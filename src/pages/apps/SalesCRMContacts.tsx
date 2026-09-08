@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { MoreHorizontal, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { contactName } from "@/adapters/loopdev";
 import {
   DataCard,
   FilterDropdown,
@@ -19,10 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
-import { useLocalStore } from "@/lib/localStore";
-import { customersStore } from "@/data";
 import { formatDate, getInitials } from "@/lib/formatters";
-import type { Customer, CustomerTier } from "@/types";
+import { useLoopdevContacts } from "@/hooks/use-loopdev-crm";
 
 const tierOptions = [
   { label: "Lead", value: "lead" },
@@ -31,7 +31,7 @@ const tierOptions = [
   { label: "Wholesale", value: "wholesale" },
 ];
 
-const tierTone: Record<CustomerTier, "info" | "neutral" | "gold" | "success"> = {
+const tierTone: Record<string, "info" | "neutral" | "gold" | "success"> = {
   lead: "info",
   standard: "neutral",
   vip: "gold",
@@ -40,23 +40,24 @@ const tierTone: Record<CustomerTier, "info" | "neutral" | "gold" | "success"> = 
 
 export default function SalesCRMContacts() {
   const { trail } = useBreadcrumbs();
-  const customers = useLocalStore(customersStore);
+  const navigate = useNavigate();
+  const { contacts } = useLoopdevContacts();
   const [search, setSearch] = useState("");
   const [tiers, setTiers] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return customers.filter((customer) => {
+    return contacts.filter((customer) => {
       const matchesSearch =
         !query ||
-        [customer.name, customer.email, customer.phone, customer.city, customer.country]
-          .filter(Boolean)
+        [contactName(customer), customer.email, customer.phone, customer.city, customer.country]
+          .filter((value): value is string => Boolean(value))
           .some((value) => value.toLowerCase().includes(query));
-      const matchesTier = !tiers.length || tiers.includes(customer.tier);
+      const matchesTier = !tiers.length || tiers.includes(String(customer.attributes.localTier ?? ""));
       return matchesSearch && matchesTier;
     });
-  }, [customers, search, tiers]);
+  }, [contacts, search, tiers]);
 
   return (
     <PageContainer width="wide">
@@ -105,24 +106,35 @@ export default function SalesCRMContacts() {
           </TableHeader>
           <TableBody>
             {filtered.map((customer) => (
-              <TableRow key={customer.id}>
+              <TableRow
+                key={customer.id}
+                className="cursor-pointer"
+                tabIndex={0}
+                onClick={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    navigate(`/app/sales-crm/contacts/${customer.id}`);
+                  }
+                }}
+              >
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8 border border-border">
                       <AvatarFallback className="text-[10px]">
-                        {getInitials(customer.name)}
+                          {getInitials(contactName(customer))}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium">{customer.name}</div>
+                      <div className="font-medium">{contactName(customer)}</div>
                       <div className="text-xs text-muted-foreground">{customer.email}</div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{customer.phone}</TableCell>
                 <TableCell>
-                  <StatusBadge tone={tierTone[customer.tier]}>
-                    {customer.tier}
+                  <StatusBadge tone={tierTone[String(customer.attributes.localTier ?? "standard")] ?? "neutral"}>
+                    {String(customer.attributes.localTier ?? "standard")}
                   </StatusBadge>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
@@ -132,7 +144,12 @@ export default function SalesCRMContacts() {
                   {formatDate(customer.lastOrderAt)}
                 </TableCell>
                 <TableCell>
-                  <Button size="icon" variant="ghost" className="h-7 w-7">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <MoreHorizontal className="h-3.5 w-3.5" />
                     <span className="sr-only">Contact actions</span>
                   </Button>

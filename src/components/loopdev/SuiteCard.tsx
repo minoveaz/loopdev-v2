@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 export interface SuiteCardProps {
@@ -9,6 +10,7 @@ export interface SuiteCardProps {
   version: string;
   status?: "ready" | "lab";
   isLocked?: boolean;
+  to?: string;
   className?: string;
 }
 
@@ -19,10 +21,24 @@ export function SuiteCard({
   version,
   status,
   isLocked = false,
+  to,
   className,
 }: SuiteCardProps) {
+  const navigate = useNavigate();
+  const isNavigable = Boolean(to && !isLocked);
+
   return (
     <article
+      aria-label={isNavigable ? `Open ${title}` : undefined}
+      role={isNavigable ? "link" : undefined}
+      tabIndex={isNavigable ? 0 : undefined}
+      onClick={isNavigable ? () => navigate(to!) : undefined}
+      onKeyDown={isNavigable ? (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          navigate(to!);
+        }
+      } : undefined}
       className={cn(
         "group relative flex min-h-[390px] flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-sm transition-all duration-500",
         !isLocked &&

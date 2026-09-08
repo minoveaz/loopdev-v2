@@ -19,6 +19,7 @@ const suites = [
     title: "Sales & CRM",
     description: "Pipeline intelligence and relationship management powered by predictive neural models.",
     version: "0.8.2",
+    to: "/app/sales-crm/overview",
     illustration: <PartnersIllustration />,
   },
   {

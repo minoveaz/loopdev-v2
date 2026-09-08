@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
+import { LoopdevSidebar } from "@/components/loopdev/LoopdevSidebar";
 import { Topbar } from "./Topbar";
 import { AppFooter } from "./AppFooter";
 import { ThemeCustomizerFab } from "@/components/theme/ThemeCustomizer";
@@ -18,6 +19,7 @@ export function AppShell() {
   const { theme } = useTheme();
   const { config } = useThemeConfig();
   const savedOverflow = useRef<string | null>(null);
+  const isLoopdevWorkspace = pathname === "/launchpad" || pathname.startsWith("/app/");
 
   // Centralized scroll-lock release. Always restores whatever inline value
   // was on <body> before we locked it (or clears it if none).
@@ -92,11 +94,19 @@ export function AppShell() {
       >
         {t("common.skipToContent")}
       </a>
-      <Sidebar
-        collapsed={collapsed}
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
+      {isLoopdevWorkspace ? (
+        <LoopdevSidebar
+          collapsed={collapsed}
+          mobileOpen={mobileOpen}
+          onMobileClose={() => setMobileOpen(false)}
+        />
+      ) : (
+        <Sidebar
+          collapsed={collapsed}
+          mobileOpen={mobileOpen}
+          onMobileClose={() => setMobileOpen(false)}
+        />
+      )}
       <div
         data-app-content
         data-sidebar-collapsed={collapsed ? "true" : "false"}

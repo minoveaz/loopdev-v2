@@ -83,9 +83,10 @@ interface SidebarProps {
   collapsed: boolean;
   mobileOpen: boolean;
   onMobileClose: () => void;
+  navigationOverride?: NavSection[];
 }
 
-export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) {
+export function Sidebar({ collapsed, mobileOpen, onMobileClose, navigationOverride }: SidebarProps) {
   const { pathname } = useLocation();
   const { dir } = useI18n();
   const asideRef = useRef<HTMLElement | null>(null);
@@ -206,7 +207,12 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
     };
   }, [mobileOpen]);
 
-  const activeNavigation = pathname === "/launchpad" ? launchpadNavigation : navigation;
+  const isLoopdevWorkspace = pathname.startsWith("/app/");
+  const activeNavigation = navigationOverride ?? (
+    pathname === "/launchpad" || isLoopdevWorkspace
+      ? launchpadNavigation
+      : navigation
+  );
   const flat = useMemo(() => buildFlatNav(activeNavigation), [activeNavigation]);
   const flatByKey = useMemo(() => new Map(flat.map((it) => [it.key, it])), [flat]);
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => {
@@ -699,7 +705,7 @@ function SidebarNode({
 
   // Top-level button styles
   const isRoot = depth === 0;
-  const isLaunchpad = node.to === "/launchpad";
+  const isLoopdevItem = node.to === "/launchpad" || node.to?.startsWith("/app/");
   const ariaLevel = depth + 1;
   const branchActive = hasChildren && nodeContainsActive(node, pathname);
 
@@ -805,7 +811,7 @@ function SidebarNode({
             ? "px-3 py-2 text-sm font-medium"
             : "px-2.5 py-1.5 text-[13px] font-medium",
           isActive
-            ? isRoot && !isLaunchpad
+            ? isRoot && !isLoopdevItem
               ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-elegant ring-1 ring-sidebar-primary/40"
               : "bg-sidebar-accent text-sidebar-accent-foreground"
             : "text-sidebar-foreground/90 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",

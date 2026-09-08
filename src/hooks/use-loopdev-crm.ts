@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { loopdevAdapter } from "@/adapters/loopdev";
-import type { CRMContact, Customer360View } from "@/adapters/loopdev";
+import type { CRMContact, CRMLead, Customer360View } from "@/adapters/loopdev";
 
 export function useLoopdevContacts() {
   const [contacts, setContacts] = useState<CRMContact[]>([]);
@@ -14,12 +14,28 @@ export function useLoopdevContacts() {
         setLoading(false);
       }
     });
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
   return { contacts, loading };
+}
+
+export function useLoopdevLeads() {
+  const [leads, setLeads] = useState<CRMLead[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    void loopdevAdapter.crm.listLeads().then((items) => {
+      if (active) {
+        setLeads(items);
+        setLoading(false);
+      }
+    });
+    return () => { active = false; };
+  }, []);
+
+  return { leads, loading };
 }
 
 export function useLoopdevCustomer360(contactId: string | undefined) {
@@ -40,9 +56,7 @@ export function useLoopdevCustomer360(contactId: string | undefined) {
         setLoading(false);
       }
     });
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [contactId]);
 
   return { view, loading };

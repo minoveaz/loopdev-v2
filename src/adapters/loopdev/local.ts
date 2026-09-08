@@ -45,10 +45,25 @@ const localActivities: CRMActivity[] = [
   { id: "local-activity-3", sourceType: "note", sourceId: "local-note-1", type: "note", summary: "Relationship note added", occurredAt: new Date(Date.now() - 3 * 86400000).toISOString() },
 ];
 
+function toLead(contact: Customer): CRMLead {
+  return {
+    id: `local-lead-${contact.id}`,
+    contactId: contact.id,
+    status: contact.tier === "lead" ? "qualified" : "new",
+    interest: contact.tier === "lead" ? "Enterprise expansion" : "General interest",
+    source: "local",
+    createdAt: contact.createdAt,
+  };
+}
+
 export const localLoopdevAdapter = {
   crm: {
     async listContacts(): Promise<CRMContact[]> {
       return customersStore.list().map(toContact);
+    },
+
+    async listLeads(): Promise<CRMLead[]> {
+      return customersStore.list().map(toLead);
     },
 
     async getCustomer360(contactId: string): Promise<Customer360View | null> {

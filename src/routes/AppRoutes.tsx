@@ -17,6 +17,7 @@ const AnalyticsDashboard = lazy(() => import("@/pages/dashboards/Analytics"));
 const CRMDashboard = lazy(() => import("@/pages/dashboards/CRM"));
 const SalesCRM = lazy(() => import("@/pages/apps/SalesCRM"));
 const SalesCRMContacts = lazy(() => import("@/pages/apps/SalesCRMContacts"));
+const SalesCRMLeads = lazy(() => import("@/pages/apps/SalesCRMLeads"));
 const SalesCRMCustomer360 = lazy(() => import("@/pages/apps/SalesCRMCustomer360"));
 const EcommerceDashboard = lazy(() => import("@/pages/dashboards/Ecommerce"));
 const UsersPage = lazy(() => import("@/pages/management/Users"));
@@ -486,6 +487,7 @@ export function AppRoutes() {
         <Route path="/app/sales-crm/overview" element={<SalesCRM />} />
         <Route path="/app/sales-crm/contacts" element={<SalesCRMContacts />} />
         <Route path="/app/sales-crm/contacts/:contactId" element={<SalesCRMCustomer360 />} />
+        <Route path="/app/sales-crm/leads" element={<SalesCRMLeads />} />
         <Route path="/dashboard/ecommerce" element={<EcommerceDashboard />} />
         <Route path="/dashboards/ecommerce" element={<EcommerceDashboard />} />
         <Route path="/management/users" element={<UsersPage />} />

@@ -1,0 +1,781 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Rivera Design System — v1.0.0
+ * Premium, spacious, data-focused SaaS admin.
+ * All colors HSL. All tokens semantic.
+ */
+
+@layer base {
+  :root {
+    /* Rivera v1 — clean, spacious SaaS surfaces */
+    --background: 220 30% 98.8%;
+    --foreground: 222 32% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 28% 12%;
+    --card-muted: 220 26% 97.6%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 28% 12%;
+
+    /* Primary — modern indigo/blue */
+    --primary: 234 80% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 234 86% 68%;
+    --primary-soft: 234 92% 96.5%;
+
+    /* Secondary — refined neutral */
+    --secondary: 220 18% 95%;
+    --secondary-foreground: 222 28% 16%;
+
+    --muted: 220 20% 96%;
+    --muted-foreground: 222 12% 46%;
+
+    /* Accent — emerald (sales positive) */
+    --accent: 158 70% 42%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 158 70% 95%;
+
+    /* Hover surface for menus, selects, lists, dropdowns (#F3F4F7) */
+    --hover: 220 14% 96%;
+    --hover-foreground: 222 28% 12%;
+
+    /* Gold (loyalty/highlights) */
+    --gold: 38 92% 52%;
+    --gold-foreground: 222 28% 12%;
+    --gold-soft: 38 92% 95%;
+
+    /* Status */
+    --destructive: 350 78% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 350 90% 96%;
+
+    --success: 158 70% 40%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 158 70% 94%;
+
+    --warning: 36 96% 52%;
+    --warning-foreground: 222 28% 12%;
+    --warning-soft: 36 96% 94%;
+
+    --info: 210 92% 52%;
+    --info-foreground: 0 0% 100%;
+    --info-soft: 210 92% 96%;
+
+    /* Lines & rings — softer, cleaner */
+    --border: 220 22% 92%;
+    --border-strong: 220 20% 85%;
+    --input: 220 22% 92%;
+    --ring: 234 80% 58%;
+
+    --radius: 0.5rem;
+    --radius-sm: 0.375rem;
+
+    /* Sidebar — light, integrated with main canvas. Uses same primary hue as the rest of the app for cohesion. */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 18% 32%;
+    --sidebar-primary: 234 80% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 22% 96%;
+    --sidebar-accent-foreground: 222 28% 16%;
+    --sidebar-border: 220 18% 92%;
+    --sidebar-ring: 234 80% 58%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(234 80% 58%), hsl(234 86% 68%));
+    --gradient-accent: linear-gradient(135deg, hsl(158 70% 42%), hsl(170 70% 48%));
+    --gradient-surface: linear-gradient(180deg, hsl(240 11% 97.5%), hsl(240 11% 96%));
+    --gradient-editorial: linear-gradient(135deg, hsl(232 28% 14%) 0%, hsl(235 60% 28%) 60%, hsl(235 82% 56%) 100%);
+    --gradient-mesh: radial-gradient(at 0% 0%, hsl(235 78% 60% / 0.10) 0px, transparent 55%),
+                     radial-gradient(at 100% 0%, hsl(158 70% 50% / 0.08) 0px, transparent 55%);
+
+    /* Shadows — one modern elevation recipe across the app */
+    --shadow-modern: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-xs: var(--shadow-modern);
+    --shadow-sm: var(--shadow-modern);
+    --shadow-md: var(--shadow-modern);
+    --shadow-lg: var(--shadow-modern);
+    --shadow-glow: 0 0 0 1px hsl(234 80% 58% / 0.14), 0 10px 28px -10px hsl(234 80% 58% / 0.32);
+    --shadow-focus: 0 0 0 3px hsl(234 80% 58% / 0.20);
+
+    /* Motion */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dark {
+    /* (overrides below) */
+  }
+
+  /* Scoped light theme — used inside dark-mode app to force a light preview */
+  .light {
+    --background: 220 30% 98.8%;
+    --foreground: 222 32% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 28% 12%;
+    --card-muted: 220 26% 97.6%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 28% 12%;
+    --primary: 234 80% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 234 86% 68%;
+    --primary-soft: 234 92% 96.5%;
+    --secondary: 220 18% 95%;
+    --secondary-foreground: 222 28% 16%;
+    --muted: 220 20% 96%;
+    --muted-foreground: 222 12% 46%;
+    --accent: 158 70% 42%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 158 70% 95%;
+    --hover: 220 14% 96%;
+    --hover-foreground: 222 28% 12%;
+    --destructive: 350 78% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 22% 92%;
+    --border-strong: 220 20% 85%;
+    --input: 220 22% 92%;
+    --ring: 234 80% 58%;
+    color-scheme: light;
+  }
+
+  .dark.dark {
+    /* Deep charcoal/slate dark mode */
+    --background: 226 32% 6.5%;
+    --foreground: 220 18% 94%;
+
+    --card: 224 24% 9.5%;
+    --card-foreground: 220 18% 94%;
+    --card-muted: 224 22% 11.5%;
+
+    --popover: 224 22% 10%;
+    --popover-foreground: 220 18% 94%;
+
+    /* Primary stays bright on dark; white text passes AA on the lighter blue */
+    --primary: 234 86% 66%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 234 92% 74%;
+    --primary-soft: 234 50% 18%;
+
+    --secondary: 224 20% 14%;
+    --secondary-foreground: 220 18% 94%;
+
+    --muted: 224 20% 14%;
+    --muted-foreground: 220 12% 64%;
+
+    --accent: 158 68% 48%;
+    --accent-foreground: 224 28% 8%;
+    --accent-soft: 158 50% 16%;
+
+    /* Hover surface (dark) — mirrors #F3F4F7 contrast on dark canvas */
+    --hover: 224 18% 18%;
+    --hover-foreground: 220 18% 94%;
+
+    --gold: 38 96% 62%;
+    --gold-foreground: 224 28% 8%;
+    --gold-soft: 38 50% 16%;
+
+    --destructive: 350 84% 64%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 350 50% 18%;
+
+    --success: 158 68% 48%;
+    --success-foreground: 224 28% 8%;
+    --success-soft: 158 50% 14%;
+
+    --warning: 36 96% 62%;
+    --warning-foreground: 224 28% 8%;
+    --warning-soft: 36 70% 14%;
+
+    --info: 210 92% 62%;
+    --info-foreground: 0 0% 100%;
+    --info-soft: 210 60% 14%;
+
+    --border: 224 18% 17%;
+    --border-strong: 224 16% 24%;
+    --input: 224 18% 17%;
+    --ring: 234 86% 66%;
+
+    --sidebar-background: 224 26% 8%;
+    --sidebar-foreground: 220 14% 74%;
+    --sidebar-primary: 234 86% 66%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 224 22% 14%;
+    --sidebar-accent-foreground: 220 18% 94%;
+    --sidebar-border: 224 20% 14%;
+    --sidebar-ring: 234 86% 66%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(234 78% 52%), hsl(234 86% 68%));
+    --gradient-accent: linear-gradient(135deg, hsl(158 68% 42%), hsl(170 70% 50%));
+    --gradient-surface: linear-gradient(180deg, hsl(224 28% 7%), hsl(224 22% 10%));
+    --gradient-editorial: linear-gradient(135deg, hsl(224 28% 7%) 0%, hsl(232 50% 18%) 60%, hsl(234 86% 56%) 100%);
+    --gradient-mesh: radial-gradient(at 0% 0%, hsl(234 86% 66% / 0.18) 0px, transparent 55%),
+                     radial-gradient(at 100% 0%, hsl(158 68% 48% / 0.12) 0px, transparent 55%);
+
+    --shadow-modern: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-xs: var(--shadow-modern);
+    --shadow-sm: var(--shadow-modern);
+    --shadow-md: var(--shadow-modern);
+    --shadow-lg: var(--shadow-modern);
+    --shadow-glow: 0 0 0 1px hsl(234 86% 66% / 0.22), 0 8px 24px -8px hsl(234 86% 66% / 0.5);
+    --shadow-focus: 0 0 0 3px hsl(234 86% 66% / 0.32);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-feature-settings: "cv11", "ss01";
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-feature-settings: "ss01", "ss02", "cv11";
+    font-size: 15px;
+    line-height: 1.55;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Prevent media + canvases from causing horizontal page scroll */
+  img, svg, video, canvas { max-width: 100%; }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Geist', system-ui, sans-serif;
+    color: hsl(var(--foreground));
+    text-wrap: balance;
+  }
+  h1 { font-weight: 700; font-size: clamp(2rem, 1.6rem + 1.6vw, 2.75rem); line-height: 1.08; letter-spacing: -0.028em; }
+  h2 { font-weight: 700; font-size: clamp(1.625rem, 1.4rem + 1vw, 2.125rem); line-height: 1.14; letter-spacing: -0.024em; }
+  h3 { font-weight: 650; font-size: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem); line-height: 1.2;  letter-spacing: -0.02em; }
+  h4 { font-weight: 600; font-size: 1.125rem; line-height: 1.3;  letter-spacing: -0.015em; }
+  h5 { font-weight: 600; font-size: 1rem;     line-height: 1.4;  letter-spacing: -0.01em; }
+  h6 { font-weight: 600; font-size: 0.875rem; line-height: 1.45; letter-spacing: 0.005em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+
+  small, .text-small { font-size: 0.8125rem; line-height: 1.5; letter-spacing: 0.005em; color: hsl(var(--muted-foreground)); }
+
+  .dark h1, .dark h2, .dark h3 { font-weight: 650; letter-spacing: -0.022em; }
+
+  /* Monospace baseline — Geist Mono everywhere */
+  code, pre, kbd, samp, tt, var, .font-mono, [class*="font-mono"] {
+    font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-feature-settings: "zero", "ss01", "calt" 0;
+    font-variant-ligatures: none;
+    font-weight: 450;
+  }
+
+  /* Inline code — sized to its surrounding text via em */
+  :not(pre) > code {
+    font-size: 0.875em;
+    line-height: 1.45;
+    padding: 0.1em 0.35em;
+    border-radius: calc(var(--radius-sm) - 2px);
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    letter-spacing: -0.005em;
+  }
+
+  /* Block code */
+  pre {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    padding: 1rem 1.125rem;
+    border-radius: var(--radius-sm);
+    background: hsl(var(--card-muted));
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    overflow-x: auto;
+    tab-size: 2;
+  }
+  pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+  }
+
+  /* Keyboard hint */
+  kbd {
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 0.2em 0.4em;
+    border-radius: calc(var(--radius-sm) - 2px);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border-strong));
+    box-shadow: inset 0 -1px 0 hsl(var(--border-strong));
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Tabular numbers wherever .font-mono is used for figures */
+  .font-mono { font-variant-numeric: tabular-nums; }
+
+  /* shadcn/ui — automatic Geist Mono polish for code/kbd that appears
+   * inside common surfaces (tooltip, alert, toast, dialog, popover, sheet,
+   * hover-card, command, dropdown). Sizing is em-relative so it inherits
+   * the surface's text size while staying visually consistent.
+   */
+  [role="tooltip"] code,
+  [role="alert"] code,
+  [role="status"] code,
+  [role="dialog"] code,
+  [role="menu"] code,
+  [role="listbox"] code,
+  [data-sonner-toast] code,
+  [data-radix-popper-content-wrapper] code {
+    font-size: 0.875em;
+    line-height: 1.45;
+    padding: 0.1em 0.35em;
+  }
+
+  [role="tooltip"] kbd,
+  [role="alert"] kbd,
+  [role="status"] kbd,
+  [role="dialog"] kbd,
+  [role="menu"] kbd,
+  [role="listbox"] kbd,
+  [data-sonner-toast] kbd,
+  [data-radix-popper-content-wrapper] kbd {
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 0.15em 0.35em;
+  }
+
+  /* Tooltip surface uses inverted foreground — keep code legible there */
+  [role="tooltip"] code {
+    background: hsl(var(--background) / 0.12);
+    border-color: hsl(var(--background) / 0.18);
+    color: inherit;
+  }
+
+  /* Universal focus-visible polish (only when component has not opted out via .focus-visible:ring-* token) */
+  :where(button, [role="button"], a, summary):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: calc(var(--radius) - 4px);
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer utilities {
+  .font-display { font-family: 'Geist', system-ui, sans-serif; letter-spacing: -0.018em; }
+
+  /* ===== Unified Card surface =====
+     Single source of truth for every card-like surface (Card, StatCard, ChartCard,
+     DataCard, FormSection, EmptyState, SettingsCard, LoadingSkeleton, etc.).
+     Transparent border + layered modern shadow that adapts to light & dark mode. */
+  .surface-card {
+    @apply rounded-xl border-0 bg-card text-card-foreground;
+    box-shadow: var(--shadow-modern);
+  }
+  .surface-card-hover {
+    @apply transition-smooth;
+  }
+  .surface-card-hover:hover {
+    box-shadow: var(--shadow-modern);
+  }
+  .dark .surface-card {
+    box-shadow: var(--shadow-modern);
+  }
+  .dark .surface-card-hover:hover {
+    box-shadow: var(--shadow-modern);
+  }
+
+  /* Back-compat aliases (existing code uses .surface / .surface-muted). */
+  .surface { @apply surface-card; }
+  .surface-muted { @apply surface-card-muted; }
+
+  /* ----- Card variants -----
+     surface-card-muted   → low-emphasis panels (nested sections, sidebars inside cards)
+     surface-card-strong  → hero / highlighted surfaces with deeper elevation
+     surface-card-compact → tighter radius + lighter shadow for dense lists/tiles */
+  .surface-card-muted {
+    @apply rounded-xl border-0 bg-card-muted text-card-foreground;
+    box-shadow: var(--shadow-modern);
+  }
+  .dark .surface-card-muted {
+    box-shadow: var(--shadow-modern);
+  }
+
+  .surface-card-strong {
+    @apply rounded-xl border-0 bg-card text-card-foreground;
+    box-shadow: var(--shadow-modern);
+  }
+  .dark .surface-card-strong {
+    box-shadow: var(--shadow-modern);
+  }
+
+  .surface-card-compact {
+    @apply rounded-xl border-0 bg-card text-card-foreground;
+    box-shadow: var(--shadow-modern);
+  }
+  .dark .surface-card-compact {
+    box-shadow: var(--shadow-modern);
+  }
+
+  /* Compact muted tile (dense lists, nested chips) */
+  .surface-card-muted-compact {
+    @apply rounded-xl border-0 bg-card-muted text-card-foreground;
+    box-shadow: var(--shadow-modern);
+  }
+  .dark .surface-card-muted-compact {
+    box-shadow: var(--shadow-modern);
+  }
+
+  /* ----- Semantic aliases -----
+     Encourage components to pick a variant by intent rather than re-deriving
+     border/shadow combinations. Aliases share the exact tokens above so light
+     and dark themes stay perfectly in sync. */
+
+  /* .surface-card-raised → emphasized elevation, same as -strong */
+  .surface-card-raised { @apply surface-card-strong; }
+
+  /* .surface-card-interactive → base surface + hover lift + cursor affordance.
+     Use on clickable tiles/cards so every interactive surface shares one rule. */
+  .surface-card-interactive {
+    @apply surface-card surface-card-hover cursor-pointer;
+  }
+  .surface-card-interactive:hover { @apply -translate-y-0.5; }
+
+  /* .surface-card-muted-interactive → muted variant with the same hover lift. */
+  .surface-card-muted-interactive {
+    @apply surface-card-muted surface-card-hover cursor-pointer;
+  }
+  .surface-card-muted-interactive:hover { @apply -translate-y-0.5; }
+
+  /* Keyboard focus-visible outline shared by every interactive card variant.
+     Uses the themed `--ring` token so the outline reads in both light and
+     dark modes, and offsets against the page background to stay visible on
+     muted / raised surfaces. */
+  .surface-card-interactive,
+  .surface-card-muted-interactive {
+    @apply outline-none;
+  }
+  .surface-card-interactive:focus-visible,
+  .surface-card-muted-interactive:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    box-shadow:
+      var(--shadow-modern),
+      0 0 0 4px hsl(var(--background)),
+      0 0 0 6px hsl(var(--ring) / 0.45);
+  }
+  .dark .surface-card-interactive:focus-visible,
+  .dark .surface-card-muted-interactive:focus-visible {
+    box-shadow:
+      var(--shadow-modern),
+      0 0 0 4px hsl(var(--background)),
+      0 0 0 6px hsl(var(--ring) / 0.6);
+  }
+
+  /* Focus-visible outlines for interactive elements nested inside any
+     interactive surface card. Keeps controls (buttons, links, inputs,
+     selects, textareas, summary) keyboard-accessible without relying on
+     each component to ship its own ring. Theme-aware via `--ring`. */
+  .surface-card-interactive :is(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible,
+  .surface-card-muted-interactive :is(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: calc(var(--radius) - 4px);
+  }
+  .dark .surface-card-interactive :is(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible,
+  .dark .surface-card-muted-interactive :is(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline-color: hsl(var(--ring));
+    box-shadow: 0 0 0 4px hsl(var(--ring) / 0.25);
+  }
+
+  /* Divider that respects contrast in both themes */
+  .divider-y > * + * { @apply border-t border-border; }
+
+  /* Numeric typography helper */
+  .num { font-feature-settings: "tnum", "ss01"; font-variant-numeric: tabular-nums; }
+
+  .bg-gradient-primary { background: var(--gradient-primary); }
+  .bg-gradient-accent { background: var(--gradient-accent); }
+  .bg-gradient-surface { background: var(--gradient-surface); }
+  .bg-gradient-editorial { background: var(--gradient-editorial); }
+  .bg-gradient-mesh { background: var(--gradient-mesh); }
+
+  .shadow-xs { box-shadow: var(--shadow-xs); }
+  .shadow-soft { box-shadow: var(--shadow-sm); }
+  .shadow-elegant { box-shadow: var(--shadow-md); }
+  .shadow-elevated { box-shadow: var(--shadow-lg); }
+  .shadow-glow { box-shadow: var(--shadow-glow); }
+  .shadow-focus { box-shadow: var(--shadow-focus); }
+
+  .transition-fast { transition: var(--transition-fast); }
+  .transition-smooth { transition: var(--transition-smooth); }
+  .transition-bounce { transition: var(--transition-bounce); }
+
+  .text-balance { text-wrap: balance; }
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border-strong)); border-radius: 8px; border: 2px solid hsl(var(--background)); }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
+/* ===== Appearance configuration — consumes data-* attributes on <html> ===== */
+
+/* Density — compact tightens main padding, table rows, sidebar items, form gaps. */
+html[data-density="compact"] #main-content { padding: 1rem 1.25rem; }
+@media (min-width: 768px) {
+  html[data-density="compact"] #main-content { padding: 1.25rem 1.5rem; }
+}
+html[data-density="compact"] table tbody td,
+html[data-density="compact"] table thead th { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+html[data-density="compact"] [data-sidebar-item] { padding-top: 0.375rem; padding-bottom: 0.375rem; min-height: 32px; }
+html[data-density="compact"] form .space-y-4 > * + * { margin-top: 0.75rem; }
+html[data-density="compact"] form .space-y-6 > * + * { margin-top: 1rem; }
+/* Navbar height tightens in compact mode */
+html[data-density="compact"] [data-app-topbar] { height: 3.25rem; }
+/* Card spacing — tighten internal padding for surface cards */
+html[data-density="compact"] .surface-card .p-6 { padding: 1rem; }
+html[data-density="compact"] .surface-card .p-6.pt-0 { padding-top: 0; }
+/* Grid/stack gap utilities tighten slightly */
+html[data-density="compact"] #main-content .gap-6 { gap: 1rem; }
+html[data-density="compact"] #main-content .space-y-6 > * + * { margin-top: 1rem; }
+/* Comfortable (default) — explicit reset to ensure cross-tab toggling restores spacing */
+html[data-density="comfortable"] [data-app-topbar] { height: 4rem; }
+
+/* Sidebar style */
+html[data-sidebar-style="compact"] [data-sidebar-item] { padding-top: 0.25rem; padding-bottom: 0.25rem; min-height: 30px; font-size: 13px; }
+html[data-sidebar-style="floating"] #app-sidebar {
+  margin: 0.625rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--sidebar-border));
+  box-shadow: var(--shadow-modern);
+  height: calc(100vh - 1.25rem);
+  inset: 0.625rem auto 0.625rem 0.625rem;
+}
+@media (min-width: 1024px) {
+  html[data-sidebar-style="floating"] [data-app-content] { padding-left: 0.625rem; }
+}
+
+/* Navbar style */
+html[data-navbar-style="static"] [data-app-topbar] { position: static; }
+html[data-navbar-style="glass"] [data-app-topbar] {
+  position: sticky;
+  background: hsl(var(--card) / 0.55);
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid hsl(var(--border) / 0.6);
+}
+
+/* Header height — overrides density defaults */
+html[data-header-height="compact"] [data-app-topbar] {
+  height: 3rem;
+  --app-topbar-height: 3rem;
+}
+html[data-header-height="standard"] [data-app-topbar] {
+  height: 4rem;
+  --app-topbar-height: 4rem;
+}
+html[data-header-height="tall"] [data-app-topbar] {
+  height: 4.75rem;
+  --app-topbar-height: 4.75rem;
+}
+
+/* Header position */
+/* Header position — authoritative; overrides navbar-style positioning above. */
+html[data-header-position="fixed"] [data-app-topbar] {
+  position: fixed;
+  inset: 0 0 auto;
+}
+@media (min-width: 768px) {
+  html[data-header-position="fixed"] [data-app-content] > [data-app-topbar] {
+    inset-inline-start: 60px;
+  }
+}
+@media (min-width: 1200px) {
+  html[data-header-position="fixed"]
+    [data-app-content][data-sidebar-collapsed="false"]
+    > [data-app-topbar] {
+    inset-inline-start: 260px;
+  }
+}
+html[data-header-position="fixed"] [data-app-content] {
+  padding-top: var(--app-topbar-height, 4rem);
+}
+html[data-header-position="sticky"] [data-app-topbar] {
+  position: sticky;
+  top: 0;
+}
+html[data-header-position="static"] [data-app-topbar] {
+  position: static;
+  top: auto;
+}
+html[data-header-position="hidden"] [data-app-topbar] { display: none; }
+
+/* Content width */
+html[data-content-width="centered"] #main-content {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+/* Keep tables and forms aligned to the same constrained column so they don't
+   overflow the centered content frame on wide displays. */
+html[data-content-width="centered"] #main-content table,
+html[data-content-width="centered"] #main-content form {
+  width: 100%;
+}
+
+/* RTL polish — flip a few utility-driven offsets that aren't logical-property
+   based. Keeps the global direction switch usable without component rewrites. */
+html[dir="rtl"] body { direction: rtl; }
+
+/* Auto-mirror direction-bearing icons in RTL.
+   Lucide adds a per-icon class like `lucide-chevron-right`, `lucide-arrow-left`,
+   etc. We flip horizontally only — keeps stroke widths and avoids touching
+   icons that are inherently directional but symmetric (search, settings).
+   Opt-out: add `data-no-rtl-flip` (or `dir="ltr"`) on the icon or any ancestor
+   to skip mirroring (e.g. brand marks, illustrations). */
+html[dir="rtl"] :is(
+  .lucide-chevron-left,
+  .lucide-chevron-right,
+  .lucide-chevron-first,
+  .lucide-chevron-last,
+  .lucide-chevrons-left,
+  .lucide-chevrons-right,
+  .lucide-arrow-left,
+  .lucide-arrow-right,
+  .lucide-arrow-up-right,
+  .lucide-arrow-down-right,
+  .lucide-arrow-up-left,
+  .lucide-arrow-down-left,
+  .lucide-arrow-left-right,
+  .lucide-arrow-right-left,
+  .lucide-arrow-big-left,
+  .lucide-arrow-big-right,
+  .lucide-move-left,
+  .lucide-move-right,
+  .lucide-corner-up-left,
+  .lucide-corner-up-right,
+  .lucide-corner-down-left,
+  .lucide-corner-down-right,
+  .lucide-square-arrow-left,
+  .lucide-square-arrow-right,
+  .lucide-circle-arrow-left,
+  .lucide-circle-arrow-right,
+  .lucide-undo,
+  .lucide-redo,
+  .lucide-undo-2,
+  .lucide-redo-2,
+  .lucide-rotate-ccw,
+  .lucide-reply,
+  .lucide-forward,
+  .lucide-send,
+  .lucide-send-horizontal,
+  .lucide-log-in,
+  .lucide-log-out,
+  .lucide-panel-left-open,
+  .lucide-panel-left-close,
+  .lucide-panel-right-open,
+  .lucide-panel-right-close,
+  .lucide-arrow-up-from-line,
+  .lucide-arrow-down-from-line,
+  .lucide-list-ordered,
+  .lucide-list-tree,
+  .lucide-indent,
+  .lucide-outdent
+) {
+  transform: scaleX(-1);
+}
+/* Opt-out hooks */
+html[dir="rtl"] [data-no-rtl-flip] .lucide,
+html[dir="rtl"] [dir="ltr"] .lucide,
+html[dir="rtl"] .lucide[data-no-rtl-flip] {
+  transform: none !important;
+}
+
+/* Chart style — minimal hides grid lines globally; linear is enforced per-chart
+   via Recharts `type` props. Kept in CSS so charts that don't (yet) read
+   `chartStyle` still react to the setting. */
+html[data-chart-style="minimal"] .recharts-cartesian-grid { display: none; }
+html[data-chart-style="minimal"] .recharts-legend-wrapper { display: none; }
+
+/* RTL — Recharts charts are rendered LTR (the SVG uses absolute pixel
+   coordinates which would break if mirrored). We instead flip the surrounding
+   chrome so tooltips, legends and axis labels feel native in RTL. */
+html[dir="rtl"] .recharts-tooltip-wrapper {
+  direction: rtl;
+  text-align: right;
+}
+html[dir="rtl"] .recharts-default-tooltip,
+html[dir="rtl"] .recharts-tooltip-item-list {
+  direction: rtl !important;
+  text-align: right !important;
+}
+html[dir="rtl"] .recharts-legend-wrapper,
+html[dir="rtl"] .recharts-default-legend {
+  direction: rtl;
+}
+html[dir="rtl"] .recharts-legend-item {
+  margin-inline: 0 10px !important;
+}
+/* Numerals stay LTR in RTL tooltips for readability */
+html[dir="rtl"] .recharts-tooltip-wrapper .tabular-nums,
+html[dir="rtl"] .recharts-tooltip-wrapper [data-numeric] {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* RTL — table columns. `text-start` on <th>/<td> handles most cases via the
+   shared Table primitive. These overrides catch utility-classed cells that
+   used `text-left`/`text-right` directly so column intent flips with dir. */
+html[dir="rtl"] table th.text-left,
+html[dir="rtl"] table td.text-left { text-align: right; }
+html[dir="rtl"] table th.text-right,
+html[dir="rtl"] table td.text-right { text-align: left; }
+/* Numeric cells should remain LTR so digits read naturally even when the row
+   flows RTL. Authors can opt-in by adding `data-numeric` to <td>/<th>. */
+html[dir="rtl"] table [data-numeric] {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: left;
+}
+
+/* ===== Radius — bind common Tailwind rounded utilities to --radius so the
+   appearance setting actually re-skins existing components without touching
+   each call site. Scale: rounded-md ≈ radius-sm; rounded-lg ≈ radius;
+   rounded-xl ≈ radius * 1.5; rounded-2xl ≈ radius * 2. */
+:where(html) .rounded-sm  { border-radius: calc(var(--radius-sm) - 1px); }
+:where(html) .rounded-md  { border-radius: var(--radius-sm); }
+:where(html) .rounded-lg  { border-radius: var(--radius); }
+:where(html) .rounded-xl  { border-radius: calc(var(--radius) * 1.5); }
+:where(html) .rounded-2xl { border-radius: calc(var(--radius) * 2); }
+/* Side-specific variants that show up across the app */
+:where(html) .rounded-t-lg { border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+:where(html) .rounded-t-xl { border-top-left-radius: calc(var(--radius) * 1.5); border-top-right-radius: calc(var(--radius) * 1.5); }
+:where(html) .rounded-b-lg { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
+:where(html) .rounded-b-xl { border-bottom-left-radius: calc(var(--radius) * 1.5); border-bottom-right-radius: calc(var(--radius) * 1.5); }
+
+/* Floating sidebar — bump specificity so it wins over the aside's own classes. */
+html[data-sidebar-style="floating"] aside#app-sidebar {
+  margin: 0.625rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--sidebar-border));
+  box-shadow: var(--shadow-modern);
+  height: calc(100vh - 1.25rem);
+  inset: 0.625rem auto 0.625rem 0.625rem;
+}

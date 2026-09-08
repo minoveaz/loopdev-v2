@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Rivera — Documentation</title>
+    <style>
+      :root {
+        --bg: #0b0d12;
+        --panel: #11141b;
+        --text: #e6e8ee;
+        --muted: #9aa3b2;
+        --border: #1f2330;
+        --accent: #6366f1;
+        --code: #0f1218;
+        --hl: #1a1f2b;
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #ffffff;
+          --panel: #fafafa;
+          --text: #0b0d12;
+          --muted: #5b6473;
+          --border: #e6e8ee;
+          --accent: #4f46e5;
+          --code: #f4f5f8;
+          --hl: #eef0f5;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          15px/1.6 ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Inter,
+          sans-serif;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        min-height: 100vh;
+      }
+      aside {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        padding: 24px 18px;
+        border-right: 1px solid var(--border);
+        background: var(--panel);
+      }
+      aside h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      aside .ver {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 18px;
+      }
+      aside nav a {
+        display: block;
+        padding: 6px 8px;
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 13.5px;
+      }
+      aside nav a:hover {
+        background: var(--hl);
+        text-decoration: none;
+      }
+      main {
+        padding: 48px 56px;
+        max-width: 920px;
+      }
+      h2 {
+        margin: 48px 0 12px;
+        font-size: 22px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 8px;
+      }
+      h2:first-child {
+        margin-top: 0;
+      }
+      h3 {
+        margin: 24px 0 8px;
+        font-size: 16px;
+      }
+      p,
+      li {
+        color: var(--text);
+      }
+      ul {
+        padding-left: 20px;
+      }
+      code {
+        background: var(--code);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      pre {
+        background: var(--code);
+        padding: 14px 16px;
+        border-radius: 8px;
+        overflow: auto;
+        border: 1px solid var(--border);
+      }
+      pre code {
+        background: transparent;
+        padding: 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-size: 12px;
+        color: var(--muted);
+        margin-right: 6px;
+      }
+      @media (max-width: 880px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+        aside {
+          position: static;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+        main {
+          padding: 28px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <aside>
+        <h1>Rivera</h1>
+        <div class="ver">v1.0.0 · Documentation</div>
+        <nav>
+          <a href="#intro">1. Introduction</a>
+          <a href="#stack">2. Technology Stack</a>
+          <a href="#requirements">3. Requirements</a>
+          <a href="#install">4. Installation</a>
+          <a href="#dev">5. Development</a>
+          <a href="#build">6. Production Build</a>
+          <a href="#preview">7. Preview Build</a>
+          <a href="#structure">8. Folder Structure</a>
+          <a href="#theme">9. Theme Customizer</a>
+          <a href="#mock">10. Mock Data</a>
+          <a href="#routing">11. Routing</a>
+          <a href="#components">12. Components</a>
+          <a href="#deploy">13. Build & Deployment</a>
+          <a href="#customize">14. Customization</a>
+          <a href="#credits">15. Credits</a>
+          <a href="#support">16. Support</a>
+        </nav>
+      </aside>
+
+      <main>
+        <section id="intro">
+          <h2>1. Introduction</h2>
+          <p><strong>Rivera — Multipurpose React Admin Dashboard Template</strong></p>
+          <p><span class="pill">Version v1.0.0</span><span class="pill">Frontend-only</span><span class="pill">React + Vite</span></p>
+          <p>Rivera is a frontend-only multipurpose React admin dashboard template. It ships with multiple dashboards, 20+ apps (Email, Chat, Calendar, Kanban, Tasks, Meetings, Invoices, AI Chatbot, …), eCommerce + POS, NFT, Real Estate, Logistics, Marketing, Academy, Blogs, Subscriptions, Helpdesk and User Management modules — all powered by mock data persisted to <code>localStorage</code>. No backend, no database, no setup wizard.</p>
+        </section>
+
+        <section id="stack">
+          <h2>2. Technology Stack</h2>
+          <ul>
+            <li>React 18</li>
+            <li>TypeScript</li>
+            <li>Vite 8</li>
+            <li>Tailwind CSS 3</li>
+            <li>shadcn/ui (50+ primitives)</li>
+            <li>Recharts</li>
+            <li>React Router</li>
+            <li>lucide-react icons</li>
+            <li>localStorage-backed mock data layer</li>
+          </ul>
+        </section>
+
+        <section id="requirements">
+          <h2>3. Requirements</h2>
+          <ul>
+            <li><strong>Node.js 18+</strong> (Node 20 LTS recommended)</li>
+            <li>Any of: <code>npm</code>, <code>yarn</code>, <code>pnpm</code>, or <code>bun</code></li>
+            <li>A modern browser (Chrome, Edge, Firefox, Safari)</li>
+          </ul>
+          <p class="muted">No <code>.env</code> file is required — Rivera has no API keys or backend.</p>
+        </section>
+
+        <section id="install">
+          <h2>4. Installation</h2>
+          <p>From the extracted project folder:</p>
+          <pre><code>npm install
+# or: yarn
+# or: pnpm install
+# or: bun install</code></pre>
+        </section>
+
+        <section id="dev">
+          <h2>5. Development</h2>
+          <pre><code>npm run dev</code></pre>
+          <p>Starts the Vite dev server with HMR on <code>http://localhost:8080</code> (configurable in <code>vite.config.ts</code>).</p>
+        </section>
+
+        <section id="build">
+          <h2>6. Production Build</h2>
+          <pre><code>npm run build</code></pre>
+          <p>Outputs a fully static bundle to <code>./dist/</code>.</p>
+        </section>
+
+        <section id="preview">
+          <h2>7. Preview Build</h2>
+          <pre><code>npm run preview</code></pre>
+          <p>Serves the built <code>./dist/</code> locally so you can sanity-check the production bundle before deploying.</p>
+        </section>
+
+        <section id="structure">
+          <h2>8. Folder Structure</h2>
+          <pre><code>rivera/
+├── documentation/         # This documentation portal
+├── public/                # Static assets served as-is
+├── src/
+│   ├── app/               # App-level config (navigation tree, etc.)
+│   ├── routes/            # AppRoutes, ProtectedRoute, RouteFallback
+│   ├── layouts/           # AppShell and layout wrappers
+│   ├── components/        # Reusable UI (shadcn/ui + Rivera components)
+│   ├── pages/             # Route page components
+│   ├── data/              # Mock data seeds
+│   ├── hooks/             # Reusable hooks
+│   ├── lib/               # Utilities (storage, csv, formatters, …)
+│   ├── types/             # Shared TypeScript types
+│   ├── providers/         # ThemeConfigProvider, bridges
+│   └── config/            # Theme tokens, brand palettes, defaults
+├── index.html
+├── package.json
+├── tailwind.config.ts
+├── tsconfig.json
+└── vite.config.ts</code></pre>
+          <table>
+            <thead>
+              <tr>
+                <th>Folder</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>src/app</code></td>
+                <td>Sidebar navigation tree and app-level configuration.</td>
+              </tr>
+              <tr>
+                <td><code>src/routes</code></td>
+                <td>Route registry, lazy imports, route guards, fallback.</td>
+              </tr>
+              <tr>
+                <td><code>src/layouts</code></td>
+                <td>AppShell, sidebar/topbar composition.</td>
+              </tr>
+              <tr>
+                <td><code>src/components</code></td>
+                <td>shadcn/ui primitives + Rivera reusable components.</td>
+              </tr>
+              <tr>
+                <td><code>src/pages</code></td>
+                <td>Every page/route component.</td>
+              </tr>
+              <tr>
+                <td><code>src/data</code></td>
+                <td>Mock seed data (users, orders, products, …).</td>
+              </tr>
+              <tr>
+                <td><code>src/hooks</code></td>
+                <td>Reusable React hooks.</td>
+              </tr>
+              <tr>
+                <td><code>src/lib</code></td>
+                <td>Utilities: storage, formatters, csv, etc.</td>
+              </tr>
+              <tr>
+                <td><code>src/types</code></td>
+                <td>Shared TypeScript types.</td>
+              </tr>
+              <tr>
+                <td><code>src/providers</code></td>
+                <td>Theme + appearance providers.</td>
+              </tr>
+              <tr>
+                <td><code>src/config</code></td>
+                <td>Brand palettes, radius tokens, defaults.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="theme">
+          <h2>9. Theme Customizer</h2>
+          <p>Rivera ships a runtime Theme Customizer drawer (top bar) that controls:</p>
+          <ul>
+            <li><strong>Theme mode</strong> — light / dark / system</li>
+            <li><strong>Primary color</strong> — choose from 6 brand presets</li>
+            <li><strong>Density</strong> — comfortable / compact</li>
+            <li><strong>Sidebar style</strong> — default / bordered / floating</li>
+            <li><strong>Sidebar mode</strong> — expanded / collapsed</li>
+            <li><strong>Navbar style</strong> — default / sticky / transparent</li>
+            <li><strong>Radius</strong> — corner radius scale</li>
+            <li><strong>Content width</strong> — fluid / boxed</li>
+            <li><strong>Chart style</strong> — line curve / bar variant</li>
+            <li><strong>Direction</strong> — LTR / RTL</li>
+            <li><strong>Reset to default</strong> — one-click restore</li>
+          </ul>
+          <p>All choices persist to <code>localStorage</code> under the key <code>rivera-theme-config</code> and sync across tabs.</p>
+        </section>
+
+        <section id="mock">
+          <h2>10. Mock Data</h2>
+          <ul>
+            <li><strong>No backend is included.</strong> Rivera is a pure frontend template.</li>
+            <li>All entities are mocked and persisted to <code>localStorage</code>.</li>
+            <li>Seeds live in <code>src/data/</code> (e.g. <code>mockUsers.ts</code>, <code>mockOrders.ts</code>, <code>mockProducts.ts</code>, …).</li>
+            <li>Generic helpers in <code>src/lib/localStore.ts</code> / <code>src/lib/storage.ts</code> read and write each store.</li>
+          </ul>
+          <h3>Reset localStorage</h3>
+          <pre><code>// In the browser DevTools console:
+localStorage.clear();
+location.reload();</code></pre>
+          <p>Or use DevTools → Application → Storage → <em>Clear site data</em>.</p>
+        </section>
+
+        <section id="routing">
+          <h2>11. Routing</h2>
+          <ul>
+            <li>Rivera uses <strong>React Router</strong>.</li>
+            <li>Every page is <strong>lazy-loaded</strong> with <code>React.lazy(() =&gt; import(...))</code> and rendered inside a <code>&lt;Suspense&gt;</code> boundary with a skeleton fallback.</li>
+          </ul>
+          <h3>Add a new route</h3>
+          <ol>
+            <li>Create the page under <code>src/pages/...</code>.</li>
+            <li>
+              In <code>src/routes/AppRoutes.tsx</code> add:
+              <pre><code>const MyPage = lazy(() =&gt; import("@/pages/MyPage"));
+// inside the AppShell block:
+&lt;Route path="/my-path" element={&lt;MyPage /&gt;} /&gt;</code></pre>
+            </li>
+          </ol>
+          <h3>Add a sidebar menu item</h3>
+          <p>Edit <code>src/app/navigation.ts</code> and add an entry with the matching <code>path</code>, label and lucide icon. The sidebar reads from this file, so menus stay in sync with routes.</p>
+        </section>
+
+        <section id="components">
+          <h2>12. Components</h2>
+          <ul>
+            <li><strong>shadcn/ui</strong> — 50+ accessible primitives in <code>src/components/ui/</code> (Button, Dialog, Table, Form, …).</li>
+            <li>
+              <strong>Rivera reusable components</strong> in <code>src/components/common/</code>:
+              <ul>
+                <li><code>DataTable</code> — sortable, filterable table with pagination.</li>
+                <li><code>StatCard</code> — metric card with trend indicator.</li>
+                <li><code>ChartCard</code> — chart container with header + legend.</li>
+                <li><code>PageHeader</code>, <code>PageContainer</code>, <code>EmptyState</code>, <code>LoadingSkeleton</code>, and more.</li>
+              </ul>
+            </li>
+            <li><strong>Theme Customizer</strong> — <code>src/components/theme/ThemeCustomizer.tsx</code>.</li>
+          </ul>
+        </section>
+
+        <section id="deploy">
+          <h2>13. Build & Deployment</h2>
+          <ol>
+            <li>Run <code>npm run build</code> to generate <code>./dist/</code>.</li>
+            <li>
+              Upload <strong>only the contents of <code>dist/</code></strong> to your static host (Netlify, Vercel, Cloudflare Pages, GitHub Pages, S3 + CloudFront, nginx, Apache, …). Add an SPA rewrite (<code>/* → /index.html</code>).
+            </li>
+            <li>
+              <strong>Do not include the <code>dist/</code> folder in the ThemeForest source package.</strong> Reviewers and buyers will run <code>npm install</code> and <code>npm run build</code> themselves.
+            </li>
+          </ol>
+        </section>
+
+        <section id="customize">
+          <h2>14. Customization</h2>
+          <h3>Change the logo / brand name</h3>
+          <p>Edit <code>src/components/layout/Logo.tsx</code> to swap the SVG/text. The product name string also appears in <code>index.html</code> and <code>public/site.webmanifest</code>.</p>
+          <h3>Change the primary color</h3>
+          <p>Edit the brand palettes in <code>src/config/themeConfig.ts</code> and the HSL CSS variables in <code>src/index.css</code>. Never hardcode colors in components — always use semantic Tailwind tokens (<code>bg-primary</code>, <code>text-foreground</code>, …).</p>
+          <h3>Update mock data</h3>
+          <p>Edit the relevant file in <code>src/data/</code> (e.g. <code>mockUsers.ts</code>). After editing, clear <code>localStorage</code> so fresh seeds are written.</p>
+          <h3>Edit sidebar navigation</h3>
+          <p>Edit <code>src/app/navigation.ts</code>. Each entry has a <code>label</code>, <code>path</code>, optional <code>icon</code> and optional <code>children</code>.</p>
+          <h3>Edit dashboard cards / charts</h3>
+          <p>Dashboards live in <code>src/pages/dashboards/</code> (Analytics, CRM, Ecommerce, Restaurant). Swap data sources, change chart types (Recharts), or rearrange <code>StatCard</code> / <code>ChartCard</code> components.</p>
+        </section>
+
+        <section id="credits">
+          <h2>15. Credits</h2>
+          <ul>
+            <li><a href="https://react.dev">React</a></li>
+            <li><a href="https://www.typescriptlang.org/">TypeScript</a></li>
+            <li><a href="https://vitejs.dev">Vite</a></li>
+            <li><a href="https://tailwindcss.com">Tailwind CSS</a></li>
+            <li><a href="https://ui.shadcn.com">shadcn/ui</a></li>
+            <li><a href="https://recharts.org">Recharts</a></li>
+            <li><a href="https://reactrouter.com">React Router</a></li>
+            <li><a href="https://lucide.dev">lucide-react</a></li>
+            <li><a href="https://sonner.emilkowal.ski">Sonner</a></li>
+            <li><a href="https://zod.dev">Zod</a></li>
+          </ul>
+        </section>
+
+        <section id="support">
+          <h2>16. Support</h2>
+          <p>When requesting support, please include:</p>
+          <ul>
+            <li>Your ThemeForest purchase code.</li>
+            <li>Rivera version (see <code>CHANGELOG.md</code>).</li>
+            <li>Node.js version (<code>node -v</code>) and package manager.</li>
+            <li>Operating system and browser (with version).</li>
+            <li>Exact steps to reproduce the issue.</li>
+            <li>Screenshots or a short screen recording, if visual.</li>
+            <li>Full console output and any network errors.</li>
+          </ul>
+          <p class="muted">Tip: try clearing <code>localStorage</code> first — many UI issues vanish after re-seeding the mock data.</p>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

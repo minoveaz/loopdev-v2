@@ -1,0 +1,561 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Visual regression — LTR vs RTL after toggle > LTR signature stable @ analytics/desktop 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "ltr",
+    "lang": "en",
+  },
+  "sidebar": {
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > LTR signature stable @ analytics/mobile 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "ltr",
+    "lang": "en",
+  },
+  "sidebar": {
+    "role": "dialog",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > LTR signature stable @ appearance/desktop 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "ltr",
+    "lang": "en",
+  },
+  "sidebar": {
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > LTR signature stable @ appearance/mobile 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "ltr",
+    "lang": "en",
+  },
+  "sidebar": {
+    "role": "dialog",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > LTR signature stable @ dashboard/desktop 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "ltr",
+    "lang": "en",
+  },
+  "sidebar": {
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > LTR signature stable @ dashboard/mobile 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "ltr",
+    "lang": "en",
+  },
+  "sidebar": {
+    "role": "dialog",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > LTR signature stable @ users/desktop 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "ltr",
+    "lang": "en",
+  },
+  "sidebar": {
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > LTR signature stable @ users/mobile 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "ltr",
+    "lang": "en",
+  },
+  "sidebar": {
+    "role": "dialog",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > RTL signature stable @ analytics/desktop 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "rtl",
+    "lang": "ar",
+  },
+  "sidebar": {
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > RTL signature stable @ analytics/mobile 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "rtl",
+    "lang": "ar",
+  },
+  "sidebar": {
+    "role": "dialog",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > RTL signature stable @ appearance/desktop 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "rtl",
+    "lang": "ar",
+  },
+  "sidebar": {
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > RTL signature stable @ appearance/mobile 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "rtl",
+    "lang": "ar",
+  },
+  "sidebar": {
+    "role": "dialog",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > RTL signature stable @ dashboard/desktop 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "rtl",
+    "lang": "ar",
+  },
+  "sidebar": {
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > RTL signature stable @ dashboard/mobile 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "rtl",
+    "lang": "ar",
+  },
+  "sidebar": {
+    "role": "dialog",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > RTL signature stable @ users/desktop 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "rtl",
+    "lang": "ar",
+  },
+  "sidebar": {
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;
+
+exports[`Visual regression — LTR vs RTL after toggle > RTL signature stable @ users/mobile 1`] = `
+{
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "html": {
+    "dir": "rtl",
+    "lang": "ar",
+  },
+  "sidebar": {
+    "role": "dialog",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+}
+`;

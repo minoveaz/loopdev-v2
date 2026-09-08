@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sticky navbar — top offset & z-index > snapshot of topbar sticky/positioning class set 1`] = `
+[
+  "bg-card",
+  "h-16",
+  "sticky",
+  "top-0",
+  "z-30",
+]
+`;

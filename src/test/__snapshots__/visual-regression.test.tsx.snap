@@ -1,0 +1,216 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Visual regression — AppShell layout signatures > layout signature is stable @ desktop-1366 1`] = `
+{
+  "backdropPresent": true,
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "logo": {
+    "alt": "Rivera",
+    "hasWordmark": true,
+    "src": "/rivera-logo-dark.png",
+  },
+  "sidebar": {
+    "ariaHidden": null,
+    "ariaModal": null,
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "ariaPressed": "false",
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+  "topbar": {
+    "present": true,
+  },
+}
+`;
+
+exports[`Visual regression — AppShell layout signatures > layout signature is stable @ laptop-1024 1`] = `
+{
+  "backdropPresent": true,
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "logo": {
+    "alt": "Rivera",
+    "hasWordmark": false,
+    "src": "/rivera-logo-dark.png",
+  },
+  "sidebar": {
+    "ariaHidden": null,
+    "ariaModal": null,
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "ariaPressed": "false",
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+  "topbar": {
+    "present": true,
+  },
+}
+`;
+
+exports[`Visual regression — AppShell layout signatures > layout signature is stable @ mobile-375 1`] = `
+{
+  "backdropPresent": true,
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "logo": {
+    "alt": "Rivera",
+    "hasWordmark": true,
+    "src": "/rivera-logo-dark.png",
+  },
+  "sidebar": {
+    "ariaHidden": "true",
+    "ariaModal": null,
+    "role": "dialog",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "ariaPressed": "false",
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+  "topbar": {
+    "present": true,
+  },
+}
+`;
+
+exports[`Visual regression — AppShell layout signatures > layout signature is stable @ tablet-768 1`] = `
+{
+  "backdropPresent": true,
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "logo": {
+    "alt": "Rivera",
+    "hasWordmark": false,
+    "src": "/rivera-logo-dark.png",
+  },
+  "sidebar": {
+    "ariaHidden": null,
+    "ariaModal": null,
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "ariaPressed": "false",
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+  "topbar": {
+    "present": true,
+  },
+}
+`;
+
+exports[`Visual regression — AppShell layout signatures > layout signature is stable @ wide-1920 1`] = `
+{
+  "backdropPresent": true,
+  "content": {
+    "paddingClasses": [
+      "md:ps-[60px]",
+      "nav:ps-[260px]",
+    ],
+  },
+  "logo": {
+    "alt": "Rivera",
+    "hasWordmark": true,
+    "src": "/rivera-logo-dark.png",
+  },
+  "sidebar": {
+    "ariaHidden": null,
+    "ariaModal": null,
+    "role": "navigation",
+    "transformClasses": [
+      "max-md:-translate-x-full",
+      "max-md:rtl:translate-x-full",
+      "md:translate-x-0",
+    ],
+    "widthClasses": [
+      "md:w-[60px]",
+      "nav:w-[260px]",
+      "w-[284px]",
+    ],
+  },
+  "sidebarToggle": {
+    "ariaPressed": "false",
+    "visibilityClasses": [
+      "flex",
+      "md:hidden",
+      "nav:flex",
+    ],
+  },
+  "topbar": {
+    "present": true,
+  },
+}
+`;

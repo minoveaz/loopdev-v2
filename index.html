@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rivera — Multipurpose React Admin Dashboard Template</title>
+    <meta name="description" content="Rivera — Frontend-only React admin dashboard template with Vite, TypeScript, Tailwind, shadcn/ui. 4 dashboards, 20+ apps, eCommerce, POS, Kanban. Mock data, no backend." />
+    <meta name="author" content="Rivera" />
+
+    <meta property="og:title" content="Rivera — Multipurpose React Admin Dashboard Template" />
+    <meta property="og:description" content="Rivera — Frontend-only React admin dashboard template with Vite, TypeScript, Tailwind, shadcn/ui. 4 dashboards, 20+ apps, eCommerce, POS, Kanban. Mock data, no backend." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Rivera" />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <!-- Mobile chrome color, kept in sync at runtime by use-theme.tsx -->
+    <meta name="theme-color" content="#fafbfc" />
+
+    <!-- Pre-paint theme script — prevents flash of incorrect theme on first load. -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("rivera:theme");
+          var stored = raw ? JSON.parse(raw) : null;
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var resolved = stored === "light" ? "light" : stored === "dark" ? "dark" : prefersDark ? "dark" : "light";
+          var root = document.documentElement;
+          root.classList.remove("light", "dark");
+          root.classList.add(resolved);
+          root.style.colorScheme = resolved;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", resolved === "dark" ? "#0d1018" : "#fafbfc");
+        } catch (e) {
+          /* no-op */
+        }
+      })();
+    </script>
+
+    <!-- Pre-paint language/direction script — prevents flash of wrong direction on first load. -->
+    <script>
+      (function () {
+        try {
+          var RTL = { ar: 1, he: 1, fa: 1, ur: 1 };
+          var SUPPORTED = { en: 1, es: 1, fr: 1, de: 1, ar: 1, he: 1 };
+          var raw = localStorage.getItem("rivera:ui:language");
+          var stored = raw ? JSON.parse(raw) : null;
+          var lang = stored && SUPPORTED[stored] ? stored : null;
+          if (!lang && navigator.language) {
+            var nav = navigator.language.slice(0, 2).toLowerCase();
+            if (SUPPORTED[nav]) lang = nav;
+          }
+          lang = lang || "en";
+          var html = document.documentElement;
+          html.lang = lang;
+          html.dir = RTL[lang] ? "rtl" : "ltr";
+        } catch (e) {
+          /* no-op */
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

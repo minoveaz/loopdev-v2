@@ -1,0 +1,107 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`header-position vs navbar-style — cascade snapshot > collected the relevant rules from index.css 1`] = `
+[
+  "html[data-navbar-style="static"] [data-app-topbar]",
+  "html[data-navbar-style="glass"] [data-app-topbar]",
+  "html[data-header-position="sticky"] [data-app-topbar]",
+  "html[data-header-position="static"] [data-app-topbar]",
+  "html[data-header-position="hidden"] [data-app-topbar]",
+]
+`;
+
+exports[`header-position vs navbar-style — cascade snapshot > navbar=glass + header-position=hidden 1`] = `
+{
+  "display": "none",
+  "matchedSelectors": [
+    "html[data-navbar-style="glass"] [data-app-topbar]",
+    "html[data-header-position="hidden"] [data-app-topbar]",
+  ],
+  "position": "sticky",
+}
+`;
+
+exports[`header-position vs navbar-style — cascade snapshot > navbar=glass + header-position=static 1`] = `
+{
+  "display": "block",
+  "matchedSelectors": [
+    "html[data-navbar-style="glass"] [data-app-topbar]",
+    "html[data-header-position="static"] [data-app-topbar]",
+  ],
+  "position": "static",
+}
+`;
+
+exports[`header-position vs navbar-style — cascade snapshot > navbar=glass + header-position=sticky 1`] = `
+{
+  "display": "block",
+  "matchedSelectors": [
+    "html[data-navbar-style="glass"] [data-app-topbar]",
+    "html[data-header-position="sticky"] [data-app-topbar]",
+  ],
+  "position": "sticky",
+}
+`;
+
+exports[`header-position vs navbar-style — cascade snapshot > navbar=static + header-position=hidden 1`] = `
+{
+  "display": "none",
+  "matchedSelectors": [
+    "html[data-navbar-style="static"] [data-app-topbar]",
+    "html[data-header-position="hidden"] [data-app-topbar]",
+  ],
+  "position": "static",
+}
+`;
+
+exports[`header-position vs navbar-style — cascade snapshot > navbar=static + header-position=static 1`] = `
+{
+  "display": "block",
+  "matchedSelectors": [
+    "html[data-navbar-style="static"] [data-app-topbar]",
+    "html[data-header-position="static"] [data-app-topbar]",
+  ],
+  "position": "static",
+}
+`;
+
+exports[`header-position vs navbar-style — cascade snapshot > navbar=static + header-position=sticky 1`] = `
+{
+  "display": "block",
+  "matchedSelectors": [
+    "html[data-navbar-style="static"] [data-app-topbar]",
+    "html[data-header-position="sticky"] [data-app-topbar]",
+  ],
+  "position": "sticky",
+}
+`;
+
+exports[`header-position vs navbar-style — cascade snapshot > navbar=sticky + header-position=hidden 1`] = `
+{
+  "display": "none",
+  "matchedSelectors": [
+    "html[data-header-position="hidden"] [data-app-topbar]",
+  ],
+  "position": "relative",
+}
+`;
+
+exports[`header-position vs navbar-style — cascade snapshot > navbar=sticky + header-position=static 1`] = `
+{
+  "display": "block",
+  "matchedSelectors": [
+    "html[data-header-position="static"] [data-app-topbar]",
+  ],
+  "position": "static",
+}
+`;
+
+exports[`header-position vs navbar-style — cascade snapshot > navbar=sticky + header-position=sticky 1`] = `
+{
+  "display": "block",
+  "matchedSelectors": [
+    "html[data-header-position="sticky"] [data-app-topbar]",
+  ],
+  "position": "sticky",
+}
+`;

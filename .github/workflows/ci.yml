@@ -21,7 +21,6 @@ jobs:
     outputs:
       application: ${{ steps.filter.outputs.application }}
       build: ${{ steps.filter.outputs.build }}
-      crm: ${{ steps.filter.outputs.crm }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -54,15 +53,8 @@ jobs:
               - 'tsconfig*.json'
               - 'tailwind.config.*'
               - 'postcss.config.*'
-            crm:
-              - 'src/loopdev/domains/crm/**'
-              - 'src/loopdev/pages/crm/**'
-              - 'src/loopdev/components/**'
-              - 'src/components/common/**'
-              - 'src/test/**'
-
-  quality:
-    name: Revisar código y ejecutar tests
+  code-quality:
+    name: Revisar reglas y tipos del código
     needs: changes
     if: needs.changes.outputs.application == 'true'
     runs-on: ubuntu-latest
@@ -84,6 +76,24 @@ jobs:
 
       - name: Comprobar tipos de TypeScript
         run: npm run typecheck
+
+  tests:
+    name: Ejecutar tests rápidos de componentes y contratos
+    needs: changes
+    if: needs.changes.outputs.application == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
 
       - name: Ejecutar tests unitarios y estructurales
         run: npm run test:quality
@@ -108,12 +118,3 @@ jobs:
 
       - name: Crear build de producción
         run: npm run build
-
-  crm-surface:
-    name: Comprobar cambios del CRM
-    needs: [changes, quality]
-    if: needs.changes.outputs.crm == 'true' && needs.quality.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Confirmar que el CRM pasó los controles comunes
-        run: echo "Los cambios del CRM pasaron lint, TypeScript y los tests no visuales."

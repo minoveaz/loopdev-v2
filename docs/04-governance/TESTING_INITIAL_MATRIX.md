@@ -108,11 +108,28 @@ local, pero quedan fuera del gate `test:quality` inicial.
 
 - `quality`: se ejecuta si cambia código, tests, configuración o dependencias.
 - `build`: se ejecuta si el cambio puede alterar el artefacto de producción.
-- `crm-surface`: se ejecuta cuando cambia CRM y confirma que la superficie pasó el gate común.
+- No existe todavía un job exclusivo de CRM: los cambios CRM pasan los gates globales hasta que
+  existan tests propios de CRM que justifiquen un job separado.
 - Cambios únicamente documentales no ejecutan instalación, tests ni build.
 - La política de flujo hacia `main` permanece separada en
   `.github/workflows/main-branch-policy.yml`.
 
-Los checks `Static quality and unit tests`, `Production build` y `CRM surface contract` deben
-ser los checks requeridos en la protección de `develop`. Para `main`, el check de política de
-flujo y el CI deben seguir siendo obligatorios.
+Los checks `Revisar reglas y tipos del código`, `Ejecutar tests rápidos de componentes y
+contratos` y `Comprobar que la aplicación compila` deben ser los checks requeridos en la
+protección de `develop`. Para `main`, el check de política de flujo y el CI deben seguir siendo
+obligatorios.
+
+## Escalado por suites
+
+Los tests deben organizarse por ownership y no como una suite global creciente:
+
+```text
+src/test/shared/       primitives, helpers y contratos transversales
+src/test/shell/        navegación, sesión y layout
+src/test/crm/          adapter, hooks y páginas CRM
+src/test/<suite>/      tests de cada nueva suite
+```
+
+Cuando una carpeta de suite tenga suficientes tests, se añadirá un script y un job específico
+para esa carpeta. El job global seguirá reservado para controles rápidos y contratos
+transversales; no se duplicarán los mismos tests en todos los jobs.

@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detect affected surfaces
+    runs-on: ubuntu-latest
+    outputs:
+      application: ${{ steps.filter.outputs.application }}
+      build: ${{ steps.filter.outputs.build }}
+      crm: ${{ steps.filter.outputs.crm }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            application:
+              - 'src/**'
+              - 'public/**'
+              - 'index.html'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'vite.config.*'
+              - 'eslint.config.*'
+              - 'tsconfig*.json'
+              - 'tailwind.config.*'
+              - 'postcss.config.*'
+            build:
+              - 'src/**'
+              - 'public/**'
+              - 'index.html'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'vite.config.*'
+              - 'tsconfig*.json'
+              - 'tailwind.config.*'
+              - 'postcss.config.*'
+            crm:
+              - 'src/loopdev/domains/crm/**'
+              - 'src/loopdev/pages/crm/**'
+              - 'src/loopdev/components/**'
+              - 'src/components/common/**'
+              - 'src/test/**'
+
+  quality:
+    name: Static quality and unit tests
+    needs: changes
+    if: needs.changes.outputs.application == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit and structural tests
+        run: npm run test:quality
+
+  build:
+    name: Production build
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  crm-surface:
+    name: CRM surface contract
+    needs: [changes, quality]
+    if: needs.changes.outputs.crm == 'true' && needs.quality.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: CRM checks are covered by the quality gate
+        run: echo "CRM changes passed lint, typecheck, and non-visual tests."

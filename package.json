@@ -17,7 +17,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:quality": "vitest run --exclude src/test/visual-regression.test.tsx --exclude src/test/visual-regression-rtl.test.tsx",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -1,4 +1,5 @@
 import { localLoopdevAdapter } from "./local";
+import type { ReferenceDataAdapter } from "@/loopdev/domains/reference-data";
 import type {
   Customer360View,
   CRMContactListParams,
@@ -24,6 +25,7 @@ export interface LoopdevCrmAdapter {
 
 export interface LoopdevAdapter {
   crm: LoopdevCrmAdapter;
+  referenceData: ReferenceDataAdapter;
 }
 
 // The adapter boundary is global to Loopdev; CRM is the first connected domain.

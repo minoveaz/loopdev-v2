@@ -4,6 +4,13 @@ import { useForm, type Control } from "react-hook-form";
 import { z } from "zod";
 import type { CRMContact, CRMContactMutationResult } from "@/loopdev/domains/crm/adapter";
 import {
+  useCities,
+  useCountries,
+  useDocumentTypes,
+  useGenderOptions,
+  useSubdivisions,
+} from "@/loopdev/domains/reference-data";
+import {
   Form,
   FormControl,
   FormField,
@@ -81,10 +88,10 @@ function valuesFromContact(contact: CRMContact | null | undefined): ContactFormV
     lastName: contact.lastName ?? "",
     secondLastName: contact.secondLastName ?? "",
     preferredName: contact.preferredName ?? "",
-    documentType: contact.documentType ?? "",
+    documentType: normalizeDocumentType(contact.documentType),
     documentNumber: contact.documentNumber ?? "",
     birthDate: contact.birthDate ?? "",
-    gender: contact.gender ?? "",
+    gender: normalizeGender(contact.gender),
     email: contact.email ?? "",
     secondaryEmail: contact.secondaryEmail ?? "",
     phone: contact.phone ?? "",
@@ -99,8 +106,39 @@ function valuesFromContact(contact: CRMContact | null | undefined): ContactFormV
     city: contact.city ?? "",
     stateProvince: contact.stateProvince ?? "",
     postalCode: contact.postalCode ?? "",
-    country: contact.country ?? "",
+    country: normalizeCountry(contact.country),
   };
+}
+
+function normalizeDocumentType(value: string | null | undefined): string {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "dni" || normalized === "nie" || normalized === "passport"
+    ? normalized
+    : value ?? "";
+}
+
+function normalizeGender(value: string | null | undefined): string {
+  const normalized = value?.trim().toLowerCase().replace(/ /g, "_");
+  return normalized === "female" || normalized === "male" || normalized === "non_binary" ||
+    normalized === "unspecified" || normalized === "prefer_not_to_say"
+    ? normalized
+    : value ?? "";
+}
+
+function normalizeCountry(value: string | null | undefined): string {
+  const normalized = value?.trim().toLowerCase();
+  const countryCodes: Record<string, string> = {
+    colombia: "CO",
+    co: "CO",
+    espana: "ES",
+    spain: "ES",
+    es: "ES",
+    estados_unidos: "US",
+    "united states": "US",
+    usa: "US",
+    us: "US",
+  };
+  return countryCodes[normalized ?? ""] ?? value ?? "";
 }
 
 function optionalValue(value: string): string | null {
@@ -121,6 +159,14 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
     defaultValues: valuesFromContact(contact),
   });
   const { formState } = form;
+  const countryValue = form.watch("country");
+  const { items: countries } = useCountries();
+  const country = countries.find((item) => item.code === countryValue || item.label === countryValue);
+  const countryCode = country?.code ?? null;
+  const { items: subdivisions } = useSubdivisions(countryCode);
+  const { items: cities } = useCities(countryCode, form.watch("stateProvince") || null, "");
+  const { items: documentTypes } = useDocumentTypes(countryCode);
+  const { items: genderOptions } = useGenderOptions();
 
   useEffect(() => {
     form.reset(valuesFromContact(contact));
@@ -188,10 +234,37 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
             <TextField control={form.control} name="lastName" label="Last name" />
             <TextField control={form.control} name="secondLastName" label="Second last name" />
             <TextField control={form.control} name="preferredName" label="Preferred name" />
-            <TextField control={form.control} name="documentType" label="Document type" />
+            <FormField control={form.control} name="documentType" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document type</FormLabel>
+                <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select document type" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Not provided</SelectItem>
+                    {field.value && !documentTypes.some((item) => item.code === field.value) && (
+                      <SelectItem value={field.value}>{field.value}</SelectItem>
+                    )}
+                    {documentTypes.map((item) => <SelectItem key={item.code} value={item.code}>{item.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
             <TextField control={form.control} name="documentNumber" label="Document number" />
             <TextField control={form.control} name="birthDate" label="Birth date" type="date" />
-            <TextField control={form.control} name="gender" label="Gender" />
+            <FormField control={form.control} name="gender" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Gender</FormLabel>
+                <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Not provided</SelectItem>
+                    {genderOptions.map((item) => <SelectItem key={item.code} value={item.code}>{item.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
         </section>
 
@@ -243,10 +316,43 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2"><TextField control={form.control} name="addressLine1" label="Address line 1" /></div>
             <div className="sm:col-span-2"><TextField control={form.control} name="addressLine2" label="Address line 2" /></div>
-            <TextField control={form.control} name="city" label="City" />
-            <TextField control={form.control} name="stateProvince" label="State / province" />
+            <CityField control={form.control} cities={cities.map((city) => city.label)} />
+            <FormField control={form.control} name="stateProvince" render={({ field }) => (
+              <FormItem>
+                <FormLabel>State / province</FormLabel>
+                <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select state / province" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Not provided</SelectItem>
+                    {subdivisions.map((item) => <SelectItem key={item.code} value={item.code}>{item.label}</SelectItem>)}
+                    {field.value && !subdivisions.some((item) => item.code === field.value) && (
+                      <SelectItem value={field.value}>{field.value}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
             <TextField control={form.control} name="postalCode" label="Postal code" />
-            <TextField control={form.control} name="country" label="Country" />
+            <FormField control={form.control} name="country" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <Select value={field.value || "none"} onValueChange={(value) => {
+                  field.onChange(value === "none" ? "" : value);
+                  form.setValue("stateProvince", "");
+                  form.setValue("city", "");
+                  form.setValue("documentType", "");
+                }}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Not provided</SelectItem>
+                    {countries.map((item) => <SelectItem key={item.code} value={item.code}>{item.label}</SelectItem>)}
+                    {field.value && !countries.some((item) => item.code === field.value) && <SelectItem value={field.value}>{field.value}</SelectItem>}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
         </section>
 
@@ -299,6 +405,29 @@ function TextField({
       <FormItem>
         <FormLabel>{label}{required ? " *" : ""}</FormLabel>
         <FormControl><Input {...field} type={type} value={field.value ?? ""} /></FormControl>
+        <FormMessage />
+      </FormItem>
+    )} />
+  );
+}
+
+function CityField({
+  control,
+  cities,
+}: {
+  control: Control<ContactFormValues>;
+  cities: string[];
+}) {
+  return (
+    <FormField control={control} name="city" render={({ field }) => (
+      <FormItem>
+        <FormLabel>City</FormLabel>
+        <FormControl>
+          <Input {...field} list="contact-city-options" value={field.value ?? ""} />
+        </FormControl>
+        <datalist id="contact-city-options">
+          {cities.map((city) => <option key={city} value={city} />)}
+        </datalist>
         <FormMessage />
       </FormItem>
     )} />

@@ -127,9 +127,10 @@ Customer 360 enriquecido quedan fuera de esta unidad.
    - [x] Añadir campos personales contractuales al formulario: documento, fecha de nacimiento y género.
 
 5. **Tests separados**
-   - [ ] Cubrir creación, edición, validación y estados de submit.
+   - [x] Cubrir creación, edición, validación y estados de submit.
    - [x] Cubrir permisos, errores de servidor, conflicto `409` y archivado en el adapter local.
-   - [ ] Cubrir restauración de foco y actualización de la lista.
+   - [x] Cubrir restauración de foco.
+   - [x] Cubrir actualización de la lista tras una mutación desde la página.
 
 ### Cierre visual de Contacts
 

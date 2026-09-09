@@ -1,4 +1,5 @@
 import { crmCustomersStore, type LocalCustomer } from "../data/localCustomers";
+import { localReferenceDataAdapter } from "@/loopdev/domains/reference-data/adapter/local";
 import type {
   Customer360View,
   CRMContact,
@@ -71,6 +72,7 @@ function toLead(contact: LocalCustomer): CRMLead {
 }
 
 export const localLoopdevAdapter = {
+  referenceData: localReferenceDataAdapter,
   crm: {
     async listContacts({
       query = "",

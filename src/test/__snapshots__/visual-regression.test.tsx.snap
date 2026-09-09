@@ -10,9 +10,8 @@ exports[`Visual regression — AppShell layout signatures > layout signature is 
     ],
   },
   "logo": {
-    "alt": "Rivera",
+    "hasIsotype": true,
     "hasWordmark": true,
-    "src": "/rivera-logo-dark.png",
   },
   "sidebar": {
     "ariaHidden": null,
@@ -53,9 +52,8 @@ exports[`Visual regression — AppShell layout signatures > layout signature is 
     ],
   },
   "logo": {
-    "alt": "Rivera",
+    "hasIsotype": true,
     "hasWordmark": false,
-    "src": "/rivera-logo-dark.png",
   },
   "sidebar": {
     "ariaHidden": null,
@@ -96,9 +94,8 @@ exports[`Visual regression — AppShell layout signatures > layout signature is 
     ],
   },
   "logo": {
-    "alt": "Rivera",
+    "hasIsotype": true,
     "hasWordmark": true,
-    "src": "/rivera-logo-dark.png",
   },
   "sidebar": {
     "ariaHidden": "true",
@@ -139,9 +136,8 @@ exports[`Visual regression — AppShell layout signatures > layout signature is 
     ],
   },
   "logo": {
-    "alt": "Rivera",
+    "hasIsotype": true,
     "hasWordmark": false,
-    "src": "/rivera-logo-dark.png",
   },
   "sidebar": {
     "ariaHidden": null,
@@ -182,9 +178,8 @@ exports[`Visual regression — AppShell layout signatures > layout signature is 
     ],
   },
   "logo": {
-    "alt": "Rivera",
+    "hasIsotype": true,
     "hasWordmark": true,
-    "src": "/rivera-logo-dark.png",
   },
   "sidebar": {
     "ariaHidden": null,

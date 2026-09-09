@@ -16,7 +16,7 @@ import { formatCurrency, formatPercent } from "@/lib/formatters";
 import type { PosLineItem, PosPaymentMethod, Product, Customer } from "@/types";
 import { getPosSettings } from "@/template/rivera/features/pos/shared";
 
-interface CartLine extends PosLineItem {}
+type CartLine = PosLineItem;
 
 export default function PosCheckout() {
   const { trail } = useBreadcrumbs();

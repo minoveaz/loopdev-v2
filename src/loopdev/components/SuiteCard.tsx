@@ -40,7 +40,7 @@ export function SuiteCard({
         }
       } : undefined}
       className={cn(
-        "group relative flex min-h-[390px] flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-sm transition-all duration-500",
+        "group relative flex min-h-[390px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card/90 shadow-sm transition-all duration-500",
         !isLocked &&
           "cursor-pointer hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_18px_45px_rgba(19,91,236,0.12)]",
         className,

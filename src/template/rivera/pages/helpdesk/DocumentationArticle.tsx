@@ -45,12 +45,18 @@ function Block({ block }: { block: DocBlock }) {
   );
 }
 
+type ArticleMatch = NonNullable<ReturnType<typeof findArticle>>;
+
 export default function HelpdeskDocumentationArticle() {
   const { section: sectionSlug = "", article: articleSlug = "" } = useParams();
-  const { trail } = useBreadcrumbs();
-  const navigate = useNavigate();
   const found = findArticle(sectionSlug, articleSlug);
   if (!found) return <Navigate to="/helpdesk/documentation" replace />;
+  return <DocumentationArticleContent found={found} />;
+}
+
+function DocumentationArticleContent({ found }: { found: ArticleMatch }) {
+  const { trail } = useBreadcrumbs();
+  const navigate = useNavigate();
   const { section, article } = found;
 
   const idx = section.articles.findIndex((a) => a.slug === article.slug);

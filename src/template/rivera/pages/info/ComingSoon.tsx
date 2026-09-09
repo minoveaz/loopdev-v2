@@ -22,8 +22,8 @@ export default function ComingSoonPage() {
   const [email, setEmail] = useState("");
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-6">
-      <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-10 text-center shadow-soft">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-soft text-primary"><Rocket className="h-8 w-8" /></div>
+      <div className="w-full max-w-xl rounded-xl border border-border bg-card p-10 text-center shadow-soft">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-primary-soft text-primary"><Rocket className="h-8 w-8" /></div>
         <p className="mt-4 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Stay tuned</p>
         <h1 className="mt-2 font-display text-3xl font-semibold">Something great is coming</h1>
         <p className="mt-2 text-sm text-muted-foreground">We're putting the final touches on this module. Drop your email and we'll let you know the moment it's live.</p>

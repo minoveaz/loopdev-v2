@@ -1,7 +1,7 @@
 ---
 id: rivera-loopdev-separation
 title: Rivera Template and Loopdev Application Separation
-status: active
+status: closed
 created: 2026-09-09
 updated: 2026-09-09
 owner: minoveaz
@@ -265,23 +265,33 @@ and each application surface has an explicit shell composition. Phase 4 is compl
 - [x] Run the existing build, lint and test commands.
 - [x] Search for forbidden cross-boundary imports.
 - [x] Update project documentation with the ownership rules.
-- [ ] Record migration evidence and close the track only after explicit approval.
+- [x] Record migration evidence and obtain explicit closure approval.
 
 **Validation evidence (2026-09-09):**
 
 - Production build passes after the full migration.
 - The migrated page consistency test passes for both `src/template/rivera/pages` and
   `src/loopdev/pages`.
-- Existing full lint and test commands were executed. They retain the baseline failures: 22 lint
-  errors and 22 warnings, missing `@testing-library/dom` in 13 test files, one pre-existing CSS
-  snapshot mismatch, and no new failure caused by the boundary migration.
+- The missing `@testing-library/dom` dependency was added to the development dependencies, so the
+  React Testing Library suites can load normally.
+- ESLint exits successfully with zero errors; 22 existing warnings remain for Fast Refresh,
+  dependency suggestions and unused disable directives.
+- The application typecheck passes with `npx tsc -p tsconfig.app.json --noEmit`.
+- The full Vitest suite passes: 18 test files and 193 tests.
+- The header cascade and Loopdev shell visual snapshots were updated to reflect the current
+  route-boundary and Loopdev branding implementation.
+- The chart source-contract test now points to the Rivera template boundary instead of the former
+  `src/pages` paths.
+- Arabic and Hebrew are registered as supported languages, and language direction takes precedence
+  over the initial theme direction so RTL remains stable across theme changes and navigation.
 - Forbidden import searches confirm that Loopdev does not import Rivera pages, features or data, and
   Rivera pages do not import Loopdev modules.
 - Ownership rules are documented in `docs/architecture/ownership.md`.
 - Primary Rivera and Loopdev routes were smoke-tested during the route and boundary migration.
 
-**Exit evidence:** the structural acceptance checks pass and the remaining baseline validation
-failures are documented. Track closure remains pending explicit user approval.
+**Exit evidence:** the structural acceptance checks, typecheck, build, lint exit status and full
+test suite pass. Non-blocking lint warnings remain documented. The user approved track closure on
+2026-09-09.
 
 ## Risks and mitigations
 
@@ -295,18 +305,20 @@ failures are documented. Track closure remains pending explicit user approval.
 
 ## Acceptance criteria
 
-- [ ] Rivera remains available as a template and visual guide.
-- [ ] Rivera design-system components are reused directly; no parallel design system exists.
-- [ ] Loopdev owns its application routes, pages, navigation and CRM domain code.
-- [ ] Loopdev does not import Rivera pages, features or mock data.
-- [ ] Rivera does not import Loopdev modules.
-- [ ] `/launchpad` and `/app/*` continue to work with Loopdev navigation.
-- [ ] Existing Rivera template routes continue to work.
-- [ ] Existing build, lint and test commands pass.
-- [ ] The user explicitly approves closure.
+- [x] Rivera remains available as a template and visual guide.
+- [x] Rivera design-system components are reused directly; no parallel design system exists.
+- [x] Loopdev owns its application routes, pages, navigation and CRM domain code.
+- [x] Loopdev does not import Rivera pages, features or mock data.
+- [x] Rivera does not import Loopdev modules.
+- [x] `/launchpad` and `/app/*` continue to work with Loopdev navigation.
+- [x] Existing Rivera template routes continue to work.
+- [x] Existing build, lint and test commands pass.
+- [x] The user explicitly approves closure.
 
 ## Change log
 
 | Date | Change | Reason | Approved by |
 | --- | --- | --- | --- |
 | 2026-09-09 | Created separation track | Keep Rivera as the unchanged visual template while making Loopdev the real application | User |
+| 2026-09-09 | Resolved baseline validation failures | Restore dependency, update migration-aware contracts/snapshots, fix RTL initialization and remove lint errors | User |
+| 2026-09-09 | Closed track | Validation evidence complete and closure explicitly approved | User |

@@ -42,7 +42,8 @@ export default function PermissionsPage() {
   const toggle = (roleId: string, key: SimPermissionKey) => {
     setMatrix((m) => {
       const list = new Set(m[roleId] ?? []);
-      list.has(key) ? list.delete(key) : list.add(key);
+      if (list.has(key)) list.delete(key);
+      else list.add(key);
       return { ...m, [roleId]: [...list] };
     });
     setDirty(true);

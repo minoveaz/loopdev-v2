@@ -7,7 +7,7 @@ export default function RegisterSuccessPage() {
   return (
     <AuthLayout eyebrow="Welcome aboard" title="Account created" description="Your Rivera account is ready. Verify your email to unlock the full experience.">
       <div className="space-y-6">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-success-soft text-success ring-1 ring-success/20"><CheckCircle2 className="h-8 w-8" /></div>
+        <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-success-soft text-success ring-1 ring-success/20"><CheckCircle2 className="h-8 w-8" /></div>
         <div className="rounded-xl border border-border bg-card p-4 text-sm">
           <p className="font-medium">Check your inbox</p>
           <p className="mt-1 text-muted-foreground">We sent a verification link to your email. Click it to confirm your address.</p>

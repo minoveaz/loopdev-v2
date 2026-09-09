@@ -19,7 +19,7 @@ const sizes: Record<BrandLogoSize, { box: string; icon: string; text: string; ga
   xs: { box: "h-6 w-6 rounded", icon: "text-xs", text: "text-[10px]", gap: "gap-1" },
   sm: { box: "h-8 w-8 rounded-lg", icon: "text-base", text: "text-sm", gap: "gap-2" },
   md: { box: "h-10 w-10 rounded-xl", icon: "text-xl", text: "text-lg", gap: "gap-3" },
-  lg: { box: "h-14 w-14 rounded-2xl", icon: "text-[28px]", text: "text-2xl", gap: "gap-4" },
+  lg: { box: "h-14 w-14 rounded-xl", icon: "text-[28px]", text: "text-2xl", gap: "gap-4" },
   xl: { box: "h-20 w-20 rounded-[24px]", icon: "text-[40px]", text: "text-[32px]", gap: "gap-6" },
 };
 

@@ -65,8 +65,10 @@ function signature(container: HTMLElement) {
   const content = container.querySelector("[data-app-content]") as HTMLElement | null;
   const backdrop = container.querySelector('[aria-hidden="true"].fixed.inset-0') as HTMLElement | null;
   const toggleBtn = topbar?.querySelector('[aria-controls="app-sidebar"]') as HTMLElement | null;
-  const sidebarLogoImg = sidebar?.querySelector("img") as HTMLImageElement | null;
-  const sidebarWordmark = sidebar?.querySelector("span.font-display") as HTMLElement | null;
+  const sidebarLogo = sidebar?.querySelector("svg");
+  const sidebarWordmark = Array.from(sidebar?.querySelectorAll("span") ?? []).find(
+    (element) => element.textContent === "loop.dev",
+  );
 
   const pickWidth = (cls: string) =>
     cls
@@ -112,10 +114,9 @@ function signature(container: HTMLElement) {
         }
       : null,
     content: content ? { paddingClasses: pickPadding(content.className) } : null,
-    logo: sidebarLogoImg
+    logo: sidebarLogo
       ? {
-          src: (sidebarLogoImg.getAttribute("src") || "").replace(/^.*\/(?=[^/]+$)/, "/"),
-          alt: sidebarLogoImg.getAttribute("alt"),
+          hasIsotype: true,
           hasWordmark: !!sidebarWordmark,
         }
       : null,
@@ -271,7 +272,7 @@ describe("Visual regression — AppShell layout signatures", () => {
     );
   });
 
-  it("logo renders with Rivera asset and wordmark across breakpoints (expanded)", () => {
+  it("logo renders with Loopdev mark and wordmark across breakpoints (expanded)", () => {
     localStorage.setItem("rivera:" + STORAGE_KEYS.sidebarCollapsed, "false");
     const out: Record<string, ReturnType<typeof signature>["logo"]> = {};
     for (const bp of BREAKPOINTS) {
@@ -282,10 +283,7 @@ describe("Visual regression — AppShell layout signatures", () => {
     for (const bp of BREAKPOINTS) {
       const logo = out[bp.name];
       expect(logo, `logo missing @ ${bp.name}`).not.toBeNull();
-      expect(logo!.alt).toBe("Rivera");
-      // Vite resolves the asset import to a hashed path; just verify
-      // the basename references the dark Rivera mark.
-      expect(logo!.src).toMatch(/rivera-logo-dark/);
+      expect(logo!.hasIsotype).toBe(true);
     }
     // Above the nav breakpoint the wordmark is visible.
     expect(out["desktop-1366"]?.hasWordmark).toBe(true);
@@ -297,7 +295,6 @@ describe("Visual regression — AppShell layout signatures", () => {
     const { container } = renderShellAt(1024);
     const logo = signature(container).logo;
     expect(logo).not.toBeNull();
-    expect(logo!.alt).toBe("Rivera");
-    expect(logo!.src).toMatch(/rivera-logo-dark/);
+    expect(logo!.hasIsotype).toBe(true);
   });
 });

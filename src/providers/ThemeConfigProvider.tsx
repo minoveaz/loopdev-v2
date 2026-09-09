@@ -7,6 +7,7 @@ import {
   sanitizeAppearance,
   type AppearanceConfig,
 } from "@/config/themeConfig";
+import { storage } from "@/lib/storage";
 
 interface ThemeConfigContextValue {
   config: AppearanceConfig;
@@ -79,7 +80,9 @@ export function ThemeConfigProvider({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     const isFirst = prevDirection.current === null;
     const dirChanged = !isFirst && prevDirection.current !== config.direction;
-    applyConfigToDom(config, { applyDir: isFirst || dirChanged });
+    const language = storage.get<string | null>("ui:language", null);
+    const languageControlsDirection = language === "ar" || language === "he";
+    applyConfigToDom(config, { applyDir: (isFirst || dirChanged) && !languageControlsDirection });
     prevDirection.current = config.direction;
   }, [config]);
 

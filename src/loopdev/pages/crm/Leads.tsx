@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowRight, Plus } from "lucide-react";
+import { AlertTriangle, ArrowRight, Plus, RefreshCw, SearchX } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DataCard, EmptyState, FilterDropdown, PageContainer, PageHeader, SearchInput, StatusBadge } from "@/components/common";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ const statusOptions = ["new", "contacted", "qualified", "stalled", "inactive", "
 
 export default function SalesCRMLeads() {
   const { trail } = useBreadcrumbs();
-  const { leads, loading } = useCrmLeads();
+  const { leads, loading, error, reload } = useCrmLeads();
   const { contacts } = useCrmContacts();
   const [search, setSearch] = useState("");
   const [statuses, setStatuses] = useState<string[]>([]);
@@ -42,8 +42,23 @@ export default function SalesCRMLeads() {
         <FilterDropdown label="Status" multiple value={statuses} onChange={setStatuses} options={statusOptions} size="sm" />
       </div>
       <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-        <DataCard flush>
-          {loading ? <div className="p-8 text-center text-sm text-muted-foreground">Loading leads...</div> : filtered.length ? (
+        <DataCard
+          flush
+          loading={loading}
+          error={error ? (
+            <>
+              <span>{error}</span>
+              <Button className="mt-3" size="sm" variant="outline" onClick={reload}>
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />Try again
+              </Button>
+            </>
+          ) : undefined}
+          empty={!loading && !error && filtered.length === 0}
+          emptyIcon={search || statuses.length ? SearchX : AlertTriangle}
+          emptyTitle={search || statuses.length ? "No leads found" : "No leads yet"}
+          emptyDescription={search || statuses.length ? "Try changing the search or filters." : "Leads will appear here when they are added to your workspace."}
+        >
+          {!loading && !error && filtered.length ? (
             <Table>
               <TableHeader><TableRow><TableHead>Contact</TableHead><TableHead>Status</TableHead><TableHead>Source</TableHead><TableHead>Interest</TableHead><TableHead>Created</TableHead></TableRow></TableHeader>
               <TableBody>{filtered.map((lead) => {
@@ -58,7 +73,7 @@ export default function SalesCRMLeads() {
                 </TableRow>;
               })}</TableBody>
             </Table>
-          ) : <EmptyState title="No leads found" description="Try changing the search or filters." />}
+          ) : null}
         </DataCard>
         <LeadPreview lead={selectedLead} contact={selectedContact} view={selectedView} />
       </div>

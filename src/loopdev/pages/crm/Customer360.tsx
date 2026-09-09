@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
 import { EmptyState, PageContainer, PageHeader } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { useCrmCustomer360 } from "@/loopdev/domains/crm/hooks/use-crm";
@@ -18,10 +18,23 @@ import {
 export default function SalesCRMCustomer360() {
   const { contactId } = useParams<{ contactId: string }>();
   const { trail } = useBreadcrumbs();
-  const { view, loading } = useCrmCustomer360(contactId);
+  const { view, loading, error, reload } = useCrmCustomer360(contactId);
 
   if (loading) {
     return <PageContainer width="narrow"><div className="py-16 text-center text-sm text-muted-foreground">Loading contact...</div></PageContainer>;
+  }
+
+  if (error) {
+    return (
+      <PageContainer width="narrow">
+        <EmptyState
+          icon={AlertTriangle}
+          title="Unable to load contact"
+          description={error}
+          action={<Button onClick={reload}><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Try again</Button>}
+        />
+      </PageContainer>
+    );
   }
 
   if (!view) {

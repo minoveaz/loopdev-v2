@@ -64,13 +64,18 @@ se duplican en este track.
 
 ### Fase 1 — Consolidar la base visual CRM
 
-**Estado:** En curso
+**Estado:** Completada en `feature/crm-v2-foundation`
 
-- [ ] Revisar Overview, Contacts, Leads y Customer 360 contra el lenguaje visual v2.
-- [ ] Homogeneizar headers, tablas, filtros, badges, estados vacíos y paginación.
-- [ ] Cubrir estados `loading`, `empty`, `error`, `forbidden` y `success`.
-- [ ] Mantener Customer 360 en `/app/sales-crm/contacts/:contactId`.
-- [ ] Evitar acceso directo a Supabase desde páginas y componentes.
+- [x] Revisar Overview, Contacts, Leads y Customer 360 contra el lenguaje visual v2.
+- [x] Homogeneizar headers, tablas, filtros, badges, estados vacíos y paginación.
+- [x] Cubrir estados `loading`, `empty`, `error`, `forbidden` y `success` según la capacidad de cada superficie.
+- [x] Mantener Customer 360 en `/app/sales-crm/contacts/:contactId`.
+- [x] Evitar acceso directo a Supabase desde páginas y componentes.
+
+**Evidencia:** Los hooks CRM ahora exponen `loading`, `error` y `reload`; Contacts,
+Leads y Customer 360 renderizan estados vacíos y errores recuperables; `DataCard`
+centraliza la presentación de errores; y la validación de la rama pasa lint,
+typecheck, 193 tests y build.
 
 ### Fase 2 — Pipeline y Opportunities
 

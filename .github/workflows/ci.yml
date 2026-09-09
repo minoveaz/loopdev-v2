@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  changes:
+    name: Identificar qué cambió
+    runs-on: ubuntu-latest
+    outputs:
+      application: ${{ steps.filter.outputs.application }}
+      build: ${{ steps.filter.outputs.build }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            application:
+              - '.github/workflows/**'
+              - 'src/**'
+              - 'public/**'
+              - 'index.html'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'vite.config.*'
+              - 'eslint.config.*'
+              - 'tsconfig*.json'
+              - 'tailwind.config.*'
+              - 'postcss.config.*'
+            build:
+              - '.github/workflows/**'
+              - 'src/**'
+              - 'public/**'
+              - 'index.html'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'vite.config.*'
+              - 'tsconfig*.json'
+              - 'tailwind.config.*'
+              - 'postcss.config.*'
+  code-quality:
+    name: Revisar reglas y tipos del código
+    needs: changes
+    if: needs.changes.outputs.application == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Revisar reglas de escritura con ESLint
+        run: npm run lint
+
+      - name: Comprobar tipos de TypeScript
+        run: npm run typecheck
+
+  tests:
+    name: Ejecutar tests rápidos de componentes y contratos
+    needs: changes
+    if: needs.changes.outputs.application == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar tests unitarios y estructurales
+        run: npm run test:quality
+
+  build:
+    name: Comprobar que la aplicación compila
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Crear build de producción
+        run: npm run build

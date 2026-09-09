@@ -21,6 +21,8 @@ interface DataCardProps {
   loading?: boolean;
   /** Render an empty state inside the body when no children data exists. */
   empty?: boolean;
+  /** Render an error state inside the body instead of the card content. */
+  error?: ReactNode;
   emptyTitle?: string;
   emptyDescription?: string;
   emptyIcon?: LucideIcon;
@@ -41,6 +43,7 @@ export function DataCard({
   flush = false,
   borderless = false,
   loading = false,
+  error,
   empty = false,
   emptyTitle = "Nothing here yet",
   emptyDescription,
@@ -83,6 +86,11 @@ export function DataCard({
               <Skeleton className="h-3 w-12" />
             </div>
             <span className="sr-only">Loading…</span>
+          </div>
+        ) : error ? (
+          <div role="alert" className="flex min-h-32 flex-col items-center justify-center gap-2 px-6 py-8 text-center">
+            <p className="font-medium text-foreground">Unable to load this data</p>
+            <div className="max-w-md text-sm text-muted-foreground">{error}</div>
           </div>
         ) : empty ? (
           <EmptyState

@@ -99,7 +99,7 @@ Customer 360 enriquecido quedan fuera de esta unidad.
 
 ### Siguiente unidad — Contacts UI-2: creación y edición
 
-**Estado:** En progreso
+**Estado:** Implementada; cierre visual pendiente
 
 1. **Contrato del adapter**
    - [x] Añadir `createContact(input)` y `updateContact(contactId, patch, expectedUpdatedAt)`.
@@ -124,11 +124,22 @@ Customer 360 enriquecido quedan fuera de esta unidad.
    - [x] Recargar la lista tras una actualización exitosa.
    - [x] Confirmar el cierre del drawer cuando existen cambios sin guardar.
    - [x] Añadir `archiveContact` como operación de archivado suave con `expectedUpdatedAt`.
+   - [x] Añadir campos personales contractuales al formulario: documento, fecha de nacimiento y género.
 
 5. **Tests separados**
    - [ ] Cubrir creación, edición, validación y estados de submit.
    - [x] Cubrir permisos, errores de servidor, conflicto `409` y archivado en el adapter local.
    - [ ] Cubrir restauración de foco y actualización de la lista.
+
+### Cierre visual de Contacts
+
+**Estado:** Pendiente
+
+- [x] Mostrar los campos disponibles del modelo CRM en el formulario y Customer 360.
+- [ ] Crear una representación mobile semántica de la lista.
+- [ ] Completar restauración de foco y pruebas de accesibilidad.
+- [ ] Añadir tests de integración del formulario y del refresco tras mutaciones.
+- [ ] Mostrar explícitamente el estado archivado en el detalle.
 
 **Fuera de UI-2:** Customer 360 enriquecido, merge, exportación, bulk actions, filtros avanzados,
 owner y lifecycle stage.

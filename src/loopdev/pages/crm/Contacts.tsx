@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Archive, AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { loopdevAdapter, contactName, type CRMContact, type CRMCreateContactInput, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
@@ -25,6 +25,7 @@ import { formatDate, getInitials } from "@/lib/formatters";
 import { useCrmContacts } from "@/loopdev/domains/crm/hooks/use-crm";
 import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactFormDrawer";
 import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
+import { ContactMobileCard } from "@/loopdev/components/crm/contacts/ContactMobileCard";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,7 @@ export default function SalesCRMContacts() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const query = searchParams.get("q") ?? "";
   const cursor = searchParams.get("cursor");
   const requestedPageSize = Number(searchParams.get("limit") ?? CONTACT_PAGE_SIZE);
@@ -64,11 +66,13 @@ export default function SalesCRMContacts() {
   });
 
   const openCreate = () => {
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingContact(null);
     setEditorOpen(true);
   };
 
   const openEdit = (contact: CRMContact) => {
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingContact(contact);
     setEditorOpen(true);
   };
@@ -82,6 +86,10 @@ export default function SalesCRMContacts() {
         lastName: optional(values.lastName),
         secondLastName: optional(values.secondLastName),
         preferredName: optional(values.preferredName),
+        documentType: optional(values.documentType),
+        documentNumber: optional(values.documentNumber),
+        birthDate: optional(values.birthDate),
+        gender: optional(values.gender),
         email: values.email.trim() || null,
         secondaryEmail: optional(values.secondaryEmail),
         phone: values.phone.trim() || null,
@@ -107,6 +115,10 @@ export default function SalesCRMContacts() {
       lastName: optional(values.lastName),
       secondLastName: optional(values.secondLastName),
       preferredName: optional(values.preferredName),
+      documentType: optional(values.documentType),
+      documentNumber: optional(values.documentNumber),
+      birthDate: optional(values.birthDate),
+      gender: optional(values.gender),
       email: values.email.trim() || null,
       secondaryEmail: optional(values.secondaryEmail),
       phone: values.phone.trim() || null,
@@ -289,6 +301,19 @@ export default function SalesCRMContacts() {
         emptyTitle={search ? "No contacts found" : "No contacts yet"}
         emptyDescription={search ? "Try changing the search." : "Contacts will appear here when they are added to your workspace."}
       >
+        <div className="space-y-3 p-4 md:hidden">
+          {contacts.map((customer, index) => (
+            <ContactMobileCard
+              key={customer.id}
+              contact={customer}
+              index={pageOffset + index + 1}
+              onOpen={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
+              onEdit={() => openEdit(customer)}
+              onArchive={() => archiveContact(customer)}
+            />
+          ))}
+        </div>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -390,6 +415,7 @@ export default function SalesCRMContacts() {
             ))}
           </TableBody>
         </Table>
+        </div>
         <nav aria-label="Contacts pagination" className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-card-muted/50 px-4 py-2.5 text-xs text-muted-foreground">
           <div className="flex items-center gap-3">
             <span>Page {cursorHistory.length + 1}</span>
@@ -429,6 +455,7 @@ export default function SalesCRMContacts() {
         }}
         onSubmit={submitContact}
         onSuccess={handleEditorSuccess}
+        restoreFocusRef={restoreFocusRef}
       />
     </PageContainer>
   );

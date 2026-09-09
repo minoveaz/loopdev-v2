@@ -20,6 +20,10 @@ export interface LocalCustomer {
   postalCode?: string | null;
   country: string;
   city: string;
+  documentType?: string | null;
+  documentNumber?: string | null;
+  birthDate?: string | null;
+  gender?: string | null;
   ordersCount: number;
   tier: "lead" | "standard" | "vip" | "wholesale";
   createdAt: string;
@@ -48,6 +52,10 @@ const seed: LocalCustomer[] = NAMES.map((name, i) => ({
   phone: `+1 555 0${100 + i}`,
   country: COUNTRIES[i % COUNTRIES.length],
   city: CITIES[i % CITIES.length],
+  documentType: i % 3 === 0 ? "PASSPORT" : i % 3 === 1 ? "DNI" : null,
+  documentNumber: i % 3 === 0 ? `DOC-${1000 + i}` : i % 3 === 1 ? `DNI-${2000 + i}` : null,
+  birthDate: i % 2 === 0 ? `198${i % 10}-0${(i % 8) + 1}-15` : null,
+  gender: i % 3 === 0 ? "Female" : i % 3 === 1 ? "Male" : null,
   ordersCount: 1 + ((i * 5) % 24),
   tier: TIERS[i % TIERS.length],
   createdAt: ago(200 - i * 4),

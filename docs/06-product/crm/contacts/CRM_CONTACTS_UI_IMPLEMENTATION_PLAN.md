@@ -3,7 +3,7 @@ title: CRM Contacts UI Implementation Plan
 status: approved-for-implementation
 version: 1.0
 created: 2026-08-20
-updated: 2026-08-21
+updated: 2026-09-09
 owner: crm
 program_track: tracks/active/crm/2026-08-13-crm-pilot-execution.md
 related_issue: https://github.com/minoveaz/loopdev/issues/82
@@ -16,6 +16,37 @@ approved_at: 2026-08-21
 ---
 
 # Plan de implementacion UI: Contactos CRM
+
+## Estado vigente de implementacion (2026-09-09)
+
+Esta seccion es la referencia actual de lo que existe en LoopDev v2. Las matrices historicas
+posteriores conservan decisiones y gaps del plan original, pero no deben interpretarse como
+indicadores del estado actual si contradicen esta tabla.
+
+### Implementado
+
+- Lista Contacts en `/app/sales-crm/contacts` con tabla desktop, busqueda `q` con debounce,
+  filtros por identidad/canal, ordenacion por columnas y paginacion cursor-based.
+- Numeracion de filas, estados loading/empty/error/success y navegacion a Customer 360.
+- Formulario CRM en drawer reutilizable para crear y editar contactos.
+- Campos visibles y editables: identidad, documento, fecha de nacimiento, genero, canales,
+  idioma, organizacion, cargo, departamento y direccion.
+- Validacion de nombre y de al menos email o telefono.
+- Respuestas visuales diferenciadas para validacion, permisos, conflicto 409 y error de servidor.
+- Refresco de la lista despues de crear/editar y confirmacion al cerrar con cambios sin guardar.
+- Archivado suave mediante `archiveContact` con control `expectedUpdatedAt`.
+- Customer 360 visual con perfil, tabs Contact/Personal/Company/Attributes, timeline,
+  leads, opportunities, tasks y notes usando el adapter local.
+
+### Pendiente de cierre visual
+
+- Vista mobile semantica como lista/cards en lugar de depender solo del overflow de tabla.
+- Restauracion explicita del foco al trigger de create/edit y tests de accesibilidad del flujo.
+- Tests de integracion del formulario para submit, validacion, estados de error y refresco.
+- Estado visual de contacto archivado en Customer 360 y accion de restauracion.
+- Acciones reales de notes/tasks, duplicate review/merge y relaciones enriquecidas.
+- Sustituir el adapter local por Supabase cuando el contrato tenant-aware, permisos y RLS esten
+  conectados.
 
 ## 1. Proposito y alcance
 

@@ -20,6 +20,10 @@ const contactFormSchema = z.object({
   lastName: z.string(),
   secondLastName: z.string(),
   preferredName: z.string(),
+  documentType: z.string(),
+  documentNumber: z.string(),
+  birthDate: z.string(),
+  gender: z.string(),
   email: z.string().email("Enter a valid email.").or(z.literal("")),
   secondaryEmail: z.string().email("Enter a valid email.").or(z.literal("")),
   phone: z.string(),
@@ -49,6 +53,10 @@ const emptyValues: ContactFormValues = {
   lastName: "",
   secondLastName: "",
   preferredName: "",
+  documentType: "",
+  documentNumber: "",
+  birthDate: "",
+  gender: "",
   email: "",
   secondaryEmail: "",
   phone: "",
@@ -73,6 +81,10 @@ function valuesFromContact(contact: CRMContact | null | undefined): ContactFormV
     lastName: contact.lastName ?? "",
     secondLastName: contact.secondLastName ?? "",
     preferredName: contact.preferredName ?? "",
+    documentType: contact.documentType ?? "",
+    documentNumber: contact.documentNumber ?? "",
+    birthDate: contact.birthDate ?? "",
+    gender: contact.gender ?? "",
     email: contact.email ?? "",
     secondaryEmail: contact.secondaryEmail ?? "",
     phone: contact.phone ?? "",
@@ -124,6 +136,10 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
       lastName: optionalValue(values.lastName) ?? "",
       secondLastName: optionalValue(values.secondLastName) ?? "",
       preferredName: optionalValue(values.preferredName) ?? "",
+      documentType: optionalValue(values.documentType) ?? "",
+      documentNumber: optionalValue(values.documentNumber) ?? "",
+      birthDate: optionalValue(values.birthDate) ?? "",
+      gender: optionalValue(values.gender) ?? "",
       email: values.email.trim(),
       secondaryEmail: optionalValue(values.secondaryEmail) ?? "",
       phone: values.phone.trim(),
@@ -172,6 +188,10 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
             <TextField control={form.control} name="lastName" label="Last name" />
             <TextField control={form.control} name="secondLastName" label="Second last name" />
             <TextField control={form.control} name="preferredName" label="Preferred name" />
+            <TextField control={form.control} name="documentType" label="Document type" />
+            <TextField control={form.control} name="documentNumber" label="Document number" />
+            <TextField control={form.control} name="birthDate" label="Birth date" type="date" />
+            <TextField control={form.control} name="gender" label="Gender" />
           </div>
         </section>
 

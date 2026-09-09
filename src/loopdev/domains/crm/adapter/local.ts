@@ -32,10 +32,10 @@ function toContact(source: LocalCustomer): CRMContact {
     secondaryPhone: source.secondaryPhone ?? null,
     preferredChannel: source.preferredChannel ?? "email",
     preferredLanguage: source.preferredLanguage ?? null,
-    documentType: null,
-    documentNumber: null,
-    birthDate: null,
-    gender: null,
+    documentType: source.documentType ?? null,
+    documentNumber: source.documentNumber ?? null,
+    birthDate: source.birthDate ?? null,
+    gender: source.gender ?? null,
     addressLine1: source.addressLine1 ?? null,
     addressLine2: source.addressLine2 ?? null,
     city: source.city,
@@ -142,6 +142,10 @@ export const localLoopdevAdapter = {
         stateProvince: input.stateProvince?.trim() || null,
         postalCode: input.postalCode?.trim() || null,
         country: input.country?.trim() || "",
+        documentType: input.documentType?.trim() || null,
+        documentNumber: input.documentNumber?.trim() || null,
+        birthDate: input.birthDate?.trim() || null,
+        gender: input.gender?.trim() || null,
         ordersCount: 0,
         tier: "standard",
       });
@@ -178,6 +182,10 @@ export const localLoopdevAdapter = {
         ? patch.companyName
         : current.companyName;
       const nextFields = {
+        documentType: Object.prototype.hasOwnProperty.call(patch, "documentType") ? patch.documentType : current.documentType,
+        documentNumber: Object.prototype.hasOwnProperty.call(patch, "documentNumber") ? patch.documentNumber : current.documentNumber,
+        birthDate: Object.prototype.hasOwnProperty.call(patch, "birthDate") ? patch.birthDate : current.birthDate,
+        gender: Object.prototype.hasOwnProperty.call(patch, "gender") ? patch.gender : current.gender,
         secondLastName: patch.secondLastName ?? current.secondLastName,
         preferredName: patch.preferredName ?? current.preferredName,
         secondaryEmail: patch.secondaryEmail ?? current.secondaryEmail,

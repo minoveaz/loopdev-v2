@@ -72,6 +72,10 @@ export interface CRMCreateContactInput {
   stateProvince?: string | null;
   postalCode?: string | null;
   country?: string | null;
+  documentType?: string | null;
+  documentNumber?: string | null;
+  birthDate?: string | null;
+  gender?: string | null;
 }
 
 export interface CRMUpdateContactPatch {
@@ -95,6 +99,10 @@ export interface CRMUpdateContactPatch {
   stateProvince?: string | null;
   postalCode?: string | null;
   country?: string | null;
+  documentType?: string | null;
+  documentNumber?: string | null;
+  birthDate?: string | null;
+  gender?: string | null;
 }
 
 export type CRMContactMutationResult =

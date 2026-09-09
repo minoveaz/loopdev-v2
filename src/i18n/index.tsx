@@ -23,6 +23,10 @@ export interface LanguageDescriptor {
 export const LANGUAGES: readonly LanguageDescriptor[] = [
   { code: "en", label: "English",  flag: "🇬🇧", dir: "ltr", locale: "en-US" },
   { code: "es", label: "Español",  flag: "🇪🇸", dir: "ltr", locale: "es-ES" },
+  { code: "fr", label: "Français", flag: "🇫🇷", dir: "ltr", locale: "fr-FR" },
+  { code: "de", label: "Deutsch", flag: "🇩🇪", dir: "ltr", locale: "de-DE" },
+  { code: "ar", label: "العربية", flag: "🇸🇦", dir: "rtl", locale: "ar-SA" },
+  { code: "he", label: "עברית", flag: "🇮🇱", dir: "rtl", locale: "he-IL" },
 ] as const;
 
 type Dict = Record<string, unknown>;

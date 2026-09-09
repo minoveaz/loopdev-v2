@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
-import { notificationsStore } from "@/data/mockNotifications";
+import { notificationsStore } from "@/template/rivera/data/mockNotifications";
 import { useLocalStore } from "@/lib/localStore";
 import { useNotificationPrefs } from "@/hooks/use-notification-prefs";
 import type { Notification } from "@/types";

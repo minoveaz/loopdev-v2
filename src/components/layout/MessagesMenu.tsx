@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { messagesStore, usersStore } from "@/data";
+import { messagesStore, usersStore } from "@/template/rivera/data";
 import { useLocalStore } from "@/lib/localStore";
 import { getInitials } from "@/lib/formatters";
 import type { Message, User } from "@/types";

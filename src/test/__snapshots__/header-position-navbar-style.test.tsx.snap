@@ -4,6 +4,7 @@ exports[`header-position vs navbar-style — cascade snapshot > collected the re
 [
   "html[data-navbar-style="static"] [data-app-topbar]",
   "html[data-navbar-style="glass"] [data-app-topbar]",
+  "html[data-header-position="fixed"] [data-app-topbar]",
   "html[data-header-position="sticky"] [data-app-topbar]",
   "html[data-header-position="static"] [data-app-topbar]",
   "html[data-header-position="hidden"] [data-app-topbar]",

@@ -36,7 +36,8 @@ import {
   mockProducts,
   mockInvoices,
   mockTickets,
-} from "@/data";
+} from "@/template/rivera/data";
+import type { NavNode } from "@/app/nav-types";
 
 interface CommandMenuProps {
   open: boolean;
@@ -124,7 +125,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
   /** Flatten the entire navigation tree into routable leaves with breadcrumb context. */
   const allRoutes = useMemo<FlatRoute[]>(() => {
     const out: FlatRoute[] = [];
-    const walk = (nodes: { label: string; to?: string; children?: any[] }[], trail: string[]) => {
+    const walk = (nodes: NavNode[], trail: string[]) => {
       for (const n of nodes) {
         const nextTrail = [...trail, n.label];
         if (n.to) {

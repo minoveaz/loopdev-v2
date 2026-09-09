@@ -35,25 +35,8 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-
-/** Node in the navigation tree — supports arbitrary nesting. */
-export interface NavNode {
-  label: string;
-  to?: string;
-  icon?: LucideIcon;
-  badge?: string;
-  description?: string;
-  children?: NavNode[];
-}
-
-/** Backwards-compatible aliases. */
-export type NavItem = NavNode;
-export type NavChild = NavNode;
-
-export interface NavSection {
-  label: string;
-  items: NavNode[];
-}
+import type { NavNode, NavSection } from "./nav-types";
+export type { NavChild, NavItem, NavNode, NavSection } from "./nav-types";
 
 export const navigation: NavSection[] = [
   {
@@ -617,37 +600,6 @@ export const launchpadNavigation: NavSection[] = [
         label: "Launchpad",
         to: "/launchpad",
         icon: LayoutDashboard,
-      },
-    ],
-  },
-];
-
-export const loopdevNavigation: NavSection[] = [
-  {
-    label: "Launchpad",
-    items: [
-      {
-        label: "Launchpad",
-        to: "/launchpad",
-        icon: LayoutDashboard,
-      },
-    ],
-  },
-  {
-    label: "Suites",
-    items: [
-      {
-        label: "CRM",
-        icon: Users,
-        children: [
-          { label: "Overview", to: "/app/sales-crm/overview" },
-          { label: "Contacts", to: "/app/sales-crm/contacts" },
-          { label: "Leads", to: "/app/sales-crm/leads" },
-          { label: "Pipeline", to: "/app/sales-crm/pipeline" },
-          { label: "Opportunities", to: "/app/sales-crm/opportunities" },
-          { label: "Tasks", to: "/app/sales-crm/tasks" },
-          { label: "Communications", to: "/app/sales-crm/communications" },
-        ],
       },
     ],
   },

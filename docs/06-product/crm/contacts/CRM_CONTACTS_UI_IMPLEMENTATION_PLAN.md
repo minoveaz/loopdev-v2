@@ -206,6 +206,22 @@ estilos o asociaciones accesibles de campos en paralelo.
 
 ## 5. Matriz de datos y dependencias
 
+### Contrato vigente de consulta
+
+El adapter recibe `query`, `cursor` y `limit`, además de `identityStatus[]`,
+`preferredChannel[]`, `sortBy` (`name`, `company`, `channel`, `identity`,
+`location` o `updated`) y `sortDirection` (`asc` o `desc`). Los filtros y la
+ordenación se aplican antes de construir la página para que la paginación siga
+siendo autoritativa.
+
+### Mutaciones y archivado
+
+Contacts soporta `createContact`, `updateContact` y `archiveContact`. El archivado
+es una operación suave: conserva el registro y su historial, pero excluye el
+contacto de la lista activa. Las mutaciones usan `expectedUpdatedAt` cuando
+corresponde y exponen estados diferenciados de validación, permisos, conflicto
+409 y error de servidor.
+
 | Elemento visual                            | ¿Existe en API actual? | Fuente requerida                     | Decision                                              |
 | ------------------------------------------ | ---------------------- | ------------------------------------ | ----------------------------------------------------- |
 | ID, nombre                                 | Sí                     | `CrmContact`                         | Implementar                                           |

@@ -85,4 +85,20 @@ describe("Contacts adapter contract", () => {
     );
     expect(conflict).toMatchObject({ status: "conflict", contact: { id: created.contact.id } });
   });
+
+  it("archives a contact and detects stale archive requests", async () => {
+    const created = await localLoopdevAdapter.crm.createContact({
+      organizationId: "local-development-organization",
+      firstName: "Archive",
+      email: "archive@example.com",
+    });
+    expect(created.status).toBe("success");
+    if (created.status !== "success") return;
+
+    const archived = await localLoopdevAdapter.crm.archiveContact(created.contact.id, created.contact.updatedAt);
+    expect(archived).toMatchObject({ status: "success", contact: { archivedAt: expect.any(String) } });
+
+    const stale = await localLoopdevAdapter.crm.archiveContact(created.contact.id, "stale-updated-at");
+    expect(stale).toMatchObject({ status: "conflict", contact: { id: created.contact.id } });
+  });
 });

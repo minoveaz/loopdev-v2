@@ -114,7 +114,7 @@ Customer 360 enriquecido quedan fuera de esta unidad.
 3. **Crear contacto**
    - [x] Activar el botón `New contact`.
    - [x] Ejecutar `createContact` y cubrir edición, envío, éxito y validación en el formulario.
-   - [ ] Diferenciar visualmente `forbidden`, conflicto `409` y error de servidor.
+   - [x] Diferenciar visualmente `forbidden`, conflicto `409` y error de servidor.
    - [x] Cerrar el drawer y recargar la primera página al finalizar.
 
 4. **Editar contacto**
@@ -122,10 +122,12 @@ Customer 360 enriquecido quedan fuera de esta unidad.
    - [x] Cargar los datos existentes en el formulario.
    - [x] Enviar `expectedUpdatedAt`.
    - [x] Recargar la lista tras una actualización exitosa.
+   - [x] Confirmar el cierre del drawer cuando existen cambios sin guardar.
+   - [x] Añadir `archiveContact` como operación de archivado suave con `expectedUpdatedAt`.
 
 5. **Tests separados**
    - [ ] Cubrir creación, edición, validación y estados de submit.
-   - [ ] Cubrir permisos, errores de servidor y conflicto `409`.
+   - [x] Cubrir permisos, errores de servidor, conflicto `409` y archivado en el adapter local.
    - [ ] Cubrir restauración de foco y actualización de la lista.
 
 **Fuera de UI-2:** Customer 360 enriquecido, merge, exportación, bulk actions, filtros avanzados,

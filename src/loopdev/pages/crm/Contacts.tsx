@@ -42,6 +42,7 @@ export default function SalesCRMContacts() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const query = searchParams.get("q") ?? "";
   const cursor = searchParams.get("cursor");
   const requestedPageSize = Number(searchParams.get("limit") ?? CONTACT_PAGE_SIZE);
@@ -129,6 +130,17 @@ export default function SalesCRMContacts() {
     setEditorOpen(false);
     setEditingContact(null);
     reload();
+  };
+
+  const archiveContact = async (contact: CRMContact) => {
+    if (!window.confirm(`Archive ${contactName(contact)}? It will be removed from the active contacts list.`)) return;
+    setActionError(null);
+    const result = await loopdevAdapter.crm.archiveContact(contact.id, contact.updatedAt);
+    if (result.status === "success") {
+      reload();
+      return;
+    }
+    setActionError(`${result.status === "forbidden" ? "Permission denied: " : result.status === "conflict" ? "Conflict: " : "Server error: "}${result.message}`);
   };
 
   useEffect(() => {
@@ -255,6 +267,11 @@ export default function SalesCRMContacts() {
           align="end"
         />
       </div>
+      {actionError && (
+        <div role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">
+          {actionError}
+        </div>
+      )}
 
       <DataCard
         flush
@@ -362,7 +379,7 @@ export default function SalesCRMContacts() {
                         Create task
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem disabled className="text-destructive focus:text-destructive">
+                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => archiveContact(customer)}>
                         <Archive className="mr-2 h-3.5 w-3.5" />
                         Archive contact
                       </DropdownMenuItem>

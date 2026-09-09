@@ -100,9 +100,10 @@ interface ContactFormProps {
   onCancel: () => void;
   onSubmit: (values: ContactFormValues) => Promise<CRMContactMutationResult>;
   onSuccess: (contact: CRMContact) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function ContactForm({ contact, onCancel, onSubmit, onSuccess }: ContactFormProps) {
+export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyChange }: ContactFormProps) {
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: valuesFromContact(contact),
@@ -112,6 +113,10 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess }: ContactF
   useEffect(() => {
     form.reset(valuesFromContact(contact));
   }, [contact, form]);
+
+  useEffect(() => {
+    onDirtyChange?.(formState.isDirty);
+  }, [formState.isDirty, onDirtyChange]);
 
   const submit = async (values: ContactFormValues) => {
     const result = await onSubmit({
@@ -136,6 +141,7 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess }: ContactF
     });
 
     if (result.status === "success") {
+      onDirtyChange?.(false);
       onSuccess(result.contact);
       return;
     }
@@ -145,7 +151,12 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess }: ContactF
       });
       return;
     }
-    form.setError("root.server", { message: result.message });
+    const prefix = result.status === "forbidden"
+      ? "Permission denied: "
+      : result.status === "conflict"
+        ? "Conflict: "
+        : "Server error: ";
+    form.setError("root.server", { message: `${prefix}${result.message}` });
   };
 
   return (
@@ -219,11 +230,25 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess }: ContactF
           </div>
         </section>
 
-        {formState.errors.root?.server && (
-          <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">
-            {formState.errors.root.server.message}
-          </p>
-        )}
+        {formState.errors.root?.server && (() => {
+          const message = formState.errors.root.server.message ?? "";
+          const conflict = message.startsWith("Conflict:");
+          const permission = message.startsWith("Permission denied:");
+          return (
+            <p
+              role="alert"
+              className={`rounded-md border px-3 py-2 text-sm ${
+                conflict
+                  ? "border-amber-500/30 bg-amber-500/10 text-amber-700"
+                  : permission
+                    ? "border-slate-400/40 bg-slate-500/10 text-slate-700"
+                    : "border-destructive/30 bg-destructive-soft text-destructive"
+              }`}
+            >
+              {message}
+            </p>
+          );
+        })()}
 
         <div className="flex justify-end gap-2 border-t border-border pt-5">
           <Button type="button" variant="ghost" onClick={onCancel} disabled={formState.isSubmitting}>Cancel</Button>

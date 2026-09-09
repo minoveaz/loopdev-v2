@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, Plus } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, Plus, RefreshCw, SearchX } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { contactName } from "@/loopdev/domains/crm/adapter";
 import {
@@ -41,7 +41,7 @@ type SortKey = "name" | "company" | "channel" | "identity" | "location" | "updat
 export default function SalesCRMContacts() {
   const { trail } = useBreadcrumbs();
   const navigate = useNavigate();
-  const { contacts } = useCrmContacts();
+  const { contacts, loading, error, reload } = useCrmContacts();
   const [search, setSearch] = useState("");
   const [identityStatuses, setIdentityStatuses] = useState<string[]>([]);
   const [channels, setChannels] = useState<string[]>([]);
@@ -155,7 +155,22 @@ export default function SalesCRMContacts() {
         />
       </div>
 
-      <DataCard flush>
+      <DataCard
+        flush
+        loading={loading}
+        error={error ? (
+          <>
+            <span>{error}</span>
+            <Button className="mt-3" size="sm" variant="outline" onClick={reload}>
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />Try again
+            </Button>
+          </>
+        ) : undefined}
+        empty={!loading && !error && sorted.length === 0}
+        emptyIcon={search || identityStatuses.length || channels.length ? SearchX : AlertTriangle}
+        emptyTitle={search || identityStatuses.length || channels.length ? "No contacts found" : "No contacts yet"}
+        emptyDescription={search || identityStatuses.length || channels.length ? "Try changing the search or filters." : "Contacts will appear here when they are added to your workspace."}
+      >
         <Table>
           <TableHeader>
             <TableRow>

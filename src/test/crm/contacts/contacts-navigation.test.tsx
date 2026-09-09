@@ -21,4 +21,21 @@ describe("Contacts navigation", () => {
     fireEvent.click(row);
     expect(screen.getByTestId("location")).toHaveTextContent("/app/sales-crm/contacts/crm_cust_1");
   });
+
+  it("moves between cursor pages and exposes page-size controls", async () => {
+    render(
+      <MemoryRouter initialEntries={["/app/sales-crm/contacts"]}>
+        <SalesCRMContacts />
+      </MemoryRouter>,
+    );
+
+    await screen.findByRole("row", { name: /Aria Blackwood/i });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await screen.findByRole("row", { name: /Niamh O'Connor/i });
+    expect(screen.getByText("Page 2")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Contacts per page" })).toHaveValue("10");
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    await screen.findByRole("row", { name: /Aria Blackwood/i });
+  });
 });

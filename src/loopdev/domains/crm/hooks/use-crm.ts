@@ -27,6 +27,10 @@ export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organ
       query: params.query,
       cursor: params.cursor ?? null,
       limit: params.limit ?? DEFAULT_CONTACT_LIMIT,
+      identityStatus: params.identityStatus,
+      preferredChannel: params.preferredChannel,
+      sortBy: params.sortBy,
+      sortDirection: params.sortDirection,
     };
     void loopdevAdapter.crm.listContacts(request)
       .then((page) => {
@@ -43,7 +47,16 @@ export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organ
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [params.cursor, params.limit, params.query, reloadToken]);
+  }, [
+    params.cursor,
+    params.limit,
+    params.query,
+    params.identityStatus,
+    params.preferredChannel,
+    params.sortBy,
+    params.sortDirection,
+    reloadToken,
+  ]);
 
   return {
     contacts,

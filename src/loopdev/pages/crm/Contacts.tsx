@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { Archive, AlertTriangle, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Archive, AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { loopdevAdapter, contactName, type CRMContact, type CRMCreateContactInput, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import {
   DataCard,
+  FilterDropdown,
   PageContainer,
   PageHeader,
   SearchInput,
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const CONTACT_PAGE_SIZE = 10;
+type ContactSortKey = "name" | "company" | "channel" | "identity" | "location" | "updated";
 
 export default function SalesCRMContacts() {
   const { trail } = useBreadcrumbs();
@@ -42,12 +44,22 @@ export default function SalesCRMContacts() {
   const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
   const query = searchParams.get("q") ?? "";
   const cursor = searchParams.get("cursor");
+  const requestedPageSize = Number(searchParams.get("limit") ?? CONTACT_PAGE_SIZE);
+  const pageSize = [10, 20, 50].includes(requestedPageSize) ? requestedPageSize : CONTACT_PAGE_SIZE;
+  const identityStatuses = useMemo(() => searchParams.getAll("identity"), [searchParams]);
+  const channels = useMemo(() => searchParams.getAll("channel"), [searchParams]);
+  const sortBy = (searchParams.get("sort") ?? "updated") as ContactSortKey;
+  const sortDirection = (searchParams.get("direction") ?? "desc") as "asc" | "desc";
   const [search, setSearch] = useState(query);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
   const { contacts, nextCursor, hasMore, loading, error, reload } = useCrmContacts({
     query,
     cursor,
-    limit: CONTACT_PAGE_SIZE,
+    limit: pageSize,
+    identityStatus: identityStatuses as ("verified" | "pending_identity_review")[],
+    preferredChannel: channels as ("email" | "phone" | "whatsapp")[],
+    sortBy,
+    sortDirection,
   });
 
   const openCreate = () => {
@@ -120,6 +132,7 @@ export default function SalesCRMContacts() {
   };
 
   useEffect(() => {
+    if (search.trim() === query) return;
     const timeout = window.setTimeout(() => {
       setSearchParams((current) => {
         const next = new URLSearchParams(current);
@@ -131,7 +144,7 @@ export default function SalesCRMContacts() {
       setCursorHistory([]);
     }, 300);
     return () => window.clearTimeout(timeout);
-  }, [search, setSearchParams]);
+  }, [query, search, setSearchParams]);
 
   useEffect(() => {
     setSearch(query);
@@ -159,6 +172,41 @@ export default function SalesCRMContacts() {
     });
   };
 
+  const changePageSize = (value: string) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("limit", value);
+      next.delete("cursor");
+      return next;
+    });
+    setCursorHistory([]);
+  };
+
+  const updateListParam = (name: string, values: string[]) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete(name);
+      values.forEach((value) => next.append(name, value));
+      next.delete("cursor");
+      return next;
+    });
+    setCursorHistory([]);
+  };
+
+  const toggleSort = (key: ContactSortKey) => {
+    const nextDirection = sortBy === key && sortDirection === "asc" ? "desc" : "asc";
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("sort", key);
+      next.set("direction", nextDirection);
+      next.delete("cursor");
+      return next;
+    });
+    setCursorHistory([]);
+  };
+
+  const pageOffset = Number.isFinite(Number(cursor)) ? Number(cursor) : 0;
+
   return (
     <PageContainer width="wide">
       <PageHeader
@@ -181,6 +229,31 @@ export default function SalesCRMContacts() {
           size="sm"
           containerClassName="w-64"
         />
+        <FilterDropdown
+          label="Identity"
+          multiple
+          value={identityStatuses}
+          onChange={(values) => updateListParam("identity", values)}
+          options={[
+            { label: "Verified", value: "verified" },
+            { label: "Pending review", value: "pending_identity_review" },
+          ]}
+          size="sm"
+          align="end"
+        />
+        <FilterDropdown
+          label="Channel"
+          multiple
+          value={channels}
+          onChange={(values) => updateListParam("channel", values)}
+          options={[
+            { label: "Email", value: "email" },
+            { label: "Phone", value: "phone" },
+            { label: "WhatsApp", value: "whatsapp" },
+          ]}
+          size="sm"
+          align="end"
+        />
       </div>
 
       <DataCard
@@ -202,17 +275,18 @@ export default function SalesCRMContacts() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Contact</TableHead>
-              <TableHead>Company / role</TableHead>
-              <TableHead>Channel</TableHead>
-              <TableHead>Identity</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Updated</TableHead>
+              <TableHead className="w-12 text-end">#</TableHead>
+              <SortableHead label="Contact" icon={sortIcon(sortBy, "name", sortDirection)} onClick={() => toggleSort("name")} />
+              <SortableHead label="Company / role" icon={sortIcon(sortBy, "company", sortDirection)} onClick={() => toggleSort("company")} />
+              <SortableHead label="Channel" icon={sortIcon(sortBy, "channel", sortDirection)} onClick={() => toggleSort("channel")} />
+              <SortableHead label="Identity" icon={sortIcon(sortBy, "identity", sortDirection)} onClick={() => toggleSort("identity")} />
+              <SortableHead label="Location" icon={sortIcon(sortBy, "location", sortDirection)} onClick={() => toggleSort("location")} />
+              <SortableHead label="Updated" icon={sortIcon(sortBy, "updated", sortDirection)} onClick={() => toggleSort("updated")} />
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {contacts.map((customer) => (
+            {contacts.map((customer, index) => (
               <TableRow
                 key={customer.id}
                 className="cursor-pointer"
@@ -225,6 +299,7 @@ export default function SalesCRMContacts() {
                   }
                 }}
               >
+                <TableCell className="text-end text-xs tabular-nums text-muted-foreground">{pageOffset + index + 1}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8 border border-border">
@@ -298,14 +373,32 @@ export default function SalesCRMContacts() {
             ))}
           </TableBody>
         </Table>
-        <nav aria-label="Contacts pagination" className="flex items-center justify-between border-t border-border bg-card-muted/50 px-4 py-2.5 text-xs text-muted-foreground">
-          <span>Cursor page</span>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={!cursorHistory.length || loading} onClick={goToPreviousPage} aria-label="Previous contacts page">
-              <ChevronLeft className="h-4 w-4" />
+        <nav aria-label="Contacts pagination" className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-card-muted/50 px-4 py-2.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <span>Page {cursorHistory.length + 1}</span>
+            <label className="flex items-center gap-1.5" htmlFor="contacts-page-size">
+              Rows
+              <select
+                id="contacts-page-size"
+                aria-label="Contacts per page"
+                value={pageSize}
+                onChange={(event) => changePageSize(event.target.value)}
+                className="h-7 rounded-md border border-input bg-card px-2 text-xs text-foreground"
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" className="h-7 gap-1" disabled={!cursorHistory.length || loading} onClick={goToPreviousPage}>
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Previous
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={!hasMore || loading} onClick={goToNextPage} aria-label="Next contacts page">
-              <ChevronRight className="h-4 w-4" />
+            <Button variant="outline" size="sm" className="h-7 gap-1" disabled={!hasMore || loading} onClick={goToNextPage}>
+              Next
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </nav>
@@ -321,5 +414,35 @@ export default function SalesCRMContacts() {
         onSuccess={handleEditorSuccess}
       />
     </PageContainer>
+  );
+}
+
+function sortIcon(
+  activeKey: ContactSortKey,
+  key: ContactSortKey,
+  direction: "asc" | "desc",
+) {
+  if (activeKey !== key) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
+  return direction === "asc"
+    ? <ArrowUp className="h-3.5 w-3.5" />
+    : <ArrowDown className="h-3.5 w-3.5" />;
+}
+
+function SortableHead({
+  label,
+  icon,
+  onClick,
+}: {
+  label: string;
+  icon: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <TableHead>
+      <button type="button" className="inline-flex items-center gap-1.5 hover:text-foreground" onClick={onClick}>
+        {label}
+        {icon}
+      </button>
+    </TableHead>
   );
 }

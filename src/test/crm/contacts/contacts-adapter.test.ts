@@ -24,6 +24,28 @@ describe("Contacts adapter contract", () => {
     expect(page.items.every((contact) => `${contact.firstName} ${contact.lastName ?? ""}`.toLowerCase().includes("aria"))).toBe(true);
   });
 
+  it("sorts contacts by updated date in both directions before pagination", async () => {
+    const ascending = await localLoopdevAdapter.crm.listContacts({
+      organizationId: "local-development-organization",
+      limit: 20,
+      sortBy: "updated",
+      sortDirection: "asc",
+    });
+    const descending = await localLoopdevAdapter.crm.listContacts({
+      organizationId: "local-development-organization",
+      limit: 20,
+      sortBy: "updated",
+      sortDirection: "desc",
+    });
+
+    expect(ascending.items.map((contact) => contact.updatedAt)).toEqual(
+      [...ascending.items].map((contact) => contact.updatedAt).sort(),
+    );
+    expect(descending.items.map((contact) => contact.updatedAt)).toEqual(
+      [...descending.items].map((contact) => contact.updatedAt).sort().reverse(),
+    );
+  });
+
   it("returns typed validation and permission responses", async () => {
     const invalid = await localLoopdevAdapter.crm.createContact({
       organizationId: "local-development-organization",

@@ -38,6 +38,10 @@ export interface CRMContactListParams {
   query?: string;
   cursor?: string | null;
   limit: number;
+  identityStatus?: CRMContact["identityStatus"][];
+  preferredChannel?: NonNullable<CRMContact["preferredChannel"]>[];
+  sortBy?: "name" | "company" | "channel" | "identity" | "location" | "updated";
+  sortDirection?: "asc" | "desc";
 }
 
 export interface CRMContactPage {

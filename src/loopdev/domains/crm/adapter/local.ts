@@ -13,6 +13,7 @@ import type {
   CRMTask,
   CRMUpdateContactPatch,
 } from "./types";
+import { contactName } from "./types";
 
 const organizationId = "local-development-organization";
 
@@ -70,23 +71,46 @@ function toLead(contact: LocalCustomer): CRMLead {
 
 export const localLoopdevAdapter = {
   crm: {
-    async listContacts({ query = "", cursor = null, limit }: CRMContactListParams): Promise<CRMContactPage> {
+    async listContacts({
+      query = "",
+      cursor = null,
+      limit,
+      identityStatus = [],
+      preferredChannel = [],
+      sortBy = "updated",
+      sortDirection = "desc",
+    }: CRMContactListParams): Promise<CRMContactPage> {
       const normalizedQuery = query.trim().toLowerCase();
       const filtered = crmCustomersStore.list().map(toContact).filter((contact) => {
         if (!normalizedQuery) return true;
         return [`${contact.firstName} ${contact.lastName ?? ""}`.trim(), contact.email, contact.phone, contact.companyName]
           .filter((value): value is string => Boolean(value))
           .some((value) => value.toLowerCase().includes(normalizedQuery));
+      }).filter((contact) => (
+        (!identityStatus.length || identityStatus.includes(contact.identityStatus)) &&
+        (!preferredChannel.length || (contact.preferredChannel && preferredChannel.includes(contact.preferredChannel)))
+      ));
+      const sorted = [...filtered].sort((left, right) => {
+        const value = (contact: CRMContact) => ({
+          name: contactName(contact),
+          company: `${contact.companyName ?? ""} ${contact.jobTitle ?? ""}`,
+          channel: contact.preferredChannel ?? "",
+          identity: contact.identityStatus,
+          location: `${contact.city ?? ""} ${contact.stateProvince ?? ""} ${contact.country ?? ""}`,
+          updated: contact.updatedAt,
+        })[sortBy].toLowerCase();
+        const result = value(left).localeCompare(value(right), undefined, { numeric: true });
+        return sortDirection === "asc" ? result : -result;
       });
       const offset = cursor ? Number.parseInt(cursor, 10) : 0;
       const safeOffset = Number.isFinite(offset) && offset >= 0 ? offset : 0;
-      const items = filtered.slice(safeOffset, safeOffset + limit);
+      const items = sorted.slice(safeOffset, safeOffset + limit);
       const nextOffset = safeOffset + items.length;
 
       return {
         items,
-        nextCursor: nextOffset < filtered.length ? String(nextOffset) : null,
-        hasMore: nextOffset < filtered.length,
+        nextCursor: nextOffset < sorted.length ? String(nextOffset) : null,
+        hasMore: nextOffset < sorted.length,
       };
     },
 

@@ -31,6 +31,7 @@ export interface CRMContact {
   identityStatus: "verified" | "pending_identity_review";
   createdAt: string;
   updatedAt: string;
+  archivedAt: string | null;
 }
 
 export interface CRMContactListParams {

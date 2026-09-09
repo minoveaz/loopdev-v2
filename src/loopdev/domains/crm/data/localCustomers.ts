@@ -24,6 +24,7 @@ export interface LocalCustomer {
   tier: "lead" | "standard" | "vip" | "wholesale";
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string | null;
 }
 
 function ago(days: number): string {

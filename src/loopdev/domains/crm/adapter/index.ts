@@ -17,6 +17,7 @@ export interface LoopdevCrmAdapter {
     patch: CRMUpdateContactPatch,
     expectedUpdatedAt: string,
   ): Promise<CRMContactMutationResult>;
+  archiveContact(contactId: string, expectedUpdatedAt: string): Promise<CRMContactMutationResult>;
   listLeads(): Promise<CRMLead[]>;
   getCustomer360(contactId: string): Promise<Customer360View | null>;
 }

@@ -49,6 +49,7 @@ function toContact(source: LocalCustomer): CRMContact {
     identityStatus: "verified",
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
+    archivedAt: source.archivedAt ?? null,
   };
 }
 
@@ -81,7 +82,7 @@ export const localLoopdevAdapter = {
       sortDirection = "desc",
     }: CRMContactListParams): Promise<CRMContactPage> {
       const normalizedQuery = query.trim().toLowerCase();
-      const filtered = crmCustomersStore.list().map(toContact).filter((contact) => {
+      const filtered = crmCustomersStore.list().map(toContact).filter((contact) => !contact.archivedAt).filter((contact) => {
         if (!normalizedQuery) return true;
         return [`${contact.firstName} ${contact.lastName ?? ""}`.trim(), contact.email, contact.phone, contact.companyName]
           .filter((value): value is string => Boolean(value))
@@ -201,6 +202,18 @@ export const localLoopdevAdapter = {
       });
       if (!updated) return { status: "server-error", message: "The contact could not be updated." };
       return { status: "success", contact: toContact(updated) };
+    },
+
+    async archiveContact(contactId: string, expectedUpdatedAt: string): Promise<CRMContactMutationResult> {
+      const current = crmCustomersStore.get(contactId);
+      if (!current) return { status: "server-error", message: "The contact could not be found." };
+      const currentContact = toContact(current);
+      if (currentContact.updatedAt !== expectedUpdatedAt) {
+        return { status: "conflict", message: "The contact changed before it could be archived.", contact: currentContact };
+      }
+      const archived = crmCustomersStore.update(contactId, { archivedAt: new Date().toISOString() });
+      if (!archived) return { status: "server-error", message: "The contact could not be archived." };
+      return { status: "success", contact: toContact(archived) };
     },
 
     async listLeads(): Promise<CRMLead[]> {

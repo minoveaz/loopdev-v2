@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { Sidebar } from "./Sidebar";
-import { LoopdevSidebar } from "@/components/loopdev/LoopdevSidebar";
+import { RiveraShell } from "@/template/rivera/RiveraShell";
+import { LoopdevShell } from "@/loopdev/LoopdevShell";
 import { Topbar } from "./Topbar";
 import { AppFooter } from "./AppFooter";
 import { ThemeCustomizerFab } from "@/components/theme/ThemeCustomizer";
@@ -95,13 +95,13 @@ export function AppShell() {
         {t("common.skipToContent")}
       </a>
       {isLoopdevWorkspace ? (
-        <LoopdevSidebar
+        <LoopdevShell
           collapsed={collapsed}
           mobileOpen={mobileOpen}
           onMobileClose={() => setMobileOpen(false)}
         />
       ) : (
-        <Sidebar
+        <RiveraShell
           collapsed={collapsed}
           mobileOpen={mobileOpen}
           onMobileClose={() => setMobileOpen(false)}

@@ -36,7 +36,7 @@ import {
   mockProducts,
   mockInvoices,
   mockTickets,
-} from "@/data";
+} from "@/template/rivera/data";
 
 interface CommandMenuProps {
   open: boolean;

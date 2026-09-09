@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import type { ActivityAction, ActivityLog } from "@/types";
-import { activityStore } from "@/data/mockActivity";
+import { activityStore } from "@/template/rivera/data/mockActivity";
 import { storage } from "./storage";
 import type { AuthSession } from "@/types";
 

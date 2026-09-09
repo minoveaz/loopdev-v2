@@ -4,7 +4,7 @@
  */
 import type { Entity } from "@/types";
 import type { LocalStore } from "./localStore";
-import { activityStore } from "@/data/mockActivity";
+import { activityStore } from "@/template/rivera/data/mockActivity";
 import { logActivity } from "./activity";
 import {
   usersStore, rolesStore, projectsStore, tasksStore, ordersStore, productsStore,
@@ -14,7 +14,7 @@ import {
   coursesStore, instructorsStore, learnersStore, blogPostsStore,
   subscriptionPlansStore, ticketsStore, timeEntriesStore, emailsStore, meetingsStore,
   posStore,
-} from "@/data";
+} from "@/template/rivera/data";
 
 type AnyStore = LocalStore<Entity>;
 

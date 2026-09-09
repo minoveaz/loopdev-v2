@@ -12,7 +12,8 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
-import { launchpadNavigation, navigation, type NavNode, type NavSection } from "@/app/navigation";
+import { launchpadNavigation, navigation } from "@/app/navigation";
+import type { NavNode, NavSection } from "@/app/nav-types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

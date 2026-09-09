@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { BrandLogo } from "@/components/loopdev";
+import { BrandLogo } from "@/loopdev/components";
 
 interface LogoProps {
   collapsed?: boolean;

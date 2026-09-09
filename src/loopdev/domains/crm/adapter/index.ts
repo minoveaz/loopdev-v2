@@ -1,8 +1,22 @@
 import { localLoopdevAdapter } from "./local";
-import type { Customer360View, CRMContactListParams, CRMContactPage, CRMLead } from "./types";
+import type {
+  Customer360View,
+  CRMContactListParams,
+  CRMContactMutationResult,
+  CRMContactPage,
+  CRMCreateContactInput,
+  CRMLead,
+  CRMUpdateContactPatch,
+} from "./types";
 
 export interface LoopdevCrmAdapter {
   listContacts(params: CRMContactListParams): Promise<CRMContactPage>;
+  createContact(input: CRMCreateContactInput): Promise<CRMContactMutationResult>;
+  updateContact(
+    contactId: string,
+    patch: CRMUpdateContactPatch,
+    expectedUpdatedAt: string,
+  ): Promise<CRMContactMutationResult>;
   listLeads(): Promise<CRMLead[]>;
   getCustomer360(contactId: string): Promise<Customer360View | null>;
 }

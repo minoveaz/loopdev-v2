@@ -81,21 +81,55 @@ Leads y Customer 360 renderizan estados vacíos y errores recuperables; `DataCar
 centraliza la presentación de errores; y la validación de la rama pasa lint,
 typecheck, 193 tests y build.
 
-### Siguiente unidad — Contacts UI-1: lista autoritativa
+### Contacts UI-1: lista autoritativa
 
-**Estado:** En progreso
+**Estado:** Completada en `f095352`
 
-- [ ] Actualizar el contrato del adapter a `items`, `nextCursor` y `hasMore`.
-- [ ] Añadir `organizationId`, `query`, `cursor` y `limit` al contrato de consulta.
-- [ ] Implementar búsqueda con debounce y estado `q` en URL.
-- [ ] Sustituir la paginación numérica local por navegación basada en cursor.
-- [ ] Mantener únicamente filtros respaldados por el contrato real.
-- [ ] Cubrir `loading`, `empty`, `error`, `forbidden` y `success`.
-- [ ] Mantener el acceso desde cada fila a `/app/sales-crm/contacts/:contactId`.
-- [ ] Crear tests separados de adapter, hook, estados y navegación a Customer 360.
+- [x] Actualizar el contrato del adapter a `items`, `nextCursor` y `hasMore`.
+- [x] Añadir `organizationId`, `query`, `cursor` y `limit` al contrato de consulta.
+- [x] Implementar búsqueda con debounce y estado `q` en URL.
+- [x] Sustituir la paginación numérica local por navegación basada en cursor.
+- [x] Mantener únicamente filtros respaldados por el contrato real.
+- [x] Cubrir `loading`, `empty`, `error`, `forbidden` y `success`.
+- [x] Mantener el acceso desde cada fila a `/app/sales-crm/contacts/:contactId`.
+- [x] Crear tests separados de adapter, hook, estados y navegación a Customer 360.
 
 **Alcance:** Solo lectura y navegación. Creación, edición, merge, exportación, bulk actions y
 Customer 360 enriquecido quedan fuera de esta unidad.
+
+### Siguiente unidad — Contacts UI-2: creación y edición
+
+**Estado:** Pendiente
+
+1. **Contrato del adapter**
+   - [x] Añadir `createContact(input)` y `updateContact(contactId, patch, expectedUpdatedAt)`.
+   - [x] Definir respuestas para éxito, validación, permisos, conflicto `409` y error de servidor.
+   - [x] Simular creación, edición y conflictos en `localLoopdevAdapter`.
+
+2. **Formulario CRM**
+   - [ ] Crear `ContactForm` y `ContactFormDialog` responsive.
+   - [ ] Incluir nombre, apellido, email, teléfono, empresa, cargo, ciudad y país.
+   - [ ] Exigir al menos email o teléfono y mostrar errores por campo.
+
+3. **Crear contacto**
+   - [ ] Activar el botón `New contact`.
+   - [ ] Ejecutar `createContact` y cubrir los estados de edición, envío, éxito, validación,
+     forbidden y error.
+   - [ ] Cerrar el diálogo, recargar la primera página y restaurar el foco al finalizar.
+
+4. **Editar contacto**
+   - [ ] Añadir una acción de edición por fila.
+   - [ ] Cargar los datos existentes en el formulario.
+   - [ ] Enviar `expectedUpdatedAt` y conservar los datos del usuario ante un conflicto `409`.
+   - [ ] Recargar la lista tras una actualización exitosa.
+
+5. **Tests separados**
+   - [ ] Cubrir creación, edición, validación y estados de submit.
+   - [ ] Cubrir permisos, errores de servidor y conflicto `409`.
+   - [ ] Cubrir restauración de foco y actualización de la lista.
+
+**Fuera de UI-2:** Customer 360 enriquecido, merge, exportación, bulk actions, filtros avanzados,
+owner y lifecycle stage.
 
 ### Fase 2 — Pipeline y Opportunities
 

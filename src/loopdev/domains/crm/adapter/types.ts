@@ -46,6 +46,31 @@ export interface CRMContactPage {
   hasMore: boolean;
 }
 
+export interface CRMCreateContactInput {
+  organizationId: string;
+  firstName: string;
+  lastName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  companyName?: string | null;
+}
+
+export interface CRMUpdateContactPatch {
+  organizationId: string;
+  firstName?: string;
+  lastName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  companyName?: string | null;
+}
+
+export type CRMContactMutationResult =
+  | { status: "success"; contact: CRMContact }
+  | { status: "validation-error"; message: string; fieldErrors: Record<string, string> }
+  | { status: "forbidden"; message: string }
+  | { status: "conflict"; message: string; contact: CRMContact }
+  | { status: "server-error"; message: string };
+
 export interface CRMLead {
   id: string;
   contactId: string;

@@ -23,4 +23,44 @@ describe("Contacts adapter contract", () => {
     expect(page.items.length).toBeGreaterThan(0);
     expect(page.items.every((contact) => `${contact.firstName} ${contact.lastName ?? ""}`.toLowerCase().includes("aria"))).toBe(true);
   });
+
+  it("returns typed validation and permission responses", async () => {
+    const invalid = await localLoopdevAdapter.crm.createContact({
+      organizationId: "local-development-organization",
+      firstName: "",
+    });
+    const forbidden = await localLoopdevAdapter.crm.createContact({
+      organizationId: "other-organization",
+      firstName: "New",
+      email: "new@example.com",
+    });
+
+    expect(invalid).toMatchObject({ status: "validation-error" });
+    expect(forbidden).toMatchObject({ status: "forbidden" });
+  });
+
+  it("creates, updates, and detects stale updates locally", async () => {
+    const created = await localLoopdevAdapter.crm.createContact({
+      organizationId: "local-development-organization",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      email: "ada@example.com",
+    });
+    expect(created.status).toBe("success");
+    if (created.status !== "success") return;
+
+    const updated = await localLoopdevAdapter.crm.updateContact(
+      created.contact.id,
+      { organizationId: "local-development-organization", companyName: "Analytical Engines" },
+      created.contact.updatedAt,
+    );
+    expect(updated).toMatchObject({ status: "success", contact: { companyName: "Analytical Engines" } });
+
+    const conflict = await localLoopdevAdapter.crm.updateContact(
+      created.contact.id,
+      { organizationId: "local-development-organization", firstName: "Changed" },
+      "stale-updated-at",
+    );
+    expect(conflict).toMatchObject({ status: "conflict", contact: { id: created.contact.id } });
+  });
 });

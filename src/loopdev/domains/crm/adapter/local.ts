@@ -2,13 +2,16 @@ import { crmCustomersStore, type LocalCustomer } from "../data/localCustomers";
 import type {
   Customer360View,
   CRMContact,
+  CRMContactMutationResult,
   CRMActivity,
   CRMContactListParams,
   CRMContactPage,
+  CRMCreateContactInput,
   CRMLead,
   CRMNote,
   CRMOpportunity,
   CRMTask,
+  CRMUpdateContactPatch,
 } from "./types";
 
 const organizationId = "local-development-organization";
@@ -38,7 +41,7 @@ function toContact(source: LocalCustomer): CRMContact {
     stateProvince: null,
     postalCode: null,
     country: source.country,
-    companyName: null,
+    companyName: source.companyName ?? null,
     jobTitle: null,
     department: null,
     attributes: { localTier: source.tier, ordersCount: source.ordersCount },
@@ -87,6 +90,66 @@ export const localLoopdevAdapter = {
       };
     },
 
+    async createContact(input: CRMCreateContactInput): Promise<CRMContactMutationResult> {
+      if (input.organizationId !== organizationId) {
+        return { status: "forbidden", message: "You do not have permission to create contacts in this organization." };
+      }
+
+      const validation = validateContactInput(input);
+      if (validation) return validation;
+
+      const created = crmCustomersStore.create({
+        name: [input.firstName.trim(), input.lastName?.trim()].filter(Boolean).join(" "),
+        email: input.email?.trim() ?? "",
+        phone: input.phone?.trim() ?? "",
+        companyName: input.companyName?.trim() || null,
+        country: "",
+        city: "",
+        ordersCount: 0,
+        tier: "standard",
+      });
+      return { status: "success", contact: toContact(created) };
+    },
+
+    async updateContact(
+      contactId: string,
+      patch: CRMUpdateContactPatch,
+      expectedUpdatedAt: string,
+    ): Promise<CRMContactMutationResult> {
+      if (patch.organizationId !== organizationId) {
+        return { status: "forbidden", message: "You do not have permission to update contacts in this organization." };
+      }
+
+      const current = crmCustomersStore.get(contactId);
+      if (!current) return { status: "server-error", message: "The contact could not be found." };
+
+      const currentContact = toContact(current);
+      if (currentContact.updatedAt !== expectedUpdatedAt) {
+        return { status: "conflict", message: "The contact changed before it could be updated.", contact: currentContact };
+      }
+
+      const validation = validateContactInput({ ...currentContact, ...patch });
+      if (validation) return validation;
+
+      const firstName = patch.firstName ?? currentContact.firstName;
+      const lastName = Object.prototype.hasOwnProperty.call(patch, "lastName")
+        ? patch.lastName
+        : currentContact.lastName;
+      const email = Object.prototype.hasOwnProperty.call(patch, "email") ? patch.email : current.email;
+      const phone = Object.prototype.hasOwnProperty.call(patch, "phone") ? patch.phone : current.phone;
+      const companyName = Object.prototype.hasOwnProperty.call(patch, "companyName")
+        ? patch.companyName
+        : current.companyName;
+      const updated = crmCustomersStore.update(contactId, {
+        name: [firstName, lastName].filter(Boolean).join(" "),
+        email: email ?? "",
+        phone: phone ?? "",
+        companyName: companyName ?? null,
+      });
+      if (!updated) return { status: "server-error", message: "The contact could not be updated." };
+      return { status: "success", contact: toContact(updated) };
+    },
+
     async listLeads(): Promise<CRMLead[]> {
       return crmCustomersStore.list().map(toLead);
     },
@@ -121,3 +184,19 @@ export const localLoopdevAdapter = {
     },
   },
 } as const;
+
+function validateContactInput(input: {
+  firstName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}): Extract<CRMContactMutationResult, { status: "validation-error" }> | null {
+  const fieldErrors: Record<string, string> = {};
+  if (!input.firstName?.trim()) fieldErrors.firstName = "First name is required.";
+  if (!input.email?.trim() && !input.phone?.trim()) {
+    fieldErrors.email = "Email or phone is required.";
+    fieldErrors.phone = "Email or phone is required.";
+  }
+  return Object.keys(fieldErrors).length
+    ? { status: "validation-error", message: "Check the contact details and try again.", fieldErrors }
+    : null;
+}

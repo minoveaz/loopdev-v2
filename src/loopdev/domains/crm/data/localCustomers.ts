@@ -5,6 +5,7 @@ export interface LocalCustomer {
   name: string;
   email: string;
   phone: string;
+  companyName?: string | null;
   country: string;
   city: string;
   ordersCount: number;

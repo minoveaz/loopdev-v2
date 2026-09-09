@@ -62,27 +62,24 @@ no tengan contrato, capability y endpoint.
 ## 4. Composicion frontend posterior
 
 ```text
-App Router route
-  -> SuiteRuntime
-    -> SuiteCanvas mode=data
-      -> ContactWorkspaceHeader
-      -> ContactToolbar
-      -> ContactTable
+/app/sales-crm/contacts
+  -> ContactsPage
+    -> ContactHeader
+    -> ContactToolbar
+    -> ContactTable
 
-Contact detail route/state
-  -> SuiteRuntime
-    -> SuiteCanvas mode=split
-      -> ContactDetailPanel
-        -> Customer360Tabs
-        -> ContactTimeline
-        -> RelatedLeads
-        -> RelatedOpportunities
-        -> RelatedTasks
-        -> NotesPanel
-        -> DuplicateReviewPanel
+/app/sales-crm/contacts/:contactId
+  -> Customer360Page
+    -> ContactProfile
+    -> Customer360Tabs
+    -> RelatedLeads
+    -> RelatedOpportunities
+    -> RelatedTasks
+    -> NotesPanel
+    -> DuplicateReviewPanel
 ```
 
-FSD se aplica dentro del Canvas:
+La composición se organiza por dominio:
 
 ```text
 app -> widgets -> features -> entities -> shared
@@ -96,8 +93,7 @@ app -> widgets -> features -> entities -> shared
 Esta composición no se implementa en la rama backend-first; se usa como contrato
 de integración para el equipo frontend.
 
-`SuiteRuntime` y `SuiteCanvas` no reciben contactos, queries, repositorios ni reglas CRM. No se crea
-una sidebar o shell paralelo dentro de CRM.
+La navegación global permanece fuera del dominio CRM. Contacts no crea una navegación paralela.
 
 ## 5. Requisitos de datos y autorizacion
 
@@ -119,7 +115,7 @@ No implementar en esta rama:
 - Cotizaciones, polizas, OCR, documentos o datos de salud.
 - AI Insights, scoring o agentes.
 - Billing, entitlements comerciales o mobile CRM.
-- Migracion global de FSD o refactor global del shell.
+- Migracion global de la arquitectura frontend.
 
 ## 7. Flujo Issue, rama, commit y PR
 
@@ -159,7 +155,7 @@ Antes del primer commit de codigo, el equipo debe confirmar en el Issue #82:
 - [ ] Ha leido este handoff y todas sus referencias.
 - [x] Ha creado `feature/crm-contacts-backend-foundation` desde `develop` actualizado.
 - [ ] Ha identificado las rutas App Router que seran delgadas.
-- [ ] El equipo frontend ha confirmado la disponibilidad de SuiteRuntime/SuiteCanvas para la integración posterior.
+- [ ] El equipo frontend ha confirmado la disponibilidad de las rutas y primitives actuales para la integración posterior.
 - [ ] Ha declarado Contracts, Schema, RLS, Storage, Secrets, Observability y Rollout/Rollback.
 - [ ] Ha identificado dependencias SEC/DB y su orden de trabajo.
 - [ ] Ha acordado no incluir cambios ajenos ni fixtures autoritativos.

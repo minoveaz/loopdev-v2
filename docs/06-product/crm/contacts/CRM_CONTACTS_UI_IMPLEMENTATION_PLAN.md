@@ -21,9 +21,9 @@ approved_at: 2026-08-21
 
 Este documento convierte la propuesta visual de Contactos en un contrato de implementacion para la
 primera entrega frontend. Debe aprobarse antes de construir la pantalla y mantenerse alineado con el
-contrato de Contact, el backend certificado y el `SuiteRuntime` existente.
+contrato de Contact, el backend certificado y las primitivas actuales de LoopDev v2.
 
-La primera entrega cubre la lista de Contactos en `SuiteCanvas mode="data"`:
+La primera entrega cubre la lista de Contactos como una página de datos de la suite:
 
 - explorar y buscar contactos autorizados;
 - aplicar filtros soportados por el backend;
@@ -41,11 +41,10 @@ de entrada para una fase posterior.
 
 | Decision         | Aprobacion propuesta                                                            |
 | ---------------- | ------------------------------------------------------------------------------- |
-| Ruta             | `/app/sales-crm/contacts`, no `/crm/contacts`; pertenece al shell v2 actual |
-| Canvas           | `SuiteCanvas mode="data"`                                                       |
-| Receta           | `DataWorkspace` con overlay responsive `TechnicalDialog`/`BottomSheet`         |
-| Shell            | `PlatformHeader`, `SuiteSidebar` y `SuiteCanvas` permanecen platform-owned      |
-| Ownership CRM    | `ModuleHeader`, `ModuleToolbar`, búsqueda, tabla, view model y acciones         |
+| Ruta             | `/app/sales-crm/contacts`, no `/crm/contacts`                                  |
+| Página           | `src/loopdev/pages/crm/Contacts.tsx`                                           |
+| Overlay          | `TechnicalDialog` o presentación responsive equivalente cuando exista          |
+| Ownership CRM    | `PageHeader`, toolbar, búsqueda, tabla, view model y acciones                   |
 | Estado server    | Consumir `GET /api/crm/contacts`; no leer Supabase desde el navegador           |
 | Paginacion       | Cursor del contrato (`nextCursor`/`hasMore`), no paginacion numerica simulada   |
 | Seleccion        | Seleccion por pagina; no ejecutar acciones masivas hasta tener capability y API |
@@ -55,36 +54,27 @@ de entrada para una fase posterior.
 ## 3. Anatomia aprobada de la pantalla
 
 ```text
-SalesCrmShell
-  -> SuiteRuntime
-    -> SuiteCanvas mode="data"
-      -> ContactsPage
-        -> ModuleHeader
-          -> Contact module title + supported count state
-          -> Segment tabs (solo segmentos implementados)
-          -> CreateContactButton (crm.manage)
-        -> ModuleToolbar
-          -> ModuleSearch (query URL q, debounce 300 ms)
-          -> ContactFilters (fase posterior; requiere query contract)
-          -> ColumnVisibilityButton (fase posterior)
-          -> BulkActions (fase posterior; capability + API required)
-        -> ContactTable
-          -> ContactRow / ContactIdentityCell
-          -> row actions (solo acciones con endpoint)
-        -> ContactPagination
-          -> current cursor state
-          -> next/previous navigation only when contract supports it
+ContactsPage
+  -> PageHeader
+    -> Contact title + supported count state
+    -> CreateContactButton (crm.manage)
+  -> ContactToolbar
+    -> ContactSearch (query URL q, debounce 300 ms)
+    -> ContactFilters (only when supported by contract)
+  -> ContactTable
+    -> ContactRow / ContactIdentityCell
+    -> row actions (only actions with endpoint)
+  -> ContactPagination
+    -> current cursor state
+    -> next/previous navigation only when contract supports it
 ```
 
 ### Ownership por zona
 
 | Zona             | Responsable | Debe hacer                                                       | No debe hacer                                       |
 | ---------------- | ----------- | ---------------------------------------------------------------- | --------------------------------------------------- |
-| `PlatformHeader` | Plataforma  | identidad, tenant, ayuda, perfil y comandos globales             | crear contactos, filtrar CRM o exportar             |
-| `SuiteSidebar`   | Plataforma  | navegación y módulo activo                                       | conocer columnas o permisos CRM                     |
-| `SuiteCanvas`    | Plataforma  | geometría y viewport del modo `data`                             | consultar contactos o decidir estados de negocio    |
-| `ModuleHeader`   | CRM         | título, estado de conteo disponible, segmentos y acción primaria | inventar total absoluto si API no lo entrega        |
-| `ModuleToolbar`  | CRM         | búsqueda, filtros y acciones contextuales                        | duplicar la responsabilidad de scroll del Canvas    |
+| `PageHeader`     | CRM         | título, estado de conteo disponible y acción primaria             | inventar total absoluto si API no lo entrega        |
+| `ContactToolbar` | CRM         | búsqueda, filtros y acciones contextuales                        | consultar tablas o decidir permisos                 |
 | `ContactTable`   | CRM         | renderizar filas tipadas, selección y ordenación compatible      | mutar datos directamente o consultar tablas         |
 | Estado de datos  | CRM/shared  | loading, empty, error, forbidden y success                       | ocultar errores de autorización o mostrar PII ajena |
 
@@ -95,10 +85,8 @@ controlado en desktop/tablet; no se debe crear un segundo scroll vertical para e
 
 ### Plataforma y layout
 
-- `SuiteRuntime` y `SuiteCanvas` desde `@loopdev/ui`.
-- `ModuleHeader` para la cabecera local y sus slots.
-- `ModuleToolbar` para distribuir búsqueda, filtros y acciones.
-- `ModuleSearch` para búsqueda contextual.
+- `PageHeader` para la cabecera local y sus acciones.
+- Componentes comunes para distribuir búsqueda, filtros y acciones.
 - `FilterBar` y `FilterDropdown` para filtros autorizados.
 - `ResponsiveTable` para tabla, selección, estados, ordenación y transformación mobile.
 - `Button`, `IconButton`, `Input`, `Select` y `Checkbox`.
@@ -180,7 +168,7 @@ drawer o página de forma arbitraria:
 | Tipo de flujo | Presentación estándar | Regla |
 | ------------- | --------------------- | ----- |
 | Crear/editar registro corto, hasta aproximadamente 6-8 campos | `TechnicalDialog` en desktop/tablet y `BottomSheet` en mobile | Mantiene el contexto de la lista y usa una sola experiencia responsive |
-| Formulario largo, wizard, muchos campos o relaciones | Página o `SuiteCanvas mode="workspace"` | Tiene navegación, secciones, guardado progresivo y más espacio vertical |
+| Formulario largo, wizard, muchos campos o relaciones | Página de detalle | Tiene navegación, secciones, guardado progresivo y más espacio vertical |
 | Detalle contextual, filtros avanzados o inspección no transaccional | Drawer/panel contextual | No se usa como sustituto del formulario estándar |
 | Confirmación simple o alerta | `TechnicalDialog` compacto | No se convierte en un formulario ni en un drawer |
 
@@ -272,7 +260,7 @@ El primer view model debe ser una proyección estricta de `CrmContact`; no debe 
 
 - [ ] Confirmar contexto de organización activo y su integración con la query.
 - [ ] Crear widget de lista dentro de la superficie Contacts.
-- [ ] Integrar `ModuleHeader`, `ModuleToolbar`, `ModuleSearch` y `ResponsiveTable`.
+- [ ] Integrar `PageHeader`, toolbar, búsqueda y tabla responsive.
 - [x] Implementar búsqueda con `q` en URL y debounce de 300 ms.
 - [x] Mantener UI-1 sin `FilterBar`: el contrato actual solo soporta `query`, `cursor` y `limit`.
 - [ ] Implementar cursor, límite acotado y navegación anterior/siguiente local.
@@ -285,7 +273,7 @@ El primer view model debe ser una proyección estricta de `CrmContact`; no debe 
 - [ ] Implementar `ContactForm` con los campos contractuales `firstName`, `lastName`, `email`, `phone` y `companyName`.
 - [ ] Aplicar validación client-side alineada con `CrmCreateContactCommandSchema` y `CrmUpdateContactCommandSchema`.
 - [ ] Exigir al menos un canal de contacto: `email` o `phone`; el backend permanece como autoridad final.
-- [ ] Abrir el formulario de creación desde `ModuleHeader.rightSlot` mediante `TechnicalDialog` o drawer accesible.
+- [ ] Abrir el formulario de creación desde la acción del `PageHeader` mediante `TechnicalDialog` o drawer accesible.
 - [ ] Abrir el mismo formulario en modo edición con valores iniciales del `CrmContact` seleccionado.
 - [ ] Crear mediante `POST /api/crm/contacts` con `organizationId` del contexto autorizado, nunca desde un input editable.
 - [ ] Editar mediante `PATCH /api/crm/contacts` enviando `contactId` y `expectedUpdatedAt` para control de concurrencia.
@@ -330,7 +318,7 @@ La separación de responsabilidades aprobada es:
 ```text
 ContactsPage
   -> ContactsDataAdapter (fixture o API)
-  -> ModuleHeader (acción Create contact)
+  -> PageHeader (acción Create contact)
   -> ContactFormDialog (apertura, cierre y foco)
   -> ContactForm (campos, validación y submit)
   -> FiltersActions (lista, filtros, selección y estados)
@@ -358,7 +346,7 @@ modificar `ContactForm` ni la composición visual.
 
 | Capacidad | Estado actual | Evidencia o gap | Acción de UI-2 |
 | --------- | ------------- | --------------- | -------------- |
-| Canvas `data` | `[x]` | `SalesCrmShell` ya usa `canvasProps={{ mode: 'data' }}` | Mantener sin duplicar configuración |
+| Página de contactos | `[x]` | `Contacts.tsx` ya existe | Mantener la ruta y composición actuales |
 | `TechnicalDialog` | `[x]` primitive global | Existe en `@loopdev/ui`; cubre dialog accesible, backdrop, `Escape`, focus trap y scroll interno | Reutilizarlo en desktop/tablet |
 | `BottomSheet` | `[ ]` no disponible | No hay export ni primitive dedicado en `@loopdev/ui` | Implementar la variante mobile dentro de `ContactFormDialog`; extraer globalmente solo con segundo consumidor |
 | Sistema de toast | `[x]` global | `ToastItem`, `ToastViewport` y `toast.show` existen y tienen tests de accesibilidad, duración y aislamiento por tenant | Reutilizar `toast.show({ tenantId, variant, title, description })` tras éxito o error recuperable |
@@ -389,7 +377,7 @@ responsive behavior.
 
 #### UI-1A: cabecera y acción primaria
 
-- `ModuleHeader` pertenece a la pantalla Contacts y contiene el título, segmento actual y
+- `PageHeader` pertenece a la pantalla Contacts y contiene el título, segmento actual y
   `Create contact` en `rightSlot` cuando existe `crm.manage`.
 - El conteo mostrado es el número de registros visibles en la página actual; no se debe presentar
   como total absoluto mientras la API no exponga un count contract.
@@ -508,7 +496,7 @@ UI-4 introduce una superficie distinta en `/app/sales-crm/contacts/:contactId` c
 
 #### UI-1
 
-- La ruta usa `SalesCrmShell` y `SuiteCanvas mode="data"`.
+- La ruta usa la navegación global de v2 y `Contacts.tsx`.
 - La fuente puede cambiar entre API y fixture sin cambiar la composición.
 - Query, cursor, permisos, estados, selección y responsive están cubiertos.
 - No existen mocks de producción ni acceso directo del navegador a Supabase.
@@ -550,14 +538,14 @@ UI-4 introduce una superficie distinta en `/app/sales-crm/contacts/:contactId` c
 
 ## 8. Criterios de aceptación para aprobar UI-1
 
-- [ ] La ruta renderiza dentro de `SalesCrmShell` y `SuiteCanvas mode="data"`.
+- [ ] La ruta renderiza la tabla de Contacts y sus estados mediante la composición v2.
 - [ ] No existen mocks ni acceso directo del navegador a Supabase.
 - [ ] La búsqueda actualiza `q` sin recargar la suite y conserva el estado al navegar.
 - [ ] La lista usa cursor real y no presenta paginación numérica ficticia.
 - [ ] La tabla representa exclusivamente campos presentes en el contrato vigente.
 - [ ] La selección no ofrece acciones que todavía no tienen API/capability.
 - [ ] Loading, empty, error y forbidden tienen representación accesible.
-- [ ] La vista mobile no genera overflow horizontal del shell y transforma filas semánticamente.
+- [ ] La vista mobile no genera overflow horizontal y transforma filas semánticamente.
 - [ ] Las acciones respetan `crm.read` y `crm.manage` server-side.
 - [ ] Tests cubren query, estados, selección, responsive y errores 403/409 cuando aplique.
 - [ ] Typecheck, tests focalizados, build y `git diff --check` pasan.

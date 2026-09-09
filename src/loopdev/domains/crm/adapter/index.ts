@@ -1,8 +1,8 @@
 import { localLoopdevAdapter } from "./local";
-import type { Customer360View, CRMContact, CRMLead } from "./types";
+import type { Customer360View, CRMContactListParams, CRMContactPage, CRMLead } from "./types";
 
 export interface LoopdevCrmAdapter {
-  listContacts(): Promise<CRMContact[]>;
+  listContacts(params: CRMContactListParams): Promise<CRMContactPage>;
   listLeads(): Promise<CRMLead[]>;
   getCustomer360(contactId: string): Promise<Customer360View | null>;
 }

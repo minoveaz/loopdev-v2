@@ -42,12 +42,16 @@ sin reescribir las páginas ni crear una API paralela desde el navegador.
 
 ## Estado actual
 
-Implementado visualmente:
+Implementado como base visual:
 
 - CRM Overview.
-- Contacts con búsqueda, filtros, ordenación y paginación visual.
+- Contacts con tabla, búsqueda, ordenación y paginación local de presentación.
 - Customer 360 dentro del detalle de Contact.
 - Leads con datos del adapter local.
+
+La documentación de producto de Contacts y Leads sigue siendo la fuente de requisitos. La base
+visual no se considera implementación funcional completa mientras falten contratos de query,
+paginación por cursor, permisos y mutaciones autorizadas.
 
 Preparado en navegación, pero pendiente de construcción de la superficie de dominio:
 
@@ -76,6 +80,22 @@ se duplican en este track.
 Leads y Customer 360 renderizan estados vacíos y errores recuperables; `DataCard`
 centraliza la presentación de errores; y la validación de la rama pasa lint,
 typecheck, 193 tests y build.
+
+### Siguiente unidad — Contacts UI-1: lista autoritativa
+
+**Estado:** En progreso
+
+- [ ] Actualizar el contrato del adapter a `items`, `nextCursor` y `hasMore`.
+- [ ] Añadir `organizationId`, `query`, `cursor` y `limit` al contrato de consulta.
+- [ ] Implementar búsqueda con debounce y estado `q` en URL.
+- [ ] Sustituir la paginación numérica local por navegación basada en cursor.
+- [ ] Mantener únicamente filtros respaldados por el contrato real.
+- [ ] Cubrir `loading`, `empty`, `error`, `forbidden` y `success`.
+- [ ] Mantener el acceso desde cada fila a `/app/sales-crm/contacts/:contactId`.
+- [ ] Crear tests separados de adapter, hook, estados y navegación a Customer 360.
+
+**Alcance:** Solo lectura y navegación. Creación, edición, merge, exportación, bulk actions y
+Customer 360 enriquecido quedan fuera de esta unidad.
 
 ### Fase 2 — Pipeline y Opportunities
 

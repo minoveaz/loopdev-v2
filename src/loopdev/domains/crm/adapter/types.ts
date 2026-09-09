@@ -33,6 +33,19 @@ export interface CRMContact {
   updatedAt: string;
 }
 
+export interface CRMContactListParams {
+  organizationId: string;
+  query?: string;
+  cursor?: string | null;
+  limit: number;
+}
+
+export interface CRMContactPage {
+  items: CRMContact[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 export interface CRMLead {
   id: string;
   contactId: string;

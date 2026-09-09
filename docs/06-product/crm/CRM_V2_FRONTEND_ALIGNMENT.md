@@ -24,7 +24,7 @@ puede cambiar de datos locales a Supabase sin reescribir las paginas.
 
 | Responsabilidad | Ubicacion en v2 |
 | --- | --- |
-| Shell y navegación LoopDev | `src/loopdev/LoopdevShell.tsx`, `src/loopdev/navigation.ts` |
+| Navegación LoopDev | `src/loopdev/navigation.ts` |
 | Paginas CRM | `src/loopdev/pages/crm` |
 | Componentes CRM | `src/loopdev/components` |
 | Tipos y adapter CRM | `src/loopdev/domains/crm` |
@@ -69,7 +69,7 @@ especificaciones de frontend v2 deben escribirse siempre como `/app/sales-crm/*`
 2. Completar Contacts y Customer 360 antes de ampliar el modelo de interacciones.
 3. Llevar Leads al mismo nivel visual que Contacts, manteniendo su contrato de dominio.
 4. Diseñar Pipeline, Tasks y Communications como nuevas superficies v2, reutilizando primitives
-   compartidos sin copiar el shell.
+   compartidos sin duplicar la navegación global.
 5. Cubrir en cada superficie `loading`, `empty`, `error`, `forbidden` y `success`; añadir
    `stale` o `conflict` cuando la mutacion real se conecte.
 
@@ -82,6 +82,14 @@ Se conservan como referencia de backend y producto:
 - modelo de Customer 360, actividad, notas, tareas y oportunidades;
 - criterios de privacidad, accesibilidad e idempotencia;
 - fixtures y evidencia de certificación del backend.
+
+Las recetas técnicas del producto legacy no forman parte de la arquitectura frontend v2. No deben
+aparecer en rutas, páginas, componentes ni criterios de aceptación de v2.
+
+En v2 se validan capacidades de producto, no recetas de shell. Para cada superficie se debe
+comprobar directamente que existe el contenido solicitado, sus acciones autorizadas, estados,
+acceso a relaciones y navegación real. Por ejemplo, Contacts debe ofrecer una tabla de contactos,
+búsqueda, estados de datos y acceso a Customer 360 desde cada contacto autorizado.
 
 No son rutas de importación para v2 los árboles `apps/loopdev-os`, `packages/contracts` o
 `/api/*` descritos en esos documentos. Cuando una especificación frontend los mencione, se

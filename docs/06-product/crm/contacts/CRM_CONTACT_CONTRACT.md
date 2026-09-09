@@ -148,11 +148,13 @@ type ContactErrorCode =
 Errors never include PII belonging to another tenant. Validation errors identify fields without
 returning secrets or full sensitive payloads.
 
-## 8. Frontend contract
+## 8. Frontend contract for LoopDev v2
 
-- Contact list renders in `SuiteCanvas mode="data"`.
-- Contact detail and Customer 360 render in `SuiteCanvas mode="split"`.
-- App routes remain thin; widgets compose features and entities.
+- Contact list renders a real table in `/app/sales-crm/contacts`.
+- Each authorized contact exposes navigation to
+  `/app/sales-crm/contacts/:contactId` and its Customer 360 view.
+- Pages compose domain hooks, adapters and shared primitives; they do not access persistence
+  directly.
 - Contact entities own view models and public APIs; features own create/update/merge actions.
 - Server state is tenant-aware and invalidated on organization/workspace change.
 - UI implements `loading`, `empty`, `error`, `forbidden` and `success` states.

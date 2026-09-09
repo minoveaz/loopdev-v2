@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
 import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
-import type { CRMContact, CRMLead, Customer360View } from "@/loopdev/domains/crm/adapter";
+import type {
+  CRMContact,
+  CRMContactListParams,
+  CRMLead,
+  Customer360View,
+} from "@/loopdev/domains/crm/adapter";
 
-export function useCrmContacts() {
+const LOCAL_ORGANIZATION_ID = "local-development-organization";
+const DEFAULT_CONTACT_LIMIT = 10;
+
+export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organizationId">> = {}) {
   const [contacts, setContacts] = useState<CRMContact[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
@@ -12,9 +22,19 @@ export function useCrmContacts() {
     let active = true;
     setLoading(true);
     setError(null);
-    void loopdevAdapter.crm.listContacts()
-      .then((items) => {
-        if (active) setContacts(items);
+    const request: CRMContactListParams = {
+      organizationId: LOCAL_ORGANIZATION_ID,
+      query: params.query,
+      cursor: params.cursor ?? null,
+      limit: params.limit ?? DEFAULT_CONTACT_LIMIT,
+    };
+    void loopdevAdapter.crm.listContacts(request)
+      .then((page) => {
+        if (active) {
+          setContacts(page.items);
+          setNextCursor(page.nextCursor);
+          setHasMore(page.hasMore);
+        }
       })
       .catch((cause: unknown) => {
         if (active) setError(cause instanceof Error ? cause.message : "Please try again.");
@@ -23,9 +43,17 @@ export function useCrmContacts() {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [reloadToken]);
+  }, [params.cursor, params.limit, params.query, reloadToken]);
 
-  return { contacts, loading, error, reload: () => setReloadToken((token) => token + 1) };
+  return {
+    contacts,
+    nextCursor,
+    hasMore,
+    forbidden: false,
+    loading,
+    error,
+    reload: () => setReloadToken((token) => token + 1),
+  };
 }
 
 export function useCrmLeads() {

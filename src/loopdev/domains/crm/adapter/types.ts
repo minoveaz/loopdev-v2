@@ -50,18 +50,46 @@ export interface CRMCreateContactInput {
   organizationId: string;
   firstName: string;
   lastName?: string | null;
+  secondLastName?: string | null;
+  preferredName?: string | null;
   email?: string | null;
+  secondaryEmail?: string | null;
   phone?: string | null;
+  secondaryPhone?: string | null;
+  preferredChannel?: CRMContact["preferredChannel"];
+  preferredLanguage?: string | null;
   companyName?: string | null;
+  jobTitle?: string | null;
+  department?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  stateProvince?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
 }
 
 export interface CRMUpdateContactPatch {
   organizationId: string;
   firstName?: string;
   lastName?: string | null;
+  secondLastName?: string | null;
+  preferredName?: string | null;
   email?: string | null;
+  secondaryEmail?: string | null;
   phone?: string | null;
+  secondaryPhone?: string | null;
+  preferredChannel?: CRMContact["preferredChannel"];
+  preferredLanguage?: string | null;
   companyName?: string | null;
+  jobTitle?: string | null;
+  department?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  stateProvince?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
 }
 
 export type CRMContactMutationResult =

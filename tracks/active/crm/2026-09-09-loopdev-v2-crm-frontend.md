@@ -99,7 +99,7 @@ Customer 360 enriquecido quedan fuera de esta unidad.
 
 ### Siguiente unidad — Contacts UI-2: creación y edición
 
-**Estado:** Pendiente
+**Estado:** En progreso
 
 1. **Contrato del adapter**
    - [x] Añadir `createContact(input)` y `updateContact(contactId, patch, expectedUpdatedAt)`.
@@ -107,21 +107,21 @@ Customer 360 enriquecido quedan fuera de esta unidad.
    - [x] Simular creación, edición y conflictos en `localLoopdevAdapter`.
 
 2. **Formulario CRM**
-   - [ ] Crear `ContactForm` y `ContactFormDialog` responsive.
-   - [ ] Incluir nombre, apellido, email, teléfono, empresa, cargo, ciudad y país.
-   - [ ] Exigir al menos email o teléfono y mostrar errores por campo.
+   - [x] Crear `ContactForm` y `ContactFormDrawer` responsive.
+   - [x] Incluir identidad, canales, organización y dirección como base real de CRM.
+   - [x] Exigir al menos email o teléfono y mostrar errores por campo.
 
 3. **Crear contacto**
-   - [ ] Activar el botón `New contact`.
-   - [ ] Ejecutar `createContact` y cubrir los estados de edición, envío, éxito, validación,
-     forbidden y error.
-   - [ ] Cerrar el diálogo, recargar la primera página y restaurar el foco al finalizar.
+   - [x] Activar el botón `New contact`.
+   - [x] Ejecutar `createContact` y cubrir edición, envío, éxito y validación en el formulario.
+   - [ ] Diferenciar visualmente `forbidden`, conflicto `409` y error de servidor.
+   - [x] Cerrar el drawer y recargar la primera página al finalizar.
 
 4. **Editar contacto**
-   - [ ] Añadir una acción de edición por fila.
-   - [ ] Cargar los datos existentes en el formulario.
-   - [ ] Enviar `expectedUpdatedAt` y conservar los datos del usuario ante un conflicto `409`.
-   - [ ] Recargar la lista tras una actualización exitosa.
+   - [x] Añadir una acción de edición por fila.
+   - [x] Cargar los datos existentes en el formulario.
+   - [x] Enviar `expectedUpdatedAt`.
+   - [x] Recargar la lista tras una actualización exitosa.
 
 5. **Tests separados**
    - [ ] Cubrir creación, edición, validación y estados de submit.

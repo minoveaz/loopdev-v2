@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, MoreHorizontal, Plus, RefreshCw, SearchX } from "lucide-react";
+import { Archive, AlertTriangle, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { contactName } from "@/loopdev/domains/crm/adapter";
+import { loopdevAdapter, contactName, type CRMContact, type CRMCreateContactInput, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import {
   DataCard,
   PageContainer,
@@ -22,6 +22,15 @@ import {
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { formatDate, getInitials } from "@/lib/formatters";
 import { useCrmContacts } from "@/loopdev/domains/crm/hooks/use-crm";
+import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactFormDrawer";
+import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const CONTACT_PAGE_SIZE = 10;
 
@@ -29,6 +38,8 @@ export default function SalesCRMContacts() {
   const { trail } = useBreadcrumbs();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
   const query = searchParams.get("q") ?? "";
   const cursor = searchParams.get("cursor");
   const [search, setSearch] = useState(query);
@@ -38,6 +49,75 @@ export default function SalesCRMContacts() {
     cursor,
     limit: CONTACT_PAGE_SIZE,
   });
+
+  const openCreate = () => {
+    setEditingContact(null);
+    setEditorOpen(true);
+  };
+
+  const openEdit = (contact: CRMContact) => {
+    setEditingContact(contact);
+    setEditorOpen(true);
+  };
+
+  const submitContact = async (values: ContactFormValues) => {
+    const optional = (value: string) => value.trim() || null;
+    if (editingContact) {
+      const patch: CRMUpdateContactPatch = {
+        organizationId: "local-development-organization",
+        firstName: values.firstName.trim(),
+        lastName: optional(values.lastName),
+        secondLastName: optional(values.secondLastName),
+        preferredName: optional(values.preferredName),
+        email: values.email.trim() || null,
+        secondaryEmail: optional(values.secondaryEmail),
+        phone: values.phone.trim() || null,
+        secondaryPhone: optional(values.secondaryPhone),
+        preferredChannel: values.preferredChannel,
+        preferredLanguage: optional(values.preferredLanguage),
+        companyName: optional(values.companyName),
+        jobTitle: optional(values.jobTitle),
+        department: optional(values.department),
+        addressLine1: optional(values.addressLine1),
+        addressLine2: optional(values.addressLine2),
+        city: optional(values.city),
+        stateProvince: optional(values.stateProvince),
+        postalCode: optional(values.postalCode),
+        country: optional(values.country),
+      };
+      return loopdevAdapter.crm.updateContact(editingContact.id, patch, editingContact.updatedAt);
+    }
+
+    const input: CRMCreateContactInput = {
+      organizationId: "local-development-organization",
+      firstName: values.firstName.trim(),
+      lastName: optional(values.lastName),
+      secondLastName: optional(values.secondLastName),
+      preferredName: optional(values.preferredName),
+      email: values.email.trim() || null,
+      secondaryEmail: optional(values.secondaryEmail),
+      phone: values.phone.trim() || null,
+      secondaryPhone: optional(values.secondaryPhone),
+      preferredChannel: values.preferredChannel,
+      preferredLanguage: optional(values.preferredLanguage),
+      companyName: optional(values.companyName),
+      jobTitle: optional(values.jobTitle),
+      department: optional(values.department),
+      addressLine1: optional(values.addressLine1),
+      addressLine2: optional(values.addressLine2),
+      city: optional(values.city),
+      stateProvince: optional(values.stateProvince),
+      postalCode: optional(values.postalCode),
+      country: optional(values.country),
+    };
+    return loopdevAdapter.crm.createContact(input);
+  };
+
+  const handleEditorSuccess = () => {
+    setEditorOpen(false);
+    setEditingContact(null);
+    reload();
+  };
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -86,7 +166,7 @@ export default function SalesCRMContacts() {
         description="Manage people and customer relationships across CRM."
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Contacts" }]}
         actions={
-          <Button className="gap-1.5">
+          <Button className="gap-1.5" onClick={openCreate}>
             <Plus className="h-3.5 w-3.5" />
             New contact
           </Button>
@@ -177,15 +257,42 @@ export default function SalesCRMContacts() {
                   {formatDate(customer.updatedAt)}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <MoreHorizontal className="h-3.5 w-3.5" />
-                    <span className="sr-only">Contact actions</span>
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        aria-label={`Actions for ${contactName(customer)}`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}>
+                        <Eye className="mr-2 h-3.5 w-3.5" />
+                        View Customer 360
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openEdit(customer)}>
+                        <Pencil className="mr-2 h-3.5 w-3.5" />
+                        Edit contact
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled>
+                        <StickyNote className="mr-2 h-3.5 w-3.5" />
+                        Add note
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled>
+                        <CheckSquare className="mr-2 h-3.5 w-3.5" />
+                        Create task
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem disabled className="text-destructive focus:text-destructive">
+                        <Archive className="mr-2 h-3.5 w-3.5" />
+                        Archive contact
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
@@ -203,6 +310,16 @@ export default function SalesCRMContacts() {
           </div>
         </nav>
       </DataCard>
+      <ContactFormDrawer
+        open={editorOpen}
+        contact={editingContact}
+        onOpenChange={(open) => {
+          setEditorOpen(open);
+          if (!open) setEditingContact(null);
+        }}
+        onSubmit={submitContact}
+        onSuccess={handleEditorSuccess}
+      />
     </PageContainer>
   );
 }

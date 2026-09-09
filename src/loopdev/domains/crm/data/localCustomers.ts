@@ -6,6 +6,18 @@ export interface LocalCustomer {
   email: string;
   phone: string;
   companyName?: string | null;
+  secondLastName?: string | null;
+  preferredName?: string | null;
+  secondaryEmail?: string | null;
+  secondaryPhone?: string | null;
+  preferredChannel?: "whatsapp" | "phone" | "email" | null;
+  preferredLanguage?: string | null;
+  jobTitle?: string | null;
+  department?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  stateProvince?: string | null;
+  postalCode?: string | null;
   country: string;
   city: string;
   ordersCount: number;

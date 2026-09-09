@@ -9,6 +9,7 @@ import {
   PageHeader,
   SearchInput,
   StatusBadge,
+  ConfirmDialog,
 } from "@/components/common";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,8 @@ export default function SalesCRMContacts() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<CRMContact | null>(null);
+  const [archiveLoading, setArchiveLoading] = useState(false);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const query = searchParams.get("q") ?? "";
   const cursor = searchParams.get("cursor");
@@ -145,14 +148,19 @@ export default function SalesCRMContacts() {
   };
 
   const archiveContact = async (contact: CRMContact) => {
-    if (!window.confirm(`Archive ${contactName(contact)}? It will be removed from the active contacts list.`)) return;
     setActionError(null);
-    const result = await loopdevAdapter.crm.archiveContact(contact.id, contact.updatedAt);
-    if (result.status === "success") {
-      reload();
-      return;
+    setArchiveLoading(true);
+    try {
+      const result = await loopdevAdapter.crm.archiveContact(contact.id, contact.updatedAt);
+      if (result.status === "success") {
+        reload();
+        setArchiveTarget(null);
+        return;
+      }
+      setActionError(`${result.status === "forbidden" ? "Permission denied: " : result.status === "conflict" ? "Conflict: " : "Server error: "}${result.message}`);
+    } finally {
+      setArchiveLoading(false);
     }
-    setActionError(`${result.status === "forbidden" ? "Permission denied: " : result.status === "conflict" ? "Conflict: " : "Server error: "}${result.message}`);
   };
 
   useEffect(() => {
@@ -309,7 +317,7 @@ export default function SalesCRMContacts() {
               index={pageOffset + index + 1}
               onOpen={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
               onEdit={() => openEdit(customer)}
-              onArchive={() => archiveContact(customer)}
+              onArchive={() => setArchiveTarget(customer)}
             />
           ))}
         </div>
@@ -404,7 +412,7 @@ export default function SalesCRMContacts() {
                         Create task
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => archiveContact(customer)}>
+                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setArchiveTarget(customer)}>
                         <Archive className="mr-2 h-3.5 w-3.5" />
                         Archive contact
                       </DropdownMenuItem>
@@ -456,6 +464,18 @@ export default function SalesCRMContacts() {
         onSubmit={submitContact}
         onSuccess={handleEditorSuccess}
         restoreFocusRef={restoreFocusRef}
+      />
+      <ConfirmDialog
+        open={Boolean(archiveTarget)}
+        onOpenChange={(open) => { if (!open && !archiveLoading) setArchiveTarget(null); }}
+        title="Archive contact?"
+        description={archiveTarget ? `${contactName(archiveTarget)} will be removed from the active contacts list.` : undefined}
+        confirmLabel="Archive"
+        tone="destructive"
+        loading={archiveLoading}
+        onConfirm={async () => {
+          if (archiveTarget) await archiveContact(archiveTarget);
+        }}
       />
     </PageContainer>
   );

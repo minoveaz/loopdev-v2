@@ -7,6 +7,9 @@ import type {
   CRMContactPage,
   CRMCreateContactInput,
   CRMLead,
+  CRMLeadMutationResult,
+  CRMUpdateLeadInput,
+  CRMCreateOpportunityFromLeadInput,
   CRMOpportunityListParams,
   CRMOpportunityMutationResult,
   CRMMoveOpportunityStageInput,
@@ -25,12 +28,17 @@ export interface LoopdevCrmAdapter {
   ): Promise<CRMContactMutationResult>;
   archiveContact(contactId: string, expectedUpdatedAt: string): Promise<CRMContactMutationResult>;
   listLeads(): Promise<CRMLead[]>;
+  updateLead(leadId: string, input: CRMUpdateLeadInput): Promise<CRMLeadMutationResult>;
   listOpportunities(params: CRMOpportunityListParams): Promise<CRMPipelineOpportunity[]>;
   moveOpportunityStage(opportunityId: string, input: CRMMoveOpportunityStageInput): Promise<CRMOpportunityMutationResult>;
   moveOpportunityStage(
     opportunityId: string,
     stageCode: CRMPipelineStageCode,
     expectedUpdatedAt: string,
+  ): Promise<CRMOpportunityMutationResult>;
+  createOpportunityFromLead(
+    leadId: string,
+    input: CRMCreateOpportunityFromLeadInput,
   ): Promise<CRMOpportunityMutationResult>;
   getCustomer360(contactId: string): Promise<Customer360View | null>;
 }

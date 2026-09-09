@@ -6,6 +6,10 @@ export interface LocalOpportunity {
   organizationId: string;
   name: string;
   contactId: string;
+  leadId: string | null;
+  productKey: string | null;
+  origin: "manual" | "lead_conversion";
+  idempotencyKey?: string | null;
   ownerId: string | null;
   ownerName: string | null;
   stageCode: CRMPipelineStageCode;
@@ -28,6 +32,9 @@ const seed: LocalOpportunity[] = [
     organizationId,
     name: "Enterprise expansion",
     contactId: "crm_cust_1",
+    leadId: null,
+    productKey: null,
+    origin: "manual",
     ownerId: "owner-maya",
     ownerName: "Maya Chen",
     stageCode: "proposal",
@@ -44,6 +51,9 @@ const seed: LocalOpportunity[] = [
     organizationId,
     name: "Annual plan renewal",
     contactId: "crm_cust_2",
+    leadId: null,
+    productKey: null,
+    origin: "manual",
     ownerId: "owner-jon",
     ownerName: "Jon Bell",
     stageCode: "qualified",
@@ -60,6 +70,9 @@ const seed: LocalOpportunity[] = [
     organizationId,
     name: "Security review package",
     contactId: "crm_cust_3",
+    leadId: null,
+    productKey: null,
+    origin: "manual",
     ownerId: "owner-maya",
     ownerName: "Maya Chen",
     stageCode: "prospecting",
@@ -76,6 +89,9 @@ const seed: LocalOpportunity[] = [
     organizationId,
     name: "Regional rollout",
     contactId: "crm_cust_4",
+    leadId: null,
+    productKey: null,
+    origin: "manual",
     ownerId: "owner-lee",
     ownerName: "Lee Okafor",
     stageCode: "negotiation",
@@ -92,6 +108,9 @@ const seed: LocalOpportunity[] = [
     organizationId,
     name: "Partner enablement",
     contactId: "crm_cust_5",
+    leadId: null,
+    productKey: null,
+    origin: "manual",
     ownerId: "owner-jon",
     ownerName: "Jon Bell",
     stageCode: "won",
@@ -108,6 +127,9 @@ const seed: LocalOpportunity[] = [
     organizationId,
     name: "Legacy migration",
     contactId: "crm_cust_6",
+    leadId: null,
+    productKey: null,
+    origin: "manual",
     ownerId: "owner-lee",
     ownerName: "Lee Okafor",
     stageCode: "lost",

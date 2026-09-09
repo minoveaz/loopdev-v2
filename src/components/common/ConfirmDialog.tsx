@@ -17,7 +17,7 @@ type Tone = "default" | "destructive" | "warning";
 interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
+  title: ReactNode;
   description?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;

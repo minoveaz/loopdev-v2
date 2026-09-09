@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ContactForm } from "@/loopdev/components/crm/contacts/ContactForm";
@@ -145,12 +145,14 @@ describe("ContactFormDrawer", () => {
     const view = render(<TestDrawer />);
 
     fireEvent.change(screen.getByLabelText("First name *"), { target: { value: "Ada" } });
-    vi.spyOn(window, "confirm").mockReturnValue(false);
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    const discardDialog = screen.getByRole("alertdialog");
+    expect(within(discardDialog).getByRole("heading", { name: "Discard contact changes?" })).toBeInTheDocument();
+    fireEvent.click(within(discardDialog).getByRole("button", { name: "Cancel" }));
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
 
-    vi.mocked(window.confirm).mockReturnValue(true);
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Discard" }));
     await waitFor(() => expect(document.activeElement).toBe(trigger));
 
     view.unmount();

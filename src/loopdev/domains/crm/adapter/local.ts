@@ -1,5 +1,6 @@
 import { crmCustomersStore, type LocalCustomer } from "../data/localCustomers";
 import { localCrmOpportunitiesStore, type LocalOpportunity } from "../data/localOpportunities";
+import { localCrmLeadsStore, type LocalLead } from "../data/localLeads";
 import { localReferenceDataAdapter } from "@/loopdev/domains/reference-data/adapter/local";
 import type {
   Customer360View,
@@ -9,7 +10,10 @@ import type {
   CRMContactListParams,
   CRMContactPage,
   CRMCreateContactInput,
+  CRMCreateOpportunityFromLeadInput,
   CRMLead,
+  CRMLeadMutationResult,
+  CRMUpdateLeadInput,
   CRMNote,
   CRMOpportunity,
   CRMOpportunityListParams,
@@ -20,7 +24,7 @@ import type {
   CRMTask,
   CRMUpdateContactPatch,
 } from "./types";
-import { contactName, CRMAdapterError, CRM_PIPELINE_STAGE_CODES } from "./types";
+import { contactName, CRMAdapterError, CRM_LEAD_STATUS_CODES, CRM_PIPELINE_STAGE_CODES } from "./types";
 
 const organizationId = "local-development-organization";
 
@@ -39,6 +43,10 @@ function toPipelineOpportunity(source: LocalOpportunity): CRMPipelineOpportunity
   return {
     id: source.id,
     organizationId: source.organizationId,
+    contactId: source.contactId,
+    leadId: source.leadId ?? null,
+    productKey: source.productKey ?? null,
+    origin: source.origin ?? "manual",
     name: source.name,
     stageCode: source.stageCode,
     stageLabel: PIPELINE_STAGE_LABELS[source.stageCode],
@@ -101,15 +109,27 @@ const localActivities: CRMActivity[] = [
   { id: "local-activity-3", sourceType: "note", sourceId: "local-note-1", type: "note", summary: "Relationship note added", occurredAt: new Date(Date.now() - 3 * 86400000).toISOString() },
 ];
 
-function toLead(contact: LocalCustomer): CRMLead {
+function toLead(source: LocalLead): CRMLead {
   return {
-    id: `local-lead-${contact.id}`,
-    contactId: contact.id,
-    status: contact.tier === "lead" ? "qualified" : "new",
-    interest: contact.tier === "lead" ? "Enterprise expansion" : "General interest",
-    source: "local",
-    createdAt: contact.createdAt,
+    id: source.id,
+    organizationId: source.organizationId,
+    contactId: source.contactId,
+    status: source.status,
+    interest: source.interest,
+    source: source.source,
+    assignedUserId: source.assignedUserId,
+    ownerName: source.ownerName,
+    score: source.score,
+    lastActivityAt: source.lastActivityAt,
+    nextActivityAt: source.nextActivityAt,
+    duplicateReviewId: source.duplicateReviewId,
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
   };
+}
+
+function normalizeProductKey(value: string): string {
+  return value.trim().toLocaleLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
 }
 
 export const localLoopdevAdapter = {
@@ -268,7 +288,31 @@ export const localLoopdevAdapter = {
     },
 
     async listLeads(): Promise<CRMLead[]> {
-      return crmCustomersStore.list().map(toLead);
+      return localCrmLeadsStore.list().map(toLead);
+    },
+
+    async updateLead(leadId: string, input: CRMUpdateLeadInput): Promise<CRMLeadMutationResult> {
+      if (input.organizationId !== organizationId) {
+        return { status: "forbidden", message: "You do not have permission to update leads in this organization." };
+      }
+      const current = localCrmLeadsStore.get(leadId);
+      if (!current || current.organizationId !== organizationId) {
+        return { status: "server-error", message: "The lead could not be found." };
+      }
+      if (input.expectedUpdatedAt && current.updatedAt !== input.expectedUpdatedAt) {
+        return { status: "conflict", message: "The lead changed before it could be updated.", lead: toLead(current) };
+      }
+      if (input.status && !CRM_LEAD_STATUS_CODES.includes(input.status)) {
+        return { status: "validation-error", message: "The selected lead status is not available." };
+      }
+      const updated = localCrmLeadsStore.update(leadId, {
+        ...(input.status ? { status: input.status } : {}),
+        ...(input.assignedUserId !== undefined ? { assignedUserId: input.assignedUserId } : {}),
+        ...(input.ownerName !== undefined ? { ownerName: input.ownerName } : {}),
+      });
+      return updated
+        ? { status: "success", lead: toLead(updated) }
+        : { status: "server-error", message: "The lead could not be updated." };
     },
 
     async listOpportunities({
@@ -341,15 +385,108 @@ export const localLoopdevAdapter = {
       return { status: "success", opportunity: toPipelineOpportunity(updated) };
     },
 
+    async createOpportunityFromLead(
+      leadId: string,
+      input: CRMCreateOpportunityFromLeadInput,
+    ): Promise<CRMOpportunityMutationResult> {
+      if (input.organizationId !== organizationId) {
+        return { status: "forbidden", message: "You do not have permission to convert leads in this organization." };
+      }
+
+      const productKey = normalizeProductKey(input.productKey);
+      const fieldErrors: Record<string, string> = {};
+      if (!productKey) fieldErrors.productKey = "Product or interest is required.";
+      if (input.amount !== undefined && input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0)) {
+        fieldErrors.amount = "Amount must be a non-negative number.";
+      }
+      if (Object.keys(fieldErrors).length) {
+        return { status: "validation-error", message: "Check the conversion details and try again.", fieldErrors };
+      }
+
+      const existing = localCrmOpportunitiesStore.list().find((opportunity) => (
+        opportunity.organizationId === organizationId &&
+        opportunity.leadId === leadId &&
+        opportunity.origin === "lead_conversion" &&
+        opportunity.productKey === productKey
+      ));
+      if (existing) return { status: "success", opportunity: toPipelineOpportunity(existing) };
+      const normalizedIdempotencyKey = input.idempotencyKey?.trim();
+      if (normalizedIdempotencyKey) {
+        const idempotencyConflict = localCrmOpportunitiesStore.list().find((opportunity) => (
+          opportunity.organizationId === organizationId &&
+          opportunity.origin === "lead_conversion" &&
+          opportunity.idempotencyKey === normalizedIdempotencyKey &&
+          (opportunity.leadId !== leadId || opportunity.productKey !== productKey)
+        ));
+        if (idempotencyConflict) {
+          return {
+            status: "conflict",
+            message: "The idempotency key was already used for a different lead conversion.",
+            opportunity: toPipelineOpportunity(idempotencyConflict),
+          };
+        }
+      }
+
+      const lead = localCrmLeadsStore.get(leadId);
+      if (!lead || lead.organizationId !== organizationId) {
+        return { status: "server-error", message: "The lead could not be found." };
+      }
+      if (lead.status !== "qualified" && lead.status !== "converted") {
+        return {
+          status: "validation-error",
+          message: "Only qualified leads can create opportunities.",
+          fieldErrors: { leadId: "The lead must be qualified before conversion." },
+        };
+      }
+      const contact = crmCustomersStore.get(lead.contactId);
+      if (!contact) return { status: "server-error", message: "The lead contact could not be found." };
+
+      const created = localCrmOpportunitiesStore.create({
+        organizationId,
+        name: input.name?.trim() || input.productKey.trim(),
+        contactId: lead.contactId,
+        leadId,
+        productKey,
+        origin: "lead_conversion",
+        idempotencyKey: normalizedIdempotencyKey ?? null,
+        ownerId: null,
+        ownerName: null,
+        stageCode: "qualified",
+        amount: input.amount ?? null,
+        currency: input.currency?.trim() || null,
+        probability: 0.4,
+        expectedCloseDate: input.expectedCloseDate ?? null,
+        archivedAt: null,
+      });
+      if (!created) return { status: "server-error", message: "The opportunity could not be created." };
+
+      if (lead.status === "qualified") {
+        const converted = localCrmLeadsStore.update(leadId, { status: "converted" });
+        if (!converted) return { status: "server-error", message: "The lead could not be converted." };
+      }
+      return { status: "success", opportunity: toPipelineOpportunity(created) };
+    },
+
     async getCustomer360(contactId: string): Promise<Customer360View | null> {
       const contact = crmCustomersStore.get(contactId);
       if (!contact) return null;
 
-      const leads: CRMLead[] = [{ id: "local-lead-1", contactId, status: "qualified", interest: "Enterprise expansion", source: "local", createdAt: contact.createdAt }];
-      const opportunities: CRMOpportunity[] = [
-        { id: "local-opportunity-1", contactId, name: "Enterprise expansion", stageKey: "proposal", amount: 48000, currency: "EUR", expectedCloseAt: null },
-        { id: "local-opportunity-2", contactId, name: "Annual plan renewal", stageKey: "qualified", amount: 14500, currency: "EUR", expectedCloseAt: null },
-      ];
+      const leads = localCrmLeadsStore.list().filter((lead) => lead.contactId === contactId).map(toLead);
+      const opportunities: CRMOpportunity[] = localCrmOpportunitiesStore.list()
+        .filter((opportunity) => opportunity.organizationId === organizationId && opportunity.contactId === contactId && !opportunity.archivedAt)
+        .map((opportunity) => ({
+          id: opportunity.id,
+          organizationId: opportunity.organizationId,
+          contactId: opportunity.contactId,
+          leadId: opportunity.leadId,
+          productKey: opportunity.productKey,
+          origin: opportunity.origin,
+          name: opportunity.name,
+          stageKey: opportunity.stageCode,
+          amount: opportunity.amount,
+          currency: opportunity.currency,
+          expectedCloseAt: opportunity.expectedCloseDate,
+        }));
       const tasks: CRMTask[] = [
         { id: "local-task-1", title: "Review renewal requirements", status: "open", priority: "high", dueAt: new Date().toISOString(), relationId: contactId },
         { id: "local-task-2", title: "Schedule technical follow-up", status: "open", priority: "medium", dueAt: new Date(Date.now() + 86400000).toISOString(), relationId: contactId },

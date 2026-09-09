@@ -3,7 +3,7 @@ title: CRM Pipeline and Opportunities Domain Contract
 status: approved
 version: 1.0
 created: 2026-08-13
-updated: 2026-08-13
+updated: 2026-09-10
 owner: crm
 program_track: tracks/planned/crm/2026-08-13-crm-pilot-execution.md
 issue: https://github.com/minoveaz/loopdev/issues/85
@@ -157,3 +157,6 @@ No secrets, provider payloads or PII are returned in ordinary error messages.
 
 Stable stage IDs, `origin`, `productKey`, `contactId` and `leadId` are public contract fields. Visible
 stage names and order are presentation/configuration and may change without historical migration.
+
+The frontend adapter follows the same separation: Lead lifecycle status is not a Pipeline stage,
+the board contains Opportunities only, and `lost` stage movement has no Lead-status side effect.

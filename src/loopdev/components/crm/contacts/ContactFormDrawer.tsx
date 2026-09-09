@@ -1,5 +1,5 @@
 import { useCallback, useRef, type RefObject } from "react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { AppDrawer } from "@/components/platform";
 import type { CRMContact, CRMContactMutationResult } from "@/loopdev/domains/crm/adapter";
 import { ContactForm, type ContactFormValues } from "./ContactForm";
 
@@ -22,44 +22,39 @@ export function ContactFormDrawer({
 }: ContactFormDrawerProps) {
   const editing = Boolean(contact);
   const dirtyRef = useRef(false);
-  const handleOpenChange = useCallback((nextOpen: boolean) => {
-    if (!nextOpen && dirtyRef.current && !window.confirm("Discard your unsaved changes?")) return;
-    onOpenChange(nextOpen);
-  }, [onOpenChange]);
-  const handleCloseAutoFocus = useCallback((event: Event) => {
-    const target = restoreFocusRef?.current;
-    if (!target?.isConnected) return;
-    event.preventDefault();
-    window.requestAnimationFrame(() => target.focus());
-  }, [restoreFocusRef]);
   const handleDirtyChange = useCallback((dirty: boolean) => {
     dirtyRef.current = dirty;
   }, []);
+  const confirmDiscard = useCallback(() => {
+    dirtyRef.current = false;
+  }, []);
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent
-        className="w-full overflow-y-auto sm:max-w-xl"
-        onCloseAutoFocus={handleCloseAutoFocus}
-      >
-        <SheetHeader>
-          <SheetTitle className="font-display text-xl">
-            {editing ? "Edit contact" : "Create contact"}
-          </SheetTitle>
-          <SheetDescription>
-            {editing
-              ? "Update the contact profile and relationship details."
-              : "Add a complete contact profile without leaving the contacts list."}
-          </SheetDescription>
-        </SheetHeader>
+    <AppDrawer
+      open={open}
+      onOpenChange={onOpenChange}
+      title={editing ? "Edit contact" : "Create contact"}
+      description={editing
+        ? "Update the contact profile and relationship details."
+        : "Add a complete contact profile without leaving the contacts list."}
+      restoreFocusRef={restoreFocusRef}
+      dirty={() => dirtyRef.current}
+      confirmOnClose
+      confirmTitle="Discard contact changes?"
+      confirmDescription="Your unsaved contact changes will be lost."
+      confirmLabel="Discard"
+      confirmTone="warning"
+      onDiscard={confirmDiscard}
+    >
+      {({ requestClose }) => (
         <ContactForm
           contact={contact}
-          onCancel={() => handleOpenChange(false)}
+          onCancel={requestClose}
           onSubmit={onSubmit}
           onSuccess={onSuccess}
           onDirtyChange={handleDirtyChange}
         />
-      </SheetContent>
-    </Sheet>
+      )}
+    </AppDrawer>
   );
 }

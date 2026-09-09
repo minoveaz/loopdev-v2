@@ -3,7 +3,9 @@ import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
 import type {
   CRMContact,
   CRMContactListParams,
+  CRMCreateOpportunityFromLeadInput,
   CRMLead,
+  CRMUpdateLeadInput,
   CRMOpportunityListParams,
   CRMOpportunityMutationResult,
   CRMMoveOpportunityStageInput,
@@ -79,6 +81,7 @@ export function useCrmLeads() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [conversion, setConversion] = useState<CrmLeadConversionState>({ status: "idle" });
 
   useEffect(() => {
     let active = true;
@@ -97,8 +100,57 @@ export function useCrmLeads() {
     return () => { active = false; };
   }, [reloadToken]);
 
-  return { leads, loading, error, reload: () => setReloadToken((token) => token + 1) };
+  const createOpportunityFromLead = async (
+    leadId: string,
+    input: CRMCreateOpportunityFromLeadInput,
+  ) => {
+    setConversion({ status: "pending", leadId });
+    let result: CRMOpportunityMutationResult;
+    try {
+      result = await loopdevAdapter.crm.createOpportunityFromLead(leadId, input);
+    } catch (cause: unknown) {
+      result = { status: "server-error", message: cause instanceof Error ? cause.message : "Please try again." };
+    }
+    if (result.status === "success") {
+      setConversion(result);
+      setReloadToken((token) => token + 1);
+    } else {
+      setConversion({ status: result.status, message: result.message });
+    }
+    return result;
+  };
+
+  const updateLead = async (lead: CRMLead, input: Omit<CRMUpdateLeadInput, "organizationId" | "expectedUpdatedAt">) => {
+    const result = await loopdevAdapter.crm.updateLead(lead.id, {
+      ...input,
+      organizationId: LOCAL_ORGANIZATION_ID,
+      expectedUpdatedAt: lead.updatedAt,
+    });
+    if (result.status === "success") {
+      setLeads((current) => current.map((item) => item.id === result.lead.id ? result.lead : item));
+    } else if (result.status === "conflict" && result.lead) {
+      setLeads((current) => current.map((item) => item.id === result.lead!.id ? result.lead! : item));
+    }
+    return result;
+  };
+
+  return {
+    leads,
+    loading,
+    error,
+    conversion,
+    createOpportunityFromLead,
+    updateLead,
+    resetConversion: () => setConversion({ status: "idle" }),
+    reload: () => setReloadToken((token) => token + 1),
+  };
 }
+
+export type CrmLeadConversionState =
+  | { status: "idle" }
+  | { status: "pending"; leadId: string }
+  | { status: "success"; opportunity: CRMPipelineOpportunity }
+  | ({ status: Exclude<CRMOpportunityMutationResult["status"], "success"> } & { message: string });
 
 export type CrmPipelineMutationState =
   | { status: "idle" }

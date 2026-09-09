@@ -114,18 +114,53 @@ export type CRMContactMutationResult =
 
 export interface CRMLead {
   id: string;
+  organizationId: string;
   contactId: string;
-  status: string;
+  status: CRMLeadStatusCode;
   interest: string | null;
   source: string | null;
+  assignedUserId?: string | null;
+  ownerName?: string | null;
+  score?: number | null;
+  lastActivityAt?: string | null;
+  nextActivityAt?: string | null;
+  duplicateReviewId?: string | null;
   createdAt: string;
+  updatedAt: string;
 }
+
+export const CRM_LEAD_STATUS_CODES = [
+  "new",
+  "contacted",
+  "qualified",
+  "stalled",
+  "inactive",
+  "converted",
+] as const;
+
+export type CRMLeadStatusCode = (typeof CRM_LEAD_STATUS_CODES)[number];
+
+export interface CRMUpdateLeadInput {
+  organizationId: string;
+  status?: CRMLeadStatusCode;
+  assignedUserId?: string | null;
+  ownerName?: string | null;
+  expectedUpdatedAt?: string;
+}
+
+export type CRMLeadMutationResult =
+  | { status: "success"; lead: CRMLead }
+  | { status: "validation-error" | "forbidden" | "conflict" | "server-error"; message: string; lead?: CRMLead };
 
 export interface CRMOpportunity {
   id: string;
+  organizationId: string;
   contactId: string;
+  leadId: string | null;
+  productKey: string | null;
+  origin: "manual" | "lead_conversion";
   name: string;
-  stageKey: string;
+  stageKey: CRMPipelineStageCode;
   amount: number | null;
   currency: string | null;
   expectedCloseAt: string | null;
@@ -168,6 +203,10 @@ export interface CRMPipelineOpportunity {
   expectedCloseDate: string | null;
   updatedAt: string;
   archivedAt: string | null;
+  contactId: string;
+  leadId: string | null;
+  productKey: string | null;
+  origin: "manual" | "lead_conversion";
 }
 
 export interface CRMOpportunityListParams {
@@ -183,8 +222,19 @@ export interface CRMMoveOpportunityStageInput {
   expectedUpdatedAt: string;
 }
 
+export interface CRMCreateOpportunityFromLeadInput {
+  organizationId: string;
+  productKey: string;
+  name?: string | null;
+  amount?: number | null;
+  currency?: string | null;
+  expectedCloseDate?: string | null;
+  idempotencyKey?: string;
+}
+
 export type CRMOpportunityMutationResult =
   | { status: "success"; opportunity: CRMPipelineOpportunity }
+  | { status: "validation-error"; message: string; fieldErrors: Record<string, string> }
   | { status: "forbidden"; message: string }
   | { status: "conflict"; message: string; opportunity: CRMPipelineOpportunity }
   | { status: "server-error"; message: string };

@@ -131,6 +131,74 @@ export interface CRMOpportunity {
   expectedCloseAt: string | null;
 }
 
+/** Stable product stage codes used by the first local Pipeline slice. */
+export const CRM_PIPELINE_STAGE_CODES = [
+  "prospecting",
+  "qualified",
+  "proposal",
+  "negotiation",
+  "won",
+  "lost",
+] as const;
+
+export type CRMPipelineStageCode = (typeof CRM_PIPELINE_STAGE_CODES)[number];
+
+export interface CRMPipelineContact {
+  id: string;
+  displayName: string;
+  email: string | null;
+}
+
+export interface CRMPipelineOwner {
+  id: string;
+  displayName: string;
+}
+
+export interface CRMPipelineOpportunity {
+  id: string;
+  organizationId: string;
+  name: string;
+  stageCode: CRMPipelineStageCode;
+  stageLabel: string;
+  amount: number | null;
+  currency: string | null;
+  contact: CRMPipelineContact;
+  owner: CRMPipelineOwner | null;
+  probability: number | null;
+  expectedCloseDate: string | null;
+  updatedAt: string;
+  archivedAt: string | null;
+}
+
+export interface CRMOpportunityListParams {
+  organizationId: string;
+  query?: string;
+  stageCodes?: CRMPipelineStageCode[];
+  ownerIds?: string[];
+}
+
+export interface CRMMoveOpportunityStageInput {
+  organizationId: string;
+  stageCode: CRMPipelineStageCode;
+  expectedUpdatedAt: string;
+}
+
+export type CRMOpportunityMutationResult =
+  | { status: "success"; opportunity: CRMPipelineOpportunity }
+  | { status: "forbidden"; message: string }
+  | { status: "conflict"; message: string; opportunity: CRMPipelineOpportunity }
+  | { status: "server-error"; message: string };
+
+export class CRMAdapterError extends Error {
+  constructor(
+    message: string,
+    public readonly code: "forbidden" | "server-error",
+  ) {
+    super(message);
+    this.name = "CRMAdapterError";
+  }
+}
+
 export interface CRMTask {
   id: string;
   title: string;

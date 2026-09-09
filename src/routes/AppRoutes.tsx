@@ -247,6 +247,7 @@ export function AppRoutes() {
     "/app/sales-crm",
     "/app/sales-crm/overview",
     "/app/sales-crm/contacts",
+    "/app/sales-crm/pipeline",
     "/dashboard/ecommerce",
     "/dashboards/ecommerce",
     "/management/users",

@@ -1,4 +1,5 @@
 import { crmCustomersStore, type LocalCustomer } from "../data/localCustomers";
+import { localCrmOpportunitiesStore, type LocalOpportunity } from "../data/localOpportunities";
 import { localReferenceDataAdapter } from "@/loopdev/domains/reference-data/adapter/local";
 import type {
   Customer360View,
@@ -11,12 +12,52 @@ import type {
   CRMLead,
   CRMNote,
   CRMOpportunity,
+  CRMOpportunityListParams,
+  CRMOpportunityMutationResult,
+  CRMMoveOpportunityStageInput,
+  CRMPipelineOpportunity,
+  CRMPipelineStageCode,
   CRMTask,
   CRMUpdateContactPatch,
 } from "./types";
-import { contactName } from "./types";
+import { contactName, CRMAdapterError, CRM_PIPELINE_STAGE_CODES } from "./types";
 
 const organizationId = "local-development-organization";
+
+const PIPELINE_STAGE_LABELS: Record<CRMPipelineStageCode, string> = {
+  prospecting: "Prospecting",
+  qualified: "Qualified",
+  proposal: "Proposal",
+  negotiation: "Negotiation",
+  won: "Won",
+  lost: "Lost",
+};
+
+function toPipelineOpportunity(source: LocalOpportunity): CRMPipelineOpportunity {
+  const contact = crmCustomersStore.get(source.contactId);
+  const contactView = contact ? toContact(contact) : null;
+  return {
+    id: source.id,
+    organizationId: source.organizationId,
+    name: source.name,
+    stageCode: source.stageCode,
+    stageLabel: PIPELINE_STAGE_LABELS[source.stageCode],
+    amount: source.amount,
+    currency: source.currency,
+    contact: {
+      id: source.contactId,
+      displayName: contactView ? contactName(contactView) : "Unknown contact",
+      email: contactView?.email ?? null,
+    },
+    owner: source.ownerId && source.ownerName
+      ? { id: source.ownerId, displayName: source.ownerName }
+      : null,
+    probability: source.probability,
+    expectedCloseDate: source.expectedCloseDate,
+    updatedAt: source.updatedAt,
+    archivedAt: source.archivedAt,
+  };
+}
 
 function toContact(source: LocalCustomer): CRMContact {
   const [firstName, ...lastNameParts] = source.name.split(" ");
@@ -228,6 +269,76 @@ export const localLoopdevAdapter = {
 
     async listLeads(): Promise<CRMLead[]> {
       return crmCustomersStore.list().map(toLead);
+    },
+
+    async listOpportunities({
+      organizationId: requestedOrganizationId,
+      query = "",
+      stageCodes = [],
+      ownerIds = [],
+    }: CRMOpportunityListParams): Promise<CRMPipelineOpportunity[]> {
+      if (requestedOrganizationId !== organizationId) {
+        throw new CRMAdapterError(
+          "You do not have permission to view opportunities in this organization.",
+          "forbidden",
+        );
+      }
+
+      const normalizedQuery = query.trim().toLowerCase();
+      return localCrmOpportunitiesStore
+        .list()
+        .filter((opportunity) => opportunity.organizationId === requestedOrganizationId)
+        .filter((opportunity) => !opportunity.archivedAt)
+        .filter((opportunity) => !stageCodes.length || stageCodes.includes(opportunity.stageCode))
+        .filter((opportunity) => !ownerIds.length || (opportunity.ownerId && ownerIds.includes(opportunity.ownerId)))
+        .filter((opportunity) => {
+          if (!normalizedQuery) return true;
+          const contact = crmCustomersStore.get(opportunity.contactId);
+          const contactView = contact ? toContact(contact) : null;
+          return [
+            opportunity.name,
+            contactView ? contactName(contactView) : "",
+            contactView?.email ?? "",
+            opportunity.ownerName ?? "",
+          ].some((value) => value.toLowerCase().includes(normalizedQuery));
+        })
+        .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+        .map(toPipelineOpportunity);
+    },
+
+    async moveOpportunityStage(
+      opportunityId: string,
+      input: CRMMoveOpportunityStageInput | CRMPipelineStageCode,
+      expectedUpdatedAt?: string,
+    ): Promise<CRMOpportunityMutationResult> {
+      const moveInput: CRMMoveOpportunityStageInput = typeof input === "string"
+        ? { organizationId, stageCode: input, expectedUpdatedAt: expectedUpdatedAt ?? "" }
+        : input;
+      if (moveInput.organizationId !== organizationId) {
+        return {
+          status: "forbidden",
+          message: "You do not have permission to move opportunities in this organization.",
+        };
+      }
+      if (!CRM_PIPELINE_STAGE_CODES.includes(moveInput.stageCode)) {
+        return { status: "server-error", message: "The selected pipeline stage is not available." };
+      }
+
+      const current = localCrmOpportunitiesStore.get(opportunityId);
+      if (!current || current.organizationId !== moveInput.organizationId || current.archivedAt) {
+        return { status: "server-error", message: "The opportunity could not be found." };
+      }
+      const currentOpportunity = toPipelineOpportunity(current);
+      if (current.updatedAt !== moveInput.expectedUpdatedAt) {
+        return {
+          status: "conflict",
+          message: "The opportunity changed before it could be moved.",
+          opportunity: currentOpportunity,
+        };
+      }
+      const updated = localCrmOpportunitiesStore.update(opportunityId, { stageCode: moveInput.stageCode });
+      if (!updated) return { status: "server-error", message: "The opportunity could not be updated." };
+      return { status: "success", opportunity: toPipelineOpportunity(updated) };
     },
 
     async getCustomer360(contactId: string): Promise<Customer360View | null> {

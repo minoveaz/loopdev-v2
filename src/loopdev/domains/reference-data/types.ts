@@ -1,5 +1,15 @@
 export type ReferenceDataScope = "global" | "product" | "organization";
 
+export type ReferenceDataCatalog =
+  | "countries"
+  | "subdivisions"
+  | "cities"
+  | "document-types"
+  | "genders"
+  | "languages"
+  | "currencies"
+  | "timezones";
+
 export interface ReferenceDataItem {
   code: string;
   label: string;
@@ -52,13 +62,39 @@ export interface CitySearchParams {
   subdivisionCode?: string | null;
   query: string;
   limit?: number;
+  organizationId?: string;
 }
 
 export interface OrganizationReferenceDataConfig {
   organizationId: string;
   allowedCountryCodes: string[];
-  enabledCatalogs: string[];
+  enabledCatalogs: ReferenceDataCatalog[];
   locale: string;
   currencyCode: string;
   timezone: string;
+  customItems?: OrganizationReferenceDataCustomItems;
+  overrides?: OrganizationReferenceDataOverrides;
 }
+
+/**
+ * Tenant-owned additions are typed per catalog so consumers can safely use
+ * the fields required by the corresponding reference item.
+ */
+export interface OrganizationReferenceDataCustomItems {
+  countries?: Country[];
+  subdivisions?: Subdivision[];
+  cities?: City[];
+  "document-types"?: DocumentType[];
+  genders?: GenderOption[];
+  languages?: Language[];
+  currencies?: Currency[];
+  timezones?: Timezone[];
+}
+
+export type ReferenceDataItemOverride = Partial<
+  Pick<ReferenceDataItem, "label" | "isActive" | "sortOrder" | "metadata">
+>;
+
+export type OrganizationReferenceDataOverrides = Partial<{
+  [catalog in ReferenceDataCatalog]: Record<string, ReferenceDataItemOverride>;
+}>;

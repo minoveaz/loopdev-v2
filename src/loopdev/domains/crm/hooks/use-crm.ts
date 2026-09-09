@@ -4,6 +4,11 @@ import type {
   CRMContact,
   CRMContactListParams,
   CRMLead,
+  CRMOpportunityListParams,
+  CRMOpportunityMutationResult,
+  CRMMoveOpportunityStageInput,
+  CRMPipelineOpportunity,
+  CRMPipelineStageCode,
   Customer360View,
 } from "@/loopdev/domains/crm/adapter";
 
@@ -93,6 +98,96 @@ export function useCrmLeads() {
   }, [reloadToken]);
 
   return { leads, loading, error, reload: () => setReloadToken((token) => token + 1) };
+}
+
+export type CrmPipelineMutationState =
+  | { status: "idle" }
+  | { status: "pending"; opportunityId: string }
+  | ({ status: Exclude<CRMOpportunityMutationResult["status"], "success"> } & {
+      message: string;
+      opportunity?: CRMPipelineOpportunity;
+    })
+  | { status: "success"; opportunity: CRMPipelineOpportunity };
+
+export interface UseCrmPipelineParams {
+  query?: string;
+  stageCodes?: CRMPipelineStageCode[];
+  ownerIds?: string[];
+}
+
+export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
+  const [opportunities, setOpportunities] = useState<CRMPipelineOpportunity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
+  const [mutation, setMutation] = useState<CrmPipelineMutationState>({ status: "idle" });
+  const [reloadToken, setReloadToken] = useState(0);
+  const stageCodesKey = (params.stageCodes ?? []).join(",");
+  const ownerIdsKey = (params.ownerIds ?? []).join(",");
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    setForbidden(false);
+    const request: CRMOpportunityListParams = {
+      organizationId: LOCAL_ORGANIZATION_ID,
+      query: params.query,
+      stageCodes: stageCodesKey ? stageCodesKey.split(",") as CRMPipelineStageCode[] : undefined,
+      ownerIds: ownerIdsKey ? ownerIdsKey.split(",") : undefined,
+    };
+    void loopdevAdapter.crm.listOpportunities(request)
+      .then((items) => {
+        if (active) setOpportunities(items);
+      })
+      .catch((cause: unknown) => {
+        if (!active) return;
+        if (typeof cause === "object" && cause !== null && "code" in cause && cause.code === "forbidden") {
+          setForbidden(true);
+          setError(null);
+        } else {
+          setError(cause instanceof Error ? cause.message : "Please try again.");
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, [params.query, stageCodesKey, ownerIdsKey, reloadToken]);
+
+  const moveStage = async (opportunity: CRMPipelineOpportunity, stageCode: CRMPipelineStageCode) => {
+    const input: CRMMoveOpportunityStageInput = {
+      organizationId: LOCAL_ORGANIZATION_ID,
+      stageCode,
+      expectedUpdatedAt: opportunity.updatedAt,
+    };
+    setMutation({ status: "pending", opportunityId: opportunity.id });
+    const result = await loopdevAdapter.crm.moveOpportunityStage(opportunity.id, input);
+    if (result.status === "success") {
+      setMutation(result);
+      setOpportunities((current) => current.map((item) => item.id === result.opportunity.id ? result.opportunity : item));
+    } else {
+      setMutation({
+        status: result.status,
+        message: result.message,
+        ...(result.status === "conflict" ? { opportunity: result.opportunity } : {}),
+      });
+      if (result.status === "conflict") {
+        setOpportunities((current) => current.map((item) => item.id === result.opportunity.id ? result.opportunity : item));
+      }
+    }
+    return result;
+  };
+
+  return {
+    opportunities,
+    loading,
+    error,
+    forbidden,
+    mutation,
+    moveStage,
+    reload: () => setReloadToken((token) => token + 1),
+  };
 }
 
 export function useCrmCustomer360(contactId: string | undefined) {

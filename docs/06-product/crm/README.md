@@ -50,6 +50,18 @@ componentes CRM está en [CRM UI component protocol](CRM_UI_COMPONENT_PROTOCOL.m
 - [Impact assessment](pipeline/CRM_PIPELINE_IMPACT_ASSESSMENT.md)
 - [Handoff de implementacion](pipeline/CRM_PIPELINE_IMPLEMENTATION_HANDOFF.md)
 
+#### Estado de implementación v2
+
+La primera slice local de Pipeline está disponible en
+`/app/sales-crm/pipeline`. Incluye contratos tipados en el boundary CRM, fixtures
+locales multi-tenant, listado filtrable y movimiento de etapa con
+`expectedUpdatedAt` (conflicto optimista). La vista usa columnas kanban
+responsive y no requiere Docker, Supabase ni servicios externos. La tabla de
+Opportunities y las operaciones de backend permanecen fuera de esta slice.
+La composición visual sigue el patrón Kanban de Rivera (`/apps/kanban`):
+toolbar de búsqueda/filtros, columnas desplazables, cards compactas y menú
+accesible de movimiento; las mutaciones continúan pasando por el adapter CRM.
+
 ### Tasks, Notes y Timeline
 
 - [Especificacion UX](tasks/CRM_TASKS_UX_SPEC.md)

@@ -77,4 +77,20 @@ export const localOrganizationReferenceDataConfig: OrganizationReferenceDataConf
   locale: "en-US",
   currencyCode: "EUR",
   timezone: "Europe/Madrid",
+  customItems: {
+    genders: [
+      {
+        code: "self_described",
+        label: "Self-described",
+        scope: "organization",
+        isActive: true,
+        sortOrder: 35,
+      },
+    ],
+  },
+  overrides: {
+    genders: {
+      male: { label: "Man" },
+    },
+  },
 };

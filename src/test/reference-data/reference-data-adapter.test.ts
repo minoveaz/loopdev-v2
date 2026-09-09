@@ -35,5 +35,16 @@ describe("reference data adapter", () => {
 
     expect(config.allowedCountryCodes).toEqual(["ES", "US", "CO"]);
     expect(config.currencyCode).toBe("EUR");
+    expect(config.customItems?.genders?.[0].code).toBe("self_described");
+    expect(config.overrides?.genders?.male?.label).toBe("Man");
+  });
+
+  it("applies organization catalog additions and overrides only when scoped", async () => {
+    const globalGenders = await referenceDataAdapter.listGenderOptions();
+    const organizationGenders = await referenceDataAdapter.listGenderOptions("local-development-organization");
+
+    expect(globalGenders.some((item) => item.code === "self_described")).toBe(false);
+    expect(organizationGenders.some((item) => item.code === "self_described")).toBe(true);
+    expect(organizationGenders.find((item) => item.code === "male")?.label).toBe("Man");
   });
 });

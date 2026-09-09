@@ -12,10 +12,11 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   changes:
-    name: Detect affected surfaces
+    name: Identificar qué cambió
     runs-on: ubuntu-latest
     outputs:
       application: ${{ steps.filter.outputs.application }}
@@ -31,6 +32,7 @@ jobs:
         with:
           filters: |
             application:
+              - '.github/workflows/**'
               - 'src/**'
               - 'public/**'
               - 'index.html'
@@ -42,6 +44,7 @@ jobs:
               - 'tailwind.config.*'
               - 'postcss.config.*'
             build:
+              - '.github/workflows/**'
               - 'src/**'
               - 'public/**'
               - 'index.html'
@@ -59,7 +62,7 @@ jobs:
               - 'src/test/**'
 
   quality:
-    name: Static quality and unit tests
+    name: Revisar código y ejecutar tests
     needs: changes
     if: needs.changes.outputs.application == 'true'
     runs-on: ubuntu-latest
@@ -76,17 +79,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
+      - name: Revisar reglas de escritura con ESLint
         run: npm run lint
 
-      - name: Typecheck
+      - name: Comprobar tipos de TypeScript
         run: npm run typecheck
 
-      - name: Unit and structural tests
+      - name: Ejecutar tests unitarios y estructurales
         run: npm run test:quality
 
   build:
-    name: Production build
+    name: Comprobar que la aplicación compila
     needs: changes
     if: needs.changes.outputs.build == 'true'
     runs-on: ubuntu-latest
@@ -103,14 +106,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Crear build de producción
         run: npm run build
 
   crm-surface:
-    name: CRM surface contract
+    name: Comprobar cambios del CRM
     needs: [changes, quality]
     if: needs.changes.outputs.crm == 'true' && needs.quality.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: CRM checks are covered by the quality gate
-        run: echo "CRM changes passed lint, typecheck, and non-visual tests."
+      - name: Confirmar que el CRM pasó los controles comunes
+        run: echo "Los cambios del CRM pasaron lint, TypeScript y los tests no visuales."

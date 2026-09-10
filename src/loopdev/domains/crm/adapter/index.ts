@@ -25,8 +25,10 @@ import type {
   CRMPipelineStageCode,
   CRMUpdateContactPatch,
 } from "./types";
+import type { CRMOperationsAdapter } from "../operations/types";
 
 export interface LoopdevCrmAdapter {
+  operations: CRMOperationsAdapter;
   listContacts(params: CRMContactListParams): Promise<CRMContactPage>;
   createContact(input: CRMCreateContactInput): Promise<CRMContactMutationResult>;
   updateContact(
@@ -71,3 +73,4 @@ export interface LoopdevAdapter {
 export const loopdevAdapter: LoopdevAdapter = localLoopdevAdapter;
 
 export * from "./types";
+export * from "../operations/types";

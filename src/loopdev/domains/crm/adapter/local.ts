@@ -40,6 +40,7 @@ import type {
   CRMUpdateContactPatch,
 } from "./types";
 import { contactName, CRMAdapterError, CRM_LEAD_STATUS_CODES, CRM_PIPELINE_STAGE_CODES } from "./types";
+import { localCrmOperationsAdapter } from "../operations/adapter/local";
 
 const organizationId = "local-development-organization";
 
@@ -194,6 +195,7 @@ export const localLoopdevAdapter = {
   catalog: catalogAdapter,
   referenceData: localReferenceDataAdapter,
   crm: {
+    operations: localCrmOperationsAdapter,
     async listContacts({
       query = "",
       cursor = null,

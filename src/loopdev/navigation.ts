@@ -24,6 +24,7 @@ export const loopdevNavigation: NavSection[] = [
           { label: "Leads", to: "/app/sales-crm/leads" },
           { label: "Pipeline", to: "/app/sales-crm/pipeline" },
           { label: "Opportunities", to: "/app/sales-crm/opportunities" },
+          { label: "Operations", to: "/app/sales-crm/operations" },
           { label: "Tasks", to: "/app/sales-crm/tasks" },
           { label: "Communications", to: "/app/sales-crm/communications" },
         ],

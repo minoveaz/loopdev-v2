@@ -338,14 +338,20 @@ migraciones y ninguna página accede a `localStorage`.
 
 ### Fase 6 — Search, Tags, Custom Fields e Import/Export
 
-**Estado:** Pendiente
+**Estado:** Completada localmente — persistencia remota y búsqueda global real pendientes
 
-- [ ] Implementar búsqueda CRM reutilizable y preparada para búsqueda global.
-- [ ] Implementar saved views y filtros persistentes.
-- [ ] Implementar Tags y EntityTags.
-- [ ] Preparar Custom Fields con visibilidad y requiredness por organización.
-- [ ] Implementar import/export local con validación, deduplicación y resultados por fila.
-- [ ] Implementar bulk actions solo sobre comandos respaldados por contrato.
+- [x] Implementar búsqueda CRM reutilizable y preparada para búsqueda global.
+- [x] Implementar saved views y filtros persistentes.
+- [x] Implementar Tags y EntityTags.
+- [x] Preparar Custom Fields con visibilidad y requiredness por organización.
+- [x] Implementar import/export local con validación, deduplicación y resultados por fila.
+- [x] Implementar bulk actions solo sobre comandos respaldados por contrato.
+- [x] Exponer las operaciones en `/app/sales-crm/operations`; la pantalla usa el adapter
+  local y queda preparada para cambiar a Supabase sin modificar la composición.
+- [x] Mantener la validación de tipos, requiredness y opciones de Custom Fields en el
+  contrato de mutación.
+- [ ] Conectar búsqueda global, persistencia Supabase, RLS y asociación de Custom Field
+  Values dentro de los formularios de Contacts, Leads y Opportunities.
 
 ### Fase 7 — Automations, entitlements y certificación local
 
@@ -409,6 +415,7 @@ migraciones y ninguna página accede a `localStorage`.
 | Opportunities | `/app/sales-crm/opportunities` | Implementada con adapter local |
 | Tasks / Platform workspace | `/app/sales-crm/tasks` | Implementada localmente con tabla, vistas y calendario |
 | Task Templates | `/app/sales-crm/task-templates` | Implementada localmente; acceso contextual desde Tasks |
+| CRM Operations | `/app/sales-crm/operations` | Implementada localmente con Search, Views, Tags, Custom Fields e Import/Export |
 | Communications | `/app/sales-crm/communications` | Pendiente |
 
 ## Fuera de alcance
@@ -427,7 +434,8 @@ migraciones y ninguna página accede a `localStorage`.
 - [x] Tasks, Notes, Activities y Timeline tienen contrato transversal y estados documentados.
 - [x] Platform foundation tiene contexto de organización, EntityRef y permisos locales.
 - [x] Attachments y Notifications tienen adapters locales y contratos reutilizables.
-- [ ] Search, Tags, Custom Fields e Import/Export tienen alcance y comandos definidos.
+- [x] Search, Tags, Custom Fields e Import/Export tienen alcance y comandos definidos
+  para el adapter local.
 - [ ] Automations y entitlements tienen límites explícitos.
 - [ ] Todas las páginas usan `/app/sales-crm/*` y el shell actual de LoopDev.
 - [ ] La UI consume datos mediante hooks, servicios y adapters.

@@ -17,6 +17,7 @@ export interface LocalOpportunity {
   currency: string | null;
   probability: number | null;
   expectedCloseDate: string | null;
+  lossReason: string | null;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
@@ -42,6 +43,7 @@ const seed: LocalOpportunity[] = [
     currency: "EUR",
     probability: 0.65,
     expectedCloseDate: fromNow(28),
+    lossReason: null,
     createdAt: ago(24),
     updatedAt: ago(1),
     archivedAt: null,
@@ -61,6 +63,7 @@ const seed: LocalOpportunity[] = [
     currency: "EUR",
     probability: 0.4,
     expectedCloseDate: fromNow(45),
+    lossReason: null,
     createdAt: ago(18),
     updatedAt: ago(3),
     archivedAt: null,
@@ -80,6 +83,7 @@ const seed: LocalOpportunity[] = [
     currency: "USD",
     probability: 0.15,
     expectedCloseDate: fromNow(60),
+    lossReason: null,
     createdAt: ago(10),
     updatedAt: ago(6),
     archivedAt: null,
@@ -99,6 +103,7 @@ const seed: LocalOpportunity[] = [
     currency: "USD",
     probability: 0.8,
     expectedCloseDate: fromNow(14),
+    lossReason: null,
     createdAt: ago(32),
     updatedAt: ago(2),
     archivedAt: null,
@@ -118,6 +123,7 @@ const seed: LocalOpportunity[] = [
     currency: "EUR",
     probability: 1,
     expectedCloseDate: fromNow(-5),
+    lossReason: null,
     createdAt: ago(55),
     updatedAt: ago(5),
     archivedAt: null,
@@ -137,6 +143,7 @@ const seed: LocalOpportunity[] = [
     currency: "EUR",
     probability: 0,
     expectedCloseDate: fromNow(-12),
+    lossReason: "Migration deferred",
     createdAt: ago(70),
     updatedAt: ago(12),
     archivedAt: null,

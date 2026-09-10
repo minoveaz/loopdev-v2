@@ -19,6 +19,7 @@ import type {
   CRMOpportunityListParams,
   CRMOpportunityMutationResult,
   CRMMoveOpportunityStageInput,
+  CRMUpdateOpportunityInput,
   CRMPipelineOpportunity,
   CRMPipelineStageCode,
   CRMTask,
@@ -62,6 +63,7 @@ function toPipelineOpportunity(source: LocalOpportunity): CRMPipelineOpportunity
       : null,
     probability: source.probability,
     expectedCloseDate: source.expectedCloseDate,
+    lossReason: source.lossReason ?? null,
     updatedAt: source.updatedAt,
     archivedAt: source.archivedAt,
   };
@@ -320,6 +322,10 @@ export const localLoopdevAdapter = {
       query = "",
       stageCodes = [],
       ownerIds = [],
+      productKeys = [],
+      origins = [],
+      sortBy = "updated",
+      sortDirection = "desc",
     }: CRMOpportunityListParams): Promise<CRMPipelineOpportunity[]> {
       if (requestedOrganizationId !== organizationId) {
         throw new CRMAdapterError(
@@ -335,6 +341,8 @@ export const localLoopdevAdapter = {
         .filter((opportunity) => !opportunity.archivedAt)
         .filter((opportunity) => !stageCodes.length || stageCodes.includes(opportunity.stageCode))
         .filter((opportunity) => !ownerIds.length || (opportunity.ownerId && ownerIds.includes(opportunity.ownerId)))
+        .filter((opportunity) => !productKeys.length || (opportunity.productKey && productKeys.includes(opportunity.productKey)))
+        .filter((opportunity) => !origins.length || origins.includes(opportunity.origin))
         .filter((opportunity) => {
           if (!normalizedQuery) return true;
           const contact = crmCustomersStore.get(opportunity.contactId);
@@ -346,7 +354,26 @@ export const localLoopdevAdapter = {
             opportunity.ownerName ?? "",
           ].some((value) => value.toLowerCase().includes(normalizedQuery));
         })
-        .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+        .sort((left, right) => {
+          const leftValue = sortBy === "amount"
+            ? left.amount ?? 0
+            : sortBy === "name"
+              ? left.name
+              : sortBy === "expectedCloseDate"
+                ? left.expectedCloseDate ?? ""
+                : left.updatedAt;
+          const rightValue = sortBy === "amount"
+            ? right.amount ?? 0
+            : sortBy === "name"
+              ? right.name
+              : sortBy === "expectedCloseDate"
+                ? right.expectedCloseDate ?? ""
+                : right.updatedAt;
+          const result = typeof leftValue === "number" && typeof rightValue === "number"
+            ? leftValue - rightValue
+            : String(leftValue).localeCompare(String(rightValue));
+          return sortDirection === "asc" ? result : -result;
+        })
         .map(toPipelineOpportunity);
     },
 
@@ -383,6 +410,43 @@ export const localLoopdevAdapter = {
       const updated = localCrmOpportunitiesStore.update(opportunityId, { stageCode: moveInput.stageCode });
       if (!updated) return { status: "server-error", message: "The opportunity could not be updated." };
       return { status: "success", opportunity: toPipelineOpportunity(updated) };
+    },
+
+    async updateOpportunity(
+      opportunityId: string,
+      input: CRMUpdateOpportunityInput,
+    ): Promise<CRMOpportunityMutationResult> {
+      if (input.organizationId !== organizationId) {
+        return { status: "forbidden", message: "You do not have permission to update opportunities in this organization." };
+      }
+      const current = localCrmOpportunitiesStore.get(opportunityId);
+      if (!current || current.organizationId !== organizationId || current.archivedAt) {
+        return { status: "server-error", message: "The opportunity could not be found." };
+      }
+      if (current.updatedAt !== input.expectedUpdatedAt) {
+        return { status: "conflict", message: "The opportunity changed before it could be updated.", opportunity: toPipelineOpportunity(current) };
+      }
+      const fieldErrors: Record<string, string> = {};
+      if (input.amount !== undefined && input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0)) {
+        fieldErrors.amount = "Amount must be a non-negative number.";
+      }
+      if (current.stageCode === "lost" && input.lossReason !== undefined && !input.lossReason?.trim()) {
+        fieldErrors.lossReason = "A loss reason is required.";
+      }
+      if (Object.keys(fieldErrors).length) {
+        return { status: "validation-error", message: "Check the opportunity details and try again.", fieldErrors };
+      }
+      const updated = localCrmOpportunitiesStore.update(opportunityId, {
+        ...(input.amount !== undefined ? { amount: input.amount } : {}),
+        ...(input.currency !== undefined ? { currency: input.currency } : {}),
+        ...(input.expectedCloseDate !== undefined ? { expectedCloseDate: input.expectedCloseDate } : {}),
+        ...(input.ownerId !== undefined ? { ownerId: input.ownerId } : {}),
+        ...(input.ownerName !== undefined ? { ownerName: input.ownerName } : {}),
+        ...(input.lossReason !== undefined ? { lossReason: input.lossReason?.trim() || null } : {}),
+      });
+      return updated
+        ? { status: "success", opportunity: toPipelineOpportunity(updated) }
+        : { status: "server-error", message: "The opportunity could not be updated." };
     },
 
     async createOpportunityFromLead(
@@ -456,6 +520,7 @@ export const localLoopdevAdapter = {
         currency: input.currency?.trim() || null,
         probability: 0.4,
         expectedCloseDate: input.expectedCloseDate ?? null,
+        lossReason: null,
         archivedAt: null,
       });
       if (!created) return { status: "server-error", message: "The opportunity could not be created." };

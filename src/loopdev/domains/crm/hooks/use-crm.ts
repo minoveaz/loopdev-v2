@@ -9,6 +9,7 @@ import type {
   CRMOpportunityListParams,
   CRMOpportunityMutationResult,
   CRMMoveOpportunityStageInput,
+  CRMUpdateOpportunityInput,
   CRMPipelineOpportunity,
   CRMPipelineStageCode,
   Customer360View,
@@ -165,6 +166,10 @@ export interface UseCrmPipelineParams {
   query?: string;
   stageCodes?: CRMPipelineStageCode[];
   ownerIds?: string[];
+  productKeys?: string[];
+  origins?: ("manual" | "lead_conversion")[];
+  sortBy?: "updated" | "name" | "amount" | "expectedCloseDate";
+  sortDirection?: "asc" | "desc";
 }
 
 export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
@@ -176,6 +181,8 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
   const [reloadToken, setReloadToken] = useState(0);
   const stageCodesKey = (params.stageCodes ?? []).join(",");
   const ownerIdsKey = (params.ownerIds ?? []).join(",");
+  const productKeysKey = (params.productKeys ?? []).join(",");
+  const originsKey = (params.origins ?? []).join(",");
 
   useEffect(() => {
     let active = true;
@@ -187,6 +194,10 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
       query: params.query,
       stageCodes: stageCodesKey ? stageCodesKey.split(",") as CRMPipelineStageCode[] : undefined,
       ownerIds: ownerIdsKey ? ownerIdsKey.split(",") : undefined,
+      productKeys: productKeysKey ? productKeysKey.split(",") : undefined,
+      origins: originsKey ? originsKey.split(",") as ("manual" | "lead_conversion")[] : undefined,
+      sortBy: params.sortBy,
+      sortDirection: params.sortDirection,
     };
     void loopdevAdapter.crm.listOpportunities(request)
       .then((items) => {
@@ -205,7 +216,7 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [params.query, stageCodesKey, ownerIdsKey, reloadToken]);
+  }, [params.query, stageCodesKey, ownerIdsKey, productKeysKey, originsKey, params.sortBy, params.sortDirection, reloadToken]);
 
   const moveStage = async (opportunity: CRMPipelineOpportunity, stageCode: CRMPipelineStageCode) => {
     const input: CRMMoveOpportunityStageInput = {
@@ -213,8 +224,34 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
       stageCode,
       expectedUpdatedAt: opportunity.updatedAt,
     };
+
     setMutation({ status: "pending", opportunityId: opportunity.id });
     const result = await loopdevAdapter.crm.moveOpportunityStage(opportunity.id, input);
+    if (result.status === "success") {
+      setMutation(result);
+      setOpportunities((current) => current.map((item) => item.id === result.opportunity.id ? result.opportunity : item));
+    } else {
+      setMutation({
+        status: result.status,
+        message: result.message,
+        ...(result.status === "conflict" ? { opportunity: result.opportunity } : {}),
+      });
+      if (result.status === "conflict") {
+        setOpportunities((current) => current.map((item) => item.id === result.opportunity.id ? result.opportunity : item));
+      }
+    }
+    return result;
+  };
+
+  const updateOpportunity = async (
+    opportunity: CRMPipelineOpportunity,
+    input: Omit<CRMUpdateOpportunityInput, "organizationId" | "expectedUpdatedAt">,
+  ) => {
+    const result = await loopdevAdapter.crm.updateOpportunity(opportunity.id, {
+      ...input,
+      organizationId: LOCAL_ORGANIZATION_ID,
+      expectedUpdatedAt: opportunity.updatedAt,
+    });
     if (result.status === "success") {
       setMutation(result);
       setOpportunities((current) => current.map((item) => item.id === result.opportunity.id ? result.opportunity : item));
@@ -238,6 +275,7 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     forbidden,
     mutation,
     moveStage,
+    updateOpportunity,
     reload: () => setReloadToken((token) => token + 1),
   };
 }

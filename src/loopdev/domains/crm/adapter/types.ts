@@ -201,6 +201,7 @@ export interface CRMPipelineOpportunity {
   owner: CRMPipelineOwner | null;
   probability: number | null;
   expectedCloseDate: string | null;
+  lossReason: string | null;
   updatedAt: string;
   archivedAt: string | null;
   contactId: string;
@@ -214,11 +215,26 @@ export interface CRMOpportunityListParams {
   query?: string;
   stageCodes?: CRMPipelineStageCode[];
   ownerIds?: string[];
+  productKeys?: string[];
+  origins?: CRMOpportunity["origin"][];
+  sortBy?: "updated" | "name" | "amount" | "expectedCloseDate";
+  sortDirection?: "asc" | "desc";
 }
 
 export interface CRMMoveOpportunityStageInput {
   organizationId: string;
   stageCode: CRMPipelineStageCode;
+  expectedUpdatedAt: string;
+}
+
+export interface CRMUpdateOpportunityInput {
+  organizationId: string;
+  amount?: number | null;
+  currency?: string | null;
+  expectedCloseDate?: string | null;
+  ownerId?: string | null;
+  ownerName?: string | null;
+  lossReason?: string | null;
   expectedUpdatedAt: string;
 }
 

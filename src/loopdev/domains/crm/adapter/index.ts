@@ -13,6 +13,7 @@ import type {
   CRMOpportunityListParams,
   CRMOpportunityMutationResult,
   CRMMoveOpportunityStageInput,
+  CRMUpdateOpportunityInput,
   CRMPipelineOpportunity,
   CRMPipelineStageCode,
   CRMUpdateContactPatch,
@@ -35,6 +36,10 @@ export interface LoopdevCrmAdapter {
     opportunityId: string,
     stageCode: CRMPipelineStageCode,
     expectedUpdatedAt: string,
+  ): Promise<CRMOpportunityMutationResult>;
+  updateOpportunity(
+    opportunityId: string,
+    input: CRMUpdateOpportunityInput,
   ): Promise<CRMOpportunityMutationResult>;
   createOpportunityFromLead(
     leadId: string,

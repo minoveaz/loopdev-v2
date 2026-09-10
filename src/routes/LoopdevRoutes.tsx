@@ -6,6 +6,7 @@ const SalesCRM = lazy(() => import("@/loopdev/pages/crm/Overview"));
 const SalesCRMContacts = lazy(() => import("@/loopdev/pages/crm/Contacts"));
 const SalesCRMLeads = lazy(() => import("@/loopdev/pages/crm/Leads"));
 const SalesCRMPipeline = lazy(() => import("@/loopdev/pages/crm/Pipeline"));
+const SalesCRMOpportunities = lazy(() => import("@/loopdev/pages/crm/Opportunities"));
 const SalesCRMCustomer360 = lazy(() => import("@/loopdev/pages/crm/Customer360"));
 
 export const loopdevRouteElements = (
@@ -17,5 +18,6 @@ export const loopdevRouteElements = (
     <Route path="/app/sales-crm/contacts/:contactId" element={<SalesCRMCustomer360 />} />
     <Route path="/app/sales-crm/leads" element={<SalesCRMLeads />} />
     <Route path="/app/sales-crm/pipeline" element={<SalesCRMPipeline />} />
+    <Route path="/app/sales-crm/opportunities" element={<SalesCRMOpportunities />} />
   </Fragment>
 );

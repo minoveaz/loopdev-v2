@@ -67,6 +67,11 @@ export default function SalesCRMOperations() {
   } = useCrmOperations(entityType);
 
   useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "tags" || tab === "fields" || tab === "import" || tab === "search") setActiveTab(tab);
+  }, [searchParams]);
+
+  useEffect(() => {
     const next = new URLSearchParams(searchParams);
     if (query.trim()) next.set("q", query.trim());
     else next.delete("q");

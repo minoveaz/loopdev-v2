@@ -421,7 +421,9 @@ migraciones y ninguna página accede a `localStorage`.
 | Opportunities | `/app/sales-crm/opportunities` | Implementada con adapter local |
 | Tasks / Platform workspace | `/app/sales-crm/tasks` | Implementada localmente con tabla, vistas y calendario |
 | Task Templates | `/app/sales-crm/task-templates` | Implementada localmente; acceso contextual desde Tasks |
-| CRM Operations | `/app/sales-crm/operations` | Implementada localmente con Search, Views, Tags, Custom Fields e Import/Export |
+| Settings | `/app/settings` | Hub de configuración de organización y workspace |
+| CRM Operations | `/app/settings/crm/operations` | Implementada localmente; acceso anterior redirige desde `/app/sales-crm/operations` |
+| CRM Automations | `/app/settings/crm/automations` | Implementada localmente; acceso anterior redirige desde `/app/sales-crm/automations` |
 | CRM Automations | `/app/sales-crm/automations` | Implementada localmente con triggers, acciones, entitlements y execution log |
 | Communications | `/app/sales-crm/communications` | Pendiente |
 

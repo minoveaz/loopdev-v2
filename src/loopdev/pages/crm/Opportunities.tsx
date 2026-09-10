@@ -113,7 +113,7 @@ export default function SalesCRMOpportunities() {
 
   return (
     <PageContainer width="wide" className="max-w-[1600px]">
-      <PageHeader eyebrow="CRM" title="Opportunities" description="Manage the sales cycle behind your pipeline." breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Opportunities" }]} actions={<Button onClick={() => setCreateOpen(true)}><Plus className="mr-1.5 h-3.5 w-3.5" />New opportunity</Button>} />
+      <PageHeader eyebrow="CRM" title="Opportunities" description="Manage the sales cycle behind your pipeline." breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Opportunities" }]} actions={<Button onClick={(event) => { restoreFocusRef.current = event.currentTarget; setCreateOpen(true); }}><Plus className="mr-1.5 h-3.5 w-3.5" />New opportunity</Button>} />
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput value={query} onValueChange={setQuery} placeholder="Search opportunities, contacts, owners…" size="sm" containerClassName="w-80" />
         <FilterDropdown label="Stage" multiple value={stageCodes} onChange={(values) => setStageCodes(values as CRMPipelineStageCode[])} options={CRM_PIPELINE_STAGE_CODES.map((value) => ({ value, label: labels[value] }))} size="sm" />
@@ -139,20 +139,31 @@ export default function SalesCRMOpportunities() {
       <AppDrawer open={drawerOpen} onOpenChange={closeDetails} title={selected?.name ?? "Opportunity"} description={selected ? `${selected.contact.displayName} · ${labels[selected.stageCode]}` : undefined} restoreFocusRef={restoreFocusRef} size="md" footer={selected ? <div className="flex w-full justify-between gap-2"><div className="flex gap-2"><Button variant="outline" onClick={() => navigate(`/app/sales-crm/contacts/${selected.contactId}`)}><ExternalLink className="mr-1.5 h-4 w-4" />Contact</Button>{selected.leadId && <Button variant="outline" onClick={() => navigate(`/app/sales-crm/leads?lead=${selected.leadId}`)}><ExternalLink className="mr-1.5 h-4 w-4" />Lead</Button>}</div><Button onClick={() => closeDetails(false)}>Done</Button></div> : undefined}>
         {selected && <OpportunityDetails opportunity={selected} onUpdate={async (input) => { const result = await updateOpportunity(selected, input); if (result.status === "success") setSelected(result.opportunity); }} onMove={async (stage) => { const result = await moveStage(selected, stage); if (result.status === "success") setSelected(result.opportunity); }} onReopen={() => setReopenTarget(selected)} />}
       </AppDrawer>
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
-          <DialogHeader><DialogTitle>New opportunity</DialogTitle><DialogDescription>Create a local opportunity with at least one catalog or legacy product line.</DialogDescription></DialogHeader>
-          <form className="space-y-4" onSubmit={(event) => void submitManualOpportunity(event)}>
+      <AppDrawer
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        title="New opportunity"
+        description="Create a local opportunity with at least one catalog or legacy product line."
+        restoreFocusRef={restoreFocusRef}
+        size="md"
+        footer={
+          <div className="flex w-full justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={mutation.status === "pending"}>Cancel</Button>
+            <Button type="submit" form="create-opportunity-form" disabled={!newContactId || !newName.trim() || mutation.status === "pending"}>
+              {mutation.status === "pending" ? "Creating…" : "Create opportunity"}
+            </Button>
+          </div>
+        }
+      >
+          <form id="create-opportunity-form" className="space-y-4" onSubmit={(event) => void submitManualOpportunity(event)}>
             <div className="space-y-1.5"><Label htmlFor="manual-opportunity-contact">Contact</Label><select id="manual-opportunity-contact" required value={newContactId} onChange={(event) => setNewContactId(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select a contact</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contact.firstName} {contact.lastName ?? ""}</option>)}</select></div>
             <div className="space-y-1.5"><Label htmlFor="manual-opportunity-name">Opportunity name</Label><Input id="manual-opportunity-name" required value={newName} onChange={(event) => setNewName(event.target.value)} /></div>
             <div className="space-y-1.5"><Label htmlFor="manual-opportunity-catalog">Catalog item</Label><select id="manual-opportunity-catalog" value={newCatalogItemId} onChange={(event) => setNewCatalogItemId(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Use legacy product key</option>{catalogItems.map((item) => <option key={item.id} value={item.id}>{item.name} ({item.key})</option>)}</select></div>
             <div className="space-y-1.5"><Label htmlFor="manual-opportunity-product">Legacy product key</Label><Input id="manual-opportunity-product" value={newProductKey} onChange={(event) => setNewProductKey(event.target.value)} placeholder="Optional when a catalog item is selected" /></div>
             <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="manual-opportunity-amount">Amount</Label><Input id="manual-opportunity-amount" type="number" min="0" value={newAmount} onChange={(event) => setNewAmount(event.target.value)} /></div><div className="space-y-1.5"><Label htmlFor="manual-opportunity-quantity">Line quantity</Label><Input id="manual-opportunity-quantity" type="number" min="1" value={newLineQuantity} onChange={(event) => setNewLineQuantity(event.target.value)} /></div></div>
             {createError && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{createError}</p>}
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={mutation.status === "pending"}>Cancel</Button><Button type="submit" disabled={!newContactId || !newName.trim() || mutation.status === "pending"}>{mutation.status === "pending" ? "Creating…" : "Create opportunity"}</Button></DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+      </AppDrawer>
       <Dialog open={Boolean(reopenTarget)} onOpenChange={(open) => { if (!open) setReopenTarget(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Reopen terminal opportunity</DialogTitle><DialogDescription>Won and lost opportunities require an explicit reason before re-entering the pipeline.</DialogDescription></DialogHeader>

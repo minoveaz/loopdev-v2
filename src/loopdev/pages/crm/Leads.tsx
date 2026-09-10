@@ -18,9 +18,6 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import {
@@ -185,12 +182,6 @@ export default function SalesCRMLeads() {
     if (conversionDirtyRef.current && conversion.status !== "success") { setDiscardOpen(true); return; }
     closeConversion();
   }, [closeConversion, conversion.status]);
-  const handleConversionCloseAutoFocus = useCallback((event: Event) => {
-    const target = conversionRestoreFocusRef.current;
-    if (!target?.isConnected) return;
-    event.preventDefault();
-    window.requestAnimationFrame(() => target.focus());
-  }, []);
   const openConversion = (lead: CRMLead) => {
     resetConversion(); conversionDirtyRef.current = false;
     conversionRestoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -218,7 +209,7 @@ export default function SalesCRMLeads() {
         title="Leads"
         description="Manage commercial intent and qualification across CRM."
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Leads" }]}
-        actions={<Button onClick={() => setCreateLeadOpen(true)}><Plus className="mr-1.5 h-3.5 w-3.5" />New lead</Button>}
+        actions={<Button onClick={(event) => { leadRestoreFocusRef.current = event.currentTarget; setCreateLeadOpen(true); }}><Plus className="mr-1.5 h-3.5 w-3.5" />New lead</Button>}
       />
 
       <div className="flex flex-wrap items-center gap-2" aria-label="Lead workspace controls">
@@ -349,32 +340,56 @@ export default function SalesCRMLeads() {
         ) : null}
       </AppDrawer>
 
-      <Dialog open={Boolean(conversionLead)} onOpenChange={(open) => { if (!open) requestCloseConversion(); }}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl" onCloseAutoFocus={handleConversionCloseAutoFocus}>
-          <DialogHeader><DialogTitle>Create opportunity</DialogTitle><DialogDescription>Create a qualified-stage opportunity for this lead. The contact relationship is preserved.</DialogDescription></DialogHeader>
-          <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void submitConversion(); }}>
+      <AppDrawer
+        open={Boolean(conversionLead)}
+        onOpenChange={(open) => { if (!open) requestCloseConversion(); }}
+        title="Create opportunity"
+        description="Create a qualified-stage opportunity for this lead. The contact relationship is preserved."
+        restoreFocusRef={conversionRestoreFocusRef}
+        size="md"
+        footer={conversion.status === "success" ? (
+          <Button type="button" onClick={closeConversion}>Close</Button>
+        ) : (
+          <div className="flex w-full justify-end gap-2">
+            <Button type="button" variant="outline" onClick={requestCloseConversion}>Cancel</Button>
+            <Button type="submit" form="lead-conversion-form" disabled={!productKey.trim() || conversion.status === "pending"}>
+              {conversion.status === "pending" ? "Creating…" : "Create opportunity"}
+            </Button>
+          </div>
+        )}
+      >
+          <form id="lead-conversion-form" className="space-y-4" onSubmit={(event) => { event.preventDefault(); void submitConversion(); }}>
             <div className="space-y-1.5"><Label htmlFor="lead-product-key">Product or interest key</Label><Input id="lead-product-key" value={productKey} onChange={(event) => { conversionDirtyRef.current = true; setProductKey(event.target.value); }} placeholder="e.g. enterprise-plan" /></div>
             <div className="space-y-1.5"><Label htmlFor="lead-opportunity-name">Opportunity name</Label><Input id="lead-opportunity-name" value={opportunityName} onChange={(event) => { conversionDirtyRef.current = true; setOpportunityName(event.target.value); }} placeholder="Optional display name" /></div>
             <div className="space-y-1.5"><Label htmlFor="lead-opportunity-amount">Amount</Label><Input id="lead-opportunity-amount" type="number" min="0" value={amount} onChange={(event) => { conversionDirtyRef.current = true; setAmount(event.target.value); }} placeholder="Optional" /></div>
             {conversion.status !== "idle" && conversion.status !== "pending" && conversion.status !== "success" ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{conversion.message}</p> : null}
             {conversion.status === "success" ? <p role="status" className="text-sm text-success">Opportunity created.</p> : null}
-            <DialogFooter>{conversion.status === "success" ? <Button type="button" onClick={closeConversion}>Close</Button> : <><Button type="button" variant="outline" onClick={requestCloseConversion}>Cancel</Button><Button type="submit" disabled={!productKey.trim() || conversion.status === "pending"}>{conversion.status === "pending" ? "Creating…" : "Create opportunity"}</Button></>}</DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={createLeadOpen} onOpenChange={setCreateLeadOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>Create lead</DialogTitle><DialogDescription>Capture commercial intent locally and assign it to an existing contact.</DialogDescription></DialogHeader>
-          <form className="space-y-4" onSubmit={(event) => void submitLead(event)}>
+      </AppDrawer>
+      <AppDrawer
+        open={createLeadOpen}
+        onOpenChange={setCreateLeadOpen}
+        title="Create lead"
+        description="Capture commercial intent locally and assign it to an existing contact."
+        restoreFocusRef={leadRestoreFocusRef}
+        size="md"
+        footer={
+          <div className="flex w-full justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setCreateLeadOpen(false)}>Cancel</Button>
+            <Button type="submit" form="create-lead-form" disabled={!newLeadContactId || !newLeadInterest.trim() || creation.status === "pending"}>
+              {creation.status === "pending" ? "Creating…" : "Create lead"}
+            </Button>
+          </div>
+        }
+      >
+          <form id="create-lead-form" className="space-y-4" onSubmit={(event) => void submitLead(event)}>
             <div className="space-y-1.5"><Label htmlFor="new-lead-contact">Contact</Label><select id="new-lead-contact" required value={newLeadContactId} onChange={(event) => setNewLeadContactId(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select a contact</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contactName(contact)}</option>)}</select></div>
             <div className="space-y-1.5"><Label htmlFor="new-lead-interest">Interest</Label><Input id="new-lead-interest" required value={newLeadInterest} onChange={(event) => setNewLeadInterest(event.target.value)} placeholder="e.g. Enterprise expansion" /></div>
             <div className="space-y-1.5"><Label htmlFor="new-lead-source">Source / attribution</Label><Input id="new-lead-source" value={newLeadSource} onChange={(event) => setNewLeadSource(event.target.value)} placeholder="Website, referral, event…" /></div>
             <div className="space-y-1.5"><Label htmlFor="new-lead-owner">Owner</Label><select id="new-lead-owner" value={newLeadOwner} onChange={(event) => setNewLeadOwner(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Unassigned</option>{ownerOptions.map((owner) => <option key={owner.value} value={owner.value}>{owner.label}</option>)}</select></div>
             {"message" in creation && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{creation.message}</p>}
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setCreateLeadOpen(false)}>Cancel</Button><Button type="submit" disabled={!newLeadContactId || !newLeadInterest.trim() || creation.status === "pending"}>{creation.status === "pending" ? "Creating…" : "Create lead"}</Button></DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+      </AppDrawer>
       <ConfirmDialog open={discardOpen} onOpenChange={setDiscardOpen} title="Discard opportunity details?" description="Your conversion details will be lost." confirmLabel="Discard" tone="warning" onConfirm={closeConversion} />
     </PageContainer>
   );

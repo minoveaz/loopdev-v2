@@ -3,10 +3,12 @@ import { resolveChartStyle } from "@/lib/chartTokens";
 import { useMemo } from "react";
 import {
   ArrowUpRight,
+  Database,
   HandCoins,
   PhoneCall,
   Mail,
   MessageSquare,
+  RefreshCw,
   UserPlus,
   Users,
   Briefcase,
@@ -26,6 +28,23 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useSimulatedLoad } from "@/hooks/use-simulated-load";
 import { formatCurrency, formatNumber, formatPercent, formatRelative, getInitials } from "@/lib/formatters";
+import {
+  PlatformActivityFeed,
+  PlatformAttachmentsPanel,
+  PlatformNotesPanel,
+  PlatformRelationsPanel,
+  PlatformTaskWorkspace,
+  PlatformTimeline,
+} from "@/loopdev/components/platform";
+import {
+  usePlatformActivities,
+  usePlatformAttachments,
+  usePlatformNotes,
+  usePlatformTasks,
+  usePlatformTimeline,
+  platformAdapter,
+} from "@/loopdev/domains/platform";
+import type { EntityRef } from "@/loopdev/domains/platform";
 
 const tooltipStyle = {
   background: "hsl(var(--popover))",
@@ -110,6 +129,28 @@ export default function SalesCRM() {
   const loading = useSimulatedLoad(700);
   const userMap = useMemo(() => new Map(crmOwners.map((u) => [u.id, u])), []);
   const totalPipeline = pipeline.reduce((s, p) => s + p.amount, 0);
+  const { organizationId, workspaceId, brandId } = platformAdapter.getScope();
+  const platformScope = useMemo(() => ({ organizationId, workspaceId, brandId }), [organizationId, workspaceId, brandId]);
+  const contactRef: EntityRef<"contact"> = useMemo(() => ({
+    entityType: "contact",
+    entityId: "crm_cust_1",
+    scope: platformScope,
+  }), [platformScope]);
+  const leadRef: EntityRef<"lead"> = useMemo(() => ({
+    entityType: "lead",
+    entityId: "local-lead-crm_cust_1",
+    scope: platformScope,
+  }), [platformScope]);
+  const opportunityRef: EntityRef<"opportunity"> = useMemo(() => ({
+    entityType: "opportunity",
+    entityId: "crm_opp_1",
+    scope: platformScope,
+  }), [platformScope]);
+  const platformTasks = usePlatformTasks({ includeCompleted: false, limit: 10 });
+  const platformNotes = usePlatformNotes({ limit: 10 });
+  const platformTimeline = usePlatformTimeline({ limit: 10 });
+  const platformActivities = usePlatformActivities({ limit: 10 });
+  const platformAttachments = usePlatformAttachments({ limit: 10 });
 
   return (
     <PageContainer width="wide">
@@ -279,6 +320,67 @@ export default function SalesCRM() {
               </table>
           </div>
         </DataCard>
+      </div>
+
+      <div className="mt-8">
+        <div className="mb-4">
+          <h2 className="font-display text-xl font-semibold tracking-tight">CRM work center</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Shared Platform capabilities across the commercial workspace.
+          </p>
+        </div>
+
+        <DataCard className="mb-6" borderless>
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="rounded-lg bg-primary-soft p-2 text-primary">
+              <Database className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium">Platform work signals</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Tasks, notes, activities, timeline and files are scoped for the active organization and ready for the future Supabase adapter.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              onClick={platformTasks.reload}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
+            </button>
+          </div>
+        </DataCard>
+
+        <PlatformRelationsPanel references={[
+          { label: "Contact", reference: contactRef, href: "/app/sales-crm/contacts/crm_cust_1" },
+          { label: "Lead", reference: leadRef, href: "/app/sales-crm/leads" },
+          { label: "Opportunity", reference: opportunityRef, href: "/app/sales-crm/opportunities" },
+        ]} />
+
+        <div className="mt-6">
+          <PlatformTaskWorkspace
+            tasks={platformTasks.tasks}
+            loading={platformTasks.loading}
+            error={platformTasks.error}
+            forbidden={platformTasks.forbidden}
+            relation={contactRef}
+            onTransition={(task, status) => platformTasks.transitionTask(task.id, status, task.version)}
+          />
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <PlatformNotesPanel
+            notes={platformNotes.notes}
+            loading={platformNotes.loading}
+            error={platformNotes.error}
+            forbidden={platformNotes.forbidden}
+          />
+          <PlatformTimeline events={platformTimeline.events} loading={platformTimeline.loading} error={platformTimeline.error} />
+          <PlatformActivityFeed activities={platformActivities.activities} loading={platformActivities.loading} error={platformActivities.error} />
+          <PlatformAttachmentsPanel attachments={platformAttachments.attachments} loading={platformAttachments.loading} error={platformAttachments.error} />
+        </div>
+
       </div>
     </PageContainer>
   );

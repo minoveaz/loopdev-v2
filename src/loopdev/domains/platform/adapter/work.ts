@@ -46,6 +46,7 @@ export interface PlatformTaskListParams extends PlatformScopeParams {
   priority?: TaskPriority[];
   assignedUserId?: string | null;
   relation?: EntityRef;
+  relationTypes?: Array<"contact" | "lead" | "opportunity">;
   includeCompleted?: boolean;
 }
 
@@ -197,6 +198,8 @@ export interface PlatformWorkAdapter {
   listNotifications(params?: PlatformNotificationListParams): Promise<PlatformPage<NotificationRecord>>;
   createNotification(input: CreateNotificationInput): Promise<NotificationRecord>;
   markNotificationRead(notificationId: string, params?: PlatformScopeParams): Promise<NotificationRecord>;
+  markNotificationUnread(notificationId: string, params?: PlatformScopeParams): Promise<NotificationRecord>;
+  archiveNotification(notificationId: string, params?: PlatformScopeParams): Promise<NotificationRecord>;
 }
 
 export interface LocalPlatformWorkDependencies {
@@ -335,7 +338,8 @@ export function createLocalPlatformWorkAdapter(deps: LocalPlatformWorkDependenci
         .filter((task) => !params.status?.length || params.status.includes(task.status))
         .filter((task) => !params.priority?.length || params.priority.includes(task.priority))
         .filter((task) => !params.assignedUserId || task.assignedUserId === params.assignedUserId)
-        .filter((task) => relationMatches(task.relation, params.relation));
+        .filter((task) => relationMatches(task.relation, params.relation))
+        .filter((task) => !params.relationTypes?.length || params.relationTypes.includes(task.relation.entityType as "contact" | "lead" | "opportunity"));
       const query = params.query?.trim().toLocaleLowerCase();
       if (query) {
         items = items.filter((task) => `${task.title} ${task.description ?? ""}`.toLocaleLowerCase().includes(query));
@@ -668,6 +672,31 @@ export function createLocalPlatformWorkAdapter(deps: LocalPlatformWorkDependenci
       const next = localPlatformNotificationsStore.update(notificationId, {
         status: "read",
         readAt: current.readAt ?? new Date().toISOString(),
+      });
+      if (!next) throw new PlatformWorkAdapterError("The requested Platform record was not found.", "not-found");
+      return next;
+    },
+
+    async markNotificationUnread(notificationId, params = {}) {
+      const scope = resolve(params);
+      assertScope(scope, "work.write");
+      const current = find(localPlatformNotificationsStore.list(), notificationId, scope);
+      const next = localPlatformNotificationsStore.update(notificationId, {
+        status: "unread",
+        readAt: null,
+        updatedAt: new Date().toISOString(),
+      });
+      if (!next) throw new PlatformWorkAdapterError("The requested Platform record was not found.", "not-found");
+      return next;
+    },
+
+    async archiveNotification(notificationId, params = {}) {
+      const scope = resolve(params);
+      assertScope(scope, "work.write");
+      const current = find(localPlatformNotificationsStore.list(), notificationId, scope);
+      const next = localPlatformNotificationsStore.update(notificationId, {
+        status: "archived",
+        updatedAt: new Date().toISOString(),
       });
       if (!next) throw new PlatformWorkAdapterError("The requested Platform record was not found.", "not-found");
       return next;

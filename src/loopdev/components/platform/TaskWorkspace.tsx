@@ -98,9 +98,10 @@ export interface PlatformTaskListProps {
   error?: string | null;
   forbidden?: boolean;
   onTransition?: (task: TaskRecord, status: TaskStatus) => Promise<unknown>;
+  onOpen?: (task: TaskRecord) => void;
 }
 
-export function PlatformTaskList({ tasks, loading = false, error, forbidden = false, onTransition }: PlatformTaskListProps) {
+export function PlatformTaskList({ tasks, loading = false, error, forbidden = false, onTransition, onOpen }: PlatformTaskListProps) {
   return (
     <DataCard
       title="Tasks"
@@ -116,7 +117,19 @@ export function PlatformTaskList({ tasks, loading = false, error, forbidden = fa
         {tasks.map((task) => {
           const done = task.status === "completed" || task.status === "cancelled";
           return (
-            <li key={task.id} className="flex items-start gap-3 rounded-lg border border-border bg-card-muted/30 p-3">
+            <li
+              key={task.id}
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-card-muted/30 p-3 transition-colors hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring"
+              tabIndex={onOpen ? 0 : undefined}
+              onClick={() => onOpen?.(task)}
+              onKeyDown={(event) => {
+                if (onOpen && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  onOpen(task);
+                }
+              }}
+              aria-label={onOpen ? `Open task ${task.title}` : undefined}
+            >
               <span className="mt-0.5 text-muted-foreground" aria-hidden="true">{done ? <CheckCircle2 className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4" />}</span>
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{task.title}</p>
@@ -132,7 +145,10 @@ export function PlatformTaskList({ tasks, loading = false, error, forbidden = fa
                   size="sm"
                   variant="ghost"
                   aria-label={done ? `Reopen ${task.title}` : `Complete ${task.title}`}
-                  onClick={() => void onTransition(task, done ? "open" : "completed")}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void onTransition(task, done ? "open" : "completed");
+                  }}
                 >
                   {done ? <RotateCcw className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
                 </Button>

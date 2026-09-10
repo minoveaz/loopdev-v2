@@ -241,6 +241,14 @@ export function usePlatformNotifications(params: PlatformNotificationListParams 
       setNotifications((current) => current.map((item) => item.id === record.id ? record : item));
       return record;
     }),
+    markUnread: (notificationId: string) => platformWorkAdapter.markNotificationUnread(notificationId).then((record) => {
+      setNotifications((current) => current.map((item) => item.id === record.id ? record : item));
+      return record;
+    }),
+    archive: (notificationId: string) => platformWorkAdapter.archiveNotification(notificationId).then((record) => {
+      setNotifications((current) => current.filter((item) => item.id !== record.id));
+      return record;
+    }),
     reload: () => setReloadToken((token) => token + 1),
   };
 }

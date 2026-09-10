@@ -21,6 +21,5 @@ export const loopdevRouteElements = (
     <Route path="/app/sales-crm/pipeline" element={<SalesCRMPipeline />} />
     <Route path="/app/sales-crm/opportunities" element={<SalesCRMOpportunities />} />
     <Route path="/app/sales-crm/tasks" element={<PlatformWorkspace />} />
-    <Route path="/app/platform/workspace" element={<PlatformWorkspace />} />
   </Fragment>
 );

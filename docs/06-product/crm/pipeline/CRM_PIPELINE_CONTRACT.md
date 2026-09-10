@@ -160,3 +160,14 @@ stage names and order are presentation/configuration and may change without hist
 
 The frontend adapter follows the same separation: Lead lifecycle status is not a Pipeline stage,
 the board contains Opportunities only, and `lost` stage movement has no Lead-status side effect.
+
+### Fase 3 local adapter handoff
+
+`localLoopdevAdapter` exposes a local stage catalog (`listPipelineStages`), manual opportunity
+creation, catalog reference resolution with legacy `productKey` fallback, extensible
+`OpportunityLine` records, and optimistic `expectedUpdatedAt` updates. Terminal stages are
+immutable through normal moves; `reopenOpportunity` is the only path out of `won`/`lost` and
+requires a non-empty reason. Stage changes are appended to a local stage-history store so Fase 4
+can project them into Timeline without duplicating Timeline capability here. The UI covers
+loading, empty, forbidden, validation, conflict and pending states with `AppDrawer`/`Dialog`;
+no backend, migration or browser-native confirmation is involved.

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   AlertTriangle, ArrowRight, CalendarClock, Mail,
   MoreHorizontal, Phone, Plus, RefreshCw, SearchX, UserRound,
@@ -58,6 +58,7 @@ export default function SalesCRMLeads() {
   const { trail } = useBreadcrumbs();
   const {
     leads, loading, error, reload, conversion, createOpportunityFromLead, updateLead, resetConversion,
+    creation, createLead,
   } = useCrmLeads();
   const { contacts } = useCrmContacts();
   const { opportunities, reload: reloadOpportunities } = useCrmPipeline();
@@ -156,6 +157,11 @@ export default function SalesCRMLeads() {
   const [opportunityName, setOpportunityName] = useState("");
   const [amount, setAmount] = useState("");
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [createLeadOpen, setCreateLeadOpen] = useState(false);
+  const [newLeadContactId, setNewLeadContactId] = useState("");
+  const [newLeadInterest, setNewLeadInterest] = useState("");
+  const [newLeadSource, setNewLeadSource] = useState("");
+  const [newLeadOwner, setNewLeadOwner] = useState("");
   const conversionRestoreFocusRef = useRef<HTMLElement | null>(null);
   const conversionDirtyRef = useRef(false);
   const submitConversion = async () => {
@@ -190,6 +196,21 @@ export default function SalesCRMLeads() {
     conversionRestoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setConversionLead(lead); setProductKey(lead.interest ?? ""); setOpportunityName(lead.interest ?? "");
   };
+  const submitLead = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const owner = ownerOptions.find((option) => option.value === newLeadOwner);
+    const result = await createLead({
+      contactId: newLeadContactId,
+      interest: newLeadInterest,
+      source: newLeadSource || null,
+      assignedUserId: owner?.value ?? null,
+      ownerName: owner?.label ?? null,
+    });
+    if (result.status === "success") {
+      setCreateLeadOpen(false);
+      setNewLeadContactId(""); setNewLeadInterest(""); setNewLeadSource(""); setNewLeadOwner("");
+    }
+  };
 
   return (
     <PageContainer width="wide" className="min-w-0">
@@ -197,7 +218,7 @@ export default function SalesCRMLeads() {
         title="Leads"
         description="Manage commercial intent and qualification across CRM."
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Leads" }]}
-        actions={<Button><Plus className="mr-1.5 h-3.5 w-3.5" />New lead</Button>}
+        actions={<Button onClick={() => setCreateLeadOpen(true)}><Plus className="mr-1.5 h-3.5 w-3.5" />New lead</Button>}
       />
 
       <div className="flex flex-wrap items-center gap-2" aria-label="Lead workspace controls">
@@ -338,6 +359,19 @@ export default function SalesCRMLeads() {
             {conversion.status !== "idle" && conversion.status !== "pending" && conversion.status !== "success" ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{conversion.message}</p> : null}
             {conversion.status === "success" ? <p role="status" className="text-sm text-success">Opportunity created.</p> : null}
             <DialogFooter>{conversion.status === "success" ? <Button type="button" onClick={closeConversion}>Close</Button> : <><Button type="button" variant="outline" onClick={requestCloseConversion}>Cancel</Button><Button type="submit" disabled={!productKey.trim() || conversion.status === "pending"}>{conversion.status === "pending" ? "Creating…" : "Create opportunity"}</Button></>}</DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={createLeadOpen} onOpenChange={setCreateLeadOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader><DialogTitle>Create lead</DialogTitle><DialogDescription>Capture commercial intent locally and assign it to an existing contact.</DialogDescription></DialogHeader>
+          <form className="space-y-4" onSubmit={(event) => void submitLead(event)}>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-contact">Contact</Label><select id="new-lead-contact" required value={newLeadContactId} onChange={(event) => setNewLeadContactId(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select a contact</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contactName(contact)}</option>)}</select></div>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-interest">Interest</Label><Input id="new-lead-interest" required value={newLeadInterest} onChange={(event) => setNewLeadInterest(event.target.value)} placeholder="e.g. Enterprise expansion" /></div>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-source">Source / attribution</Label><Input id="new-lead-source" value={newLeadSource} onChange={(event) => setNewLeadSource(event.target.value)} placeholder="Website, referral, event…" /></div>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-owner">Owner</Label><select id="new-lead-owner" value={newLeadOwner} onChange={(event) => setNewLeadOwner(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Unassigned</option>{ownerOptions.map((owner) => <option key={owner.value} value={owner.value}>{owner.label}</option>)}</select></div>
+            {"message" in creation && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{creation.message}</p>}
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setCreateLeadOpen(false)}>Cancel</Button><Button type="submit" disabled={!newLeadContactId || !newLeadInterest.trim() || creation.status === "pending"}>{creation.status === "pending" ? "Creating…" : "Create lead"}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

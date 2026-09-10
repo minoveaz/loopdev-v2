@@ -139,6 +139,14 @@ details use the shared `ConfirmDialog` warning before dismissal. The existing CR
 behavior, and Contact archive confirmation now uses that system primitive as well; no browser
 native prompt/confirm is used for these CRM actions.
 
+### Fase 3 local
+
+The local adapter now also exposes `createLead`. Capture requires an existing Contact and an
+interest, accepts manually supplied source/attribution and local assignment, and starts at
+`new`. The Leads page provides a standard Dialog plus a contextual drawer workspace with
+contact, source, owner, related opportunities and conversion actions. This remains local-only;
+membership validation and persistence belong to the future Supabase adapter.
+
 ## Definition of contract readiness
 
 - [x] UX and component audit approved.

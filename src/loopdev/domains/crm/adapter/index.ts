@@ -1,19 +1,26 @@
 import { localLoopdevAdapter } from "./local";
 import type { ReferenceDataAdapter } from "@/loopdev/domains/reference-data";
+import type { CatalogAdapter } from "@/loopdev/domains/catalog";
+import type { PlatformAdapter } from "@/loopdev/domains/platform";
 import type {
   Customer360View,
   CRMContactListParams,
   CRMContactMutationResult,
   CRMContactPage,
   CRMCreateContactInput,
+  CRMCreateLeadInput,
   CRMLead,
   CRMLeadMutationResult,
   CRMUpdateLeadInput,
   CRMCreateOpportunityFromLeadInput,
+  CRMCreateOpportunityInput,
   CRMOpportunityListParams,
   CRMOpportunityMutationResult,
   CRMMoveOpportunityStageInput,
   CRMUpdateOpportunityInput,
+  CRMReopenOpportunityInput,
+  CRMOpportunityStageHistory,
+  CRMStageDefinition,
   CRMPipelineOpportunity,
   CRMPipelineStageCode,
   CRMUpdateContactPatch,
@@ -29,6 +36,7 @@ export interface LoopdevCrmAdapter {
   ): Promise<CRMContactMutationResult>;
   archiveContact(contactId: string, expectedUpdatedAt: string): Promise<CRMContactMutationResult>;
   listLeads(): Promise<CRMLead[]>;
+  createLead(input: CRMCreateLeadInput): Promise<CRMLeadMutationResult>;
   updateLead(leadId: string, input: CRMUpdateLeadInput): Promise<CRMLeadMutationResult>;
   listOpportunities(params: CRMOpportunityListParams): Promise<CRMPipelineOpportunity[]>;
   moveOpportunityStage(opportunityId: string, input: CRMMoveOpportunityStageInput): Promise<CRMOpportunityMutationResult>;
@@ -45,10 +53,16 @@ export interface LoopdevCrmAdapter {
     leadId: string,
     input: CRMCreateOpportunityFromLeadInput,
   ): Promise<CRMOpportunityMutationResult>;
+  createOpportunity(input: CRMCreateOpportunityInput): Promise<CRMOpportunityMutationResult>;
+  reopenOpportunity(opportunityId: string, input: CRMReopenOpportunityInput): Promise<CRMOpportunityMutationResult>;
+  listPipelineStages(): Promise<CRMStageDefinition[]>;
+  listOpportunityStageHistory(opportunityId: string): Promise<CRMOpportunityStageHistory[]>;
   getCustomer360(contactId: string): Promise<Customer360View | null>;
 }
 
 export interface LoopdevAdapter {
+  platform: PlatformAdapter;
+  catalog: CatalogAdapter;
   crm: LoopdevCrmAdapter;
   referenceData: ReferenceDataAdapter;
 }

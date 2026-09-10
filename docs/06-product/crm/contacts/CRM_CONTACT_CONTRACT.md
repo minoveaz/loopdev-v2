@@ -118,6 +118,14 @@ flow starts; those flows are outside this pilot.
 - No ambiguous match may block contact creation or merge automatically.
 - Agent or manager approval is required for a merge.
 - Merge preserves lead, opportunity, task, note, attribution and audit references.
+
+## Frontend closure handoff (local)
+
+The v2 Contacts list uses a semantic keyboard-operable mobile card representation in addition
+to the desktop table. Customer 360 explicitly renders an `Archived` badge and read-only notice
+when `archivedAt` is present. Creation, editing, archive conflict handling and drawer focus
+restoration remain behind `localLoopdevAdapter`; the future backend adapter must preserve those
+typed envelopes and must not expose archived contacts in the default list.
 - Merge and dismissal record actor, reason, timestamp, source and survivor/duplicate IDs.
 - Cross-organization candidates are never returned.
 

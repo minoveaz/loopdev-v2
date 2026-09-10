@@ -129,6 +129,16 @@ export interface CRMLead {
   updatedAt: string;
 }
 
+export interface CRMCreateLeadInput {
+  organizationId: string;
+  contactId: string;
+  interest?: string | null;
+  source?: string | null;
+  assignedUserId?: string | null;
+  ownerName?: string | null;
+  score?: number | null;
+}
+
 export const CRM_LEAD_STATUS_CODES = [
   "new",
   "contacted",
@@ -150,7 +160,7 @@ export interface CRMUpdateLeadInput {
 
 export type CRMLeadMutationResult =
   | { status: "success"; lead: CRMLead }
-  | { status: "validation-error" | "forbidden" | "conflict" | "server-error"; message: string; lead?: CRMLead };
+  | { status: "validation-error" | "forbidden" | "conflict" | "server-error"; message: string; lead?: CRMLead; fieldErrors?: Record<string, string> };
 
 export interface CRMOpportunity {
   id: string;
@@ -158,6 +168,9 @@ export interface CRMOpportunity {
   contactId: string;
   leadId: string | null;
   productKey: string | null;
+  catalogItemId: string | null;
+  offerId: string | null;
+  variantId: string | null;
   origin: "manual" | "lead_conversion";
   name: string;
   stageKey: CRMPipelineStageCode;
@@ -207,7 +220,25 @@ export interface CRMPipelineOpportunity {
   contactId: string;
   leadId: string | null;
   productKey: string | null;
+  catalogItemId: string | null;
+  offerId: string | null;
+  variantId: string | null;
   origin: "manual" | "lead_conversion";
+  lines: CRMOpportunityLine[];
+}
+
+export interface CRMOpportunityLine {
+  id: string;
+  opportunityId: string;
+  catalogItemId: string | null;
+  offerId: string | null;
+  variantId: string | null;
+  productKey: string | null;
+  label: string;
+  quantity: number;
+  unitAmount: number | null;
+  currency: string | null;
+  totalAmount: number | null;
 }
 
 export interface CRMOpportunityListParams {
@@ -216,6 +247,7 @@ export interface CRMOpportunityListParams {
   stageCodes?: CRMPipelineStageCode[];
   ownerIds?: string[];
   productKeys?: string[];
+  catalogItemIds?: string[];
   origins?: CRMOpportunity["origin"][];
   sortBy?: "updated" | "name" | "amount" | "expectedCloseDate";
   sortDirection?: "asc" | "desc";
@@ -235,12 +267,74 @@ export interface CRMUpdateOpportunityInput {
   ownerId?: string | null;
   ownerName?: string | null;
   lossReason?: string | null;
+  lines?: Array<{
+    id?: string;
+    label?: string | null;
+    quantity: number;
+    unitAmount?: number | null;
+    currency?: string | null;
+  }>;
   expectedUpdatedAt: string;
+}
+
+export interface CRMCreateOpportunityInput {
+  organizationId: string;
+  contactId: string;
+  leadId?: string | null;
+  catalogItemId?: string | null;
+  offerId?: string | null;
+  variantId?: string | null;
+  productKey?: string | null;
+  name: string;
+  amount?: number | null;
+  currency?: string | null;
+  expectedCloseDate?: string | null;
+  ownerId?: string | null;
+  ownerName?: string | null;
+  lines: Array<{
+    catalogItemId?: string | null;
+    offerId?: string | null;
+    variantId?: string | null;
+    productKey?: string | null;
+    label?: string | null;
+    quantity: number;
+    unitAmount?: number | null;
+    currency?: string | null;
+  }>;
+}
+
+export interface CRMReopenOpportunityInput {
+  organizationId: string;
+  expectedUpdatedAt: string;
+  reason: string;
+  stageCode?: Exclude<CRMPipelineStageCode, "won" | "lost">;
+}
+
+export interface CRMStageDefinition {
+  code: CRMPipelineStageCode;
+  label: string;
+  order: number;
+  terminal: boolean;
+  probability: number | null;
+}
+
+export interface CRMOpportunityStageHistory {
+  id: string;
+  opportunityId: string;
+  fromStageCode: CRMPipelineStageCode | null;
+  toStageCode: CRMPipelineStageCode;
+  reason: string | null;
+  occurredAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CRMCreateOpportunityFromLeadInput {
   organizationId: string;
-  productKey: string;
+  productKey?: string;
+  catalogItemId?: string | null;
+  offerId?: string | null;
+  variantId?: string | null;
   name?: string | null;
   amount?: number | null;
   currency?: string | null;

@@ -1,7 +1,15 @@
 import { crmCustomersStore, type LocalCustomer } from "../data/localCustomers";
-import { localCrmOpportunitiesStore, type LocalOpportunity } from "../data/localOpportunities";
+import {
+  localCrmOpportunitiesStore,
+  localCrmOpportunityLinesStore,
+  type LocalOpportunity,
+  type LocalOpportunityLine,
+} from "../data/localOpportunities";
 import { localCrmLeadsStore, type LocalLead } from "../data/localLeads";
+import { localCrmStageHistoryStore } from "../data/localStageHistory";
 import { localReferenceDataAdapter } from "@/loopdev/domains/reference-data/adapter/local";
+import { catalogAdapter } from "@/loopdev/domains/catalog";
+import { platformAdapter } from "@/loopdev/domains/platform";
 import type {
   Customer360View,
   CRMContact,
@@ -10,7 +18,9 @@ import type {
   CRMContactListParams,
   CRMContactPage,
   CRMCreateContactInput,
+  CRMCreateLeadInput,
   CRMCreateOpportunityFromLeadInput,
+  CRMCreateOpportunityInput,
   CRMLead,
   CRMLeadMutationResult,
   CRMUpdateLeadInput,
@@ -20,6 +30,10 @@ import type {
   CRMOpportunityMutationResult,
   CRMMoveOpportunityStageInput,
   CRMUpdateOpportunityInput,
+  CRMReopenOpportunityInput,
+  CRMOpportunityLine,
+  CRMOpportunityStageHistory,
+  CRMStageDefinition,
   CRMPipelineOpportunity,
   CRMPipelineStageCode,
   CRMTask,
@@ -38,6 +52,31 @@ const PIPELINE_STAGE_LABELS: Record<CRMPipelineStageCode, string> = {
   lost: "Lost",
 };
 
+const PIPELINE_STAGES: CRMStageDefinition[] = [
+  { code: "prospecting", label: "Prospecting", order: 10, terminal: false, probability: 0.15 },
+  { code: "qualified", label: "Qualified", order: 20, terminal: false, probability: 0.4 },
+  { code: "proposal", label: "Proposal", order: 30, terminal: false, probability: 0.65 },
+  { code: "negotiation", label: "Negotiation", order: 40, terminal: false, probability: 0.8 },
+  { code: "won", label: "Won", order: 50, terminal: true, probability: 1 },
+  { code: "lost", label: "Lost", order: 60, terminal: true, probability: 0 },
+];
+
+function toOpportunityLine(source: LocalOpportunityLine): CRMOpportunityLine {
+  return {
+    id: source.id,
+    opportunityId: source.opportunityId,
+    catalogItemId: source.catalogItemId,
+    offerId: source.offerId,
+    variantId: source.variantId,
+    productKey: source.productKey,
+    label: source.label,
+    quantity: source.quantity,
+    unitAmount: source.unitAmount,
+    currency: source.currency,
+    totalAmount: source.totalAmount,
+  };
+}
+
 function toPipelineOpportunity(source: LocalOpportunity): CRMPipelineOpportunity {
   const contact = crmCustomersStore.get(source.contactId);
   const contactView = contact ? toContact(contact) : null;
@@ -47,6 +86,9 @@ function toPipelineOpportunity(source: LocalOpportunity): CRMPipelineOpportunity
     contactId: source.contactId,
     leadId: source.leadId ?? null,
     productKey: source.productKey ?? null,
+    catalogItemId: source.catalogItemId ?? null,
+    offerId: source.offerId ?? null,
+    variantId: source.variantId ?? null,
     origin: source.origin ?? "manual",
     name: source.name,
     stageCode: source.stageCode,
@@ -66,6 +108,9 @@ function toPipelineOpportunity(source: LocalOpportunity): CRMPipelineOpportunity
     lossReason: source.lossReason ?? null,
     updatedAt: source.updatedAt,
     archivedAt: source.archivedAt,
+    lines: localCrmOpportunityLinesStore.list()
+      .filter((line) => line.opportunityId === source.id)
+      .map(toOpportunityLine),
   };
 }
 
@@ -134,7 +179,19 @@ function normalizeProductKey(value: string): string {
   return value.trim().toLocaleLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
 }
 
+function appendStageHistory(
+  opportunityId: string,
+  fromStageCode: CRMPipelineStageCode | null,
+  toStageCode: CRMPipelineStageCode,
+  reason: string | null = null,
+): void {
+  const occurredAt = new Date().toISOString();
+  localCrmStageHistoryStore.create({ opportunityId, fromStageCode, toStageCode, reason, occurredAt });
+}
+
 export const localLoopdevAdapter = {
+  platform: platformAdapter,
+  catalog: catalogAdapter,
   referenceData: localReferenceDataAdapter,
   crm: {
     async listContacts({
@@ -293,6 +350,36 @@ export const localLoopdevAdapter = {
       return localCrmLeadsStore.list().map(toLead);
     },
 
+    async createLead(input: CRMCreateLeadInput): Promise<CRMLeadMutationResult> {
+      if (input.organizationId !== organizationId) {
+        return { status: "forbidden", message: "You do not have permission to create leads in this organization." };
+      }
+      const fieldErrors: Record<string, string> = {};
+      if (!input.contactId.trim() || !crmCustomersStore.get(input.contactId)) {
+        fieldErrors.contactId = "Select an existing contact.";
+      }
+      if (!input.interest?.trim()) fieldErrors.interest = "Interest is required.";
+      if (Object.keys(fieldErrors).length) {
+        return { status: "validation-error", message: "Check the lead details and try again.", fieldErrors };
+      }
+      const created = localCrmLeadsStore.create({
+        organizationId,
+        contactId: input.contactId,
+        status: "new",
+        interest: input.interest!.trim(),
+        source: input.source?.trim() || null,
+        assignedUserId: input.assignedUserId ?? null,
+        ownerName: input.ownerName?.trim() || null,
+        score: input.score ?? null,
+        lastActivityAt: null,
+        nextActivityAt: null,
+        duplicateReviewId: null,
+      });
+      return created
+        ? { status: "success", lead: toLead(created) }
+        : { status: "server-error", message: "The lead could not be created." };
+    },
+
     async updateLead(leadId: string, input: CRMUpdateLeadInput): Promise<CRMLeadMutationResult> {
       if (input.organizationId !== organizationId) {
         return { status: "forbidden", message: "You do not have permission to update leads in this organization." };
@@ -323,6 +410,7 @@ export const localLoopdevAdapter = {
       stageCodes = [],
       ownerIds = [],
       productKeys = [],
+      catalogItemIds = [],
       origins = [],
       sortBy = "updated",
       sortDirection = "desc",
@@ -342,6 +430,7 @@ export const localLoopdevAdapter = {
         .filter((opportunity) => !stageCodes.length || stageCodes.includes(opportunity.stageCode))
         .filter((opportunity) => !ownerIds.length || (opportunity.ownerId && ownerIds.includes(opportunity.ownerId)))
         .filter((opportunity) => !productKeys.length || (opportunity.productKey && productKeys.includes(opportunity.productKey)))
+        .filter((opportunity) => !catalogItemIds.length || (opportunity.catalogItemId && catalogItemIds.includes(opportunity.catalogItemId)))
         .filter((opportunity) => !origins.length || origins.includes(opportunity.origin))
         .filter((opportunity) => {
           if (!normalizedQuery) return true;
@@ -407,8 +496,20 @@ export const localLoopdevAdapter = {
           opportunity: currentOpportunity,
         };
       }
-      const updated = localCrmOpportunitiesStore.update(opportunityId, { stageCode: moveInput.stageCode });
+      if ((current.stageCode === "won" || current.stageCode === "lost") && moveInput.stageCode !== current.stageCode) {
+        return {
+          status: "validation-error",
+          message: "Terminal opportunities must be reopened with an explicit reason before changing stage.",
+          fieldErrors: { stageCode: "Use the reopen action for won or lost opportunities." },
+        };
+      }
+      const updated = localCrmOpportunitiesStore.update(opportunityId, {
+        stageCode: moveInput.stageCode,
+        probability: PIPELINE_STAGES.find((stage) => stage.code === moveInput.stageCode)?.probability ?? current.probability,
+        ...(moveInput.stageCode !== "lost" ? { lossReason: null } : {}),
+      });
       if (!updated) return { status: "server-error", message: "The opportunity could not be updated." };
+      if (current.stageCode !== updated.stageCode) appendStageHistory(opportunityId, current.stageCode, updated.stageCode);
       return { status: "success", opportunity: toPipelineOpportunity(updated) };
     },
 
@@ -433,6 +534,9 @@ export const localLoopdevAdapter = {
       if (current.stageCode === "lost" && input.lossReason !== undefined && !input.lossReason?.trim()) {
         fieldErrors.lossReason = "A loss reason is required.";
       }
+      if (input.lines && (!input.lines.length || input.lines.some((line) => !Number.isFinite(line.quantity) || line.quantity <= 0))) {
+        fieldErrors.lines = "At least one line with a positive quantity is required.";
+      }
       if (Object.keys(fieldErrors).length) {
         return { status: "validation-error", message: "Check the opportunity details and try again.", fieldErrors };
       }
@@ -444,9 +548,161 @@ export const localLoopdevAdapter = {
         ...(input.ownerName !== undefined ? { ownerName: input.ownerName } : {}),
         ...(input.lossReason !== undefined ? { lossReason: input.lossReason?.trim() || null } : {}),
       });
+      if (updated && input.lines) {
+        input.lines.forEach((line) => {
+          const currentLine = line.id
+            ? localCrmOpportunityLinesStore.get(line.id)
+            : localCrmOpportunityLinesStore.list().find((item) => item.opportunityId === opportunityId);
+          if (!currentLine) return;
+          const unitAmount = line.unitAmount === undefined ? currentLine.unitAmount : line.unitAmount;
+          localCrmOpportunityLinesStore.update(currentLine.id, {
+            label: line.label?.trim() || currentLine.label,
+            quantity: line.quantity,
+            unitAmount,
+            currency: line.currency === undefined ? currentLine.currency : line.currency,
+            totalAmount: unitAmount === null ? null : unitAmount * line.quantity,
+          });
+        });
+      }
       return updated
         ? { status: "success", opportunity: toPipelineOpportunity(updated) }
         : { status: "server-error", message: "The opportunity could not be updated." };
+    },
+
+    async createOpportunity(input: CRMCreateOpportunityInput): Promise<CRMOpportunityMutationResult> {
+      if (input.organizationId !== organizationId) {
+        return { status: "forbidden", message: "You do not have permission to create opportunities in this organization." };
+      }
+      const fieldErrors: Record<string, string> = {};
+      if (!input.contactId.trim() || !crmCustomersStore.get(input.contactId)) fieldErrors.contactId = "Select an existing contact.";
+      if (!input.name.trim()) fieldErrors.name = "Opportunity name is required.";
+      if (input.amount !== undefined && input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0)) fieldErrors.amount = "Amount must be a non-negative number.";
+      if (!input.lines.length) fieldErrors.lines = "Add at least one opportunity line.";
+      if (input.lines.some((line) => !Number.isFinite(line.quantity) || line.quantity <= 0)) {
+        fieldErrors.lines = "Line quantities must be greater than zero.";
+      }
+      if (input.lines.some((line) => line.unitAmount !== undefined && line.unitAmount !== null && (!Number.isFinite(line.unitAmount) || line.unitAmount < 0))) {
+        fieldErrors.lines = "Line amounts must be non-negative numbers.";
+      }
+      const lineRefs = input.lines.map((line) => ({
+        ...line,
+        productKey: normalizeProductKey(line.productKey ?? ""),
+      }));
+      const resolvedLines = [];
+      for (const line of lineRefs) {
+        const hasReference = Boolean(line.catalogItemId || line.offerId || line.variantId || line.productKey);
+        if (!hasReference) {
+          fieldErrors.lines = "Each line needs a catalog reference or product key.";
+          continue;
+        }
+        const resolved = await catalogAdapter.resolveReference({
+          organizationId,
+          reference: {
+            catalogItemId: line.catalogItemId,
+            offerId: line.offerId,
+            variantId: line.variantId,
+            productKey: line.productKey,
+          },
+        });
+        if ((line.catalogItemId || line.offerId || line.variantId) && !resolved) {
+          fieldErrors.lines = "One or more catalog references are not available.";
+          continue;
+        }
+        resolvedLines.push({ line, resolved });
+      }
+      if (Object.keys(fieldErrors).length) {
+        return { status: "validation-error", message: "Check the opportunity details and try again.", fieldErrors };
+      }
+      const first = resolvedLines[0];
+      const primaryProductKey = first.resolved?.item.key ?? first.line.productKey ?? null;
+      const calculatedAmount = resolvedLines.reduce((sum, entry) => {
+        const unitAmount = entry.line.unitAmount ?? null;
+        return sum + (unitAmount === null ? 0 : unitAmount * entry.line.quantity);
+      }, 0);
+      const amount = input.amount !== undefined && input.amount !== null
+        ? input.amount
+        : calculatedAmount || null;
+      const created = localCrmOpportunitiesStore.create({
+        organizationId,
+        name: input.name.trim(),
+        contactId: input.contactId,
+        leadId: input.leadId ?? null,
+        productKey: primaryProductKey,
+        catalogItemId: first.resolved?.item.id ?? first.line.catalogItemId ?? null,
+        offerId: first.resolved?.offer?.id ?? first.line.offerId ?? null,
+        variantId: first.resolved?.variant?.id ?? first.line.variantId ?? null,
+        origin: "manual",
+        idempotencyKey: null,
+        ownerId: input.ownerId ?? null,
+        ownerName: input.ownerName?.trim() || null,
+        stageCode: "prospecting",
+        amount,
+        currency: input.currency?.trim() || first.line.currency?.trim() || null,
+        probability: PIPELINE_STAGES[0].probability,
+        expectedCloseDate: input.expectedCloseDate ?? null,
+        lossReason: null,
+        archivedAt: null,
+      });
+      if (!created) return { status: "server-error", message: "The opportunity could not be created." };
+      for (const entry of resolvedLines) {
+        const unitAmount = entry.line.unitAmount ?? null;
+        localCrmOpportunityLinesStore.create({
+          opportunityId: created.id,
+          catalogItemId: entry.resolved?.item.id ?? entry.line.catalogItemId ?? null,
+          offerId: entry.resolved?.offer?.id ?? entry.line.offerId ?? null,
+          variantId: entry.resolved?.variant?.id ?? entry.line.variantId ?? null,
+          productKey: entry.resolved?.item.key ?? entry.line.productKey ?? null,
+          label: entry.line.label?.trim() || entry.resolved?.item.name || entry.line.productKey || "Opportunity line",
+          quantity: entry.line.quantity,
+          unitAmount,
+          currency: entry.line.currency?.trim() || input.currency?.trim() || null,
+          totalAmount: unitAmount === null ? null : unitAmount * entry.line.quantity,
+        });
+      }
+      appendStageHistory(created.id, null, created.stageCode);
+      return { status: "success", opportunity: toPipelineOpportunity(created) };
+    },
+
+    async reopenOpportunity(
+      opportunityId: string,
+      input: CRMReopenOpportunityInput,
+    ): Promise<CRMOpportunityMutationResult> {
+      if (input.organizationId !== organizationId) {
+        return { status: "forbidden", message: "You do not have permission to reopen opportunities in this organization." };
+      }
+      const reason = input.reason.trim();
+      if (!reason) {
+        return { status: "validation-error", message: "A reason is required to reopen a terminal opportunity.", fieldErrors: { reason: "Reason is required." } };
+      }
+      const current = localCrmOpportunitiesStore.get(opportunityId);
+      if (!current || current.organizationId !== organizationId || current.archivedAt) {
+        return { status: "server-error", message: "The opportunity could not be found." };
+      }
+      if (current.updatedAt !== input.expectedUpdatedAt) {
+        return { status: "conflict", message: "The opportunity changed before it could be reopened.", opportunity: toPipelineOpportunity(current) };
+      }
+      if (current.stageCode !== "won" && current.stageCode !== "lost") {
+        return { status: "validation-error", message: "Only won or lost opportunities can be reopened.", fieldErrors: { stageCode: "The opportunity is not terminal." } };
+      }
+      const nextStage = input.stageCode ?? "prospecting";
+      const updated = localCrmOpportunitiesStore.update(opportunityId, {
+        stageCode: nextStage,
+        probability: PIPELINE_STAGES.find((stage) => stage.code === nextStage)?.probability ?? null,
+        lossReason: null,
+      });
+      if (!updated) return { status: "server-error", message: "The opportunity could not be reopened." };
+      appendStageHistory(opportunityId, current.stageCode, nextStage, reason);
+      return { status: "success", opportunity: toPipelineOpportunity(updated) };
+    },
+
+    async listPipelineStages(): Promise<CRMStageDefinition[]> {
+      return PIPELINE_STAGES.map((stage) => ({ ...stage }));
+    },
+
+    async listOpportunityStageHistory(opportunityId: string): Promise<CRMOpportunityStageHistory[]> {
+      return localCrmStageHistoryStore.list()
+        .filter((entry) => entry.opportunityId === opportunityId)
+        .sort((left, right) => left.occurredAt.localeCompare(right.occurredAt));
     },
 
     async createOpportunityFromLead(
@@ -457,9 +713,11 @@ export const localLoopdevAdapter = {
         return { status: "forbidden", message: "You do not have permission to convert leads in this organization." };
       }
 
-      const productKey = normalizeProductKey(input.productKey);
+      const productKey = normalizeProductKey(input.productKey ?? "");
       const fieldErrors: Record<string, string> = {};
-      if (!productKey) fieldErrors.productKey = "Product or interest is required.";
+      if (!productKey && !input.catalogItemId && !input.offerId && !input.variantId) {
+        fieldErrors.productKey = "Product or interest is required.";
+      }
       if (input.amount !== undefined && input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0)) {
         fieldErrors.amount = "Amount must be a non-negative number.";
       }
@@ -467,11 +725,31 @@ export const localLoopdevAdapter = {
         return { status: "validation-error", message: "Check the conversion details and try again.", fieldErrors };
       }
 
+      const catalogReference = input.catalogItemId || input.offerId || input.variantId || productKey
+        ? await catalogAdapter.resolveReference({
+          organizationId,
+          reference: {
+            catalogItemId: input.catalogItemId,
+            offerId: input.offerId,
+            variantId: input.variantId,
+            productKey,
+          },
+        })
+        : null;
+      if ((input.catalogItemId || input.offerId || input.variantId) && !catalogReference) {
+        return {
+          status: "validation-error",
+          message: "The selected catalog reference is not available.",
+          fieldErrors: { productKey: "Select an active catalog item." },
+        };
+      }
+      const resolvedProductKey = productKey || catalogReference?.item.key || "";
+
       const existing = localCrmOpportunitiesStore.list().find((opportunity) => (
         opportunity.organizationId === organizationId &&
         opportunity.leadId === leadId &&
         opportunity.origin === "lead_conversion" &&
-        opportunity.productKey === productKey
+        opportunity.productKey === resolvedProductKey
       ));
       if (existing) return { status: "success", opportunity: toPipelineOpportunity(existing) };
       const normalizedIdempotencyKey = input.idempotencyKey?.trim();
@@ -480,7 +758,7 @@ export const localLoopdevAdapter = {
           opportunity.organizationId === organizationId &&
           opportunity.origin === "lead_conversion" &&
           opportunity.idempotencyKey === normalizedIdempotencyKey &&
-          (opportunity.leadId !== leadId || opportunity.productKey !== productKey)
+          (opportunity.leadId !== leadId || opportunity.productKey !== resolvedProductKey)
         ));
         if (idempotencyConflict) {
           return {
@@ -507,10 +785,13 @@ export const localLoopdevAdapter = {
 
       const created = localCrmOpportunitiesStore.create({
         organizationId,
-        name: input.name?.trim() || input.productKey.trim(),
+        name: input.name?.trim() || resolvedProductKey,
         contactId: lead.contactId,
         leadId,
-        productKey,
+        productKey: resolvedProductKey,
+        catalogItemId: catalogReference?.item.id ?? input.catalogItemId ?? null,
+        offerId: catalogReference?.offer?.id ?? input.offerId ?? null,
+        variantId: catalogReference?.variant?.id ?? input.variantId ?? null,
         origin: "lead_conversion",
         idempotencyKey: normalizedIdempotencyKey ?? null,
         ownerId: null,
@@ -524,6 +805,20 @@ export const localLoopdevAdapter = {
         archivedAt: null,
       });
       if (!created) return { status: "server-error", message: "The opportunity could not be created." };
+
+      localCrmOpportunityLinesStore.create({
+        opportunityId: created.id,
+        catalogItemId: created.catalogItemId,
+        offerId: created.offerId,
+        variantId: created.variantId,
+        productKey: created.productKey,
+        label: created.name,
+        quantity: 1,
+        unitAmount: created.amount,
+        currency: created.currency,
+        totalAmount: created.amount,
+      });
+      appendStageHistory(created.id, null, created.stageCode);
 
       if (lead.status === "qualified") {
         const converted = localCrmLeadsStore.update(leadId, { status: "converted" });
@@ -545,6 +840,9 @@ export const localLoopdevAdapter = {
           contactId: opportunity.contactId,
           leadId: opportunity.leadId,
           productKey: opportunity.productKey,
+          catalogItemId: opportunity.catalogItemId ?? null,
+          offerId: opportunity.offerId ?? null,
+          variantId: opportunity.variantId ?? null,
           origin: opportunity.origin,
           name: opportunity.name,
           stageKey: opportunity.stageCode,

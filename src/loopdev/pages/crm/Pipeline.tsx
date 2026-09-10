@@ -1,8 +1,11 @@
-import { useMemo, useState, type DragEvent } from "react";
+import { useMemo, useState, type DragEvent, type FormEvent } from "react";
 import {
   AlertTriangle, CalendarClock, MoreHorizontal, MoveRight, RefreshCw, SearchX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DataCard, FilterDropdown, PageContainer, PageHeader, SearchInput, StatusBadge,
 } from "@/components/common";
@@ -46,6 +49,8 @@ export default function SalesCRMPipeline() {
   const [ownerIds, setOwnerIds] = useState<string[]>([]);
   const [dragOverStage, setDragOverStage] = useState<CRMPipelineStageCode | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [reopenTarget, setReopenTarget] = useState<CRMPipelineOpportunity | null>(null);
+  const [reopenReason, setReopenReason] = useState("");
   const {
     opportunities,
     loading,
@@ -53,6 +58,7 @@ export default function SalesCRMPipeline() {
     forbidden,
     mutation,
     moveStage,
+    reopenOpportunity,
     reload,
   } = useCrmPipeline({ query, stageCodes, ownerIds });
 
@@ -91,6 +97,16 @@ export default function SalesCRMPipeline() {
     if (opportunity) moveOpportunity(opportunity, stageCode);
     setDragOverStage(null);
     setDraggingId(null);
+  };
+
+  const submitReopen = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!reopenTarget || !reopenReason.trim()) return;
+    const result = await reopenOpportunity(reopenTarget, { reason: reopenReason });
+    if (result.status === "success") {
+      setReopenTarget(null);
+      setReopenReason("");
+    }
   };
 
   return (
@@ -210,6 +226,7 @@ export default function SalesCRMPipeline() {
                         setDraggingId(null);
                       }}
                       onMove={(nextStage) => moveOpportunity(opportunity, nextStage)}
+                      onReopen={() => setReopenTarget(opportunity)}
                     />
                   )) : (
                     <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
@@ -222,6 +239,15 @@ export default function SalesCRMPipeline() {
           })}
         </div>
       </DataCard>
+      <Dialog open={Boolean(reopenTarget)} onOpenChange={(open) => { if (!open) setReopenTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Reopen terminal opportunity</DialogTitle><DialogDescription>Won and lost opportunities require a non-empty reason before re-entering the pipeline.</DialogDescription></DialogHeader>
+          <form className="space-y-4" onSubmit={(event) => void submitReopen(event)}>
+            <div className="space-y-1.5"><Label htmlFor="pipeline-reopen-reason">Reason</Label><Input id="pipeline-reopen-reason" required value={reopenReason} onChange={(event) => setReopenReason(event.target.value)} /></div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setReopenTarget(null)}>Cancel</Button><Button type="submit" disabled={!reopenReason.trim()}>Reopen opportunity</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }
@@ -233,6 +259,7 @@ function OpportunityCard({
   onDragStart,
   onDragEnd,
   onMove,
+  onReopen,
 }: {
   opportunity: CRMPipelineOpportunity;
   moving: boolean;
@@ -240,6 +267,7 @@ function OpportunityCard({
   onDragStart: (event: DragEvent<HTMLElement>) => void;
   onDragEnd: () => void;
   onMove: (stageCode: CRMPipelineStageCode) => void;
+  onReopen: () => void;
 }) {
   return (
     <article
@@ -270,7 +298,10 @@ function OpportunityCard({
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Move to</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {CRM_PIPELINE_STAGE_CODES.filter((stageCode) => stageCode !== opportunity.stageCode).map((stageCode) => (
+            {(opportunity.stageCode === "won" || opportunity.stageCode === "lost") && (
+              <DropdownMenuItem onClick={onReopen}>Reopen with reason…</DropdownMenuItem>
+            )}
+            {CRM_PIPELINE_STAGE_CODES.filter((stageCode) => stageCode !== opportunity.stageCode && opportunity.stageCode !== "won" && opportunity.stageCode !== "lost").map((stageCode) => (
               <DropdownMenuItem key={stageCode} onClick={() => onMove(stageCode)}>
                 <MoveRight className="mr-2 h-3.5 w-3.5" /> {STAGE_LABELS[stageCode]}
               </DropdownMenuItem>

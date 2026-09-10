@@ -1,35 +1,38 @@
 ---
 id: loopdev-v2-crm-frontend
-title: CRM y Communications frontend para LoopDev v2
+title: CRM y capacidades transversales para LoopDev v2
 status: active
 created: 2026-09-09
-updated: 2026-09-09
+updated: 2026-09-10
 owner: loopdev-v2
 lead: User
 branch: develop
 branches: []
-phase: 1
+phase: 3
 pull_requests: []
 issues: [2]
 packages: []
 release: internal-product
-areas: [frontend, crm, communications, ux]
+areas: [frontend, platform, crm, communications, ux]
 dependencies:
   - loopdev-v2-monorepo-multitenancy
 blocked_by: []
 supersedes: []
 ---
 
-# CRM y Communications frontend para LoopDev v2
+# CRM y capacidades transversales para LoopDev v2
 
 ## Outcome
 
-Construir la experiencia visual del CRM y de Communications en LoopDev v2 a partir del
-lenguaje visual ya establecido, manteniendo las páginas desacopladas del backend Supabase
-que ya existe en el producto legacy.
+Construir el CRM completo de LoopDev v2 sobre adapters locales y capacidades Platform
+reutilizables, dejando las páginas, contratos y reglas preparados para sustituir el adapter
+local por Supabase como última fase, sin reescribir la UI.
 
 El trabajo es frontend-first. La persistencia real se conectará después mediante adapters,
-sin reescribir las páginas ni crear una API paralela desde el navegador.
+sin reescribir las páginas ni crear una API paralela desde el navegador. Las capacidades
+transversales de trabajo —Tasks, Notes, Activities y Timeline— se diseñan como Platform
+capabilities reutilizables por CRM y por las futuras suites de LoopDev, aunque su primera
+implementación y fixtures se validen dentro de CRM.
 
 ## Fuente de verdad
 
@@ -53,16 +56,105 @@ La documentación de producto de Contacts y Leads sigue siendo la fuente de requ
 visual no se considera implementación funcional completa mientras falten contratos de query,
 paginación por cursor, permisos y mutaciones autorizadas.
 
-Preparado en navegación, pero pendiente de construcción de la superficie de dominio:
+Implementado o preparado para continuar localmente:
 
-- Pipeline.
-- Opportunities.
-- Tasks.
-- Communications.
+- Pipeline y Opportunities con adapter local, filtros, mutaciones y drawers responsive.
+- Contacts y Leads con drawers globales, estados y contratos de ciclo comercial separados.
+- Frontera documentada para reemplazar el adapter local por Supabase sin reescribir páginas.
+- Cuatro capacidades transversales pendientes de diseño detallado: Tasks, Notes, Activities y
+  Timeline.
+
+## Alcance funcional del CRM
+
+El track cubre las siguientes superficies y capacidades de CRM:
+
+### Entidades comerciales
+
+- [x] CRM Overview.
+- [x] Contacts: tabla, búsqueda, filtros, cursor local, creación, edición, archivado y
+  drawer responsive.
+- [x] Customer 360 inicial para Contact.
+- [x] Leads: tabla/cards, vistas, filtros, selección, preview, estados y conversión.
+- [x] Pipeline: board Kanban de Opportunities y movimientos de etapa.
+- [x] Opportunities: tabla/cards, filtros, ordenación y detalle en drawer.
+- [ ] Contact detail enriquecido con relaciones, Notes, Tasks y Timeline.
+- [ ] Lead detail/workspace con actividad, atribución y relaciones.
+- [ ] Opportunity detail completo con historial, actividad y relaciones.
+- [ ] Creación manual de Leads y Opportunities.
+- [ ] Reapertura explícita de Opportunities terminales.
+- [ ] Stage configuration y catálogo de productos preparado para organización/workspace.
+- [ ] Opportunity lines con referencias a CatalogItem, Offer y Variant.
+
+### Operación comercial
+
+- [ ] Tasks y vista My Day.
+- [ ] Notes contextuales con privacidad.
+- [ ] Activities de negocio.
+- [ ] Timeline unificado y deduplicado.
+- [ ] Attachments de Contact, Lead, Opportunity, Task y Note.
+- [ ] Notifications in-app para asignaciones, menciones, vencimientos y cambios relevantes.
+- [ ] Comments y mentions cuando exista una necesidad colaborativa validada.
+- [ ] Import/export y operaciones masivas autorizadas.
+- [ ] Search CRM y filtros guardables.
+- [ ] Tags y clasificación transversal.
+- [ ] Custom fields mediante configuración, sin builders prematuros.
+- [ ] Auditoría visible donde corresponda y audit log interno separado.
+- [ ] Automatizaciones CRM iniciales basadas en eventos y acciones.
 
 El adapter activo durante esta fase es `localLoopdevAdapter`. El backend Supabase, sus
 contratos, RLS, permisos y migraciones se mantienen como referencia de integración y no
 se duplican en este track.
+
+## Capacidades Platform transversales
+
+Estas capacidades no pertenecen exclusivamente a CRM. CRM será el primer consumidor, pero los
+contratos deben permitir su uso posterior en Projects, Support, Documents, Operations y la
+aplicación móvil.
+
+### Platform foundation
+
+- **Organization context:** organización activa, workspace, brand, tenant y contexto de sesión.
+- **Identity and membership:** usuario, membresía, roles, estado de membresía y usuarios asignables.
+- **Permissions and capabilities:** permisos de lectura, escritura, asignación, administración y
+  acceso a datos sensibles.
+- **Entity references:** referencias polimórficas `entityType + entityId` con scope autorizado.
+- **Entity relationships:** relaciones entre entidades, cardinalidad, tipo de relación y ownership.
+- **Reference data:** países, ciudades, monedas, idiomas, timezone, documentos, géneros, productos
+  y catálogos configurables.
+- **Catalog:** catálogo transversal de ofertas comerciales, independiente de CRM y extensible
+  para servicios de salud, comercio, SaaS, servicios profesionales y productos físicos.
+- **Catalog items:** elemento comercial base con `key`, `sku`, tipo, categoría y estado.
+- **Offers:** condiciones comerciales, modelo de cobro, moneda, unidad y vigencia.
+- **Variants:** variantes por talla, modalidad, cobertura, plan o configuración.
+- **Price books and entries:** listas de precios y precios vigentes sin acoplarlos a CRM.
+- **Catalog visibility:** disponibilidad por organización, workspace, brand o canal autorizado.
+
+### Work and collaboration
+
+- **Tasks:** trabajo accionable, asignación, prioridad, vencimiento, lifecycle y versionado.
+- **Notes:** contenido contextual, autoría, visibilidad `private/team/organization` y privacidad.
+- **Comments:** conversación colaborativa separada de Notes.
+- **Mentions:** menciones de usuarios y futura notificación.
+- **Activities:** eventos funcionales visibles, no equivalentes a auditoría.
+- **Timeline:** read model append-only compuesto y deduplicado por `sourceType:sourceId`.
+- **Audit:** eventos internos de seguridad, cambios sensibles y cumplimiento, separados del Timeline.
+- **Attachments:** archivos, versiones, asociación a entidades, permisos y futura Storage.
+- **Notifications:** inbox in-app, preferencias, eventos y futuros canales email/push/WhatsApp.
+
+### Data and extensibility
+
+- **Search:** búsqueda por entidad y búsqueda global autorizada.
+- **Saved filters/views:** filtros persistentes por usuario y organización.
+- **Tags:** clasificación reutilizable por organización, workspace y entidad.
+- **Custom fields:** definiciones, valores, visibilidad y obligatoriedad configurables.
+- **Import/export:** CSV, validación, deduplicación, progreso, errores y reintentos.
+- **Automations:** triggers, condiciones, acciones, ejecuciones e idempotencia.
+- **Localization:** locale, timezone, moneda, formatos y traducciones.
+- **Entitlements:** capacidades habilitadas por organización y futura relación con billing.
+
+Todas las capacidades se desarrollarán inicialmente con contratos TypeScript, adapters locales,
+stores deterministas y fixtures. Ninguna página accederá directamente a `localStorage`,
+Supabase o tablas de dominio.
 
 ## Fases
 
@@ -134,54 +226,148 @@ Customer 360 enriquecido quedan fuera de esta unidad.
 
 ### Cierre visual de Contacts
 
-**Estado:** Pendiente
+**Estado:** Completada localmente; Customer 360 enriquecido queda en una fase posterior
 
 - [x] Mostrar los campos disponibles del modelo CRM en el formulario y Customer 360.
-- [ ] Crear una representación mobile semántica de la lista.
-- [ ] Completar restauración de foco y pruebas de accesibilidad.
-- [ ] Añadir tests de integración del formulario y del refresco tras mutaciones.
-- [ ] Mostrar explícitamente el estado archivado en el detalle.
+- [x] Crear una representación mobile semántica de la lista.
+- [x] Completar restauración de foco y pruebas de accesibilidad.
+- [x] Añadir tests de integración del formulario y del refresco tras mutaciones.
+- [x] Mostrar explícitamente el estado archivado en el detalle.
 
 **Fuera de UI-2:** Customer 360 enriquecido, merge, exportación, bulk actions, filtros avanzados,
 owner y lifecycle stage.
 
-### Fase 2 — Pipeline y Opportunities
+### Fase 2 — Platform foundation local y Catalog
+
+**Estado:** Completada localmente — sin backend, migraciones ni Supabase
+
+- [x] Mantener Reference Data detrás de un adapter transversal.
+- [x] Crear `OrganizationContext`, `EntityRef`, scope y permisos locales.
+- [x] Crear contratos Platform independientes de CRM.
+- [x] Crear `CatalogItem`, `Offer`, `CatalogVariant`, `PriceBook` y `PriceEntry`.
+- [x] Crear `CatalogAdapter` y stores locales deterministas.
+- [x] Soportar tipos `physical_product`, `service`, `subscription`, `coverage`, `package`,
+  `digital_product` y `fee`.
+- [x] Mantener `key`/`sku` estables y separar nombre visible, precio y operación.
+- [x] Añadir visibilidad por organización/workspace sin crear reglas sectoriales en el núcleo.
+- [x] Preparar extensiones verticales para healthcare, commerce, SaaS y servicios profesionales
+  mediante metadata y fixtures genéricos, sin campos sectoriales en el core.
+- [x] Preparar contratos para web y futura aplicación móvil.
+- [x] Cubrir aislamiento lógico entre organizaciones en los adapters locales.
+
+**Evidencia local:** `src/loopdev/domains/platform` aporta el contexto de organización,
+`EntityRef`, scopes y permisos detrás de `PlatformAdapter`. `src/loopdev/domains/catalog`
+aporta contratos, fixtures multi-tenant, stores y `CatalogAdapter`; el adapter local solo
+devuelve registros visibles para la organización/workspace solicitado. CRM conserva `productKey`
+y además persiste/resuelve `catalogItemId`, `offerId` y `variantId` cuando están disponibles.
+La futura frontera Supabase queda en el adapter: no se instalaron servicios, no se ejecutaron
+migraciones y ninguna página accede a `localStorage`.
+
+### Fase 3 — Cerrar el CRM core
+
+**Estado:** Completada localmente — backend Supabase y capacidades de Fase 4 permanecen fuera
+
+- [x] Implementar board Kanban de Opportunities en `/app/sales-crm/pipeline`.
+- [x] Implementar tabla/cards responsive de Opportunities en
+  `/app/sales-crm/opportunities`.
+- [x] Reutilizar `AppDrawer` para el detalle responsive.
+- [x] Compartir adapter, store local y concurrencia optimista entre Pipeline y
+  Opportunities.
+- [x] Completar mobile semántico, accesibilidad y estados archivados de Contacts.
+- [ ] Completar Contact detail, relaciones y Customer 360 enriquecido.
+- [x] Añadir captura y creación manual de Leads.
+- [x] Añadir Lead detail/workspace, atribución y assignment local.
+- [x] Añadir creación manual de Opportunities.
+- [x] Añadir reapertura explícita de `won`/`lost` con razón y permiso elevado.
+- [x] Añadir historial de cambios de etapa y relación con Timeline.
+- [x] Reemplazar progresivamente `productKey` libre por referencias de CatalogItem, Offer y Variant.
+- [x] Añadir Opportunity Lines, inicialmente con soporte de una línea y después multi-línea.
+- [x] Alinear stages configurables/locales y estados de error con el contrato local; price books y paginación avanzada quedan para el adapter futuro.
+- [x] Cubrir tests de adapter y páginas para creación, terminales, reapertura, líneas, conversión y navegación/detalle.
+
+### Fase 4 — Tasks, Notes, Activities y Timeline
 
 **Estado:** Pendiente
 
-- [ ] Definir la composición visual del board y la tabla responsive.
-- [ ] Diseñar tarjetas de Opportunity, etapas, filtros y acciones.
-- [ ] Implementar detalle de Opportunity reutilizando Contact 360 cuando corresponda.
-- [ ] Añadir estados `stale`, `conflict` y `action pending` para la futura conexión real.
-- [ ] Mantener las rutas bajo `/app/sales-crm/*`.
+- [ ] Implementar Tasks con relaciones a Contact, Lead, Opportunity y futuras entidades.
+- [ ] Implementar Notes con visibilidad privada, equipo y organización.
+- [ ] Implementar Activities como eventos de negocio.
+- [ ] Implementar Timeline como read model transversal, append-only y deduplicado.
+- [ ] Separar Audit Events internos de Activities y Timeline.
+- [ ] Integrar las cuatro capacidades con Contact, Lead, Opportunity y Customer 360.
+- [ ] Crear Tasks list y My Day usando el mismo contrato Platform.
+- [ ] Reutilizar AppDrawer, Dialog y ConfirmDialog.
+- [ ] Cubrir estados loading, empty, forbidden, conflict, stale y pending.
 
-### Fase 3 — Tasks, Notes y Timeline
+### Fase 5 — Attachments, Notifications y colaboración
 
 **Estado:** Pendiente
 
-- [ ] Diseñar bandeja de Tasks y vista My Day.
-- [ ] Integrar Tasks, Notes y Timeline como capacidades contextuales.
-- [ ] Evitar duplicar actividad dentro de Customer 360.
-- [ ] Definir formularios y overlays con los primitives actuales.
-- [ ] Conservar permisos y reglas de privacidad del backend como contrato.
+- [ ] Implementar Attachments con asociación polimórfica y límites locales.
+- [ ] Implementar Notifications in-app y preferencias básicas.
+- [ ] Implementar Comments y Mentions solo donde exista una necesidad validada.
+- [ ] Integrar notificaciones con asignación de Tasks, vencimientos, menciones y cambios de etapa.
+- [ ] Dejar Storage, email, push y proveedores reales detrás del adapter.
 
-### Fase 4 — Communications
+### Fase 6 — Search, Tags, Custom Fields e Import/Export
+
+**Estado:** Pendiente
+
+- [ ] Implementar búsqueda CRM reutilizable y preparada para búsqueda global.
+- [ ] Implementar saved views y filtros persistentes.
+- [ ] Implementar Tags y EntityTags.
+- [ ] Preparar Custom Fields con visibilidad y requiredness por organización.
+- [ ] Implementar import/export local con validación, deduplicación y resultados por fila.
+- [ ] Implementar bulk actions solo sobre comandos respaldados por contrato.
+
+### Fase 7 — Automations, entitlements y certificación local
+
+**Estado:** Pendiente
+
+- [ ] Implementar eventos, triggers y acciones CRM iniciales.
+- [ ] Añadir idempotencia y execution log local.
+- [ ] Preparar entitlements por organización sin conectar billing real.
+- [ ] Completar accesibilidad, responsive, error recovery y visual review.
+- [ ] Ejecutar suite completa de typecheck, lint, tests y build.
+- [ ] Actualizar contratos, handoffs, matrices y evidencia de cierre.
+
+### Fase 8 — Communications y extensiones verticales
 
 **Estado:** Pendiente
 
 - [ ] Definir Communications como suite visual independiente dentro de LoopDev.
 - [ ] Diseñar inbox, conversaciones, estados de lectura, filtros y panel contextual.
-- [ ] Mantener la relación contextual con Contact, Lead y Customer 360.
+- [ ] Mantener la relación contextual con Contact, Lead, Opportunity y Customer 360.
 - [ ] Separar claramente la UI de canales reales, proveedores y credenciales.
 - [ ] Usar fixtures o adapter local hasta conectar el backend existente.
+- [ ] Definir extensiones `healthcare`, `commerce`, `saas` y `services` sin contaminar Catalog core.
+- [ ] Healthcare: coberturas, servicios, elegibilidad, beneficiarios y reservas.
+- [ ] Commerce: inventario, almacenes, fulfillment, devoluciones y órdenes.
+- [ ] SaaS: planes, seats, usage, suscripciones y entitlements.
+- [ ] Services: recursos, duración, modalidad, reservas y entrega.
 
-### Fase 5 — Integración progresiva
+### Fase 9 — Documentación y frontera Supabase
+
+**Estado:** Pendiente — última fase local
+
+- [ ] Actualizar todos los contratos con los modelos Platform definitivos.
+- [ ] Definir el mapping de `expectedUpdatedAt` a `version`.
+- [ ] Definir el mapping de probabilidad local `0..1` al formato legacy `0..100`.
+- [ ] Definir interfaces del adapter Supabase para CRM, Platform y Catalog.
+- [ ] Definir envelopes, errores, paginación, idempotencia y scopes.
+- [ ] Preparar mapeos de Auth, organización, workspace, membership y permisos.
+- [ ] Preparar mappings de CatalogItem, Offer, Variant, PriceBook, PriceEntry y OpportunityLine.
+- [ ] Mantener las páginas sin cambios al sustituir el adapter local.
+- [ ] No ejecutar migraciones, RLS, seeds, Auth real ni endpoints Supabase en esta fase.
+
+### Fase 10 — Integración progresiva con Supabase
 
 **Estado:** Futuro
 
 - [ ] Implementar el adapter Supabase para los contratos ya existentes.
 - [ ] Conectar queries y mutaciones sin cambiar las composiciones visuales.
 - [ ] Validar aislamiento multi-tenant, permisos y estados de error.
+- [ ] Validar Catalog y CRM con organizaciones, workspaces, price books y permisos reales.
 - [ ] Retirar datos locales solo cuando cada flujo tenga persistencia real validada.
 
 ## Rutas v2
@@ -192,8 +378,8 @@ owner y lifecycle stage.
 | Contacts | `/app/sales-crm/contacts` | Implementada |
 | Customer 360 | `/app/sales-crm/contacts/:contactId` | Implementada |
 | Leads | `/app/sales-crm/leads` | Implementada |
-| Pipeline | `/app/sales-crm/pipeline` | Pendiente |
-| Opportunities | `/app/sales-crm/opportunities` | Pendiente |
+| Pipeline | `/app/sales-crm/pipeline` | Implementada con adapter local |
+| Opportunities | `/app/sales-crm/opportunities` | Implementada con adapter local |
 | Tasks | `/app/sales-crm/tasks` | Pendiente |
 | Communications | `/app/sales-crm/communications` | Pendiente |
 
@@ -208,7 +394,13 @@ owner y lifecycle stage.
 ## Criterios de cierre
 
 - [ ] Las superficies CRM actuales tienen una composición visual consistente en v2.
-- [ ] Pipeline, Opportunities, Tasks y Communications tienen diseño y estados documentados.
+- [x] Pipeline y Opportunities tienen diseño y estados documentados para la fase local.
+- [x] Platform Catalog tiene contratos, adapter local y referencias desde CRM.
+- [ ] Tasks, Notes, Activities y Timeline tienen contrato transversal y estados documentados.
+- [x] Platform foundation tiene contexto de organización, EntityRef y permisos locales.
+- [ ] Attachments y Notifications tienen adapters locales y contratos reutilizables.
+- [ ] Search, Tags, Custom Fields e Import/Export tienen alcance y comandos definidos.
+- [ ] Automations y entitlements tienen límites explícitos.
 - [ ] Todas las páginas usan `/app/sales-crm/*` y el shell actual de LoopDev.
 - [ ] La UI consume datos mediante hooks, servicios y adapters.
 - [ ] La integración Supabase sustituye al adapter local sin reescritura de páginas.

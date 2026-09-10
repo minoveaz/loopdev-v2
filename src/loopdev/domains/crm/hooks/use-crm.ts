@@ -4,12 +4,16 @@ import type {
   CRMContact,
   CRMContactListParams,
   CRMCreateOpportunityFromLeadInput,
+  CRMCreateLeadInput,
+  CRMCreateOpportunityInput,
   CRMLead,
+  CRMLeadMutationResult,
   CRMUpdateLeadInput,
   CRMOpportunityListParams,
   CRMOpportunityMutationResult,
   CRMMoveOpportunityStageInput,
   CRMUpdateOpportunityInput,
+  CRMReopenOpportunityInput,
   CRMPipelineOpportunity,
   CRMPipelineStageCode,
   Customer360View,
@@ -83,6 +87,7 @@ export function useCrmLeads() {
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
   const [conversion, setConversion] = useState<CrmLeadConversionState>({ status: "idle" });
+  const [creation, setCreation] = useState<CrmLeadCreationState>({ status: "idle" });
 
   useEffect(() => {
     let active = true;
@@ -121,6 +126,23 @@ export function useCrmLeads() {
     return result;
   };
 
+  const createLead = async (input: Omit<CRMCreateLeadInput, "organizationId">) => {
+    setCreation({ status: "pending" });
+    let result: Awaited<ReturnType<typeof loopdevAdapter.crm.createLead>>;
+    try {
+      result = await loopdevAdapter.crm.createLead({ ...input, organizationId: LOCAL_ORGANIZATION_ID });
+    } catch (cause: unknown) {
+      result = { status: "server-error", message: cause instanceof Error ? cause.message : "Please try again." };
+    }
+    if (result.status === "success") {
+      setLeads((current) => [result.lead, ...current]);
+      setCreation({ status: "success", lead: result.lead });
+    } else {
+      setCreation({ status: result.status, message: result.message });
+    }
+    return result;
+  };
+
   const updateLead = async (lead: CRMLead, input: Omit<CRMUpdateLeadInput, "organizationId" | "expectedUpdatedAt">) => {
     const result = await loopdevAdapter.crm.updateLead(lead.id, {
       ...input,
@@ -140,12 +162,19 @@ export function useCrmLeads() {
     loading,
     error,
     conversion,
+    creation,
+    createLead,
     createOpportunityFromLead,
     updateLead,
     resetConversion: () => setConversion({ status: "idle" }),
     reload: () => setReloadToken((token) => token + 1),
   };
 }
+
+export type CrmLeadCreationState =
+  | { status: "idle" | "pending" }
+  | { status: "success"; lead: CRMLead }
+  | ({ status: Exclude<CRMLeadMutationResult["status"], "success"> } & { message: string });
 
 export type CrmLeadConversionState =
   | { status: "idle" }
@@ -167,6 +196,7 @@ export interface UseCrmPipelineParams {
   stageCodes?: CRMPipelineStageCode[];
   ownerIds?: string[];
   productKeys?: string[];
+  catalogItemIds?: string[];
   origins?: ("manual" | "lead_conversion")[];
   sortBy?: "updated" | "name" | "amount" | "expectedCloseDate";
   sortDirection?: "asc" | "desc";
@@ -182,6 +212,7 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
   const stageCodesKey = (params.stageCodes ?? []).join(",");
   const ownerIdsKey = (params.ownerIds ?? []).join(",");
   const productKeysKey = (params.productKeys ?? []).join(",");
+  const catalogItemIdsKey = (params.catalogItemIds ?? []).join(",");
   const originsKey = (params.origins ?? []).join(",");
 
   useEffect(() => {
@@ -195,6 +226,7 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
       stageCodes: stageCodesKey ? stageCodesKey.split(",") as CRMPipelineStageCode[] : undefined,
       ownerIds: ownerIdsKey ? ownerIdsKey.split(",") : undefined,
       productKeys: productKeysKey ? productKeysKey.split(",") : undefined,
+      catalogItemIds: catalogItemIdsKey ? catalogItemIdsKey.split(",") : undefined,
       origins: originsKey ? originsKey.split(",") as ("manual" | "lead_conversion")[] : undefined,
       sortBy: params.sortBy,
       sortDirection: params.sortDirection,
@@ -216,7 +248,7 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [params.query, stageCodesKey, ownerIdsKey, productKeysKey, originsKey, params.sortBy, params.sortDirection, reloadToken]);
+  }, [params.query, stageCodesKey, ownerIdsKey, productKeysKey, catalogItemIdsKey, originsKey, params.sortBy, params.sortDirection, reloadToken]);
 
   const moveStage = async (opportunity: CRMPipelineOpportunity, stageCode: CRMPipelineStageCode) => {
     const input: CRMMoveOpportunityStageInput = {
@@ -268,6 +300,45 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     return result;
   };
 
+  const createOpportunity = async (input: Omit<CRMCreateOpportunityInput, "organizationId">) => {
+    setMutation({ status: "pending", opportunityId: "new" });
+    let result: CRMOpportunityMutationResult;
+    try {
+      result = await loopdevAdapter.crm.createOpportunity({ ...input, organizationId: LOCAL_ORGANIZATION_ID });
+    } catch (cause: unknown) {
+      result = { status: "server-error", message: cause instanceof Error ? cause.message : "Please try again." };
+    }
+    if (result.status === "success") {
+      setMutation(result);
+      setOpportunities((current) => [result.opportunity, ...current]);
+    } else {
+      setMutation({ status: result.status, message: result.message, ...(result.status === "conflict" ? { opportunity: result.opportunity } : {}) });
+    }
+    return result;
+  };
+
+  const reopenOpportunity = async (
+    opportunity: CRMPipelineOpportunity,
+    input: Omit<CRMReopenOpportunityInput, "organizationId" | "expectedUpdatedAt">,
+  ) => {
+    setMutation({ status: "pending", opportunityId: opportunity.id });
+    const result = await loopdevAdapter.crm.reopenOpportunity(opportunity.id, {
+      ...input,
+      organizationId: LOCAL_ORGANIZATION_ID,
+      expectedUpdatedAt: opportunity.updatedAt,
+    });
+    if (result.status === "success") {
+      setMutation(result);
+      setOpportunities((current) => current.map((item) => item.id === result.opportunity.id ? result.opportunity : item));
+    } else {
+      setMutation({ status: result.status, message: result.message, ...(result.status === "conflict" ? { opportunity: result.opportunity } : {}) });
+      if (result.status === "conflict") {
+        setOpportunities((current) => current.map((item) => item.id === result.opportunity.id ? result.opportunity : item));
+      }
+    }
+    return result;
+  };
+
   return {
     opportunities,
     loading,
@@ -276,6 +347,8 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     mutation,
     moveStage,
     updateOpportunity,
+    createOpportunity,
+    reopenOpportunity,
     reload: () => setReloadToken((token) => token + 1),
   };
 }

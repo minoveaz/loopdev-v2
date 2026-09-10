@@ -28,6 +28,8 @@ puede cambiar de datos locales a Supabase sin reescribir las paginas.
 | Paginas CRM | `src/loopdev/pages/crm` |
 | Componentes CRM | `src/loopdev/components` |
 | Tipos y adapter CRM | `src/loopdev/domains/crm` |
+| Platform foundation | `src/loopdev/domains/platform` |
+| Catalog y adapter local | `src/loopdev/domains/catalog` |
 | Primitives compartidos | `src/components/common`, `src/components/ui` |
 | Documentacion de producto | `docs/06-product/crm` |
 
@@ -41,8 +43,44 @@ Pagina CRM
 ```
 
 Mientras se completa la conexion de v2, `localLoopdevAdapter` es la implementacion activa para
-la fase visual. El adapter ya modela contactos, leads, Customer 360, oportunidades, tareas,
-notas y timeline con `organizationId`, estados parciales y permisos por seccion.
+la fase local. El adapter modela contactos, leads, Customer 360 y oportunidades; las referencias
+transversales de organización, workspace, scopes y permisos viven en `PlatformAdapter`, y el
+catálogo transversal vive en `CatalogAdapter`. Ninguna página accede directamente a `localStorage`.
+
+## Fase 2 local: Platform y Catalog
+
+La base local implementada antes del cierre CRM incluye:
+
+- `OrganizationContext`, `EntityRef`, `EntityScope` y permisos locales reemplazables por un
+  adapter futuro.
+- `CatalogItem`, `Offer`, `CatalogVariant`, `PriceBook` y `PriceEntry`, con estados `draft`,
+  `active` y `archived`, `key`/`sku` estables y metadata extensible.
+- Visibilidad por organización y workspace: los registros compartidos tienen `workspaceId: null`
+  y los registros de workspace solo aparecen en su scope autorizado.
+- Fixtures multi-tenant para ejemplos genéricos de salud, tienda, SaaS y servicios. El core no
+  contiene campos sectoriales; las extensiones se expresan mediante metadata.
+- Opportunities compatibles hacia atrás con `productKey`, y referencias opcionales a
+  `catalogItemId`, `offerId` y `variantId`. Las conversiones de Leads mantienen la normalización
+  e idempotencia existentes y pueden resolver una referencia local de Catalog.
+
+Esta fase es deliberadamente frontend-first: no instala Docker/Supabase, no crea ni ejecuta
+migraciones y no conecta backend real. La frontera futura consiste en sustituir
+`localPlatformAdapter`, `localCatalogAdapter` y `localLoopdevAdapter` por implementaciones
+Supabase con los mismos contratos, scopes y permisos.
+
+## Fase 3 local: cierre del CRM core
+
+Contacts, Leads, Pipeline y Opportunities comparten contratos y adapters locales sin conectar
+backend. Leads se crean desde un diálogo estándar con contacto, source/attribution y owner
+local; su estado (`new`, `qualified`, `converted`, etc.) nunca se mezcla con los stages de
+Pipeline y las conversiones siguen siendo idempotentes.
+
+Opportunities admiten creación manual con `CatalogItem`, `Offer` o `Variant` cuando existen y
+conservan `productKey` como fallback. Cada oportunidad tiene al menos una línea extensible,
+edición local, relaciones a Contact/Lead y detalle en `AppDrawer`. Los stages locales exponen
+un catálogo estable; `won` y `lost` son terminales y solo pueden reabrirse con una razón no
+vacía. Cada cambio agrega un registro a un store append-only de stage history preparado para
+ser proyectado por Timeline en Fase 4, sin implementar Timeline aquí.
 
 ## Rutas v2
 
@@ -54,8 +92,8 @@ La navegacion de la suite usa el prefijo `/app/sales-crm`:
 | Contacts | `/app/sales-crm/contacts` | Implementada con adapter local |
 | Customer 360 | `/app/sales-crm/contacts/:contactId` | Implementada con adapter local |
 | Leads | `/app/sales-crm/leads` | Implementada con adapter local |
-| Pipeline | `/app/sales-crm/pipeline` | Ruta de suite preparada; UI de dominio pendiente |
-| Opportunities | `/app/sales-crm/opportunities` | Ruta de suite preparada; UI de dominio pendiente |
+| Pipeline | `/app/sales-crm/pipeline` | Board local con stages, concurrencia optimista, terminales y reapertura explícita |
+| Opportunities | `/app/sales-crm/opportunities` | Tabla/cards local, creación manual, líneas, catálogo y detalle en drawer |
 | Tasks | `/app/sales-crm/tasks` | Ruta de suite preparada; UI de dominio pendiente |
 | Communications | `/app/sales-crm/communications` | Ruta de suite preparada; UI pendiente |
 

@@ -27,6 +27,7 @@ import type {
 } from "./types";
 import type { CRMOperationsAdapter } from "../operations/types";
 import type { CRMAutomationsAdapter } from "../automations";
+import type { CommunicationsAdapter } from "@/loopdev/domains/communications";
 
 export interface LoopdevCrmAdapter {
   operations: CRMOperationsAdapter;
@@ -68,6 +69,7 @@ export interface LoopdevAdapter {
   platform: PlatformAdapter;
   catalog: CatalogAdapter;
   crm: LoopdevCrmAdapter;
+  communications: CommunicationsAdapter;
   referenceData: ReferenceDataAdapter;
 }
 

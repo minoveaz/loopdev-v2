@@ -370,20 +370,203 @@ migraciones y ninguna página accede a `localStorage`.
   `crm.contacts` y `crm.opportunities` sin límite local.
 - [ ] Conectar Supabase, billing, proveedores externos y persistencia remota.
 
-### Fase 8 — Communications y extensiones verticales
+### Fase 8 — Communications Inbox multicanal
+
+**Estado:** 8A-8D completadas localmente — 8E-8G pendientes (CRM context,
+responsive mobile, collaboration backend, providers y delivery real)
+
+Communications no se define como una suite independiente en esta fase. El primer
+consumidor es el CRM Communications Inbox, preparado para múltiples canales sin
+activar proveedores que todavía no tengan adapter, políticas y permisos aprobados.
+
+- [x] Definir el Inbox como una experiencia operativa CRM basada en la composición
+  de Rivera y los patrones de `loopdev-lab`.
+- [x] Mantener la arquitectura multicanal desde el inicio:
+  `whatsapp`, `email`, `instagram`, `facebook_messenger`, `sms`, `phone` y
+  `livechat`.
+- [x] Definir WhatsApp como primer canal operativo local.
+- [x] Mantener Email preparado visual y contractualmente, aunque no esté activo en
+  la primera entrega. Email requiere posteriormente sus propias reglas de asunto,
+  threads, attachments, delivery, consentimiento y provider adapter.
+- [x] Diseñar Channel Rail con `All channels`, filtros por canal, contadores,
+  estado de conexión y estados `connected`, `disconnected`, `pending`, `error`,
+  `coming_soon` y `disabled`.
+- [x] Diseñar Inbox desktop con lista de conversaciones, thread y contexto CRM
+  opcional; el contexto CRM permanece cerrado por defecto y se activa únicamente
+  cuando el usuario lo solicita.
+- [x] Diseñar experiencia mobile secuencial:
+  lista de conversaciones → thread → CRM context drawer/sheet.
+- [x] Definir el contexto CRM como panel opt-in con Contact, Lead, Opportunity,
+  Tasks, Activities y Customer 360, sin duplicar entidades CRM.
+- [x] Separar `Reply` e `Internal note` en el composer.
+- [x] Preparar estados `queued`, `sent`, `delivered`, `read` y `failed`, además
+  de account disconnected, kill switch, policy restricted, expired window,
+  template required, forbidden, empty, loading y conflict.
+- [x] Mantener el diseño del composer basado en capacidades del canal:
+  templates, attachments, voice, rich content, delivery states y conversation
+  window; cada capacidad debe venir del adapter y no de condiciones visuales
+  hardcoded.
+- [x] Mantener fixtures redacted y adapter local como fuente de datos de la
+  primera implementación visual.
+#### 8A — Contratos, adapter y datos locales
+
+**Estado:** Completada
+
+- [x] Implementar contratos tipados, contexto de organización y frontera
+  `Page -> hook -> adapter -> local store`.
+- [x] Implementar fixtures redacted y store local con conversaciones,
+  mensajes, notas internas, estados de lifecycle, lectura, starred y filtros.
+- [x] Preparar soporte multicanal: WhatsApp operativo; Email y canales futuros
+  visibles como `coming_soon` sin acciones de proveedor.
+
+#### 8B — Communications Inbox desktop
+
+**Estado:** Completada
+
+- [x] Implementar `/app/sales-crm/communications` y
+  `/app/sales-crm/communications/:conversationId`.
+- [x] Implementar Channel Rail, lista de conversaciones, thread, búsqueda,
+  filtros, unread counts y selección respaldada por URL.
+
+#### 8C — Estados y validación local
+
+**Estado:** Completada
+
+- [x] Implementar estados loading, empty, error, account/capability state,
+  lifecycle, read y starred.
+- [x] Mantener el trigger de CRM context como placeholder sin implementar el
+  contexto CRM; las acciones de composer se implementan en 8D.
+- [x] Añadir tests focalizados de contratos, filtros y mutaciones del adapter
+  local; ejecutar typecheck y lint.
+
+#### 8D — Composer y acciones de conversación
+
+**Estado:** Completada localmente — sin providers reales
+
+- [x] Implementar composer `Reply` / `Internal note` con texto, envío local,
+  creación optimista y estados de entrega.
+- [x] Aplicar capabilities y estados de cuenta al habilitar acciones; mostrar
+  mensajes explícitos para cuenta desconectada, canal `coming_soon`, ventana
+  expirada, template requerido y policy-disabled.
+- [x] Implementar lifecycle local `pending`, `snoozed`, `closed` y `reopen`,
+  asignación propia y conflictos de versión optimista.
+- [x] Mantener CRM context como placeholder y sin attachments, audio, AI ni
+  integraciones externas.
+
+#### 8E — CRM context
 
 **Estado:** Pendiente
 
-- [ ] Definir Communications como suite visual independiente dentro de LoopDev.
-- [ ] Diseñar inbox, conversaciones, estados de lectura, filtros y panel contextual.
-- [ ] Mantener la relación contextual con Contact, Lead, Opportunity y Customer 360.
-- [ ] Separar claramente la UI de canales reales, proveedores y credenciales.
-- [ ] Usar fixtures o adapter local hasta conectar el backend existente.
-- [ ] Definir extensiones `healthcare`, `commerce`, `saas` y `services` sin contaminar Catalog core.
-- [ ] Healthcare: coberturas, servicios, elegibilidad, beneficiarios y reservas.
-- [ ] Commerce: inventario, almacenes, fulfillment, devoluciones y órdenes.
-- [ ] SaaS: planes, seats, usage, suscripciones y entitlements.
-- [ ] Services: recursos, duración, modalidad, reservas y entrega.
+- [ ] Implementar el panel CRM opt-in con Contact, Lead, Opportunity, Tasks,
+  Activities y Customer 360 sin duplicar entidades.
+
+#### 8F — Mobile y configuración operativa
+
+**Estado:** Pendiente
+
+- [ ] Implementar la variante mobile y sus acciones en sheet/drawer.
+- [ ] Implementar `/app/settings/communications` para canales, account health,
+  templates y estado de conexión.
+- [ ] Mantener Email y los demás canales visibles como preparados/no conectados,
+  sin simular envío ni habilitar acciones no respaldadas por adapter.
+- [ ] Mantener fuera de esta fase attachments, audio, AI, campañas, routing
+  automático, macros, teams, SLA, bulk actions y otros canales operativos reales.
+
+#### 8G — Bandeja colaborativa multiagente y concurrencia backend
+
+**Estado:** Pendiente — última subfase de Communications
+
+La bandeja será utilizada simultáneamente por múltiples personas del mismo
+workspace. No basta con asignar una conversación a un usuario: hay que evitar
+respuestas cruzadas, trabajo duplicado, pérdida de contexto y envíos basados en
+una versión obsoleta de la conversación.
+
+**Modelo de colaboración**
+
+- [ ] Mantener un `assignee` persistente como propietario principal de la
+  conversación.
+- [ ] Permitir `claim`, `assign`, `transfer`, `unassign` y handoff explícito.
+- [ ] Mantener colaboradores/watchers sin convertirlos en propietarios.
+- [ ] Mostrar en la lista el responsable, avatar, iniciales y estado de
+  asignación.
+- [ ] Añadir filtros `All`, `Mine` y `Unassigned`, además de colas o equipos
+  cuando estén definidos.
+- [ ] Registrar quién realizó cada cambio, transferencia, cierre, reapertura,
+  nota y mensaje.
+
+**Presence y actividad en tiempo real**
+
+- [ ] Modelar presencia efímera de agentes que están viendo una conversación:
+  `viewing`, `idle` y `offline`.
+- [ ] Mostrar en el header quién está viendo simultáneamente el thread.
+- [ ] Modelar presencia de escritura/redacción:
+  `drafting` con usuario, timestamp y expiración.
+- [ ] Mostrar avisos como `Maya Chen is viewing` o
+  `Daniel Ortiz is drafting a reply`.
+- [ ] No bloquear la lectura ni las notas internas por presencia de otro agente.
+- [ ] Implementar un soft lock para la respuesta, con posibilidad de takeover
+  controlado por permisos de supervisor.
+- [ ] Eliminar presencia y locks cuando expire el heartbeat, se cierre la
+  pestaña o se pierda la conexión.
+
+**Concurrencia y protección de envíos**
+
+- [ ] Mantener `expectedVersion` en mutaciones de estado, asignación y mensajes.
+- [ ] Validar la versión otra vez en backend justo antes de enviar.
+- [ ] Rechazar versiones obsoletas con error explícito y solicitar refresh.
+- [ ] Implementar `idempotencyKey` por intento de envío para evitar duplicados
+  ante reintentos, refresh o reconexión.
+- [ ] No permitir que un draft antiguo se envíe silenciosamente sobre mensajes
+  nuevos.
+- [ ] Mostrar quién modificó la conversación cuando ocurra un conflicto.
+- [ ] Mantener ordenamiento consistente de mensajes mediante secuencia o
+  timestamp server-side.
+- [ ] Separar claramente el bloqueo de composer del bloqueo de la conversación:
+  la colaboración no debe impedir consultar el historial.
+
+**Persistencia y backend**
+
+- [ ] Definir tablas/entidades para assignments, participants, presence,
+  composer locks, drafts, audit events e idempotency keys.
+- [ ] Definir TTL y limpieza de presence, drafts y locks.
+- [ ] Implementar realtime por organización/workspace con aislamiento
+  multi-tenant.
+- [ ] Proteger asignaciones, takeover, envío y lectura con permisos de rol.
+- [ ] Aplicar RLS y validación server-side; el cliente no decide ownership ni
+  autorización.
+- [ ] Conectar Supabase Realtime, webhooks, workers, delivery y retries sin
+  exponer credenciales de proveedores.
+- [ ] Mantener la integración con WhatsApp detrás de un provider adapter.
+- [ ] Preparar el mismo contrato para Email y futuros canales sin duplicar la
+  lógica de colaboración.
+
+**Estados y experiencia de error**
+
+- [ ] Definir estados `unassigned`, `assigned`, `viewing`, `drafting`,
+  `waiting`, `handoff_requested` y `closed`.
+- [ ] Mostrar avisos claros cuando otro agente está redactando o cuando la
+  conversación cambió mientras se editaba.
+- [ ] Permitir guardar una nota interna como alternativa cuando no se puede
+  responder.
+- [ ] Diseñar recuperación ante desconexión, reconexión, heartbeat expirado,
+  retry y envío duplicado.
+- [ ] Añadir audit trail visible para supervisores y trazabilidad operativa.
+
+**Validación**
+
+- [ ] Cubrir dos agentes viendo la misma conversación.
+- [ ] Cubrir dos drafts simultáneos y takeover autorizado.
+- [ ] Cubrir dos envíos concurrentes con una versión obsoleta.
+- [ ] Cubrir reintentos con la misma `idempotencyKey`.
+- [ ] Cubrir transferencia, unassignment y handoff.
+- [ ] Cubrir pérdida de conexión y expiración de presence.
+- [ ] Validar aislamiento entre organizaciones y workspaces.
+- [ ] Validar que la UI móvil y desktop reflejen los mismos estados
+  colaborativos.
+
+Las extensiones `healthcare`, `commerce`, `saas` y `services` no forman parte de
+esta fase; se mantienen como trabajo futuro y no deben contaminar Catalog, CRM ni
+el contrato inicial de Communications.
 
 ### Fase 9 — Documentación y frontera Supabase
 
@@ -425,7 +608,9 @@ migraciones y ninguna página accede a `localStorage`.
 | CRM Operations | `/app/settings/crm/operations` | Implementada localmente; acceso anterior redirige desde `/app/sales-crm/operations` |
 | CRM Automations | `/app/settings/crm/automations` | Implementada localmente; acceso anterior redirige desde `/app/sales-crm/automations` |
 | CRM Automations | `/app/sales-crm/automations` | Implementada localmente con triggers, acciones, entitlements y execution log |
-| Communications | `/app/sales-crm/communications` | Pendiente |
+| Communications Inbox | `/app/sales-crm/communications` | Implementada localmente; providers y delivery real pendientes |
+| Communications conversation | `/app/sales-crm/communications/:conversationId` | Implementada localmente; CRM context, mobile y providers pendientes |
+| Communications settings | `/app/settings/communications` | Definida; implementación visual/local pendiente |
 
 ## Fuera de alcance
 
@@ -446,6 +631,8 @@ migraciones y ninguna página accede a `localStorage`.
 - [x] Search, Tags, Custom Fields e Import/Export tienen alcance y comandos definidos
   para el adapter local.
 - [x] Automations y entitlements tienen límites explícitos.
+- [x] Communications Inbox tiene contratos, adapter local, estados multicanal y
+  composición desktop, composer y acciones locales definidos para 8A-8D.
 - [ ] Todas las páginas usan `/app/sales-crm/*` y el shell actual de LoopDev.
 - [ ] La UI consume datos mediante hooks, servicios y adapters.
 - [ ] La integración Supabase sustituye al adapter local sin reescritura de páginas.

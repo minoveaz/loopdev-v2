@@ -1,0 +1,229 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
+import {
+  COMMUNICATIONS_LOCAL_CONTEXT,
+  type CommunicationChannelAccount,
+  type CommunicationSendResult,
+  type CommunicationsContext,
+  type ConversationDetail,
+  type ConversationFilters,
+  type ConversationListResult,
+  type ConversationStatus,
+  type ConversationSummary,
+} from "../types";
+
+function messageFor(error: unknown): string {
+  return error instanceof Error ? error.message : "Unable to load communications.";
+}
+
+function stableFilters(filters: ConversationFilters): ConversationFilters {
+  return {
+    channel: filters.channel ?? "all",
+    status: filters.status ?? "all",
+    assignee: filters.assignee ?? "all",
+    unreadOnly: filters.unreadOnly ?? false,
+    starredOnly: filters.starredOnly ?? false,
+    query: filters.query ?? "",
+  };
+}
+
+export function useCommunicationsInbox(
+  filters: ConversationFilters = {},
+  context: CommunicationsContext = COMMUNICATIONS_LOCAL_CONTEXT,
+) {
+  const request = useMemo(() => stableFilters(filters), [
+    filters.assignee,
+    filters.channel,
+    filters.query,
+    filters.starredOnly,
+    filters.status,
+    filters.unreadOnly,
+  ]);
+  const [channels, setChannels] = useState<CommunicationChannelAccount[]>([]);
+  const [result, setResult] = useState<ConversationListResult>({
+    items: [],
+    total: 0,
+    unreadCount: 0,
+    channelUnreadCounts: {},
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+
+  const reload = useCallback(() => setReloadToken((value) => value + 1), []);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    void Promise.all([
+      loopdevAdapter.communications.listChannels(context),
+      loopdevAdapter.communications.listConversations(context, request),
+    ]).then(([nextChannels, nextResult]) => {
+      if (!active) return;
+      setChannels(nextChannels);
+      setResult(nextResult);
+    }).catch((cause: unknown) => {
+      if (active) setError(messageFor(cause));
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [context, reloadToken, request]);
+
+  const update = useCallback(async (action: () => Promise<ConversationSummary>) => {
+    setActionError(null);
+    try {
+      const updated = await action();
+      setResult((current) => {
+        const items = current.items.map((item) => item.id === updated.id ? updated : item);
+        const channelUnreadCounts: ConversationListResult["channelUnreadCounts"] = {};
+        items.forEach((item) => {
+          channelUnreadCounts[item.channel] = (channelUnreadCounts[item.channel] ?? 0) + item.unreadCount;
+        });
+        return {
+          ...current,
+          items,
+          unreadCount: items.reduce((sum, item) => sum + item.unreadCount, 0),
+          channelUnreadCounts,
+        };
+      });
+      return updated;
+    } catch (cause) {
+      setActionError(messageFor(cause));
+      throw cause;
+    }
+  }, []);
+
+  const markRead = useCallback(
+    (conversationId: string) => update(() => loopdevAdapter.communications.markConversationRead(context, conversationId)),
+    [context, update],
+  );
+  const toggleStar = useCallback(
+    (conversationId: string) => update(() => loopdevAdapter.communications.toggleConversationStar(context, conversationId)),
+    [context, update],
+  );
+  const changeStatus = useCallback(
+    (conversationId: string, status: ConversationStatus, expectedVersion: number) =>
+      update(() => loopdevAdapter.communications.updateConversationStatus(context, conversationId, status, expectedVersion)),
+    [context, update],
+  );
+  const assignConversation = useCallback(
+    (conversationId: string, assigneeUserId: string | null, assigneeName: string | null, expectedVersion: number) =>
+      update(() => loopdevAdapter.communications.assignConversation(
+        context,
+        conversationId,
+        assigneeUserId,
+        assigneeName,
+        expectedVersion,
+      )),
+    [context, update],
+  );
+
+  return {
+    channels,
+    conversations: result.items,
+    total: result.total,
+    unreadCount: result.unreadCount,
+    channelUnreadCounts: result.channelUnreadCounts,
+    loading,
+    error,
+    actionError,
+    clearActionError: () => setActionError(null),
+    reload,
+    markRead,
+    toggleStar,
+    changeStatus,
+    assignConversation,
+  };
+}
+
+export function useCommunicationConversation(
+  conversationId: string | undefined,
+  context: CommunicationsContext = COMMUNICATIONS_LOCAL_CONTEXT,
+) {
+  const [conversation, setConversation] = useState<ConversationDetail | null>(null);
+  const [loading, setLoading] = useState(Boolean(conversationId));
+  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    if (!conversationId) {
+      setConversation(null);
+      setLoading(false);
+      return () => { active = false; };
+    }
+    setLoading(true);
+    setError(null);
+    void loopdevAdapter.communications.getConversation(context, conversationId)
+      .then((next) => { if (active) setConversation(next); })
+      .catch((cause: unknown) => { if (active) setError(messageFor(cause)); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [context, conversationId, reloadToken]);
+
+  const mutate = useCallback(async (action: () => Promise<CommunicationSendResult>) => {
+    setActionError(null);
+    try {
+      const result = await action();
+      setConversation((current) => {
+        if (!current) return current;
+        const messageAlreadyPresent = current.messages.some((message) => message.id === result.message.id);
+        return {
+          summary: result.summary,
+          messages: messageAlreadyPresent
+            ? current.messages.map((message) => message.id === result.message.id ? result.message : message)
+            : [...current.messages, result.message],
+          internalNotes: result.message.direction === "internal"
+            ? [...current.internalNotes, result.message]
+            : current.internalNotes,
+        };
+      });
+      return result;
+    } catch (cause) {
+      setActionError(messageFor(cause));
+      throw cause;
+    }
+  }, []);
+
+  const sendReply = useCallback(
+    (body: string) => {
+      if (!conversation) return Promise.reject(new Error("No conversation selected."));
+      return mutate(() => loopdevAdapter.communications.sendReply(
+        context,
+        conversation.summary.id,
+        body,
+        conversation.summary.version,
+      ));
+    },
+    [context, conversation, mutate],
+  );
+
+  const addInternalNote = useCallback(
+    (body: string) => {
+      if (!conversation) return Promise.reject(new Error("No conversation selected."));
+      return mutate(() => loopdevAdapter.communications.addInternalNote(
+        context,
+        conversation.summary.id,
+        body,
+        conversation.summary.version,
+      ));
+    },
+    [context, conversation, mutate],
+  );
+  const reload = useCallback(() => setReloadToken((value) => value + 1), []);
+
+  return {
+    conversation,
+    loading,
+    error,
+    actionError,
+    clearActionError: () => setActionError(null),
+    reload,
+    sendReply,
+    addInternalNote,
+  };
+}

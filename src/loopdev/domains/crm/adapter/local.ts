@@ -42,6 +42,7 @@ import type {
 import { contactName, CRMAdapterError, CRM_LEAD_STATUS_CODES, CRM_PIPELINE_STAGE_CODES } from "./types";
 import { localCrmOperationsAdapter } from "../operations/adapter/local";
 import { localCrmAutomationsAdapter } from "../automations";
+import { localCommunicationsAdapter } from "@/loopdev/domains/communications/adapter/local";
 
 const organizationId = "local-development-organization";
 
@@ -195,6 +196,7 @@ export const localLoopdevAdapter = {
   platform: platformAdapter,
   catalog: catalogAdapter,
   referenceData: localReferenceDataAdapter,
+  communications: localCommunicationsAdapter,
   crm: {
     operations: localCrmOperationsAdapter,
     automations: localCrmAutomationsAdapter,

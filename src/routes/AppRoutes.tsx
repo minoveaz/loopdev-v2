@@ -250,6 +250,8 @@ export function AppRoutes() {
     "/app/sales-crm/pipeline",
     "/app/sales-crm/leads",
     "/app/sales-crm/opportunities",
+    "/app/sales-crm/tasks",
+    "/app/platform/workspace",
     "/dashboard/ecommerce",
     "/dashboards/ecommerce",
     "/management/users",

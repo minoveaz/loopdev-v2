@@ -8,6 +8,7 @@ import type {
   PlatformPermissionSet,
 } from "../types";
 import { PlatformAdapterError, type PlatformAdapter } from "./index";
+import { createLocalPlatformWorkAdapter } from "./work";
 
 export const LOCAL_ORGANIZATION_ID = "local-development-organization";
 export const LOCAL_WORKSPACE_ID = "local-workspace";
@@ -31,6 +32,10 @@ const localPermissionSet: PlatformPermissionSet = {
     "crm.read",
     "crm.write",
     "crm.assign",
+    "work.read",
+    "work.write",
+    "work.assign",
+    "notifications.read",
   ],
 };
 
@@ -48,6 +53,15 @@ function hasLocalPermission(permission: PlatformPermission, scope: EntityScope):
   if (scope.organizationId !== localPermissionSet.organizationId) return false;
   return localPermissionSet.permissions.includes(permission) || localPermissionSet.permissions.includes("admin");
 }
+
+const localWorkDependencies = {
+  getScope: currentScope,
+  getUserId: () => activeContext.userId,
+  hasPermission: (permission: "work.read" | "work.write" | "work.assign", scope: EntityScope) =>
+    hasLocalPermission(permission, scope),
+};
+
+export const localPlatformWorkAdapter = createLocalPlatformWorkAdapter(localWorkDependencies);
 
 export const localPlatformAdapter: PlatformAdapter = {
   getOrganizationContext() {
@@ -82,4 +96,8 @@ export const localPlatformAdapter: PlatformAdapter = {
   canAccessEntity(ref: EntityRef, scope = currentScope()) {
     return hasLocalPermission("organization.read", scope) && isScopeVisible(ref.scope, scope);
   },
+
+  work: localPlatformWorkAdapter,
 };
+
+export const platformWorkAdapter = localPlatformWorkAdapter;

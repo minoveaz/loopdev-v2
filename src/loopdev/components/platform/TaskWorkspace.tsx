@@ -1,0 +1,177 @@
+import { useState, type FormEvent } from "react";
+import { CheckCircle2, Circle, Clock3, ListChecks, Plus, RotateCcw } from "lucide-react";
+import { DataCard, StatusBadge } from "@/components/common";
+import { AppDrawer } from "@/components/platform";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import type { EntityRef, TaskPriority, TaskRecord, TaskStatus } from "@/loopdev/domains/platform";
+
+const priorityTone: Record<TaskPriority, "neutral" | "info" | "warning" | "gold"> = {
+  low: "neutral",
+  normal: "info",
+  high: "warning",
+  urgent: "gold",
+};
+
+export interface PlatformTaskFormProps {
+  relation: EntityRef;
+  onSubmit: (input: {
+    title: string;
+    description: string | null;
+    priority: TaskPriority;
+    dueAt: string | null;
+    relation: EntityRef;
+  }) => Promise<unknown>;
+}
+
+export function PlatformTaskForm({ relation, onSubmit }: PlatformTaskFormProps) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState<TaskPriority>("normal");
+  const [dueAt, setDueAt] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!title.trim()) {
+      setError("Add a title before saving the task.");
+      return;
+    }
+    setPending(true);
+    setError(null);
+    try {
+      await onSubmit({
+        title: title.trim(),
+        description: description.trim() || null,
+        priority,
+        dueAt: dueAt || null,
+        relation,
+      });
+      setTitle("");
+      setDescription("");
+      setPriority("normal");
+      setDueAt("");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to save task.");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-4" aria-label="Create task">
+      <div className="space-y-1.5">
+        <Label htmlFor="platform-task-title">Title</Label>
+        <Input id="platform-task-title" value={title} onChange={(event) => setTitle(event.target.value)} disabled={pending} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="platform-task-description">Description</Label>
+        <Textarea id="platform-task-description" value={description} onChange={(event) => setDescription(event.target.value)} disabled={pending} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="platform-task-priority">Priority</Label>
+          <select id="platform-task-priority" value={priority} onChange={(event) => setPriority(event.target.value as TaskPriority)} disabled={pending} className="flex h-9 w-full rounded-lg border border-input bg-card px-3 text-sm">
+            <option value="low">Low</option>
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="platform-task-due">Due date</Label>
+          <Input id="platform-task-due" type="date" value={dueAt.slice(0, 10)} onChange={(event) => setDueAt(event.target.value ? new Date(`${event.target.value}T12:00:00`).toISOString() : "")} disabled={pending} />
+        </div>
+      </div>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      <Button type="submit" disabled={pending}><Plus className="mr-1.5 h-4 w-4" />{pending ? "Saving…" : "Add task"}</Button>
+    </form>
+  );
+}
+
+export interface PlatformTaskListProps {
+  tasks: TaskRecord[];
+  loading?: boolean;
+  error?: string | null;
+  forbidden?: boolean;
+  onTransition?: (task: TaskRecord, status: TaskStatus) => Promise<unknown>;
+}
+
+export function PlatformTaskList({ tasks, loading = false, error, forbidden = false, onTransition }: PlatformTaskListProps) {
+  return (
+    <DataCard
+      title="Tasks"
+      description="Actionable work shared by CRM and Platform"
+      loading={loading}
+      error={forbidden ? "You do not have access to tasks in this scope." : error}
+      empty={!loading && !error && !forbidden && tasks.length === 0}
+      emptyIcon={ListChecks}
+      emptyTitle="No tasks in this view"
+      emptyDescription="Create a task from a related CRM record to start a follow-up."
+    >
+      <ul className="space-y-2" aria-label="Task list">
+        {tasks.map((task) => {
+          const done = task.status === "completed" || task.status === "cancelled";
+          return (
+            <li key={task.id} className="flex items-start gap-3 rounded-lg border border-border bg-card-muted/30 p-3">
+              <span className="mt-0.5 text-muted-foreground" aria-hidden="true">{done ? <CheckCircle2 className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4" />}</span>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{task.title}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{task.relation.entityType} · {task.dueAt ? new Date(task.dueAt).toLocaleDateString() : "No due date"}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <StatusBadge tone={priorityTone[task.priority]}>{task.priority}</StatusBadge>
+                  <StatusBadge tone={done ? "neutral" : "info"}>{task.status.replace("_", " ")}</StatusBadge>
+                </div>
+              </div>
+              {onTransition && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  aria-label={done ? `Reopen ${task.title}` : `Complete ${task.title}`}
+                  onClick={() => void onTransition(task, done ? "open" : "completed")}
+                >
+                  {done ? <RotateCcw className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+                </Button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </DataCard>
+  );
+}
+
+export function PlatformTaskWorkspace(props: PlatformTaskListProps & { relation?: EntityRef; onCreate?: PlatformTaskFormProps["onSubmit"] }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  return (
+    <div>
+      <PlatformTaskList {...props} />
+      {props.relation && props.onCreate && (
+        <>
+          <div className="mt-3 flex justify-end">
+            <Button type="button" variant="outline" onClick={() => setDrawerOpen(true)}><Plus className="mr-1.5 h-4 w-4" />New task</Button>
+          </div>
+          <AppDrawer
+            open={drawerOpen}
+            onOpenChange={setDrawerOpen}
+            title="New Platform task"
+            description="Create work related to this CRM entity."
+            size="md"
+          >
+            <PlatformTaskForm
+              relation={props.relation}
+              onSubmit={async (input) => {
+                await props.onCreate!(input);
+                setDrawerOpen(false);
+              }}
+            />
+          </AppDrawer>
+        </>
+      )}
+    </div>
+  );
+}

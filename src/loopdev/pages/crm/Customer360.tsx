@@ -14,6 +14,7 @@ import {
   Customer360TasksCard,
   Customer360TimelineCard,
 } from "@/loopdev/components/customer360/Customer360ActivityCards";
+import { Customer360PlatformSection } from "@/loopdev/components/customer360/Customer360PlatformSection";
 
 export default function SalesCRMCustomer360() {
   const { contactId } = useParams<{ contactId: string }>();
@@ -69,6 +70,8 @@ export default function SalesCRMCustomer360() {
         <Customer360TasksCard tasks={view.tasks} />
         <Customer360NotesCard notes={view.notes} />
       </div>
+
+      <Customer360PlatformSection contactId={contact.id} />
     </PageContainer>
   );
 }

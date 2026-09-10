@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users } from "lucide-react";
+import { ClipboardList, LayoutDashboard, Users } from "lucide-react";
 import type { NavSection } from "@/app/nav-types";
 
 export const loopdevNavigation: NavSection[] = [
@@ -28,6 +28,12 @@ export const loopdevNavigation: NavSection[] = [
           { label: "Communications", to: "/app/sales-crm/communications" },
         ],
       },
+    ],
+  },
+  {
+    label: "Platform",
+    items: [
+      { label: "Work workspace", to: "/app/platform/workspace", icon: ClipboardList },
     ],
   },
 ];

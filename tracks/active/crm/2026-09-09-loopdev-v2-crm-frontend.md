@@ -56,13 +56,19 @@ La documentación de producto de Contacts y Leads sigue siendo la fuente de requ
 visual no se considera implementación funcional completa mientras falten contratos de query,
 paginación por cursor, permisos y mutaciones autorizadas.
 
-Implementado o preparado para continuar localmente:
+Implementado localmente en la Fase 4:
 
 - Pipeline y Opportunities con adapter local, filtros, mutaciones y drawers responsive.
 - Contacts y Leads con drawers globales, estados y contratos de ciclo comercial separados.
 - Frontera documentada para reemplazar el adapter local por Supabase sin reescribir páginas.
-- Cuatro capacidades transversales pendientes de diseño detallado: Tasks, Notes, Activities y
-  Timeline.
+- Contratos Platform independientes para Tasks, Notes, Activities, Timeline, Attachments y
+  Notifications, reutilizables fuera de CRM.
+- Adapters/stores locales aislados por `EntityScope`, con CRUD, filtros, optimistic versioning,
+  idempotencia local y Timeline append-only deduplicado.
+- Workspace Platform demostrable en `/app/sales-crm/tasks` y `/app/platform/workspace`, además
+  de paneles reutilizables dentro de Customer 360.
+
+Supabase, Storage, RLS, Auth real y migraciones siguen pendientes de una fase de backend posterior.
 
 ## Alcance funcional del CRM
 
@@ -87,12 +93,14 @@ El track cubre las siguientes superficies y capacidades de CRM:
 
 ### Operación comercial
 
-- [ ] Tasks y vista My Day.
-- [ ] Notes contextuales con privacidad.
-- [ ] Activities de negocio.
-- [ ] Timeline unificado y deduplicado.
-- [ ] Attachments de Contact, Lead, Opportunity, Task y Note.
-- [ ] Notifications in-app para asignaciones, menciones, vencimientos y cambios relevantes.
+- [x] Tasks y vista My Day local (lista/workspace y filtros Platform; agrupación avanzada pendiente).
+- [x] Notes contextuales con privacidad local.
+- [x] Activities de negocio local.
+- [x] Timeline unificado y deduplicado local.
+- [x] Attachments de Contact, Lead, Opportunity, Task y Note mediante referencias Platform
+  (uploader visual local).
+- [x] Notifications in-app local para asignaciones y cambios relevantes; canales externos
+  pendientes.
 - [ ] Comments y mentions cuando exista una necesidad colaborativa validada.
 - [ ] Import/export y operaciones masivas autorizadas.
 - [ ] Search CRM y filtros guardables.
@@ -287,27 +295,37 @@ migraciones y ninguna página accede a `localStorage`.
 
 ### Fase 4 — Tasks, Notes, Activities y Timeline
 
-**Estado:** Pendiente
+**Estado:** Completada localmente — Supabase pendiente
 
-- [ ] Implementar Tasks con relaciones a Contact, Lead, Opportunity y futuras entidades.
-- [ ] Implementar Notes con visibilidad privada, equipo y organización.
-- [ ] Implementar Activities como eventos de negocio.
-- [ ] Implementar Timeline como read model transversal, append-only y deduplicado.
-- [ ] Separar Audit Events internos de Activities y Timeline.
-- [ ] Integrar las cuatro capacidades con Contact, Lead, Opportunity y Customer 360.
-- [ ] Crear Tasks list y My Day usando el mismo contrato Platform.
-- [ ] Reutilizar AppDrawer, Dialog y ConfirmDialog.
-- [ ] Cubrir estados loading, empty, forbidden, conflict, stale y pending.
+- [x] Implementar Tasks con relaciones polimórficas a Contact, Lead, Opportunity y futuras
+  entidades mediante `EntityRef`.
+- [x] Implementar Notes con visibilidad `private`, `team` y `organization`, autoría y
+  permisos explícitos.
+- [x] Implementar Activities como eventos de negocio, separados del audit log.
+- [x] Implementar Timeline como read model transversal, append-only y deduplicado por
+  `sourceType:sourceId`.
+- [x] Mantener el límite de Audit Events: no se mezclan en el Timeline local; el audit log
+  persistente y sus políticas quedan pendientes de backend.
+- [x] Integrar las cuatro capacidades con Contact, Lead, Opportunity y Customer 360 mediante
+  referencias y paneles Platform reutilizables.
+- [x] Crear Tasks list/workspace local usando el contrato Platform. My Day avanzado queda
+  representado por filtros de estado, prioridad, asignación y vencimiento.
+- [x] Reutilizar `AppDrawer`, `DataCard`, `EmptyState`, `LoadingState` y primitives de
+  `src/components/ui`; no se copiaron páginas ni mocks de Rivera.
+- [x] Cubrir estados loading, empty, forbidden, conflict, stale (versión) y pending en la
+  frontera de adapter/hooks/UI.
 
 ### Fase 5 — Attachments, Notifications y colaboración
 
-**Estado:** Pendiente
+**Estado:** Completada localmente para Attachments/Notifications — proveedores reales pendientes
 
-- [ ] Implementar Attachments con asociación polimórfica y límites locales.
-- [ ] Implementar Notifications in-app y preferencias básicas.
+- [x] Implementar Attachments con asociación polimórfica, metadatos, estado local y límites
+  visuales; Storage real queda detrás del adapter.
+- [x] Implementar Notifications in-app locales con estado unread/read/archived y mark-as-read.
 - [ ] Implementar Comments y Mentions solo donde exista una necesidad validada.
-- [ ] Integrar notificaciones con asignación de Tasks, vencimientos, menciones y cambios de etapa.
-- [ ] Dejar Storage, email, push y proveedores reales detrás del adapter.
+- [x] Preparar notificaciones para asignaciones y cambios de Tasks; vencimientos, menciones y
+  cambios de etapa de proveedores reales quedan pendientes.
+- [x] Dejar Storage, email, push y proveedores reales detrás del adapter sin instalar servicios.
 
 ### Fase 6 — Search, Tags, Custom Fields e Import/Export
 
@@ -380,7 +398,8 @@ migraciones y ninguna página accede a `localStorage`.
 | Leads | `/app/sales-crm/leads` | Implementada |
 | Pipeline | `/app/sales-crm/pipeline` | Implementada con adapter local |
 | Opportunities | `/app/sales-crm/opportunities` | Implementada con adapter local |
-| Tasks | `/app/sales-crm/tasks` | Pendiente |
+| Tasks / Platform workspace | `/app/sales-crm/tasks` | Implementada localmente |
+| Platform workspace | `/app/platform/workspace` | Implementada localmente |
 | Communications | `/app/sales-crm/communications` | Pendiente |
 
 ## Fuera de alcance
@@ -396,9 +415,9 @@ migraciones y ninguna página accede a `localStorage`.
 - [ ] Las superficies CRM actuales tienen una composición visual consistente en v2.
 - [x] Pipeline y Opportunities tienen diseño y estados documentados para la fase local.
 - [x] Platform Catalog tiene contratos, adapter local y referencias desde CRM.
-- [ ] Tasks, Notes, Activities y Timeline tienen contrato transversal y estados documentados.
+- [x] Tasks, Notes, Activities y Timeline tienen contrato transversal y estados documentados.
 - [x] Platform foundation tiene contexto de organización, EntityRef y permisos locales.
-- [ ] Attachments y Notifications tienen adapters locales y contratos reutilizables.
+- [x] Attachments y Notifications tienen adapters locales y contratos reutilizables.
 - [ ] Search, Tags, Custom Fields e Import/Export tienen alcance y comandos definidos.
 - [ ] Automations y entitlements tienen límites explícitos.
 - [ ] Todas las páginas usan `/app/sales-crm/*` y el shell actual de LoopDev.
@@ -407,6 +426,36 @@ migraciones y ninguna página accede a `localStorage`.
 - [ ] Los estados de permisos, errores, privacidad y aislamiento están cubiertos.
 - [ ] Tests, typecheck, build y lint pasan.
 - [ ] El issue GitHub asociado está enlazado y la evidencia final está registrada.
+
+## Auditoría Rivera: reutilización y límites Platform
+
+La implementación conserva la separación documentada en `docs/architecture/ownership.md`:
+
+- **Reutilización Rivera/shared:** `src/components/common`, `src/components/ui`,
+  `AppDrawer`, estados de `DataCard`, primitives de formulario, tokens visuales y shell
+  compartido. Rivera sirve como referencia visual, pero no se copian páginas, features ni
+  fixtures.
+- **Propiedad Platform/LoopDev:** `src/loopdev/domains/platform` contiene los contratos
+  `TaskRecord`, `NoteRecord`, `ActivityRecord`, `TimelineEvent`, `AttachmentRecord` y
+  `NotificationRecord`, sus stores locales y el adapter reemplazable. `src/loopdev/components`
+  contiene los widgets controlados por props/hooks y la ruta de workspace.
+- **Regla de dependencia:** Platform no importa `src/template/rivera`, `useLocalStore` ni
+  mocks de Rivera. CRM solo aporta `EntityRef` de sus registros; el acceso a datos sigue
+  pasando por adapters/hooks.
+- **Frontera futura:** el mapeo a tablas, Storage, Auth, RLS y permisos Supabase está
+  preparado en `EntityScope`, `EntityRef`, `version`, `visibility` y `permissions`, pero no
+  se conecta en esta fase.
+
+## Evidencia de Fase 4 (local)
+
+- Contratos y adapter: `src/loopdev/domains/platform/types.ts`,
+  `src/loopdev/domains/platform/adapter/work.ts`,
+  `src/loopdev/domains/platform/adapter/local.ts`.
+- Stores aislados: `src/loopdev/domains/platform/data/localWork.ts`.
+- Hooks/UI: `src/loopdev/domains/platform/hooks/use-platform-work.ts` y
+  `src/loopdev/components/platform`.
+- Integración CRM: `Customer360PlatformSection` y `/app/platform/workspace`.
+- Sin Supabase, Docker, migraciones, RLS ni Auth real.
 
 ## Issue GitHub
 

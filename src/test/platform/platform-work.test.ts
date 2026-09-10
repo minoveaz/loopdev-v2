@@ -110,6 +110,31 @@ describe("local Platform work adapter", () => {
     });
     const read = await platformWorkAdapter.markNotificationRead(notification.id, { scope });
     expect(read.status).toBe("read");
+    const unread = await platformWorkAdapter.markNotificationUnread(notification.id, { scope });
+    expect(unread.status).toBe("unread");
+    const archived = await platformWorkAdapter.archiveNotification(notification.id, { scope });
+    expect(archived.status).toBe("archived");
+    expect((await platformWorkAdapter.listNotifications({ scope, status: ["archived"] })).items).toHaveLength(1);
+  });
+
+  it("filters CRM tasks by relation type without exposing platform-only tasks", async () => {
+    await platformWorkAdapter.createTask({
+      scope,
+      relation: contactRef,
+      title: "CRM task",
+    });
+    await platformWorkAdapter.createTask({
+      scope,
+      relation: { entityType: "project", entityId: "project-test", scope },
+      title: "Project task",
+    });
+    const result = await platformWorkAdapter.listTasks({
+      scope,
+      relationTypes: ["contact", "lead", "opportunity"],
+      includeCompleted: true,
+    });
+    expect(result.items.some((task) => task.title === "CRM task")).toBe(true);
+    expect(result.items.some((task) => task.title === "Project task")).toBe(false);
   });
 
   it("uses explicit adapter errors for invalid relations", async () => {

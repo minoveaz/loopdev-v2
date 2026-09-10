@@ -65,8 +65,9 @@ Implementado localmente en la Fase 4:
   Notifications, reutilizables fuera de CRM.
 - Adapters/stores locales aislados por `EntityScope`, con CRUD, filtros, optimistic versioning,
   idempotencia local y Timeline append-only deduplicado.
-- Workspace Platform demostrable en `/app/sales-crm/tasks` y `/app/platform/workspace`, además
-  de paneles reutilizables dentro de Customer 360.
+- Bandeja de Tasks CRM demostrable en `/app/sales-crm/tasks`, además de paneles reutilizables
+  dentro de Customer 360. El workspace técnico `/app/platform/workspace` fue retirado para
+  evitar duplicar la superficie operativa del CRM.
 
 Supabase, Storage, RLS, Auth real y migraciones siguen pendientes de una fase de backend posterior.
 
@@ -399,7 +400,6 @@ migraciones y ninguna página accede a `localStorage`.
 | Pipeline | `/app/sales-crm/pipeline` | Implementada con adapter local |
 | Opportunities | `/app/sales-crm/opportunities` | Implementada con adapter local |
 | Tasks / Platform workspace | `/app/sales-crm/tasks` | Implementada localmente |
-| Platform workspace | `/app/platform/workspace` | Implementada localmente |
 | Communications | `/app/sales-crm/communications` | Pendiente |
 
 ## Fuera de alcance
@@ -454,7 +454,10 @@ La implementación conserva la separación documentada en `docs/architecture/own
 - Stores aislados: `src/loopdev/domains/platform/data/localWork.ts`.
 - Hooks/UI: `src/loopdev/domains/platform/hooks/use-platform-work.ts` y
   `src/loopdev/components/platform`.
-- Integración CRM: `Customer360PlatformSection` y `/app/platform/workspace`.
+- Integración CRM: `Customer360PlatformSection`, `/app/sales-crm/overview` y
+  `/app/sales-crm/tasks`.
+- Notifications globales: menú de campana en `Topbar`, conectado al adapter Platform local.
+- Attachments: uploader visual y metadata local; Storage real permanece detrás del adapter.
 - Sin Supabase, Docker, migraciones, RLS ni Auth real.
 
 ## Issue GitHub

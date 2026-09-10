@@ -36,6 +36,7 @@ export interface PlatformScopeParams {
 export interface PlatformTaskTemplateListParams extends PlatformScopeParams {
   query?: string;
   relationType?: string;
+  includeArchived?: boolean;
 }
 
 export interface PlatformPage<T> {
@@ -110,6 +111,28 @@ export interface UpdateTaskInput extends PlatformScopeParams {
   priority?: TaskPriority;
   dueAt?: string | null;
   visibility?: PlatformVisibility;
+}
+
+export interface CreateTaskTemplateInput extends PlatformScopeParams {
+  key: string;
+  name: string;
+  description?: string;
+  defaultPriority?: TaskPriority;
+  defaultDueDays?: number | null;
+  relationTypes: string[];
+  visibility?: PlatformVisibility;
+}
+
+export interface UpdateTaskTemplateInput extends PlatformScopeParams {
+  expectedVersion: number;
+  key?: string;
+  name?: string;
+  description?: string;
+  defaultPriority?: TaskPriority;
+  defaultDueDays?: number | null;
+  relationTypes?: string[];
+  visibility?: PlatformVisibility;
+  status?: "active" | "archived";
 }
 
 export interface CreateNoteInput extends PlatformScopeParams {
@@ -189,6 +212,9 @@ export class PlatformWorkAdapterError extends Error {
 export interface PlatformWorkAdapter {
   listTasks(params?: PlatformTaskListParams): Promise<PlatformPage<TaskRecord>>;
   listTaskTemplates(params?: PlatformTaskTemplateListParams): Promise<TaskTemplateRecord[]>;
+  createTaskTemplate(input: CreateTaskTemplateInput): Promise<TaskTemplateRecord>;
+  updateTaskTemplate(templateId: string, input: UpdateTaskTemplateInput): Promise<TaskTemplateRecord>;
+  archiveTaskTemplate(templateId: string, expectedVersion: number, params?: PlatformScopeParams): Promise<TaskTemplateRecord>;
   getTask(taskId: string, params?: PlatformScopeParams): Promise<TaskRecord | null>;
   createTask(input: CreateTaskInput): Promise<TaskRecord>;
   updateTask(taskId: string, input: UpdateTaskInput): Promise<TaskRecord>;
@@ -360,9 +386,91 @@ export function createLocalPlatformWorkAdapter(deps: LocalPlatformWorkDependenci
       assertScope(scope, "work.read");
       const query = params.query?.trim().toLocaleLowerCase();
       return visible(localPlatformTaskTemplatesStore.list(), scope)
+        .filter((template) => params.includeArchived || template.status !== "archived")
         .filter((template) => !params.relationType || template.relationTypes.includes(params.relationType))
         .filter((template) => !query || `${template.name} ${template.description}`.toLocaleLowerCase().includes(query))
         .sort((left, right) => left.name.localeCompare(right.name));
+    },
+
+    async createTaskTemplate(input) {
+      const scope = resolve(input);
+      assertScope(scope, "work.write");
+      if (!input.key?.trim() || !input.name?.trim() || !input.relationTypes?.length) {
+        throw new PlatformWorkAdapterError("A template key, name and relation type are required.", "validation-error");
+      }
+      const key = input.key.trim().toLocaleLowerCase().replace(/\s+/g, "-");
+      const relationTypes = [...new Set(input.relationTypes.map((type) => type.trim()).filter(Boolean))];
+      if (!relationTypes.length) {
+        throw new PlatformWorkAdapterError("A template key, name and relation type are required.", "validation-error");
+      }
+      if (visible(localPlatformTaskTemplatesStore.list(), scope).some((template) => template.key === key)) {
+        throw new PlatformWorkAdapterError("A task template with this key already exists.", "conflict");
+      }
+      return localPlatformTaskTemplatesStore.create({
+        scope,
+        status: "active",
+        createdById: currentActor(),
+        updatedById: currentActor(),
+        version: 1,
+        visibility: input.visibility ?? "organization",
+        permissions: currentPermissions(),
+        key,
+        name: input.name.trim(),
+        description: input.description?.trim() ?? "",
+        defaultPriority: input.defaultPriority ?? "normal",
+        defaultDueDays: input.defaultDueDays ?? null,
+        relationTypes,
+      });
+    },
+
+    async updateTaskTemplate(templateId, input) {
+      const scope = resolve(input);
+      assertScope(scope, "work.write");
+      const current = find(localPlatformTaskTemplatesStore.list(), templateId, scope);
+      if (current.version !== input.expectedVersion) {
+        throw new PlatformWorkAdapterError("The task template changed before it could be updated.", "conflict");
+      }
+      const nextKey = input.key?.trim().toLocaleLowerCase().replace(/\s+/g, "-");
+      if (nextKey && visible(localPlatformTaskTemplatesStore.list(), scope)
+        .some((template) => template.id !== templateId && template.key === nextKey)) {
+        throw new PlatformWorkAdapterError("A task template with this key already exists.", "conflict");
+      }
+      const relationTypes = input.relationTypes
+        ? [...new Set(input.relationTypes.map((type) => type.trim()).filter(Boolean))]
+        : current.relationTypes;
+      if (!relationTypes.length) {
+        throw new PlatformWorkAdapterError("At least one related record type is required.", "validation-error");
+      }
+      const next = localPlatformTaskTemplatesStore.update(templateId, {
+        key: nextKey ?? current.key,
+        name: input.name?.trim() ?? current.name,
+        description: input.description === undefined ? current.description : input.description.trim(),
+        defaultPriority: input.defaultPriority ?? current.defaultPriority,
+        defaultDueDays: input.defaultDueDays === undefined ? current.defaultDueDays : input.defaultDueDays,
+        relationTypes,
+        visibility: input.visibility ?? current.visibility,
+        status: input.status ?? current.status,
+        version: current.version + 1,
+        updatedById: currentActor(),
+      });
+      if (!next) throw new PlatformWorkAdapterError("The requested Platform record was not found.", "not-found");
+      return next;
+    },
+
+    async archiveTaskTemplate(templateId, expectedVersion, params = {}) {
+      const scope = resolve(params);
+      assertScope(scope, "work.write");
+      const current = find(localPlatformTaskTemplatesStore.list(), templateId, scope);
+      if (current.version !== expectedVersion) {
+        throw new PlatformWorkAdapterError("The task template changed before its status could be updated.", "conflict");
+      }
+      const next = localPlatformTaskTemplatesStore.update(templateId, {
+        status: current.status === "archived" ? "active" : "archived",
+        version: current.version + 1,
+        updatedById: currentActor(),
+      });
+      if (!next) throw new PlatformWorkAdapterError("The requested Platform record was not found.", "not-found");
+      return next;
     },
 
     async getTask(taskId, params = {}) {

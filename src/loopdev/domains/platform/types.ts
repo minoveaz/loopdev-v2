@@ -72,6 +72,7 @@ export interface TaskRecord extends PlatformRecordBase {
 }
 
 export interface TaskTemplateRecord extends PlatformRecordBase {
+  status: PlatformRecordStatus;
   key: string;
   name: string;
   description: string;

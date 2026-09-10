@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Check, CheckCircle2, Circle, Clock3, ListChecks, Plus, RotateCcw, ChevronsUpDown } from "lucide-react";
 import { DataCard, StatusBadge } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
@@ -21,29 +21,44 @@ const priorityTone: Record<TaskPriority, "neutral" | "info" | "warning" | "gold"
 
 export interface PlatformTaskFormProps {
   relation: EntityRef;
+  task?: TaskRecord;
   templates?: TaskTemplateRecord[];
   formId?: string;
   showSubmitButton?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
+  submitLabel?: string;
+  canAssign?: boolean;
   onSubmit: (input: {
     title: string;
     description: string | null;
     priority: TaskPriority;
     dueAt: string | null;
     relation: EntityRef;
+    assignedUserId?: string | null;
   }) => Promise<unknown>;
 }
 
-export function PlatformTaskForm({ relation, templates = [], formId = "platform-task-form", showSubmitButton = true, onDirtyChange, onSubmit }: PlatformTaskFormProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState<TaskPriority>("normal");
-  const [dueAt, setDueAt] = useState("");
+export function PlatformTaskForm({ relation, task, templates = [], formId = "platform-task-form", showSubmitButton = true, onDirtyChange, submitLabel, canAssign = false, onSubmit }: PlatformTaskFormProps) {
+  const [title, setTitle] = useState(task?.title ?? "");
+  const [description, setDescription] = useState(task?.description ?? "");
+  const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "normal");
+  const [dueAt, setDueAt] = useState(task?.dueAt ?? "");
+  const [assignedUserId, setAssignedUserId] = useState(task?.assignedUserId ?? "");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [templateKey, setTemplateKey] = useState("");
   const [templateOpen, setTemplateOpen] = useState(false);
   const selectedTemplate = templates.find((template) => template.key === templateKey);
+  useEffect(() => {
+    setTitle(task?.title ?? "");
+    setDescription(task?.description ?? "");
+    setPriority(task?.priority ?? "normal");
+    setDueAt(task?.dueAt ?? "");
+    setAssignedUserId(task?.assignedUserId ?? "");
+    setTemplateKey("");
+    setError(null);
+    onDirtyChange?.(false);
+  }, [onDirtyChange, task]);
   const applyTemplate = (template: TaskTemplateRecord) => {
     setTemplateKey(template.key);
     setTitle(template.name);
@@ -69,11 +84,13 @@ export function PlatformTaskForm({ relation, templates = [], formId = "platform-
         priority,
         dueAt: dueAt || null,
         relation,
+        assignedUserId: canAssign ? assignedUserId.trim() || null : undefined,
       });
       setTitle("");
       setDescription("");
       setPriority("normal");
       setDueAt("");
+      setAssignedUserId("");
       onDirtyChange?.(false);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save task.");
@@ -83,7 +100,7 @@ export function PlatformTaskForm({ relation, templates = [], formId = "platform-
   };
 
   return (
-    <form id={formId} onSubmit={submit} className="space-y-4" aria-label="Create task">
+    <form id={formId} onSubmit={submit} className="space-y-4" aria-label={task ? "Edit task" : "Create task"}>
       {templates.length > 0 && (
         <div className="space-y-1.5">
           <Label htmlFor="platform-task-template">Task template</Label>
@@ -137,8 +154,20 @@ export function PlatformTaskForm({ relation, templates = [], formId = "platform-
           <Input id="platform-task-due" type="date" value={dueAt.slice(0, 10)} onChange={(event) => { setDueAt(event.target.value ? new Date(`${event.target.value}T12:00:00`).toISOString() : ""); onDirtyChange?.(true); }} disabled={pending} />
         </div>
       </div>
+      {canAssign && (
+        <div className="space-y-1.5">
+          <Label htmlFor={`${formId}-assignee`}>Assigned user</Label>
+          <Input
+            id={`${formId}-assignee`}
+            value={assignedUserId}
+            placeholder="User ID or leave unassigned"
+            onChange={(event) => { setAssignedUserId(event.target.value); onDirtyChange?.(true); }}
+            disabled={pending}
+          />
+        </div>
+      )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {showSubmitButton && <Button type="submit" disabled={pending}><Plus className="mr-1.5 h-4 w-4" />{pending ? "Saving…" : "Add task"}</Button>}
+      {showSubmitButton && <Button type="submit" disabled={pending}><Plus className="mr-1.5 h-4 w-4" />{pending ? "Saving…" : submitLabel ?? (task ? "Save changes" : "Add task")}</Button>}
     </form>
   );
 }

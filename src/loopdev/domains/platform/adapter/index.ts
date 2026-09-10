@@ -17,6 +17,7 @@ export {
   type CreateNotificationInput,
   type CreateNoteInput,
   type CreateTaskInput,
+  type CreateTaskTemplateInput,
   type PlatformActivityListParams,
   type PlatformAttachmentListParams,
   type PlatformNotificationListParams,
@@ -28,6 +29,7 @@ export {
   type PlatformTimelineListParams,
   type UpdateNoteInput,
   type UpdateTaskInput,
+  type UpdateTaskTemplateInput,
   type PlatformWorkAdapter,
 } from "./work";
 

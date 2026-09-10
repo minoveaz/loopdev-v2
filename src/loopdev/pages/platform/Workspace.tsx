@@ -1,8 +1,9 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Circle, ExternalLink,
-  ListChecks, Plus, Siren,
+  ListChecks, Plus, Settings2, Siren,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   DataCard, DataTable, FilterDropdown, PageContainer, PageHeader, SearchInput,
   StatCard, StatusBadge, type DataTableAction, type DataTableColumn,
@@ -13,14 +14,10 @@ import { PlatformTaskForm } from "@/loopdev/components/platform";
 import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
 import { platformAdapter, usePlatformTaskTemplates, usePlatformTasks } from "@/loopdev/domains/platform";
 import type { EntityRef, TaskPriority, TaskRecord, TaskStatus } from "@/loopdev/domains/platform";
+import { useCrmContacts, useCrmLeads, useCrmPipeline } from "@/loopdev/domains/crm/hooks/use-crm";
+import { contactName } from "@/loopdev/domains/crm/adapter";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { cn } from "@/lib/utils";
-
-const CRM_RELATIONS: readonly CRMRecordPickerItem[] = [
-  { type: "contact", id: "crm_cust_1", label: "Contact · Helena Park" },
-  { type: "lead", id: "local-lead-crm_cust_1", label: "Lead · Helena Park" },
-  { type: "opportunity", id: "crm_opp_1", label: "Opportunity · Renewal options" },
-] as const;
 
 const CURRENT_USER_ID = "local-development-user";
 type TaskView = "all" | "mine" | "urgent" | "calendar";
@@ -65,10 +62,12 @@ function startOfWeek(date: Date) {
 export default function CRMTasks() {
   const { trail } = useBreadcrumbs();
   const { organizationId, workspaceId, brandId } = platformAdapter.getScope();
-  const [relationKey, setRelationKey] = useState("contact:crm_cust_1");
+  const [relationKey, setRelationKey] = useState("");
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [taskFormKey, setTaskFormKey] = useState(0);
   const [selectedTask, setSelectedTask] = useState<TaskRecord | null>(null);
+  const [editingTask, setEditingTask] = useState(false);
+  const [taskEditFormKey, setTaskEditFormKey] = useState(0);
   const [view, setView] = useState<TaskView>("all");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
@@ -76,14 +75,43 @@ export default function CRMTasks() {
   const [cursor, setCursor] = useState(() => new Date());
   const taskCreateTriggerRef = useRef<HTMLButtonElement>(null);
   const taskFormDirtyRef = useRef(false);
+  const taskEditDirtyRef = useRef(false);
+  const { contacts } = useCrmContacts({ limit: 100 });
+  const { leads } = useCrmLeads();
+  const { opportunities } = useCrmPipeline();
+  const crmRelations = useMemo<CRMRecordPickerItem[]>(() => [
+    ...contacts.map((contact) => ({
+      type: "contact" as const,
+      id: contact.id,
+      label: `Contact · ${contactName(contact)}`,
+    })),
+    ...leads.map((lead) => {
+      const contact = contacts.find((item) => item.id === lead.contactId);
+      return {
+        type: "lead" as const,
+        id: lead.id,
+        label: `Lead · ${contact ? contactName(contact) : lead.id}`,
+      };
+    }),
+    ...opportunities.map((opportunity) => ({
+      type: "opportunity" as const,
+      id: opportunity.id,
+      label: `Opportunity · ${opportunity.name}`,
+    })),
+  ], [contacts, leads, opportunities]);
+  useEffect(() => {
+    if (crmRelations.length && !crmRelations.some((item) => `${item.type}:${item.id}` === relationKey)) {
+      setRelationKey(`${crmRelations[0].type}:${crmRelations[0].id}`);
+    }
+  }, [crmRelations, relationKey]);
   const relation = useMemo(() => {
-    const selected = CRM_RELATIONS.find((item) => `${item.type}:${item.id}` === relationKey) ?? CRM_RELATIONS[0];
+    const selected = crmRelations.find((item) => `${item.type}:${item.id}` === relationKey) ?? crmRelations[0];
     return {
-      entityType: selected.type,
-      entityId: selected.id,
+      entityType: selected?.type ?? "contact",
+      entityId: selected?.id ?? "",
       scope: { organizationId, workspaceId, brandId },
     } as EntityRef<"contact" | "lead" | "opportunity">;
-  }, [brandId, organizationId, relationKey, workspaceId]);
+  }, [brandId, crmRelations, organizationId, relationKey, workspaceId]);
   const tasks = usePlatformTasks({
     organizationId,
     workspaceId,
@@ -94,8 +122,8 @@ export default function CRMTasks() {
   });
   const taskTemplates = usePlatformTaskTemplates();
   const relationLabels = useMemo(
-    () => new Map(CRM_RELATIONS.map((item) => [`${item.type}:${item.id}`, item.label])),
-    [],
+    () => new Map(crmRelations.map((item) => [`${item.type}:${item.id}`, item.label])),
+    [crmRelations],
   );
   const stats = useMemo(() => ({
     total: tasks.tasks.length,
@@ -191,7 +219,14 @@ export default function CRMTasks() {
         title="CRM tasks"
         description="Follow-up work associated with Contacts, Leads and Opportunities."
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Tasks" }]}
-        actions={<Button onClick={(event) => { taskCreateTriggerRef.current = event.currentTarget; setTaskFormKey((key) => key + 1); setCreateTaskOpen(true); }}><Plus className="mr-1.5 h-3.5 w-3.5" />New task</Button>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/app/sales-crm/task-templates"><Settings2 className="mr-1.5 h-3.5 w-3.5" />Task templates</Link>
+            </Button>
+            <Button onClick={(event) => { taskCreateTriggerRef.current = event.currentTarget; setTaskFormKey((key) => key + 1); setCreateTaskOpen(true); }}><Plus className="mr-1.5 h-3.5 w-3.5" />New task</Button>
+          </div>
+        }
       />
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -201,7 +236,7 @@ export default function CRMTasks() {
         <StatCard label="Urgent" value={String(stats.urgent)} icon={Siren} accent="accent" compact />
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-1 border-b border-border">
+      <div className="mt-6 flex max-w-full items-center gap-1 overflow-x-auto border-b border-border">
         {([
           ["all", "All tasks"],
           ["mine", "My tasks"],
@@ -254,6 +289,8 @@ export default function CRMTasks() {
             </div>
             <SearchInput value={search} onValueChange={setSearch} placeholder="Search calendar..." size="sm" containerClassName="w-56" />
           </div>
+          <div className="overflow-x-auto">
+          <div className="min-w-[640px]">
           <div className="grid grid-cols-7 border-b border-border bg-card-muted text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => <div key={day} className="px-2 py-2">{day}</div>)}
           </div>
@@ -273,6 +310,8 @@ export default function CRMTasks() {
                 </div>
               );
             })}
+          </div>
+          </div>
           </div>
         </DataCard>
       )}
@@ -300,7 +339,7 @@ export default function CRMTasks() {
             <CRMRecordPicker
               value={relationKey}
               onValueChange={(value) => { setRelationKey(value); taskFormDirtyRef.current = true; }}
-              items={CRM_RELATIONS}
+              items={crmRelations}
               placeholder="Search contacts, leads or opportunities..."
             />
           </div>
@@ -308,6 +347,7 @@ export default function CRMTasks() {
             key={taskFormKey}
             formId="create-crm-task-form"
             showSubmitButton={false}
+            canAssign={platformAdapter.hasPermission("work.assign")}
             relation={relation}
             templates={taskTemplates.templates}
             onDirtyChange={(dirty) => { taskFormDirtyRef.current = dirty; }}
@@ -326,24 +366,65 @@ export default function CRMTasks() {
 
       <AppDrawer
         open={Boolean(selectedTask)}
-        onOpenChange={(open) => { if (!open) setSelectedTask(null); }}
-        title={selectedTask?.title ?? "Task"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedTask(null);
+            setEditingTask(false);
+            taskEditDirtyRef.current = false;
+          }
+        }}
+        title={editingTask ? "Edit task" : selectedTask?.title ?? "Task"}
         description={selectedTask ? `${selectedTask.relation.entityType} · ${selectedTask.relation.entityId}` : undefined}
         size="md"
+        dirty={() => taskEditDirtyRef.current}
+        confirmOnClose={editingTask}
+        onDiscard={() => { taskEditDirtyRef.current = false; }}
         footer={selectedTask ? (
           <div className="flex w-full justify-end gap-2">
-            <Button variant="outline" onClick={() => setSelectedTask(null)}>Close</Button>
-            {selectedTask.relation.entityType === "contact" && (
-              <Button asChild>
-                <a href={`/app/sales-crm/contacts/${selectedTask.relation.entityId}`}>
-                  Open CRM record <ExternalLink className="ml-1.5 h-4 w-4" />
-                </a>
-              </Button>
+            <Button variant="outline" onClick={() => { setSelectedTask(null); setEditingTask(false); }}>Close</Button>
+            {editingTask ? (
+              <Button type="submit" form="edit-crm-task-form" disabled={tasks.loading}>Save changes</Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => { setTaskEditFormKey((key) => key + 1); setEditingTask(true); }}>Edit task</Button>
+                {selectedTask.relation.entityType === "contact" && (
+                  <Button asChild>
+                    <a href={`/app/sales-crm/contacts/${selectedTask.relation.entityId}`}>
+                      Open CRM record <ExternalLink className="ml-1.5 h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
+              </>
             )}
           </div>
         ) : undefined}
       >
-        {selectedTask && (
+        {selectedTask && editingTask ? (
+          <PlatformTaskForm
+            key={`${selectedTask.id}-${taskEditFormKey}`}
+            task={selectedTask}
+            relation={selectedTask.relation}
+            templates={taskTemplates.templates}
+            formId="edit-crm-task-form"
+            showSubmitButton={false}
+            canAssign={selectedTask.permissions.canAssign}
+            onDirtyChange={(dirty) => { taskEditDirtyRef.current = dirty; }}
+            onSubmit={async (input) => {
+              const { relation: _relation, assignedUserId, ...taskFields } = input;
+              const updated = await tasks.updateTask(selectedTask.id, {
+                ...taskFields,
+                expectedVersion: selectedTask.version,
+                scope: { organizationId, workspaceId, brandId },
+              });
+              const next = assignedUserId === undefined || assignedUserId === selectedTask.assignedUserId
+                ? updated
+                : await tasks.assignTask(updated.id, assignedUserId, updated.version);
+              setSelectedTask(next);
+              taskEditDirtyRef.current = false;
+              setEditingTask(false);
+            }}
+          />
+        ) : selectedTask && (
           <div className="space-y-6">
             <div className="flex flex-wrap gap-2 text-sm">
               <span className="rounded-full bg-primary-soft px-2.5 py-1 text-primary">{selectedTask.status.replace("_", " ")}</span>

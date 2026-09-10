@@ -6,6 +6,7 @@ import {
   localPlatformNotesStore,
   localPlatformNotificationsStore,
   localPlatformTasksStore,
+  localPlatformTaskTemplatesStore,
   localPlatformTimelineStore,
   platformWorkAdapter,
   PlatformWorkAdapterError,
@@ -21,6 +22,7 @@ const contactRef: EntityRef<"contact"> = {
 
 beforeEach(() => {
   localPlatformTasksStore.reset();
+  localPlatformTaskTemplatesStore.reset();
   localPlatformNotesStore.reset();
   localPlatformActivitiesStore.reset();
   localPlatformTimelineStore.reset();
@@ -144,5 +146,36 @@ describe("local Platform work adapter", () => {
       scope: { organizationId: "other-organization", workspaceId: null },
     };
     await expect(platformWorkAdapter.createTask({ scope, relation: outsideRef, title: "Blocked" })).rejects.toBeInstanceOf(PlatformWorkAdapterError);
+  });
+
+  it("administers organization-scoped task templates with optimistic conflicts", async () => {
+    const created = await platformWorkAdapter.createTaskTemplate({
+      scope,
+      key: "new-follow-up",
+      name: "New follow-up",
+      description: "A reusable follow-up.",
+      defaultPriority: "high",
+      defaultDueDays: 4,
+      relationTypes: ["contact", "lead"],
+    });
+    expect(created.status).toBe("active");
+    expect((await platformWorkAdapter.listTaskTemplates({ scope })).some((item) => item.key === "new-follow-up")).toBe(true);
+
+    const updated = await platformWorkAdapter.updateTaskTemplate(created.id, {
+      scope,
+      expectedVersion: created.version,
+      name: "Updated follow-up",
+    });
+    expect(updated.name).toBe("Updated follow-up");
+    await expect(platformWorkAdapter.updateTaskTemplate(created.id, {
+      scope,
+      expectedVersion: created.version,
+      name: "Stale update",
+    })).rejects.toMatchObject({ code: "conflict" });
+
+    const archived = await platformWorkAdapter.archiveTaskTemplate(created.id, updated.version, { scope });
+    expect(archived.status).toBe("archived");
+    expect((await platformWorkAdapter.listTaskTemplates({ scope })).some((item) => item.id === created.id)).toBe(false);
+    expect((await platformWorkAdapter.listTaskTemplates({ scope, includeArchived: true })).some((item) => item.id === created.id)).toBe(true);
   });
 });

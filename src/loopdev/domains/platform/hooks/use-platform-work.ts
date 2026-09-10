@@ -7,12 +7,15 @@ import {
   type PlatformNoteListParams,
   type PlatformTaskListParams,
   type PlatformTaskTemplateListParams,
+  type PlatformScopeParams,
   type PlatformTimelineListParams,
   type CreateAttachmentInput,
   type CreateNoteInput,
   type CreateTaskInput,
+  type CreateTaskTemplateInput,
   type UpdateNoteInput,
   type UpdateTaskInput,
+  type UpdateTaskTemplateInput,
 } from "../adapter";
 import type {
   AttachmentRecord,
@@ -98,6 +101,7 @@ export function usePlatformTaskTemplates(params: PlatformTaskTemplateListParams 
   const [templates, setTemplates] = useState<TaskTemplateRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const key = useMemo(() => JSON.stringify(request), [request]);
 
   useEffect(() => {
@@ -109,9 +113,36 @@ export function usePlatformTaskTemplates(params: PlatformTaskTemplateListParams 
       .catch((cause: unknown) => { if (active) setError(messageFor(cause)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [key, request]);
+  }, [key, reloadToken, request]);
 
-  return { templates, loading, error };
+  const run = async <T,>(action: () => Promise<T>) => {
+    setError(null);
+    try {
+      const result = await action();
+      setReloadToken((token) => token + 1);
+      return result;
+    } catch (cause) {
+      setError(messageFor(cause));
+      throw cause;
+    }
+  };
+
+  return {
+    templates,
+    loading,
+    error,
+    createTemplate: (input: CreateTaskTemplateInput) => run(() => platformWorkAdapter.createTaskTemplate(input)),
+    updateTemplate: (templateId: string, input: UpdateTaskTemplateInput) =>
+      run(() => platformWorkAdapter.updateTaskTemplate(templateId, input)),
+    archiveTemplate: (templateId: string, expectedVersion: number, scope?: PlatformScopeParams) =>
+      run(() => platformWorkAdapter.archiveTaskTemplate(templateId, expectedVersion, scope)),
+    createTaskTemplate: (input: CreateTaskTemplateInput) => run(() => platformWorkAdapter.createTaskTemplate(input)),
+    updateTaskTemplate: (templateId: string, input: UpdateTaskTemplateInput) =>
+      run(() => platformWorkAdapter.updateTaskTemplate(templateId, input)),
+    archiveTaskTemplate: (templateId: string, expectedVersion: number, scope?: PlatformScopeParams) =>
+      run(() => platformWorkAdapter.archiveTaskTemplate(templateId, expectedVersion, scope)),
+    reload: () => setReloadToken((token) => token + 1),
+  };
 }
 
 export function usePlatformNotes(params: PlatformNoteListParams = {}) {

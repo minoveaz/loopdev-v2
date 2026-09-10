@@ -309,12 +309,20 @@ migraciones y ninguna página accede a `localStorage`.
   persistente y sus políticas quedan pendientes de backend.
 - [x] Integrar las cuatro capacidades con Contact, Lead, Opportunity y Customer 360 mediante
   referencias y paneles Platform reutilizables.
-- [x] Crear Tasks list/workspace local usando el contrato Platform. My Day avanzado queda
-  representado por filtros de estado, prioridad, asignación y vencimiento.
+- [x] Crear Tasks list/workspace local usando el contrato Platform, con tabla operativa,
+  filtros, ordenación, acciones de lifecycle, vistas `All tasks`, `My tasks`, `Urgent &
+  overdue` y calendario mensual.
+- [x] Sustituir relaciones CRM hardcoded por un `CRMRecordPicker` alimentado desde Contacts,
+  Leads y Opportunities mediante sus hooks de dominio.
+- [x] Añadir edición de Tasks desde `AppDrawer`, asignación condicionada por permisos y
+  control de concurrencia optimista por `version`.
+- [x] Añadir catálogo local de Task Templates con administración por organización, CRUD,
+  archivado/restauración y aplicación desde el formulario de Tasks. La administración se
+  accede desde Tasks y no aparece como entrada independiente del sidebar.
 - [x] Reutilizar `AppDrawer`, `DataCard`, `EmptyState`, `LoadingState` y primitives de
   `src/components/ui`; no se copiaron páginas ni mocks de Rivera.
 - [x] Cubrir estados loading, empty, forbidden, conflict, stale (versión) y pending en la
-  frontera de adapter/hooks/UI.
+  frontera de adapter/hooks/UI, además de tests del picker, vistas, edición y templates.
 
 ### Fase 5 — Attachments, Notifications y colaboración
 
@@ -399,7 +407,8 @@ migraciones y ninguna página accede a `localStorage`.
 | Leads | `/app/sales-crm/leads` | Implementada |
 | Pipeline | `/app/sales-crm/pipeline` | Implementada con adapter local |
 | Opportunities | `/app/sales-crm/opportunities` | Implementada con adapter local |
-| Tasks / Platform workspace | `/app/sales-crm/tasks` | Implementada localmente |
+| Tasks / Platform workspace | `/app/sales-crm/tasks` | Implementada localmente con tabla, vistas y calendario |
+| Task Templates | `/app/sales-crm/task-templates` | Implementada localmente; acceso contextual desde Tasks |
 | Communications | `/app/sales-crm/communications` | Pendiente |
 
 ## Fuera de alcance

@@ -9,6 +9,7 @@ const SalesCRMPipeline = lazy(() => import("@/loopdev/pages/crm/Pipeline"));
 const SalesCRMOpportunities = lazy(() => import("@/loopdev/pages/crm/Opportunities"));
 const SalesCRMCustomer360 = lazy(() => import("@/loopdev/pages/crm/Customer360"));
 const PlatformWorkspace = lazy(() => import("@/loopdev/pages/platform/Workspace"));
+const TaskTemplates = lazy(() => import("@/loopdev/pages/platform/TaskTemplates"));
 
 export const loopdevRouteElements = (
   <Fragment>
@@ -21,5 +22,6 @@ export const loopdevRouteElements = (
     <Route path="/app/sales-crm/pipeline" element={<SalesCRMPipeline />} />
     <Route path="/app/sales-crm/opportunities" element={<SalesCRMOpportunities />} />
     <Route path="/app/sales-crm/tasks" element={<PlatformWorkspace />} />
+    <Route path="/app/sales-crm/task-templates" element={<TaskTemplates />} />
   </Fragment>
 );

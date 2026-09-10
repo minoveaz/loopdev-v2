@@ -1,4 +1,5 @@
 import { localPlatformAdapter } from "./local";
+import type { OrganizationEntitlementsAdapter } from "../entitlements";
 import type { PlatformWorkAdapter } from "./work";
 import type {
   EntityRef,
@@ -41,6 +42,7 @@ export interface PlatformAdapter {
   hasPermission(permission: PlatformPermission, scope?: EntityScope): boolean;
   assertPermission(permission: PlatformPermission, scope?: EntityScope): void;
   canAccessEntity(ref: EntityRef, scope?: EntityScope): boolean;
+  entitlements: OrganizationEntitlementsAdapter;
   work: PlatformWorkAdapter;
 }
 

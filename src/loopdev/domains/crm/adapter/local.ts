@@ -41,6 +41,7 @@ import type {
 } from "./types";
 import { contactName, CRMAdapterError, CRM_LEAD_STATUS_CODES, CRM_PIPELINE_STAGE_CODES } from "./types";
 import { localCrmOperationsAdapter } from "../operations/adapter/local";
+import { localCrmAutomationsAdapter } from "../automations";
 
 const organizationId = "local-development-organization";
 
@@ -196,6 +197,7 @@ export const localLoopdevAdapter = {
   referenceData: localReferenceDataAdapter,
   crm: {
     operations: localCrmOperationsAdapter,
+    automations: localCrmAutomationsAdapter,
     async listContacts({
       query = "",
       cursor = null,

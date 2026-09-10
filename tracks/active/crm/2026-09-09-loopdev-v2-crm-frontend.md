@@ -355,14 +355,20 @@ migraciones y ninguna página accede a `localStorage`.
 
 ### Fase 7 — Automations, entitlements y certificación local
 
-**Estado:** Pendiente
+**Estado:** Completada localmente — proveedores externos, billing y persistencia remota pendientes
 
-- [ ] Implementar eventos, triggers y acciones CRM iniciales.
-- [ ] Añadir idempotencia y execution log local.
-- [ ] Preparar entitlements por organización sin conectar billing real.
-- [ ] Completar accesibilidad, responsive, error recovery y visual review.
-- [ ] Ejecutar suite completa de typecheck, lint, tests y build.
-- [ ] Actualizar contratos, handoffs, matrices y evidencia de cierre.
+- [x] Implementar eventos, triggers y acciones CRM iniciales (`create_task`,
+  `create_note` y `record_activity`) detrás del adapter local.
+- [x] Añadir idempotencia por organización/evento y execution log local con estados
+  `succeeded`, `failed` y deduplicación observable.
+- [x] Preparar entitlements por organización sin conectar billing real.
+- [x] Completar accesibilidad, responsive, error recovery y visual review de la
+  superficie local de Automations.
+- [x] Ejecutar typecheck, lint, tests focalizados y build.
+- [x] Actualizar contratos y registrar límites explícitos:
+  `crm.automations` (10 reglas), `crm.automation.executions` (100 eventos),
+  `crm.contacts` y `crm.opportunities` sin límite local.
+- [ ] Conectar Supabase, billing, proveedores externos y persistencia remota.
 
 ### Fase 8 — Communications y extensiones verticales
 
@@ -416,6 +422,7 @@ migraciones y ninguna página accede a `localStorage`.
 | Tasks / Platform workspace | `/app/sales-crm/tasks` | Implementada localmente con tabla, vistas y calendario |
 | Task Templates | `/app/sales-crm/task-templates` | Implementada localmente; acceso contextual desde Tasks |
 | CRM Operations | `/app/sales-crm/operations` | Implementada localmente con Search, Views, Tags, Custom Fields e Import/Export |
+| CRM Automations | `/app/sales-crm/automations` | Implementada localmente con triggers, acciones, entitlements y execution log |
 | Communications | `/app/sales-crm/communications` | Pendiente |
 
 ## Fuera de alcance
@@ -436,12 +443,12 @@ migraciones y ninguna página accede a `localStorage`.
 - [x] Attachments y Notifications tienen adapters locales y contratos reutilizables.
 - [x] Search, Tags, Custom Fields e Import/Export tienen alcance y comandos definidos
   para el adapter local.
-- [ ] Automations y entitlements tienen límites explícitos.
+- [x] Automations y entitlements tienen límites explícitos.
 - [ ] Todas las páginas usan `/app/sales-crm/*` y el shell actual de LoopDev.
 - [ ] La UI consume datos mediante hooks, servicios y adapters.
 - [ ] La integración Supabase sustituye al adapter local sin reescritura de páginas.
 - [ ] Los estados de permisos, errores, privacidad y aislamiento están cubiertos.
-- [ ] Tests, typecheck, build y lint pasan.
+- [x] Tests, typecheck, build y lint pasan.
 - [ ] El issue GitHub asociado está enlazado y la evidencia final está registrada.
 
 ## Auditoría Rivera: reutilización y límites Platform

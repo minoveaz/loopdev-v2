@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
+export { useCrmAutomations } from "./use-crm-automations";
 import type {
   CRMContact,
   CRMContactListParams,

@@ -26,9 +26,11 @@ import type {
   CRMUpdateContactPatch,
 } from "./types";
 import type { CRMOperationsAdapter } from "../operations/types";
+import type { CRMAutomationsAdapter } from "../automations";
 
 export interface LoopdevCrmAdapter {
   operations: CRMOperationsAdapter;
+  automations: CRMAutomationsAdapter;
   listContacts(params: CRMContactListParams): Promise<CRMContactPage>;
   createContact(input: CRMCreateContactInput): Promise<CRMContactMutationResult>;
   updateContact(

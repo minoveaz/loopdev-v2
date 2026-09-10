@@ -9,6 +9,7 @@ import type {
 } from "../types";
 import { PlatformAdapterError, type PlatformAdapter } from "./index";
 import { createLocalPlatformWorkAdapter } from "./work";
+import { localOrganizationEntitlementsAdapter } from "../entitlements";
 
 export const LOCAL_ORGANIZATION_ID = "local-development-organization";
 export const LOCAL_WORKSPACE_ID = "local-workspace";
@@ -64,6 +65,7 @@ const localWorkDependencies = {
 export const localPlatformWorkAdapter = createLocalPlatformWorkAdapter(localWorkDependencies);
 
 export const localPlatformAdapter: PlatformAdapter = {
+  entitlements: localOrganizationEntitlementsAdapter,
   getOrganizationContext() {
     return { ...activeContext };
   },

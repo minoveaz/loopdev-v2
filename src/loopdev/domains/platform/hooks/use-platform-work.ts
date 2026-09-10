@@ -6,6 +6,7 @@ import {
   type PlatformNotificationListParams,
   type PlatformNoteListParams,
   type PlatformTaskListParams,
+  type PlatformTaskTemplateListParams,
   type PlatformTimelineListParams,
   type CreateAttachmentInput,
   type CreateNoteInput,
@@ -18,6 +19,7 @@ import type {
   NoteRecord,
   NotificationRecord,
   TaskRecord,
+  TaskTemplateRecord,
   TaskStatus,
   TimelineEvent,
   ActivityRecord,
@@ -89,6 +91,27 @@ export function usePlatformTasks(params: PlatformTaskListParams = {}) {
       run(() => platformWorkAdapter.assignTask(taskId, assignedUserId, expectedVersion)),
     reload: () => setReloadToken((token) => token + 1),
   };
+}
+
+export function usePlatformTaskTemplates(params: PlatformTaskTemplateListParams = {}) {
+  const request = useStableParams(params);
+  const [templates, setTemplates] = useState<TaskTemplateRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const key = useMemo(() => JSON.stringify(request), [request]);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    void platformWorkAdapter.listTaskTemplates(request)
+      .then((items) => { if (active) setTemplates(items); })
+      .catch((cause: unknown) => { if (active) setError(messageFor(cause)); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [key, request]);
+
+  return { templates, loading, error };
 }
 
 export function usePlatformNotes(params: PlatformNoteListParams = {}) {

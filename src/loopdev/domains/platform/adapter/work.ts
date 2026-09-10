@@ -12,6 +12,7 @@ import type {
   PlatformVisibility,
   TaskPriority,
   TaskRecord,
+  TaskTemplateRecord,
   TaskStatus,
   TimelineEvent,
 } from "../types";
@@ -21,6 +22,7 @@ import {
   localPlatformNotesStore,
   localPlatformNotificationsStore,
   localPlatformTasksStore,
+  localPlatformTaskTemplatesStore,
   localPlatformTimelineStore,
 } from "../data/localWork";
 
@@ -29,6 +31,11 @@ export interface PlatformScopeParams {
   organizationId?: string;
   workspaceId?: string | null;
   brandId?: string | null;
+}
+
+export interface PlatformTaskTemplateListParams extends PlatformScopeParams {
+  query?: string;
+  relationType?: string;
 }
 
 export interface PlatformPage<T> {
@@ -181,6 +188,7 @@ export class PlatformWorkAdapterError extends Error {
 
 export interface PlatformWorkAdapter {
   listTasks(params?: PlatformTaskListParams): Promise<PlatformPage<TaskRecord>>;
+  listTaskTemplates(params?: PlatformTaskTemplateListParams): Promise<TaskTemplateRecord[]>;
   getTask(taskId: string, params?: PlatformScopeParams): Promise<TaskRecord | null>;
   createTask(input: CreateTaskInput): Promise<TaskRecord>;
   updateTask(taskId: string, input: UpdateTaskInput): Promise<TaskRecord>;
@@ -345,6 +353,16 @@ export function createLocalPlatformWorkAdapter(deps: LocalPlatformWorkDependenci
         items = items.filter((task) => `${task.title} ${task.description ?? ""}`.toLocaleLowerCase().includes(query));
       }
       return page(items.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)), params.cursor, params.limit);
+    },
+
+    async listTaskTemplates(params = {}) {
+      const scope = resolve(params);
+      assertScope(scope, "work.read");
+      const query = params.query?.trim().toLocaleLowerCase();
+      return visible(localPlatformTaskTemplatesStore.list(), scope)
+        .filter((template) => !params.relationType || template.relationTypes.includes(params.relationType))
+        .filter((template) => !query || `${template.name} ${template.description}`.toLocaleLowerCase().includes(query))
+        .sort((left, right) => left.name.localeCompare(right.name));
     },
 
     async getTask(taskId, params = {}) {

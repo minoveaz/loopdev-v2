@@ -13,6 +13,7 @@ import {
 } from "@/components/common";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -429,17 +430,16 @@ export default function SalesCRMContacts() {
             <span>Page {cursorHistory.length + 1}</span>
             <label className="flex items-center gap-1.5" htmlFor="contacts-page-size">
               Rows
-              <select
-                id="contacts-page-size"
-                aria-label="Contacts per page"
-                value={pageSize}
-                onChange={(event) => changePageSize(event.target.value)}
-                className="h-7 rounded-md border border-input bg-card px-2 text-xs text-foreground"
-              >
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-              </select>
+              <Select value={String(pageSize)} onValueChange={changePageSize}>
+                <SelectTrigger id="contacts-page-size" aria-label="Contacts per page" className="h-7 w-16 bg-card px-2 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
             </label>
           </div>
           <div className="flex items-center gap-1.5">

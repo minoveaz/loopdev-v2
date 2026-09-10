@@ -24,6 +24,7 @@ export {
   type PlatformPage,
   type PlatformScopeParams,
   type PlatformTaskListParams,
+  type PlatformTaskTemplateListParams,
   type PlatformTimelineListParams,
   type UpdateNoteInput,
   type UpdateTaskInput,

@@ -3,6 +3,7 @@ import { LockKeyhole, Pencil, Plus, Save, UsersRound } from "lucide-react";
 import { DataCard } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { EntityRef, NoteRecord, PlatformVisibility } from "@/loopdev/domains/platform";
 
@@ -96,11 +97,14 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-1">
               <Label htmlFor="platform-note-visibility" className="text-xs">Visibility</Label>
-              <select id="platform-note-visibility" value={visibility} onChange={(event) => setVisibility(event.target.value as PlatformVisibility)} className="h-9 rounded-lg border border-input bg-card px-2 text-sm">
-                <option value="private">Private</option>
-                <option value="team">Team</option>
-                <option value="organization">Organization</option>
-              </select>
+              <Select value={visibility} onValueChange={(value) => setVisibility(value as PlatformVisibility)}>
+                <SelectTrigger id="platform-note-visibility" className="h-9 w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="private">Private</SelectItem>
+                  <SelectItem value="team">Team</SelectItem>
+                  <SelectItem value="organization">Organization</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <Button type="submit" size="sm" disabled={pending}><Plus className="mr-1.5 h-3.5 w-3.5" />{pending ? "Saving…" : "Add note"}</Button>
           </div>

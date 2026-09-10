@@ -16,9 +16,13 @@ describe("Opportunities page", () => {
     await waitFor(() => expect(screen.getAllByText("Enterprise expansion").length).toBeGreaterThan(0));
     fireEvent.click(screen.getByRole("button", { name: "New opportunity" }));
     const dialog = await screen.findByRole("dialog", { name: "New opportunity" });
-    fireEvent.change(within(dialog).getByLabelText("Contact"), { target: { value: "crm_cust_1" } });
+    fireEvent.click(within(dialog).getByRole("combobox", { name: "Search contact" }));
+    const ariaRecords = await screen.findAllByText("Aria Blackwood");
+    fireEvent.click(ariaRecords[ariaRecords.length - 1]);
     fireEvent.change(within(dialog).getByLabelText("Opportunity name"), { target: { value: "New catalog deal" } });
-    fireEvent.change(within(dialog).getByLabelText("Catalog item"), { target: { value: "catalog_item_enterprise_plan" } });
+    fireEvent.click(within(dialog).getByRole("combobox", { name: "Catalog item" }));
+    const enterpriseItems = await screen.findAllByText("Enterprise plan (enterprise-plan)");
+    fireEvent.click(enterpriseItems[enterpriseItems.length - 1]);
     fireEvent.click(within(dialog).getByRole("button", { name: "Create opportunity" }));
 
     await waitFor(() => expect(localCrmOpportunitiesStore.list().some((item) => item.name === "New catalog deal")).toBe(true));

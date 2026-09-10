@@ -9,6 +9,7 @@ import {
   SearchInput, StatusBadge,
 } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
+import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -383,10 +384,10 @@ export default function SalesCRMLeads() {
         }
       >
           <form id="create-lead-form" className="space-y-4" onSubmit={(event) => void submitLead(event)}>
-            <div className="space-y-1.5"><Label htmlFor="new-lead-contact">Contact</Label><select id="new-lead-contact" required value={newLeadContactId} onChange={(event) => setNewLeadContactId(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select a contact</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contactName(contact)}</option>)}</select></div>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-contact">Contact</Label><CRMRecordPicker items={contacts.map((contact): CRMRecordPickerItem => ({ type: "contact", id: contact.id, label: contactName(contact) }))} value={newLeadContactId ? `contact:${newLeadContactId}` : ""} onValueChange={(value) => setNewLeadContactId(value.replace(/^contact:/, ""))} placeholder="Search contacts..." ariaLabel="Search contact" /></div>
             <div className="space-y-1.5"><Label htmlFor="new-lead-interest">Interest</Label><Input id="new-lead-interest" required value={newLeadInterest} onChange={(event) => setNewLeadInterest(event.target.value)} placeholder="e.g. Enterprise expansion" /></div>
             <div className="space-y-1.5"><Label htmlFor="new-lead-source">Source / attribution</Label><Input id="new-lead-source" value={newLeadSource} onChange={(event) => setNewLeadSource(event.target.value)} placeholder="Website, referral, event…" /></div>
-            <div className="space-y-1.5"><Label htmlFor="new-lead-owner">Owner</Label><select id="new-lead-owner" value={newLeadOwner} onChange={(event) => setNewLeadOwner(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Unassigned</option>{ownerOptions.map((owner) => <option key={owner.value} value={owner.value}>{owner.label}</option>)}</select></div>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-owner">Owner</Label><Select value={newLeadOwner || "unassigned"} onValueChange={(value) => setNewLeadOwner(value === "unassigned" ? "" : value)}><SelectTrigger id="new-lead-owner"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unassigned">Unassigned</SelectItem>{ownerOptions.map((owner) => <SelectItem key={owner.value} value={owner.value}>{owner.label}</SelectItem>)}</SelectContent></Select></div>
             {"message" in creation && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{creation.message}</p>}
           </form>
       </AppDrawer>

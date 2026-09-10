@@ -71,6 +71,15 @@ export interface TaskRecord extends PlatformRecordBase {
   completedAt: string | null;
 }
 
+export interface TaskTemplateRecord extends PlatformRecordBase {
+  key: string;
+  name: string;
+  description: string;
+  defaultPriority: TaskPriority;
+  defaultDueDays: number | null;
+  relationTypes: Array<"contact" | "lead" | "opportunity" | string>;
+}
+
 export interface NoteRecord extends PlatformRecordBase {
   status: PlatformRecordStatus;
   relation: EntityRef<TaskRelationType>;

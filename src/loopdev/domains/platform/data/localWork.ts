@@ -6,6 +6,7 @@ import type {
   NoteRecord,
   NotificationRecord,
   TaskRecord,
+  TaskTemplateRecord,
   TimelineEvent,
 } from "../types";
 
@@ -91,6 +92,60 @@ const taskSeed: TaskRecord[] = [
     dueAt: null,
     relation: ref("lead", "local-lead-crm_cust_2"),
     completedAt: null,
+  },
+];
+
+const taskTemplateSeed: TaskTemplateRecord[] = [
+  {
+    id: "platform-task-template-follow-up",
+    scope: LOCAL_PLATFORM_SCOPE,
+    createdById: actorId,
+    updatedById: actorId,
+    createdAt: ago(30),
+    updatedAt: ago(30),
+    version: 1,
+    visibility: "organization",
+    permissions,
+    key: "commercial-follow-up",
+    name: "Commercial follow-up",
+    description: "Follow up with the record after a commercial interaction.",
+    defaultPriority: "normal",
+    defaultDueDays: 2,
+    relationTypes: ["contact", "lead", "opportunity"],
+  },
+  {
+    id: "platform-task-template-proposal",
+    scope: LOCAL_PLATFORM_SCOPE,
+    createdById: actorId,
+    updatedById: actorId,
+    createdAt: ago(30),
+    updatedAt: ago(30),
+    version: 1,
+    visibility: "organization",
+    permissions,
+    key: "send-proposal",
+    name: "Send proposal",
+    description: "Prepare and send a proposal to the related CRM record.",
+    defaultPriority: "high",
+    defaultDueDays: 3,
+    relationTypes: ["lead", "opportunity"],
+  },
+  {
+    id: "platform-task-template-discovery",
+    scope: LOCAL_PLATFORM_SCOPE,
+    createdById: actorId,
+    updatedById: actorId,
+    createdAt: ago(30),
+    updatedAt: ago(30),
+    version: 1,
+    visibility: "organization",
+    permissions,
+    key: "discovery-call",
+    name: "Schedule discovery call",
+    description: "Coordinate a discovery call and capture the next steps.",
+    defaultPriority: "normal",
+    defaultDueDays: 5,
+    relationTypes: ["contact", "lead"],
   },
 ];
 
@@ -210,6 +265,12 @@ export const localPlatformTasksStore = createLocalStore<TaskRecord>({
   key: "loopdev:platform:tasks",
   seed: taskSeed,
   idPrefix: "platform-task",
+});
+
+export const localPlatformTaskTemplatesStore = createLocalStore<TaskTemplateRecord>({
+  key: "loopdev:platform:task-templates",
+  seed: taskTemplateSeed,
+  idPrefix: "platform-task-template",
 });
 
 export const localPlatformNotesStore = createLocalStore<NoteRecord>({

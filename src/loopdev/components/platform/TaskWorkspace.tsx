@@ -1,12 +1,16 @@
 import { useState, type FormEvent } from "react";
-import { CheckCircle2, Circle, Clock3, ListChecks, Plus, RotateCcw } from "lucide-react";
+import { Check, CheckCircle2, Circle, Clock3, ListChecks, Plus, RotateCcw, ChevronsUpDown } from "lucide-react";
 import { DataCard, StatusBadge } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
 import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { EntityRef, TaskPriority, TaskRecord, TaskStatus } from "@/loopdev/domains/platform";
+import { cn } from "@/lib/utils";
+import type { EntityRef, TaskPriority, TaskRecord, TaskStatus, TaskTemplateRecord } from "@/loopdev/domains/platform";
 
 const priorityTone: Record<TaskPriority, "neutral" | "info" | "warning" | "gold"> = {
   low: "neutral",
@@ -17,6 +21,10 @@ const priorityTone: Record<TaskPriority, "neutral" | "info" | "warning" | "gold"
 
 export interface PlatformTaskFormProps {
   relation: EntityRef;
+  templates?: TaskTemplateRecord[];
+  formId?: string;
+  showSubmitButton?: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
   onSubmit: (input: {
     title: string;
     description: string | null;
@@ -26,13 +34,25 @@ export interface PlatformTaskFormProps {
   }) => Promise<unknown>;
 }
 
-export function PlatformTaskForm({ relation, onSubmit }: PlatformTaskFormProps) {
+export function PlatformTaskForm({ relation, templates = [], formId = "platform-task-form", showSubmitButton = true, onDirtyChange, onSubmit }: PlatformTaskFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("normal");
   const [dueAt, setDueAt] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [templateKey, setTemplateKey] = useState("");
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const selectedTemplate = templates.find((template) => template.key === templateKey);
+  const applyTemplate = (template: TaskTemplateRecord) => {
+    setTemplateKey(template.key);
+    setTitle(template.name);
+    setDescription(template.description);
+    setPriority(template.defaultPriority);
+    setDueAt(template.defaultDueDays == null ? "" : new Date(Date.now() + template.defaultDueDays * 86400000).toISOString());
+    onDirtyChange?.(true);
+    setTemplateOpen(false);
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -54,6 +74,7 @@ export function PlatformTaskForm({ relation, onSubmit }: PlatformTaskFormProps) 
       setDescription("");
       setPriority("normal");
       setDueAt("");
+      onDirtyChange?.(false);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save task.");
     } finally {
@@ -62,32 +83,62 @@ export function PlatformTaskForm({ relation, onSubmit }: PlatformTaskFormProps) 
   };
 
   return (
-    <form onSubmit={submit} className="space-y-4" aria-label="Create task">
+    <form id={formId} onSubmit={submit} className="space-y-4" aria-label="Create task">
+      {templates.length > 0 && (
+        <div className="space-y-1.5">
+          <Label htmlFor="platform-task-template">Task template</Label>
+          <Popover open={templateOpen} onOpenChange={setTemplateOpen}>
+            <PopoverTrigger asChild>
+              <Button id="platform-task-template" type="button" variant="outline" role="combobox" aria-expanded={templateOpen} className="w-full justify-between font-normal">
+                <span className={cn(!selectedTemplate && "text-muted-foreground")}>{selectedTemplate?.name ?? "Start from a template (optional)"}</span>
+                <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search task templates..." />
+                <CommandList>
+                  <CommandEmpty>No task templates found.</CommandEmpty>
+                  {templates.filter((template) => template.relationTypes.includes(relation.entityType)).map((template) => (
+                    <CommandItem key={template.key} value={`${template.key} ${template.name} ${template.description}`} onSelect={() => applyTemplate(template)}>
+                      <Check className={cn("mr-2 h-4 w-4", selectedTemplate?.key === template.key ? "opacity-100" : "opacity-0")} />
+                      <span>{template.name}</span>
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
       <div className="space-y-1.5">
         <Label htmlFor="platform-task-title">Title</Label>
-        <Input id="platform-task-title" value={title} onChange={(event) => setTitle(event.target.value)} disabled={pending} />
+        <Input id="platform-task-title" value={title} onChange={(event) => { setTitle(event.target.value); onDirtyChange?.(true); }} disabled={pending} />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="platform-task-description">Description</Label>
-        <Textarea id="platform-task-description" value={description} onChange={(event) => setDescription(event.target.value)} disabled={pending} />
+        <Textarea id="platform-task-description" value={description} onChange={(event) => { setDescription(event.target.value); onDirtyChange?.(true); }} disabled={pending} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="platform-task-priority">Priority</Label>
-          <select id="platform-task-priority" value={priority} onChange={(event) => setPriority(event.target.value as TaskPriority)} disabled={pending} className="flex h-9 w-full rounded-lg border border-input bg-card px-3 text-sm">
-            <option value="low">Low</option>
-            <option value="normal">Normal</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
+          <Select value={priority} onValueChange={(value) => { setPriority(value as TaskPriority); onDirtyChange?.(true); }} disabled={pending}>
+            <SelectTrigger id="platform-task-priority"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="normal">Normal</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="urgent">Urgent</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="platform-task-due">Due date</Label>
-          <Input id="platform-task-due" type="date" value={dueAt.slice(0, 10)} onChange={(event) => setDueAt(event.target.value ? new Date(`${event.target.value}T12:00:00`).toISOString() : "")} disabled={pending} />
+          <Input id="platform-task-due" type="date" value={dueAt.slice(0, 10)} onChange={(event) => { setDueAt(event.target.value ? new Date(`${event.target.value}T12:00:00`).toISOString() : ""); onDirtyChange?.(true); }} disabled={pending} />
         </div>
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={pending}><Plus className="mr-1.5 h-4 w-4" />{pending ? "Saving…" : "Add task"}</Button>
+      {showSubmitButton && <Button type="submit" disabled={pending}><Plus className="mr-1.5 h-4 w-4" />{pending ? "Saving…" : "Add task"}</Button>}
     </form>
   );
 }

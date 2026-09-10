@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Props {
   page: number;
@@ -36,14 +37,14 @@ export function TablePagination({
         {onPageSizeChange && (
           <label className="flex items-center gap-2">
             <span className="text-muted-foreground">Rows per page</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="h-7 rounded-md border border-border bg-card px-2 text-xs font-medium text-foreground transition-fast hover:border-foreground/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              aria-label="Rows per page"
-            >
-              {pageSizes.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+              <SelectTrigger aria-label="Rows per page" className="h-7 w-16 bg-card px-2 text-xs font-medium">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizes.map((s) => <SelectItem key={s} value={String(s)}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </label>
         )}
         <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 shadow-[0_1px_2px_0_hsl(var(--foreground)/0.04)]">

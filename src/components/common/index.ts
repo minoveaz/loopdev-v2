@@ -46,3 +46,6 @@ export {
 export { InlineCode, CodeBlock, Kbd, Samp, type CodeBlockProps } from "./Typography";
 export { MonoCell, type MonoCellProps, type MonoFieldKind } from "./MonoCell";
 export { PageContainer, type PageContainerWidth } from "./PageContainer";
+export { useFormLifecycle } from "./useFormLifecycle";
+export { FormSectionHeader } from "./FormSectionHeader";
+export { FormSectionNav, type FormSectionNavItem } from "./FormSectionNav";

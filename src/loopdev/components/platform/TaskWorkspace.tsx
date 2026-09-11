@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Check, CheckCircle2, Circle, Clock3, ListChecks, Plus, RotateCcw, ChevronsUpDown } from "lucide-react";
-import { DataCard, StatusBadge } from "@/components/common";
+import { DataCard, StatusBadge, useFormLifecycle } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -243,6 +243,7 @@ export function PlatformTaskList({ tasks, loading = false, error, forbidden = fa
 
 export function PlatformTaskWorkspace(props: PlatformTaskListProps & { relation?: EntityRef; onCreate?: PlatformTaskFormProps["onSubmit"] }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const lifecycle = useFormLifecycle();
   return (
     <div>
       <PlatformTaskList {...props} />
@@ -257,11 +258,18 @@ export function PlatformTaskWorkspace(props: PlatformTaskListProps & { relation?
             title="New Platform task"
             description="Create work related to this CRM entity."
             size="md"
+            layoutMode="standard"
+            responsive="auto"
+            dirty={() => lifecycle.dirtyRef.current}
+            confirmOnClose
+            onDiscard={lifecycle.markClean}
           >
             <PlatformTaskForm
               relation={props.relation}
+              onDirtyChange={lifecycle.setDirty}
               onSubmit={async (input) => {
                 await props.onCreate!(input);
+                lifecycle.markClean();
                 setDrawerOpen(false);
               }}
             />

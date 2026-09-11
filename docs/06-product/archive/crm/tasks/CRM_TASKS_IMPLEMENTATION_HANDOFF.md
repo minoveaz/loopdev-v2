@@ -1,6 +1,6 @@
 ---
 title: CRM Tasks, Notes and Timeline Implementation Handoff
-status: approved-for-handoff
+status: historical-superseded
 version: 1.0
 created: 2026-08-13
 updated: 2026-08-13
@@ -9,6 +9,10 @@ program_track: tracks/planned/crm/2026-08-13-crm-pilot-execution.md
 issue: https://github.com/minoveaz/loopdev/issues/87
 coordinating_issue: https://github.com/minoveaz/loopdev/issues/86
 ---
+
+> **Historical handoff (2026-09-11):** Tasks, Notes, Activities and Timeline are implemented
+> locally. Current status is governed by `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md`
+> and `../../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`.
 
 # Handoff de implementacion de Tasks
 

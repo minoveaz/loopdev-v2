@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { LockKeyhole, Pencil, Plus, Save, UsersRound } from "lucide-react";
-import { DataCard } from "@/components/common";
+import { ConfirmDialog, DataCard, useFormLifecycle } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,6 +25,8 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingBody, setEditingBody] = useState("");
   const [editPending, setEditPending] = useState(false);
+  const [discardEditOpen, setDiscardEditOpen] = useState(false);
+  const lifecycle = useFormLifecycle();
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -37,6 +39,7 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
     try {
       await onCreate(body.trim(), visibility);
       setBody("");
+      lifecycle.markClean();
     } catch (cause) {
       setFormError(cause instanceof Error ? cause.message : "Unable to save note.");
     } finally {
@@ -51,6 +54,7 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
     try {
       await onUpdate(note.id, editingBody.trim(), note.version);
       setEditingId(null);
+      lifecycle.markClean();
     } catch (cause) {
       setFormError(cause instanceof Error ? cause.message : "Unable to update note.");
     } finally {
@@ -74,17 +78,17 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
           <li key={note.id} className="rounded-lg border border-border bg-card-muted/30 p-3">
             {editingId === note.id ? (
               <div className="space-y-2">
-                <Textarea aria-label={`Edit ${note.body.slice(0, 24)}`} value={editingBody} onChange={(event) => setEditingBody(event.target.value)} disabled={editPending} />
+                <Textarea aria-label={`Edit ${note.body.slice(0, 24)}`} value={editingBody} onChange={(event) => { lifecycle.markDirty(); setEditingBody(event.target.value); }} disabled={editPending} />
                 <div className="flex gap-2">
                   <Button type="button" size="sm" onClick={() => void saveEdit(note)} disabled={editPending}><Save className="mr-1.5 h-3.5 w-3.5" />Save</Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setEditingId(null)} disabled={editPending}>Cancel</Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => { if (lifecycle.dirtyRef.current) setDiscardEditOpen(true); else setEditingId(null); }} disabled={editPending}>Cancel</Button>
                 </div>
               </div>
             ) : <p className="whitespace-pre-wrap text-sm">{note.body}</p>}
             <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
               {note.visibility === "private" ? <LockKeyhole className="h-3 w-3" /> : <UsersRound className="h-3 w-3" />}
               {note.visibility} · {new Date(note.updatedAt).toLocaleDateString()}
-              {onUpdate && note.permissions.canEdit && editingId !== note.id && <Button type="button" size="sm" variant="ghost" className="ml-auto h-7 px-2" onClick={() => { setEditingId(note.id); setEditingBody(note.body); }}><Pencil className="mr-1 h-3 w-3" />Edit</Button>}
+              {onUpdate && note.permissions.canEdit && editingId !== note.id && <Button type="button" size="sm" variant="ghost" className="ml-auto h-7 px-2" onClick={() => { lifecycle.markClean(); setEditingId(note.id); setEditingBody(note.body); }}><Pencil className="mr-1 h-3 w-3" />Edit</Button>}
             </div>
           </li>
         ))}
@@ -93,11 +97,11 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
       {relation && onCreate && (
         <form onSubmit={submit} className="mt-4 space-y-3 border-t border-border pt-4" aria-label="Add note">
           <Label htmlFor="platform-note-body">Add a note</Label>
-          <Textarea id="platform-note-body" value={body} onChange={(event) => setBody(event.target.value)} disabled={pending} />
+          <Textarea id="platform-note-body" value={body} onChange={(event) => { lifecycle.markDirty(); setBody(event.target.value); }} disabled={pending} />
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-1">
               <Label htmlFor="platform-note-visibility" className="text-xs">Visibility</Label>
-              <Select value={visibility} onValueChange={(value) => setVisibility(value as PlatformVisibility)}>
+              <Select value={visibility} onValueChange={(value) => { lifecycle.markDirty(); setVisibility(value as PlatformVisibility); }}>
                 <SelectTrigger id="platform-note-visibility" className="h-9 w-40"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="private">Private</SelectItem>
@@ -111,6 +115,19 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
           {formError && <p role="alert" className="text-sm text-destructive">{formError}</p>}
         </form>
       )}
+      <ConfirmDialog
+        open={discardEditOpen}
+        onOpenChange={setDiscardEditOpen}
+        title="Discard note changes?"
+        description="Your unsaved note changes will be lost."
+        confirmLabel="Discard"
+        tone="warning"
+        onConfirm={() => {
+          setDiscardEditOpen(false);
+          setEditingId(null);
+          lifecycle.markClean();
+        }}
+      />
     </DataCard>
   );
 }

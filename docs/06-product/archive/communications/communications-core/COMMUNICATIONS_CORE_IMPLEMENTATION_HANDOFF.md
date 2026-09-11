@@ -1,6 +1,6 @@
 ---
 title: Communications Core Implementation Handoff
-status: approved
+status: historical-superseded
 version: 0.1
 created: 2026-08-29
 updated: 2026-08-29
@@ -10,6 +10,11 @@ issue: https://github.com/minoveaz/loopdev/issues/157
 approver: User
 approved_at: 2026-08-29
 ---
+
+> **Superseded for frontend status (2026-09-11):** this handoff is the original
+> Communications Core implementation plan. The current frontend remains local-first; backend
+> readiness and future Supabase integration are tracked by the active CRM frontend track and
+> `../../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`.
 
 # Communications Core Implementation Handoff
 

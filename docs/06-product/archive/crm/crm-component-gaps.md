@@ -8,7 +8,7 @@ matrix: crm-component-decision-matrix.json
 
 > **Alineacion v2:** este documento es un audit historico de gaps y no la fuente autoritativa
 > de rutas del frontend. La UI activa usa `/app/sales-crm/*` y su mapa se mantiene en
-> [CRM v2 frontend alignment](CRM_V2_FRONTEND_ALIGNMENT.md). Las referencias a `/sales-crm/*`,
+> [CRM frontend closure matrix](../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md). Las referencias a `/sales-crm/*`,
 > APIs y `packages/contracts` describen evidencia legacy/backend.
 
 # CRM component gaps and duplicate review

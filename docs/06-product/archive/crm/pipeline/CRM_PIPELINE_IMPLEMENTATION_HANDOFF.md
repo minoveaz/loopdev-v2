@@ -1,6 +1,6 @@
 ---
 title: CRM Pipeline and Opportunities Implementation Handoff
-status: approved-for-handoff
+status: historical-superseded
 version: 1.0
 created: 2026-08-13
 updated: 2026-08-13
@@ -8,6 +8,10 @@ owner: crm
 program_track: tracks/planned/crm/2026-08-13-crm-pilot-execution.md
 issue: https://github.com/minoveaz/loopdev/issues/85
 ---
+
+> **Historical handoff (2026-09-11):** Pipeline and Opportunities are implemented locally.
+> Current status is governed by `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md` and
+> `../../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`.
 
 # Handoff de implementacion de Pipeline
 

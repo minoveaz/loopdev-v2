@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageContainer, PageHeader, SearchInput, StatusBadge, SurfaceCard, SurfaceCardBody, SurfaceCardHeader } from "@/components/common";
+import { PageContainer, PageHeader, SearchInput, StatusBadge, SurfaceCard, SurfaceCardBody, SurfaceCardHeader, useFormLifecycle } from "@/components/common";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useCrmOperations } from "@/loopdev/domains/crm/hooks/use-crm-operations";
 import type { CRMEntityType, CRMFieldType, CRMFilter, CRMImportResult, CRMVisibility } from "@/loopdev/domains/crm/operations/types";
@@ -48,6 +48,7 @@ export default function SalesCRMOperations() {
   const [importCsv, setImportCsv] = useState("");
   const [importResult, setImportResult] = useState<CRMImportResult>();
   const [importMode, setImportMode] = useState<"validate" | "commit">("validate");
+  const lifecycle = useFormLifecycle();
   const {
     savedViews,
     tags,
@@ -112,6 +113,7 @@ export default function SalesCRMOperations() {
     try {
       await createTag({ name: tagName, color: tagColor, visibility: tagVisibility });
       setTagName("");
+      lifecycle.markClean();
       setNotice("Reusable tag created.");
     } catch (cause: unknown) {
       setNotice(cause instanceof Error ? cause.message : "Tag could not be created.");
@@ -134,6 +136,7 @@ export default function SalesCRMOperations() {
       setFieldLabel("");
       setFieldKey("");
       setFieldOptions("");
+      lifecycle.markClean();
       setNotice("Custom field definition created.");
     } catch (cause: unknown) {
       setNotice(cause instanceof Error ? cause.message : "Custom field could not be created.");
@@ -153,6 +156,7 @@ export default function SalesCRMOperations() {
       await setCustomFieldValue({ entityId: fieldValueEntityId.trim(), definitionId: definition.id, value });
       setNotice(`Value saved for ${definition.label}.`);
       setFieldValue("");
+      lifecycle.markClean();
     } catch (cause: unknown) {
       setNotice(cause instanceof Error ? cause.message : "Custom field value could not be saved.");
     }
@@ -164,6 +168,7 @@ export default function SalesCRMOperations() {
     try {
       await createSavedView({ name: viewName, entityType, filters, columns: ["name", "email", "company"], visibility: "workspace" });
       setViewName("");
+      lifecycle.markClean();
       setNotice("Saved view created. Filters will be restored for your workspace.");
     } catch (cause: unknown) {
       setNotice(cause instanceof Error ? cause.message : "Saved view could not be created.");
@@ -175,6 +180,7 @@ export default function SalesCRMOperations() {
     try {
       const result = await importContacts(importCsv, importMode);
       setImportResult(result);
+      lifecycle.markClean();
       setNotice(importMode === "validate" ? "Validation complete. Review row results before committing." : "Import complete.");
     } catch (cause: unknown) {
       setNotice(cause instanceof Error ? cause.message : "Import could not be completed.");
@@ -240,7 +246,7 @@ export default function SalesCRMOperations() {
                   <SelectTrigger className="w-52"><SelectValue placeholder="Open saved view" /></SelectTrigger>
                   <SelectContent>{savedViews.map((view) => <SelectItem key={view.id} value={view.id}>{view.name} · {entityLabels[view.entityType]}</SelectItem>)}</SelectContent>
                 </Select>
-                <form onSubmit={submitView} className="flex items-center gap-2"><Input value={viewName} onChange={(event) => setViewName(event.target.value)} placeholder="Name current view" className="w-44" /><Button type="submit" variant="outline"><Plus className="mr-1.5 h-3.5 w-3.5" />Save view</Button></form>
+                <form onSubmit={submitView} className="flex items-center gap-2" onChange={() => lifecycle.markDirty()}><Input value={viewName} onChange={(event) => setViewName(event.target.value)} placeholder="Name current view" className="w-44" /><Button type="submit" variant="outline"><Plus className="mr-1.5 h-3.5 w-3.5" />Save view</Button></form>
                 {savedViews.filter((view) => view.ownerId === "local-development-user").map((view) => <Button key={view.id} variant="ghost" size="sm" onClick={() => void deleteSavedView(view.id)}>Remove {view.name}</Button>)}
               </div>
             </SurfaceCardBody>
@@ -258,7 +264,7 @@ export default function SalesCRMOperations() {
           <SurfaceCard>
             <SurfaceCardHeader title="Reusable tags" description="Tags are scoped to this organization and workspace, with explicit visibility." icon={Tags} />
             <SurfaceCardBody className="space-y-5">
-              <form onSubmit={submitTag} className="grid gap-3 sm:grid-cols-[1fr_120px_190px_auto] sm:items-end">
+              <form onSubmit={submitTag} className="grid gap-3 sm:grid-cols-[1fr_120px_190px_auto] sm:items-end" onChange={() => lifecycle.markDirty()}>
                 <div><Label htmlFor="tag-name">Name</Label><Input id="tag-name" value={tagName} onChange={(event) => setTagName(event.target.value)} placeholder="e.g. Renewal risk" /></div>
                 <div><Label htmlFor="tag-color">Color</Label><Input id="tag-color" type="color" value={tagColor} onChange={(event) => setTagColor(event.target.value)} className="h-9 p-1" /></div>
                 <div><Label>Visibility</Label><Select value={tagVisibility} onValueChange={(value) => setTagVisibility(value as CRMVisibility)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{visibilityOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div>
@@ -273,7 +279,7 @@ export default function SalesCRMOperations() {
           <SurfaceCard>
             <SurfaceCardHeader title="Custom field definitions" description="Define typed, visible, and required fields without coupling the page to persistence." />
             <SurfaceCardBody className="space-y-5">
-              <form onSubmit={submitField} className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <form onSubmit={submitField} className="grid gap-3 md:grid-cols-2 lg:grid-cols-4" onChange={() => lifecycle.markDirty()}>
                 <div><Label htmlFor="field-label">Label</Label><Input id="field-label" value={fieldLabel} onChange={(event) => setFieldLabel(event.target.value)} placeholder="Customer segment" /></div>
                 <div><Label htmlFor="field-key">Key</Label><Input id="field-key" value={fieldKey} onChange={(event) => setFieldKey(event.target.value.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase())} placeholder="customer_segment" /></div>
                 <div><Label>Type</Label><Select value={fieldType} onValueChange={(value) => setFieldType(value as CRMFieldType)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{(["text", "number", "date", "boolean", "select"] as CRMFieldType[]).map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select></div>
@@ -285,7 +291,7 @@ export default function SalesCRMOperations() {
               <div className="divide-y divide-border rounded-lg border border-border">{customFields.map((field) => <div key={field.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"><div><p className="font-medium">{field.label} <span className="font-mono text-xs text-muted-foreground">{field.key}</span></p><p className="text-xs text-muted-foreground">{entityLabels[field.entityType]} · {field.type} · {field.required ? "Required" : "Optional"}</p></div><StatusBadge tone={field.visibility === "organization" ? "success" : "info"}>{field.visibility}</StatusBadge></div>)}</div>
               <div className="rounded-lg border border-border bg-card-muted/30 p-4">
                 <h3 className="mb-3 text-sm font-semibold">Set a field value</h3>
-                <form onSubmit={submitFieldValue} className="grid gap-3 md:grid-cols-[1fr_220px_1fr_auto] md:items-end">
+                <form onSubmit={submitFieldValue} className="grid gap-3 md:grid-cols-[1fr_220px_1fr_auto] md:items-end" onChange={() => lifecycle.markDirty()}>
                   <div><Label htmlFor="field-entity-id">Entity ID</Label><Input id="field-entity-id" value={fieldValueEntityId} onChange={(event) => setFieldValueEntityId(event.target.value)} placeholder="crm_cust_1" /></div>
                   <div><Label>Field</Label><Select value={fieldValueDefinitionId} onValueChange={setFieldValueDefinitionId}><SelectTrigger><SelectValue placeholder="Choose field" /></SelectTrigger><SelectContent>{customFields.map((field) => <SelectItem key={field.id} value={field.id}>{field.label}{field.required ? " · required" : ""}</SelectItem>)}</SelectContent></Select></div>
                   <div><Label htmlFor="field-value">Value</Label><Input id="field-value" value={fieldValue} onChange={(event) => setFieldValue(event.target.value)} placeholder="Value for this record" /></div>
@@ -301,8 +307,8 @@ export default function SalesCRMOperations() {
           <SurfaceCard>
             <SurfaceCardHeader title="Local CSV import" description="Validate, deduplicate, and commit rows through the CRM adapter contract. Nothing is written during validation." icon={Upload} />
             <SurfaceCardBody className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2"><Input type="file" accept=".csv,text/csv" onChange={handleFile} className="max-w-xs" /><Select value={importMode} onValueChange={(value) => setImportMode(value as "validate" | "commit")}><SelectTrigger className="w-36"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="validate">Validate only</SelectItem><SelectItem value="commit">Validate & import</SelectItem></SelectContent></Select><Button onClick={() => void handleImport()} disabled={!importCsv.trim()}><Upload className="mr-1.5 h-3.5 w-3.5" />Run import</Button></div>
-              <Textarea value={importCsv} onChange={(event) => setImportCsv(event.target.value)} placeholder={"name,email,phone,company,city,country\nAlex Rivera,alex@example.com,+1 555 0100,Acme,New York,USA"} rows={8} />
+              <div className="flex flex-wrap items-center gap-2"><Input type="file" accept=".csv,text/csv" onChange={(event) => { lifecycle.markDirty(); handleFile(event); }} className="max-w-xs" /><Select value={importMode} onValueChange={(value) => { lifecycle.markDirty(); setImportMode(value as "validate" | "commit"); }}><SelectTrigger className="w-36"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="validate">Validate only</SelectItem><SelectItem value="commit">Validate & import</SelectItem></SelectContent></Select><Button onClick={() => void handleImport()} disabled={!importCsv.trim()}><Upload className="mr-1.5 h-3.5 w-3.5" />Run import</Button></div>
+              <Textarea value={importCsv} onChange={(event) => { lifecycle.markDirty(); setImportCsv(event.target.value); }} placeholder={"name,email,phone,company,city,country\nAlex Rivera,alex@example.com,+1 555 0100,Acme,New York,USA"} rows={8} />
               {importResult && <div className="space-y-3"><div className="flex flex-wrap gap-2 text-sm"><StatusBadge tone="success">{importResult.importedRows} imported</StatusBadge><StatusBadge tone="warning">{importResult.duplicateRows} duplicates</StatusBadge><StatusBadge tone="destructive">{importResult.invalidRows} invalid</StatusBadge></div><div className="max-h-72 overflow-auto rounded-lg border border-border"><table className="w-full text-sm"><thead className="bg-card-muted text-left text-xs uppercase text-muted-foreground"><tr><th className="px-3 py-2">Row</th><th className="px-3 py-2">Result</th><th className="px-3 py-2">Message</th></tr></thead><tbody className="divide-y divide-border">{importResult.results.map((row) => <tr key={row.rowNumber}><td className="px-3 py-2">{row.rowNumber}</td><td className="px-3 py-2">{row.status}</td><td className="px-3 py-2 text-muted-foreground">{row.message}</td></tr>)}</tbody></table></div></div>}
             </SurfaceCardBody>
           </SurfaceCard>

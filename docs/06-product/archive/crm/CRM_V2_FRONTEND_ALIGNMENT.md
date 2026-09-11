@@ -1,12 +1,17 @@
 ---
 title: CRM v2 frontend alignment
-status: active
+status: historical-reference
 owner: loopdev-v2
-updated: 2026-09-09
+updated: 2026-09-11
 scope: frontend
 ---
 
-# Alineacion del frontend CRM para LoopDev v2
+# Alineacion historica del frontend CRM para LoopDev v2
+
+> **Nota de estado:** este documento ya no es la fuente de estado frontend. El estado actual
+> vive en `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md` y en
+> `../../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`. Esta página conserva contratos de alineación, rutas y
+> decisiones de arquitectura que siguen siendo útiles como referencia.
 
 ## Proposito
 
@@ -20,7 +25,7 @@ dos tipos de informacion:
 El backend no se reescribe en esta fase. La UI v2 consume el dominio mediante adapters y
 puede cambiar de datos locales a Supabase sin reescribir las paginas.
 
-## Fuente autoritativa actual
+## Referencia de ubicaciones autoritativas
 
 | Responsabilidad | Ubicacion en v2 |
 | --- | --- |

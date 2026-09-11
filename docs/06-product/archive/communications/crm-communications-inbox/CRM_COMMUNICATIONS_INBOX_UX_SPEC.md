@@ -1,6 +1,6 @@
 ---
 title: CRM Communications Inbox UX Specification
-status: approved
+status: historical-reference
 version: 0.1
 created: 2026-08-29
 updated: 2026-08-29
@@ -10,6 +10,12 @@ issue: https://github.com/minoveaz/loopdev/issues/158
 approver: User
 approved_at: 2026-08-29
 ---
+
+> **Estado frontend actualizado (2026-09-11):** esta especificación conserva el contrato UX
+> inicial del Inbox y las exclusiones de la primera vertical. La implementación vigente es
+> local-first y su estado, rutas y separación entre Chat, Conversation Operations, CRM Context
+> y Timeline están definidos en `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md` y
+> `../../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`.
 
 # CRM Communications Inbox UX Specification
 

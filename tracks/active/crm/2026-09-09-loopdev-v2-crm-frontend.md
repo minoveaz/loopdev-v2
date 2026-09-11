@@ -36,8 +36,13 @@ implementación y fixtures se validen dentro de CRM.
 
 ## Fuente de verdad
 
-- Alineación frontend: `docs/06-product/crm/CRM_V2_FRONTEND_ALIGNMENT.md`
+Este documento es la fuente autoritativa del estado frontend actual de CRM y Communications
+en LoopDev v2. Los documentos de producto y handoffs anteriores se conservan como contrato,
+contexto histórico o frontera backend, pero no sustituyen este estado.
+
+- Matriz única de cierre: `docs/06-product/crm/CRM_FRONTEND_CLOSURE_MATRIX.md`
 - Documentación de producto: `docs/06-product/crm`
+- Documentación de Communications: `docs/06-product/communications`
 - Páginas CRM: `src/loopdev/pages/crm`
 - Componentes de dominio: `src/loopdev/components`
 - Dominio y adapters: `src/loopdev/domains/crm`
@@ -45,16 +50,95 @@ implementación y fixtures se validen dentro de CRM.
 
 ## Estado actual
 
-Implementado como base visual:
+Implementado localmente y validado como frontend-first:
 
 - CRM Overview.
-- Contacts con tabla, búsqueda, ordenación y paginación local de presentación.
-- Customer 360 dentro del detalle de Contact.
-- Leads con datos del adapter local.
+- Contacts con tabla, búsqueda, cursor local, creación, edición, archivado y drawer responsive.
+- Customer 360 inicial dentro del detalle de Contact.
+- Leads con captura, detalle/workspace, atribución, assignment y conversión local.
+- Pipeline y Opportunities con creación, líneas, catálogo, historial y reapertura local.
+- Tasks, Notes, Activities, Timeline, Attachments, Notifications, Operations y Automations.
+- Communications Inbox, Conversation Operations, CRM Context y Timeline Explorer.
 
-La documentación de producto de Contacts y Leads sigue siendo la fuente de requisitos. La base
-visual no se considera implementación funcional completa mientras falten contratos de query,
-paginación por cursor, permisos y mutaciones autorizadas.
+El estado detallado y las diferencias entre frontend local, frontend parcial y backend pendiente
+se mantienen en `CRM_FRONTEND_CLOSURE_MATRIX.md`. La ausencia de Supabase, RLS, Realtime,
+providers y permisos server-side no invalida el cierre local: pertenece a las fases 9 y 10.
+
+## Fase transversal siguiente
+
+La siguiente unidad transversal es el **Sistema global de formularios**. Su contrato y alcance
+viven en `docs/03-platform/LOOPDEV_GLOBAL_FORMS_PHASE.md`. Esta fase debe ejecutarse antes de
+seguir ampliando formularios de CRM o conectar nuevas superficies de persistencia, y aplica por
+igual a drawer, modal, página completa, wizard e inline edit. Rivera se utiliza como referencia
+visual auditada; `AppDrawer` y los primitives de `src/components/ui` son la base implementable
+de LoopDev.
+
+### Estado de implementación del sistema global de formularios
+
+Implementado localmente:
+
+- `useFormLifecycle` compartido para dirty state, `beforeunload`, descarte y restauración
+  del estado después de guardar.
+- `FormSectionHeader` y `FormSection` compartidos para jerarquía visual, eyebrow, icono,
+  descripción, metadatos y progreso opcional.
+- Primitives globales de `Input`, `Textarea` y `SelectTrigger` con contraste, foco y
+  estados de interacción consistentes.
+- `AppDrawer` con superficie interna diferenciada, confirmación de cambios y footer común.
+- Contacts: secciones Identity, Contact channels, Organization y Address migradas al nuevo
+  encabezado visual.
+- Leads y Opportunities: creación, conversión, edición y reapertura con dirty guard común.
+- Tasks y Task Templates: drawers conectados al ciclo global.
+- Notes: cancelación de edición inline protegida contra descarte accidental.
+- Automations y Operations: formularios inline con dirty tracking y limpieza tras persistir.
+
+Pendiente de cierre de esta fase:
+
+1. **Progreso real por sección** calculado desde el estado de React Hook Form.
+2. **Estado de errores en el encabezado**, con contador y navegación al primer campo inválido.
+3. **Navegación sticky del formulario** para saltar entre secciones largas.
+4. **Secciones colapsables opcionales** para Address, Metadata y Custom Fields.
+5. **Indicador global de cambios no guardados** en header y footer.
+6. **Estados visuales de completitud** neutral, en progreso, completo y con errores.
+7. **Variante compacta para formularios pequeños**, evitando ornamentación innecesaria.
+
+### Dirección visual del header de formulario
+
+El header superior mostrado en el drawer todavía puede evolucionar. La dirección propuesta
+es convertirlo en una cabecera de contexto, no solo en título y descripción:
+
+- primera línea con eyebrow de contexto (`CRM / CONTACT`);
+- título principal y descripción limitada a una línea o dos;
+- estado a la derecha (`New`, `Editing`, `Read-only`) y dirty badge cuando corresponda;
+- barra de progreso opcional para formularios largos;
+- metadatos secundarios como última actualización, propietario o entidad relacionada;
+- footer sticky separado para `Cancel` y `Save`, sin mezclar acciones con el scroll;
+- versión compacta en móvil para evitar que la cabecera consuma demasiado espacio.
+
+La implementación debe mantener `FormSectionHeader` como componente base y permitir que cada
+superficie active solo los slots que necesita. No se deben crear headers específicos por dominio.
+
+### Contrato responsive de formularios
+
+Los formularios separan densidad visual y tamaño de superficie:
+
+```ts
+type FormLayoutMode = "compact" | "standard" | "expanded";
+type FormResponsiveMode = "auto" | "fixed";
+```
+
+`compact` se reserva para acciones rápidas e inline edit, `standard` es el valor por defecto
+para drawers y modales, y `expanded` se usa en formularios largos, páginas completas y wizards.
+Con `responsive="auto"` la presentación se adapta así:
+
+| Desktop | Mobile |
+| --- | --- |
+| compact | compact |
+| standard | compact |
+| expanded | standard |
+
+El contrato funcional no cambia entre dispositivos: validación, dirty state, errores, foco y
+acciones permanecen iguales. Solo cambia la presentación: una columna en móvil, header reducido,
+metadata secundaria oculta, navegación horizontal y footer accesible.
 
 Implementado localmente en la Fase 4:
 
@@ -80,17 +164,17 @@ El track cubre las siguientes superficies y capacidades de CRM:
 - [x] CRM Overview.
 - [x] Contacts: tabla, búsqueda, filtros, cursor local, creación, edición, archivado y
   drawer responsive.
-- [x] Customer 360 inicial para Contact.
+- [x] Customer 360 inicial para Contact; la versión enriquecida permanece parcial.
 - [x] Leads: tabla/cards, vistas, filtros, selección, preview, estados y conversión.
 - [x] Pipeline: board Kanban de Opportunities y movimientos de etapa.
-- [x] Opportunities: tabla/cards, filtros, ordenación y detalle en drawer.
+- [x] Opportunities: tabla/cards, filtros, ordenación, creación, líneas, historial y detalle en drawer.
 - [ ] Contact detail enriquecido con relaciones, Notes, Tasks y Timeline.
-- [ ] Lead detail/workspace con actividad, atribución y relaciones.
-- [ ] Opportunity detail completo con historial, actividad y relaciones.
-- [ ] Creación manual de Leads y Opportunities.
-- [ ] Reapertura explícita de Opportunities terminales.
-- [ ] Stage configuration y catálogo de productos preparado para organización/workspace.
-- [ ] Opportunity lines con referencias a CatalogItem, Offer y Variant.
+- [x] Lead detail/workspace, actividad, atribución y assignment local.
+- [x] Opportunity detail local con historial, actividad, relaciones y drawer responsive.
+- [x] Creación manual local de Leads y Opportunities.
+- [x] Reapertura explícita local de Opportunities terminales.
+- [x] Stage configuration y catálogo local preparado para organización/workspace.
+- [x] Opportunity lines locales con referencias a CatalogItem, Offer y Variant.
 
 ### Operación comercial
 

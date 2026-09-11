@@ -6,7 +6,7 @@ import {
 import { Link } from "react-router-dom";
 import {
   ConfirmDialog, DataCard, EmptyState, FilterDropdown, PageContainer, PageHeader,
-  SearchInput, StatusBadge,
+  SearchInput, StatusBadge, useFormLifecycle,
 } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
 import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
@@ -154,14 +154,15 @@ export default function SalesCRMLeads() {
   const [productKey, setProductKey] = useState("");
   const [opportunityName, setOpportunityName] = useState("");
   const [amount, setAmount] = useState("");
-  const [discardOpen, setDiscardOpen] = useState(false);
   const [createLeadOpen, setCreateLeadOpen] = useState(false);
+  const [conversionDiscardOpen, setConversionDiscardOpen] = useState(false);
   const [newLeadContactId, setNewLeadContactId] = useState("");
   const [newLeadInterest, setNewLeadInterest] = useState("");
   const [newLeadSource, setNewLeadSource] = useState("");
   const [newLeadOwner, setNewLeadOwner] = useState("");
   const conversionRestoreFocusRef = useRef<HTMLElement | null>(null);
-  const conversionDirtyRef = useRef(false);
+  const conversionLifecycle = useFormLifecycle();
+  const createLeadLifecycle = useFormLifecycle();
   const submitConversion = async () => {
     if (!conversionLead) return;
     const result = await createOpportunityFromLead(conversionLead.id, {
@@ -171,20 +172,16 @@ export default function SalesCRMLeads() {
       amount: amount ? Number(amount) : null,
     });
     if (result.status === "success") {
-      setProductKey(""); setOpportunityName(""); setAmount(""); conversionDirtyRef.current = false;
+      setProductKey(""); setOpportunityName(""); setAmount(""); conversionLifecycle.markClean();
       reloadCustomer360();
       reloadOpportunities();
     }
   };
   const closeConversion = useCallback(() => {
-    setConversionLead(undefined); setDiscardOpen(false); conversionDirtyRef.current = false; resetConversion();
-  }, [resetConversion]);
-  const requestCloseConversion = useCallback(() => {
-    if (conversionDirtyRef.current && conversion.status !== "success") { setDiscardOpen(true); return; }
-    closeConversion();
-  }, [closeConversion, conversion.status]);
+    setConversionLead(undefined); conversionLifecycle.markClean(); resetConversion();
+  }, [conversionLifecycle, resetConversion]);
   const openConversion = (lead: CRMLead) => {
-    resetConversion(); conversionDirtyRef.current = false;
+    resetConversion(); conversionLifecycle.markClean();
     conversionRestoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setConversionLead(lead); setProductKey(lead.interest ?? ""); setOpportunityName(lead.interest ?? "");
   };
@@ -201,6 +198,7 @@ export default function SalesCRMLeads() {
     if (result.status === "success") {
       setCreateLeadOpen(false);
       setNewLeadContactId(""); setNewLeadInterest(""); setNewLeadSource(""); setNewLeadOwner("");
+      createLeadLifecycle.markClean();
     }
   };
 
@@ -324,6 +322,8 @@ export default function SalesCRMLeads() {
         description="Contact, commercial and activity context"
         restoreFocusRef={leadRestoreFocusRef}
         size="lg"
+        layoutMode="expanded"
+        responsive="auto"
       >
         {selectedLead && selectedContact ? (
           <LeadPreview
@@ -343,16 +343,23 @@ export default function SalesCRMLeads() {
 
       <AppDrawer
         open={Boolean(conversionLead)}
-        onOpenChange={(open) => { if (!open) requestCloseConversion(); }}
+        onOpenChange={(open) => { if (!open) closeConversion(); }}
         title="Create opportunity"
         description="Create a qualified-stage opportunity for this lead. The contact relationship is preserved."
         restoreFocusRef={conversionRestoreFocusRef}
+        dirty={() => conversionLifecycle.dirtyRef.current}
+        confirmOnClose
+        confirmTitle="Discard opportunity details?"
+        confirmDescription="Your conversion details will be lost."
+        onDiscard={closeConversion}
         size="md"
+        layoutMode="standard"
+        responsive="auto"
         footer={conversion.status === "success" ? (
           <Button type="button" onClick={closeConversion}>Close</Button>
         ) : (
           <div className="flex w-full justify-end gap-2">
-            <Button type="button" variant="outline" onClick={requestCloseConversion}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => { if (conversionLifecycle.dirtyRef.current) setConversionDiscardOpen(true); else closeConversion(); }}>Cancel</Button>
             <Button type="submit" form="lead-conversion-form" disabled={!productKey.trim() || conversion.status === "pending"}>
               {conversion.status === "pending" ? "Creating…" : "Create opportunity"}
             </Button>
@@ -360,20 +367,40 @@ export default function SalesCRMLeads() {
         )}
       >
           <form id="lead-conversion-form" className="space-y-4" onSubmit={(event) => { event.preventDefault(); void submitConversion(); }}>
-            <div className="space-y-1.5"><Label htmlFor="lead-product-key">Product or interest key</Label><Input id="lead-product-key" value={productKey} onChange={(event) => { conversionDirtyRef.current = true; setProductKey(event.target.value); }} placeholder="e.g. enterprise-plan" /></div>
-            <div className="space-y-1.5"><Label htmlFor="lead-opportunity-name">Opportunity name</Label><Input id="lead-opportunity-name" value={opportunityName} onChange={(event) => { conversionDirtyRef.current = true; setOpportunityName(event.target.value); }} placeholder="Optional display name" /></div>
-            <div className="space-y-1.5"><Label htmlFor="lead-opportunity-amount">Amount</Label><Input id="lead-opportunity-amount" type="number" min="0" value={amount} onChange={(event) => { conversionDirtyRef.current = true; setAmount(event.target.value); }} placeholder="Optional" /></div>
+            <div className="space-y-1.5"><Label htmlFor="lead-product-key">Product or interest key</Label><Input id="lead-product-key" value={productKey} onChange={(event) => { conversionLifecycle.markDirty(); setProductKey(event.target.value); }} placeholder="e.g. enterprise-plan" /></div>
+            <div className="space-y-1.5"><Label htmlFor="lead-opportunity-name">Opportunity name</Label><Input id="lead-opportunity-name" value={opportunityName} onChange={(event) => { conversionLifecycle.markDirty(); setOpportunityName(event.target.value); }} placeholder="Optional display name" /></div>
+            <div className="space-y-1.5"><Label htmlFor="lead-opportunity-amount">Amount</Label><Input id="lead-opportunity-amount" type="number" min="0" value={amount} onChange={(event) => { conversionLifecycle.markDirty(); setAmount(event.target.value); }} placeholder="Optional" /></div>
             {conversion.status !== "idle" && conversion.status !== "pending" && conversion.status !== "success" ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{conversion.message}</p> : null}
             {conversion.status === "success" ? <p role="status" className="text-sm text-success">Opportunity created.</p> : null}
           </form>
       </AppDrawer>
+      <ConfirmDialog
+        open={conversionDiscardOpen}
+        onOpenChange={setConversionDiscardOpen}
+        title="Discard opportunity details?"
+        description="Your conversion details will be lost."
+        confirmLabel="Discard"
+        tone="warning"
+        onConfirm={() => {
+          setConversionDiscardOpen(false);
+          closeConversion();
+        }}
+      />
       <AppDrawer
         open={createLeadOpen}
         onOpenChange={setCreateLeadOpen}
         title="Create lead"
         description="Capture commercial intent locally and assign it to an existing contact."
         restoreFocusRef={leadRestoreFocusRef}
+        dirty={() => createLeadLifecycle.dirtyRef.current}
+        confirmOnClose
+        onDiscard={() => {
+          setNewLeadContactId(""); setNewLeadInterest(""); setNewLeadSource(""); setNewLeadOwner("");
+          createLeadLifecycle.markClean();
+        }}
         size="md"
+        layoutMode="standard"
+        responsive="auto"
         footer={
           <div className="flex w-full justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setCreateLeadOpen(false)}>Cancel</Button>
@@ -384,14 +411,13 @@ export default function SalesCRMLeads() {
         }
       >
           <form id="create-lead-form" className="space-y-4" onSubmit={(event) => void submitLead(event)}>
-            <div className="space-y-1.5"><Label htmlFor="new-lead-contact">Contact</Label><CRMRecordPicker items={contacts.map((contact): CRMRecordPickerItem => ({ type: "contact", id: contact.id, label: contactName(contact) }))} value={newLeadContactId ? `contact:${newLeadContactId}` : ""} onValueChange={(value) => setNewLeadContactId(value.replace(/^contact:/, ""))} placeholder="Search contacts..." ariaLabel="Search contact" /></div>
-            <div className="space-y-1.5"><Label htmlFor="new-lead-interest">Interest</Label><Input id="new-lead-interest" required value={newLeadInterest} onChange={(event) => setNewLeadInterest(event.target.value)} placeholder="e.g. Enterprise expansion" /></div>
-            <div className="space-y-1.5"><Label htmlFor="new-lead-source">Source / attribution</Label><Input id="new-lead-source" value={newLeadSource} onChange={(event) => setNewLeadSource(event.target.value)} placeholder="Website, referral, event…" /></div>
-            <div className="space-y-1.5"><Label htmlFor="new-lead-owner">Owner</Label><Select value={newLeadOwner || "unassigned"} onValueChange={(value) => setNewLeadOwner(value === "unassigned" ? "" : value)}><SelectTrigger id="new-lead-owner"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unassigned">Unassigned</SelectItem>{ownerOptions.map((owner) => <SelectItem key={owner.value} value={owner.value}>{owner.label}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-contact">Contact</Label><CRMRecordPicker items={contacts.map((contact): CRMRecordPickerItem => ({ type: "contact", id: contact.id, label: contactName(contact) }))} value={newLeadContactId ? `contact:${newLeadContactId}` : ""} onValueChange={(value) => { createLeadLifecycle.markDirty(); setNewLeadContactId(value.replace(/^contact:/, "")); }} placeholder="Search contacts..." ariaLabel="Search contact" /></div>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-interest">Interest</Label><Input id="new-lead-interest" required value={newLeadInterest} onChange={(event) => { createLeadLifecycle.markDirty(); setNewLeadInterest(event.target.value); }} placeholder="e.g. Enterprise expansion" /></div>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-source">Source / attribution</Label><Input id="new-lead-source" value={newLeadSource} onChange={(event) => { createLeadLifecycle.markDirty(); setNewLeadSource(event.target.value); }} placeholder="Website, referral, event…" /></div>
+            <div className="space-y-1.5"><Label htmlFor="new-lead-owner">Owner</Label><Select value={newLeadOwner || "unassigned"} onValueChange={(value) => { createLeadLifecycle.markDirty(); setNewLeadOwner(value === "unassigned" ? "" : value); }}><SelectTrigger id="new-lead-owner"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unassigned">Unassigned</SelectItem>{ownerOptions.map((owner) => <SelectItem key={owner.value} value={owner.value}>{owner.label}</SelectItem>)}</SelectContent></Select></div>
             {"message" in creation && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{creation.message}</p>}
           </form>
       </AppDrawer>
-      <ConfirmDialog open={discardOpen} onOpenChange={setDiscardOpen} title="Discard opportunity details?" description="Your conversion details will be lost." confirmLabel="Discard" tone="warning" onConfirm={closeConversion} />
     </PageContainer>
   );
 }

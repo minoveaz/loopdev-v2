@@ -28,7 +28,7 @@ The authoritative LoopDev boundaries remain:
 - The consuming suite owns domain copy, permissions presentation, context panels
   and user actions.
 
-This document extends the [CRM Communications Inbox UX specification](CRM_COMMUNICATIONS_INBOX_UX_SPEC.md)
+This document extends the [historical CRM Communications Inbox UX specification](../../archive/communications/crm-communications-inbox/CRM_COMMUNICATIONS_INBOX_UX_SPEC.md)
 and does not replace the public [Inbox contract](CRM_COMMUNICATIONS_INBOX_CONTRACT.md).
 
 ## Reference principles

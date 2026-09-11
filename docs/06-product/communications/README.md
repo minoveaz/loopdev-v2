@@ -1,5 +1,11 @@
 # Communications
 
+> **Estado frontend actual:** la implementación local-first de Communications está documentada
+> en `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md` y resumida en
+> `../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`. Los handoffs de Core, Docker/Supabase e Inbox
+> describen integración backend futura o decisiones históricas; no son el estado de las rutas
+> y componentes actuales.
+
 Definición de producto de `Communications Core`, una capacidad transversal de LoopDev, y de `CRM Communications Inbox`, su primer consumidor operativo.
 
 Communications no es una suite independiente en esta fase. Su owner transitorio es `crm`, sin que CRM sea propietario arquitectónico de proveedores, credenciales, webhooks, conversaciones, delivery, consentimiento o auditoría. La evolución hacia una suite o dominio independiente requiere una decisión de portfolio y de tracks aprobada.
@@ -10,8 +16,10 @@ Communications no es una suite independiente en esta fase. Su owner transitorio 
 
 ## Módulos en definición
 
-- [Communications Core](communications-core/COMMUNICATIONS_CORE_UX_SPEC.md): paquete formal `proposed` para capacidades conversacionales, proveedores y políticas compartidas.
-- [CRM Communications Inbox](crm-communications-inbox/CRM_COMMUNICATIONS_INBOX_UX_SPEC.md): paquete formal `proposed` para la primera experiencia operativa sobre WhatsApp Cloud.
+- La UX inicial de [Communications Core](../archive/communications/communications-core/COMMUNICATIONS_CORE_UX_SPEC.md)
+  está archivada como referencia histórica.
+- La UX inicial de [CRM Communications Inbox](../archive/communications/crm-communications-inbox/CRM_COMMUNICATIONS_INBOX_UX_SPEC.md)
+  está archivada como referencia histórica.
 - [Chatwoot -> LoopDev reference guide](crm-communications-inbox/CHATWOOT_LOOPDEV_REFERENCE_GUIDE.md): matriz de patrones operativos, adaptaciones y limites de portabilidad.
 
 ## Estado

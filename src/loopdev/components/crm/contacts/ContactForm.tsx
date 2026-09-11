@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { useForm, type Control } from "react-hook-form";
+import { Building2, Contact, MapPin, UserRound } from "lucide-react";
+import { useForm, type Control, type FieldErrors } from "react-hook-form";
 import { z } from "zod";
 import type { CRMContact, CRMContactMutationResult } from "@/loopdev/domains/crm/adapter";
 import {
@@ -23,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { FormSectionHeader } from "@/components/common";
 
 const contactFormSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required."),
@@ -82,6 +84,21 @@ const emptyValues: ContactFormValues = {
   postalCode: "",
   country: "",
 };
+
+function sectionStatsFor(
+  fields: (keyof ContactFormValues)[],
+  values: ContactFormValues,
+  errors: FieldErrors<ContactFormValues>,
+) {
+  const completed = fields.filter((field) => String(values[field] ?? "").trim().length > 0).length;
+  const errorsCount = fields.filter((field) => Boolean(errors[field])).length;
+  return {
+    completed,
+    total: fields.length,
+    errors: errorsCount,
+    status: errorsCount > 0 ? "error" as const : completed === fields.length ? "complete" as const : completed > 0 ? "progress" as const : "neutral" as const,
+  };
+}
 
 function valuesFromContact(contact: CRMContact | null | undefined): ContactFormValues {
   if (!contact) return emptyValues;
@@ -163,6 +180,13 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
     defaultValues: valuesFromContact(contact),
   });
   const { formState } = form;
+  const values = form.watch();
+  const sectionStats = {
+    identity: sectionStatsFor(["firstName", "lastName", "documentType", "documentNumber", "birthDate", "gender"], values, formState.errors),
+    channels: sectionStatsFor(["email", "secondaryEmail", "phone", "secondaryPhone", "preferredChannel", "preferredLanguage"], values, formState.errors),
+    organization: sectionStatsFor(["companyName", "jobTitle", "department"], values, formState.errors),
+    address: sectionStatsFor(["addressLine1", "addressLine2", "city", "stateProvince", "postalCode", "country"], values, formState.errors),
+  };
   const countryValue = form.watch("country");
   const { items: countries } = useCountries(organizationId);
   const country = countries.find((item) => item.code === countryValue || item.label === countryValue);
@@ -227,12 +251,9 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(submit)} className="mt-6 space-y-7">
-        <section className="space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Identity</h3>
-            <p className="text-xs text-muted-foreground">How this person should be identified in CRM.</p>
-          </div>
+      <form onSubmit={form.handleSubmit(submit)} className="loopdev-form mt-6 space-y-7">
+        <section id="contact-form-identity" className="scroll-mt-14 loopdev-form-section space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs">
+          <FormSectionHeader eyebrow="Profile" title="Identity" description="How this person should be identified in CRM." icon={<UserRound className="h-4 w-4" />} completed={sectionStats.identity.completed} total={sectionStats.identity.total} errorCount={sectionStats.identity.errors} status={sectionStats.identity.status} mode="expanded" responsive="auto" meta={<span>Core details</span>} />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField control={form.control} name="firstName" label="First name" required />
             <TextField control={form.control} name="lastName" label="Last name" />
@@ -269,11 +290,8 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
           </div>
         </section>
 
-        <section className="space-y-4 border-t border-border pt-6">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Contact channels</h3>
-            <p className="text-xs text-muted-foreground">At least an email address or phone number is required.</p>
-          </div>
+        <section id="contact-form-channels" className="scroll-mt-14 loopdev-form-section space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs">
+          <FormSectionHeader eyebrow="Communication" title="Contact channels" description="At least an email address or phone number is required." icon={<Contact className="h-4 w-4" />} completed={sectionStats.channels.completed} total={sectionStats.channels.total} errorCount={sectionStats.channels.errors} status={sectionStats.channels.status} mode="expanded" responsive="auto" meta={<span>At least one</span>} />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField control={form.control} name="email" label="Primary email" type="email" />
             <TextField control={form.control} name="secondaryEmail" label="Secondary email" type="email" />
@@ -297,11 +315,8 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
           </div>
         </section>
 
-        <section className="space-y-4 border-t border-border pt-6">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Organization</h3>
-            <p className="text-xs text-muted-foreground">Professional context for the relationship.</p>
-          </div>
+        <section id="contact-form-organization" className="scroll-mt-14 loopdev-form-section space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs">
+          <FormSectionHeader eyebrow="Relationship" title="Organization" description="Professional context for the relationship." icon={<Building2 className="h-4 w-4" />} completed={sectionStats.organization.completed} total={sectionStats.organization.total} errorCount={sectionStats.organization.errors} status={sectionStats.organization.status} mode="expanded" responsive="auto" />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField control={form.control} name="companyName" label="Company" />
             <TextField control={form.control} name="jobTitle" label="Job title" />
@@ -309,11 +324,8 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
           </div>
         </section>
 
-        <section className="space-y-4 border-t border-border pt-6">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Address</h3>
-            <p className="text-xs text-muted-foreground">Optional location information.</p>
-          </div>
+        <section id="contact-form-address" className="scroll-mt-14 loopdev-form-section space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs">
+          <FormSectionHeader eyebrow="Location" title="Address" description="Optional location information." icon={<MapPin className="h-4 w-4" />} completed={sectionStats.address.completed} total={sectionStats.address.total} errorCount={sectionStats.address.errors} status={sectionStats.address.status} mode="expanded" responsive="auto" meta={<span>Optional</span>} />
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2"><TextField control={form.control} name="addressLine1" label="Address line 1" /></div>
             <div className="sm:col-span-2"><TextField control={form.control} name="addressLine2" label="Address line 2" /></div>

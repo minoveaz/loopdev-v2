@@ -323,6 +323,8 @@ export default function CRMTasks() {
         description="Create follow-up work and associate it with a Contact, Lead or Opportunity."
         restoreFocusRef={taskCreateTriggerRef}
         size="md"
+        layoutMode="standard"
+        responsive="auto"
         dirty={() => taskFormDirtyRef.current}
         confirmOnClose
         onDiscard={() => { taskFormDirtyRef.current = false; }}
@@ -376,6 +378,8 @@ export default function CRMTasks() {
         title={editingTask ? "Edit task" : selectedTask?.title ?? "Task"}
         description={selectedTask ? `${selectedTask.relation.entityType} · ${selectedTask.relation.entityId}` : undefined}
         size="md"
+        layoutMode="standard"
+        responsive="auto"
         dirty={() => taskEditDirtyRef.current}
         confirmOnClose={editingTask}
         onDiscard={() => { taskEditDirtyRef.current = false; }}

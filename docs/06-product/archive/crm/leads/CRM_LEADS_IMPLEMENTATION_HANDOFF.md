@@ -1,6 +1,6 @@
 ---
 title: CRM Leads Implementation Handoff
-status: approved-for-handoff
+status: historical-superseded
 version: 1.0
 created: 2026-08-13
 updated: 2026-09-04
@@ -10,6 +10,11 @@ implementation_issue: https://github.com/minoveaz/loopdev/issues/84
 implementation_branch: feature/leads-frontend-implementation
 ui_contract: CRM_LEADS_UI_CONTRACT.md
 ---
+
+> **Historical handoff (2026-09-11):** Leads are implemented locally, including detail,
+> attribution, assignment and conversion. Current status is governed by
+> `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md` and
+> `../../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`.
 
 # Handoff de implementacion: CRM Leads
 

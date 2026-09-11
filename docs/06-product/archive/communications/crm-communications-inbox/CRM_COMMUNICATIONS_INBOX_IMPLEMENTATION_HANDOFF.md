@@ -1,6 +1,6 @@
 ---
 title: CRM Communications Inbox Implementation Handoff
-status: approved
+status: historical-superseded
 version: 0.1
 created: 2026-08-29
 updated: 2026-08-29
@@ -10,6 +10,12 @@ issue: https://github.com/minoveaz/loopdev/issues/158
 approver: User
 approved_at: 2026-08-29
 ---
+
+> **Superseded for frontend status (2026-09-11):** this handoff describes the original
+> Core/SuiteRuntime delivery plan. The current local-first implementation and its route/state
+> ownership are tracked in `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md` and
+> `../../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`. Keep this document as historical contract and
+> backend integration context.
 
 # CRM Communications Inbox Implementation Handoff
 

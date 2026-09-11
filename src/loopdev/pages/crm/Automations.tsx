@@ -3,7 +3,7 @@ import { Activity, CheckCircle2, Plus, RefreshCw, ShieldCheck } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageContainer, PageHeader, StatusBadge, SurfaceCard, SurfaceCardBody, SurfaceCardHeader } from "@/components/common";
+import { PageContainer, PageHeader, StatusBadge, SurfaceCard, SurfaceCardBody, SurfaceCardHeader, useFormLifecycle } from "@/components/common";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useCrmAutomations } from "@/loopdev/domains/crm/hooks/use-crm-automations";
 import { useOrganizationEntitlements } from "@/loopdev/domains/platform";
@@ -12,6 +12,7 @@ export default function CRMAutomations() {
   const { trail } = useBreadcrumbs();
   const [name, setName] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+  const lifecycle = useFormLifecycle();
   const automationState = useCrmAutomations();
   const entitlementState = useOrganizationEntitlements();
 
@@ -25,6 +26,7 @@ export default function CRMAutomations() {
         actions: [{ type: "create_task", payload: { title: "Follow up with qualified lead", priority: "high" } }],
       });
       setName("");
+      lifecycle.markClean();
       setNotice("Automation created locally.");
     } catch (cause: unknown) {
       setNotice(cause instanceof Error ? cause.message : "Automation could not be created.");
@@ -46,7 +48,7 @@ export default function CRMAutomations() {
         <SurfaceCard>
           <SurfaceCardHeader title="Automation rules" description="Rules are scoped to the active local organization." icon={Activity} />
           <SurfaceCardBody className="space-y-4">
-            <form className="flex flex-wrap items-end gap-3" onSubmit={(event) => { event.preventDefault(); void createAutomation(); }}>
+            <form className="flex flex-wrap items-end gap-3" onSubmit={(event) => { event.preventDefault(); void createAutomation(); }} onChange={() => lifecycle.markDirty()}>
               <div className="min-w-60 flex-1"><Label htmlFor="automation-name">New rule</Label><Input id="automation-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Qualified lead follow-up" /></div>
               <Button type="submit"><Plus className="mr-1.5 h-3.5 w-3.5" />Add rule</Button>
             </form>

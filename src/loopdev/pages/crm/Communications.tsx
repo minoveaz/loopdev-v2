@@ -588,7 +588,7 @@ export default function Communications() {
             </div>
           </section>
 
-          <section className={cn("min-w-0 flex-1 flex-col bg-background", conversationId ? "flex" : "hidden lg:flex")} aria-label="Conversation thread">
+          <section className={cn("min-h-0 min-w-0 flex-1 flex-col bg-background", conversationId ? "flex" : "hidden lg:flex")} aria-label="Conversation thread">
             {!conversationId ? (
               <EmptyState variant="plain" size="lg" icon={MessageSquare} title="Select a conversation" description="Choose a conversation from the list to inspect its timeline." />
             ) : detail.loading ? (
@@ -599,7 +599,7 @@ export default function Communications() {
               <EmptyState variant="plain" size="lg" icon={Inbox} title="Conversation unavailable" description="This conversation may no longer be in the selected view." />
             ) : (
               <>
-                <header className="flex flex-wrap items-center gap-3 border-b border-border/80 bg-card px-3 py-3 sm:px-5">
+                <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border/80 bg-card px-3 py-3 sm:px-5">
                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 lg:hidden" aria-label="Back to conversations" onClick={() => navigate("/app/sales-crm/communications")}><ArrowLeft className="h-4 w-4" /></Button>
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">{initials(selectedSummary.contact.displayName)}</span>
                   <div className="min-w-0 flex-1">
@@ -628,7 +628,7 @@ export default function Communications() {
                   </div>
                 </header>
                 {selectedAccount && selectedAccount.state !== "connected" && <div className="flex items-center gap-2 border-b border-warning/20 bg-warning-soft px-5 py-2 text-xs text-warning"><ShieldAlert className="h-3.5 w-3.5 shrink-0" />{selectedAccount.statusMessage}. Reading is available; provider actions remain disabled.</div>}
-                <div className="flex min-h-0 flex-1">
+                <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
                   <div ref={threadScrollRef} onScroll={(event) => { threadScrollPositions.current[selectedSummary.id] = event.currentTarget.scrollTop; }} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 sm:py-5">
                     <ol className="space-y-4">
                       {activeDetail.messages.filter((message) => message.direction !== "internal").map((message, index, visibleMessages) => {
@@ -667,7 +667,7 @@ export default function Communications() {
                     onOpenDetails={() => openContextView("timeline")}
                   />
                 </div>
-                <footer className="border-t border-border/80 bg-muted/25 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] dark:bg-card-muted sm:px-5">
+                <footer className="shrink-0 border-t border-border/80 bg-muted/25 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] dark:bg-card-muted sm:px-5">
                   <ConversationComposer
                     summary={activeDetail.summary}
                     collaboration={activeDetail.collaboration}

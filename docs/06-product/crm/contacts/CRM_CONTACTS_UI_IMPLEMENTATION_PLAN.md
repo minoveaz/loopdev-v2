@@ -7,7 +7,7 @@ updated: 2026-09-09
 owner: crm
 program_track: tracks/active/crm/2026-08-13-crm-pilot-execution.md
 related_issue: https://github.com/minoveaz/loopdev/issues/82
-backend_handoff: CRM_CONTACT_IMPLEMENTATION_HANDOFF.md
+backend_handoff: ../../archive/crm/contacts/CRM_CONTACT_IMPLEMENTATION_HANDOFF.md
 component_audit: CRM_CONTACTS_COMPONENT_AUDIT.md
 contract: CRM_CONTACT_CONTRACT.md
 post_pilot_backlog: ../shared/CRM_POST_PILOT_BACKLOG.md
@@ -600,7 +600,8 @@ UI-4 introduce una superficie distinta en `/app/sales-crm/contacts/:contactId` c
 ## 9. Aprobaciones y relación con el handoff backend
 
 Este documento es el handoff de implementación UI y complementa
-`CRM_CONTACT_IMPLEMENTATION_HANDOFF.md`, que certifica el slice backend-first. No reemplaza el
+`../../archive/crm/contacts/CRM_CONTACT_IMPLEMENTATION_HANDOFF.md`, que certifica el slice
+backend-first. No reemplaza el
 contrato de Contact ni autoriza cambios de schema sin actualizar el impact assessment.
 
 Antes de comenzar UI-1 deben aprobarse explícitamente:

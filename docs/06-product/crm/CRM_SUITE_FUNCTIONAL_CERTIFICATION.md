@@ -2,7 +2,8 @@
 
 > **Referencia legacy/backend:** esta certificacion documenta la implementacion anterior y su
 > evidencia de backend. No certifica las rutas ni el frontend actual de LoopDev v2. La UI v2
-> usa `/app/sales-crm/*` y se desarrolla conforme a `CRM_V2_FRONTEND_ALIGNMENT.md`.
+> usa `/app/sales-crm/*` y se desarrolla conforme al track activo
+> `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md`.
 
 **Phase:** F3 — completed
 **Base:** `origin/develop@6255ec367c245067ec92f4bf1a7a74f91c0cb53f`

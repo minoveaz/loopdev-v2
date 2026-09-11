@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Archive, ArchiveRestore, FileText, Pencil, Plus } from "lucide-react";
-import { DataCard, DataTable, PageContainer, PageHeader, StatusBadge, type DataTableAction, type DataTableColumn } from "@/components/common";
+import { DataCard, DataTable, PageContainer, PageHeader, StatusBadge, type DataTableAction, type DataTableColumn, useFormLifecycle } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -151,7 +151,7 @@ export default function TaskTemplates() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<TaskTemplateRecord | null>(null);
   const [formKey, setFormKey] = useState(0);
-  const dirtyRef = useRef(false);
+  const lifecycle = useFormLifecycle();
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const openCreate = () => {
@@ -224,10 +224,12 @@ export default function TaskTemplates() {
         title={editing ? "Edit task template" : "New task template"}
         description="These defaults are available to everyone in the organization."
         size="md"
+        layoutMode="standard"
+        responsive="auto"
         restoreFocusRef={triggerRef}
-        dirty={() => dirtyRef.current}
+        dirty={() => lifecycle.dirtyRef.current}
         confirmOnClose
-        onDiscard={() => { dirtyRef.current = false; }}
+        onDiscard={lifecycle.markClean}
         footer={
           <div className="flex w-full justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setDrawerOpen(false)}>Cancel</Button>
@@ -239,13 +241,14 @@ export default function TaskTemplates() {
           key={`${editing?.id ?? "new"}-${formKey}`}
           template={editing}
           formId="task-template-form"
-          onDirtyChange={(dirty) => { dirtyRef.current = dirty; }}
+          onDirtyChange={lifecycle.setDirty}
           onSubmit={async (input) => {
             if (editing) {
               await templates.updateTemplate(editing.id, { ...input, expectedVersion: editing.version, scope: organizationScope });
             } else {
               await templates.createTemplate({ ...input, scope: { ...organizationScope, workspaceId: null } });
             }
+            lifecycle.markClean();
             setDrawerOpen(false);
             templates.reload();
           }}

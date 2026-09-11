@@ -1,6 +1,6 @@
 ---
 title: CRM Contact Implementation Handoff
-status: approved-for-handoff
+status: historical-superseded
 version: 1.0
 created: 2026-08-13
 updated: 2026-08-18
@@ -11,6 +11,11 @@ implementation_branch: feature/crm-contacts-backend-foundation
 commit_convention: 'feat(crm): implement <slice> (#82)'
 pull_request_closure: 'Closes #82'
 ---
+
+> **Historical handoff (2026-09-11):** the Contact frontend status is now governed by
+> `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md` and
+> `../../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`. This file preserves the original slice delivery
+> contract and issue provenance.
 
 # Handoff de implementacion: CRM Contact backend-first
 

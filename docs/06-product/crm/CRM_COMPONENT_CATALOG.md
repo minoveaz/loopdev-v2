@@ -8,10 +8,11 @@ source_commit: 4256632f543753af32e68a69dc7486a5099513fa
 reviewed_at: 2026-09-04
 ---
 
-> **LoopDev v2:** este catalogo conserva decisiones y gaps del producto legacy. Las rutas
+> **LoopDev v2:** este catalogo conserva decisiones y gaps del producto legacy. El estado
+> frontend actual se consulta en `CRM_FRONTEND_CLOSURE_MATRIX.md`; las rutas
 > activas del frontend usan `/app/sales-crm/*`; las filas que mencionan `/sales-crm/*`,
 > `apps/loopdev-os` o `packages/contracts` son evidencia historica/backend y no ubicaciones
-> del codigo v2. Consulta `CRM_V2_FRONTEND_ALIGNMENT.md` antes de implementar.
+> del codigo v2.
 
 # CRM component catalog
 
@@ -223,27 +224,27 @@ All citations below refer to the pinned source commit in the front matter.
 | C1 | `.../crm/contacts/CRM_CONTACTS_COMPONENT_AUDIT.md` — composition, inventory, ownership, states |
 | C2 | `.../crm/contacts/CRM_CONTACT_CONTRACT.md` — read model, commands, dedupe, authorization, errors |
 | C3 | `.../crm/contacts/CRM_CONTACT_IMPACT_ASSESSMENT.md` — dependencies, schema/RLS, rollout |
-| C4 | `.../crm/contacts/CRM_CONTACT_IMPLEMENTATION_HANDOFF.md` — routes, composition, evidence gates |
+| C4 | `.../archive/crm/contacts/CRM_CONTACT_IMPLEMENTATION_HANDOFF.md` — historical routes, composition, evidence gates |
 | L1 | `.../crm/leads/CRM_LEADS_COMPONENT_AUDIT.md` — inventory and ownership |
 | L2 | `.../crm/leads/CRM_LEADS_UX_SPEC.md` — routes, journeys, roles, states and view composition |
 | L3 | `.../crm/leads/CRM_LEAD_CONTRACT.md` — Lead fields, commands, idempotency and errors |
 | L4 | `.../crm/leads/CRM_LEAD_IMPACT_ASSESSMENT.md` — dependencies and no-go conditions |
-| L5 | `.../crm/leads/CRM_LEADS_IMPLEMENTATION_HANDOFF.md` — implementation boundary and readiness |
+| L5 | `.../archive/crm/leads/CRM_LEADS_IMPLEMENTATION_HANDOFF.md` — historical implementation boundary and readiness |
 | P1 | `.../crm/pipeline/CRM_PIPELINE_COMPONENT_AUDIT.md` — inventory and reuse decisions |
 | P2 | `.../crm/pipeline/CRM_PIPELINE_UX_SPEC.md` — routes, board/table/detail/form journeys |
 | P3 | `.../crm/pipeline/CRM_PIPELINE_CONTRACT.md` — Opportunity/Stage fields and commands |
 | P4 | `.../crm/pipeline/CRM_PIPELINE_IMPACT_ASSESSMENT.md` — sensitivity and dependencies |
-| P5 | `.../crm/pipeline/CRM_PIPELINE_IMPLEMENTATION_HANDOFF.md` — delivery boundary and evidence |
+| P5 | `.../archive/crm/pipeline/CRM_PIPELINE_IMPLEMENTATION_HANDOFF.md` — historical delivery boundary and evidence |
 | U1 | `.../crm/customer-360/CRM_CUSTOMER_360_COMPONENT_AUDIT.md` — inventory and shared promotion |
 | U2 | `.../crm/customer-360/CRM_CUSTOMER_360_UX_SPEC.md` — sections, actions, privacy and states |
 | U3 | `.../crm/customer-360/CRM_CUSTOMER_360_CONTRACT.md` — scoped read models and section cursors |
 | U4 | `.../crm/customer-360/CRM_CUSTOMER_360_IMPACT_ASSESSMENT.md` — sensitivity and dependencies |
-| U5 | `.../crm/customer-360/CRM_CUSTOMER_360_IMPLEMENTATION_HANDOFF.md` — composition and evidence |
+| U5 | `.../archive/crm/customer-360/CRM_CUSTOMER_360_IMPLEMENTATION_HANDOFF.md` — historical composition and evidence |
 | T1 | `.../crm/tasks/CRM_TASKS_COMPONENT_AUDIT.md` — inventory and ownership |
 | T2 | `.../crm/tasks/CRM_TASKS_UX_SPEC.md` — routes, journeys, roles and component composition |
 | T3 | `.../crm/tasks/CRM_TASKS_CONTRACT.md` — Task/Note/Timeline fields and commands |
 | T4 | `.../crm/tasks/CRM_TASKS_IMPACT_ASSESSMENT.md` — sensitivity and dependencies |
-| T5 | `.../crm/tasks/CRM_TASKS_IMPLEMENTATION_HANDOFF.md` — implementation boundary and evidence |
+| T5 | `.../archive/crm/tasks/CRM_TASKS_IMPLEMENTATION_HANDOFF.md` — historical implementation boundary and evidence |
 | H1 | `.../crm/shared/CRM_PILOT_READINESS_REVIEW.md` — pilot readiness and residual risks |
 | H2 | `.../crm/shared/CRM_PILOT_UX_SPEC.md` — cross-module Canvas and shared UX direction |
 

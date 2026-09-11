@@ -1,6 +1,6 @@
 ---
 title: Communications Core UX Specification
-status: approved
+status: historical-reference
 version: 0.1
 created: 2026-08-29
 updated: 2026-08-29
@@ -10,6 +10,11 @@ issue: https://github.com/minoveaz/loopdev/issues/157
 approver: User
 approved_at: 2026-08-29
 ---
+
+> **Estado frontend actualizado (2026-09-11):** este documento conserva la definición
+> transversal y la frontera de producto de Communications Core. No es la fuente del estado
+> frontend ni de las rutas v2; consultar el track activo y
+> `../../../crm/CRM_FRONTEND_CLOSURE_MATRIX.md`.
 
 # Communications Core UX Specification
 

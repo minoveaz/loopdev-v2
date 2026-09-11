@@ -43,6 +43,8 @@ export function DetailDrawer({
       footer={footer}
       side={side}
       size={size}
+      layoutMode="expanded"
+      responsive="auto"
       className={cn(className, hero && "pb-0")}
     >
       {hero && <div className="mb-5">{hero}</div>}

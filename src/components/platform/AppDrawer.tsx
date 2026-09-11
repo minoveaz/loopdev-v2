@@ -1,5 +1,5 @@
 import type { ReactNode, RefObject } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import {
   Sheet,
@@ -21,6 +21,13 @@ export interface AppDrawerProps {
   onOpenChange: (open: boolean) => void;
   title: ReactNode;
   description?: ReactNode;
+  eyebrow?: ReactNode;
+  mode?: "New" | "Editing" | "Read-only" | "Duplicate";
+  headerMeta?: ReactNode;
+  headerNav?: ReactNode;
+  showDirtyState?: boolean;
+  layoutMode?: "compact" | "standard" | "expanded";
+  responsive?: "auto" | "fixed";
   children: ReactNode | ((controls: AppDrawerRenderControls) => ReactNode);
   footer?: ReactNode;
   side?: "right" | "left";
@@ -55,6 +62,13 @@ export function AppDrawer({
   onOpenChange,
   title,
   description,
+  eyebrow,
+  mode,
+  headerMeta,
+  headerNav,
+  showDirtyState = false,
+  layoutMode = "standard",
+  responsive = "auto",
   children,
   footer,
   side = "right",
@@ -72,6 +86,21 @@ export function AppDrawer({
   onDiscard,
 }: AppDrawerProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const previousHtmlOverflow = html.style.overflow;
+    const previousBodyOverflow = body.style.overflow;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+
+    return () => {
+      html.style.overflow = previousHtmlOverflow;
+      body.style.overflow = previousBodyOverflow;
+    };
+  }, [open]);
+
   const requestClose = useCallback((nextOpen: boolean) => {
     const isDirty = typeof dirty === "function" ? dirty() : dirty;
     if (!nextOpen && confirmOnClose && isDirty) {
@@ -105,21 +134,30 @@ export function AppDrawer({
         <SheetContent
           side={side}
           className={cn(
-            "flex h-full w-full max-w-none flex-col gap-0 overflow-hidden p-0",
+            "flex h-full !w-full max-w-none flex-col gap-0 !overflow-hidden p-0 md:w-[88%]",
             widthMap[size],
             className,
           )}
+          style={{ overflow: "hidden" }}
           onCloseAutoFocus={handleCloseAutoFocus}
         >
-          <SheetHeader className="shrink-0 space-y-1 border-b border-border px-5 py-4 text-left sm:text-left">
-            <SheetTitle className="pr-8 font-display text-lg font-semibold tracking-tight">{title}</SheetTitle>
+          <SheetHeader className={cn("shrink-0 border-b border-border bg-card text-left sm:text-left", layoutMode === "compact" ? "space-y-1.5 px-4 py-3 sm:px-5 sm:py-4" : "space-y-2 px-4 py-3.5 sm:px-5 sm:py-4")}>
+            <div className={cn("flex items-center justify-between pr-8", responsive === "auto" ? "gap-2 sm:gap-3" : "gap-3")}>
+              <div className="flex min-w-0 items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary/80">
+                {eyebrow ?? "LoopDev"}
+                {mode && <span className="rounded-full border border-border bg-muted px-2 py-0.5 tracking-normal text-muted-foreground">{mode}</span>}
+              </div>
+              {(headerMeta || showDirtyState) && <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">{headerMeta}{showDirtyState && <span className="rounded-full border border-warning/30 bg-warning-soft px-2 py-1 font-medium text-warning">Unsaved changes</span>}</div>}
+            </div>
+            <SheetTitle className={cn("pr-8 font-display font-semibold tracking-tight", layoutMode === "compact" ? "text-lg" : "text-xl sm:text-2xl")}>{title}</SheetTitle>
             <SheetDescription className={description ? undefined : "sr-only"}>
               {description ?? "Contextual details"}
             </SheetDescription>
+            {headerNav}
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">{content}</div>
+          <div data-app-drawer-scroll className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain bg-muted/20", layoutMode === "compact" ? "px-4 py-4 sm:px-5 sm:py-5" : "px-4 py-4 sm:px-5 sm:py-5")}>{content}</div>
           {footer && (
-            <SheetFooter className="shrink-0 border-t border-border bg-card-muted px-5 py-3">
+            <SheetFooter className="shrink-0 border-t border-border bg-card-muted px-4 py-3 sm:px-5">
               {footer}
             </SheetFooter>
           )}

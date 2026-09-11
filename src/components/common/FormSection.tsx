@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { FormSectionHeader } from "./FormSectionHeader";
 
 interface FormSectionProps {
   title: string;
@@ -9,6 +10,17 @@ interface FormSectionProps {
   aside?: ReactNode;
   children: ReactNode;
   className?: string;
+  eyebrow?: string;
+  meta?: ReactNode;
+  completed?: number;
+  total?: number;
+  errorCount?: number;
+  status?: "neutral" | "progress" | "complete" | "error";
+  collapsible?: boolean;
+  defaultCollapsed?: boolean;
+  compact?: boolean;
+  mode?: "compact" | "standard" | "expanded";
+  responsive?: "auto" | "fixed";
 }
 
 /**
@@ -22,31 +34,31 @@ export function FormSection({
   aside,
   children,
   className,
+  eyebrow,
+  meta,
+  completed,
+  total,
+  errorCount,
+  status,
+  collapsible = false,
+  defaultCollapsed = false,
+  compact = false,
+  mode,
+  responsive = "auto",
 }: FormSectionProps) {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
   return (
     <section
       className={cn(
-        "grid gap-6 surface-card p-5 md:p-6 lg:grid-cols-[260px_1fr]",
+        "grid gap-6 rounded-xl border border-border-strong/70 bg-card-muted/45 p-5 shadow-xs md:p-6 lg:grid-cols-[260px_1fr]",
         className,
       )}
     >
-      <header className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          {icon && (
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-soft text-primary">
-              {icon}
-            </span>
-          )}
-          <h3 className="font-display text-base font-semibold tracking-tight text-foreground">
-            {title}
-          </h3>
-        </div>
-        {description && (
-          <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-        )}
-        {aside && <div className="mt-2">{aside}</div>}
-      </header>
-      <div className="space-y-5">{children}</div>
+      <div className="flex flex-col gap-2">
+        <FormSectionHeader title={title} description={description} eyebrow={eyebrow} icon={icon} meta={meta} completed={completed} total={total} errorCount={errorCount} status={status} collapsible={collapsible} collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} compact={compact} mode={mode} responsive={responsive} />
+        {aside && <div>{aside}</div>}
+      </div>
+      {!collapsed && <div className="min-w-0 space-y-5 rounded-lg border border-border/80 bg-background/70 p-4 md:p-5">{children}</div>}
     </section>
   );
 }

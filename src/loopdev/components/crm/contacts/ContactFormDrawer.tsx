@@ -1,5 +1,6 @@
-import { useCallback, useRef, type RefObject } from "react";
+import { useCallback, useRef, useState, type RefObject } from "react";
 import { AppDrawer } from "@/components/platform";
+import { FormSectionNav } from "@/components/common";
 import type { CRMContact, CRMContactMutationResult } from "@/loopdev/domains/crm/adapter";
 import { ContactForm, type ContactFormValues } from "./ContactForm";
 
@@ -22,11 +23,22 @@ export function ContactFormDrawer({
 }: ContactFormDrawerProps) {
   const editing = Boolean(contact);
   const dirtyRef = useRef(false);
+  const [dirty, setDirty] = useState(false);
   const handleDirtyChange = useCallback((dirty: boolean) => {
     dirtyRef.current = dirty;
+    setDirty(dirty);
   }, []);
   const confirmDiscard = useCallback(() => {
     dirtyRef.current = false;
+    setDirty(false);
+  }, []);
+  const scrollToSection = useCallback((id: string) => {
+    const target = document.getElementById(id);
+    const container = target?.closest<HTMLElement>("[data-app-drawer-scroll]");
+    if (!target || !container) return;
+
+    const targetTop = target.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+    container.scrollTo({ top: Math.max(0, targetTop - 12), behavior: "smooth" });
   }, []);
 
   return (
@@ -34,6 +46,23 @@ export function ContactFormDrawer({
       open={open}
       onOpenChange={onOpenChange}
       title={editing ? "Edit contact" : "Create contact"}
+      eyebrow="CRM / Contact"
+      mode={editing ? "Editing" : "New"}
+      layoutMode="expanded"
+      responsive="auto"
+      showDirtyState={dirty}
+      headerMeta={<span>Profile form</span>}
+      headerNav={
+        <FormSectionNav
+          items={[
+            { id: "contact-form-identity", label: "Identity" },
+            { id: "contact-form-channels", label: "Channels" },
+            { id: "contact-form-organization", label: "Organization" },
+            { id: "contact-form-address", label: "Address" },
+          ]}
+          onSelect={scrollToSection}
+        />
+      }
       description={editing
         ? "Update the contact profile and relationship details."
         : "Add a complete contact profile without leaving the contacts list."}

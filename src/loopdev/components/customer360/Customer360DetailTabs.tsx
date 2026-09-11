@@ -2,7 +2,8 @@ import { useState } from "react";
 import { FileText, PackagePlus, Pencil, Plus, Upload, UserPlus } from "lucide-react";
 import { DataCard } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import type { CRMContact, CRMLead, CRMNote, CRMOpportunity, CRMTask } from "@/loopdev/domains/crm/adapter";
+import type { CRMContact, CRMLead, CRMOpportunity, CRMTask } from "@/loopdev/domains/crm/adapter";
+import type { GlobalNoteRecord } from "@/loopdev/domains/notes";
 import { Customer360CrmDetailsTab } from "./Customer360CrmDetailsTab";
 import { Customer360DocumentsTab } from "./Customer360DocumentsTab";
 import { Customer360ProductsTab } from "./Customer360ProductsTab";
@@ -14,10 +15,10 @@ interface Customer360DetailTabsProps {
   leads: CRMLead[];
   opportunities: CRMOpportunity[];
   tasks: CRMTask[];
-  notes: CRMNote[];
+  notes: GlobalNoteRecord[];
   onEdit: () => void;
   onNewNote?: () => void;
-  onEditNote?: (note: CRMNote) => void;
+  onEditNote?: (note: GlobalNoteRecord) => void;
 }
 
 export function Customer360DetailTabs({ contact, leads, opportunities, tasks, notes, onEdit, onNewNote, onEditNote }: Customer360DetailTabsProps) {
@@ -43,7 +44,7 @@ export function Customer360DetailTabs({ contact, leads, opportunities, tasks, no
       <div className="min-h-0 flex-1 overflow-y-auto p-5">
         {activeTab === "contact" && <Customer360CrmDetailsTab contact={contact} />}
         {activeTab === "sales" && <Customer360SalesTab leads={leads} opportunities={opportunities} />}
-        {activeTab === "work" && <Customer360WorkTab tasks={tasks} notes={notes} onNewNote={onNewNote} onEditNote={onEditNote} />}
+        {activeTab === "work" && <Customer360WorkTab tasks={tasks} notes={notes} onEditNote={onEditNote} />}
         {activeTab === "documents" && <Customer360DocumentsTab />}
         {activeTab === "products" && <Customer360ProductsTab />}
       </div>

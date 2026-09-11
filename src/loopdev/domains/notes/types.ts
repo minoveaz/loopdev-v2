@@ -69,6 +69,9 @@ export interface GlobalNotesAdapter {
   list(relation?: NoteRelationRef): Promise<GlobalNoteRecord[]>;
   create(input: CreateGlobalNoteInput): Promise<GlobalNoteRecord>;
   update(noteId: string, input: Partial<CreateGlobalNoteInput>): Promise<GlobalNoteRecord>;
+  delete(noteId: string): Promise<void>;
+  seed(records: readonly GlobalNoteRecord[]): Promise<void>;
   uploadAttachment(file: File): Promise<NoteAttachment>;
+  releaseAttachment(attachment: NoteAttachment): void;
   listWorkspaceUsers(organizationId: string): Promise<WorkspaceUser[]>;
 }

@@ -11,7 +11,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
-import { AlignCenter, AlignLeft, AlignRight, AtSign, Bold, CheckSquare, Highlighter, Italic, Link2, List, ListOrdered, Paperclip, Quote, Redo2, Send, Undo2, Underline as UnderlineIcon, X } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, AtSign, Bold, CheckSquare, Highlighter, Italic, Link2, List, ListOrdered, Paperclip, Quote, Redo2, Send, Trash2, Undo2, Underline as UnderlineIcon, X } from "lucide-react";
 import { AppDrawer } from "@/components/platform";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { notesAdapter, noteMentions, notePlainText, type CreateGlobalNoteInput, type NoteAttachment, type NoteMention, type NoteMode, type NoteRelationRef, type NoteVisibility, type WorkspaceUser } from "@/loopdev/domains/notes";
+import { LOCAL_NOTES_ORGANIZATION_ID, notesAdapter, noteMentions, notePlainText, type CreateGlobalNoteInput, type NoteAttachment, type NoteMention, type NoteMode, type NoteRelationRef, type NoteVisibility, type WorkspaceUser } from "@/loopdev/domains/notes";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 function mentionSuggestion(users: WorkspaceUser[]) {
   return {
@@ -115,6 +116,9 @@ export function RichNoteEditor({ initialContent, users = [], placeholder = "Writ
   }, [users]);
 
   useEffect(() => { editor?.setEditable(!disabled); }, [disabled, editor]);
+  useEffect(() => {
+    if (editor) editor.commands.setContent(initialContent ?? { type: "doc", content: [{ type: "paragraph" }] }, { emitUpdate: false });
+  }, [editor, initialContent]);
   if (!editor) return <div className="min-h-40 animate-pulse rounded-md bg-muted/40" />;
   return <div className={cn("overflow-hidden rounded-lg border border-border bg-background", disabled && "opacity-60")}>
     <NoteToolbar editor={editor} disabled={disabled} />
@@ -155,10 +159,11 @@ export interface NoteEditorDrawerProps {
   initialValue?: Partial<NoteEditorValue>;
   title?: ReactNode;
   onSubmit: (value: NoteEditorValue) => Promise<void>;
+  onDelete?: () => Promise<void>;
   restoreFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
-export function NoteEditorDrawer({ open, onOpenChange, relation, initialValue, title = "New note", onSubmit, restoreFocusRef }: NoteEditorDrawerProps) {
+export function NoteEditorDrawer({ open, onOpenChange, relation, initialValue, title = "New note", onSubmit, onDelete, restoreFocusRef }: NoteEditorDrawerProps) {
   const [mode, setMode] = useState<NoteMode>(initialValue?.mode ?? "quick");
   const [noteTitle, setNoteTitle] = useState(initialValue?.title ?? "");
   const [visibility, setVisibility] = useState<NoteVisibility>(initialValue?.visibility ?? "team");
@@ -167,11 +172,28 @@ export function NoteEditorDrawer({ open, onOpenChange, relation, initialValue, t
   const [attachments, setAttachments] = useState<NoteAttachment[]>(initialValue?.attachments ?? []);
   const [users, setUsers] = useState<WorkspaceUser[]>([]);
   const [pending, setPending] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dirtyRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadedThisSessionRef = useRef(new Map<string, NoteAttachment>());
+  const openRef = useRef(open);
 
-  useEffect(() => { if (open) void notesAdapter.listWorkspaceUsers("local-development-organization").then(setUsers); }, [open]);
+  useEffect(() => {
+    openRef.current = open;
+    if (open) {
+      void notesAdapter.listWorkspaceUsers(LOCAL_NOTES_ORGANIZATION_ID).then(setUsers, (cause: unknown) => {
+        setError(cause instanceof Error ? cause.message : "Unable to load workspace users.");
+      });
+    } else {
+      uploadedThisSessionRef.current.forEach((attachment) => notesAdapter.releaseAttachment(attachment));
+      uploadedThisSessionRef.current.clear();
+    }
+  }, [open]);
+  useEffect(() => () => {
+    uploadedThisSessionRef.current.forEach((attachment) => notesAdapter.releaseAttachment(attachment));
+  }, []);
   useEffect(() => {
     if (!open) return;
     setMode(initialValue?.mode ?? "quick"); setNoteTitle(initialValue?.title ?? ""); setVisibility(initialValue?.visibility ?? "team");
@@ -184,24 +206,77 @@ export function NoteEditorDrawer({ open, onOpenChange, relation, initialValue, t
   const handleSubmit = async () => {
     if (!preview) { setError("Add some content before saving."); return; }
     setPending(true); setError(null);
-    try { await onSubmit({ title: noteTitle.trim(), mode, visibility, relations: relation ? [relation] : [], content, plainTextPreview: preview, mentions, attachments }); dirtyRef.current = false; onOpenChange(false); }
+    try {
+      await onSubmit({ title: noteTitle.trim(), mode, visibility, relations: initialValue?.relations ?? (relation ? [relation] : []), content, plainTextPreview: preview, mentions, attachments });
+      uploadedThisSessionRef.current.clear();
+      dirtyRef.current = false;
+      onOpenChange(false);
+    }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save note."); }
     finally { setPending(false); }
   };
   const upload = async (file: File) => {
-    dirtyRef.current = true; setAttachments((current) => [...current, { id: `uploading-${Date.now()}`, name: file.name, mimeType: file.type, size: file.size, url: "", status: "uploading" }]);
-    try { const uploaded = await notesAdapter.uploadAttachment(file); setAttachments((current) => current.map((item) => item.name === file.name && item.status === "uploading" ? uploaded : item)); }
-    catch (cause) { setAttachments((current) => current.map((item) => item.name === file.name && item.status === "uploading" ? { ...item, status: "error", error: cause instanceof Error ? cause.message : "Upload failed." } : item)); }
+    const pendingId = `uploading-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
+    dirtyRef.current = true;
+    setAttachments((current) => [...current, { id: pendingId, name: file.name, mimeType: file.type, size: file.size, url: "", status: "uploading" }]);
+    try {
+      const uploaded = await notesAdapter.uploadAttachment(file);
+      if (!openRef.current) {
+        notesAdapter.releaseAttachment(uploaded);
+        return;
+      }
+      uploadedThisSessionRef.current.set(uploaded.id, uploaded);
+      setAttachments((current) => current.map((item) => item.id === pendingId ? uploaded : item));
+    } catch (cause) {
+      setAttachments((current) => current.map((item) => item.id === pendingId ? { ...item, status: "error", error: cause instanceof Error ? cause.message : "Upload failed." } : item));
+    }
   };
-  const footer = <div className="flex w-full items-center justify-between gap-3"><p className="truncate text-xs text-muted-foreground">{relation ? `Related to ${relation.label}` : "Global workspace note"}</p><div className="flex gap-2"><Button type="button" variant="ghost" disabled={pending} onClick={() => onOpenChange(false)}>Cancel</Button><Button type="button" loading={pending} disabled={!preview || attachments.some((item) => item.status === "uploading")} onClick={() => void handleSubmit()}><Send className="h-3.5 w-3.5" />Save note</Button></div></div>;
-  return <AppDrawer open={open} onOpenChange={onOpenChange} title={title} description="Capture context for your workspace" mode={title === "Edit note" ? "Editing" : "New"} size="md" responsive="auto" restoreFocusRef={restoreFocusRef} dirty={() => dirtyRef.current} confirmOnClose onDiscard={() => { dirtyRef.current = false; }} footer={footer}>
+  const removeAttachment = (attachment: NoteAttachment) => {
+    const uploaded = uploadedThisSessionRef.current.get(attachment.id);
+    if (uploaded) {
+      notesAdapter.releaseAttachment(uploaded);
+      uploadedThisSessionRef.current.delete(attachment.id);
+    }
+    dirtyRef.current = true;
+    setAttachments((current) => current.filter((item) => item.id !== attachment.id));
+  };
+  const footer = <div className="flex w-full items-center justify-between gap-3"><div>{onDelete && <Button type="button" variant="destructive" disabled={pending || deletePending} onClick={() => setDeleteOpen(true)}><Trash2 className="h-3.5 w-3.5" />Delete</Button>}</div><div className="flex gap-2"><Button type="button" variant="ghost" disabled={pending || deletePending} onClick={() => onOpenChange(false)}>Cancel</Button><Button type="button" loading={pending} disabled={!preview || deletePending || attachments.some((item) => item.status === "uploading")} onClick={() => void handleSubmit()}><Send className="h-3.5 w-3.5" />Save note</Button></div></div>;
+  return <>
+  <AppDrawer open={open} onOpenChange={onOpenChange} title={title} description={relation ? `Related to ${relation.label}` : "Global workspace note"} mode={onDelete ? "Editing" : "New"} size="md" responsive="auto" restoreFocusRef={restoreFocusRef} dirty={() => dirtyRef.current} confirmOnClose onDiscard={() => { dirtyRef.current = false; }} footer={footer}>
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><div className="inline-flex rounded-md border border-border bg-muted/40 p-0.5" role="tablist" aria-label="Note format"><button type="button" role="tab" aria-selected={mode === "quick"} className={cn("rounded px-3 py-1.5 text-xs", mode === "quick" && "bg-card font-medium shadow-sm")} onClick={() => { dirtyRef.current = true; setMode("quick"); }}>Quick note</button><button type="button" role="tab" aria-selected={mode === "rich"} className={cn("rounded px-3 py-1.5 text-xs", mode === "rich" && "bg-card font-medium shadow-sm")} onClick={() => { dirtyRef.current = true; setMode("rich"); }}>Rich note</button></div><div className="flex items-center gap-2"><Label htmlFor="note-visibility" className="text-xs text-muted-foreground">Visibility</Label><Select value={visibility} onValueChange={(value) => { dirtyRef.current = true; setVisibility(value as NoteVisibility); }}><SelectTrigger id="note-visibility" className="h-8 w-32"><SelectValue /></SelectTrigger><SelectContent>{(["private", "team", "organization"] as NoteVisibility[]).map((item) => <SelectItem key={item} value={item}>{item[0].toUpperCase() + item.slice(1)}</SelectItem>)}</SelectContent></Select></div></div>
       <div><Label htmlFor="note-title">Title <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="note-title" value={noteTitle} onChange={(event) => { dirtyRef.current = true; setNoteTitle(event.target.value); }} placeholder="Give this note a useful title" className="mt-1.5" /></div>
       {relation && <div className="rounded-md border border-border bg-card-muted/40 px-3 py-2 text-xs text-muted-foreground">Related to <span className="font-medium text-foreground">{relation.label}</span></div>}
       {mode === "quick" ? <Textarea value={quickBody} onChange={(event) => { dirtyRef.current = true; setQuickBody(event.target.value); }} placeholder="Write a quick note…" className="min-h-48 resize-y" aria-label="Note content" disabled={pending} /> : <RichNoteEditor initialContent={initialValue?.content} users={users} disabled={pending} onChange={(value) => { dirtyRef.current = true; setRichValue(value); }} />}
-      <div className="space-y-2"><input ref={fileInputRef} type="file" className="hidden" multiple onChange={(event) => { const files = event.target.files; if (files) Array.from(files).forEach((file) => void upload(file)); event.currentTarget.value = ""; }} /><Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => fileInputRef.current?.click()}><Paperclip className="h-3.5 w-3.5" />Attach files</Button>{attachments.length > 0 && <ul className="space-y-1.5">{attachments.map((attachment) => <li key={attachment.id} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-xs">{attachment.url && attachment.mimeType.startsWith("image/") && <img src={attachment.url} alt="" className="h-8 w-8 rounded object-cover" /> }<span className="min-w-0 flex-1 truncate">{attachment.name}</span><span className={attachment.status === "error" ? "text-destructive" : "text-muted-foreground"}>{attachment.status === "uploading" ? "Uploading…" : attachment.status === "error" ? attachment.error : `${Math.ceil(attachment.size / 1024)} KB`}</span><button type="button" aria-label={`Remove ${attachment.name}`} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}><X className="h-3.5 w-3.5" /></button></li>)}</ul>}</div>
+      <div className="space-y-2"><input ref={fileInputRef} type="file" className="hidden" multiple onChange={(event) => { const files = event.target.files; if (files) Array.from(files).forEach((file) => void upload(file)); event.currentTarget.value = ""; }} /><Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => fileInputRef.current?.click()}><Paperclip className="h-3.5 w-3.5" />Attach files</Button>{attachments.length > 0 && <ul className="space-y-1.5">{attachments.map((attachment) => <li key={attachment.id} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-xs">{attachment.url && attachment.mimeType.startsWith("image/") && <img src={attachment.url} alt="" className="h-8 w-8 rounded object-cover" /> }<span className="min-w-0 flex-1 truncate">{attachment.name}</span><span className={attachment.status === "error" ? "text-destructive" : "text-muted-foreground"}>{attachment.status === "uploading" ? "Uploading…" : attachment.status === "error" ? attachment.error : !attachment.url ? "Metadata only" : `${Math.ceil(attachment.size / 1024)} KB`}</span><button type="button" aria-label={`Remove ${attachment.name}`} onClick={() => removeAttachment(attachment)}><X className="h-3.5 w-3.5" /></button></li>)}</ul>}</div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     </div>
-  </AppDrawer>;
+  </AppDrawer>
+  <ConfirmDialog
+    open={deleteOpen}
+    onOpenChange={setDeleteOpen}
+    title="Delete note?"
+    description="This removes the note from local browser storage. This action cannot be undone."
+    confirmLabel="Delete note"
+    tone="destructive"
+    loading={deletePending}
+    onConfirm={async () => {
+      if (!onDelete) return;
+      setDeletePending(true);
+      setError(null);
+      try {
+        await onDelete();
+        uploadedThisSessionRef.current.clear();
+        dirtyRef.current = false;
+        setDeleteOpen(false);
+        onOpenChange(false);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Unable to delete note.");
+        setDeleteOpen(false);
+      } finally {
+        setDeletePending(false);
+      }
+    }}
+  />
+  </>;
 }

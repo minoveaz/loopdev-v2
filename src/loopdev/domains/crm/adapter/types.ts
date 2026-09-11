@@ -1,3 +1,5 @@
+import type { GlobalNoteRecord } from "@/loopdev/domains/notes";
+
 export type Customer360Section = "profile" | "leads" | "opportunities" | "tasks" | "notes" | "timeline";
 export type Customer360SectionState = "fresh" | "stale" | "loading" | "error" | "forbidden";
 
@@ -372,14 +374,6 @@ export interface CRMTask {
   relationId: string;
 }
 
-export interface CRMNote {
-  id: string;
-  body: string | null;
-  visibility: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface CRMActivity {
   id: string;
   sourceType: string;
@@ -400,7 +394,7 @@ export interface Customer360View {
   leads: CRMLead[];
   opportunities: CRMOpportunity[];
   tasks: CRMTask[];
-  notes: CRMNote[];
+  notes: GlobalNoteRecord[];
   timeline: CRMActivity[];
   cursors: Record<Customer360Section, string | null>;
   sectionState: Record<Customer360Section, Customer360SectionState>;

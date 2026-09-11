@@ -1,8 +1,9 @@
-import { CheckSquare, Plus, TrendingUp, ArrowRight } from "lucide-react";
+import { CheckSquare, TrendingUp, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ActivityFeed, DataCard, EmptyState, getActivityActionLabel, getActivityKind, StatusBadge, type ActivityFeedItem } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import type { CRMActivity, CRMLead, CRMNote, CRMOpportunity, CRMTask } from "@/loopdev/domains/crm/adapter";
+import type { CRMActivity, CRMLead, CRMOpportunity, CRMTask } from "@/loopdev/domains/crm/adapter";
+import type { GlobalNoteRecord } from "@/loopdev/domains/notes";
 import { formatDate, formatRelative } from "@/lib/formatters";
 
 function crmActivityTarget(item: CRMActivity): string | undefined {
@@ -67,15 +68,15 @@ export function Customer360TasksCard({ tasks }: { tasks: CRMTask[] }) {
   const openTasks = tasks.filter((task) => task.status !== "completed");
   const navigate = useNavigate();
   const openTask = (taskId: string) => navigate(`/app/sales-crm/tasks?taskId=${encodeURIComponent(taskId)}`);
-  return <DataCard title={`Tasks (${openTasks.length})`} description="Follow-ups and next actions" action={<Button asChild variant="ghost" size="sm"><Link to="/app/sales-crm/tasks">View</Link></Button>}>
+  return <DataCard title={`Tasks (${openTasks.length})`} action={<Button asChild variant="ghost" size="sm"><Link to="/app/sales-crm/tasks">View</Link></Button>}>
     {openTasks.length ? <ul className="space-y-3">{openTasks.map((task) => <li key={task.id} role="button" tabIndex={0} onClick={() => openTask(task.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openTask(task.id); } }} className="cursor-pointer rounded-md border border-border-strong bg-card-muted/20 p-3 transition-colors hover:bg-card-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <div className="flex min-w-0 items-start gap-3"><CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><div className="min-w-0"><p className="break-words text-sm font-medium">{task.title}</p><p className="mt-1 text-xs text-muted-foreground">{task.priority} priority · {task.dueAt ? formatDate(task.dueAt) : "No due date"}</p></div></div>
     </li>)}</ul> : <EmptyState title="No open tasks" description="Follow-ups will appear here." />}
   </DataCard>;
 }
 
-export function Customer360NotesCard({ notes, onNewNote, onEditNote }: { notes: CRMNote[]; onNewNote?: () => void; onEditNote?: (note: CRMNote) => void }) {
-  return <DataCard title={`Notes (${notes.length})`} description="Contextual notes for this relationship" action={<Button variant="outline" size="sm" onClick={onNewNote}><Plus className="mr-1.5 h-3.5 w-3.5" />New note</Button>}>
-    {notes.length ? <ul className="space-y-3">{notes.map((note) => <li key={note.id}><button type="button" onClick={() => onEditNote?.(note)} className="w-full cursor-pointer rounded-md border border-border-strong bg-card-muted/20 p-3 text-left transition-colors hover:bg-card-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><p className="break-words text-sm">{note.body || "Note content is restricted."}</p><p className="mt-1 text-xs text-muted-foreground">{formatRelative(note.updatedAt)} · {note.visibility}</p></button></li>)}</ul> : <EmptyState title="No notes" description="Notes added to this contact will appear here." />}
+export function Customer360NotesCard({ notes, onEditNote }: { notes: GlobalNoteRecord[]; onEditNote?: (note: GlobalNoteRecord) => void }) {
+  return <DataCard title={`Notes (${notes.length})`}>
+    {notes.length ? <ul className="space-y-3">{notes.map((note) => <li key={note.id}><button type="button" onClick={() => onEditNote?.(note)} className="w-full cursor-pointer rounded-md border border-border-strong bg-card-muted/20 p-3 text-left transition-colors hover:bg-card-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{note.title && <p className="mb-1 break-words text-sm font-medium">{note.title}</p>}<p className="break-words whitespace-pre-wrap text-sm">{note.plainTextPreview || "Note content is restricted."}</p><p className="mt-1 text-xs text-muted-foreground">{formatRelative(note.updatedAt)} · {note.visibility}{note.attachments.length ? ` · ${note.attachments.length} attachment${note.attachments.length === 1 ? "" : "s"}` : ""}</p></button></li>)}</ul> : <EmptyState title="No notes" description="Notes added to this contact will appear here." />}
   </DataCard>;
 }

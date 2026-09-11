@@ -24,7 +24,6 @@ import type {
   CRMLead,
   CRMLeadMutationResult,
   CRMUpdateLeadInput,
-  CRMNote,
   CRMOpportunity,
   CRMOpportunityListParams,
   CRMOpportunityMutationResult,
@@ -43,7 +42,7 @@ import { contactName, CRMAdapterError, CRM_LEAD_STATUS_CODES, CRM_PIPELINE_STAGE
 import { localCrmOperationsAdapter } from "../operations/adapter/local";
 import { localCrmAutomationsAdapter } from "../automations";
 import { localCommunicationsAdapter } from "@/loopdev/domains/communications/adapter/local";
-import { localNotesAdapter } from "@/loopdev/domains/notes";
+import { localNotesAdapter, type GlobalNoteRecord, type NoteRelationRef } from "@/loopdev/domains/notes";
 
 const organizationId = "local-development-organization";
 
@@ -64,6 +63,32 @@ const PIPELINE_STAGES: CRMStageDefinition[] = [
   { code: "won", label: "Won", order: 50, terminal: true, probability: 1 },
   { code: "lost", label: "Lost", order: 60, terminal: true, probability: 0 },
 ];
+
+/**
+ * Compatibility bridge for the one seeded CRM note that predates GlobalNoteRecord.
+ * It is imported through the global adapter once, so Customer 360 has one notes source.
+ */
+function legacyCustomerNote(contactId: string, contactLabel: string, occurredAt: string): GlobalNoteRecord {
+  const body = "Relationship note added during the last review.";
+  const relation: NoteRelationRef = { type: "contact", id: contactId, label: contactLabel };
+  return {
+    id: `legacy-crm-note-${contactId}`,
+    organizationId,
+    authorId: "legacy-crm",
+    authorName: "Imported CRM note",
+    title: "",
+    mode: "quick",
+    visibility: "team",
+    relations: [relation],
+    content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: body }] }] },
+    plainTextPreview: body,
+    mentions: [],
+    attachments: [],
+    createdAt: occurredAt,
+    updatedAt: occurredAt,
+    permissions: { canEdit: true, canDelete: true },
+  };
+}
 
 function toOpportunityLine(source: LocalOpportunityLine): CRMOpportunityLine {
   return {
@@ -871,11 +896,11 @@ export const localLoopdevAdapter = {
         { id: "local-task-1", title: "Review renewal requirements", status: "open", priority: "high", dueAt: new Date().toISOString(), relationId: contactId },
         { id: "local-task-2", title: "Schedule technical follow-up", status: "open", priority: "medium", dueAt: new Date(Date.now() + 86400000).toISOString(), relationId: contactId },
       ];
-      const globalNotes = await localNotesAdapter.list({ type: "contact", id: contactId, label: contact.name });
-      const notes: CRMNote[] = [
-        { id: "local-note-1", body: "Relationship note added during the last review.", visibility: "team", createdAt: localActivities[2].occurredAt, updatedAt: localActivities[2].occurredAt },
-        ...globalNotes.map((note) => ({ id: note.id, body: note.plainTextPreview, visibility: note.visibility, createdAt: note.createdAt, updatedAt: note.updatedAt })),
-      ];
+      const relation = { type: "contact" as const, id: contactId, label: contact.name };
+      const legacyCreatedAt = localActivities[2]?.occurredAt ?? contact.updatedAt;
+      // Import legacy CRM data into the global adapter before reading Customer 360 notes.
+      await localNotesAdapter.seed([legacyCustomerNote(contactId, contact.name, legacyCreatedAt)]);
+      const notes = await localNotesAdapter.list(relation);
       const state = { profile: "fresh", leads: "fresh", opportunities: "fresh", tasks: "fresh", notes: "fresh", timeline: "fresh" } as const;
 
       return {

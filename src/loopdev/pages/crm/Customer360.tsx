@@ -5,7 +5,8 @@ import { EmptyState, NoteEditorDrawer, PageContainer, PageHeader, type NoteEdito
 import { Button } from "@/components/ui/button";
 import { useCrmCustomer360 } from "@/loopdev/domains/crm/hooks/use-crm";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
-import { contactName, loopdevAdapter, type CRMNote, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
+import { contactName, loopdevAdapter, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
+import type { GlobalNoteRecord } from "@/loopdev/domains/notes";
 import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
 import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactFormDrawer";
 import { Customer360ProfileCard } from "@/loopdev/components/customer360/Customer360ProfileCard";
@@ -19,17 +20,20 @@ export default function SalesCRMCustomer360() {
   const { view, loading, error, reload } = useCrmCustomer360(contactId);
   const [editorOpen, setEditorOpen] = useState(false);
   const [noteEditorOpen, setNoteEditorOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<CRMNote | null>(null);
-  const [customerNotes, setCustomerNotes] = useState<CRMNote[]>([]);
+  const [selectedNote, setSelectedNote] = useState<GlobalNoteRecord | null>(null);
+  const [customerNotes, setCustomerNotes] = useState<GlobalNoteRecord[]>([]);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const customerName = view ? contactName(view.contact) : "";
-  const noteInitialValue = useMemo(() => selectedNote && view ? {
-    mode: "quick" as const,
-    plainTextPreview: selectedNote.body ?? "",
-    visibility: selectedNote.visibility === "private" ? "private" as const : selectedNote.visibility === "organization" ? "organization" as const : "team" as const,
-    relations: [{ type: "contact" as const, id: view.contact.id, label: customerName }],
-    content: { type: "doc" as const, content: [{ type: "paragraph" as const, content: selectedNote.body ? [{ type: "text" as const, text: selectedNote.body }] : undefined }] },
-  } : undefined, [customerName, selectedNote, view]);
+  const noteInitialValue = useMemo(() => selectedNote ? {
+    title: selectedNote.title,
+    mode: selectedNote.mode,
+    plainTextPreview: selectedNote.plainTextPreview,
+    visibility: selectedNote.visibility,
+    relations: selectedNote.relations,
+    content: selectedNote.content,
+    mentions: selectedNote.mentions,
+    attachments: selectedNote.attachments,
+  } : undefined, [selectedNote]);
 
   useEffect(() => {
     if (view) setCustomerNotes(view.notes);
@@ -116,7 +120,7 @@ export default function SalesCRMCustomer360() {
     setSelectedNote(null);
     setNoteEditorOpen(true);
   };
-  const openExistingNote = (note: CRMNote) => {
+  const openExistingNote = (note: GlobalNoteRecord) => {
     setSelectedNote(note);
     setNoteEditorOpen(true);
   };
@@ -184,9 +188,20 @@ export default function SalesCRMCustomer360() {
         relation={{ type: "contact", id: contact.id, label: name }}
         title={selectedNote ? "Edit note" : "New note"}
         initialValue={noteInitialValue}
+        onDelete={selectedNote?.permissions.canDelete ? async () => {
+          await loopdevAdapter.notes.delete(selectedNote.id);
+          setCustomerNotes((current) => current.filter((note) => note.id !== selectedNote.id));
+          setSelectedNote(null);
+        } : undefined}
         onSubmit={async (value: NoteEditorValue) => {
           if (selectedNote) {
-            setCustomerNotes((current) => current.map((note) => note.id === selectedNote.id ? { ...note, body: value.plainTextPreview, visibility: value.visibility, updatedAt: new Date().toISOString() } : note));
+            const updated = await loopdevAdapter.notes.update(selectedNote.id, {
+              organizationId: selectedNote.organizationId,
+              authorId: selectedNote.authorId,
+              authorName: selectedNote.authorName,
+              ...value,
+            });
+            setCustomerNotes((current) => current.map((note) => note.id === updated.id ? updated : note));
           } else {
             const created = await loopdevAdapter.notes.create({
               organizationId: contact.organizationId,
@@ -194,7 +209,7 @@ export default function SalesCRMCustomer360() {
               authorName: "Alex Morgan",
               ...value,
             });
-            setCustomerNotes((current) => [{ id: created.id, body: created.plainTextPreview, visibility: created.visibility, createdAt: created.createdAt, updatedAt: created.updatedAt }, ...current]);
+            setCustomerNotes((current) => [created, ...current]);
           }
           setSelectedNote(null);
           setNoteEditorOpen(false);

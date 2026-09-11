@@ -15,8 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { StatusBadge } from "@/components/common";
-import { platformAdapter, type EntityRef } from "@/loopdev/domains/platform";
+import { NoteEditorDrawer, StatusBadge, type NoteEditorValue } from "@/components/common";
+import { platformAdapter, type EntityRef, type NoteRecord } from "@/loopdev/domains/platform";
+import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
 import { type ConversationSummary } from "@/loopdev/domains/communications";
 import { useCrmWorkspace } from "@/loopdev/domains/crm/workspace";
 import { cn } from "@/lib/utils";
@@ -83,9 +84,10 @@ function CRMWorkspaceBody({
     assignTask,
   } = workspaceHook;
   const [taskFormOpen, setTaskFormOpen] = useState(false);
-  const [noteFormOpen, setNoteFormOpen] = useState(false);
+  const [noteEditorOpen, setNoteEditorOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<NoteRecord | null>(null);
+  const [editableNotes, setEditableNotes] = useState<NoteRecord[]>([]);
   const [taskTitle, setTaskTitle] = useState("");
-  const [noteBody, setNoteBody] = useState("");
   const [leadStatus, setLeadStatus] = useState("");
   const [working, setWorking] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -101,6 +103,22 @@ function CRMWorkspaceBody({
   useEffect(() => {
     setLeadStatus(lead?.status ?? "");
   }, [lead?.id, lead?.status]);
+
+  useEffect(() => {
+    setEditableNotes(workspace?.notes ?? []);
+  }, [workspace?.notes]);
+
+  const noteInitialValue = useMemo(() => selectedNote ? {
+    mode: "quick" as const,
+    plainTextPreview: selectedNote.body,
+    visibility: "team" as const,
+    relations: [{ type: "contact" as const, id: conversation.contact.id, label: conversation.contact.displayName }],
+    content: { type: "doc" as const, content: [{ type: "paragraph" as const, content: selectedNote.body ? [{ type: "text" as const, text: selectedNote.body }] : undefined }] },
+  } : undefined, [conversation.contact.displayName, conversation.contact.id, selectedNote]);
+  const openNewNote = () => {
+    setSelectedNote(null);
+    setNoteEditorOpen(true);
+  };
 
   const run = async (action: () => Promise<unknown>, after?: () => void) => {
     setWorking(true);
@@ -127,17 +145,6 @@ function CRMWorkspaceBody({
       () => {
         setTaskTitle("");
         setTaskFormOpen(false);
-      },
-    );
-  };
-
-  const submitNote = () => {
-    if (!noteBody.trim() || !workspace) return;
-    void run(
-      () => createNote({ relation, body: noteBody, visibility: "team" }),
-      () => {
-        setNoteBody("");
-        setNoteFormOpen(false);
       },
     );
   };
@@ -206,11 +213,10 @@ function CRMWorkspaceBody({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" size="sm" onClick={() => setTaskFormOpen((value) => !value)}><ListTodo className="me-1.5 h-3.5 w-3.5" />Create task</Button>
-                <Button variant="outline" size="sm" onClick={() => setNoteFormOpen((value) => !value)}><MessageSquarePlus className="me-1.5 h-3.5 w-3.5" />Add CRM note</Button>
+                <Button variant="outline" size="sm" onClick={openNewNote}><MessageSquarePlus className="me-1.5 h-3.5 w-3.5" />Add CRM note</Button>
                 {opportunity ? recordLink(`/app/sales-crm/opportunities?opportunity=${opportunity.id}`, "Open opportunity") : <span />}
               </div>
               <QuickTaskForm open={taskFormOpen} title={taskTitle} onTitleChange={setTaskTitle} onCancel={() => setTaskFormOpen(false)} onSubmit={submitTask} working={working} />
-              <QuickNoteForm open={noteFormOpen} body={noteBody} onBodyChange={setNoteBody} onCancel={() => setNoteFormOpen(false)} onSubmit={submitNote} working={working} />
               {actionError && <ActionError message={actionError} onDismiss={clearActionError} />}
             </TabsContent>
 
@@ -225,9 +231,8 @@ function CRMWorkspaceBody({
                   <Field label="Identity" value={workspace.contact.identityStatus.replace("_", " ")} />
                 </dl>
               </RecordSection>
-              <QuickActions onTask={() => setTaskFormOpen(true)} onNote={() => setNoteFormOpen(true)} />
+              <QuickActions onTask={() => setTaskFormOpen(true)} onNote={openNewNote} />
               <QuickTaskForm open={taskFormOpen} title={taskTitle} onTitleChange={setTaskTitle} onCancel={() => setTaskFormOpen(false)} onSubmit={submitTask} working={working} />
-              <QuickNoteForm open={noteFormOpen} body={noteBody} onBodyChange={setNoteBody} onCancel={() => setNoteFormOpen(false)} onSubmit={submitNote} working={working} />
               {actionError && <ActionError message={actionError} onDismiss={clearActionError} />}
             </TabsContent>
 
@@ -274,16 +279,48 @@ function CRMWorkspaceBody({
             </TabsContent>
 
             <TabsContent value="notes" className="mt-3 space-y-3">
-              <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Notes & Timeline</h3><Button variant="outline" size="sm" onClick={() => setNoteFormOpen(true)}><FileText className="me-1.5 h-3 w-3" />Add note</Button></div>
-              <QuickNoteForm open={noteFormOpen} body={noteBody} onBodyChange={setNoteBody} onCancel={() => setNoteFormOpen(false)} onSubmit={submitNote} working={working} />
-              {workspace.notes.map((note) => <div key={note.id} className="rounded-md border border-border px-3 py-2 text-xs"><p>{note.body}</p><p className="mt-1 text-[11px] text-muted-foreground">{formatRelative(note.updatedAt)} · {note.visibility}</p></div>)}
-              {workspace.timeline.map((event) => <div key={event.id} className="flex gap-2 border-s border-border ps-3 text-xs"><CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" /><div><p>{event.summary}</p><p className="text-[11px] text-muted-foreground">{formatRelative(event.occurredAt)}</p></div></div>)}
-              {!workspace.notes.length && !workspace.timeline.length && <EmptyPanel icon={FileText} message="No notes or timeline activity yet." />}
+              <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Notes & Timeline</h3><Button variant="outline" size="sm" onClick={openNewNote}><FileText className="me-1.5 h-3 w-3" />Add note</Button></div>
+              {editableNotes.length > 0 && <div className="mb-4 space-y-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"><FileText className="h-3.5 w-3.5" />Notes</p>
+                {editableNotes.map((note) => <button key={note.id} type="button" onClick={() => { setSelectedNote(note); setNoteEditorOpen(true); }} className="w-full rounded-md border border-primary/25 bg-primary-soft/20 px-3 py-2 text-left text-xs transition-colors hover:bg-primary-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><p>{note.body}</p><p className="mt-1 text-[11px] text-muted-foreground">{formatRelative(note.updatedAt)} · {note.visibility}</p></button>)}
+              </div>}
+              {workspace.timeline.length > 0 && <div className="space-y-2 border-t border-border pt-4">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"><CheckCircle2 className="h-3.5 w-3.5" />Activity & tasks</p>
+                {workspace.timeline.map((event) => {
+                  const isTask = event.type === "task";
+                  return <div key={event.id} className="flex gap-2 border-s border-border ps-3 text-xs"><span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-semibold text-muted-foreground">{isTask ? <ListTodo className="h-3 w-3" /> : <FileText className="h-3 w-3" />}</span><div><p><span className="me-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{isTask ? "Task" : "Activity"}</span>{event.summary}</p><p className="text-[11px] text-muted-foreground">{formatRelative(event.occurredAt)}</p></div></div>;
+                })}
+              </div>}
+              {!editableNotes.length && !workspace.timeline.length && <EmptyPanel icon={FileText} message="No notes or timeline activity yet." />}
               {actionError && <ActionError message={actionError} onDismiss={clearActionError} />}
             </TabsContent>
           </Tabs>
         )}
       </div>
+      {workspace && <NoteEditorDrawer
+        open={noteEditorOpen}
+        onOpenChange={setNoteEditorOpen}
+        title={selectedNote ? "Edit CRM note" : "New CRM note"}
+        initialValue={noteInitialValue}
+        relation={{ type: "contact", id: workspace.contact.id, label: `${workspace.contact.firstName} ${workspace.contact.lastName ?? ""}`.trim() }}
+        onSubmit={async (value: NoteEditorValue) => {
+          if (selectedNote) {
+            setEditableNotes((current) => current.map((note) => note.id === selectedNote.id ? { ...note, body: value.plainTextPreview, updatedAt: new Date().toISOString() } : note));
+          } else {
+            await createNote({ relation, body: value.plainTextPreview, visibility: value.visibility });
+            await loopdevAdapter.notes.create({
+              organizationId: "local-development-organization",
+              authorId: "local-development-user",
+              authorName: "Alex Morgan",
+              ...value,
+              relations: [{ type: "contact", id: workspace.contact.id, label: `${workspace.contact.firstName} ${workspace.contact.lastName ?? ""}`.trim() }],
+            });
+          }
+          setSelectedNote(null);
+          setNoteEditorOpen(false);
+          if (!selectedNote) reload();
+        }}
+      />}
     </div>
   );
 }
@@ -307,11 +344,6 @@ function QuickActions({ onTask, onNote }: { onTask: () => void; onNote: () => vo
 function QuickTaskForm({ open, title, onTitleChange, onCancel, onSubmit, working }: { open: boolean; title: string; onTitleChange: (value: string) => void; onCancel: () => void; onSubmit: () => void; working: boolean }) {
   if (!open) return null;
   return <div className="rounded-md border border-primary/25 bg-primary-soft/30 p-3"><label className="text-xs font-medium" htmlFor="crm-workspace-task-title">Task title</label><Input id="crm-workspace-task-title" value={title} onChange={(event) => onTitleChange(event.target.value)} placeholder="Follow up with contact" className="mt-1 h-8 text-xs" /><div className="mt-2 flex justify-end gap-2"><Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button><Button size="sm" onClick={onSubmit} disabled={!title.trim() || working}>{working ? "Saving…" : "Save task"}</Button></div></div>;
-}
-
-function QuickNoteForm({ open, body, onBodyChange, onCancel, onSubmit, working }: { open: boolean; body: string; onBodyChange: (value: string) => void; onCancel: () => void; onSubmit: () => void; working: boolean }) {
-  if (!open) return null;
-  return <div className="rounded-md border border-primary/25 bg-primary-soft/30 p-3"><label className="text-xs font-medium" htmlFor="crm-workspace-note-body">CRM note</label><textarea id="crm-workspace-note-body" value={body} onChange={(event) => onBodyChange(event.target.value)} placeholder="Add context for the team" className="mt-1 min-h-16 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs" /><div className="mt-2 flex justify-end gap-2"><Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button><Button size="sm" onClick={onSubmit} disabled={!body.trim() || working}>{working ? "Saving…" : "Save note"}</Button></div></div>;
 }
 
 function ActionError({ message, onDismiss }: { message: string; onDismiss: () => void }) {

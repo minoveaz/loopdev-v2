@@ -4,6 +4,7 @@ import {
   Check,
   ClipboardList,
   Eye,
+  FileText,
   Hand,
   Lock,
   MessageSquarePlus,
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { NoteComposer, NoteEditorDrawer, StatusBadge, type NoteEditorValue } from "@/components/common";
+import { NoteEditorDrawer, StatusBadge, type NoteEditorValue } from "@/components/common";
 import {
   localCommunicationAgents,
   type CollaborationAgent,
@@ -234,22 +235,7 @@ function OperationsBody({
           <p className="mt-1 text-[11px] text-warning-foreground/80">Visible to the team only; never sent to the customer.</p>
           <div className="mt-3 space-y-2">
             {detail.internalNotes.slice().reverse().map((note) => <div key={note.id} className="rounded-md border border-warning/20 bg-background/60 px-2.5 py-2 text-xs"><p>{note.body}</p><p className="mt-1 text-[10px] text-muted-foreground">{note.authorName} · {formatRelative(note.occurredAt)}</p></div>)}
-            <NoteComposer compact disabled={working} placeholder="Add a private conversation note…" submitLabel="Add internal note" onSubmit={(body, mode) => run(async () => {
-              await onAddInternalNote(body);
-              if (onCreateGlobalNote) {
-                await onCreateGlobalNote({
-                  title: "",
-                  mode,
-                  visibility: "team",
-                  relations: [{ type: "conversation", id: detail.summary.id, label: detail.summary.contact.displayName }],
-                  content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: body }] }] },
-                  plainTextPreview: body,
-                  mentions: [],
-                  attachments: [],
-                });
-              }
-            })} />
-            {onCreateGlobalNote && <Button type="button" size="sm" variant="outline" onClick={() => setNoteEditorOpen(true)} disabled={working}>Open rich note editor</Button>}
+            {onCreateGlobalNote && <Button type="button" size="sm" variant="outline" onClick={() => setNoteEditorOpen(true)} disabled={working}><FileText className="me-1.5 h-3.5 w-3.5" />Add note</Button>}
           </div>
         </section>
 

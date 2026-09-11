@@ -29,7 +29,17 @@ export function Customer360PlatformSection({ contactId }: { contactId: string })
         <PlatformTaskList tasks={tasks.tasks} loading={tasks.loading} error={tasks.error} forbidden={tasks.forbidden} />
         <PlatformNotesPanel notes={notes.notes} loading={notes.loading} error={notes.error} forbidden={notes.forbidden} />
         <PlatformTimeline events={timeline.events} loading={timeline.loading} error={timeline.error} />
-        <PlatformAttachmentsPanel attachments={attachments.attachments} loading={attachments.loading} error={attachments.error} />
+        <PlatformAttachmentsPanel
+          attachments={attachments.attachments}
+          loading={attachments.loading}
+          error={attachments.error}
+          onUpload={(file) => attachments.createAttachment({
+            relation,
+            fileName: file.fileName,
+            mimeType: file.mimeType,
+            byteSize: file.byteSize,
+          })}
+        />
       </div>
     </section>
   );

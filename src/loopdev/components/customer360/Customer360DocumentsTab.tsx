@@ -11,6 +11,7 @@ import { FilePreviewDialog, FilesDropzone } from "@/loopdev/components/files";
 import {
   type FileCategory,
   type FileSource,
+  localFilesAdapter,
   useFiles,
 } from "@/loopdev/domains/files";
 
@@ -67,6 +68,7 @@ export function Customer360DocumentsTab({
   const [dropzoneKey, setDropzoneKey] = useState(0);
   const [localFiles, setLocalFiles] = useState<Record<string, File>>({});
   const [previewTarget, setPreviewTarget] = useState<(typeof files)[number] | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const visibleFiles = files.filter((file) => file.status !== "deleted" && (category === "all" || file.category === category));
   const activePendingFile = pendingFiles[activePendingIndex] ?? null;
   const [activePreviewUrl, setActivePreviewUrl] = useState<string | null>(null);
@@ -108,6 +110,7 @@ export function Customer360DocumentsTab({
           byteSize: file.size,
           category: "other",
           source: "upload",
+          file,
         });
         setLocalFiles((current) => ({ ...current, [created.id]: file }));
       }
@@ -229,7 +232,12 @@ export function Customer360DocumentsTab({
           {visibleFiles.map((file) => (
             <li key={file.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
               <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
-              <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPreviewTarget(file)}>
+              <button type="button" className="min-w-0 flex-1 text-left" onClick={() => {
+                void localFilesAdapter.getPreviewSource(file.id).then((source) => {
+                  setPreviewUrl(source?.url ?? null);
+                  setPreviewTarget(file);
+                });
+              }}>
                 <p className="truncate text-sm font-medium">{file.fileName}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatBytes(file.byteSize)} · Uploaded {formatDate(file.createdAt)} · {sourceLabel(file.source)} · {file.status}
@@ -246,8 +254,15 @@ export function Customer360DocumentsTab({
       <FilePreviewDialog
         file={previewTarget}
         localFile={previewTarget ? localFiles[previewTarget.id] : undefined}
+        previewUrl={previewUrl}
         open={previewTarget !== null}
-        onOpenChange={(open) => { if (!open) setPreviewTarget(null); }}
+        onOpenChange={(open) => {
+          if (!open) {
+            if (previewTarget && previewUrl) URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+            setPreviewTarget(null);
+          }
+        }}
         onDelete={() => {
           if (previewTarget) setDeleteTarget(previewTarget);
           setPreviewTarget(null);

@@ -71,6 +71,7 @@ export interface CreateFileMetadataInput {
     messageId?: string;
   };
   uploadedById?: string | null;
+  file?: File;
 }
 
 export interface FileListParams {
@@ -94,6 +95,7 @@ export interface ReplaceFileVersionInput {
   mimeType?: string;
   byteSize?: number;
   checksum?: string | null;
+  file?: File;
 }
 
 export interface FilePreviewSource {

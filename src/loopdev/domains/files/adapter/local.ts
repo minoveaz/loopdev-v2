@@ -1,6 +1,7 @@
 import { localPlatformAdapter, isScopeVisible, type EntityScope } from "@/loopdev/domains/platform";
 import type { CreateFileMetadataInput, FileListParams, FileRecord, FilePreviewSource, FileRelation, FileVersion, FilesAdapter, ReplaceFileVersionInput, UpdateFileMetadataInput } from "../types";
 import { FILES_LOCAL_STORAGE_KEY, localFilesDemoSeed } from "../data/localFiles";
+import { deleteLocalPreview, getLocalPreview, putLocalPreview } from "../data/localPreviewStore";
 
 type FileStorage = Pick<Storage, "getItem" | "setItem">;
 
@@ -112,6 +113,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
         permissions: { canRead: true, canEdit: true, canDelete: true, canAssign: false, canModerate: false },
       };
       write([record, ...existing]);
+      if (input.file) await putLocalPreview(id, input.file);
       return clone(record);
     },
     async remove(id: string, expectedVersion: number) {
@@ -131,6 +133,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       };
       records[index] = updated;
       write(records);
+      await deleteLocalPreview(id);
       return clone(updated);
     },
     async updateMetadata(input: UpdateFileMetadataInput) {
@@ -191,6 +194,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       const replaced = { ...record, fileName: version.fileName, mimeType: version.mimeType, byteSize: version.byteSize, status: "ready" as const, versions: [...record.versions, version], currentVersion: record.currentVersion + 1, updatedAt: now };
       records[index] = replaced;
       write(records);
+      if (input.file) await putLocalPreview(input.id, input.file);
       return clone(replaced);
     },
     async relate(id: string, relation: FileRelation, expectedVersion: number) {
@@ -212,7 +216,10 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       const record = read().find((candidate) => candidate.id === id);
       if (!record) throw new Error("File not found.");
       assertScope(record.scope, "work.read");
-      return { url: null, mimeType: record.mimeType };
+      const localFile = await getLocalPreview(id);
+      if (!localFile) return { url: null, mimeType: record.mimeType };
+      const url = URL.createObjectURL(localFile);
+      return { url, mimeType: localFile.type || record.mimeType, revoke: () => URL.revokeObjectURL(url) };
     },
   };
 }

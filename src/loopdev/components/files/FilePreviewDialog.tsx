@@ -8,17 +8,22 @@ import type { FileRecord } from "@/loopdev/domains/files";
 export interface FilePreviewDialogProps {
   file: FileRecord | null;
   localFile?: File;
+  previewUrl?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDelete?: () => void;
 }
 
-export function FilePreviewDialog({ file, localFile, open, onOpenChange, onDelete }: FilePreviewDialogProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+export function FilePreviewDialog({ file, localFile, previewUrl: providedPreviewUrl, open, onOpenChange, onDelete }: FilePreviewDialogProps) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(providedPreviewUrl ?? null);
   const isImage = file?.mimeType.startsWith("image/") ?? false;
   const isPdf = file?.mimeType === "application/pdf";
 
   useEffect(() => {
+    if (providedPreviewUrl) {
+      setPreviewUrl(providedPreviewUrl);
+      return;
+    }
     if (!localFile || !isImage && !isPdf) {
       setPreviewUrl(null);
       return;
@@ -26,7 +31,7 @@ export function FilePreviewDialog({ file, localFile, open, onOpenChange, onDelet
     const url = URL.createObjectURL(localFile);
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
-  }, [isImage, isPdf, localFile]);
+  }, [isImage, isPdf, localFile, providedPreviewUrl]);
 
   if (!file) return null;
 

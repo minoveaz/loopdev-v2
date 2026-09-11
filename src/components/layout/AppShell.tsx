@@ -12,7 +12,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { useThemeConfig } from "@/hooks/useThemeConfig";
 
 export function AppShell() {
-  const { collapsed, setCollapsed, toggle } = useSidebarCollapsed();
+  const { collapsed, toggle } = useSidebarCollapsed();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopNav, setDesktopNav] = useState(() => (
     typeof window !== "undefined" && window.matchMedia("(min-width: 1200px)").matches
@@ -22,7 +22,6 @@ export function AppShell() {
   const { theme } = useTheme();
   const { config } = useThemeConfig();
   const savedOverflow = useRef<string | null>(null);
-  const previousCommunicationsSidebarState = useRef<boolean | null>(null);
   const isLoopdevWorkspace = pathname === "/launchpad" || pathname.startsWith("/app/");
   const isCommunicationsRoute = pathname.startsWith("/app/sales-crm/communications");
   const effectiveSidebarCollapsed = isCommunicationsRoute && desktopNav ? true : collapsed;
@@ -34,36 +33,6 @@ export function AppShell() {
     media.addEventListener?.("change", syncDesktopNav);
     return () => media.removeEventListener?.("change", syncDesktopNav);
   }, []);
-
-  // Communications is a full-width workspace, so collapse the desktop
-  // sidebar while it is active without changing the user's normal preference.
-  // Listen for breakpoint changes so resizing while staying on the Inbox cannot
-  // leave the desktop sidebar expanded or fail to restore the saved preference.
-  useEffect(() => {
-    const media = window.matchMedia("(min-width: 1200px)");
-    const syncCommunicationsSidebar = () => {
-    if (isCommunicationsRoute && media.matches) {
-      if (previousCommunicationsSidebarState.current === null) {
-        previousCommunicationsSidebarState.current = collapsed;
-      }
-      if (!collapsed) {
-        setCollapsed(true);
-      }
-      return;
-    }
-
-    if (isCommunicationsRoute) return;
-
-    if (previousCommunicationsSidebarState.current !== null) {
-      setCollapsed(previousCommunicationsSidebarState.current);
-      previousCommunicationsSidebarState.current = null;
-    }
-    };
-
-    syncCommunicationsSidebar();
-    media.addEventListener?.("change", syncCommunicationsSidebar);
-    return () => media.removeEventListener?.("change", syncCommunicationsSidebar);
-  }, [collapsed, isCommunicationsRoute, setCollapsed]);
 
   // Centralized scroll-lock release. Always restores whatever inline value
   // was on <body> before we locked it (or clears it if none).

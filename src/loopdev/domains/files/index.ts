@@ -4,4 +4,6 @@ export * from "./adapter";
 export * from "./data/localFiles";
 export * from "./data/localPreviewStore";
 export * from "./data/localFileEvents";
+export * from "./workers/localUploadWorker";
+export * from "./migration/attachments";
 export * from "./hooks/use-files";

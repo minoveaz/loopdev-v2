@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { localFilesAdapter } from "../adapter";
-import type { CreateFileMetadataInput, FileListParams, FileRecord, FilesAdapter } from "../types";
+import type { CreateFileMetadataInput, FileListParams, FileRecord, FilesAdapter, ReplaceFileVersionInput, UpdateFileMetadataInput, FileRelation } from "../types";
 
 export function useFiles(params: FileListParams, adapter: FilesAdapter = localFilesAdapter) {
   const [files, setFiles] = useState<FileRecord[]>([]);
@@ -31,6 +31,11 @@ export function useFiles(params: FileListParams, adapter: FilesAdapter = localFi
     setFiles((current) => current.map((file) => file.id === removed.id ? removed : file));
     return removed;
   }, [adapter]);
+  const mutate = useCallback(async (action: (current: FilesAdapter) => Promise<FileRecord>) => {
+    const updated = await action(adapter);
+    setFiles((current) => current.map((file) => file.id === updated.id ? updated : file));
+    return updated;
+  }, [adapter]);
 
   return {
     files,
@@ -38,6 +43,12 @@ export function useFiles(params: FileListParams, adapter: FilesAdapter = localFi
     error,
     createMetadata,
     remove,
+    updateMetadata: (input: UpdateFileMetadataInput) => mutate((current) => current.updateMetadata(input)),
+    archive: (id: string, expectedVersion: number) => mutate((current) => current.archive(id, expectedVersion)),
+    restore: (id: string, expectedVersion: number) => mutate((current) => current.restore(id, expectedVersion)),
+    replaceVersion: (input: ReplaceFileVersionInput) => mutate((current) => current.replaceVersion(input)),
+    relate: (id: string, relation: FileRelation, expectedVersion: number) => mutate((current) => current.relate(id, relation, expectedVersion)),
+    unrelate: (id: string, expectedVersion: number) => mutate((current) => current.unrelate(id, expectedVersion)),
     reload: () => setReloadToken((value) => value + 1),
   };
 }

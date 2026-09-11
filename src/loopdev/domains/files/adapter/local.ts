@@ -1,5 +1,5 @@
 import { localPlatformAdapter, isScopeVisible, type EntityScope } from "@/loopdev/domains/platform";
-import type { CreateFileMetadataInput, FileListParams, FileRecord, FileVersion, FilesAdapter } from "../types";
+import type { CreateFileMetadataInput, FileListParams, FileRecord, FilePreviewSource, FileRelation, FileVersion, FilesAdapter, ReplaceFileVersionInput, UpdateFileMetadataInput } from "../types";
 import { FILES_LOCAL_STORAGE_KEY, localFilesDemoSeed } from "../data/localFiles";
 
 type FileStorage = Pick<Storage, "getItem" | "setItem">;
@@ -132,6 +132,87 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       records[index] = updated;
       write(records);
       return clone(updated);
+    },
+    async updateMetadata(input: UpdateFileMetadataInput) {
+      const records = read();
+      const index = records.findIndex((record) => record.id === input.id);
+      if (index < 0) throw new Error("File not found.");
+      const record = records[index];
+      if (record.currentVersion !== input.expectedVersion) throw new Error("File has changed; refresh before retrying.");
+      assertScope(record.scope, "work.write");
+      if (input.relation && !isScopeVisible(input.relation.scope, record.scope)) throw new Error("The file relation does not match its scope.");
+      const updated = {
+        ...record,
+        fileName: input.fileName?.trim() || record.fileName,
+        category: input.category ?? record.category,
+        source: input.source ?? record.source,
+        relation: input.relation ? { ...input.relation, scope: { ...input.relation.scope } } : record.relation,
+        currentVersion: record.currentVersion + 1,
+        updatedAt: new Date().toISOString(),
+      };
+      records[index] = updated;
+      write(records);
+      return clone(updated);
+    },
+    async archive(id: string, expectedVersion: number) {
+      const records = read();
+      const index = records.findIndex((record) => record.id === id);
+      if (index < 0) throw new Error("File not found.");
+      const record = records[index];
+      if (record.currentVersion !== expectedVersion) throw new Error("File has changed; refresh before retrying.");
+      assertScope(record.scope, "work.write");
+      const archived = { ...record, status: "archived" as const, archivedAt: new Date().toISOString(), currentVersion: record.currentVersion + 1, updatedAt: new Date().toISOString() };
+      records[index] = archived;
+      write(records);
+      return clone(archived);
+    },
+    async restore(id: string, expectedVersion: number) {
+      const records = read();
+      const index = records.findIndex((record) => record.id === id);
+      if (index < 0) throw new Error("File not found.");
+      const record = records[index];
+      if (record.currentVersion !== expectedVersion) throw new Error("File has changed; refresh before retrying.");
+      assertScope(record.scope, "work.write");
+      const restored = { ...record, status: "ready" as const, archivedAt: null, deletedAt: null, currentVersion: record.currentVersion + 1, updatedAt: new Date().toISOString() };
+      records[index] = restored;
+      write(records);
+      return clone(restored);
+    },
+    async replaceVersion(input: ReplaceFileVersionInput) {
+      const records = read();
+      const index = records.findIndex((record) => record.id === input.id);
+      if (index < 0) throw new Error("File not found.");
+      const record = records[index];
+      if (record.currentVersion !== input.expectedVersion) throw new Error("File has changed; refresh before retrying.");
+      assertScope(record.scope, "work.write");
+      const now = new Date().toISOString();
+      const nextVersion = record.versions.length + 1;
+      const version: FileVersion = { id: `${record.id}-v${nextVersion}`, fileId: record.id, version: nextVersion, fileName: input.fileName ?? record.fileName, mimeType: input.mimeType ?? record.mimeType, byteSize: input.byteSize ?? record.byteSize, checksum: input.checksum ?? null, storageKey: null, createdById: localPlatformAdapter.getOrganizationContext().userId, createdAt: now };
+      const replaced = { ...record, fileName: version.fileName, mimeType: version.mimeType, byteSize: version.byteSize, status: "ready" as const, versions: [...record.versions, version], currentVersion: record.currentVersion + 1, updatedAt: now };
+      records[index] = replaced;
+      write(records);
+      return clone(replaced);
+    },
+    async relate(id: string, relation: FileRelation, expectedVersion: number) {
+      return this.updateMetadata({ id, expectedVersion, relation });
+    },
+    async unrelate(id: string, expectedVersion: number) {
+      const records = read();
+      const index = records.findIndex((record) => record.id === id);
+      if (index < 0) throw new Error("File not found.");
+      const record = records[index];
+      if (record.currentVersion !== expectedVersion) throw new Error("File has changed; refresh before retrying.");
+      assertScope(record.scope, "work.write");
+      const unrelated = { ...record, relation: { entityType: "unlinked", entityId: record.id, scope: { ...record.scope } }, currentVersion: record.currentVersion + 1, updatedAt: new Date().toISOString() };
+      records[index] = unrelated;
+      write(records);
+      return clone(unrelated);
+    },
+    async getPreviewSource(id: string): Promise<FilePreviewSource | null> {
+      const record = read().find((candidate) => candidate.id === id);
+      if (!record) throw new Error("File not found.");
+      assertScope(record.scope, "work.read");
+      return { url: null, mimeType: record.mimeType };
     },
   };
 }

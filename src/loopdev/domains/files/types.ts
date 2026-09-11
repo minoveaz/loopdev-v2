@@ -1,6 +1,6 @@
 import type { EntityRef, EntityScope, PlatformPermissions } from "@/loopdev/domains/platform";
 
-export type FileStatus = "pending" | "ready" | "failed" | "deleted";
+export type FileStatus = "queued" | "uploading" | "processing" | "pending" | "ready" | "failed" | "archived" | "deleted" | "expired";
 export type UploadSessionStatus = "pending" | "completed" | "failed" | "cancelled";
 export type FileCategory = "identity" | "contracts" | "proposals" | "billing" | "communications" | "other";
 export type FileSource = "upload" | "conversation" | "manager" | "generated" | "temporary";
@@ -42,6 +42,8 @@ export interface FileRecord {
   createdAt: string;
   updatedAt: string;
   permissions: PlatformPermissions;
+  archivedAt?: string | null;
+  deletedAt?: string | null;
 }
 
 export interface UploadSession {
@@ -76,6 +78,30 @@ export interface FileListParams {
   relation?: FileRelation;
 }
 
+export interface UpdateFileMetadataInput {
+  id: string;
+  expectedVersion: number;
+  fileName?: string;
+  category?: FileCategory;
+  source?: FileSource;
+  relation?: FileRelation;
+}
+
+export interface ReplaceFileVersionInput {
+  id: string;
+  expectedVersion: number;
+  fileName?: string;
+  mimeType?: string;
+  byteSize?: number;
+  checksum?: string | null;
+}
+
+export interface FilePreviewSource {
+  url: string | null;
+  mimeType: string;
+  revoke?: () => void;
+}
+
 export interface FileValidationOptions {
   acceptedTypes?: readonly string[];
   maxSizeBytes?: number;
@@ -90,4 +116,11 @@ export interface FilesAdapter {
   list(params: FileListParams): Promise<FileRecord[]>;
   createMetadata(input: CreateFileMetadataInput): Promise<FileRecord>;
   remove(id: string, expectedVersion: number): Promise<FileRecord>;
+  updateMetadata(input: UpdateFileMetadataInput): Promise<FileRecord>;
+  archive(id: string, expectedVersion: number): Promise<FileRecord>;
+  restore(id: string, expectedVersion: number): Promise<FileRecord>;
+  replaceVersion(input: ReplaceFileVersionInput): Promise<FileRecord>;
+  relate(id: string, relation: FileRelation, expectedVersion: number): Promise<FileRecord>;
+  unrelate(id: string, expectedVersion: number): Promise<FileRecord>;
+  getPreviewSource(id: string): Promise<FilePreviewSource | null>;
 }

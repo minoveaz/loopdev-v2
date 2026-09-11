@@ -471,11 +471,11 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
   el botón de upload del workspace activa el selector.
 - [x] Definir `FileCategory` y `FileSource`; `FilePermission` y versionado de `UploadSession`
   siguen pendientes.
-- [ ] Completar `FilesAdapter` y store local con update metadata, archive, restore, delete,
-  version, relate/unrelate y signed-preview mock.
-- [ ] Crear primitives globales `FilePicker`, `UploadQueue`, `UploadItem`,
-  `FilePreview`, `FileList` y `FileCategoryTabs`, con variantes para página, drawer, modal,
-  formulario e inline edit.
+- [x] Completar `FilesAdapter` y store local con update metadata, archive, restore, delete,
+  version, relate/unrelate y signed-preview mock local.
+- [x] Crear primitives globales `FilePicker`, `UploadQueue`, `UploadItem`,
+  `FilePreview`, `FileList` y `FileCategoryTabs`, con una primera variante reutilizable para
+  página y modal.
 - [ ] Cubrir drag and drop, selección múltiple, progreso, cancelación, retry, pausa,
   duplicados, límites de tamaño/tipo/cantidad, errores recuperables y keyboard/mobile UX.
 - [ ] Modelar estados `queued`, `uploading`, `processing`, `ready`, `failed`, `archived`

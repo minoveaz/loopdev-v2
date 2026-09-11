@@ -1,0 +1,3 @@
+export function FileCategoryTabs<T extends string>({ categories, value, onChange }: { categories: Array<{ value: T; label: string }>; value: T; onChange: (value: T) => void }) {
+  return <div className="flex gap-1 overflow-x-auto rounded-md bg-card-muted p-1" role="tablist" aria-label="File categories">{categories.map((category) => <button key={category.value} type="button" role="tab" aria-selected={value === category.value} onClick={() => onChange(category.value)} className={`shrink-0 rounded px-2.5 py-1.5 text-xs ${value === category.value ? "bg-card font-medium shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{category.label}</button>)}</div>;
+}

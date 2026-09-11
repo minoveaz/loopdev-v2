@@ -1,21 +1,45 @@
-import { CheckSquare, Plus, TrendingUp } from "lucide-react";
-import { DataCard, EmptyState } from "@/components/common";
+import { CheckSquare, Plus, TrendingUp, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ActivityFeed, DataCard, EmptyState, getActivityActionLabel, getActivityKind, type ActivityFeedItem } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import type { CRMActivity, CRMLead, CRMNote, CRMOpportunity, CRMTask } from "@/loopdev/domains/crm/adapter";
 import { formatDate, formatRelative } from "@/lib/formatters";
 
-export function Customer360TimelineCard({ timeline }: { timeline: CRMActivity[] }) {
-  return (
-    <DataCard title="Activity timeline" description="Recent relationship activity">
-      {timeline.length ? <ol className="relative ml-2 max-w-3xl space-y-5 border-l border-border pl-5">
-        {timeline.map((item) => <li key={`${item.sourceType}:${item.sourceId}`} className="relative">
-          <span className="absolute -left-[26px] top-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary" />
-          <p className="text-sm font-medium">{item.summary}</p>
-          <p className="text-xs text-muted-foreground">{formatRelative(item.occurredAt)} · {item.type}</p>
-        </li>)}
-      </ol> : <EmptyState title="No recent activity" description="Activity will appear here as the relationship develops." />}
-    </DataCard>
-  );
+function crmActivityTarget(item: CRMActivity): string | undefined {
+  if (item.sourceType === "communication") return `/app/sales-crm/communications/${item.sourceId}`;
+  if (item.sourceType === "task") return `/app/sales-crm/tasks?taskId=${item.sourceId}`;
+  if (item.sourceType === "opportunity") return `/app/sales-crm/opportunities?opportunityId=${item.sourceId}`;
+  return undefined;
+}
+
+export function Customer360TimelineCard({ timeline, contactId }: { timeline: CRMActivity[]; contactId: string }) {
+  const recentTimeline = [...timeline]
+    .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
+    .slice(0, 4);
+  const orderedTimeline = [...timeline].sort((left, right) => left.occurredAt.localeCompare(right.occurredAt));
+  const firstActivity = orderedTimeline[0];
+  const lastActivity = orderedTimeline[orderedTimeline.length - 1];
+  const items: ActivityFeedItem[] = recentTimeline.map((item) => ({
+    id: `${item.sourceType}:${item.sourceId}`,
+    kind: getActivityKind(item.type),
+    actorLabel: item.sourceType,
+    actorInitials: item.sourceType.slice(0, 2).toUpperCase(),
+    action: item.type,
+    actionLabel: getActivityActionLabel(item.type),
+    contextLabel: item.status ?? undefined,
+    targetHref: crmActivityTarget(item),
+    targetLabel: item.sourceType === "communication" ? "Open conversation" : "Open record",
+    occurredAt: item.occurredAt,
+    summary: item.summary,
+  }));
+  const activitySummary = timeline.length ? (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+      <span><strong className="font-medium text-foreground">Total activities:</strong> {timeline.length}</span>
+      {firstActivity && <span><strong className="font-medium text-foreground">First activity:</strong> {formatDate(firstActivity.occurredAt)}</span>}
+      {lastActivity && <span><strong className="font-medium text-foreground">Last activity:</strong> {formatDate(lastActivity.occurredAt)}</span>}
+    </div>
+  ) : "Latest relationship activity";
+  return <ActivityFeed title="Activity timeline" description={activitySummary} action={<Button asChild variant="ghost" size="sm"><Link to={`/app/sales-crm/contacts/${contactId}/activity`}>View all<ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link></Button>} items={items} emptyTitle="No recent activity" emptyDescription="Activity will appear here as the relationship develops." />;
 }
 
 export function Customer360LeadsCard({ leads }: { leads: CRMLead[] }) {

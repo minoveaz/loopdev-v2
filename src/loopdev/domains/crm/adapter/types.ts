@@ -383,6 +383,12 @@ export interface CRMActivity {
   type: string;
   summary: string;
   occurredAt: string;
+  actor?: string;
+  source?: string;
+  channel?: string;
+  status?: string;
+  outcome?: string;
+  details?: string;
 }
 
 export interface Customer360View {

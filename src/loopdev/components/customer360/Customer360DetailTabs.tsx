@@ -1,79 +1,51 @@
-import { Plus, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import { FileText, MessageSquare, PackagePlus, Pencil, Plus, Upload, UserPlus } from "lucide-react";
 import { DataCard } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { CRMContact } from "@/loopdev/domains/crm/adapter";
-import { formatDate } from "@/lib/formatters";
-import { Customer360Field, formatCustomerAttribute } from "./Customer360Field";
+import type { CRMContact, CRMLead, CRMNote, CRMOpportunity, CRMTask } from "@/loopdev/domains/crm/adapter";
+import { Customer360CrmDetailsTab } from "./Customer360CrmDetailsTab";
+import { Customer360DocumentsTab } from "./Customer360DocumentsTab";
+import { Customer360ProductsTab } from "./Customer360ProductsTab";
+import { Customer360SalesTab } from "./Customer360SalesTab";
+import { Customer360WorkTab } from "./Customer360WorkTab";
 
-export function Customer360DetailTabs({ contact }: { contact: CRMContact }) {
+interface Customer360DetailTabsProps {
+  contact: CRMContact;
+  leads: CRMLead[];
+  opportunities: CRMOpportunity[];
+  tasks: CRMTask[];
+  notes: CRMNote[];
+  onEdit: () => void;
+}
+
+export function Customer360DetailTabs({ contact, leads, opportunities, tasks, notes, onEdit }: Customer360DetailTabsProps) {
+  const [activeTab, setActiveTab] = useState("contact");
+  const tabs = [
+    { value: "contact", label: "Contact information" },
+    { value: "sales", label: "Sales", count: leads.length + opportunities.length },
+    { value: "work", label: "Work", count: tasks.filter((task) => task.status !== "completed").length + notes.length },
+    { value: "documents", label: "Documents" },
+    { value: "products", label: "Products" },
+  ];
+  const footer = {
+    contact: <Button onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit contact</Button>,
+    sales: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New opportunity</Button><Button variant="outline"><UserPlus className="mr-1.5 h-3.5 w-3.5" />New lead</Button><Button variant="outline">View pipeline</Button></>,
+    work: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New task</Button><Button variant="outline"><MessageSquare className="mr-1.5 h-3.5 w-3.5" />Add note</Button></>,
+    documents: <><Button><Upload className="mr-1.5 h-3.5 w-3.5" />Upload document</Button><Button variant="outline"><FileText className="mr-1.5 h-3.5 w-3.5" />View all</Button></>,
+    products: <><Button><PackagePlus className="mr-1.5 h-3.5 w-3.5" />Add product</Button><Button variant="outline">View catalog</Button></>,
+  }[activeTab as keyof typeof footer];
   return (
-    <DataCard
-      className="min-w-0 lg:col-span-2 lg:h-[580px]"
-      bodyClassName="flex min-h-0 flex-col overflow-hidden"
-      title="CRM details"
-      description="Relationship and assignment context"
-    >
-      <Tabs defaultValue="contact" className="flex min-h-0 flex-1 flex-col">
-        <TabsList className="mb-5 flex w-full shrink-0 flex-wrap justify-start gap-1 bg-card-muted p-1">
-          <TabsTrigger value="contact">Contact</TabsTrigger>
-          <TabsTrigger value="personal">Personal</TabsTrigger>
-          <TabsTrigger value="company">Company</TabsTrigger>
-          <TabsTrigger value="attributes">Attributes</TabsTrigger>
-        </TabsList>
-        <TabsContent value="contact" className="min-h-0 flex-1 overflow-y-auto pr-2">
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <Customer360Field label="Full name" value={[contact.firstName, contact.lastName, contact.secondLastName].filter(Boolean).join(" ")} />
-            <Customer360Field label="Email" value={contact.email} />
-            <Customer360Field label="Secondary email" value={contact.secondaryEmail} />
-            <Customer360Field label="Phone" value={contact.phone} />
-            <Customer360Field label="Secondary phone" value={contact.secondaryPhone} />
-            <Customer360Field label="Preferred channel" value={contact.preferredChannel} />
-            <Customer360Field label="Preferred language" value={contact.preferredLanguage} />
-            <Customer360Field label="Address line 1" value={contact.addressLine1} />
-            <Customer360Field label="Address line 2" value={contact.addressLine2} />
-            <Customer360Field label="City" value={contact.city} />
-            <Customer360Field label="State / province" value={contact.stateProvince} />
-            <Customer360Field label="Postal code" value={contact.postalCode} />
-            <Customer360Field label="Country" value={contact.country} />
-          </dl>
-        </TabsContent>
-        <TabsContent value="personal" className="min-h-0 flex-1 overflow-y-auto pr-2">
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <Customer360Field label="First name" value={contact.firstName} />
-            <Customer360Field label="Last name" value={contact.lastName} />
-            <Customer360Field label="Second last name" value={contact.secondLastName} />
-            <Customer360Field label="Preferred name" value={contact.preferredName} />
-            <Customer360Field label="Document type" value={contact.documentType} />
-            <Customer360Field label="Document number" value={contact.documentNumber} mono />
-            <Customer360Field label="Birth date" value={contact.birthDate ? formatDate(contact.birthDate) : null} />
-            <Customer360Field label="Gender" value={contact.gender} />
-          </dl>
-        </TabsContent>
-        <TabsContent value="company" className="min-h-0 flex-1 overflow-y-auto pr-2">
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <Customer360Field label="Company" value={contact.companyName} />
-            <Customer360Field label="Job title" value={contact.jobTitle} />
-            <Customer360Field label="Department" value={contact.department} />
-            <Customer360Field label="Identity status" value={contact.identityStatus.replace("_", " ")} />
-            <Customer360Field label="Contact ID" value={contact.id} mono />
-            <Customer360Field label="Created" value={formatDate(contact.createdAt)} />
-            <Customer360Field label="Updated" value={formatDate(contact.updatedAt)} />
-          </dl>
-        </TabsContent>
-        <TabsContent value="attributes" className="min-h-0 flex-1 overflow-y-auto pr-2">
-          {Object.entries(contact.attributes).length ? (
-            <dl className="grid gap-4 sm:grid-cols-2">
-              {Object.entries(contact.attributes).map(([key, value]) => <Customer360Field key={key} label={key} value={formatCustomerAttribute(value)} />)}
-            </dl>
-          ) : <p className="py-8 text-center text-sm text-muted-foreground">No additional attributes.</p>}
-        </TabsContent>
-      </Tabs>
-      <div className="mt-5 flex shrink-0 gap-2 border-t border-border pt-4">
-        <Button><Plus className="mr-1.5 h-3.5 w-3.5" />New task</Button>
-        <Button variant="outline"><MessageSquare className="mr-1.5 h-3.5 w-3.5" />Add note</Button>
-        <Button variant="outline">Edit contact</Button>
+    <DataCard className="min-w-0 lg:col-span-2 h-[580px] max-h-[calc(100vh-8rem)]" bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden p-0" title="Customer workspace" description="Everything we know about this relationship" headerContent={<div role="tablist" aria-label="Customer workspace sections" className="flex w-full gap-1 overflow-x-auto bg-card-muted p-1">
+      {tabs.map((tab) => <button key={tab.value} type="button" role="tab" aria-selected={activeTab === tab.value} onClick={() => setActiveTab(tab.value)} className={`shrink-0 rounded-md px-3 py-2 text-sm transition-colors ${activeTab === tab.value ? "bg-card font-medium text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{tab.label}{tab.count !== undefined && <span className="ml-1 text-xs text-muted-foreground">{tab.count}</span>}</button>)}
+    </div>}>
+      <div className="min-h-0 flex-1 overflow-y-auto p-5">
+        {activeTab === "contact" && <Customer360CrmDetailsTab contact={contact} />}
+        {activeTab === "sales" && <Customer360SalesTab leads={leads} opportunities={opportunities} />}
+        {activeTab === "work" && <Customer360WorkTab tasks={tasks} notes={notes} />}
+        {activeTab === "documents" && <Customer360DocumentsTab />}
+        {activeTab === "products" && <Customer360ProductsTab />}
       </div>
+      <div className="flex shrink-0 flex-wrap gap-2 border-t border-border bg-card px-5 py-4">{footer}</div>
     </DataCard>
   );
 }

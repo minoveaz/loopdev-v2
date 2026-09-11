@@ -56,9 +56,9 @@ export function ContactFormDrawer({
         <FormSectionNav
           items={[
             { id: "contact-form-identity", label: "Identity" },
-            { id: "contact-form-channels", label: "Channels" },
-            { id: "contact-form-organization", label: "Organization" },
             { id: "contact-form-address", label: "Address" },
+            { id: "contact-form-organization", label: "Organization" },
+            { id: "contact-form-channels", label: "Contact channels" },
           ]}
           onSelect={scrollToSection}
         />

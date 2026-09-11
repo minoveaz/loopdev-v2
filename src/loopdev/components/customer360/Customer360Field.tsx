@@ -1,18 +1,17 @@
+import { ReadOnlyField } from "@/components/common";
+
 export function Customer360Field({
   label,
   value,
   mono = false,
+  copyable = true,
 }: {
   label: string;
   value: string | null;
   mono?: boolean;
+  copyable?: boolean;
 }) {
-  return (
-    <div className="rounded-md border border-border bg-card-muted/30 p-3">
-      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
-      <dd className={`mt-0.5 text-sm ${mono ? "font-mono" : ""}`}>{value || "—"}</dd>
-    </div>
-  );
+  return <ReadOnlyField label={label} value={value} mono={mono} copyable={copyable} />;
 }
 
 export function formatCustomerAttribute(value: unknown): string | null {

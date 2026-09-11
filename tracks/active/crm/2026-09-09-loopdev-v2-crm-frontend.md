@@ -430,7 +430,7 @@ migraciones y ninguna página accede a `localStorage`.
 
 ### Fase 8H — Files Platform transversal
 
-**Estado:** En progreso — foundation local implementada, integración de consumidores pendiente
+**Estado:** En progreso — foundation local implementada, CRM/Communications/Platform conectados localmente
 
 Esta fase continúa el cierre local de Communications 8A-8G. Se numera 8H porque Files
 Platform nace ahora como capacidad transversal necesaria para Customer 360 y Communications,
@@ -462,8 +462,8 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
   `EntityScope`, `EntityRef` y permisos; las categorías y fuentes extensibles siguen abiertas.
 - [x] Definir la frontera de `FileRecord` (metadata y relaciones) frente al binario y al
   `StorageObject`; ningún consumidor depende de una URL pública o de un proveedor concreto.
-- [x] Definir `FilesAdapter` y store local determinista con listado y creación de metadata;
-  las mutaciones de versionado, archivado y relaciones quedan pendientes.
+- [x] Definir `FilesAdapter` y store local determinista con listado, creación de metadata y
+  mutaciones de lifecycle.
 - [x] Crear el primitive global `FilesDropzone` con variantes iniciales para selección múltiple,
   drag/drop, browse, validación y cola local.
 - [x] Cubrir validación de archivos y comportamiento del adapter local con tests focalizados.
@@ -476,9 +476,9 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
 - [x] Crear primitives globales `FilePicker`, `UploadQueue`, `UploadItem`,
   `FilePreview`, `FileList` y `FileCategoryTabs`, con una primera variante reutilizable para
   página y modal.
-- [ ] Cubrir drag and drop, selección múltiple, progreso, cancelación, retry, pausa,
+- [x] Cubrir drag and drop, selección múltiple, progreso, cancelación, retry,
   duplicados, límites de tamaño/tipo/cantidad, errores recuperables y keyboard/mobile UX.
-- [ ] Modelar estados `queued`, `uploading`, `processing`, `ready`, `failed`, `archived`
+- [x] Modelar estados `queued`, `uploading`, `processing`, `ready`, `failed`, `archived`
   y `expired`, además de `source: upload | conversation | manager | generated | temporary`.
 - [ ] Añadir categorías, tags, búsqueda autorizada, filtros, ordenación, colecciones y
   vistas compacta/lista/grid sin imponer una taxonomía exclusiva de CRM.
@@ -486,14 +486,16 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
   quedan preparados para descarga cuando exista Storage.
 - [ ] Implementar versionado y reemplazo conservando historial, autoría, checksum y
   `supersedesFileVersionId`; evitar duplicados por hash dentro del scope autorizado.
-- [ ] Definir lifecycle temporal, retención, archivado, borrado lógico, expiración y cleanup
-  para documentos de sesión y assets abandonados.
+- [x] Definir lifecycle temporal, retención, archivado, borrado lógico, expiración y cleanup
+  local para documentos de sesión y assets abandonados.
 - [ ] Mantener permisos por organización/workspace/entidad, acceso sensible, links compartidos
   con expiración y audit events separados del Timeline.
 - [ ] Añadir eventos Platform para `file.created`, `file.versioned`, `file.related`,
   `file.archived` y `file.deleted`, preparados para Notifications y Automations.
 - [x] Integrar la acción de Communications para guardar documentos recibidos en Customer 360,
-  conservando `conversationId` y `messageId`. Notes y el resto de consumidores quedan pendientes.
+  conservando `conversationId` y `messageId`.
+- [x] Conectar el selector local con attachments de Customer 360, Notes y Tasks mediante
+  bridges compatibles con los contratos anteriores.
   Customer 360 Documents queda integrado en el slice
   inicial. Después se conectarán Marketing Studio, Content Studio y Document Intelligence
   mediante adapters/hooks, no imports cruzados.

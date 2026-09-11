@@ -50,6 +50,8 @@ import { CRMWorkspacePanel } from "@/loopdev/components/crm/CRMWorkspacePanel";
 import { ConversationOperationsPanel } from "@/loopdev/components/communications/ConversationOperationsPanel";
 import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
 import { MessageContextMenu } from "@/loopdev/components/communications/MessageContextMenu";
+import { toast } from "@/hooks/use-toast";
+import { localFilesAdapter } from "@/loopdev/domains/files";
 import { ConversationTimelineRail } from "@/loopdev/components/communications/ConversationTimelineRail";
 import { ConversationTimelinePanel } from "@/loopdev/components/communications/ConversationTimelinePanel";
 import type { ConversationContextView } from "@/loopdev/components/communications/ConversationContextTabs";
@@ -651,6 +653,28 @@ export default function Communications() {
                                 onCopy={(selectedMessage) => navigator.clipboard.writeText(selectedMessage.body)}
                                 onReply={(selectedMessage) => updateComposerDraft({ body: `> ${selectedMessage.body}\n\n` })}
                                 onOpenOperations={() => openContextView("operations")}
+                                onSaveToCustomer={async (selectedMessage) => {
+                                  const metadata = selectedMessage.contentMetadata;
+                                  if (!metadata?.name) {
+                                    toast({ title: "Unable to save attachment", description: "This message does not contain a file name.", variant: "destructive" });
+                                    return;
+                                  }
+                                  try {
+                                    await localFilesAdapter.createMetadata({
+                                      scope: { organizationId: selectedSummary.organizationId, workspaceId: selectedSummary.workspaceId },
+                                      relation: { entityType: "contact", entityId: selectedSummary.contact.id, scope: { organizationId: selectedSummary.organizationId, workspaceId: selectedSummary.workspaceId }, label: selectedSummary.contact.displayName },
+                                      fileName: metadata.name,
+                                      mimeType: metadata.mimeType ?? "application/octet-stream",
+                                      byteSize: Number.parseInt(metadata.size ?? "0", 10) || 0,
+                                      category: "communications",
+                                      source: "conversation",
+                                      sourceMetadata: { conversationId: selectedMessage.conversationId, messageId: selectedMessage.id },
+                                    });
+                                    toast({ title: "File saved to customer record", description: `${metadata.name} is now available in Customer 360.` });
+                                  } catch (cause) {
+                                    toast({ title: "Unable to save file", description: cause instanceof Error ? cause.message : "Please try again.", variant: "destructive" });
+                                  }
+                                }}
                               >
                                 <div className={cn("max-w-[75%] rounded-xl px-4 py-2.5", outbound ? "rounded-ee-sm bg-primary text-primary-foreground" : "rounded-es-sm bg-muted text-foreground")}>
                                   <MessageContent message={message} outbound={outbound} />

@@ -492,7 +492,9 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
   con expiración y audit events separados del Timeline.
 - [ ] Añadir eventos Platform para `file.created`, `file.versioned`, `file.related`,
   `file.archived` y `file.deleted`, preparados para Notifications y Automations.
-- [ ] Integrar Notes y Communications; Customer 360 Documents queda integrado en el slice
+- [x] Integrar la acción de Communications para guardar documentos recibidos en Customer 360,
+  conservando `conversationId` y `messageId`. Notes y el resto de consumidores quedan pendientes.
+  Customer 360 Documents queda integrado en el slice
   inicial. Después se conectarán Marketing Studio, Content Studio y Document Intelligence
   mediante adapters/hooks, no imports cruzados.
 

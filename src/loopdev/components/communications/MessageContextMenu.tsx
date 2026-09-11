@@ -1,4 +1,4 @@
-import { Copy, ExternalLink, Reply } from "lucide-react";
+import { Copy, ExternalLink, Reply, Save } from "lucide-react";
 import type { ReactElement } from "react";
 import { AdaptiveContextMenu, type ContextMenuAction } from "@/components/common";
 import type { CommunicationMessage } from "@/loopdev/domains/communications";
@@ -9,6 +9,7 @@ interface MessageContextMenuProps {
   onCopy: (message: CommunicationMessage) => void | Promise<void>;
   onReply: (message: CommunicationMessage) => void | Promise<void>;
   onOpenOperations: () => void;
+  onSaveToCustomer?: (message: CommunicationMessage) => void | Promise<void>;
 }
 
 export function MessageContextMenu({
@@ -17,6 +18,7 @@ export function MessageContextMenu({
   onCopy,
   onReply,
   onOpenOperations,
+  onSaveToCustomer,
 }: MessageContextMenuProps) {
   const actions: ContextMenuAction[] = [
     {
@@ -31,6 +33,14 @@ export function MessageContextMenu({
         label: "Reply to message",
         icon: <Reply className="me-2 h-4 w-4" />,
         onSelect: () => onReply(message),
+      }]
+      : []),
+    ...(onSaveToCustomer && message.contentType === "document"
+      ? [{
+        id: "save-to-customer",
+        label: "Save to customer record",
+        icon: <Save className="me-2 h-4 w-4" />,
+        onSelect: () => onSaveToCustomer(message),
       }]
       : []),
     {

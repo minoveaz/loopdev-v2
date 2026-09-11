@@ -65,3 +65,7 @@ export async function deleteLocalPreview(id: string) {
     // Metadata deletion remains valid if local preview cleanup is unavailable.
   }
 }
+
+export async function deleteLocalPreviews(ids: readonly string[]) {
+  await Promise.all(ids.map((id) => deleteLocalPreview(id)));
+}

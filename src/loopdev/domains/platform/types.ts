@@ -69,6 +69,7 @@ export interface TaskRecord extends PlatformRecordBase {
   dueAt: string | null;
   relation: EntityRef<TaskRelationType>;
   completedAt: string | null;
+  attachments?: AttachmentRecord[];
 }
 
 export interface TaskTemplateRecord extends PlatformRecordBase {
@@ -86,6 +87,7 @@ export interface NoteRecord extends PlatformRecordBase {
   relation: EntityRef<TaskRelationType>;
   authorId: string;
   body: string;
+  attachments?: AttachmentRecord[];
 }
 
 export interface ActivityRecord {

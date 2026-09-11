@@ -41,6 +41,7 @@ import { formatDate, formatRelative } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { CRMWorkspacePanel } from "@/loopdev/components/crm/CRMWorkspacePanel";
 import { ConversationOperationsPanel } from "@/loopdev/components/communications/ConversationOperationsPanel";
+import { MessageContextMenu } from "@/loopdev/components/communications/MessageContextMenu";
 
 const channelIcons: Record<CommunicationChannel, ComponentType<ChannelIconProps>> = {
   whatsapp: WhatsAppIcon,
@@ -529,10 +530,17 @@ export default function Communications() {
                       const outbound = message.direction === "outbound";
                       return (
                         <li key={message.id} className={cn("flex", outbound ? "justify-end" : "justify-start")}>
-                          <div className={cn("max-w-[75%] rounded-xl px-4 py-2.5", outbound ? "rounded-ee-sm bg-primary text-primary-foreground" : "rounded-es-sm bg-muted text-foreground")}>
-                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p>
-                            <div className={cn("mt-1.5 flex items-center gap-1.5 text-[10px]", outbound ? "text-primary-foreground/70" : "text-muted-foreground")}><span>{message.authorName}</span><span>·</span><span>{formatRelative(message.occurredAt)}</span>{outbound && message.deliveryStatus && <><span>·</span><DeliveryStatus status={message.deliveryStatus} /></>}</div>
-                          </div>
+                          <MessageContextMenu
+                            message={message}
+                            onCopy={(selectedMessage) => navigator.clipboard.writeText(selectedMessage.body)}
+                            onReply={(selectedMessage) => updateComposerDraft({ body: `> ${selectedMessage.body}\n\n` })}
+                            onOpenOperations={() => { setCrmWorkspaceOpen(false); setOperationsOpen(true); }}
+                          >
+                            <div className={cn("max-w-[75%] rounded-xl px-4 py-2.5", outbound ? "rounded-ee-sm bg-primary text-primary-foreground" : "rounded-es-sm bg-muted text-foreground")}>
+                              <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p>
+                              <div className={cn("mt-1.5 flex items-center gap-1.5 text-[10px]", outbound ? "text-primary-foreground/70" : "text-muted-foreground")}><span>{message.authorName}</span><span>·</span><span>{formatRelative(message.occurredAt)}</span>{outbound && message.deliveryStatus && <><span>·</span><DeliveryStatus status={message.deliveryStatus} /></>}</div>
+                            </div>
+                          </MessageContextMenu>
                         </li>
                       );
                     })}

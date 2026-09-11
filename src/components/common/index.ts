@@ -31,6 +31,12 @@ export { FormSection } from "./FormSection";
 export { SettingsCard } from "./SettingsCard";
 export { DetailDrawer } from "./DetailDrawer";
 export {
+  AdaptiveContextMenu,
+  type AdaptiveContextMenuAction,
+  type ContextMenuAction,
+  type ContextMenuSeparatorAction,
+} from "./AdaptiveContextMenu";
+export {
   DataTable,
   type DataTableColumn,
   type DataTableAction,

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Check, CheckCircle2, Circle, Clock3, ListChecks, Plus, RotateCcw, ChevronsUpDown } from "lucide-react";
 import { DataCard, StatusBadge, useFormLifecycle } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
+import { FilePicker } from "@/loopdev/components/files";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
@@ -36,9 +37,10 @@ export interface PlatformTaskFormProps {
     relation: EntityRef;
     assignedUserId?: string | null;
   }) => Promise<unknown>;
+  onAttachmentUpload?: (file: File) => Promise<unknown>;
 }
 
-export function PlatformTaskForm({ relation, task, templates = [], formId = "platform-task-form", showSubmitButton = true, onDirtyChange, submitLabel, canAssign = false, onSubmit }: PlatformTaskFormProps) {
+export function PlatformTaskForm({ relation, task, templates = [], formId = "platform-task-form", showSubmitButton = true, onDirtyChange, submitLabel, canAssign = false, onSubmit, onAttachmentUpload }: PlatformTaskFormProps) {
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "normal");
@@ -164,6 +166,12 @@ export function PlatformTaskForm({ relation, task, templates = [], formId = "pla
             onChange={(event) => { setAssignedUserId(event.target.value); onDirtyChange?.(true); }}
             disabled={pending}
           />
+        </div>
+      )}
+      {onAttachmentUpload && (
+        <div className="space-y-1.5">
+          <Label>Attachments</Label>
+          <FilePicker multiple onFilesSelected={(files) => Promise.all(files.map(onAttachmentUpload))} />
         </div>
       )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

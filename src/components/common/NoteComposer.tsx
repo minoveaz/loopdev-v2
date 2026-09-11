@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { RichNoteEditor } from "./NoteEditorDrawer";
+import { FilePicker } from "@/loopdev/components/files";
 
 type NoteComposerMode = "quick" | "rich";
 
@@ -16,6 +17,7 @@ export interface NoteComposerProps {
   error?: string | null;
   footerContent?: ReactNode;
   className?: string;
+  onAttachmentUpload?: (file: File) => Promise<unknown>;
 }
 
 export function NoteComposer({
@@ -27,6 +29,7 @@ export function NoteComposer({
   error,
   footerContent,
   className,
+  onAttachmentUpload,
 }: NoteComposerProps) {
   const [mode, setMode] = useState<NoteComposerMode>("quick");
   const [body, setBody] = useState("");
@@ -67,7 +70,10 @@ export function NoteComposer({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{footerContent}</div>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          {footerContent}
+          {onAttachmentUpload && <FilePicker multiple={false} onFilesSelected={(files) => { const file = files[0]; if (file) void onAttachmentUpload(file); }} />}
+        </div>
         <Button type="button" size="sm" onClick={() => void submit()} disabled={disabled || pending || !(mode === "quick" ? body.trim() : richBody.trim())}>
           <Send className="mr-1.5 h-3.5 w-3.5" />{pending ? "Saving…" : submitLabel}
         </Button>

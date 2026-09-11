@@ -15,9 +15,10 @@ export interface PlatformNotesPanelProps {
   relation?: EntityRef;
   onCreate?: (body: string, visibility: PlatformVisibility) => Promise<unknown>;
   onUpdate?: (noteId: string, body: string, expectedVersion: number) => Promise<unknown>;
+  onAttachmentUpload?: (file: File) => Promise<unknown>;
 }
 
-export function PlatformNotesPanel({ notes, loading = false, error, forbidden = false, relation, onCreate, onUpdate }: PlatformNotesPanelProps) {
+export function PlatformNotesPanel({ notes, loading = false, error, forbidden = false, relation, onCreate, onUpdate, onAttachmentUpload }: PlatformNotesPanelProps) {
   const [visibility, setVisibility] = useState<PlatformVisibility>("team");
   const [formError, setFormError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -103,6 +104,7 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
               </Select>
             </div>
           )}
+          onAttachmentUpload={onAttachmentUpload}
         />
         </div>
       )}

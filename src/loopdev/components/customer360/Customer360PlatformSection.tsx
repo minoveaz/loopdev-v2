@@ -27,7 +27,19 @@ export function Customer360PlatformSection({ contactId }: { contactId: string })
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <PlatformTaskList tasks={tasks.tasks} loading={tasks.loading} error={tasks.error} forbidden={tasks.forbidden} />
-        <PlatformNotesPanel notes={notes.notes} loading={notes.loading} error={notes.error} forbidden={notes.forbidden} />
+        <PlatformNotesPanel
+          notes={notes.notes}
+          loading={notes.loading}
+          error={notes.error}
+          forbidden={notes.forbidden}
+          relation={relation}
+          onAttachmentUpload={(file) => attachments.createAttachment({
+            relation,
+            fileName: file.name,
+            mimeType: file.type,
+            byteSize: file.size,
+          })}
+        />
         <PlatformTimeline events={timeline.events} loading={timeline.loading} error={timeline.error} />
         <PlatformAttachmentsPanel
           attachments={attachments.attachments}

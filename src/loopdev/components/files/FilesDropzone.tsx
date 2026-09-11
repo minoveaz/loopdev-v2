@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { FileUp, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { validateFile, type FileValidationOptions } from "@/loopdev/domains/files";
@@ -33,13 +33,13 @@ export function FilesDropzone({
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [queue, setQueue] = useState<FilesDropzoneItem[]>([]);
-  const open = () => {
+  const open = useCallback(() => {
     if (!disabled) inputRef.current?.click();
-  };
+  }, [disabled]);
 
   useEffect(() => {
     onOpenReady?.(open);
-  }, [disabled, onOpenReady]);
+  }, [onOpenReady, open]);
 
   const select = (selected: File[]) => {
     const candidates = multiple ? selected : selected.slice(0, 1);

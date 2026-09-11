@@ -4,6 +4,8 @@ import {
   COMMUNICATIONS_LOCAL_CONTEXT,
   type CommunicationChannelAccount,
   type CommunicationSendResult,
+  type CollaborationPresenceState,
+  type ComposerMode,
   type CommunicationsContext,
   type ConversationDetail,
   type ConversationFilters,
@@ -190,31 +192,122 @@ export function useCommunicationConversation(
   }, []);
 
   const sendReply = useCallback(
-    (body: string) => {
+    (body: string, idempotencyKey?: string) => {
       if (!conversation) return Promise.reject(new Error("No conversation selected."));
-      return mutate(() => loopdevAdapter.communications.sendReply(
-        context,
-        conversation.summary.id,
-        body,
-        conversation.summary.version,
-      ));
+      return loopdevAdapter.communications.getConversation(context, conversation.summary.id).then((current) => {
+        if (!current) throw new Error("No conversation selected.");
+        return mutate(() => loopdevAdapter.communications.sendReply(
+          context,
+          current.summary.id,
+          body,
+          current.summary.version,
+          idempotencyKey,
+        ));
+      });
     },
     [context, conversation, mutate],
   );
 
   const addInternalNote = useCallback(
-    (body: string) => {
+    (body: string, idempotencyKey?: string) => {
       if (!conversation) return Promise.reject(new Error("No conversation selected."));
-      return mutate(() => loopdevAdapter.communications.addInternalNote(
-        context,
-        conversation.summary.id,
-        body,
-        conversation.summary.version,
-      ));
+      return loopdevAdapter.communications.getConversation(context, conversation.summary.id).then((current) => {
+        if (!current) throw new Error("No conversation selected.");
+        return mutate(() => loopdevAdapter.communications.addInternalNote(
+          context,
+          current.summary.id,
+          body,
+          current.summary.version,
+          idempotencyKey,
+        ));
+      });
     },
     [context, conversation, mutate],
   );
   const reload = useCallback(() => setReloadToken((value) => value + 1), []);
+  const setPresence = useCallback((state: CollaborationPresenceState, ttlMs?: number) => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    return loopdevAdapter.communications.setPresence(context, conversation.summary.id, state, ttlMs)
+      .then(setConversation);
+  }, [context, conversation]);
+  const setDrafting = useCallback((mode: ComposerMode | null, ttlMs?: number) => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    return loopdevAdapter.communications.setDrafting(context, conversation.summary.id, mode, ttlMs)
+      .then(setConversation);
+  }, [context, conversation]);
+  const acquireComposerLock = useCallback((expectedVersion: number, ttlMs?: number) => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    return loopdevAdapter.communications.acquireComposerLock(context, conversation.summary.id, expectedVersion, ttlMs)
+      .then(setConversation);
+  }, [context, conversation]);
+  const releaseComposerLock = useCallback(() => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    return loopdevAdapter.communications.releaseComposerLock(context, conversation.summary.id).then(setConversation);
+  }, [context, conversation]);
+  const takeoverComposerLock = useCallback(() => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    return loopdevAdapter.communications.takeoverComposerLock(context, conversation.summary.id, conversation.summary.version)
+      .then(setConversation);
+  }, [context, conversation]);
+  const claimConversation = useCallback((expectedVersion: number) => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    return loopdevAdapter.communications.claimConversation(context, conversation.summary.id, expectedVersion)
+      .then(() => loopdevAdapter.communications.getConversation(context, conversation.summary.id))
+      .then((next) => {
+        if (next) setConversation(next);
+        return next;
+      });
+  }, [context, conversation]);
+  const transferConversation = useCallback((userId: string, name: string, expectedVersion: number) => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    return loopdevAdapter.communications.transferConversation(context, conversation.summary.id, userId, name, expectedVersion)
+      .then(() => loopdevAdapter.communications.getConversation(context, conversation.summary.id))
+      .then((next) => {
+        if (next) setConversation(next);
+        return next;
+      });
+  }, [context, conversation]);
+  const unassignConversation = useCallback((expectedVersion: number) => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    return loopdevAdapter.communications.unassignConversation(context, conversation.summary.id, expectedVersion)
+      .then(() => loopdevAdapter.communications.getConversation(context, conversation.summary.id))
+      .then((next) => {
+        if (next) setConversation(next);
+        return next;
+      });
+  }, [context, conversation]);
+  const requestHandoff = useCallback((userId: string, name: string, expectedVersion: number) => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    return loopdevAdapter.communications.requestHandoff(context, conversation.summary.id, userId, name, expectedVersion)
+      .then(() => loopdevAdapter.communications.getConversation(context, conversation.summary.id))
+      .then((next) => {
+        if (next) setConversation(next);
+        return next;
+      });
+  }, [context, conversation]);
+  const updateParticipant = useCallback((
+    action: "addCollaborator" | "removeCollaborator" | "addWatcher" | "removeWatcher",
+    userId: string,
+    agent?: import("../types").CollaborationAgent,
+  ) => {
+    if (!conversation) return Promise.reject(new Error("No conversation selected."));
+    const id = conversation.summary.id;
+    const version = conversation.summary.version;
+    const adapter = loopdevAdapter.communications;
+    const actionPromise = action === "addCollaborator" && agent
+      ? adapter.addConversationCollaborator(context, id, agent, version)
+      : action === "removeCollaborator"
+        ? adapter.removeConversationCollaborator(context, id, userId, version)
+        : action === "addWatcher" && agent
+          ? adapter.addConversationWatcher(context, id, agent, version)
+          : adapter.removeConversationWatcher(context, id, userId, version);
+    return actionPromise
+      .then(() => adapter.getConversation(context, id))
+      .then((next) => {
+        if (next) setConversation(next);
+        return next;
+      });
+  }, [context, conversation]);
 
   return {
     conversation,
@@ -225,5 +318,15 @@ export function useCommunicationConversation(
     reload,
     sendReply,
     addInternalNote,
+    setPresence,
+    setDrafting,
+    acquireComposerLock,
+    releaseComposerLock,
+    takeoverComposerLock,
+    claimConversation,
+    transferConversation,
+    unassignConversation,
+    requestHandoff,
+    updateParticipant,
   };
 }

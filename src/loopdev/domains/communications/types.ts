@@ -24,6 +24,83 @@ export type ConversationAssigneeFilter = "all" | "mine" | "unassigned";
 export type MessageDirection = "inbound" | "outbound" | "internal";
 export type MessageDeliveryStatus = "queued" | "sent" | "delivered" | "read" | "failed";
 export type ComposerMode = "reply" | "internal_note";
+export type CollaborationPresenceState = "viewing" | "idle" | "offline";
+
+export interface CollaborationAgent {
+  userId: string;
+  name: string;
+  role?: "agent" | "supervisor";
+  avatarUrl?: string | null;
+}
+
+export interface ConversationPresence {
+  userId: string;
+  name: string;
+  state: CollaborationPresenceState;
+  lastSeenAt: string;
+  expiresAt: string;
+}
+
+export interface DraftingIndicator {
+  userId: string;
+  name: string;
+  mode: ComposerMode;
+  startedAt: string;
+  expiresAt: string;
+}
+
+export interface ComposerLock {
+  userId: string;
+  name: string;
+  mode: "reply";
+  acquiredAt: string;
+  expiresAt: string;
+  takenOverFromUserId?: string;
+}
+
+export interface HandoffRequest {
+  requestedByUserId: string;
+  requestedByName: string;
+  requestedToUserId: string;
+  requestedToName: string;
+  requestedAt: string;
+  status: "pending" | "accepted" | "declined" | "cancelled";
+}
+
+export interface ConversationCollaboration {
+  assignee: CollaborationAgent | null;
+  collaborators: CollaborationAgent[];
+  watchers: CollaborationAgent[];
+  presence: ConversationPresence[];
+  drafting: DraftingIndicator[];
+  composerLock: ComposerLock | null;
+  handoff: HandoffRequest | null;
+  lastModifiedBy: CollaborationAgent | null;
+}
+
+export interface CommunicationAuditEvent {
+  id: string;
+  conversationId: string;
+  action:
+    | "read"
+    | "star"
+    | "status"
+    | "claim"
+    | "assign"
+    | "transfer"
+    | "unassign"
+    | "handoff"
+    | "collaborator"
+    | "watcher"
+    | "presence"
+    | "drafting"
+    | "lock"
+    | "message";
+  actor: CollaborationAgent;
+  occurredAt: string;
+  sequence: number;
+  details?: string;
+}
 
 export interface CommunicationCapabilities {
   canReply: boolean;
@@ -77,6 +154,7 @@ export interface ConversationSummary {
   lastInboundAt: string | null;
   windowExpiresAt: string | null;
   version: number;
+  collaboration?: ConversationCollaboration;
 }
 
 export interface CommunicationMessage {
@@ -87,12 +165,15 @@ export interface CommunicationMessage {
   authorName: string;
   occurredAt: string;
   deliveryStatus: MessageDeliveryStatus | null;
+  sequence?: number;
 }
 
 export interface ConversationDetail {
   summary: ConversationSummary;
   messages: CommunicationMessage[];
   internalNotes: CommunicationMessage[];
+  collaboration?: ConversationCollaboration;
+  auditTrail?: CommunicationAuditEvent[];
 }
 
 export interface CommunicationSendResult {
@@ -138,17 +219,83 @@ export interface CommunicationsAdapter {
     assigneeName: string | null,
     expectedVersion: number,
   ): Promise<ConversationSummary>;
+  claimConversation(context: CommunicationsContext, conversationId: string, expectedVersion: number): Promise<ConversationSummary>;
+  transferConversation(
+    context: CommunicationsContext,
+    conversationId: string,
+    assigneeUserId: string,
+    assigneeName: string,
+    expectedVersion: number,
+  ): Promise<ConversationSummary>;
+  unassignConversation(context: CommunicationsContext, conversationId: string, expectedVersion: number): Promise<ConversationSummary>;
+  requestHandoff(
+    context: CommunicationsContext,
+    conversationId: string,
+    requestedToUserId: string,
+    requestedToName: string,
+    expectedVersion: number,
+  ): Promise<ConversationSummary>;
+  addConversationCollaborator(
+    context: CommunicationsContext,
+    conversationId: string,
+    collaborator: CollaborationAgent,
+    expectedVersion: number,
+  ): Promise<ConversationSummary>;
+  removeConversationCollaborator(
+    context: CommunicationsContext,
+    conversationId: string,
+    userId: string,
+    expectedVersion: number,
+  ): Promise<ConversationSummary>;
+  addConversationWatcher(
+    context: CommunicationsContext,
+    conversationId: string,
+    watcher: CollaborationAgent,
+    expectedVersion: number,
+  ): Promise<ConversationSummary>;
+  removeConversationWatcher(
+    context: CommunicationsContext,
+    conversationId: string,
+    userId: string,
+    expectedVersion: number,
+  ): Promise<ConversationSummary>;
+  setPresence(
+    context: CommunicationsContext,
+    conversationId: string,
+    state: CollaborationPresenceState,
+    ttlMs?: number,
+  ): Promise<ConversationDetail>;
+  setDrafting(
+    context: CommunicationsContext,
+    conversationId: string,
+    mode: ComposerMode | null,
+    ttlMs?: number,
+  ): Promise<ConversationDetail>;
+  acquireComposerLock(
+    context: CommunicationsContext,
+    conversationId: string,
+    expectedVersion: number,
+    ttlMs?: number,
+  ): Promise<ConversationDetail>;
+  releaseComposerLock(context: CommunicationsContext, conversationId: string): Promise<ConversationDetail>;
+  takeoverComposerLock(
+    context: CommunicationsContext,
+    conversationId: string,
+    expectedVersion: number,
+  ): Promise<ConversationDetail>;
   sendReply(
     context: CommunicationsContext,
     conversationId: string,
     body: string,
     expectedVersion?: number,
+    idempotencyKey?: string,
   ): Promise<CommunicationSendResult>;
   addInternalNote(
     context: CommunicationsContext,
     conversationId: string,
     body: string,
     expectedVersion?: number,
+    idempotencyKey?: string,
   ): Promise<CommunicationSendResult>;
 }
 

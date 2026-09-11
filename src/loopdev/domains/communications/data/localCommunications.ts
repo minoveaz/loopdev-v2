@@ -1,12 +1,25 @@
 import type {
+  CollaborationAgent,
+  CommunicationAuditEvent,
   CommunicationChannelAccount,
   CommunicationMessage,
+  ConversationCollaboration,
   ConversationDetail,
   ConversationSummary,
 } from "../types";
 
 const now = "2026-09-10T18:00:00.000Z";
 let localMessageSequence = 0;
+let localAuditSequence = 0;
+let localReferenceNow = now;
+const idempotentMessages = new Map<string, { message: CommunicationMessage; summary: ConversationSummary }>();
+
+export const localCommunicationAgents: CollaborationAgent[] = [
+  { userId: "local-development-user", name: "Local operator", role: "supervisor" },
+  { userId: "owner-maya", name: "Maya Chen", role: "agent" },
+  { userId: "owner-daniel", name: "Daniel Ortiz", role: "agent" },
+  { userId: "owner-sam", name: "Sam Rivera", role: "agent" },
+];
 
 export const localCommunicationChannels: CommunicationChannelAccount[] = [
   {
@@ -166,49 +179,183 @@ const localMessages: CommunicationMessage[] = [
   { id: "message-closed-2", conversationId: "conversation-closed", direction: "outbound", body: "That works for me. Thank you!", authorName: "Daniel Ortiz", occurredAt: "2026-09-07T09:30:00.000Z", deliveryStatus: "read" },
 ];
 
+const agent = (userId: string): CollaborationAgent => {
+  const found = localCommunicationAgents.find((item) => item.userId === userId);
+  return found ? { ...found } : { userId, name: userId, role: "agent" };
+};
+
+function initialCollaboration(summary: ConversationSummary): ConversationCollaboration {
+  const assignee = summary.assignedToUserId ? agent(summary.assignedToUserId) : null;
+  const presence = summary.id === "conversation-aria"
+    ? [{
+      ...agent("owner-maya"),
+      state: "viewing" as const,
+      lastSeenAt: "2026-09-10T17:59:00.000Z",
+      expiresAt: "2026-09-10T18:05:00.000Z",
+    }]
+    : [];
+  return {
+    assignee,
+    collaborators: summary.id === "conversation-aria" ? [agent("owner-maya")] : [],
+    watchers: summary.id === "conversation-aria" ? [agent("owner-daniel")] : [],
+    presence,
+    drafting: [],
+    composerLock: null,
+    handoff: null,
+    lastModifiedBy: assignee,
+  };
+}
+
 const initialDetails = localSummaries.map((summary): ConversationDetail => ({
-  summary,
-  messages: localMessages.filter((message) => message.conversationId === summary.id),
-  internalNotes: localMessages.filter((message) => message.conversationId === summary.id && message.direction === "internal"),
+  summary: { ...summary, collaboration: initialCollaboration(summary) },
+  messages: localMessages.filter((message) => message.conversationId === summary.id).map((message, index) => ({ ...message, sequence: index + 1 })),
+  internalNotes: localMessages.filter((message) => message.conversationId === summary.id && message.direction === "internal").map((message) => ({ ...message })),
+  collaboration: initialCollaboration(summary),
+  auditTrail: [],
 }));
 
 function cloneSummary(summary: ConversationSummary): ConversationSummary {
-  return { ...summary, contact: { ...summary.contact } };
+  return {
+    ...summary,
+    contact: { ...summary.contact },
+    collaboration: summary.collaboration ? cloneCollaboration(summary.collaboration) : undefined,
+  };
+}
+
+function cloneCollaboration(collaboration: ConversationCollaboration): ConversationCollaboration {
+  return {
+    ...collaboration,
+    assignee: collaboration.assignee ? { ...collaboration.assignee } : null,
+    collaborators: collaboration.collaborators.map((item) => ({ ...item })),
+    watchers: collaboration.watchers.map((item) => ({ ...item })),
+    presence: collaboration.presence.map((item) => ({ ...item })),
+    drafting: collaboration.drafting.map((item) => ({ ...item })),
+    composerLock: collaboration.composerLock ? { ...collaboration.composerLock } : null,
+    handoff: collaboration.handoff ? { ...collaboration.handoff } : null,
+    lastModifiedBy: collaboration.lastModifiedBy ? { ...collaboration.lastModifiedBy } : null,
+  };
 }
 
 function cloneDetail(detail: ConversationDetail): ConversationDetail {
   return {
     summary: cloneSummary(detail.summary),
-    messages: detail.messages.map((message) => ({ ...message })),
+    messages: [...detail.messages].sort((left, right) => (left.sequence ?? 0) - (right.sequence ?? 0)).map((message) => ({ ...message })),
     internalNotes: detail.internalNotes.map((message) => ({ ...message })),
+    collaboration: detail.collaboration ? cloneCollaboration(detail.collaboration) : undefined,
+    auditTrail: detail.auditTrail?.map((event) => ({ ...event, actor: { ...event.actor } })),
   };
+}
+
+function findDetail(id: string): ConversationDetail | undefined {
+  return initialDetails.find((item) => item.summary.id === id);
+}
+
+function syncSummary(detail: ConversationDetail): void {
+  detail.summary = {
+    ...detail.summary,
+    assignedToUserId: detail.collaboration?.assignee?.userId ?? null,
+    assignedToName: detail.collaboration?.assignee?.name ?? null,
+    collaboration: detail.collaboration ? cloneCollaboration(detail.collaboration) : undefined,
+  };
+}
+
+function pruneExpired(detail: ConversationDetail): void {
+  if (!detail.collaboration) return;
+  const current = new Date(localReferenceNow).getTime();
+  detail.collaboration.presence = detail.collaboration.presence.filter((item) => new Date(item.expiresAt).getTime() > current);
+  detail.collaboration.drafting = detail.collaboration.drafting.filter((item) => new Date(item.expiresAt).getTime() > current);
+  if (detail.collaboration.composerLock && new Date(detail.collaboration.composerLock.expiresAt).getTime() <= current) {
+    detail.collaboration.composerLock = null;
+  }
 }
 
 export const localCommunicationsStore = {
   listSummaries(): ConversationSummary[] {
-    return initialDetails.map((detail) => cloneSummary(detail.summary));
+    return initialDetails.map((detail) => {
+      pruneExpired(detail);
+      syncSummary(detail);
+      return cloneSummary(detail.summary);
+    });
   },
   getDetail(id: string): ConversationDetail | null {
-    const detail = initialDetails.find((item) => item.summary.id === id);
+    const detail = findDetail(id);
+    if (detail) {
+      pruneExpired(detail);
+      syncSummary(detail);
+    }
     return detail ? cloneDetail(detail) : null;
   },
   updateSummary(id: string, update: (summary: ConversationSummary) => ConversationSummary): ConversationSummary | null {
-    const detail = initialDetails.find((item) => item.summary.id === id);
+    const detail = findDetail(id);
     if (!detail) return null;
+    pruneExpired(detail);
     detail.summary = update(detail.summary);
+    syncSummary(detail);
     return cloneSummary(detail.summary);
+  },
+  updateCollaboration(
+    id: string,
+    update: (collaboration: ConversationCollaboration) => ConversationCollaboration,
+    actor: CollaborationAgent,
+    action: CommunicationAuditEvent["action"],
+    versionBump = true,
+    details?: string,
+  ): ConversationSummary | null {
+    const detail = findDetail(id);
+    if (!detail || !detail.collaboration) return null;
+    pruneExpired(detail);
+    detail.collaboration = update(cloneCollaboration(detail.collaboration));
+    detail.collaboration.lastModifiedBy = { ...actor };
+    if (versionBump) detail.summary.version += 1;
+    syncSummary(detail);
+    this.recordAudit(id, action, actor, details);
+    return cloneSummary(detail.summary);
+  },
+  recordAudit(
+    conversationId: string,
+    action: CommunicationAuditEvent["action"],
+    actor: CollaborationAgent,
+    details?: string,
+  ): CommunicationAuditEvent | null {
+    const detail = findDetail(conversationId);
+    if (!detail) return null;
+    if (detail.collaboration) {
+      detail.collaboration.lastModifiedBy = { ...actor };
+      syncSummary(detail);
+    }
+    const event: CommunicationAuditEvent = {
+      id: `audit-local-${localAuditSequence + 1}`,
+      conversationId,
+      action,
+      actor: { ...actor },
+      occurredAt: localReferenceNow,
+      sequence: ++localAuditSequence,
+      details,
+    };
+    detail.auditTrail = [...(detail.auditTrail ?? []), event];
+    return { ...event, actor: { ...event.actor } };
+  },
+  getAuditTrail(id: string): CommunicationAuditEvent[] {
+    return (findDetail(id)?.auditTrail ?? []).map((event) => ({ ...event, actor: { ...event.actor } }));
   },
   appendMessage(
     conversationId: string,
     message: Omit<CommunicationMessage, "id" | "occurredAt">,
+    actor: CollaborationAgent = agent("local-development-user"),
+    idempotencyKey?: string,
   ): { message: CommunicationMessage; summary: ConversationSummary } | null {
-    const detail = initialDetails.find((item) => item.summary.id === conversationId);
+    const detail = findDetail(conversationId);
     if (!detail) return null;
+    if (idempotencyKey) {
+      const existing = idempotentMessages.get(`${conversationId}:${idempotencyKey}`);
+      if (existing) return { message: { ...existing.message }, summary: cloneSummary(existing.summary) };
+    }
     const occurredAt = new Date().toISOString();
     const nextMessage: CommunicationMessage = {
       ...message,
       id: `message-local-${++localMessageSequence}`,
       occurredAt,
+      sequence: Math.max(0, ...detail.messages.map((item) => item.sequence ?? 0)) + 1,
     };
     detail.messages.push(nextMessage);
     if (nextMessage.direction === "internal") detail.internalNotes.push(nextMessage);
@@ -219,15 +366,35 @@ export const localCommunicationsStore = {
       lastActivityAt: occurredAt,
       version: detail.summary.version + 1,
     };
-    return { message: { ...nextMessage }, summary: cloneSummary(detail.summary) };
+    syncSummary(detail);
+    this.recordAudit(conversationId, "message", actor, nextMessage.direction);
+    const result = { message: { ...nextMessage }, summary: cloneSummary(detail.summary) };
+    if (idempotencyKey) idempotentMessages.set(`${conversationId}:${idempotencyKey}`, result);
+    return result;
+  },
+  getIdempotentMessage(conversationId: string, idempotencyKey: string): { message: CommunicationMessage; summary: ConversationSummary } | null {
+    const existing = idempotentMessages.get(`${conversationId}:${idempotencyKey}`);
+    return existing
+      ? { message: { ...existing.message }, summary: cloneSummary(existing.summary) }
+      : null;
+  },
+  setReferenceNow(value: string): void {
+    localReferenceNow = value;
   },
   reset(): void {
     localMessageSequence = 0;
+    localAuditSequence = 0;
+    idempotentMessages.clear();
+    localReferenceNow = now;
     initialDetails.splice(0, initialDetails.length, ...localSummaries.map((summary) => ({
-      summary: cloneSummary(summary),
-      messages: localMessages.filter((message) => message.conversationId === summary.id).map((message) => ({ ...message })),
+      summary: { ...cloneSummary(summary), collaboration: initialCollaboration(summary) },
+      messages: localMessages.filter((message) => message.conversationId === summary.id).map((message, index) => ({ ...message, sequence: index + 1 })),
       internalNotes: localMessages.filter((message) => message.conversationId === summary.id && message.direction === "internal").map((message) => ({ ...message })),
+      collaboration: initialCollaboration(summary),
+      auditTrail: [],
     })));
   },
-  referenceNow: now,
+  get referenceNow(): string {
+    return localReferenceNow;
+  },
 };

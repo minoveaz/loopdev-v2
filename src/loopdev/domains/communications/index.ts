@@ -3,7 +3,7 @@ import type { CommunicationsAdapter } from "./types";
 
 export * from "./types";
 export { localCommunicationsAdapter };
-export { localCommunicationChannels, localCommunicationsStore } from "./data/localCommunications";
+export { localCommunicationAgents, localCommunicationChannels, localCommunicationsStore } from "./data/localCommunications";
 export * from "./hooks/use-communications";
 
 export interface CommunicationsDomainAdapter {

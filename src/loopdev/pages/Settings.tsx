@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Bot, Database, Settings2, SlidersHorizontal, Tags } from "lucide-react";
+import { ArrowRight, Bot, Database, MessageCircle, Settings2, SlidersHorizontal, Tags } from "lucide-react";
 import { PageContainer, PageHeader, SurfaceCard, SurfaceCardBody, SurfaceCardHeader } from "@/components/common";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 
@@ -12,6 +12,14 @@ const settingsAreas = [
       { label: "Tags", description: "Create and govern reusable CRM tags.", to: "/app/settings/crm/operations?tab=tags", icon: Tags },
       { label: "Custom fields", description: "Define typed fields for CRM records.", to: "/app/settings/crm/operations?tab=fields", icon: Settings2 },
       { label: "Automations", description: "Configure event triggers and actions.", to: "/app/settings/crm/automations", icon: Bot },
+    ],
+  },
+  {
+    title: "Communications",
+    description: "Review channel readiness, permissions, and operational safeguards.",
+    icon: MessageCircle,
+    items: [
+      { label: "Communications", description: "Manage local channel health and policy readiness.", to: "/app/settings/communications", icon: MessageCircle },
     ],
   },
   {

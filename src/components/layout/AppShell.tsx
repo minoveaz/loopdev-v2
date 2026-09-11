@@ -106,7 +106,10 @@ export function AppShell() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-surface text-foreground">
+    <div className={cn(
+      "w-full bg-gradient-surface text-foreground",
+      isCommunicationsRoute ? "h-dvh overflow-hidden" : "min-h-screen",
+    )}>
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-elegant"
@@ -130,7 +133,8 @@ export function AppShell() {
         data-app-content
         data-sidebar-collapsed={collapsed ? "true" : "false"}
         className={cn(
-          "flex min-h-screen min-w-0 flex-col transition-[padding] duration-300",
+          "flex min-w-0 flex-col transition-[padding] duration-300",
+          isCommunicationsRoute ? "h-dvh min-h-0 overflow-hidden" : "min-h-screen",
           // Forced mini (60px) between md (768px) and nav (1200px).
           "md:ps-[60px]",
           // Above the nav breakpoint, respect the user's collapsed choice.
@@ -157,11 +161,16 @@ export function AppShell() {
           id="main-content"
           tabIndex={-1}
           key={isCommunicationsRoute ? undefined : pathname}
-          className="flex-1 animate-fade-in px-3 py-5 sm:px-4 sm:py-6 md:px-6 md:py-7 lg:px-8 lg:py-8"
+          className={cn(
+            "flex-1 animate-fade-in",
+            isCommunicationsRoute
+              ? "min-h-0 overflow-hidden p-0"
+              : "px-3 py-5 sm:px-4 sm:py-6 md:px-6 md:py-7 lg:px-8 lg:py-8",
+          )}
         >
           <Outlet />
         </main>
-        <AppFooter />
+        {!isCommunicationsRoute && <AppFooter />}
       </div>
       {!pathname.startsWith("/launchpad") && !isCommunicationsRoute && <ThemeCustomizerFab />}
     </div>

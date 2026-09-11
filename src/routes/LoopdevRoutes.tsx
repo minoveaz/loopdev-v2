@@ -3,6 +3,7 @@ import { Navigate, Route } from "react-router-dom";
 
 const Launchpad = lazy(() => import("@/loopdev/pages/Launchpad"));
 const Settings = lazy(() => import("@/loopdev/pages/Settings"));
+const CommunicationsSettings = lazy(() => import("@/loopdev/pages/settings/Communications"));
 const SalesCRM = lazy(() => import("@/loopdev/pages/crm/Overview"));
 const SalesCRMContacts = lazy(() => import("@/loopdev/pages/crm/Contacts"));
 const SalesCRMLeads = lazy(() => import("@/loopdev/pages/crm/Leads"));
@@ -19,6 +20,7 @@ export const loopdevRouteElements = (
   <Fragment>
     <Route path="/launchpad" element={<Launchpad />} />
     <Route path="/app/settings" element={<Settings />} />
+    <Route path="/app/settings/communications" element={<CommunicationsSettings />} />
     <Route path="/app/settings/crm/operations" element={<SalesCRMOperations />} />
     <Route path="/app/settings/crm/automations" element={<SalesCRMAutomations />} />
     <Route path="/app/settings/data/operations" element={<SalesCRMOperations />} />

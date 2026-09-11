@@ -1,17 +1,15 @@
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import {
   AlertCircle,
-  Archive,
+  ArrowLeft,
   Check,
   CheckCheck,
-  CircleUserRound,
   Clock3,
   Inbox,
   Instagram,
   Mail,
   MessageCircle,
   MessageSquare,
-  MoreHorizontal,
   PanelRightOpen,
   Phone,
   RefreshCw,
@@ -19,9 +17,8 @@ import {
   Send,
   ShieldAlert,
   Star,
-  TimerReset,
+  Settings2,
   UserRound,
-  UserPlus,
   Users,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -30,10 +27,10 @@ import { Button } from "@/components/ui/button";
 import {
   CHANNEL_LABELS,
   COMMUNICATIONS_LOCAL_CONTEXT,
-  type ComposerMode,
   type ChannelConnectionState,
   type CommunicationChannelAccount,
   type CommunicationChannel,
+  type ConversationCollaboration,
   type ConversationAssigneeFilter,
   type ConversationSummary,
   type ConversationStatus,
@@ -42,6 +39,8 @@ import { useCommunicationConversation, useCommunicationsInbox } from "@/loopdev/
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate, formatRelative } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { CRMWorkspacePanel } from "@/loopdev/components/crm/CRMWorkspacePanel";
+import { ConversationOperationsPanel } from "@/loopdev/components/communications/ConversationOperationsPanel";
 
 const channelIcons: Record<CommunicationChannel, ComponentType<ChannelIconProps>> = {
   whatsapp: WhatsAppIcon,
@@ -114,34 +113,36 @@ function ConnectionDot({ state }: { state: ChannelConnectionState }) {
 
 function ConversationComposer({
   summary,
+  collaboration,
   account,
+  draft,
+  onDraftChange,
   actionError,
   onReply,
-  onInternalNote,
 }: {
   summary: ConversationSummary;
+  collaboration?: ConversationCollaboration;
   account?: CommunicationChannelAccount;
+  draft: { body: string };
+  onDraftChange: (draft: { body: string }) => void;
   actionError: string | null;
   onReply: (body: string) => Promise<unknown>;
-  onInternalNote: (body: string) => Promise<unknown>;
 }) {
-  const [mode, setMode] = useState<ComposerMode>("reply");
-  const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const { body } = draft;
   const windowExpired = Boolean(summary.windowExpiresAt && new Date(summary.windowExpiresAt).getTime() <= Date.now());
   const accountConnected = account?.state === "connected";
   const policyDisabled = account?.policyState === "disabled";
-  const canReply = Boolean(accountConnected && account?.capabilities.canReply && !policyDisabled && !windowExpired);
-  const canNote = Boolean(accountConnected && account?.capabilities.canAddInternalNote);
-  const canSend = mode === "reply" ? canReply : canNote;
+  const composerOwnedByOther = collaboration?.composerLock && collaboration.composerLock.userId !== COMMUNICATIONS_LOCAL_CONTEXT.userId;
+  const canReply = Boolean(accountConnected && account?.capabilities.canReply && !policyDisabled && !windowExpired && !composerOwnedByOther);
+  const canSend = canReply;
 
   const submit = async () => {
     if (!canSend || !body.trim()) return;
     setSending(true);
     try {
-      if (mode === "reply") await onReply(body);
-      else await onInternalNote(body);
-      setBody("");
+      await onReply(body);
+      onDraftChange({ body: "" });
     } catch {
       // The hook exposes the normalized operational error beside the composer.
     } finally {
@@ -149,48 +150,31 @@ function ConversationComposer({
     }
   };
 
-  let availabilityMessage = "WhatsApp replies are ready. Internal notes stay in LoopDev.";
+  let availabilityMessage = `Replies go directly to ${summary.contact.displayName}.`;
   if (!account) availabilityMessage = "This channel account is unavailable. Actions are disabled.";
-  else if (account.state === "disconnected") availabilityMessage = "Account disconnected. Reading remains available, but replies and notes are disabled.";
+  else if (account.state === "disconnected") availabilityMessage = "Account disconnected. Reading remains available, but customer replies are disabled.";
   else if (account.state !== "connected") availabilityMessage = `${account.statusMessage}. Channel actions are disabled until it is connected.`;
-  else if (policyDisabled || !account.capabilities.canReply) availabilityMessage = "Replies are disabled by channel policy. Internal notes remain available.";
+  else if (policyDisabled || !account.capabilities.canReply) availabilityMessage = "Customer replies are disabled by channel policy.";
   else if (windowExpired) availabilityMessage = "WhatsApp window expired. An approved template is required; free-text replies are disabled.";
+  else if (composerOwnedByOther) availabilityMessage = `${collaboration?.composerLock?.name} is drafting a customer reply. Open Conversation Operations to take over.`;
 
   return (
     <div className="space-y-2" aria-label="Conversation composer">
-      <div className="flex flex-wrap items-center gap-1" role="tablist" aria-label="Composer mode">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "reply"}
-          disabled={!canReply}
-          onClick={() => setMode("reply")}
-          className={cn("rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50", mode === "reply" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
-        >
-          Reply
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "internal_note"}
-          disabled={!canNote}
-          onClick={() => setMode("internal_note")}
-          className={cn("rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50", mode === "internal_note" ? "bg-warning text-warning-foreground" : "text-muted-foreground hover:bg-muted")}
-        >
-          Internal note
-        </button>
-        <span className="ms-auto text-[11px] text-muted-foreground">{availabilityMessage}</span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-md bg-primary-soft px-2.5 py-1.5 text-xs font-semibold text-primary">Customer reply</span>
+        <span className="text-[11px] text-muted-foreground">{availabilityMessage}</span>
       </div>
       {actionError && <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive" role="alert">{actionError}</p>}
       <div className="flex items-end gap-2">
         <Textarea
           value={body}
-          onChange={(event) => setBody(event.target.value)}
-          placeholder={mode === "reply" ? "Write a WhatsApp reply…" : "Add an internal note…"}
-          aria-label={mode === "reply" ? "Reply message" : "Internal note"}
+          onChange={(event) => onDraftChange({ body: event.target.value })}
+          placeholder="Write a WhatsApp reply…"
+          aria-label={`Customer reply to ${summary.contact.displayName}`}
           disabled={!canSend || sending}
           rows={2}
-          className="min-h-[68px] resize-none bg-background"
+          enterKeyHint="send"
+          className="min-h-[68px] resize-none bg-background touch-manipulation"
           onKeyDown={(event) => {
             if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
               event.preventDefault();
@@ -200,7 +184,7 @@ function ConversationComposer({
         />
         <Button
           size="icon"
-          aria-label={mode === "reply" ? "Send reply" : "Add internal note"}
+          aria-label="Send reply"
           disabled={!canSend || !body.trim() || sending}
           loading={sending}
           onClick={() => void submit()}
@@ -219,25 +203,41 @@ function ChannelRail({
   unreadCounts,
   onSelect,
   onRefresh,
+  hideOnThread,
 }: {
   channels: ReturnType<typeof useCommunicationsInbox>["channels"];
   selected: CommunicationChannel | "all";
   unreadCounts: ReturnType<typeof useCommunicationsInbox>["channelUnreadCounts"];
   onSelect: (channel: CommunicationChannel | "all") => void;
   onRefresh: () => void;
+  hideOnThread?: boolean;
 }) {
   return (
-    <aside className="border-b border-border bg-muted/45 lg:w-[204px] lg:shrink-0 lg:border-b-0 lg:border-e" aria-label="Communication channels">
+    <aside className={cn("border-b border-border/80 bg-muted/60 dark:bg-card/60 lg:w-[204px] lg:shrink-0 lg:border-b-0 lg:border-e", hideOnThread && "hidden lg:block")} aria-label="Communication channels">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Channels</p>
           <p className="mt-0.5 text-xs text-muted-foreground">Operational inbox</p>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Refresh channels" onClick={onRefresh}>
+        <Button variant="ghost" size="icon" className="hidden h-8 w-8 lg:inline-flex" aria-label="Refresh channels" onClick={onRefresh}>
           <RefreshCw className="h-3.5 w-3.5" />
         </Button>
       </div>
-      <nav className="flex gap-1 overflow-x-auto p-2 lg:block" aria-label="Channel filters">
+      <div className="flex items-center gap-2 p-2 lg:hidden">
+        <label htmlFor="mobile-channel-filter" className="text-[11px] font-medium text-muted-foreground">Channel</label>
+        <select
+          id="mobile-channel-filter"
+          aria-label="Channel filter"
+          value={selected}
+          onChange={(event) => onSelect(event.target.value as CommunicationChannel | "all")}
+          className="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs"
+        >
+          <option value="all">All channels</option>
+          {channels.map((account) => <option key={account.id} value={account.channel}>{CHANNEL_LABELS[account.channel]} · {connectionLabels[account.state]}</option>)}
+        </select>
+        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Refresh channels" onClick={onRefresh}><RefreshCw className="h-3.5 w-3.5" /></Button>
+      </div>
+      <nav className="hidden gap-1 overflow-x-auto p-2 lg:block" aria-label="Channel filters">
         <button
           type="button"
           onClick={() => onSelect("all")}
@@ -288,7 +288,12 @@ export default function Communications() {
   const [query, setQuery] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [starredOnly, setStarredOnly] = useState(false);
-  const [showContextPlaceholder, setShowContextPlaceholder] = useState(false);
+  const [crmWorkspaceOpen, setCrmWorkspaceOpen] = useState(false);
+  const [operationsOpen, setOperationsOpen] = useState(false);
+  const [composerDrafts, setComposerDrafts] = useState<Record<string, { body: string }>>({});
+  const threadScrollPositions = useRef<Record<string, number>>({});
+  const threadScrollRef = useRef<HTMLDivElement>(null);
+  const presenceConversationRef = useRef<string | null>(null);
   const filters = useMemo(() => ({ channel, status, assignee, query, unreadOnly, starredOnly }), [assignee, channel, query, starredOnly, status, unreadOnly]);
   const inbox = useCommunicationsInbox(filters, COMMUNICATIONS_LOCAL_CONTEXT);
   const selectedSummary = inbox.conversations.find((item) => item.id === conversationId) ?? null;
@@ -308,54 +313,79 @@ export default function Communications() {
   }, [conversationId, inbox.conversations, inbox.loading, navigate, selectedSummary]);
 
   const { markRead } = inbox;
+  const reloadDetail = detail.reload;
   useEffect(() => {
     if (selectedSummary?.unreadCount) {
-      void markRead(selectedSummary.id).then(() => detail.reload()).catch(() => undefined);
+      void markRead(selectedSummary.id).then(() => reloadDetail()).catch(() => undefined);
     }
-  }, [detail.reload, markRead, selectedSummary?.id, selectedSummary?.unreadCount]);
+  }, [markRead, reloadDetail, selectedSummary?.id, selectedSummary?.unreadCount]);
 
   const selectConversation = (id: string) => navigate(`/app/sales-crm/communications/${id}`);
   const activeDetail = detail.conversation;
   const actionSummary = activeDetail?.summary ?? selectedSummary;
-
-  const handleStatus = async (nextStatus: ConversationStatus) => {
-    if (!actionSummary) return;
-    try {
-      await inbox.changeStatus(actionSummary.id, nextStatus, actionSummary.version);
-      detail.reload();
-    } catch {
-      // The hook exposes the conflict or policy error in the action banner.
-    }
+  const presenceDetail = detail.conversation;
+  const updatePresence = detail.setPresence;
+  useEffect(() => {
+    if (!selectedId || !presenceDetail) return;
+    if (presenceConversationRef.current === selectedId) return;
+    presenceConversationRef.current = selectedId;
+    void updatePresence("viewing").catch(() => undefined);
+  }, [presenceDetail, selectedId, updatePresence]);
+  const composerDraft = selectedSummary
+    ? composerDrafts[selectedSummary.id] ?? { body: "" }
+    : { body: "" };
+  const updateComposerDraft = (draft: { body: string }) => {
+    if (!selectedSummary) return;
+    setComposerDrafts((current) => ({ ...current, [selectedSummary.id]: draft }));
+    void detail.setDrafting(draft.body.trim() ? "reply" : null).catch(() => undefined);
   };
 
-  const handleAssignment = async () => {
+  useEffect(() => {
+    if (!conversationId || !threadScrollRef.current) return;
+    threadScrollRef.current.scrollTop = threadScrollPositions.current[conversationId] ?? 0;
+  }, [conversationId, activeDetail?.messages.length]);
+
+  const handleOperationsStatus = async (nextStatus: ConversationStatus) => {
     if (!actionSummary) return;
-    try {
-      await inbox.assignConversation(
-        actionSummary.id,
-        COMMUNICATIONS_LOCAL_CONTEXT.userId,
-        "Local operator",
-        actionSummary.version,
-      );
-      detail.reload();
-    } catch {
-      // The hook exposes the conflict in the action banner.
+    await inbox.changeStatus(actionSummary.id, nextStatus, actionSummary.version);
+    await detail.reload();
+  };
+
+  const handleOperationsAssignment = async (action: "claim" | "unassign") => {
+    if (!actionSummary) return;
+    if (action === "claim") {
+      await detail.claimConversation(actionSummary.version);
+    } else {
+      await detail.unassignConversation(actionSummary.version);
     }
+    await inbox.reload();
+  };
+
+  const handleOperationsTransfer = async (agent: import("@/loopdev/domains/communications").CollaborationAgent) => {
+    if (!actionSummary) return;
+    await detail.transferConversation(agent.userId, agent.name, actionSummary.version);
+    await inbox.reload();
+  };
+
+  const handleOperationsHandoff = async (agent: import("@/loopdev/domains/communications").CollaborationAgent) => {
+    if (!actionSummary) return;
+    await detail.requestHandoff(agent.userId, agent.name, actionSummary.version);
   };
 
   return (
-    <div className="relative isolate -mx-3 -my-5 min-h-[calc(100vh-4rem)] w-[calc(100%+1.5rem)] overflow-hidden bg-background sm:-mx-4 sm:-my-6 sm:w-[calc(100%+2rem)] md:-mx-6 md:-my-7 md:w-[calc(100%+3rem)] lg:-mx-8 lg:-my-8 lg:w-[calc(100%+4rem)]">
-      <section className="min-h-[calc(100vh-4rem)] w-full overflow-hidden" aria-label="Communications inbox">
-        <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
+    <div className="relative isolate flex h-full min-h-0 w-full overflow-hidden bg-background">
+      <section className="flex h-full min-h-0 w-full overflow-hidden" aria-label="Communications inbox">
+        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <ChannelRail
             channels={inbox.channels}
             selected={channel}
             unreadCounts={inbox.channelUnreadCounts}
             onSelect={setChannel}
             onRefresh={inbox.reload}
+            hideOnThread={Boolean(conversationId)}
           />
 
-          <section className="flex w-full flex-col border-b border-border bg-background lg:w-[350px] lg:shrink-0 lg:border-b-0 lg:border-e" aria-label="Conversation list">
+          <section className={cn("w-full flex-col border-b border-border/80 bg-card lg:flex lg:w-[350px] lg:shrink-0 lg:border-b-0 lg:border-e", conversationId ? "hidden" : "flex")} aria-label="Conversation list">
             <div className="border-b border-border p-3">
               <div className="relative">
                 <Search className="pointer-events-none absolute start-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -442,7 +472,10 @@ export default function Communications() {
                             <span className={cn("mt-1 flex items-center gap-1.5 text-[11px]", active ? "text-foreground/75" : "text-muted-foreground")}><Icon className="h-3 w-3" />{conversation.contact.identityStatus === "pending_identity_review" ? "Identity review" : CHANNEL_LABELS[conversation.channel]}<span aria-hidden="true">·</span><span className="truncate">{conversation.preview ?? "No messages yet"}</span></span>
                             <span className="mt-2 flex items-center gap-1.5">
                               <StatusBadge tone={statusTone[conversation.status]}>{statusLabels[conversation.status]}</StatusBadge>
-                              {conversation.assignedToName && <span className="truncate text-[10px] text-muted-foreground">{conversation.assignedToName}</span>}
+                              {conversation.assignedToName
+                                ? <span className="inline-flex min-w-0 items-center gap-1 truncate text-[10px] text-muted-foreground" title={`Owned by ${conversation.assignedToName}`}><span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[8px] font-semibold text-primary">{initials(conversation.assignedToName)}</span>{conversation.assignedToName}</span>
+                                : <span className="text-[10px] text-muted-foreground">Unassigned</span>}
+                              {conversation.collaboration?.presence.filter((item) => item.state !== "offline").map((item) => <span key={`list-presence-${item.userId}`} title={`${item.name} is ${item.state}`} className="h-1.5 w-1.5 rounded-full bg-success" />)}
                               {conversation.unreadCount > 0 && <span className="ms-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">{conversation.unreadCount}</span>}
                             </span>
                           </span>
@@ -457,7 +490,7 @@ export default function Communications() {
             </div>
           </section>
 
-          <section className="flex min-w-0 flex-1 flex-col bg-card" aria-label="Conversation thread">
+          <section className={cn("min-w-0 flex-1 flex-col bg-background", conversationId ? "flex" : "hidden lg:flex")} aria-label="Conversation thread">
             {!conversationId ? (
               <EmptyState variant="plain" size="lg" icon={MessageSquare} title="Select a conversation" description="Choose a conversation from the list to inspect its timeline." />
             ) : detail.loading ? (
@@ -468,72 +501,85 @@ export default function Communications() {
               <EmptyState variant="plain" size="lg" icon={Inbox} title="Conversation unavailable" description="This conversation may no longer be in the selected view." />
             ) : (
               <>
-                <header className="flex flex-wrap items-center gap-3 border-b border-primary/15 px-5 py-3">
+                <header className="flex flex-wrap items-center gap-3 border-b border-border/80 bg-card px-3 py-3 sm:px-5">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 lg:hidden" aria-label="Back to conversations" onClick={() => navigate("/app/sales-crm/communications")}><ArrowLeft className="h-4 w-4" /></Button>
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">{initials(selectedSummary.contact.displayName)}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-display text-base font-semibold text-foreground">{selectedSummary.contact.displayName}</h2><StatusBadge tone={statusTone[selectedSummary.status]} dot>{statusLabels[selectedSummary.status]}</StatusBadge></div>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">{selectedAccount ? selectedAccount.label : CHANNEL_LABELS[selectedSummary.channel]} · {selectedSummary.contact.phone ?? selectedSummary.contact.email ?? "No contact detail"}</p>
                   </div>
                   <div className="flex items-center gap-1">
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[9px] font-semibold text-muted-foreground"
+                      aria-label={selectedSummary.assignedToName ? `Responsible: ${selectedSummary.assignedToName}` : "Responsible: unassigned"}
+                      title={selectedSummary.assignedToName ? `Responsible: ${selectedSummary.assignedToName}` : "Responsible: unassigned"}
+                    >
+                      {selectedSummary.assignedToName ? initials(selectedSummary.assignedToName) : "—"}
+                    </span>
                     <Button variant="ghost" size="icon" className={cn("h-8 w-8", selectedSummary.starred && "text-gold")} aria-label={selectedSummary.starred ? "Unstar conversation" : "Star conversation"} onClick={() => void inbox.toggleStar(selectedSummary.id)}><Star className={cn("h-4 w-4", selectedSummary.starred && "fill-current")} /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Show CRM context placeholder" onClick={() => setShowContextPlaceholder((value) => !value)}><PanelRightOpen className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More conversation actions"><MoreHorizontal className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Open CRM workspace" onClick={() => { setOperationsOpen(false); setCrmWorkspaceOpen(true); }}><PanelRightOpen className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Open Conversation Operations" onClick={() => { setCrmWorkspaceOpen(false); setOperationsOpen(true); }}><Settings2 className="h-4 w-4" /></Button>
                   </div>
                 </header>
                 {selectedAccount && selectedAccount.state !== "connected" && <div className="flex items-center gap-2 border-b border-warning/20 bg-warning-soft px-5 py-2 text-xs text-warning"><ShieldAlert className="h-3.5 w-3.5 shrink-0" />{selectedAccount.statusMessage}. Reading is available; provider actions remain disabled.</div>}
-                {showContextPlaceholder && <div className="border-b border-border bg-muted/40 px-5 py-3"><div className="flex items-start gap-2"><CircleUserRound className="mt-0.5 h-4 w-4 text-primary" /><div><p className="text-sm font-medium text-foreground">CRM context</p><p className="mt-0.5 text-xs text-muted-foreground">Contact, lead, opportunity and Customer 360 context will be available in a future phase.</p></div></div></div>}
-                <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+                <div ref={threadScrollRef} onScroll={(event) => { threadScrollPositions.current[selectedSummary.id] = event.currentTarget.scrollTop; }} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 sm:py-5">
                   <div className="mb-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground"><span className="h-px flex-1 bg-border" /><span>{formatDate(selectedSummary.lastActivityAt, "medium")}</span><span className="h-px flex-1 bg-border" /></div>
                   <ol className="space-y-4">
-                    {activeDetail.messages.map((message) => {
-                      const internal = message.direction === "internal";
+                    {activeDetail.messages.filter((message) => message.direction !== "internal").map((message) => {
                       const outbound = message.direction === "outbound";
                       return (
-                        <li key={message.id} className={cn("flex", internal ? "justify-center" : outbound ? "justify-end" : "justify-start")}>
-                          {internal ? (
-                            <div className="flex max-w-[90%] items-start gap-2 rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-xs text-warning"><Archive className="mt-0.5 h-3.5 w-3.5 shrink-0" /><div><p className="font-semibold">Internal note · {message.authorName}</p><p className="mt-1 leading-relaxed">{message.body}</p><p className="mt-1 text-[10px] opacity-80">{formatRelative(message.occurredAt)}</p></div></div>
-                          ) : (
-                            <div className={cn("max-w-[75%] rounded-xl px-4 py-2.5", outbound ? "rounded-ee-sm bg-primary text-primary-foreground" : "rounded-es-sm bg-muted text-foreground")}>
-                              <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p>
-                              <div className={cn("mt-1.5 flex items-center gap-1.5 text-[10px]", outbound ? "text-primary-foreground/70" : "text-muted-foreground")}><span>{message.authorName}</span><span>·</span><span>{formatRelative(message.occurredAt)}</span>{outbound && message.deliveryStatus && <><span>·</span><DeliveryStatus status={message.deliveryStatus} /></>}</div>
-                            </div>
-                          )}
+                        <li key={message.id} className={cn("flex", outbound ? "justify-end" : "justify-start")}>
+                          <div className={cn("max-w-[75%] rounded-xl px-4 py-2.5", outbound ? "rounded-ee-sm bg-primary text-primary-foreground" : "rounded-es-sm bg-muted text-foreground")}>
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p>
+                            <div className={cn("mt-1.5 flex items-center gap-1.5 text-[10px]", outbound ? "text-primary-foreground/70" : "text-muted-foreground")}><span>{message.authorName}</span><span>·</span><span>{formatRelative(message.occurredAt)}</span>{outbound && message.deliveryStatus && <><span>·</span><DeliveryStatus status={message.deliveryStatus} /></>}</div>
+                          </div>
                         </li>
                       );
                     })}
                   </ol>
                 </div>
-                <footer className="border-t border-border bg-card-muted px-5 py-3">
+                <footer className="border-t border-border/80 bg-muted/25 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] dark:bg-card-muted sm:px-5">
                   <ConversationComposer
                     summary={activeDetail.summary}
+                    collaboration={activeDetail.collaboration}
                     account={selectedAccount}
+                    draft={composerDraft}
+                    onDraftChange={updateComposerDraft}
                     actionError={detail.actionError ?? inbox.actionError}
                     onReply={async (body) => {
                       await detail.sendReply(body);
                       inbox.reload();
                     }}
-                    onInternalNote={async (body) => {
-                      await detail.addInternalNote(body);
-                      inbox.reload();
-                    }}
                   />
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock3 className="h-3.5 w-3.5" />
-                      {activeDetail.summary.assignedToName ? `Assigned to ${activeDetail.summary.assignedToName}` : "Unassigned"}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!activeDetail.summary.assignedToUserId && activeDetail.summary.status !== "closed" && <Button variant="outline" size="sm" onClick={() => void handleAssignment()}><UserPlus className="h-3.5 w-3.5" /> Assign to me</Button>}
-                      {activeDetail.summary.status === "open" && <Button variant="outline" size="sm" onClick={() => void handleStatus("pending")}>Mark pending</Button>}
-                      {(activeDetail.summary.status === "open" || activeDetail.summary.status === "pending") && <Button variant="outline" size="sm" onClick={() => void handleStatus("snoozed")}><TimerReset className="h-3.5 w-3.5" /> Snooze</Button>}
-                      {activeDetail.summary.status !== "closed" && <Button variant="outline" size="sm" onClick={() => void handleStatus("closed")}><Check className="h-3.5 w-3.5" /> Close</Button>}
-                      {activeDetail.summary.status !== "open" && <Button variant="outline" size="sm" onClick={() => void handleStatus("open")}>Reopen</Button>}
-                    </div>
-                  </div>
                 </footer>
               </>
             )}
           </section>
+          {selectedSummary && (
+            <CRMWorkspacePanel
+              conversation={selectedSummary}
+              open={crmWorkspaceOpen}
+              onOpenChange={setCrmWorkspaceOpen}
+            />
+          )}
+          {activeDetail && selectedSummary && (
+            <ConversationOperationsPanel
+              detail={activeDetail}
+              open={operationsOpen}
+              onOpenChange={setOperationsOpen}
+              actionError={detail.actionError ?? inbox.actionError}
+              onStatusChange={handleOperationsStatus}
+              onClaim={() => handleOperationsAssignment("claim")}
+              onTransfer={handleOperationsTransfer}
+              onUnassign={() => handleOperationsAssignment("unassign")}
+              onHandoff={handleOperationsHandoff}
+              onParticipant={detail.updateParticipant}
+              onAddInternalNote={async (body) => { await detail.addInternalNote(body); inbox.reload(); }}
+              onAcquireLock={() => detail.acquireComposerLock(activeDetail.summary.version)}
+              onReleaseLock={detail.releaseComposerLock}
+              onTakeoverLock={detail.takeoverComposerLock}
+            />
+          )}
         </div>
       </section>
     </div>

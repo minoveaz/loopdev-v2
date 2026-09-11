@@ -5,12 +5,15 @@ import { validateFile, type FileValidationOptions } from "@/loopdev/domains/file
 
 export type FilesDropzoneItem = {
   file: File;
-  state: "ready" | "rejected";
+  state: "queued" | "uploading" | "processing" | "ready" | "failed" | "rejected";
   error?: string;
+  progress?: number;
 };
 
 export interface FilesDropzoneProps extends FileValidationOptions {
   multiple?: boolean;
+  maxFiles?: number;
+  allowDuplicates?: boolean;
   disabled?: boolean;
   accept?: string;
   className?: string;
@@ -21,6 +24,8 @@ export interface FilesDropzoneProps extends FileValidationOptions {
 
 export function FilesDropzone({
   multiple = true,
+  maxFiles = 10,
+  allowDuplicates = false,
   disabled = false,
   acceptedTypes,
   maxSizeBytes,
@@ -42,14 +47,20 @@ export function FilesDropzone({
   }, [onOpenReady, open]);
 
   const select = (selected: File[]) => {
-    const candidates = multiple ? selected : selected.slice(0, 1);
+    const existing = queue;
+    const remaining = Math.max(maxFiles - existing.length, 0);
+    const candidates = (multiple ? selected : selected.slice(0, 1)).slice(0, remaining);
+    const duplicate = (file: File) => existing.some((item) => item.file.name === file.name && item.file.size === file.size && item.file.lastModified === file.lastModified);
     const items = candidates.map((file) => {
       const result = validateFile(file, { acceptedTypes, maxSizeBytes });
-      return { file, state: result.valid ? "ready" : "rejected", error: result.error } as FilesDropzoneItem;
+      const isDuplicate = !allowDuplicates && duplicate(file);
+      return { file, state: result.valid && !isDuplicate ? "ready" : "rejected", error: isDuplicate ? "Duplicate file." : result.error } as FilesDropzoneItem;
     });
+    const limitError = selected.length > candidates.length ? `Maximum ${maxFiles} files allowed.` : undefined;
     setQueue((current) => multiple ? [...current, ...items] : items);
     const valid = items.filter((item) => item.state === "ready").map((item) => item.file);
     const errors = items.flatMap((item) => item.error ? [item.error] : []);
+    if (limitError) errors.push(limitError);
     if (valid.length > 0) onFilesSelected?.(valid);
     if (errors.length > 0) onValidationError?.(errors);
   };

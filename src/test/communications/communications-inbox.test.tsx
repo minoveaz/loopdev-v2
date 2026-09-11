@@ -16,6 +16,11 @@ function renderInbox(initialEntries: string[] = ["/app/sales-crm/communications"
   );
 }
 
+function openContext(view: "CRM Context" | "Operations") {
+  fireEvent.click(screen.getByRole("button", { name: view === "CRM Context" ? "Open CRM workspace" : "Open Conversation Operations" }));
+  fireEvent.click(screen.getByRole("tab", { name: view }));
+}
+
 describe("Communications Inbox", () => {
   it("renders channel readiness and filters the conversation list by search", async () => {
     localCommunicationsStore.reset();
@@ -54,7 +59,7 @@ describe("Communications Inbox", () => {
     expect(screen.getByText("Queued")).toBeInTheDocument();
 
     expect(screen.queryByRole("tab", { name: "Internal note" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Open Conversation Operations" }));
+    openContext("Operations");
     const noteInput = await screen.findByPlaceholderText("Add a private conversation note…");
     fireEvent.change(noteInput, { target: { value: "Check the requirements." } });
     fireEvent.click(await screen.findByRole("button", { name: "Add internal note" }));
@@ -75,7 +80,7 @@ describe("Communications Inbox", () => {
     renderInbox(["/app/sales-crm/communications/conversation-aria"]);
 
     expect(await screen.findByText("Hi Maya, checking in on the workspace rollout.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Open CRM workspace" }));
+    openContext("CRM Context");
 
     expect(await screen.findByRole("heading", { name: "CRM Workspace" })).toBeInTheDocument();
     expect(screen.getAllByText("Aria Blackwood").length).toBeGreaterThan(1);
@@ -92,7 +97,7 @@ describe("Communications Inbox", () => {
     renderInbox(["/app/sales-crm/communications/conversation-aria"]);
 
     expect(await screen.findByText("Hi Maya, checking in on the workspace rollout.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Open Conversation Operations" }));
+    openContext("Operations");
     expect(await screen.findByRole("heading", { name: "Conversation Operations" })).toBeInTheDocument();
     expect(screen.getByText("Audit trail")).toBeInTheDocument();
     expect(screen.getByText("Conversation internal notes")).toBeInTheDocument();
@@ -117,7 +122,7 @@ describe("Communications Inbox", () => {
     renderInbox(["/app/sales-crm/communications/conversation-aria"]);
 
     await screen.findByText("Hi Maya, checking in on the workspace rollout.");
-    fireEvent.click(screen.getByRole("button", { name: "Open CRM workspace" }));
+    openContext("CRM Context");
     expect(await screen.findByRole("tab", { name: "Overview" })).toHaveAttribute("aria-selected", "true");
 
     fireEvent.click(screen.getByRole("tab", { name: "Lead" }));
@@ -128,8 +133,7 @@ describe("Communications Inbox", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save task" }));
     expect(await screen.findByText("Call Aria tomorrow")).toBeInTheDocument();
 
-    const closeButton = document.querySelector('[data-testid="crm-workspace"] button[aria-label="Close CRM workspace"]');
-    if (closeButton) fireEvent.click(closeButton);
+    fireEvent.click(screen.getByRole("button", { name: "Close CRM workspace" }));
     vi.restoreAllMocks();
   });
 

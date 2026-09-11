@@ -1,23 +1,30 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import {
   AlertCircle,
   ArrowLeft,
   Check,
   CheckCheck,
   Clock3,
+  FileText,
+  Image as ImageIcon,
   Inbox,
   Instagram,
   Mail,
   MessageCircle,
   MessageSquare,
+  MapPin,
   PanelRightOpen,
+  PanelRightClose,
   Phone,
+  Play,
+  Pause,
+  Video,
+  Link2,
   RefreshCw,
   Search,
   Send,
   ShieldAlert,
   Star,
-  Settings2,
   UserRound,
   Users,
 } from "lucide-react";
@@ -42,6 +49,9 @@ import { cn } from "@/lib/utils";
 import { CRMWorkspacePanel } from "@/loopdev/components/crm/CRMWorkspacePanel";
 import { ConversationOperationsPanel } from "@/loopdev/components/communications/ConversationOperationsPanel";
 import { MessageContextMenu } from "@/loopdev/components/communications/MessageContextMenu";
+import { ConversationTimelineRail } from "@/loopdev/components/communications/ConversationTimelineRail";
+import { ConversationTimelinePanel } from "@/loopdev/components/communications/ConversationTimelinePanel";
+import type { ConversationContextView } from "@/loopdev/components/communications/ConversationContextTabs";
 
 const channelIcons: Record<CommunicationChannel, ComponentType<ChannelIconProps>> = {
   whatsapp: WhatsAppIcon,
@@ -110,6 +120,77 @@ function initials(name: string): string {
 
 function ConnectionDot({ state }: { state: ChannelConnectionState }) {
   return <span className={cn("h-2 w-2 rounded-full", state === "connected" ? "bg-success" : state === "error" ? "bg-destructive" : state === "coming_soon" ? "bg-muted-foreground/50" : "bg-warning")} />;
+}
+
+function MessageContent({ message, outbound }: { message: import("@/loopdev/domains/communications").CommunicationMessage; outbound: boolean }) {
+  const [playing, setPlaying] = useState(false);
+  const metadata = message.contentMetadata;
+  if (!message.contentType || message.contentType === "text") {
+    return <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p>;
+  }
+
+  if (message.contentType === "audio") {
+    return (
+      <div className="flex min-w-[210px] items-center gap-2.5">
+        <button type="button" aria-label={playing ? "Pause audio" : "Play audio"} onClick={() => setPlaying((value) => !value)} className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-full", outbound ? "bg-primary-foreground/20" : "bg-primary/10 text-primary")}>
+          {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 fill-current" />}
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-0.5" aria-label="Audio waveform">
+            {Array.from({ length: 24 }, (_, index) => <span key={index} className={cn("w-1 rounded-full", index % 4 === 0 ? "h-5" : index % 3 === 0 ? "h-3" : "h-2", outbound ? "bg-primary-foreground/70" : "bg-primary/50")} />)}
+          </div>
+          <p className="mt-1 text-[10px] opacity-75">{metadata?.durationSeconds ? `0:${String(metadata.durationSeconds).padStart(2, "0")}` : "Voice message"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (message.contentType === "document") {
+    return (
+      <div className={cn("flex min-w-[220px] items-center gap-3 rounded-lg border p-2.5", outbound ? "border-primary-foreground/20 bg-primary-foreground/10" : "border-border bg-background/70")}>
+        <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-md", outbound ? "bg-primary-foreground/20" : "bg-destructive/10 text-destructive")}><FileText className="h-5 w-5" /></span>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-semibold">{metadata?.name ?? message.body}</p>
+          <p className="mt-0.5 text-[10px] opacity-75">{metadata?.size ?? metadata?.mimeType ?? "Document"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (message.contentType === "image") {
+    return (
+      <div className="overflow-hidden rounded-lg">
+        <div className="flex h-32 w-56 items-center justify-center bg-gradient-to-br from-primary/30 via-sky-200 to-emerald-200 dark:via-sky-900 dark:to-emerald-900"><ImageIcon className="h-10 w-10 text-white/80" /></div>
+        <p className="mt-1 text-xs font-medium">{metadata?.name ?? message.body}</p>
+        {metadata?.size && <p className="text-[10px] opacity-70">{metadata.size}</p>}
+      </div>
+    );
+  }
+
+  if (message.contentType === "location") {
+    return (
+      <div className={cn("flex min-w-[220px] items-center gap-3 rounded-lg border p-2.5", outbound ? "border-primary-foreground/20 bg-primary-foreground/10" : "border-border bg-background/70")}>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-red-500"><MapPin className="h-5 w-5" /></span>
+        <div><p className="text-xs font-semibold">{message.body}</p><p className="mt-0.5 text-[10px] opacity-75">{metadata?.locationLabel ?? "Shared location"}</p></div>
+      </div>
+    );
+  }
+
+  if (message.contentType === "video") {
+    return (
+      <div className={cn("flex min-w-[220px] items-center gap-3 rounded-lg border p-2.5", outbound ? "border-primary-foreground/20 bg-primary-foreground/10" : "border-border bg-background/70")}>
+        <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-md bg-slate-900 text-white"><Video className="h-5 w-5" /></span>
+        <div><p className="text-xs font-semibold">{metadata?.name ?? message.body}</p><p className="mt-0.5 text-[10px] opacity-75">{metadata?.durationSeconds ? `0:${String(metadata.durationSeconds).padStart(2, "0")}` : "Video"}{metadata?.size ? ` · ${metadata.size}` : ""}</p></div>
+      </div>
+    );
+  }
+
+  return (
+    <a href={metadata?.url ?? "#"} target="_blank" rel="noreferrer" className={cn("flex min-w-[220px] items-center gap-3 rounded-lg border p-2.5", outbound ? "border-primary-foreground/20 bg-primary-foreground/10" : "border-border bg-background/70")}>
+      <Link2 className="h-5 w-5 shrink-0 text-primary" />
+      <span className="truncate text-xs font-semibold">{metadata?.name ?? message.body}</span>
+    </a>
+  );
 }
 
 function ConversationComposer({
@@ -205,6 +286,7 @@ function ChannelRail({
   onSelect,
   onRefresh,
   hideOnThread,
+  hideOnContext,
 }: {
   channels: ReturnType<typeof useCommunicationsInbox>["channels"];
   selected: CommunicationChannel | "all";
@@ -212,9 +294,13 @@ function ChannelRail({
   onSelect: (channel: CommunicationChannel | "all") => void;
   onRefresh: () => void;
   hideOnThread?: boolean;
+  hideOnContext?: boolean;
 }) {
   return (
-    <aside className={cn("border-b border-border/80 bg-muted/60 dark:bg-card/60 lg:w-[204px] lg:shrink-0 lg:border-b-0 lg:border-e", hideOnThread && "hidden lg:block")} aria-label="Communication channels">
+    <aside className={cn(
+      "border-b border-border/80 bg-muted/60 dark:bg-card/60 lg:w-[204px] lg:shrink-0 lg:border-b-0 lg:border-e",
+      hideOnContext ? "hidden lg:hidden" : hideOnThread && "hidden lg:block",
+    )} aria-label="Communication channels">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Channels</p>
@@ -289,8 +375,8 @@ export default function Communications() {
   const [query, setQuery] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [starredOnly, setStarredOnly] = useState(false);
-  const [crmWorkspaceOpen, setCrmWorkspaceOpen] = useState(false);
-  const [operationsOpen, setOperationsOpen] = useState(false);
+  const [contextView, setContextView] = useState<ConversationContextView | null>(null);
+  const [lastContextView, setLastContextView] = useState<ConversationContextView>("crm");
   const [composerDrafts, setComposerDrafts] = useState<Record<string, { body: string }>>({});
   const threadScrollPositions = useRef<Record<string, number>>({});
   const threadScrollRef = useRef<HTMLDivElement>(null);
@@ -302,6 +388,16 @@ export default function Communications() {
   const detail = useCommunicationConversation(selectedId, COMMUNICATIONS_LOCAL_CONTEXT);
   const selectedAccount = inbox.channels.find((item) => item.id === selectedSummary?.accountId);
   const selectedChannelAccount = inbox.channels.find((item) => item.channel === channel);
+  const openContextView = (view: ConversationContextView) => {
+    setLastContextView(view);
+    setContextView(view);
+  };
+  const closeContextView = () => setContextView(null);
+  const contextLabel = lastContextView === "crm"
+    ? "CRM workspace"
+    : lastContextView === "operations"
+      ? "Conversation Operations"
+      : "Conversation Timeline";
 
   useEffect(() => {
     if (!conversationId && inbox.conversations[0]) {
@@ -384,6 +480,7 @@ export default function Communications() {
             onSelect={setChannel}
             onRefresh={inbox.reload}
             hideOnThread={Boolean(conversationId)}
+            hideOnContext={Boolean(contextView)}
           />
 
           <section className={cn("w-full flex-col border-b border-border/80 bg-card lg:flex lg:w-[350px] lg:shrink-0 lg:border-b-0 lg:border-e", conversationId ? "hidden" : "flex")} aria-label="Conversation list">
@@ -518,33 +615,57 @@ export default function Communications() {
                       {selectedSummary.assignedToName ? initials(selectedSummary.assignedToName) : "—"}
                     </span>
                     <Button variant="ghost" size="icon" className={cn("h-8 w-8", selectedSummary.starred && "text-gold")} aria-label={selectedSummary.starred ? "Unstar conversation" : "Star conversation"} onClick={() => void inbox.toggleStar(selectedSummary.id)}><Star className={cn("h-4 w-4", selectedSummary.starred && "fill-current")} /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Open CRM workspace" onClick={() => { setOperationsOpen(false); setCrmWorkspaceOpen(true); }}><PanelRightOpen className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Open Conversation Operations" onClick={() => { setCrmWorkspaceOpen(false); setOperationsOpen(true); }}><Settings2 className="h-4 w-4" /></Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      aria-label={contextView ? `Close ${contextLabel}` : `Open ${contextLabel}`}
+                      title={contextView ? `Close ${contextLabel}` : `Open ${contextLabel}`}
+                      onClick={() => contextView ? closeContextView() : openContextView(lastContextView)}
+                    >
+                      {contextView ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </header>
                 {selectedAccount && selectedAccount.state !== "connected" && <div className="flex items-center gap-2 border-b border-warning/20 bg-warning-soft px-5 py-2 text-xs text-warning"><ShieldAlert className="h-3.5 w-3.5 shrink-0" />{selectedAccount.statusMessage}. Reading is available; provider actions remain disabled.</div>}
-                <div ref={threadScrollRef} onScroll={(event) => { threadScrollPositions.current[selectedSummary.id] = event.currentTarget.scrollTop; }} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 sm:py-5">
-                  <div className="mb-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground"><span className="h-px flex-1 bg-border" /><span>{formatDate(selectedSummary.lastActivityAt, "medium")}</span><span className="h-px flex-1 bg-border" /></div>
-                  <ol className="space-y-4">
-                    {activeDetail.messages.filter((message) => message.direction !== "internal").map((message) => {
-                      const outbound = message.direction === "outbound";
-                      return (
-                        <li key={message.id} className={cn("flex", outbound ? "justify-end" : "justify-start")}>
-                          <MessageContextMenu
-                            message={message}
-                            onCopy={(selectedMessage) => navigator.clipboard.writeText(selectedMessage.body)}
-                            onReply={(selectedMessage) => updateComposerDraft({ body: `> ${selectedMessage.body}\n\n` })}
-                            onOpenOperations={() => { setCrmWorkspaceOpen(false); setOperationsOpen(true); }}
-                          >
-                            <div className={cn("max-w-[75%] rounded-xl px-4 py-2.5", outbound ? "rounded-ee-sm bg-primary text-primary-foreground" : "rounded-es-sm bg-muted text-foreground")}>
-                              <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p>
-                              <div className={cn("mt-1.5 flex items-center gap-1.5 text-[10px]", outbound ? "text-primary-foreground/70" : "text-muted-foreground")}><span>{message.authorName}</span><span>·</span><span>{formatRelative(message.occurredAt)}</span>{outbound && message.deliveryStatus && <><span>·</span><DeliveryStatus status={message.deliveryStatus} /></>}</div>
-                            </div>
-                          </MessageContextMenu>
-                        </li>
-                      );
-                    })}
-                  </ol>
+                <div className="flex min-h-0 flex-1">
+                  <div ref={threadScrollRef} onScroll={(event) => { threadScrollPositions.current[selectedSummary.id] = event.currentTarget.scrollTop; }} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 sm:py-5">
+                    <ol className="space-y-4">
+                      {activeDetail.messages.filter((message) => message.direction !== "internal").map((message, index, visibleMessages) => {
+                        const outbound = message.direction === "outbound";
+                        const previousMessage = visibleMessages[index - 1];
+                        const showDaySeparator = !previousMessage || previousMessage.occurredAt.slice(0, 10) !== message.occurredAt.slice(0, 10);
+                        return (
+                          <Fragment key={message.id}>
+                            {showDaySeparator && (
+                              <li aria-label={`Messages from ${formatDate(message.occurredAt, "medium")}`} className="flex items-center gap-2 py-1 text-[11px] text-muted-foreground">
+                                <span className="h-px flex-1 bg-border" />
+                                <span className="rounded-full border border-border/80 bg-muted/40 px-2.5 py-0.5 font-medium">{formatDate(message.occurredAt, "medium")}</span>
+                                <span className="h-px flex-1 bg-border" />
+                              </li>
+                            )}
+                            <li id={`conversation-message-${message.id}`} className={cn("flex scroll-mt-6", outbound ? "justify-end" : "justify-start")}>
+                              <MessageContextMenu
+                                message={message}
+                                onCopy={(selectedMessage) => navigator.clipboard.writeText(selectedMessage.body)}
+                                onReply={(selectedMessage) => updateComposerDraft({ body: `> ${selectedMessage.body}\n\n` })}
+                                onOpenOperations={() => openContextView("operations")}
+                              >
+                                <div className={cn("max-w-[75%] rounded-xl px-4 py-2.5", outbound ? "rounded-ee-sm bg-primary text-primary-foreground" : "rounded-es-sm bg-muted text-foreground")}>
+                                  <MessageContent message={message} outbound={outbound} />
+                                  <div className={cn("mt-1.5 flex items-center gap-1.5 text-[10px]", outbound ? "text-primary-foreground/70" : "text-muted-foreground")}><span>{message.authorName}</span><span>·</span><span>{formatRelative(message.occurredAt)}</span>{outbound && message.deliveryStatus && <><span>·</span><DeliveryStatus status={message.deliveryStatus} /></>}</div>
+                                </div>
+                              </MessageContextMenu>
+                            </li>
+                          </Fragment>
+                        );
+                      })}
+                    </ol>
+                  </div>
+                  <ConversationTimelineRail
+                    messages={activeDetail.messages.filter((message) => message.direction !== "internal")}
+                    onOpenDetails={() => openContextView("timeline")}
+                  />
                 </div>
                 <footer className="border-t border-border/80 bg-muted/25 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] dark:bg-card-muted sm:px-5">
                   <ConversationComposer
@@ -566,15 +687,19 @@ export default function Communications() {
           {selectedSummary && (
             <CRMWorkspacePanel
               conversation={selectedSummary}
-              open={crmWorkspaceOpen}
-              onOpenChange={setCrmWorkspaceOpen}
+              open={contextView === "crm"}
+              onOpenChange={(open) => open ? openContextView("crm") : closeContextView()}
+              contextView={contextView ?? "crm"}
+              onContextViewChange={openContextView}
             />
           )}
           {activeDetail && selectedSummary && (
             <ConversationOperationsPanel
               detail={activeDetail}
-              open={operationsOpen}
-              onOpenChange={setOperationsOpen}
+              open={contextView === "operations"}
+              onOpenChange={(open) => open ? openContextView("operations") : closeContextView()}
+              contextView={contextView ?? "operations"}
+              onContextViewChange={openContextView}
               actionError={detail.actionError ?? inbox.actionError}
               onStatusChange={handleOperationsStatus}
               onClaim={() => handleOperationsAssignment("claim")}
@@ -586,6 +711,15 @@ export default function Communications() {
               onAcquireLock={() => detail.acquireComposerLock(activeDetail.summary.version)}
               onReleaseLock={detail.releaseComposerLock}
               onTakeoverLock={detail.takeoverComposerLock}
+            />
+          )}
+          {activeDetail && selectedSummary && (
+            <ConversationTimelinePanel
+              messages={activeDetail.messages.filter((message) => message.direction !== "internal")}
+              open={contextView === "timeline"}
+              onOpenChange={(open) => open ? openContextView("timeline") : closeContextView()}
+              contextView={contextView ?? "timeline"}
+              onContextViewChange={openContextView}
             />
           )}
         </div>

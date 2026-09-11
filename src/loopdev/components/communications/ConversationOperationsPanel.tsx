@@ -7,7 +7,6 @@ import {
   Hand,
   Lock,
   MessageSquarePlus,
-  PanelRightClose,
   UserMinus,
   UserPlus,
   Users,
@@ -24,6 +23,8 @@ import {
 } from "@/loopdev/domains/communications";
 import { formatRelative } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { ConversationContextPanelHeader } from "./ConversationContextPanelHeader";
+import { ConversationContextTabs, type ConversationContextView } from "./ConversationContextTabs";
 
 const statusLabels: Record<ConversationStatus, string> = {
   open: "Open",
@@ -51,6 +52,8 @@ interface ConversationOperationsPanelProps {
   onAcquireLock: () => Promise<unknown>;
   onReleaseLock: () => Promise<unknown>;
   onTakeoverLock: () => Promise<unknown>;
+  contextView: ConversationContextView;
+  onContextViewChange: (view: ConversationContextView) => void;
 }
 
 function useDesktopLayout() {
@@ -111,6 +114,8 @@ function OperationsBody({
   onAcquireLock,
   onReleaseLock,
   onTakeoverLock,
+  contextView,
+  onContextViewChange,
 }: Omit<ConversationOperationsPanelProps, "open">) {
   const collaboration = detail.collaboration;
   const [noteBody, setNoteBody] = useState("");
@@ -137,15 +142,13 @@ function OperationsBody({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="conversation-operations">
-      <header className="flex shrink-0 items-start gap-3 border-b border-border px-4 py-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary"><ClipboardList className="h-4 w-4" /></span>
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-sm font-semibold">Conversation Operations</h2>
-          <p className="truncate text-xs text-muted-foreground">{detail.summary.contact.displayName} · operational controls</p>
-        </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Close Conversation Operations" onClick={() => onOpenChange(false)}><PanelRightClose className="h-4 w-4" /></Button>
-      </header>
+      <ConversationContextPanelHeader
+        icon={<ClipboardList className="h-4 w-4" />}
+        title="Conversation Operations"
+        subtitle={`${detail.summary.contact.displayName} · operational controls`}
+      />
 
+      <ConversationContextTabs active={contextView} onChange={onContextViewChange} />
       <div className="min-h-0 flex-1 overflow-y-auto space-y-4 p-3">
         {actionError && !errorDismissed && (
           <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive" role="alert">
@@ -247,14 +250,14 @@ export function ConversationOperationsPanel(props: ConversationOperationsPanelPr
   const desktop = useDesktopLayout();
   if (desktop) {
     return (
-      <aside className={cn("w-[380px] shrink-0 flex-col border-s border-border bg-card", props.open ? "flex" : "hidden")} aria-label="Conversation Operations" aria-hidden={!props.open}>
+      <aside className={cn("w-[480px] shrink-0 flex-col border-s border-border bg-card xl:w-[min(40vw,560px)]", props.open ? "flex" : "hidden")} aria-label="Conversation Operations" aria-hidden={!props.open}>
         <OperationsBody {...props} />
       </aside>
     );
   }
   return (
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
-      <SheetContent forceMount side="right" className="flex w-full max-w-none flex-col p-0 sm:w-[min(92vw,420px)]">
+      <SheetContent forceMount side="right" className="flex w-full max-w-none flex-col p-0 sm:w-[min(92vw,480px)]">
         <SheetHeader className="sr-only"><SheetTitle>Conversation Operations drawer</SheetTitle><SheetDescription>Conversation status, ownership, collaboration and internal notes.</SheetDescription></SheetHeader>
         <OperationsBody {...props} />
       </SheetContent>

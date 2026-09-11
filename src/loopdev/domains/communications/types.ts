@@ -165,6 +165,15 @@ export interface CommunicationMessage {
   authorName: string;
   occurredAt: string;
   deliveryStatus: MessageDeliveryStatus | null;
+  contentType?: "text" | "document" | "audio" | "image" | "video" | "location" | "link";
+  contentMetadata?: {
+    name?: string;
+    size?: string;
+    mimeType?: string;
+    durationSeconds?: number;
+    url?: string;
+    locationLabel?: string;
+  };
   sequence?: number;
 }
 

@@ -7,7 +7,6 @@ import {
   FileText,
   ListTodo,
   MessageSquarePlus,
-  PanelRightClose,
   RefreshCw,
   UsersRound,
   X,
@@ -22,11 +21,15 @@ import { type ConversationSummary } from "@/loopdev/domains/communications";
 import { useCrmWorkspace } from "@/loopdev/domains/crm/workspace";
 import { cn } from "@/lib/utils";
 import { formatDate, formatRelative } from "@/lib/formatters";
+import { ConversationContextPanelHeader } from "@/loopdev/components/communications/ConversationContextPanelHeader";
+import { ConversationContextTabs, type ConversationContextView } from "@/loopdev/components/communications/ConversationContextTabs";
 
 interface CRMWorkspacePanelProps {
   conversation: ConversationSummary;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  contextView: ConversationContextView;
+  onContextViewChange: (view: ConversationContextView) => void;
 }
 
 function useDesktopLayout() {
@@ -62,6 +65,8 @@ function recordLink(path: string, label: string) {
 function CRMWorkspaceBody({
   conversation,
   onOpenChange,
+  contextView,
+  onContextViewChange,
 }: Omit<CRMWorkspacePanelProps, "open">) {
   const workspaceHook = useCrmWorkspace(conversation.contact.id, true);
   const {
@@ -147,19 +152,13 @@ function CRMWorkspaceBody({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="crm-workspace">
-      <header className="flex shrink-0 items-start gap-3 border-b border-border px-4 py-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
-          {conversation.contact.displayName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-sm font-semibold">CRM Workspace</h2>
-          <p className="truncate text-xs text-muted-foreground">{conversation.contact.displayName}</p>
-        </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Close CRM workspace" onClick={() => onOpenChange(false)}>
-          <PanelRightClose className="h-4 w-4" />
-        </Button>
-      </header>
+      <ConversationContextPanelHeader
+        icon={conversation.contact.displayName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}
+        title="CRM Workspace"
+        subtitle={conversation.contact.displayName}
+      />
 
+      <ConversationContextTabs active={contextView} onChange={onContextViewChange} />
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         {loading && <p className="py-10 text-center text-sm text-muted-foreground">Loading CRM context…</p>}
         {forbidden && (
@@ -323,7 +322,7 @@ export function CRMWorkspacePanel(props: CRMWorkspacePanelProps) {
   const desktop = useDesktopLayout();
   if (desktop) {
     return (
-      <aside className={cn("w-[380px] shrink-0 flex-col border-s border-border bg-card", props.open ? "flex" : "hidden")} aria-label="CRM workspace" aria-hidden={!props.open}>
+      <aside className={cn("w-[480px] shrink-0 flex-col border-s border-border bg-card xl:w-[min(40vw,560px)]", props.open ? "flex" : "hidden")} aria-label="CRM workspace" aria-hidden={!props.open}>
         <CRMWorkspaceBody {...props} />
       </aside>
     );
@@ -331,7 +330,7 @@ export function CRMWorkspacePanel(props: CRMWorkspacePanelProps) {
 
   return (
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
-      <SheetContent forceMount side="right" className="flex w-full max-w-none flex-col p-0 sm:w-[min(92vw,420px)]">
+      <SheetContent forceMount side="right" className="flex w-full max-w-none flex-col p-0 sm:w-[min(92vw,480px)]">
         <SheetHeader className="sr-only"><SheetTitle>Contextual CRM records</SheetTitle><SheetDescription>Contextual CRM records for the selected conversation.</SheetDescription></SheetHeader>
         <CRMWorkspaceBody {...props} />
       </SheetContent>

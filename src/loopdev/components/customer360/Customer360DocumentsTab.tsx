@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/formatters";
 import type { CRMContact } from "@/loopdev/domains/crm/adapter";
 import { localPlatformAdapter } from "@/loopdev/domains/platform";
-import { FilesDropzone } from "@/loopdev/components/files";
+import { FilePreviewDialog, FilesDropzone } from "@/loopdev/components/files";
 import {
   type FileCategory,
   type FileSource,
@@ -65,6 +65,8 @@ export function Customer360DocumentsTab({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [dropzoneKey, setDropzoneKey] = useState(0);
+  const [localFiles, setLocalFiles] = useState<Record<string, File>>({});
+  const [previewTarget, setPreviewTarget] = useState<(typeof files)[number] | null>(null);
   const visibleFiles = files.filter((file) => file.status !== "deleted" && (category === "all" || file.category === category));
   const activePendingFile = pendingFiles[activePendingIndex] ?? null;
   const [activePreviewUrl, setActivePreviewUrl] = useState<string | null>(null);
@@ -98,7 +100,7 @@ export function Customer360DocumentsTab({
     setSaving(true);
     try {
       for (const file of pendingFiles) {
-        await createMetadata({
+        const created = await createMetadata({
           scope,
           relation,
           fileName: file.name,
@@ -107,6 +109,7 @@ export function Customer360DocumentsTab({
           category: "other",
           source: "upload",
         });
+        setLocalFiles((current) => ({ ...current, [created.id]: file }));
       }
       resetPending();
       toast({ title: "Documents saved", description: `${pendingFiles.length} document${pendingFiles.length === 1 ? "" : "s"} added to this customer.` });
@@ -226,12 +229,12 @@ export function Customer360DocumentsTab({
           {visibleFiles.map((file) => (
             <li key={file.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
               <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
+              <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPreviewTarget(file)}>
                 <p className="truncate text-sm font-medium">{file.fileName}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatBytes(file.byteSize)} · Uploaded {formatDate(file.createdAt)} · {sourceLabel(file.source)} · {file.status}
                 </p>
-              </div>
+              </button>
               <Button type="button" variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive" aria-label={`Delete ${file.fileName}`} onClick={() => setDeleteTarget(file)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -239,6 +242,17 @@ export function Customer360DocumentsTab({
           ))}
         </ul>
       )}
+
+      <FilePreviewDialog
+        file={previewTarget}
+        localFile={previewTarget ? localFiles[previewTarget.id] : undefined}
+        open={previewTarget !== null}
+        onOpenChange={(open) => { if (!open) setPreviewTarget(null); }}
+        onDelete={() => {
+          if (previewTarget) setDeleteTarget(previewTarget);
+          setPreviewTarget(null);
+        }}
+      />
 
       <ConfirmDialog
         open={deleteTarget !== null}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type ClipboardEvent, type DragEvent, type KeyboardEvent } from "react";
 import { FileUp, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { validateFile, type FileValidationOptions } from "@/loopdev/domains/files";
@@ -62,6 +62,16 @@ export function FilesDropzone({
     setDragging(false);
     if (!disabled) select(Array.from(event.dataTransfer.files));
   };
+  const onPaste = (event: ClipboardEvent<HTMLDivElement>) => {
+    if (disabled) return;
+    const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
+    const image = imageItem?.getAsFile();
+    if (!image) return;
+    event.preventDefault();
+    const extension = image.type.split("/")[1]?.replace("jpeg", "jpg") || "png";
+    const pastedFile = new File([image], `screenshot-${new Date().toISOString().replace(/[:.]/g, "-")}.${extension}`, { type: image.type });
+    select([pastedFile]);
+  };
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if ((event.key === "Enter" || event.key === " ") && !disabled) {
       event.preventDefault();
@@ -83,6 +93,7 @@ export function FilesDropzone({
         onDragOver={(event) => event.preventDefault()}
         onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }}
         onDrop={onDrop}
+        onPaste={onPaste}
         className={cn(
           "rounded-lg border-2 border-dashed p-6 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           dragging ? "border-primary bg-primary/5" : "border-border",
@@ -101,7 +112,7 @@ export function FilesDropzone({
         <FileUp className="mx-auto mb-2 h-6 w-6 text-muted-foreground" aria-hidden="true" />
         <p className="text-sm font-medium">Drop files here or browse</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Files are selected locally; binary storage is handled by a future adapter.
+          Drop, browse or paste an image with Cmd/Ctrl + V.
         </p>
       </div>
       {queue.length > 0 && (

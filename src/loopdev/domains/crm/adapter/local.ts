@@ -860,6 +860,10 @@ export const localLoopdevAdapter = {
           amount: opportunity.amount,
           currency: opportunity.currency,
           expectedCloseAt: opportunity.expectedCloseDate,
+          ownerId: opportunity.ownerId,
+          ownerName: opportunity.ownerName,
+          createdAt: opportunity.createdAt,
+          updatedAt: opportunity.updatedAt,
         }));
       const tasks: CRMTask[] = [
         { id: "local-task-1", title: "Review renewal requirements", status: "open", priority: "high", dueAt: new Date().toISOString(), relationId: contactId },

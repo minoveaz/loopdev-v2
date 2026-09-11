@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ExternalLink, Plus, RefreshCw, SearchX } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppDrawer } from "@/components/platform";
 import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
 import { ConfirmDialog, DataCard, FilterDropdown, PageContainer, PageHeader, SearchInput, StatusBadge, useFormLifecycle } from "@/components/common";
@@ -34,6 +34,7 @@ const stageTone: Record<CRMPipelineStageCode, "neutral" | "info" | "success" | "
 export default function SalesCRMOpportunities() {
   const { trail } = useBreadcrumbs();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { contacts } = useCrmContacts({ limit: 100 });
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const createLifecycle = useFormLifecycle();
@@ -72,12 +73,18 @@ export default function SalesCRMOpportunities() {
       .catch(() => setCatalogItems([]));
   }, []);
 
-  const openDetails = (opportunity: CRMPipelineOpportunity) => {
+  const openDetails = useCallback((opportunity: CRMPipelineOpportunity) => {
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setSelected(opportunity);
     detailsLifecycle.markClean();
     setDrawerOpen(true);
-  };
+  }, [detailsLifecycle]);
+
+  useEffect(() => {
+    const opportunityId = searchParams.get("opportunityId");
+    const opportunity = opportunities.find((item) => item.id === opportunityId);
+    if (opportunity && !drawerOpen) openDetails(opportunity);
+  }, [drawerOpen, openDetails, opportunities, searchParams]);
 
   const closeDetails = (open: boolean) => {
     setDrawerOpen(open);

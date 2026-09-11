@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   AlertTriangle, ArrowRight, CalendarClock, Mail,
   MoreHorizontal, Phone, Plus, RefreshCw, SearchX, UserRound,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ConfirmDialog, DataCard, EmptyState, FilterDropdown, PageContainer, PageHeader,
   SearchInput, StatusBadge, useFormLifecycle,
@@ -68,6 +68,7 @@ export default function SalesCRMLeads() {
   const [noRecentActivity, setNoRecentActivity] = useState(false);
   const [viewKey, setViewKey] = useState<ViewKey>("all");
   const [selectedLeadId, setSelectedLeadId] = useState<string>();
+  const [searchParams] = useSearchParams();
   const leadRestoreFocusRef = useRef<HTMLElement | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -119,6 +120,11 @@ export default function SalesCRMLeads() {
     leadRestoreFocusRef.current = trigger;
     setSelectedLeadId(leadId);
   };
+
+  useEffect(() => {
+    const leadId = searchParams.get("lead");
+    if (leadId && leads.some((lead) => lead.id === leadId)) setSelectedLeadId(leadId);
+  }, [leads, searchParams]);
 
   const selectView = (key: ViewKey) => {
     const view = SAVED_VIEWS.find((item) => item.key === key)!;

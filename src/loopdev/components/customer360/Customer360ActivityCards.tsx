@@ -1,6 +1,6 @@
 import { CheckSquare, Plus, TrendingUp, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
-import { ActivityFeed, DataCard, EmptyState, getActivityActionLabel, getActivityKind, type ActivityFeedItem } from "@/components/common";
+import { Link, useNavigate } from "react-router-dom";
+import { ActivityFeed, DataCard, EmptyState, getActivityActionLabel, getActivityKind, StatusBadge, type ActivityFeedItem } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import type { CRMActivity, CRMLead, CRMNote, CRMOpportunity, CRMTask } from "@/loopdev/domains/crm/adapter";
 import { formatDate, formatRelative } from "@/lib/formatters";
@@ -44,21 +44,22 @@ export function Customer360TimelineCard({ timeline, contactId }: { timeline: CRM
 
 export function Customer360LeadsCard({ leads }: { leads: CRMLead[] }) {
   const statusLabel = (status: CRMLead["status"]) => status.replace("_", " ").replace(/^\w/, (letter) => letter.toUpperCase());
-  return <DataCard title={`Leads (${leads.length})`} description="Lead source and qualification context">
-    {leads.length ? <ul className="space-y-2">{leads.map((lead) => <li key={lead.id} className="rounded-md border border-border bg-card-muted/30 p-3">
-      <div className="flex items-center justify-between"><span className="text-sm font-medium">{lead.interest || "General interest"}</span><span className="text-xs text-muted-foreground">{statusLabel(lead.status)}</span></div>
-      <p className="mt-1 text-xs text-muted-foreground">{lead.source || "Unknown source"} · {formatDate(lead.createdAt)}</p>
+  const navigate = useNavigate();
+  const openLead = (leadId: string) => navigate(`/app/sales-crm/leads?lead=${encodeURIComponent(leadId)}`);
+  return <DataCard title={`Leads (${leads.length})`} action={<Button asChild variant="ghost" size="sm"><Link to="/app/sales-crm/leads">View</Link></Button>} className="border-border-strong">
+    {leads.length ? <ul className="space-y-3">{leads.map((lead) => <li key={lead.id} role="button" tabIndex={0} onClick={() => openLead(lead.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openLead(lead.id); } }} className="cursor-pointer rounded-md border border-border-strong bg-card-muted/20 px-3 py-3 transition-colors hover:bg-card-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-3"><p className="break-words text-sm font-medium">{lead.interest || "General interest"}</p><StatusBadge tone={lead.status === "converted" ? "success" : lead.status === "inactive" || lead.status === "stalled" ? "destructive" : "info"}>{statusLabel(lead.status)}</StatusBadge></div><dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 text-xs"><div><dt className="text-muted-foreground">Source</dt><dd className="mt-0.5 break-words font-medium">{lead.source || "Unknown source"}</dd></div><div><dt className="text-muted-foreground">Score</dt><dd className="mt-0.5 font-medium">{lead.score ?? "—"}</dd></div><div><dt className="text-muted-foreground">Owner</dt><dd className="mt-0.5 break-words font-medium">{lead.ownerName || "Unassigned"}</dd></div><div><dt className="text-muted-foreground">Started</dt><dd className="mt-0.5 break-words font-medium">{formatDate(lead.createdAt)}</dd></div><div><dt className="text-muted-foreground">Last activity</dt><dd className="mt-0.5 break-words font-medium">{lead.lastActivityAt ? formatRelative(lead.lastActivityAt) : "None recorded"}</dd></div><div><dt className="text-muted-foreground">Next activity</dt><dd className="mt-0.5 break-words font-medium">{lead.nextActivityAt ? formatDate(lead.nextActivityAt) : "Not set"}</dd></div></dl></div>
     </li>)}</ul> : <EmptyState title="No related leads" description="Leads associated with this contact will appear here." />}
   </DataCard>;
 }
 
 export function Customer360OpportunitiesCard({ opportunities }: { opportunities: CRMOpportunity[] }) {
-  return <DataCard title={`Opportunities (${opportunities.length})`} description="Commercial context for this contact">
-    {opportunities.length ? <ul className="space-y-2">{opportunities.map((opportunity) => <li key={opportunity.id} className="flex items-center justify-between gap-3 rounded-md border border-border bg-card-muted/30 p-3">
-      <div className="flex min-w-0 items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-soft text-primary"><TrendingUp className="h-4 w-4" /></span><div className="min-w-0"><p className="truncate text-sm font-medium">{opportunity.name}</p><p className="text-xs text-muted-foreground">{opportunity.stageKey} · {opportunity.amount ?? "—"} {opportunity.currency ?? ""}</p><p className="text-xs text-muted-foreground">{opportunity.origin === "lead_conversion" ? `Lead conversion · ${opportunity.productKey ?? "—"}` : "Manual opportunity"}{opportunity.leadId ? ` · ${opportunity.leadId}` : ""}</p></div></div>
-      <Button size="sm" variant="ghost">View</Button>
+  const navigate = useNavigate();
+  const openOpportunity = (opportunityId: string) => navigate(`/app/sales-crm/opportunities?opportunityId=${encodeURIComponent(opportunityId)}`);
+  return <DataCard title={`Opportunities (${opportunities.length})`} action={<Button asChild variant="ghost" size="sm"><Link to="/app/sales-crm/opportunities">View</Link></Button>} className="border-border-strong">
+    {opportunities.length ? <ul className="space-y-3">{opportunities.map((opportunity) => <li key={opportunity.id} role="button" tabIndex={0} onClick={() => openOpportunity(opportunity.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openOpportunity(opportunity.id); } }} className="cursor-pointer rounded-md border border-border-strong bg-card-muted/20 px-3 py-3 transition-colors hover:bg-card-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <div className="flex min-w-0 items-start gap-3"><span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><TrendingUp className="h-4 w-4" /></span><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-3"><p className="break-words text-sm font-medium">{opportunity.name}</p><StatusBadge tone={opportunity.stageKey === "won" ? "success" : opportunity.stageKey === "lost" ? "destructive" : "info"}>{opportunity.stageKey}</StatusBadge></div><dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 text-xs"><div><dt className="text-muted-foreground">Amount</dt><dd className="mt-0.5 break-words font-medium">{opportunity.amount ?? "—"} {opportunity.currency ?? ""}</dd></div><div><dt className="text-muted-foreground">Owner</dt><dd className="mt-0.5 break-words font-medium">{opportunity.ownerName || "Unassigned"}</dd></div><div><dt className="text-muted-foreground">Started</dt><dd className="mt-0.5 break-words font-medium">{formatDate(opportunity.createdAt)}</dd></div><div><dt className="text-muted-foreground">Expected close</dt><dd className="mt-0.5 break-words font-medium">{opportunity.expectedCloseAt ? formatDate(opportunity.expectedCloseAt) : "Not set"}</dd></div><div><dt className="text-muted-foreground">Last updated</dt><dd className="mt-0.5 break-words font-medium">{formatRelative(opportunity.updatedAt)}</dd></div><div><dt className="text-muted-foreground">Origin</dt><dd className="mt-0.5 break-words font-medium">{opportunity.origin === "lead_conversion" ? "Lead conversion" : "Manual opportunity"}</dd></div></dl></div></div>
     </li>)}</ul> : <EmptyState title="No opportunities" description="Related opportunities will appear here." />}
-    <Button variant="outline" className="mt-4 w-full"><Plus className="mr-1.5 h-3.5 w-3.5" />New opportunity</Button>
   </DataCard>;
 }
 

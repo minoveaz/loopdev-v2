@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useRef, useState } from "react";
 import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
 import { EmptyState, PageContainer, PageHeader } from "@/components/common";
@@ -14,6 +14,7 @@ import { Customer360TimelineCard } from "@/loopdev/components/customer360/Custom
 
 export default function SalesCRMCustomer360() {
   const { contactId } = useParams<{ contactId: string }>();
+  const [searchParams] = useSearchParams();
   const { trail } = useBreadcrumbs();
   const { view, loading, error, reload } = useCrmCustomer360(contactId);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -41,6 +42,56 @@ export default function SalesCRMCustomer360() {
   }
 
   const { contact } = view;
+  const demoMultiple = searchParams.get("demo") === "multiple" && contact.id === "crm_cust_1";
+  const demoView = demoMultiple ? {
+    ...view,
+    leads: view.leads.length ? [
+      ...view.leads,
+      {
+        ...view.leads[0],
+        id: `${view.leads[0].id}-demo-2`,
+        interest: "Security review",
+        status: "contacted" as const,
+        source: "Referral",
+        ownerName: "Jon Bell",
+        assignedUserId: "owner-jon",
+        score: 68,
+      },
+      {
+        ...view.leads[0],
+        id: `${view.leads[0].id}-demo-3`,
+        interest: "Implementation planning",
+        status: "new" as const,
+        source: "Event",
+        ownerName: "Lee Okafor",
+        assignedUserId: "owner-lee",
+        score: 51,
+      },
+    ] : view.leads,
+    opportunities: view.opportunities.length ? [
+      ...view.opportunities,
+      {
+        ...view.opportunities[0],
+        id: `${view.opportunities[0].id}-demo-2`,
+        name: "Security review package",
+        stageKey: "qualified" as const,
+        amount: 18500,
+        ownerName: "Jon Bell",
+        ownerId: "owner-jon",
+        origin: "lead_conversion" as const,
+      },
+      {
+        ...view.opportunities[0],
+        id: `${view.opportunities[0].id}-demo-3`,
+        name: "Implementation services",
+        stageKey: "negotiation" as const,
+        amount: 32000,
+        ownerName: "Lee Okafor",
+        ownerId: "owner-lee",
+        origin: "manual" as const,
+      },
+    ] : view.opportunities,
+  } : view;
   const name = contactName(contact);
   const openEditor = () => {
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -88,7 +139,7 @@ export default function SalesCRMCustomer360() {
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-3">
         <Customer360ProfileCard contact={contact} />
-        <Customer360DetailTabs contact={contact} leads={view.leads} opportunities={view.opportunities} tasks={view.tasks} notes={view.notes} onEdit={openEditor} />
+        <Customer360DetailTabs contact={contact} leads={demoView.leads} opportunities={demoView.opportunities} tasks={view.tasks} notes={view.notes} onEdit={openEditor} />
       </div>
 
       <Customer360TimelineCard timeline={view.timeline} contactId={contact.id} />

@@ -177,6 +177,10 @@ export interface CRMOpportunity {
   amount: number | null;
   currency: string | null;
   expectedCloseAt: string | null;
+  ownerId: string | null;
+  ownerName: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** Stable product stage codes used by the first local Pipeline slice. */

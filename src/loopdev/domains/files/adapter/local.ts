@@ -2,6 +2,7 @@ import { localPlatformAdapter, isScopeVisible, type EntityScope } from "@/loopde
 import type { CreateFileMetadataInput, FileListParams, FileRecord, FilePreviewSource, FileRelation, FileVersion, FilesAdapter, ReplaceFileVersionInput, UpdateFileMetadataInput } from "../types";
 import { FILES_LOCAL_STORAGE_KEY, localFilesDemoSeed } from "../data/localFiles";
 import { deleteLocalPreview, getLocalPreview, putLocalPreview } from "../data/localPreviewStore";
+import { recordFileEvent } from "../data/localFileEvents";
 
 type FileStorage = Pick<Storage, "getItem" | "setItem">;
 
@@ -114,6 +115,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       };
       write([record, ...existing]);
       if (input.file) await putLocalPreview(id, input.file);
+      recordFileEvent(record, "created");
       return clone(record);
     },
     async remove(id: string, expectedVersion: number) {
@@ -134,6 +136,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       records[index] = updated;
       write(records);
       await deleteLocalPreview(id);
+      recordFileEvent(updated, "deleted");
       return clone(updated);
     },
     async updateMetadata(input: UpdateFileMetadataInput) {
@@ -155,6 +158,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       };
       records[index] = updated;
       write(records);
+      recordFileEvent(updated, "updated");
       return clone(updated);
     },
     async archive(id: string, expectedVersion: number) {
@@ -167,6 +171,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       const archived = { ...record, status: "archived" as const, archivedAt: new Date().toISOString(), currentVersion: record.currentVersion + 1, updatedAt: new Date().toISOString() };
       records[index] = archived;
       write(records);
+      recordFileEvent(archived, "archived");
       return clone(archived);
     },
     async restore(id: string, expectedVersion: number) {
@@ -179,6 +184,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       const restored = { ...record, status: "ready" as const, archivedAt: null, deletedAt: null, currentVersion: record.currentVersion + 1, updatedAt: new Date().toISOString() };
       records[index] = restored;
       write(records);
+      recordFileEvent(restored, "restored");
       return clone(restored);
     },
     async replaceVersion(input: ReplaceFileVersionInput) {
@@ -195,10 +201,13 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       records[index] = replaced;
       write(records);
       if (input.file) await putLocalPreview(input.id, input.file);
+      recordFileEvent(replaced, "versioned");
       return clone(replaced);
     },
     async relate(id: string, relation: FileRelation, expectedVersion: number) {
-      return this.updateMetadata({ id, expectedVersion, relation });
+      const related = await this.updateMetadata({ id, expectedVersion, relation });
+      recordFileEvent(related, "related", `${relation.entityType}:${relation.entityId}`);
+      return related;
     },
     async unrelate(id: string, expectedVersion: number) {
       const records = read();
@@ -210,6 +219,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       const unrelated = { ...record, relation: { entityType: "unlinked", entityId: record.id, scope: { ...record.scope } }, currentVersion: record.currentVersion + 1, updatedAt: new Date().toISOString() };
       records[index] = unrelated;
       write(records);
+      recordFileEvent(unrelated, "related", "unlinked");
       return clone(unrelated);
     },
     async getPreviewSource(id: string): Promise<FilePreviewSource | null> {

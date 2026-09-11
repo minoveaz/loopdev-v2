@@ -33,6 +33,7 @@ export function Customer360PlatformSection({ contactId }: { contactId: string })
           error={notes.error}
           forbidden={notes.forbidden}
           relation={relation}
+          attachments={attachments.attachments}
           onAttachmentUpload={(file) => attachments.createAttachment({
             relation,
             fileName: file.name,

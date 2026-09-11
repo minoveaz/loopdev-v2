@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { EntityRef, NoteRecord, PlatformVisibility } from "@/loopdev/domains/platform";
+import type { AttachmentRecord, EntityRef, NoteRecord, PlatformVisibility } from "@/loopdev/domains/platform";
 
 export interface PlatformNotesPanelProps {
   notes: NoteRecord[];
@@ -16,9 +16,10 @@ export interface PlatformNotesPanelProps {
   onCreate?: (body: string, visibility: PlatformVisibility) => Promise<unknown>;
   onUpdate?: (noteId: string, body: string, expectedVersion: number) => Promise<unknown>;
   onAttachmentUpload?: (file: File) => Promise<unknown>;
+  attachments?: AttachmentRecord[];
 }
 
-export function PlatformNotesPanel({ notes, loading = false, error, forbidden = false, relation, onCreate, onUpdate, onAttachmentUpload }: PlatformNotesPanelProps) {
+export function PlatformNotesPanel({ notes, loading = false, error, forbidden = false, relation, onCreate, onUpdate, onAttachmentUpload, attachments = [] }: PlatformNotesPanelProps) {
   const [visibility, setVisibility] = useState<PlatformVisibility>("team");
   const [formError, setFormError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -76,6 +77,9 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
                 </div>
               </div>
             ) : <p className="whitespace-pre-wrap text-sm">{note.body}</p>}
+            {attachments.filter((attachment) => attachment.relation.entityType === "note" && attachment.relation.entityId === note.id).map((attachment) => (
+              <p key={attachment.id} className="mt-2 text-xs text-muted-foreground">{attachment.fileName} · {attachment.attachmentStatus}</p>
+            ))}
             <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
               {note.visibility === "private" ? <LockKeyhole className="h-3 w-3" /> : <UsersRound className="h-3 w-3" />}
               {note.visibility} · {new Date(note.updatedAt).toLocaleDateString()}

@@ -222,6 +222,7 @@ export function PlatformTaskList({ tasks, loading = false, error, forbidden = fa
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{task.title}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">{task.relation.entityType} · {task.dueAt ? new Date(task.dueAt).toLocaleDateString() : "No due date"}</p>
+                {task.attachments && task.attachments.length > 0 && <p className="mt-1 text-xs text-muted-foreground">{task.attachments.length} attachment{task.attachments.length === 1 ? "" : "s"}</p>}
                 <div className="mt-2 flex flex-wrap gap-2">
                   <StatusBadge tone={priorityTone[task.priority]}>{task.priority}</StatusBadge>
                   <StatusBadge tone={done ? "neutral" : "info"}>{task.status.replace("_", " ")}</StatusBadge>

@@ -48,6 +48,7 @@ import { formatDate, formatRelative } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { CRMWorkspacePanel } from "@/loopdev/components/crm/CRMWorkspacePanel";
 import { ConversationOperationsPanel } from "@/loopdev/components/communications/ConversationOperationsPanel";
+import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
 import { MessageContextMenu } from "@/loopdev/components/communications/MessageContextMenu";
 import { ConversationTimelineRail } from "@/loopdev/components/communications/ConversationTimelineRail";
 import { ConversationTimelinePanel } from "@/loopdev/components/communications/ConversationTimelinePanel";
@@ -708,6 +709,14 @@ export default function Communications() {
               onHandoff={handleOperationsHandoff}
               onParticipant={detail.updateParticipant}
               onAddInternalNote={async (body) => { await detail.addInternalNote(body); inbox.reload(); }}
+              onCreateGlobalNote={async (value) => {
+                await loopdevAdapter.notes.create({
+                  organizationId: selectedSummary.organizationId,
+                  authorId: "local-development-user",
+                  authorName: "Alex Morgan",
+                  ...value,
+                });
+              }}
               onAcquireLock={() => detail.acquireComposerLock(activeDetail.summary.version)}
               onReleaseLock={detail.releaseComposerLock}
               onTakeoverLock={detail.takeoverComposerLock}

@@ -3,7 +3,7 @@ import {
   CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Circle, ExternalLink,
   ListChecks, Plus, Settings2, Siren,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   DataCard, DataTable, FilterDropdown, PageContainer, PageHeader, SearchInput,
   StatCard, StatusBadge, type DataTableAction, type DataTableColumn,
@@ -61,6 +61,7 @@ function startOfWeek(date: Date) {
 
 export default function CRMTasks() {
   const { trail } = useBreadcrumbs();
+  const [searchParams] = useSearchParams();
   const { organizationId, workspaceId, brandId } = platformAdapter.getScope();
   const [relationKey, setRelationKey] = useState("");
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
@@ -120,6 +121,11 @@ export default function CRMTasks() {
     includeCompleted: true,
     limit: 100,
   });
+  useEffect(() => {
+    const taskId = searchParams.get("taskId");
+    const task = tasks.tasks.find((item) => item.id === taskId);
+    if (task) setSelectedTask(task);
+  }, [searchParams, tasks.tasks]);
   const taskTemplates = usePlatformTaskTemplates();
   const relationLabels = useMemo(
     () => new Map(crmRelations.map((item) => [`${item.type}:${item.id}`, item.label])),

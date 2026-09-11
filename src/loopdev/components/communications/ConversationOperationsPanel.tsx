@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { StatusBadge } from "@/components/common";
+import { NoteComposer, NoteEditorDrawer, StatusBadge, type NoteEditorValue } from "@/components/common";
 import {
   localCommunicationAgents,
   type CollaborationAgent,
@@ -49,6 +49,7 @@ interface ConversationOperationsPanelProps {
     agent?: CollaborationAgent,
   ) => Promise<unknown>;
   onAddInternalNote: (body: string) => Promise<unknown>;
+  onCreateGlobalNote?: (value: NoteEditorValue) => Promise<unknown>;
   onAcquireLock: () => Promise<unknown>;
   onReleaseLock: () => Promise<unknown>;
   onTakeoverLock: () => Promise<unknown>;
@@ -111,6 +112,7 @@ function OperationsBody({
   onHandoff,
   onParticipant,
   onAddInternalNote,
+  onCreateGlobalNote,
   onAcquireLock,
   onReleaseLock,
   onTakeoverLock,
@@ -118,10 +120,10 @@ function OperationsBody({
   onContextViewChange,
 }: Omit<ConversationOperationsPanelProps, "open">) {
   const collaboration = detail.collaboration;
-  const [noteBody, setNoteBody] = useState("");
   const [selectedAgentId, setSelectedAgentId] = useState(localCommunicationAgents[1]?.userId ?? "");
   const [working, setWorking] = useState(false);
   const [errorDismissed, setErrorDismissed] = useState(false);
+  const [noteEditorOpen, setNoteEditorOpen] = useState(false);
   const selectedAgent = localCommunicationAgents.find((agent) => agent.userId === selectedAgentId) ?? localCommunicationAgents[0];
   const run = async (action: () => Promise<unknown>, after?: () => void) => {
     setWorking(true);
@@ -232,8 +234,22 @@ function OperationsBody({
           <p className="mt-1 text-[11px] text-warning-foreground/80">Visible to the team only; never sent to the customer.</p>
           <div className="mt-3 space-y-2">
             {detail.internalNotes.slice().reverse().map((note) => <div key={note.id} className="rounded-md border border-warning/20 bg-background/60 px-2.5 py-2 text-xs"><p>{note.body}</p><p className="mt-1 text-[10px] text-muted-foreground">{note.authorName} · {formatRelative(note.occurredAt)}</p></div>)}
-            <textarea aria-label="Conversation internal note" value={noteBody} onChange={(event) => setNoteBody(event.target.value)} placeholder="Add a private conversation note…" className="min-h-16 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs" />
-            <div className="flex justify-end"><Button size="sm" disabled={working || !noteBody.trim()} onClick={() => void run(() => onAddInternalNote(noteBody), () => setNoteBody(""))}><MessageSquarePlus className="me-1.5 h-3.5 w-3.5" />Add internal note</Button></div>
+            <NoteComposer compact disabled={working} placeholder="Add a private conversation note…" submitLabel="Add internal note" onSubmit={(body, mode) => run(async () => {
+              await onAddInternalNote(body);
+              if (onCreateGlobalNote) {
+                await onCreateGlobalNote({
+                  title: "",
+                  mode,
+                  visibility: "team",
+                  relations: [{ type: "conversation", id: detail.summary.id, label: detail.summary.contact.displayName }],
+                  content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: body }] }] },
+                  plainTextPreview: body,
+                  mentions: [],
+                  attachments: [],
+                });
+              }
+            })} />
+            {onCreateGlobalNote && <Button type="button" size="sm" variant="outline" onClick={() => setNoteEditorOpen(true)} disabled={working}>Open rich note editor</Button>}
           </div>
         </section>
 
@@ -242,6 +258,16 @@ function OperationsBody({
           {detail.auditTrail?.length ? <ol className="mt-2 space-y-2 border-s border-border ps-3 text-[11px] text-muted-foreground">{detail.auditTrail.slice().reverse().map((event) => <li key={event.id}><p className="font-medium text-foreground">{event.actor.name} · {event.action}</p><p>{event.details ? `${event.details} · ` : ""}{formatRelative(event.occurredAt)}</p></li>)}</ol> : <p className="mt-2 text-xs text-muted-foreground">No operational events yet.</p>}
         </section>
       </div>
+      {onCreateGlobalNote && <NoteEditorDrawer
+        open={noteEditorOpen}
+        onOpenChange={setNoteEditorOpen}
+        title="New conversation note"
+        relation={{ type: "conversation", id: detail.summary.id, label: detail.summary.contact.displayName }}
+        onSubmit={async (value: NoteEditorValue) => {
+          await onAddInternalNote(value.plainTextPreview);
+          await onCreateGlobalNote(value);
+        }}
+      />}
     </div>
   );
 }

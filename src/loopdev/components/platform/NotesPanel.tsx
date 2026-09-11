@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from "react";
-import { LockKeyhole, Pencil, Plus, Save, UsersRound } from "lucide-react";
-import { ConfirmDialog, DataCard, useFormLifecycle } from "@/components/common";
+import { useState } from "react";
+import { LockKeyhole, Pencil, Save, UsersRound } from "lucide-react";
+import { ConfirmDialog, DataCard, NoteComposer, useFormLifecycle } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,9 +18,7 @@ export interface PlatformNotesPanelProps {
 }
 
 export function PlatformNotesPanel({ notes, loading = false, error, forbidden = false, relation, onCreate, onUpdate }: PlatformNotesPanelProps) {
-  const [body, setBody] = useState("");
   const [visibility, setVisibility] = useState<PlatformVisibility>("team");
-  const [pending, setPending] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingBody, setEditingBody] = useState("");
@@ -28,22 +26,14 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
   const [discardEditOpen, setDiscardEditOpen] = useState(false);
   const lifecycle = useFormLifecycle();
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!onCreate || !body.trim()) {
-      setFormError("Write a note before saving.");
-      return;
-    }
-    setPending(true);
+  const submit = async (body: string) => {
+    if (!onCreate) return;
     setFormError(null);
     try {
       await onCreate(body.trim(), visibility);
-      setBody("");
       lifecycle.markClean();
     } catch (cause) {
       setFormError(cause instanceof Error ? cause.message : "Unable to save note.");
-    } finally {
-      setPending(false);
     }
   };
 
@@ -95,14 +85,16 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
       </ul>
       {formError && !onCreate && <p role="alert" className="mt-3 text-sm text-destructive">{formError}</p>}
       {relation && onCreate && (
-        <form onSubmit={submit} className="mt-4 space-y-3 border-t border-border pt-4" aria-label="Add note">
-          <Label htmlFor="platform-note-body">Add a note</Label>
-          <Textarea id="platform-note-body" value={body} onChange={(event) => { lifecycle.markDirty(); setBody(event.target.value); }} disabled={pending} />
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="platform-note-visibility" className="text-xs">Visibility</Label>
+        <div className="mt-4 border-t border-border pt-4" aria-label="Add note">
+        <NoteComposer
+          onSubmit={submit}
+          compact
+          error={formError}
+          footerContent={(
+            <div className="flex items-center gap-2">
+              <Label htmlFor="platform-note-visibility" className="text-xs text-muted-foreground">Visibility</Label>
               <Select value={visibility} onValueChange={(value) => { lifecycle.markDirty(); setVisibility(value as PlatformVisibility); }}>
-                <SelectTrigger id="platform-note-visibility" className="h-9 w-40"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="platform-note-visibility" className="h-8 w-36"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="private">Private</SelectItem>
                   <SelectItem value="team">Team</SelectItem>
@@ -110,10 +102,9 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" size="sm" disabled={pending}><Plus className="mr-1.5 h-3.5 w-3.5" />{pending ? "Saving…" : "Add note"}</Button>
-          </div>
-          {formError && <p role="alert" className="text-sm text-destructive">{formError}</p>}
-        </form>
+          )}
+        />
+        </div>
       )}
       <ConfirmDialog
         open={discardEditOpen}

@@ -65,17 +65,17 @@ export function Customer360OpportunitiesCard({ opportunities }: { opportunities:
 
 export function Customer360TasksCard({ tasks }: { tasks: CRMTask[] }) {
   const openTasks = tasks.filter((task) => task.status !== "completed");
-  return <DataCard title={`Tasks (${openTasks.length})`} description="Follow-ups and next actions">
-    {openTasks.length ? <ul className="space-y-2">{openTasks.map((task) => <li key={task.id} className="flex items-center justify-between gap-3 rounded-md border border-border bg-card-muted/30 p-3">
-      <div className="flex min-w-0 items-center gap-3"><CheckSquare className="h-4 w-4 shrink-0 text-muted-foreground" /><div className="min-w-0"><p className="truncate text-sm font-medium">{task.title}</p><p className="text-xs text-muted-foreground">{task.priority} priority · {task.dueAt ? formatDate(task.dueAt) : "No due date"}</p></div></div>
-      <Button size="sm" variant="ghost">View</Button>
+  const navigate = useNavigate();
+  const openTask = (taskId: string) => navigate(`/app/sales-crm/tasks?taskId=${encodeURIComponent(taskId)}`);
+  return <DataCard title={`Tasks (${openTasks.length})`} description="Follow-ups and next actions" action={<Button asChild variant="ghost" size="sm"><Link to="/app/sales-crm/tasks">View</Link></Button>}>
+    {openTasks.length ? <ul className="space-y-3">{openTasks.map((task) => <li key={task.id} role="button" tabIndex={0} onClick={() => openTask(task.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openTask(task.id); } }} className="cursor-pointer rounded-md border border-border-strong bg-card-muted/20 p-3 transition-colors hover:bg-card-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <div className="flex min-w-0 items-start gap-3"><CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><div className="min-w-0"><p className="break-words text-sm font-medium">{task.title}</p><p className="mt-1 text-xs text-muted-foreground">{task.priority} priority · {task.dueAt ? formatDate(task.dueAt) : "No due date"}</p></div></div>
     </li>)}</ul> : <EmptyState title="No open tasks" description="Follow-ups will appear here." />}
   </DataCard>;
 }
 
-export function Customer360NotesCard({ notes }: { notes: CRMNote[] }) {
-  return <DataCard title={`Notes (${notes.length})`} description="Contextual notes for this relationship">
-    {notes.length ? <ul className="space-y-2">{notes.map((note) => <li key={note.id} className="rounded-md border border-border bg-card-muted/30 p-3"><p className="text-sm">{note.body || "Note content is restricted."}</p><p className="mt-1 text-xs text-muted-foreground">{formatRelative(note.updatedAt)} · {note.visibility}</p></li>)}</ul> : <EmptyState title="No notes" description="Notes added to this contact will appear here." />}
-    <Button variant="outline" className="mt-4 w-full"><Plus className="mr-1.5 h-3.5 w-3.5" />Add note</Button>
+export function Customer360NotesCard({ notes, onNewNote, onEditNote }: { notes: CRMNote[]; onNewNote?: () => void; onEditNote?: (note: CRMNote) => void }) {
+  return <DataCard title={`Notes (${notes.length})`} description="Contextual notes for this relationship" action={<Button variant="outline" size="sm" onClick={onNewNote}><Plus className="mr-1.5 h-3.5 w-3.5" />New note</Button>}>
+    {notes.length ? <ul className="space-y-3">{notes.map((note) => <li key={note.id}><button type="button" onClick={() => onEditNote?.(note)} className="w-full cursor-pointer rounded-md border border-border-strong bg-card-muted/20 p-3 text-left transition-colors hover:bg-card-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><p className="break-words text-sm">{note.body || "Note content is restricted."}</p><p className="mt-1 text-xs text-muted-foreground">{formatRelative(note.updatedAt)} · {note.visibility}</p></button></li>)}</ul> : <EmptyState title="No notes" description="Notes added to this contact will appear here." />}
   </DataCard>;
 }

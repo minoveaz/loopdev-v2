@@ -43,6 +43,7 @@ import { contactName, CRMAdapterError, CRM_LEAD_STATUS_CODES, CRM_PIPELINE_STAGE
 import { localCrmOperationsAdapter } from "../operations/adapter/local";
 import { localCrmAutomationsAdapter } from "../automations";
 import { localCommunicationsAdapter } from "@/loopdev/domains/communications/adapter/local";
+import { localNotesAdapter } from "@/loopdev/domains/notes";
 
 const organizationId = "local-development-organization";
 
@@ -202,6 +203,7 @@ export const localLoopdevAdapter = {
   catalog: catalogAdapter,
   referenceData: localReferenceDataAdapter,
   communications: localCommunicationsAdapter,
+  notes: localNotesAdapter,
   crm: {
     operations: localCrmOperationsAdapter,
     automations: localCrmAutomationsAdapter,
@@ -869,7 +871,11 @@ export const localLoopdevAdapter = {
         { id: "local-task-1", title: "Review renewal requirements", status: "open", priority: "high", dueAt: new Date().toISOString(), relationId: contactId },
         { id: "local-task-2", title: "Schedule technical follow-up", status: "open", priority: "medium", dueAt: new Date(Date.now() + 86400000).toISOString(), relationId: contactId },
       ];
-      const notes: CRMNote[] = [{ id: "local-note-1", body: "Relationship note added during the last review.", visibility: "team", createdAt: localActivities[2].occurredAt, updatedAt: localActivities[2].occurredAt }];
+      const globalNotes = await localNotesAdapter.list({ type: "contact", id: contactId, label: contact.name });
+      const notes: CRMNote[] = [
+        { id: "local-note-1", body: "Relationship note added during the last review.", visibility: "team", createdAt: localActivities[2].occurredAt, updatedAt: localActivities[2].occurredAt },
+        ...globalNotes.map((note) => ({ id: note.id, body: note.plainTextPreview, visibility: note.visibility, createdAt: note.createdAt, updatedAt: note.updatedAt })),
+      ];
       const state = { profile: "fresh", leads: "fresh", opportunities: "fresh", tasks: "fresh", notes: "fresh", timeline: "fresh" } as const;
 
       return {

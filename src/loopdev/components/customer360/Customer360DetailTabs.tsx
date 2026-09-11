@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, MessageSquare, PackagePlus, Pencil, Plus, Upload, UserPlus } from "lucide-react";
+import { FileText, PackagePlus, Pencil, Plus, Upload, UserPlus } from "lucide-react";
 import { DataCard } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import type { CRMContact, CRMLead, CRMNote, CRMOpportunity, CRMTask } from "@/loopdev/domains/crm/adapter";
@@ -16,9 +16,11 @@ interface Customer360DetailTabsProps {
   tasks: CRMTask[];
   notes: CRMNote[];
   onEdit: () => void;
+  onNewNote?: () => void;
+  onEditNote?: (note: CRMNote) => void;
 }
 
-export function Customer360DetailTabs({ contact, leads, opportunities, tasks, notes, onEdit }: Customer360DetailTabsProps) {
+export function Customer360DetailTabs({ contact, leads, opportunities, tasks, notes, onEdit, onNewNote, onEditNote }: Customer360DetailTabsProps) {
   const [activeTab, setActiveTab] = useState("contact");
   const tabs = [
     { value: "contact", label: "Contact information" },
@@ -30,7 +32,7 @@ export function Customer360DetailTabs({ contact, leads, opportunities, tasks, no
   const footer = {
     contact: <Button onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit contact</Button>,
     sales: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New opportunity</Button><Button variant="outline"><UserPlus className="mr-1.5 h-3.5 w-3.5" />New lead</Button><Button variant="outline">View pipeline</Button></>,
-    work: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New task</Button><Button variant="outline"><MessageSquare className="mr-1.5 h-3.5 w-3.5" />Add note</Button></>,
+    work: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New task</Button><Button variant="outline" onClick={onNewNote}><FileText className="mr-1.5 h-3.5 w-3.5" />New note</Button></>,
     documents: <><Button><Upload className="mr-1.5 h-3.5 w-3.5" />Upload document</Button><Button variant="outline"><FileText className="mr-1.5 h-3.5 w-3.5" />View all</Button></>,
     products: <><Button><PackagePlus className="mr-1.5 h-3.5 w-3.5" />Add product</Button><Button variant="outline">View catalog</Button></>,
   }[activeTab as keyof typeof footer];
@@ -41,7 +43,7 @@ export function Customer360DetailTabs({ contact, leads, opportunities, tasks, no
       <div className="min-h-0 flex-1 overflow-y-auto p-5">
         {activeTab === "contact" && <Customer360CrmDetailsTab contact={contact} />}
         {activeTab === "sales" && <Customer360SalesTab leads={leads} opportunities={opportunities} />}
-        {activeTab === "work" && <Customer360WorkTab tasks={tasks} notes={notes} />}
+        {activeTab === "work" && <Customer360WorkTab tasks={tasks} notes={notes} onNewNote={onNewNote} onEditNote={onEditNote} />}
         {activeTab === "documents" && <Customer360DocumentsTab />}
         {activeTab === "products" && <Customer360ProductsTab />}
       </div>

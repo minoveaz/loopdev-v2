@@ -1,11 +1,11 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
-import { EmptyState, PageContainer, PageHeader } from "@/components/common";
+import { EmptyState, NoteEditorDrawer, PageContainer, PageHeader, type NoteEditorValue } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { useCrmCustomer360 } from "@/loopdev/domains/crm/hooks/use-crm";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
-import { contactName, loopdevAdapter, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
+import { contactName, loopdevAdapter, type CRMNote, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
 import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactFormDrawer";
 import { Customer360ProfileCard } from "@/loopdev/components/customer360/Customer360ProfileCard";
@@ -18,7 +18,22 @@ export default function SalesCRMCustomer360() {
   const { trail } = useBreadcrumbs();
   const { view, loading, error, reload } = useCrmCustomer360(contactId);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [noteEditorOpen, setNoteEditorOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<CRMNote | null>(null);
+  const [customerNotes, setCustomerNotes] = useState<CRMNote[]>([]);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const customerName = view ? contactName(view.contact) : "";
+  const noteInitialValue = useMemo(() => selectedNote && view ? {
+    mode: "quick" as const,
+    plainTextPreview: selectedNote.body ?? "",
+    visibility: selectedNote.visibility === "private" ? "private" as const : selectedNote.visibility === "organization" ? "organization" as const : "team" as const,
+    relations: [{ type: "contact" as const, id: view.contact.id, label: customerName }],
+    content: { type: "doc" as const, content: [{ type: "paragraph" as const, content: selectedNote.body ? [{ type: "text" as const, text: selectedNote.body }] : undefined }] },
+  } : undefined, [customerName, selectedNote, view]);
+
+  useEffect(() => {
+    if (view) setCustomerNotes(view.notes);
+  }, [view]);
 
   if (loading) {
     return <PageContainer width="narrow"><div className="py-16 text-center text-sm text-muted-foreground">Loading contact...</div></PageContainer>;
@@ -92,10 +107,18 @@ export default function SalesCRMCustomer360() {
       },
     ] : view.opportunities,
   } : view;
-  const name = contactName(contact);
+  const name = customerName;
   const openEditor = () => {
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditorOpen(true);
+  };
+  const openNewNote = () => {
+    setSelectedNote(null);
+    setNoteEditorOpen(true);
+  };
+  const openExistingNote = (note: CRMNote) => {
+    setSelectedNote(note);
+    setNoteEditorOpen(true);
   };
   const submitContact = async (values: ContactFormValues) => {
     const optional = (value: string) => value.trim() || null;
@@ -139,7 +162,7 @@ export default function SalesCRMCustomer360() {
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-3">
         <Customer360ProfileCard contact={contact} />
-        <Customer360DetailTabs contact={contact} leads={demoView.leads} opportunities={demoView.opportunities} tasks={view.tasks} notes={view.notes} onEdit={openEditor} />
+        <Customer360DetailTabs contact={contact} leads={demoView.leads} opportunities={demoView.opportunities} tasks={view.tasks} notes={customerNotes} onEdit={openEditor} onNewNote={openNewNote} onEditNote={openExistingNote} />
       </div>
 
       <Customer360TimelineCard timeline={view.timeline} contactId={contact.id} />
@@ -154,6 +177,28 @@ export default function SalesCRMCustomer360() {
           reload();
         }}
         restoreFocusRef={restoreFocusRef}
+      />
+      <NoteEditorDrawer
+        open={noteEditorOpen}
+        onOpenChange={setNoteEditorOpen}
+        relation={{ type: "contact", id: contact.id, label: name }}
+        title={selectedNote ? "Edit note" : "New note"}
+        initialValue={noteInitialValue}
+        onSubmit={async (value: NoteEditorValue) => {
+          if (selectedNote) {
+            setCustomerNotes((current) => current.map((note) => note.id === selectedNote.id ? { ...note, body: value.plainTextPreview, visibility: value.visibility, updatedAt: new Date().toISOString() } : note));
+          } else {
+            const created = await loopdevAdapter.notes.create({
+              organizationId: contact.organizationId,
+              authorId: "local-development-user",
+              authorName: "Alex Morgan",
+              ...value,
+            });
+            setCustomerNotes((current) => [{ id: created.id, body: created.plainTextPreview, visibility: created.visibility, createdAt: created.createdAt, updatedAt: created.updatedAt }, ...current]);
+          }
+          setSelectedNote(null);
+          setNoteEditorOpen(false);
+        }}
       />
     </PageContainer>
   );

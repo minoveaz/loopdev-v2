@@ -52,3 +52,10 @@ export { FormSectionNav, type FormSectionNavItem } from "./FormSectionNav";
 export { ActivityFeed, type ActivityFeedItem } from "./ActivityFeed";
 export { activityKindConfig, getActivityActionLabel, getActivityKind, getActivityStatusTone, type ActivityKind } from "./ActivityPresentation";
 export { ReadOnlyField } from "./ReadOnlyField";
+export { NoteComposer, type NoteComposerProps } from "./NoteComposer";
+export {
+  NoteEditorDrawer,
+  RichNoteEditor,
+  type NoteEditorDrawerProps,
+  type NoteEditorValue,
+} from "./NoteEditorDrawer";

@@ -59,6 +59,9 @@ Implementado localmente y validado como frontend-first:
 - Pipeline y Opportunities con creación, líneas, catálogo, historial y reapertura local.
 - Tasks, Notes, Activities, Timeline, Attachments, Notifications, Operations y Automations.
 - Communications Inbox, Conversation Operations, CRM Context y Timeline Explorer.
+- La capacidad Files Platform queda planificada como evolución transversal de Attachments
+  para centralizar documentos de CRM, archivos compartidos en Communications, assets de
+  Marketing Studio y Content Studio, y documentos temporales de Document Intelligence.
 
 El estado detallado y las diferencias entre frontend local, frontend parcial y backend pendiente
 se mantienen en `CRM_FRONTEND_CLOSURE_MATRIX.md`. La ausencia de Supabase, RLS, Realtime,
@@ -232,6 +235,11 @@ aplicación móvil.
 - **Timeline:** read model append-only compuesto y deduplicado por `sourceType:sourceId`.
 - **Audit:** eventos internos de seguridad, cambios sensibles y cumplimiento, separados del Timeline.
 - **Attachments:** archivos, versiones, asociación a entidades, permisos y futura Storage.
+- **Files Platform:** capacidad global de archivos y documentos con upload queue, dropzone,
+  previews, metadatos, categorías, tags, versiones, relaciones polimórficas, permisos,
+  retención, auditoría y frontera reemplazable hacia Storage/Supabase. No pertenece a CRM:
+  CRM, Communications, Marketing Studio, Content Studio y Document Intelligence son
+  consumidores.
 - **Notifications:** inbox in-app, preferencias, eventos y futuros canales email/push/WhatsApp.
 
 ### Data and extensibility
@@ -419,6 +427,96 @@ migraciones y ninguna página accede a `localStorage`.
 - [x] Preparar notificaciones para asignaciones y cambios de Tasks; vencimientos, menciones y
   cambios de etapa de proveedores reales quedan pendientes.
 - [x] Dejar Storage, email, push y proveedores reales detrás del adapter sin instalar servicios.
+
+### Fase 8H — Files Platform transversal
+
+**Estado:** En progreso — foundation local implementada, integración de consumidores pendiente
+
+Esta fase continúa el cierre local de Communications 8A-8G. Se numera 8H porque Files
+Platform nace ahora como capacidad transversal necesaria para Customer 360 y Communications,
+y se extenderá a Marketing Studio, Content Studio y Document Intelligence. La referencia a
+Attachments de la Fase 5 describe la base existente; no representa el orden actual de trabajo.
+
+Files Platform sustituirá el uploader específico de Attachments por una capacidad reutilizable
+para cualquier suite o dominio. El objetivo no es solo subir archivos: debe ofrecer un contrato
+único para archivos operativos, documentos de clientes y assets creativos, manteniendo el
+binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
+
+**Consumidores iniciales**
+
+- CRM Customer 360: documentos centralizados del contacto con categorías, preview, versiones,
+  permisos y origen.
+- Communications: archivos recibidos o enviados en una conversación y acción explícita de
+  “Guardar en la ficha del cliente”, conservando `conversationId` y `messageId`.
+- Notes, Tasks, Leads y Opportunities: attachments contextuales mediante `EntityRef`.
+- Marketing Studio: biblioteca de assets para imágenes, vídeo, audio, motion kits, logos,
+  fuentes y recursos white-label.
+- Content Studio: assets de contenido, previews, variantes por canal/aspect ratio y
+  referencias desde piezas o campañas.
+- Document Intelligence: documentos temporales, previews, límites de formato y lifecycle
+  de sesión sin convertir la extracción en almacenamiento permanente.
+
+**Contrato y experiencia global**
+
+- [x] Definir `FileRecord`, `FileVersion`, `FileRelation` y `UploadSession` con
+  `EntityScope`, `EntityRef` y permisos; las categorías y fuentes extensibles siguen abiertas.
+- [x] Definir la frontera de `FileRecord` (metadata y relaciones) frente al binario y al
+  `StorageObject`; ningún consumidor depende de una URL pública o de un proveedor concreto.
+- [x] Definir `FilesAdapter` y store local determinista con listado y creación de metadata;
+  las mutaciones de versionado, archivado y relaciones quedan pendientes.
+- [x] Crear el primitive global `FilesDropzone` con variantes iniciales para selección múltiple,
+  drag/drop, browse, validación y cola local.
+- [x] Cubrir validación de archivos y comportamiento del adapter local con tests focalizados.
+- [x] Integrar `FilesDropzone`, categorías, listado y metadata local en Customer 360 Documents;
+  el botón de upload del workspace activa el selector.
+- [x] Definir `FileCategory` y `FileSource`; `FilePermission` y versionado de `UploadSession`
+  siguen pendientes.
+- [ ] Completar `FilesAdapter` y store local con update metadata, archive, restore, delete,
+  version, relate/unrelate y signed-preview mock.
+- [ ] Crear primitives globales `FilePicker`, `UploadQueue`, `UploadItem`,
+  `FilePreview`, `FileList` y `FileCategoryTabs`, con variantes para página, drawer, modal,
+  formulario e inline edit.
+- [ ] Cubrir drag and drop, selección múltiple, progreso, cancelación, retry, pausa,
+  duplicados, límites de tamaño/tipo/cantidad, errores recuperables y keyboard/mobile UX.
+- [ ] Modelar estados `queued`, `uploading`, `processing`, `ready`, `failed`, `archived`
+  y `expired`, además de `source: upload | conversation | manager | generated | temporary`.
+- [ ] Añadir categorías, tags, búsqueda autorizada, filtros, ordenación, colecciones y
+  vistas compacta/lista/grid sin imponer una taxonomía exclusiva de CRM.
+- [x] Preparar preview local seguro para imágenes y PDF; los demás tipos muestran metadata y
+  quedan preparados para descarga cuando exista Storage.
+- [ ] Implementar versionado y reemplazo conservando historial, autoría, checksum y
+  `supersedesFileVersionId`; evitar duplicados por hash dentro del scope autorizado.
+- [ ] Definir lifecycle temporal, retención, archivado, borrado lógico, expiración y cleanup
+  para documentos de sesión y assets abandonados.
+- [ ] Mantener permisos por organización/workspace/entidad, acceso sensible, links compartidos
+  con expiración y audit events separados del Timeline.
+- [ ] Añadir eventos Platform para `file.created`, `file.versioned`, `file.related`,
+  `file.archived` y `file.deleted`, preparados para Notifications y Automations.
+- [ ] Integrar Notes y Communications; Customer 360 Documents queda integrado en el slice
+  inicial. Después se conectarán Marketing Studio, Content Studio y Document Intelligence
+  mediante adapters/hooks, no imports cruzados.
+
+**Frontera backend futura**
+
+- [ ] Definir mapping de metadata a tablas y del binario a Storage/Supabase.
+- [ ] Preparar signed URLs, resumable/multipart upload, antivirus/validación MIME y
+  generación de thumbnails/renditions detrás de servicios server-side.
+- [ ] Definir cuotas, límites por organización/workspace, retención legal y export/delete
+  de datos sin exponer credenciales ni permitir autorización decidida por el cliente.
+- [ ] Conectar OCR, clasificación, extracción y transcodificación solo como workers o
+  capacidades posteriores; Files Platform no debe asumir IA ni un proveedor específico.
+
+**Criterios de diseño derivados de VitaBlue**
+
+- La biblioteca debe soportar assets creativos y recursos white-label, no únicamente
+  documentos administrativos.
+- Debe conservar `assetType`, `brandId`, `channel`, `aspectRatio`, `rendition`,
+  `license/usage` y `status` como metadata extensible para Marketing/Content Studio.
+- Debe distinguir fuente original, preview, thumbnail y renditions generadas, evitando
+  que una pantalla de edición dependa del archivo original para cada tamaño o canal.
+- La extracción de Document Intelligence debe consumir una `UploadSession` temporal y
+  devolver resultados al workflow sin convertir automáticamente el documento en un asset
+  permanente.
 
 ### Fase 6 — Search, Tags, Custom Fields e Import/Export
 
@@ -775,6 +873,8 @@ el contrato inicial de Communications.
 - [x] Tasks, Notes, Activities y Timeline tienen contrato transversal y estados documentados.
 - [x] Platform foundation tiene contexto de organización, EntityRef y permisos locales.
 - [x] Attachments y Notifications tienen adapters locales y contratos reutilizables.
+- [ ] Files Platform tiene contrato global, primitives de upload, adapter local y
+  consumidores CRM/Communications/Marketing/Content definidos sin acoplamiento de proveedor.
 - [x] Search, Tags, Custom Fields e Import/Export tienen alcance y comandos definidos
   para el adapter local.
 - [x] Automations y entitlements tienen límites explícitos.

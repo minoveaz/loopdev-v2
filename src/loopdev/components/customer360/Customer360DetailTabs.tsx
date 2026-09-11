@@ -23,6 +23,7 @@ interface Customer360DetailTabsProps {
 
 export function Customer360DetailTabs({ contact, leads, opportunities, tasks, notes, onEdit, onNewNote, onEditNote }: Customer360DetailTabsProps) {
   const [activeTab, setActiveTab] = useState("contact");
+  const [documentUploadTrigger, setDocumentUploadTrigger] = useState<(() => void) | null>(null);
   const tabs = [
     { value: "contact", label: "Contact information" },
     { value: "sales", label: "Sales", count: leads.length + opportunities.length },
@@ -34,7 +35,7 @@ export function Customer360DetailTabs({ contact, leads, opportunities, tasks, no
     contact: <Button onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit contact</Button>,
     sales: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New opportunity</Button><Button variant="outline"><UserPlus className="mr-1.5 h-3.5 w-3.5" />New lead</Button><Button variant="outline">View pipeline</Button></>,
     work: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New task</Button><Button variant="outline" onClick={onNewNote}><FileText className="mr-1.5 h-3.5 w-3.5" />New note</Button></>,
-    documents: <><Button><Upload className="mr-1.5 h-3.5 w-3.5" />Upload document</Button><Button variant="outline"><FileText className="mr-1.5 h-3.5 w-3.5" />View all</Button></>,
+    documents: <><Button onClick={() => documentUploadTrigger?.()}><Upload className="mr-1.5 h-3.5 w-3.5" />Upload document</Button><Button variant="outline"><FileText className="mr-1.5 h-3.5 w-3.5" />View all</Button></>,
     products: <><Button><PackagePlus className="mr-1.5 h-3.5 w-3.5" />Add product</Button><Button variant="outline">View catalog</Button></>,
   }[activeTab as keyof typeof footer];
   return (
@@ -45,7 +46,12 @@ export function Customer360DetailTabs({ contact, leads, opportunities, tasks, no
         {activeTab === "contact" && <Customer360CrmDetailsTab contact={contact} />}
         {activeTab === "sales" && <Customer360SalesTab leads={leads} opportunities={opportunities} />}
         {activeTab === "work" && <Customer360WorkTab tasks={tasks} notes={notes} onEditNote={onEditNote} />}
-        {activeTab === "documents" && <Customer360DocumentsTab />}
+        {activeTab === "documents" && (
+          <Customer360DocumentsTab
+            contact={contact}
+            onUploadTriggerReady={(trigger) => setDocumentUploadTrigger(() => trigger)}
+          />
+        )}
         {activeTab === "products" && <Customer360ProductsTab />}
       </div>
       <div className="flex shrink-0 flex-wrap gap-2 border-t border-border bg-card px-5 py-4">{footer}</div>

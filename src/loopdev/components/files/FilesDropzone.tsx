@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type ClipboardEvent, type DragEvent, type KeyboardEvent } from "react";
 import { FileUp, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { validateFile, type FileValidationOptions } from "@/loopdev/domains/files";
+import { processLocalUpload, validateFile, type FileValidationOptions } from "@/loopdev/domains/files";
 
 export type FilesDropzoneItem = {
   file: File;
-  state: "queued" | "uploading" | "processing" | "ready" | "failed" | "rejected";
+  state: "queued" | "uploading" | "processing" | "ready" | "failed" | "cancelled" | "rejected";
   error?: string;
   progress?: number;
 };
@@ -38,6 +38,7 @@ export function FilesDropzone({
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [queue, setQueue] = useState<FilesDropzoneItem[]>([]);
+  const controllers = useRef(new Map<File, AbortController>());
   const open = useCallback(() => {
     if (!disabled) inputRef.current?.click();
   }, [disabled]);
@@ -58,10 +59,31 @@ export function FilesDropzone({
     });
     const limitError = selected.length > candidates.length ? `Maximum ${maxFiles} files allowed.` : undefined;
     setQueue((current) => multiple ? [...current, ...items] : items);
-    const valid = items.filter((item) => item.state === "ready").map((item) => item.file);
+    const validItems = items.filter((item) => item.state === "ready");
+    const valid = validItems.map((item) => item.file);
     const errors = items.flatMap((item) => item.error ? [item.error] : []);
     if (limitError) errors.push(limitError);
-    if (valid.length > 0) onFilesSelected?.(valid);
+    if (validItems.length > 0) {
+      void Promise.all(validItems.map(async (item) => {
+        const controller = new AbortController();
+        controllers.current.set(item.file, controller);
+        try {
+          await processLocalUpload(item.file, (progress) => {
+            setQueue((current) => current.map((queued) => queued.file === item.file ? { ...queued, state: progress.state, progress: progress.progress } : queued));
+          }, controller.signal);
+          return item.file;
+        } catch (cause) {
+          const cancelled = cause instanceof DOMException && cause.name === "AbortError";
+          setQueue((current) => current.map((queued) => queued.file === item.file ? { ...queued, state: cancelled ? "cancelled" : "failed", error: cancelled ? "Upload cancelled." : cause instanceof Error ? cause.message : "Upload failed." } : queued));
+          return null;
+        } finally {
+          controllers.current.delete(item.file);
+        }
+      })).then((results) => {
+        const ready = results.filter((file): file is File => file !== null);
+        if (ready.length > 0) onFilesSelected?.(ready);
+      });
+    }
     if (errors.length > 0) onValidationError?.(errors);
   };
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -89,7 +111,22 @@ export function FilesDropzone({
       inputRef.current?.click();
     }
   };
-  const remove = (file: File) => setQueue((current) => current.filter((item) => item.file !== file));
+  const remove = (file: File) => {
+    controllers.current.get(file)?.abort();
+    controllers.current.delete(file);
+    setQueue((current) => current.filter((item) => item.file !== file));
+  };
+  const retry = (file: File) => {
+    setQueue((current) => current.map((item) => item.file === file ? { ...item, state: "queued", error: undefined, progress: 0 } : item));
+    const controller = new AbortController();
+    controllers.current.set(file, controller);
+    void processLocalUpload(file, (progress) => {
+      setQueue((current) => current.map((item) => item.file === file ? { ...item, state: progress.state, progress: progress.progress } : item));
+    }, controller.signal).then(() => onFilesSelected?.([file])).catch((cause) => {
+      const cancelled = cause instanceof DOMException && cause.name === "AbortError";
+      setQueue((current) => current.map((item) => item.file === file ? { ...item, state: cancelled ? "cancelled" : "failed", error: cancelled ? "Upload cancelled." : "Upload failed." } : item));
+    }).finally(() => controllers.current.delete(file));
+  };
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -135,8 +172,14 @@ export function FilesDropzone({
             >
               <span className="min-w-0 truncate">{item.file.name}</span>
               <span className={cn("shrink-0 text-xs", item.state === "rejected" ? "text-destructive" : "text-muted-foreground")}>
-                {item.error ?? "Ready"}
+                {item.error ?? `${item.state}${item.progress === undefined ? "" : ` (${item.progress}%)`}`}
               </span>
+              {(item.state === "failed" || item.state === "cancelled") && (
+                <button type="button" className="text-xs text-primary" onClick={() => retry(item.file)}>Retry</button>
+              )}
+              {(item.state === "queued" || item.state === "uploading" || item.state === "processing") && (
+                <button type="button" className="text-xs text-muted-foreground" onClick={() => controllers.current.get(item.file)?.abort()}>Cancel</button>
+              )}
               <button
                 type="button"
                 className="shrink-0 rounded p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

@@ -92,8 +92,10 @@ export function Customer360DocumentsTab({
 
   const handleFiles = (selected: File[]) => {
     if (!selected.length) return;
-    setPendingFiles(selected);
-    setActivePendingIndex(0);
+    setPendingFiles((current) => {
+      const existing = new Set(current.map((file) => `${file.name}:${file.size}:${file.lastModified}`));
+      return [...current, ...selected.filter((file) => !existing.has(`${file.name}:${file.size}:${file.lastModified}`))];
+    });
     setReviewOpen(true);
   };
 

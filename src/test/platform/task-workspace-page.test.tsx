@@ -51,6 +51,23 @@ describe("task workspace", () => {
     })));
   });
 
+  it("keeps selected attachments in the transactional task submit payload", async () => {
+    const onSubmit = vi.fn(() => Promise.resolve());
+    const { container } = render(<PlatformTaskForm relation={relation} onSubmit={onSubmit} />);
+    const file = new File(["attachment"], "brief.pdf", { type: "application/pdf" });
+
+    fireEvent.change(container.querySelector('input[type="file"]')!, { target: { files: [file] } });
+    await waitFor(() => expect(screen.getByText("brief.pdf")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/ready/)).toBeInTheDocument(), { timeout: 3000 });
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Task with document" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add task" }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      title: "Task with document",
+      attachments: [file],
+    })));
+  });
+
   it("keeps table, personal, urgent and calendar views available", async () => {
     render(<MemoryRouter><CRMTasks /></MemoryRouter>);
     expect(await screen.findByText("CRM tasks")).toBeInTheDocument();

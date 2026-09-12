@@ -175,7 +175,10 @@ export function useCommunicationConversation(
         if (!current) return current;
         const messageAlreadyPresent = current.messages.some((message) => message.id === result.message.id);
         return {
-          summary: result.summary,
+          summary: {
+            ...result.summary,
+            collaboration: result.summary.collaboration ?? current.summary.collaboration,
+          },
           messages: messageAlreadyPresent
             ? current.messages.map((message) => message.id === result.message.id ? result.message : message)
             : [...current.messages, result.message],

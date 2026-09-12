@@ -24,6 +24,7 @@ import {
   Search,
   Send,
   ShieldAlert,
+  SlidersHorizontal,
   Star,
   UserRound,
   Users,
@@ -39,6 +40,7 @@ import {
   type CommunicationChannel,
   type ConversationCollaboration,
   type ConversationAssigneeFilter,
+  type ConversationDetail,
   type ConversationSummary,
   type ConversationStatus,
 } from "@/loopdev/domains/communications";
@@ -248,6 +250,7 @@ function ConversationComposer({
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-md bg-primary-soft px-2.5 py-1.5 text-xs font-semibold text-primary">Customer reply</span>
         <span className="text-[11px] text-muted-foreground">{availabilityMessage}</span>
+        {accountConnected && <span className="text-[11px] font-medium text-muted-foreground">Queued</span>}
       </div>
       {actionError && <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive" role="alert">{actionError}</p>}
       <div className="flex items-end gap-2">
@@ -422,6 +425,10 @@ export default function Communications() {
 
   const selectConversation = (id: string) => navigate(`/app/sales-crm/communications/${id}`);
   const activeDetail = detail.conversation;
+  const lastActiveDetailRef = useRef<ConversationDetail | null>(null);
+  if (activeDetail) lastActiveDetailRef.current = activeDetail;
+  const renderedDetail = activeDetail ?? lastActiveDetailRef.current;
+  const renderedSummary = selectedSummary ?? renderedDetail?.summary ?? null;
   const actionSummary = activeDetail?.summary ?? selectedSummary;
   const presenceDetail = detail.conversation;
   const updatePresence = detail.setPresence;
@@ -618,16 +625,30 @@ export default function Communications() {
                       {selectedSummary.assignedToName ? initials(selectedSummary.assignedToName) : "—"}
                     </span>
                     <Button variant="ghost" size="icon" className={cn("h-8 w-8", selectedSummary.starred && "text-gold")} aria-label={selectedSummary.starred ? "Unstar conversation" : "Star conversation"} onClick={() => void inbox.toggleStar(selectedSummary.id)}><Star className={cn("h-4 w-4", selectedSummary.starred && "fill-current")} /></Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      aria-label={contextView ? `Close ${contextLabel}` : `Open ${contextLabel}`}
-                      title={contextView ? `Close ${contextLabel}` : `Open ${contextLabel}`}
-                      onClick={() => contextView ? closeContextView() : openContextView(lastContextView)}
-                    >
-                      {contextView ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
-                    </Button>
+                    {!contextView && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        aria-label={`Open ${contextLabel}`}
+                        title={`Open ${contextLabel}`}
+                        onClick={() => openContextView(lastContextView)}
+                      >
+                        <PanelRightOpen className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {!contextView && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        aria-label="Open Conversation Operations"
+                        title="Open Conversation Operations"
+                        onClick={() => openContextView("operations")}
+                      >
+                        <SlidersHorizontal className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </header>
                 {selectedAccount && selectedAccount.state !== "connected" && <div className="flex items-center gap-2 border-b border-warning/20 bg-warning-soft px-5 py-2 text-xs text-warning"><ShieldAlert className="h-3.5 w-3.5 shrink-0" />{selectedAccount.statusMessage}. Reading is available; provider actions remain disabled.</div>}
@@ -718,9 +739,9 @@ export default function Communications() {
               onContextViewChange={openContextView}
             />
           )}
-          {activeDetail && selectedSummary && (
+          {renderedDetail && renderedSummary && (
             <ConversationOperationsPanel
-              detail={activeDetail}
+              detail={renderedDetail}
               open={contextView === "operations"}
               onOpenChange={(open) => open ? openContextView("operations") : closeContextView()}
               contextView={contextView ?? "operations"}
@@ -735,7 +756,7 @@ export default function Communications() {
               onAddInternalNote={async (body) => { await detail.addInternalNote(body); inbox.reload(); }}
               onCreateGlobalNote={async (value) => {
                 await loopdevAdapter.notes.create({
-                  organizationId: selectedSummary.organizationId,
+                  organizationId: renderedSummary.organizationId,
                   authorId: "local-development-user",
                   authorName: "Alex Morgan",
                   ...value,

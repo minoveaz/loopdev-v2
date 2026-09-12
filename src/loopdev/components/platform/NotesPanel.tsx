@@ -109,7 +109,7 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
               </Select>
             </div>
           )}
-          onAttachmentUpload={onAttachmentUpload}
+          onAttachmentUpload={onCreate ? undefined : onAttachmentUpload}
         />
         </div>
       )}

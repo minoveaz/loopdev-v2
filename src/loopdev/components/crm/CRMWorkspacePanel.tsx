@@ -163,6 +163,8 @@ function CRMWorkspaceBody({
         icon={conversation.contact.displayName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}
         title="CRM Workspace"
         subtitle={conversation.contact.displayName}
+        onClose={() => onOpenChange(false)}
+        closeLabel="Close CRM workspace"
       />
 
       <ConversationContextTabs active={contextView} onChange={onContextViewChange} />
@@ -362,7 +364,7 @@ export function CRMWorkspacePanel(props: CRMWorkspacePanelProps) {
 
   return (
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
-      <SheetContent forceMount side="right" className="flex w-full max-w-none flex-col p-0 sm:w-[min(92vw,480px)]">
+      <SheetContent forceMount hideClose side="right" className="flex w-full max-w-none flex-col p-0 sm:w-[min(92vw,480px)]">
         <SheetHeader className="sr-only"><SheetTitle>Contextual CRM records</SheetTitle><SheetDescription>Contextual CRM records for the selected conversation.</SheetDescription></SheetHeader>
         <CRMWorkspaceBody {...props} />
       </SheetContent>

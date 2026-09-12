@@ -103,6 +103,7 @@ function AgentRow({
 }
 
 function OperationsBody({
+  open,
   detail,
   onOpenChange,
   actionError,
@@ -119,12 +120,22 @@ function OperationsBody({
   onTakeoverLock,
   contextView,
   onContextViewChange,
-}: Omit<ConversationOperationsPanelProps, "open">) {
-  const collaboration = detail.collaboration;
+}: ConversationOperationsPanelProps) {
+  const collaboration = detail.collaboration ?? {
+    assignee: null,
+    collaborators: [],
+    watchers: [],
+    presence: [],
+    drafting: [],
+    composerLock: null,
+    handoff: null,
+    lastModifiedBy: null,
+  };
   const [selectedAgentId, setSelectedAgentId] = useState(localCommunicationAgents[1]?.userId ?? "");
   const [working, setWorking] = useState(false);
   const [errorDismissed, setErrorDismissed] = useState(false);
   const [noteEditorOpen, setNoteEditorOpen] = useState(false);
+  const [internalNoteDraft, setInternalNoteDraft] = useState("");
   const selectedAgent = localCommunicationAgents.find((agent) => agent.userId === selectedAgentId) ?? localCommunicationAgents[0];
   const run = async (action: () => Promise<unknown>, after?: () => void) => {
     setWorking(true);
@@ -137,7 +148,6 @@ function OperationsBody({
     }
   };
 
-  if (!collaboration) return null;
   const collaboratorIds = new Set(collaboration.collaborators.map((agent) => agent.userId));
   const watcherIds = new Set(collaboration.watchers.map((agent) => agent.userId));
   const availableCollaborators = localCommunicationAgents.filter((agent) => !collaboratorIds.has(agent.userId));
@@ -149,6 +159,7 @@ function OperationsBody({
         icon={<ClipboardList className="h-4 w-4" />}
         title="Conversation Operations"
         subtitle={`${detail.summary.contact.displayName} · operational controls`}
+        onClose={open ? () => onOpenChange(false) : undefined}
       />
 
       <ConversationContextTabs active={contextView} onChange={onContextViewChange} />
@@ -235,6 +246,25 @@ function OperationsBody({
           <p className="mt-1 text-[11px] text-warning-foreground/80">Visible to the team only; never sent to the customer.</p>
           <div className="mt-3 space-y-2">
             {detail.internalNotes.slice().reverse().map((note) => <div key={note.id} className="rounded-md border border-warning/20 bg-background/60 px-2.5 py-2 text-xs"><p>{note.body}</p><p className="mt-1 text-[10px] text-muted-foreground">{note.authorName} · {formatRelative(note.occurredAt)}</p></div>)}
+            <textarea
+              aria-label="Private conversation note"
+              placeholder="Add a private conversation note…"
+              value={internalNoteDraft}
+              onChange={(event) => setInternalNoteDraft(event.target.value)}
+              className="min-h-20 w-full rounded-md border border-input bg-background px-2.5 py-2 text-xs"
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={working || !internalNoteDraft.trim()}
+              onClick={() => void run(async () => {
+                await onAddInternalNote(internalNoteDraft.trim());
+                setInternalNoteDraft("");
+              })}
+            >
+              Add internal note
+            </Button>
             {onCreateGlobalNote && <Button type="button" size="sm" variant="outline" onClick={() => setNoteEditorOpen(true)} disabled={working}><FileText className="me-1.5 h-3.5 w-3.5" />Add note</Button>}
           </div>
         </section>
@@ -269,7 +299,7 @@ export function ConversationOperationsPanel(props: ConversationOperationsPanelPr
   }
   return (
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
-      <SheetContent forceMount side="right" className="flex w-full max-w-none flex-col p-0 sm:w-[min(92vw,480px)]">
+      <SheetContent forceMount hideClose side="right" className="flex w-full max-w-none flex-col p-0 sm:w-[min(92vw,480px)]">
         <SheetHeader className="sr-only"><SheetTitle>Conversation Operations drawer</SheetTitle><SheetDescription>Conversation status, ownership, collaboration and internal notes.</SheetDescription></SheetHeader>
         <OperationsBody {...props} />
       </SheetContent>

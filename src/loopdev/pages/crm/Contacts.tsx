@@ -430,16 +430,17 @@ export default function SalesCRMContacts() {
             <span>Page {cursorHistory.length + 1}</span>
             <label className="flex items-center gap-1.5" htmlFor="contacts-page-size">
               Rows
-              <Select value={String(pageSize)} onValueChange={changePageSize}>
-                <SelectTrigger id="contacts-page-size" aria-label="Contacts per page" className="h-7 w-16 bg-card px-2 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                id="contacts-page-size"
+                aria-label="Contacts per page"
+                value={String(pageSize)}
+                onChange={(event) => changePageSize(event.target.value)}
+                className="h-7 w-16 rounded-md border border-border bg-card px-2 text-xs"
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
             </label>
           </div>
           <div className="flex items-center gap-1.5">

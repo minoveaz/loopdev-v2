@@ -41,7 +41,7 @@ export interface PlatformTaskFormProps {
   onAttachmentUpload?: (file: File) => Promise<unknown>;
 }
 
-export function PlatformTaskForm({ relation, task, templates = [], formId = "platform-task-form", showSubmitButton = true, onDirtyChange, submitLabel, canAssign = false, onSubmit, onAttachmentUpload }: PlatformTaskFormProps) {
+export function PlatformTaskForm({ relation, task, templates = [], formId = "platform-task-form", showSubmitButton = true, onDirtyChange, submitLabel, canAssign = false, onSubmit }: PlatformTaskFormProps) {
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "normal");
@@ -172,12 +172,13 @@ export function PlatformTaskForm({ relation, task, templates = [], formId = "pla
           />
         </div>
       )}
-      {onAttachmentUpload && (
-        <div className="space-y-1.5">
-          <Label>Attachments</Label>
-          <FilePicker multiple onFilesSelected={(files) => { setAttachments((current) => [...current, ...files]); if (onAttachmentUpload) void Promise.all(files.map(onAttachmentUpload)); }} />
-        </div>
-      )}
+      <div className="space-y-1.5">
+        <Label>Attachments</Label>
+        <FilePicker multiple onFilesSelected={(files) => {
+          setAttachments((current) => [...current, ...files]);
+          onDirtyChange?.(true);
+        }} />
+      </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {showSubmitButton && <Button type="submit" disabled={pending}><Plus className="mr-1.5 h-4 w-4" />{pending ? "Saving…" : submitLabel ?? (task ? "Save changes" : "Add task")}</Button>}
     </form>

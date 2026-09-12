@@ -430,7 +430,7 @@ migraciones y ninguna página accede a `localStorage`.
 
 ### Fase 8H — Files Platform transversal
 
-**Estado:** En progreso — foundation local implementada, CRM/Communications/Platform conectados localmente
+**Estado:** En progreso — slice local funcional y consumidores CRM/Communications/Notes/Tasks conectados
 
 Esta fase continúa el cierre local de Communications 8A-8G. Se numera 8H porque Files
 Platform nace ahora como capacidad transversal necesaria para Customer 360 y Communications,
@@ -496,9 +496,9 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
   conservando `conversationId` y `messageId`.
 - [x] Conectar el selector local con attachments de Customer 360, Notes y Tasks mediante
   bridges compatibles con los contratos anteriores.
-  Customer 360 Documents queda integrado en el slice
-  inicial. Después se conectarán Marketing Studio, Content Studio y Document Intelligence
-  mediante adapters/hooks, no imports cruzados.
+  Customer 360 Documents queda integrado en el slice inicial. Notes muestra archivos por
+  relación y Tasks expone el contador de archivos asociados. Los contratos legacy siguen
+  siendo compatibles durante la migración.
 
 **Frontera backend futura**
 
@@ -509,6 +509,21 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
   de datos sin exponer credenciales ni permitir autorización decidida por el cliente.
 - [ ] Conectar OCR, clasificación, extracción y transcodificación solo como workers o
   capacidades posteriores; Files Platform no debe asumir IA ni un proveedor específico.
+
+**Pendiente para cerrar la fase**
+
+- [ ] Persistir attachments como parte de la operación de creación de Note/Task y evitar
+  huérfanos si el formulario se cancela; hoy el adapter Platform crea metadata de attachment
+  de forma independiente.
+- [ ] Añadir acciones de preview, delete y retry dentro de las vistas de Notes y Tasks; hoy
+  Notes lista nombre/estado y Tasks muestra el contador.
+- [ ] Completar búsqueda, tags, filtros, ordenación y vistas de biblioteca.
+- [ ] Completar checksum, deduplicación por hash y reemplazo/versionado con historial visible.
+- [ ] Conectar Leads y Opportunities, y posteriormente Marketing Studio, Content Studio y
+  Document Intelligence.
+- [ ] Sustituir el almacenamiento local por un adapter server-side cuando exista infraestructura:
+  Storage, signed URLs, RLS/permisos, cuotas, antivirus, thumbnails, retención legal y
+  export/delete.
 
 **Criterios de diseño derivados de VitaBlue**
 

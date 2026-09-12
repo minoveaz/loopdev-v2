@@ -69,3 +69,22 @@ export async function deleteLocalPreview(id: string) {
 export async function deleteLocalPreviews(ids: readonly string[]) {
   await Promise.all(ids.map((id) => deleteLocalPreview(id)));
 }
+
+export async function cleanupLocalPreviews(activeIds: ReadonlySet<string>) {
+  for (const id of Array.from(memory.keys())) {
+    if (!activeIds.has(id)) memory.delete(id);
+  }
+  if (!supported()) return;
+  try {
+    const database = await openDatabase();
+    const keys = await new Promise<IDBValidKey[]>((resolve, reject) => {
+      const request = database.transaction(storeName, "readonly").objectStore(storeName).getAllKeys();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error ?? new Error("Unable to inspect local previews."));
+    });
+    await Promise.all(keys.filter((key): key is string => typeof key === "string" && !activeIds.has(key)).map((id) => deleteLocalPreview(id)));
+    database.close();
+  } catch {
+    // Metadata remains usable if IndexedDB cleanup is unavailable.
+  }
+}

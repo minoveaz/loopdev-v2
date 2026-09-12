@@ -2,7 +2,7 @@ import { localPlatformAdapter, isScopeVisible, type EntityScope } from "@/loopde
 import type { CreateFileMetadataInput, FileListParams, FileRecord, FilePreviewSource, FileRelation, FileVersion, FilesAdapter, ReplaceFileVersionInput, UpdateFileMetadataInput } from "../types";
 import { checksumForFile } from "../data/checksum";
 import { FILES_LOCAL_STORAGE_KEY, localFilesDemoSeed } from "../data/localFiles";
-import { deleteLocalPreview, getLocalPreview, putLocalPreview } from "../data/localPreviewStore";
+import { cleanupLocalPreviews, deleteLocalPreview, getLocalPreview, putLocalPreview } from "../data/localPreviewStore";
 import { recordFileEvent } from "../data/localFileEvents";
 
 type FileStorage = Pick<Storage, "getItem" | "setItem">;
@@ -68,9 +68,11 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       if (relation && !isScopeVisible(relation.scope, scope)) {
         throw new Error("You do not have permission for this file scope.");
       }
-      return read()
+      const records = read()
         .filter((record) => isScopeVisible(record.scope, scope) && sameRelation(record, relation))
         .map(clone);
+      void cleanupLocalPreviews(new Set(read().filter((record) => record.status !== "deleted").map((record) => record.id)));
+      return records;
     },
     async createMetadata(input: CreateFileMetadataInput) {
       assertScope(input.scope, "work.write");

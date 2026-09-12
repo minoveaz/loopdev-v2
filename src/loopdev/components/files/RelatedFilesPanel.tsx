@@ -11,6 +11,11 @@ export function RelatedFilesPanel({ relation }: { relation: FileRelation }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<FileRecord | null>(null);
   const [replaceTarget, setReplaceTarget] = useState<FileRecord | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const run = async (action: () => Promise<unknown>) => {
+    setActionError(null);
+    try { await action(); } catch (cause) { setActionError(cause instanceof Error ? cause.message : "Unable to update file."); }
+  };
   return (
     <section className="space-y-3 rounded-lg border border-border p-3" aria-label="Related files">
       <div className="flex items-center justify-between gap-2">
@@ -19,8 +24,9 @@ export function RelatedFilesPanel({ relation }: { relation: FileRelation }) {
       </div>
       {replaceTarget && <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-sm">Replacing <strong>{replaceTarget.fileName}</strong><FilePicker multiple={false} onFilesSelected={async (selectedFiles) => { const file = selectedFiles[0]; if (!file) return; await files.replaceVersion({ id: replaceTarget.id, expectedVersion: replaceTarget.currentVersion, file, fileName: file.name, mimeType: file.type, byteSize: file.size }); setReplaceTarget(null); }} /></div>}
       <input className="w-full rounded-md border border-border px-3 py-2 text-sm" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search files..." aria-label="Search related files" />
-      <FileList files={files.files} query={query} onSelect={setSelected} onDelete={(file) => void files.remove(file.id, file.currentVersion)} onRetry={(file) => void files.replaceVersion({ id: file.id, expectedVersion: file.currentVersion })} onReplace={setReplaceTarget} />
-      <FilePreviewDialog file={selected} open={Boolean(selected)} onOpenChange={(open) => { if (!open) setSelected(null); }} onDelete={async () => { if (selected) { await files.remove(selected.id, selected.currentVersion); setSelected(null); } }} />
+      {(files.error || actionError) && <p role="alert" className="text-sm text-destructive">{files.error ?? actionError}</p>}
+      <FileList files={files.files} query={query} onSelect={setSelected} onDelete={(file) => { if (window.confirm(`Delete ${file.fileName}?`)) void run(() => files.remove(file.id, file.currentVersion)); }} onRetry={(file) => void run(() => files.replaceVersion({ id: file.id, expectedVersion: file.currentVersion }))} onReplace={setReplaceTarget} />
+      <FilePreviewDialog file={selected} open={Boolean(selected)} onOpenChange={(open) => { if (!open) setSelected(null); }} onDelete={async () => { if (selected && window.confirm(`Delete ${selected.fileName}?`)) { await run(() => files.remove(selected.id, selected.currentVersion)); setSelected(null); } }} />
     </section>
   );
 }

@@ -20,9 +20,11 @@ describe("Leads page", () => {
     );
 
     await waitFor(() => expect(screen.getAllByText("Enterprise expansion").length).toBeGreaterThan(0));
-    const leadRow = screen.getAllByText("Enterprise expansion").map((node) => node.closest('[role="row"]')).find((row) => row?.querySelector('button[aria-label^="Actions for"]'))!;
-    fireEvent.click(within(leadRow as HTMLElement).getByRole("button", { name: /Actions for/i }));
-    fireEvent.click(await screen.findByText("Create opportunity"));
+    const leadRow = screen.getAllByText("Enterprise expansion").map((node) => node.closest("tr")).find((row) => row?.textContent?.includes("Qualified"));
+    const actionButton = within(leadRow as HTMLElement).getByRole("button", { name: "Actions for Enterprise expansion" });
+    fireEvent.pointerDown(actionButton);
+    fireEvent.click(actionButton);
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Create opportunity" }));
 
     const dialog = await screen.findByRole("dialog", { name: "Create opportunity" });
     fireEvent.change(within(dialog).getByLabelText("Product or interest key"), {
@@ -43,9 +45,11 @@ describe("Leads page", () => {
     );
 
     await waitFor(() => expect(screen.getAllByText("Enterprise expansion").length).toBeGreaterThan(0));
-    const leadRow = screen.getAllByText("Enterprise expansion").map((node) => node.closest('[role="row"]')).find((row) => row?.querySelector('button[aria-label^="Actions for"]'))!;
-    fireEvent.click(within(leadRow as HTMLElement).getByRole("button", { name: /Actions for/i }));
-    fireEvent.click(await screen.findByText("Create opportunity"));
+    const leadRow = screen.getAllByText("Enterprise expansion").map((node) => node.closest("tr")).find((row) => row?.textContent?.includes("Qualified"));
+    const actionButton = within(leadRow as HTMLElement).getByRole("button", { name: "Actions for Enterprise expansion" });
+    fireEvent.pointerDown(actionButton);
+    fireEvent.click(actionButton);
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Create opportunity" }));
     const dialog = await screen.findByRole("dialog", { name: "Create opportunity" });
     expect(within(dialog).getByRole("heading", { name: "Create opportunity" })).toBeInTheDocument();
 
@@ -62,9 +66,11 @@ describe("Leads page", () => {
     );
 
     await waitFor(() => expect(screen.getAllByText("Enterprise expansion").length).toBeGreaterThan(0));
-    const leadRow = screen.getAllByText("Enterprise expansion").map((node) => node.closest('[role="row"]')).find((row) => row?.querySelector('button[aria-label^="Actions for"]'))!;
-    fireEvent.click(within(leadRow as HTMLElement).getByRole("button", { name: /Actions for/i }));
-    fireEvent.click(await screen.findByText("Create opportunity"));
+    const leadRow = screen.getAllByText("Enterprise expansion").map((node) => node.closest("tr")).find((row) => row?.textContent?.includes("Qualified"));
+    const actionButton = within(leadRow as HTMLElement).getByRole("button", { name: "Actions for Enterprise expansion" });
+    fireEvent.pointerDown(actionButton);
+    fireEvent.click(actionButton);
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Create opportunity" }));
     const dialog = await screen.findByRole("dialog", { name: "Create opportunity" });
     fireEvent.change(within(dialog).getByLabelText("Opportunity name"), { target: { value: "Changed details" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));

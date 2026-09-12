@@ -8,3 +8,4 @@ export { UploadQueue } from "./UploadQueue";
 export { FilePreview } from "./FilePreview";
 export { FileList } from "./FileList";
 export { FileCategoryTabs } from "./FileCategoryTabs";
+export { RelatedFilesPanel } from "./RelatedFilesPanel";

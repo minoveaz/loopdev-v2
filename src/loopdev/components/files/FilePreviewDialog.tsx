@@ -44,7 +44,7 @@ export function FilePreviewDialog({ file, localFile, previewUrl: providedPreview
             <span className="truncate">{file.fileName}</span>
           </DialogTitle>
           <DialogDescription>
-            {file.category} · {file.byteSize.toLocaleString()} bytes · Uploaded {formatDate(file.createdAt)}
+              {file.category} · {file.byteSize.toLocaleString()} bytes · Version {file.currentVersion} · Uploaded {formatDate(file.createdAt)}
           </DialogDescription>
         </DialogHeader>
 
@@ -57,6 +57,14 @@ export function FilePreviewDialog({ file, localFile, previewUrl: providedPreview
         ) : (
           <div className="flex min-h-[22rem] items-center justify-center rounded-lg border border-dashed bg-muted/30 p-8 text-center text-sm text-muted-foreground">
             Preview is not available for this document in the current local session.
+          </div>
+        )}
+        {file.versions.length > 1 && (
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Version history</p>
+            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+              {file.versions.map((version) => <li key={version.id}>v{version.version} · {version.fileName} · {version.byteSize.toLocaleString()} bytes · {formatDate(version.createdAt)}</li>)}
+            </ul>
           </div>
         )}
 

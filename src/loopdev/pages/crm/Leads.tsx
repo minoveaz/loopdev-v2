@@ -10,6 +10,7 @@ import {
 } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
 import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
+import { RelatedFilesPanel } from "@/loopdev/components/files";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ import {
 } from "@/loopdev/domains/crm/adapter";
 import { useCrmContacts, useCrmCustomer360, useCrmLeads, useCrmPipeline } from "@/loopdev/domains/crm/hooks/use-crm";
 import { formatDate, getInitials } from "@/lib/formatters";
+import { platformAdapter } from "@/loopdev/domains/platform";
 
 const STATUS_LABELS: Record<CRMLeadStatusCode, string> = {
   new: "New", contacted: "Contacted", qualified: "Qualified", stalled: "Stalled",
@@ -545,6 +547,7 @@ function LeadPreview({ lead, contact, view, loading, error, opportunityCount, on
           <div className="space-y-3">{view?.timeline.slice(0, 5).map((item) => <div key={item.id} className="border-l-2 border-primary/30 pl-3"><p className="text-sm">{item.summary}</p><p className="text-xs text-muted-foreground">{formatDate(item.occurredAt)}</p></div>)}</div>
         </DataCard>
         {view?.opportunities.length ? <div><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Related opportunities</p><div className="space-y-2">{view.opportunities.map((opportunity) => <div key={opportunity.id} className="flex items-center justify-between rounded-md border border-border p-2 text-sm"><span className="truncate">{opportunity.name}</span><StatusBadge tone="info">{opportunity.stageKey}</StatusBadge></div>)}</div></div> : <p className="text-sm text-muted-foreground">No related opportunities.</p>}
+        <RelatedFilesPanel relation={{ entityType: "lead", entityId: lead.id, scope: platformAdapter.getScope() }} />
         <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => onStatus("contacted")} disabled={lead.status === "contacted"}>Mark contacted</Button>{lead.status === "qualified" && <Button onClick={() => onConvert(lead)}><Plus className="mr-1.5 h-3.5 w-3.5" />Create opportunity</Button>}</div>
         <Button className="w-full" asChild><Link to={`/app/sales-crm/contacts/${contact.id}`}>Open Customer 360 <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link></Button>
       </div>

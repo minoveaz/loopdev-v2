@@ -3,6 +3,7 @@ import { ExternalLink, Plus, RefreshCw, SearchX } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppDrawer } from "@/components/platform";
 import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
+import { RelatedFilesPanel } from "@/loopdev/components/files";
 import { ConfirmDialog, DataCard, FilterDropdown, PageContainer, PageHeader, SearchInput, StatusBadge, useFormLifecycle } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import {
 } from "@/loopdev/domains/crm/adapter";
 import type { CatalogItem } from "@/loopdev/domains/catalog";
 import { useCrmContacts, useCrmPipeline } from "@/loopdev/domains/crm/hooks/use-crm";
+import { platformAdapter } from "@/loopdev/domains/platform";
 
 const labels: Record<CRMPipelineStageCode, string> = {
   prospecting: "Prospecting", qualified: "Qualified", proposal: "Proposal",
@@ -226,6 +228,7 @@ function OpportunityDetails({ opportunity, onUpdate, onMove, onReopen, onDirtyCh
   const [saving, setSaving] = useState(false);
   const save = async () => { setSaving(true); const owner = [{ id: "owner-maya", name: "Maya Chen" }, { id: "owner-jon", name: "Jon Bell" }, { id: "owner-lee", name: "Lee Okafor" }].find((candidate) => candidate.id === ownerId); await onUpdate({ amount: amount ? Number(amount) : null, expectedCloseDate: closeDate || null, ownerId: owner?.id ?? null, ownerName: owner?.name ?? null, lossReason: opportunity.stageCode === "lost" ? lossReason : undefined, lines: opportunity.lines.map((line) => ({ id: line.id, quantity: Number(lineQuantities[line.id] ?? line.quantity) })) }); setSaving(false); };
   return <div className="space-y-6">
+    <RelatedFilesPanel relation={{ entityType: "opportunity", entityId: opportunity.id, scope: platformAdapter.getScope() }} />
     <div className="grid grid-cols-2 gap-4 text-sm"><div><span className="text-muted-foreground">Origin</span><p className="font-medium">{opportunity.origin === "lead_conversion" ? "Lead conversion" : "Manual"}</p></div><div><span className="text-muted-foreground">Product</span><p className="font-medium">{opportunity.productKey ?? "—"}</p></div><div><span className="text-muted-foreground">Owner</span><p className="font-medium">{opportunity.owner?.displayName ?? "Unassigned"}</p></div><div><span className="text-muted-foreground">Probability</span><p className="font-medium">{opportunity.probability === null ? "—" : `${Math.round(opportunity.probability * 100)}%`}</p></div></div>
     {opportunity.stageCode === "won" || opportunity.stageCode === "lost" ? <Button variant="outline" onClick={onReopen}>Reopen terminal opportunity</Button> : <div className="space-y-2"><Label htmlFor="opportunity-stage">Stage</Label><Select value={opportunity.stageCode} onValueChange={(value) => void onMove(value as CRMPipelineStageCode)}><SelectTrigger id="opportunity-stage"><SelectValue /></SelectTrigger><SelectContent>{CRM_PIPELINE_STAGE_CODES.map((stage) => <SelectItem key={stage} value={stage}>{labels[stage]}</SelectItem>)}</SelectContent></Select></div>}
     <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="opportunity-amount">Amount</Label><Input id="opportunity-amount" type="number" min="0" value={amount} onChange={(event) => { onDirtyChange(true); setAmount(event.target.value); }} /></div><div className="space-y-2"><Label htmlFor="opportunity-close-date">Expected close</Label><Input id="opportunity-close-date" type="date" value={closeDate} onChange={(event) => { onDirtyChange(true); setCloseDate(event.target.value); }} /></div></div>

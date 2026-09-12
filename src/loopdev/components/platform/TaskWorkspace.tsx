@@ -36,6 +36,7 @@ export interface PlatformTaskFormProps {
     dueAt: string | null;
     relation: EntityRef;
     assignedUserId?: string | null;
+    attachments?: File[];
   }) => Promise<unknown>;
   onAttachmentUpload?: (file: File) => Promise<unknown>;
 }
@@ -50,6 +51,7 @@ export function PlatformTaskForm({ relation, task, templates = [], formId = "pla
   const [error, setError] = useState<string | null>(null);
   const [templateKey, setTemplateKey] = useState("");
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const selectedTemplate = templates.find((template) => template.key === templateKey);
   useEffect(() => {
     setTitle(task?.title ?? "");
@@ -87,12 +89,14 @@ export function PlatformTaskForm({ relation, task, templates = [], formId = "pla
         dueAt: dueAt || null,
         relation,
         assignedUserId: canAssign ? assignedUserId.trim() || null : undefined,
+        attachments,
       });
       setTitle("");
       setDescription("");
       setPriority("normal");
       setDueAt("");
       setAssignedUserId("");
+      setAttachments([]);
       onDirtyChange?.(false);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save task.");
@@ -171,7 +175,7 @@ export function PlatformTaskForm({ relation, task, templates = [], formId = "pla
       {onAttachmentUpload && (
         <div className="space-y-1.5">
           <Label>Attachments</Label>
-          <FilePicker multiple onFilesSelected={(files) => Promise.all(files.map(onAttachmentUpload))} />
+          <FilePicker multiple onFilesSelected={(files) => { setAttachments((current) => [...current, ...files]); if (onAttachmentUpload) void Promise.all(files.map(onAttachmentUpload)); }} />
         </div>
       )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

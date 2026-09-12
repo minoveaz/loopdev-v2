@@ -102,6 +102,7 @@ export interface CreateTaskInput extends PlatformScopeParams {
   relation: EntityRef;
   visibility?: PlatformVisibility;
   idempotencyKey?: string;
+  attachments?: File[];
 }
 
 export interface UpdateTaskInput extends PlatformScopeParams {
@@ -140,6 +141,7 @@ export interface CreateNoteInput extends PlatformScopeParams {
   body: string;
   visibility?: PlatformVisibility;
   idempotencyKey?: string;
+  attachments?: File[];
 }
 
 export interface UpdateNoteInput extends PlatformScopeParams {
@@ -306,6 +308,22 @@ export function createLocalPlatformWorkAdapter(deps: LocalPlatformWorkDependenci
       throw new PlatformWorkAdapterError("The related entity is outside the active scope.", "invalid-scope");
     }
   };
+  const createLocalAttachments = (files: readonly File[] | undefined, relation: EntityRef, scope: EntityScope) => (files ?? []).map((file) => localPlatformAttachmentsStore.create({
+    scope,
+    status: "active",
+    createdById: currentActor(),
+    updatedById: currentActor(),
+    version: 1,
+    visibility: "team",
+    permissions: currentPermissions(),
+    relation,
+    fileName: file.name,
+    mimeType: file.type || "application/octet-stream",
+    byteSize: file.size,
+    storageKey: null,
+    uploadedById: currentActor() ?? "local-system",
+    attachmentStatus: "ready",
+  }));
   const visible = <T extends StoredRecord>(items: T[], scope: EntityScope): T[] =>
     items.filter((item) => sameScope(item, scope));
   const find = <T extends StoredRecord>(items: T[], id: string, scope: EntityScope): T => {
@@ -514,9 +532,18 @@ export function createLocalPlatformWorkAdapter(deps: LocalPlatformWorkDependenci
         relation: input.relation,
         completedAt: null,
       });
-      if (idempotencyKey) idempotency.set(idempotencyKey, { fingerprint, id: created.id });
-      await appendSystemEvent(scope, created.relation, "task", "task", "task", created.id, `Task created: ${created.title}`);
-      return created;
+      try {
+        const attachments = createLocalAttachments(input.attachments, { ...created.relation, entityType: "task", entityId: created.id }, scope);
+        if (attachments.length) localPlatformTasksStore.update(created.id, { attachments });
+        const hydrated = localPlatformTasksStore.get(created.id) ?? created;
+        if (idempotencyKey) idempotency.set(idempotencyKey, { fingerprint, id: created.id });
+        await appendSystemEvent(scope, created.relation, "task", "task", "task", created.id, `Task created: ${created.title}`);
+        return hydrated;
+      } catch (cause) {
+        localPlatformAttachmentsStore.list().filter((attachment) => attachment.relation.entityId === created.id).forEach((attachment) => localPlatformAttachmentsStore.remove(attachment.id));
+        localPlatformTasksStore.remove(created.id);
+        throw cause;
+      }
     },
 
     async updateTask(taskId, input) {
@@ -619,9 +646,18 @@ export function createLocalPlatformWorkAdapter(deps: LocalPlatformWorkDependenci
         authorId: currentActor() ?? "local-system",
         body: input.body.trim(),
       });
-      if (idempotencyKey) idempotency.set(`note:${idempotencyKey}`, { fingerprint, id: created.id });
-      await appendSystemEvent(scope, created.relation, "note", "note", "note", created.id, "Note added");
-      return created;
+      try {
+        const attachments = createLocalAttachments(input.attachments, { ...created.relation, entityType: "note", entityId: created.id }, scope);
+        if (attachments.length) localPlatformNotesStore.update(created.id, { attachments });
+        const hydrated = localPlatformNotesStore.get(created.id) ?? created;
+        if (idempotencyKey) idempotency.set(`note:${idempotencyKey}`, { fingerprint, id: created.id });
+        await appendSystemEvent(scope, created.relation, "note", "note", "note", created.id, "Note added");
+        return hydrated;
+      } catch (cause) {
+        localPlatformAttachmentsStore.list().filter((attachment) => attachment.relation.entityId === created.id).forEach((attachment) => localPlatformAttachmentsStore.remove(attachment.id));
+        localPlatformNotesStore.remove(created.id);
+        throw cause;
+      }
     },
 
     async updateNote(noteId, input) {

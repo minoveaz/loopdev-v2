@@ -9,7 +9,7 @@ import { FilePicker } from "@/loopdev/components/files";
 type NoteComposerMode = "quick" | "rich";
 
 export interface NoteComposerProps {
-  onSubmit: (body: string, mode: NoteComposerMode) => Promise<void> | void;
+  onSubmit: (body: string, mode: NoteComposerMode, attachments?: File[]) => Promise<void> | void;
   placeholder?: string;
   submitLabel?: string;
   compact?: boolean;
@@ -35,15 +35,18 @@ export function NoteComposer({
   const [body, setBody] = useState("");
   const [richBody, setRichBody] = useState("");
   const [pending, setPending] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   const submit = async () => {
     const value = (mode === "quick" ? body : richBody).trim();
     if (!value || pending || disabled) return;
     setPending(true);
     try {
-      await onSubmit(value, mode);
+      if (attachments.length) await onSubmit(value, mode, attachments);
+      else await onSubmit(value, mode);
       setBody("");
       setRichBody("");
+      setAttachments([]);
     } finally {
       setPending(false);
     }
@@ -72,7 +75,7 @@ export function NoteComposer({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           {footerContent}
-          {onAttachmentUpload && <FilePicker multiple={false} onFilesSelected={(files) => { const file = files[0]; if (file) void onAttachmentUpload(file); }} />}
+          {onAttachmentUpload ? <FilePicker multiple={false} onFilesSelected={(files) => { const file = files[0]; if (file) void onAttachmentUpload(file); }} /> : <FilePicker multiple onFilesSelected={(files) => setAttachments((current) => [...current, ...files])} />}
         </div>
         <Button type="button" size="sm" onClick={() => void submit()} disabled={disabled || pending || !(mode === "quick" ? body.trim() : richBody.trim())}>
           <Send className="mr-1.5 h-3.5 w-3.5" />{pending ? "Saving…" : submitLabel}

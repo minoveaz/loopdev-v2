@@ -13,7 +13,7 @@ export interface PlatformNotesPanelProps {
   error?: string | null;
   forbidden?: boolean;
   relation?: EntityRef;
-  onCreate?: (body: string, visibility: PlatformVisibility) => Promise<unknown>;
+  onCreate?: (body: string, visibility: PlatformVisibility, attachments?: File[]) => Promise<unknown>;
   onUpdate?: (noteId: string, body: string, expectedVersion: number) => Promise<unknown>;
   onAttachmentUpload?: (file: File) => Promise<unknown>;
   attachments?: AttachmentRecord[];
@@ -28,11 +28,12 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
   const [discardEditOpen, setDiscardEditOpen] = useState(false);
   const lifecycle = useFormLifecycle();
 
-  const submit = async (body: string) => {
+  const submit = async (body: string, _mode: "quick" | "rich", attachments?: File[]) => {
     if (!onCreate) return;
     setFormError(null);
     try {
-      await onCreate(body.trim(), visibility);
+      if (attachments?.length) await onCreate(body.trim(), visibility, attachments);
+      else await onCreate(body.trim(), visibility);
       lifecycle.markClean();
     } catch (cause) {
       setFormError(cause instanceof Error ? cause.message : "Unable to save note.");

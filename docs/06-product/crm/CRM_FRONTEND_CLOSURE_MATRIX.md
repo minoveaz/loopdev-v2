@@ -44,6 +44,15 @@ La fuente detallada por fases es `tracks/active/crm/2026-09-09-loopdev-v2-crm-fr
 | Comments y Mentions | Parcial frontend | Contrato reservado, sin UI aprobada | Validar necesidad y diseñar UX |
 | Búsqueda global | Pendiente backend | Búsquedas locales por dominio | Índice autorizado y persistencia remota |
 
+### Última validación manual
+
+El 12 de septiembre de 2026 se validaron manualmente con mock auth las rutas de Contacts,
+Customer 360, Leads, Opportunities y Tasks. Contacts mostró paginación y filtros; el detalle
+de Customer 360 mostró la pestaña Documents; Opportunities mostró el drawer con `Files`,
+dropzone y búsqueda de archivos relacionados; Leads y Tasks cargaron sus listados, filtros,
+relaciones CRM y acciones principales. La prueba confirma el montaje de las superficies, pero
+no sustituye una prueba E2E de subida binaria, reemplazo, retry y rollback.
+
 ## Communications
 
 | Superficie o capacidad | Estado | Evidencia principal | Pendiente |

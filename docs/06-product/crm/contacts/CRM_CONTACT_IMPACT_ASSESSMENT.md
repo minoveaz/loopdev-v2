@@ -15,7 +15,8 @@ approved_at: 2026-08-13
 
 ## 1. Scope
 
-`CRM-01` entregara Contactos y Customer 360 minimo sobre `SuiteRuntime + SuiteCanvas + FSD`.
+`CRM-01` entregara Contactos y Customer 360 minimo sobre las rutas y componentes de dominio
+definidos por LoopDev v2.
 Incluye lista, busqueda, crear, editar, detalle, posible duplicado y merge humano auditado.
 
 ## 2. Impact matrix
@@ -70,7 +71,7 @@ CRM-01 must not silently absorb pipeline, leads, documents, communications, bill
 
 - [x] Contact contract reviewed by Product Owner and Tech Lead.
 - [x] Impact matrix reviewed and linked from the delivery Issue.
-- [x] SuiteRuntime/SuiteCanvas usage confirmed on the branch.
+- [x] La integración con las rutas y primitives actuales de LoopDev v2 está confirmada.
 - [x] Data/security dependencies assigned or explicitly sequenced.
 - [x] No unrelated files are included in the implementation commit.
 - [x] Acceptance cases and readiness checklist references are present.

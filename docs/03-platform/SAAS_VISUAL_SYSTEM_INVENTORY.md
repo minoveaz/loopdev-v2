@@ -23,6 +23,13 @@ remove existing classes.
 | Canvas structure | `SuiteCanvasMode` | `SuiteCanvas/types.ts` | Keep independent from visual recipes |
 | Typography | token package and CSS variables | `tokens/src`, `globals.css` | Reference tokens; prohibit local font scales |
 
+Contextual overlay rule: use `src/components/platform/AppDrawer.tsx` for
+responsive drawers across LoopDev. It wraps the shared Sheet primitive and
+provides the standard desktop width, full-width mobile layout, fixed header,
+scrollable body, optional footer, focus restoration and dirty-close
+confirmation. Feature modules should compose its slots rather than introduce
+another drawer shell.
+
 ## Surface taxonomy baseline
 
 The existing implementation implies these semantic layers:

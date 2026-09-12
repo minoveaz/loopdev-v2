@@ -7,7 +7,7 @@ updated: 2026-09-04
 owner: crm
 program_track: tracks/active/crm/2026-08-13-crm-pilot-execution.md
 related_issue: https://github.com/minoveaz/loopdev/issues/84
-backend_handoff: CRM_LEADS_IMPLEMENTATION_HANDOFF.md
+backend_handoff: ../../archive/crm/leads/CRM_LEADS_IMPLEMENTATION_HANDOFF.md
 component_audit: CRM_LEADS_COMPONENT_AUDIT.md
 contract: CRM_LEAD_CONTRACT.md
 ux_spec: CRM_LEADS_UX_SPEC.md
@@ -51,7 +51,8 @@ La propuesta de implementacion queda alineada con:
 - `CRM_LEADS_UX_SPEC.md`: rutas, modos `data/split/workspace/full-bleed`, journeys y estados;
 - `CRM_LEADS_COMPONENT_AUDIT.md`: ownership FSD y reutilizacion de primitives;
 - `CRM_LEAD_CONTRACT.md`: entidad, comandos, errores, estados e idempotencia;
-- `CRM_LEADS_IMPLEMENTATION_HANDOFF.md`: dependencias, Definition of Ready y exclusiones;
+- `../../archive/crm/leads/CRM_LEADS_IMPLEMENTATION_HANDOFF.md`: dependencias, Definition of Ready
+  y exclusiones;
 - `CRM_BACKEND_MODULE_PLAYBOOK.md`: orden contract -> schema/RLS -> service/API -> fixtures -> tests -> handoff;
 - `CRM_CONTACTS_UI_IMPLEMENTATION_PLAN.md`: receta de trabajo para listas, formularios, feedback y
   responsive.

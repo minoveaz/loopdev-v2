@@ -1,5 +1,6 @@
 import {
   HealthIllustration,
+  ERPIllustration,
   PartnersIllustration,
   TargetIllustration,
   UIKitIllustration,
@@ -21,6 +22,13 @@ const suites = [
     version: "0.8.2",
     to: "/app/sales-crm/overview",
     illustration: <PartnersIllustration />,
+  },
+  {
+    title: "ERP",
+    description: "Shared product and service catalogs for the next generation of LoopDev operations.",
+    version: "0.1.0",
+    to: "/app/erp/overview",
+    illustration: <ERPIllustration />,
   },
   {
     title: "Financial Ops",

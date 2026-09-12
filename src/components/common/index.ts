@@ -31,6 +31,12 @@ export { FormSection } from "./FormSection";
 export { SettingsCard } from "./SettingsCard";
 export { DetailDrawer } from "./DetailDrawer";
 export {
+  AdaptiveContextMenu,
+  type AdaptiveContextMenuAction,
+  type ContextMenuAction,
+  type ContextMenuSeparatorAction,
+} from "./AdaptiveContextMenu";
+export {
   DataTable,
   type DataTableColumn,
   type DataTableAction,
@@ -40,3 +46,16 @@ export {
 export { InlineCode, CodeBlock, Kbd, Samp, type CodeBlockProps } from "./Typography";
 export { MonoCell, type MonoCellProps, type MonoFieldKind } from "./MonoCell";
 export { PageContainer, type PageContainerWidth } from "./PageContainer";
+export { useFormLifecycle } from "./useFormLifecycle";
+export { FormSectionHeader } from "./FormSectionHeader";
+export { FormSectionNav, type FormSectionNavItem } from "./FormSectionNav";
+export { ActivityFeed, type ActivityFeedItem } from "./ActivityFeed";
+export { activityKindConfig, getActivityActionLabel, getActivityKind, getActivityStatusTone, type ActivityKind } from "./ActivityPresentation";
+export { ReadOnlyField } from "./ReadOnlyField";
+export { NoteComposer, type NoteComposerProps } from "./NoteComposer";
+export {
+  NoteEditorDrawer,
+  RichNoteEditor,
+  type NoteEditorDrawerProps,
+  type NoteEditorValue,
+} from "./NoteEditorDrawer";

@@ -1,0 +1,303 @@
+import { createLocalStore } from "@/lib/localStore";
+import type { CatalogAvailability, CatalogEligibility, CatalogItem, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole } from "../types";
+
+const localOrganizationId = "local-development-organization";
+const otherOrganizationId = "other-development-organization";
+const sharedWorkspace = null;
+const now = "2026-09-10T00:00:00.000Z";
+
+export const localOrganizationCatalogsStore = createLocalStore<OrganizationCatalog>({
+  key: "loopdev:catalog:catalogs",
+  idPrefix: "catalog",
+  seed: [
+    {
+      id: "catalog_products",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      key: "products",
+      name: "Products",
+      description: "Physical, digital and packaged products.",
+      kind: "products",
+      status: "active",
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "catalog_services",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      key: "services",
+      name: "Services",
+      description: "Professional, healthcare and recurring services.",
+      kind: "services",
+      status: "active",
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogItemsStore = createLocalStore<CatalogItem>({
+  key: "loopdev:catalog:items",
+  idPrefix: "catalog_item",
+  seed: [
+    {
+      id: "catalog_item_enterprise_plan",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      key: "enterprise-plan",
+      sku: "SAAS-ENTERPRISE",
+      type: "subscription",
+      name: "Enterprise plan",
+      description: "Annual access plan for larger teams.",
+      categoryKey: "software",
+      status: "active",
+      visibility: { organizationId: localOrganizationId, workspaceId: sharedWorkspace },
+      metadata: { vertical: "saas", seats: 25 },
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "catalog_item_health_consultation",
+      organizationId: localOrganizationId,
+      workspaceId: "workspace-health",
+      key: "health-consultation",
+      sku: "HEALTH-CONSULT",
+      type: "service",
+      name: "Health consultation",
+      description: "A generic appointment-based service.",
+      categoryKey: "services",
+      status: "active",
+      visibility: { organizationId: localOrganizationId, workspaceId: "workspace-health" },
+      metadata: { vertical: "healthcare", durationMinutes: 45 },
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "catalog_item_store_kit",
+      organizationId: localOrganizationId,
+      workspaceId: "workspace-commerce",
+      key: "store-kit",
+      sku: "STORE-KIT-001",
+      type: "physical_product",
+      name: "Store starter kit",
+      description: "A generic physical product bundle.",
+      categoryKey: "commerce",
+      status: "active",
+      visibility: { organizationId: localOrganizationId, workspaceId: "workspace-commerce" },
+      metadata: { vertical: "commerce" },
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "catalog_item_advisory_package",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      key: "advisory-package",
+      sku: "SERVICES-ADVISORY",
+      type: "package",
+      name: "Advisory package",
+      description: "A reusable package for professional services.",
+      categoryKey: "services",
+      status: "draft",
+      visibility: { organizationId: localOrganizationId, workspaceId: sharedWorkspace },
+      metadata: { vertical: "services" },
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "catalog_item_other_org",
+      organizationId: otherOrganizationId,
+      workspaceId: sharedWorkspace,
+      key: "other-org-plan",
+      sku: "OTHER-001",
+      type: "digital_product",
+      name: "Other organization plan",
+      description: null,
+      categoryKey: null,
+      status: "active",
+      visibility: { organizationId: otherOrganizationId, workspaceId: sharedWorkspace },
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogOffersStore = createLocalStore<Offer>({
+  key: "loopdev:catalog:offers",
+  idPrefix: "catalog_offer",
+  seed: [
+    {
+      id: "catalog_offer_enterprise_annual",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      catalogItemId: "catalog_item_enterprise_plan",
+      key: "enterprise-annual",
+      name: "Enterprise annual",
+      status: "active",
+      billingModel: "recurring",
+      currency: "EUR",
+      unit: "year",
+      validFrom: now,
+      validTo: null,
+      metadata: { termMonths: 12 },
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "catalog_offer_health_consultation",
+      organizationId: localOrganizationId,
+      workspaceId: "workspace-health",
+      catalogItemId: "catalog_item_health_consultation",
+      key: "health-consultation-standard",
+      name: "Standard consultation",
+      status: "active",
+      billingModel: "one_time",
+      currency: "EUR",
+      unit: "session",
+      validFrom: now,
+      validTo: null,
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogVariantsStore = createLocalStore<CatalogVariant>({
+  key: "loopdev:catalog:variants",
+  idPrefix: "catalog_variant",
+  seed: [
+    {
+      id: "catalog_variant_enterprise_25",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      catalogItemId: "catalog_item_enterprise_plan",
+      key: "enterprise-25-seats",
+      sku: "SAAS-ENTERPRISE-25",
+      name: "25 seats",
+      status: "active",
+      attributes: { seats: "25" },
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogPartyRolesStore = createLocalStore<ProductPartyRole>({
+  key: "loopdev:catalog:party-roles",
+  idPrefix: "catalog_party_role",
+  seed: [
+    {
+      id: "catalog_party_role_health_provider",
+      organizationId: localOrganizationId,
+      workspaceId: "workspace-health",
+      catalogItemId: "catalog_item_health_consultation",
+      offerId: "catalog_offer_health_consultation",
+      role: "provider",
+      partyKey: "local-health-clinic",
+      partyName: "Local Health Clinic",
+      status: "active",
+      validFrom: now,
+      validTo: null,
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogAvailabilitiesStore = createLocalStore<CatalogAvailability>({
+  key: "loopdev:catalog:availabilities",
+  idPrefix: "catalog_availability",
+  seed: [
+    {
+      id: "catalog_availability_health_consultation",
+      organizationId: localOrganizationId,
+      workspaceId: "workspace-health",
+      catalogItemId: "catalog_item_health_consultation",
+      offerId: "catalog_offer_health_consultation",
+      channels: ["Online", "Branch / office"],
+      markets: ["Spain"],
+      status: "active",
+      validFrom: now,
+      validTo: null,
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogEligibilitiesStore = createLocalStore<CatalogEligibility>({
+  key: "loopdev:catalog:eligibilities",
+  idPrefix: "catalog_eligibility",
+  seed: [
+    {
+      id: "catalog_eligibility_health_consultation",
+      organizationId: localOrganizationId,
+      workspaceId: "workspace-health",
+      catalogItemId: "catalog_item_health_consultation",
+      offerId: "catalog_offer_health_consultation",
+      ruleKey: "open-access",
+      description: "Available to all customers in the selected market.",
+      status: "active",
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogPriceBooksStore = createLocalStore<PriceBook>({
+  key: "loopdev:catalog:price-books",
+  idPrefix: "price_book",
+  seed: [
+    {
+      id: "price_book_default_eur",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      key: "default-eur",
+      name: "Default EUR",
+      currency: "EUR",
+      status: "active",
+      validFrom: now,
+      validTo: null,
+      visibility: { organizationId: localOrganizationId, workspaceId: sharedWorkspace },
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogPriceEntriesStore = createLocalStore<PriceEntry>({
+  key: "loopdev:catalog:price-entries",
+  idPrefix: "price_entry",
+  seed: [
+    {
+      id: "price_entry_enterprise_annual",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      priceBookId: "price_book_default_eur",
+      catalogItemId: "catalog_item_enterprise_plan",
+      offerId: "catalog_offer_enterprise_annual",
+      variantId: null,
+      amount: 48000,
+      currency: "EUR",
+      unit: "year",
+      status: "active",
+      minQuantity: 1,
+      maxQuantity: null,
+      validFrom: now,
+      validTo: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const LOCAL_CATALOG_ORGANIZATION_ID = localOrganizationId;

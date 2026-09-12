@@ -3,7 +3,7 @@ title: CRM Pipeline and Opportunities Domain Contract
 status: approved
 version: 1.0
 created: 2026-08-13
-updated: 2026-08-13
+updated: 2026-09-10
 owner: crm
 program_track: tracks/planned/crm/2026-08-13-crm-pilot-execution.md
 issue: https://github.com/minoveaz/loopdev/issues/85
@@ -157,3 +157,17 @@ No secrets, provider payloads or PII are returned in ordinary error messages.
 
 Stable stage IDs, `origin`, `productKey`, `contactId` and `leadId` are public contract fields. Visible
 stage names and order are presentation/configuration and may change without historical migration.
+
+The frontend adapter follows the same separation: Lead lifecycle status is not a Pipeline stage,
+the board contains Opportunities only, and `lost` stage movement has no Lead-status side effect.
+
+### Fase 3 local adapter handoff
+
+`localLoopdevAdapter` exposes a local stage catalog (`listPipelineStages`), manual opportunity
+creation, catalog reference resolution with legacy `productKey` fallback, extensible
+`OpportunityLine` records, and optimistic `expectedUpdatedAt` updates. Terminal stages are
+immutable through normal moves; `reopenOpportunity` is the only path out of `won`/`lost` and
+requires a non-empty reason. Stage changes are appended to a local stage-history store so Fase 4
+can project them into Timeline without duplicating Timeline capability here. The UI covers
+loading, empty, forbidden, validation, conflict and pending states with `AppDrawer`/`Dialog`;
+no backend, migration or browser-native confirmation is involved.

@@ -8,34 +8,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
-import { notificationsStore } from "@/template/rivera/data/mockNotifications";
-import { useLocalStore } from "@/lib/localStore";
 import { useNotificationPrefs } from "@/hooks/use-notification-prefs";
-import type { Notification } from "@/types";
 import { cn } from "@/lib/utils";
+import { usePlatformNotifications } from "@/loopdev/domains/platform";
+import type { NotificationRecord } from "@/loopdev/domains/platform";
 
-const toneIcon: Record<Notification["type"], LucideIcon> = {
+type NotificationTone = "info" | "success" | "warning" | "error";
+
+const toneIcon: Record<NotificationTone, LucideIcon> = {
   info: Info,
   success: CheckCircle2,
   warning: AlertTriangle,
   error: AlertCircle,
 };
 
-const toneClasses: Record<Notification["type"], string> = {
+const toneClasses: Record<NotificationTone, string> = {
   info: "bg-info/10 text-info ring-info/20",
   success: "bg-success/10 text-success ring-success/20",
   warning: "bg-warning/10 text-warning ring-warning/20",
   error: "bg-destructive/10 text-destructive ring-destructive/20",
 };
 
-const typeLabel: Record<Notification["type"], string> = {
+const typeLabel: Record<NotificationTone, string> = {
   info: "Informational",
   success: "Success",
   warning: "Warnings",
   error: "Errors & alerts",
 };
 
-const typeDescription: Record<Notification["type"], string> = {
+const typeDescription: Record<NotificationTone, string> = {
   info: "Tips, mentions, and product updates",
   success: "Completed jobs and deliveries",
   warning: "Approaching limits or attention needed",
@@ -50,37 +51,64 @@ function timeAgo(iso: string) {
   return `${Math.round(diffMin / 1440)}d ago`;
 }
 
+function toneFor(record: NotificationRecord): NotificationTone {
+  if (record.type === "assignment" || record.type === "reopen") return "warning";
+  if (record.type === "conversion" || record.type === "stage_change") return "success";
+  if (record.type === "attachment") return "info";
+  return "info";
+}
+
+function linkFor(record: NotificationRecord): string | undefined {
+  if (!record.relation) return undefined;
+  if (record.relation.entityType === "contact") return `/app/sales-crm/contacts/${record.relation.entityId}`;
+  if (record.relation.entityType === "lead") return "/app/sales-crm/leads";
+  if (record.relation.entityType === "opportunity") return "/app/sales-crm/opportunities";
+  return undefined;
+}
+
 export function NotificationsMenu() {
-  const items = useLocalStore(notificationsStore) as readonly Notification[];
+  const {
+    notifications,
+    loading,
+    error,
+    markRead: markPlatformRead,
+    markUnread: markPlatformUnread,
+    archive,
+  } = usePlatformNotifications({ limit: 50 });
+  const items = notifications.map((record) => ({
+    ...record,
+    tone: toneFor(record),
+    message: record.body,
+    read: record.status === "read",
+    link: linkFor(record),
+  }));
   const { prefs, setType, setChannel } = useNotificationPrefs();
-  const visibleItems = items.filter((n) => prefs.types[n.type]);
+  const visibleItems = items.filter((n) => prefs.types[n.tone]);
   const unread = visibleItems.filter((n) => !n.read).length;
   const navigate = useNavigate();
   const [view, setView] = useState<"feed" | "prefs">("feed");
 
-  const markAll = () => {
-    items.forEach((n) => {
-      if (!n.read) notificationsStore.update(n.id, { read: true });
-    });
+  const markAll = async () => {
+    await Promise.all(items.filter((n) => !n.read).map((n) => markPlatformRead(n.id)));
     toast.success("All notifications marked as read");
   };
 
-  const clearAll = () => {
+  const clearAll = async () => {
     if (items.length === 0) return;
-    notificationsStore.replace([]);
+    await Promise.all(items.map((n) => archive(n.id)));
     toast("Notifications cleared", { description: "Your inbox is now empty." });
   };
 
   const markRead = (id: string, read = true) => {
-    notificationsStore.update(id, { read });
+    return read ? markPlatformRead(id) : markPlatformUnread(id);
   };
 
   const remove = (id: string) => {
-    notificationsStore.remove(id);
+    return archive(id);
   };
 
-  const onItemClick = (n: Notification) => {
-    if (!n.read) markRead(n.id, true);
+  const onItemClick = (n: typeof items[number]) => {
+    if (!n.read) void markRead(n.id, true);
     if (n.link) navigate(n.link);
   };
 
@@ -150,6 +178,8 @@ export function NotificationsMenu() {
           </div>
           ) : null}
         </div>
+        {loading && <p className="px-4 py-3 text-xs text-muted-foreground">Loading notifications...</p>}
+        {error && <p className="px-4 py-3 text-xs text-destructive">{error}</p>}
         {view === "prefs" ? (
           <div className="max-h-[420px] overflow-y-auto">
             <div className="border-b border-border px-4 py-3">
@@ -181,7 +211,7 @@ export function NotificationsMenu() {
                 Types
               </p>
               <ul className="mt-2 space-y-2">
-                {(Object.keys(prefs.types) as Notification["type"][]).map((t) => {
+                {(Object.keys(prefs.types) as NotificationTone[]).map((t) => {
                   const Icon = toneIcon[t];
                   return (
                     <li key={t} className="flex items-center justify-between gap-3">
@@ -217,7 +247,7 @@ export function NotificationsMenu() {
         <>
         <ul className="max-h-[420px] divide-y divide-border overflow-y-auto">
           {visibleItems.map((n) => {
-            const Icon = toneIcon[n.type];
+            const Icon = toneIcon[n.tone];
             return (
               <li
                 key={n.id}
@@ -244,7 +274,7 @@ export function NotificationsMenu() {
                 <span
                   className={cn(
                     "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset",
-                    toneClasses[n.type],
+                    toneClasses[n.tone],
                   )}
                 >
                   <Icon className="h-4 w-4" />

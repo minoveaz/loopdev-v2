@@ -118,6 +118,14 @@ flow starts; those flows are outside this pilot.
 - No ambiguous match may block contact creation or merge automatically.
 - Agent or manager approval is required for a merge.
 - Merge preserves lead, opportunity, task, note, attribution and audit references.
+
+## Frontend closure handoff (local)
+
+The v2 Contacts list uses a semantic keyboard-operable mobile card representation in addition
+to the desktop table. Customer 360 explicitly renders an `Archived` badge and read-only notice
+when `archivedAt` is present. Creation, editing, archive conflict handling and drawer focus
+restoration remain behind `localLoopdevAdapter`; the future backend adapter must preserve those
+typed envelopes and must not expose archived contacts in the default list.
 - Merge and dismissal record actor, reason, timestamp, source and survivor/duplicate IDs.
 - Cross-organization candidates are never returned.
 
@@ -148,11 +156,13 @@ type ContactErrorCode =
 Errors never include PII belonging to another tenant. Validation errors identify fields without
 returning secrets or full sensitive payloads.
 
-## 8. Frontend contract
+## 8. Frontend contract for LoopDev v2
 
-- Contact list renders in `SuiteCanvas mode="data"`.
-- Contact detail and Customer 360 render in `SuiteCanvas mode="split"`.
-- App routes remain thin; widgets compose features and entities.
+- Contact list renders a real table in `/app/sales-crm/contacts`.
+- Each authorized contact exposes navigation to
+  `/app/sales-crm/contacts/:contactId` and its Customer 360 view.
+- Pages compose domain hooks, adapters and shared primitives; they do not access persistence
+  directly.
 - Contact entities own view models and public APIs; features own create/update/merge actions.
 - Server state is tenant-aware and invalidated on organization/workspace change.
 - UI implements `loading`, `empty`, `error`, `forbidden` and `success` states.

@@ -6,9 +6,10 @@ import { EmptyState } from "./EmptyState";
 
 interface DataCardProps {
   title?: string;
-  description?: string;
+  description?: ReactNode;
   eyebrow?: string;
   action?: ReactNode;
+  headerContent?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -36,6 +37,7 @@ export function DataCard({
   description,
   eyebrow,
   action,
+  headerContent,
   footer,
   children,
   className,
@@ -72,6 +74,7 @@ export function DataCard({
               <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
             )}
           </div>
+          {headerContent && <div className="w-full min-w-0">{headerContent}</div>}
           {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
         </header>
       )}

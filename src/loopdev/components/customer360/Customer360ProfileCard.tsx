@@ -21,8 +21,14 @@ export function Customer360ProfileCard({ contact }: { contact: CRMContact }) {
         <div className="mt-2 flex flex-wrap justify-center gap-2">
           <StatusBadge tone="success" dot>{lifecycle}</StatusBadge>
           <StatusBadge tone={contact.identityStatus === "verified" ? "primary" : "warning"}>{contact.identityStatus.replace("_", " ")}</StatusBadge>
+          {contact.archivedAt && <StatusBadge tone="destructive">Archived</StatusBadge>}
         </div>
       </div>
+      {contact.archivedAt && (
+        <div role="status" className="mt-4 rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">
+          This contact is archived and is read-only in the local workspace. Archived on {formatDate(contact.archivedAt)}.
+        </div>
+      )}
       <ul className="mt-5 space-y-3 border-t border-border pt-4 text-sm">
         <ContactLine icon={Mail} value={contact.email} />
         <ContactLine icon={Phone} value={contact.phone} />

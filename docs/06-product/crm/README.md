@@ -6,9 +6,11 @@ aplicacion LoopDev v2 de este repositorio.
 
 ## Alineacion con LoopDev v2
 
-Lee primero [CRM v2 frontend alignment](CRM_V2_FRONTEND_ALIGNMENT.md). Ese documento define
-las rutas, superficies implementadas, limites del adapter local y la clasificacion de la
-documentacion legacy.
+Lee primero el track activo
+(`tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md`) y la
+[matriz única de cierre](CRM_FRONTEND_CLOSURE_MATRIX.md). Ahí se definen las rutas,
+superficies implementadas, límites del adapter local y la clasificación de la documentación
+legacy.
 
 La fuente actual de la UI CRM es:
 
@@ -36,7 +38,8 @@ componentes CRM está en [CRM UI component protocol](CRM_UI_COMPONENT_PROTOCOL.m
 - [UX y componentes](contacts/CRM_CONTACTS_COMPONENT_AUDIT.md)
 - [Contrato](contacts/CRM_CONTACT_CONTRACT.md)
 - [Impact assessment](contacts/CRM_CONTACT_IMPACT_ASSESSMENT.md)
-- [Handoff de implementacion](contacts/CRM_CONTACT_IMPLEMENTATION_HANDOFF.md)
+- El handoff original está archivado en
+  [`archive/crm/contacts/CRM_CONTACT_IMPLEMENTATION_HANDOFF.md`](../archive/crm/contacts/CRM_CONTACT_IMPLEMENTATION_HANDOFF.md).
 
 ### Leads
 
@@ -48,7 +51,20 @@ componentes CRM está en [CRM UI component protocol](CRM_UI_COMPONENT_PROTOCOL.m
 - [Auditoria de componentes](pipeline/CRM_PIPELINE_COMPONENT_AUDIT.md)
 - [Contrato](pipeline/CRM_PIPELINE_CONTRACT.md)
 - [Impact assessment](pipeline/CRM_PIPELINE_IMPACT_ASSESSMENT.md)
-- [Handoff de implementacion](pipeline/CRM_PIPELINE_IMPLEMENTATION_HANDOFF.md)
+- El handoff original está archivado en
+  [`archive/crm/pipeline/CRM_PIPELINE_IMPLEMENTATION_HANDOFF.md`](../archive/crm/pipeline/CRM_PIPELINE_IMPLEMENTATION_HANDOFF.md).
+
+#### Estado de implementación v2
+
+La primera slice local de Pipeline está disponible en
+`/app/sales-crm/pipeline`. Incluye contratos tipados en el boundary CRM, fixtures
+locales multi-tenant, listado filtrable y movimiento de etapa con
+`expectedUpdatedAt` (conflicto optimista). La vista usa columnas kanban
+responsive y no requiere Docker, Supabase ni servicios externos. La tabla de
+Opportunities y las operaciones de backend permanecen fuera de esta slice.
+La composición visual sigue el patrón Kanban de Rivera (`/apps/kanban`):
+toolbar de búsqueda/filtros, columnas desplazables, cards compactas y menú
+accesible de movimiento; las mutaciones continúan pasando por el adapter CRM.
 
 ### Tasks, Notes y Timeline
 
@@ -56,7 +72,8 @@ componentes CRM está en [CRM UI component protocol](CRM_UI_COMPONENT_PROTOCOL.m
 - [Auditoria de componentes](tasks/CRM_TASKS_COMPONENT_AUDIT.md)
 - [Contrato](tasks/CRM_TASKS_CONTRACT.md)
 - [Impact assessment](tasks/CRM_TASKS_IMPACT_ASSESSMENT.md)
-- [Handoff de implementacion](tasks/CRM_TASKS_IMPLEMENTATION_HANDOFF.md)
+- El handoff original está archivado en
+  [`archive/crm/tasks/CRM_TASKS_IMPLEMENTATION_HANDOFF.md`](../archive/crm/tasks/CRM_TASKS_IMPLEMENTATION_HANDOFF.md).
 
 ### Customer 360
 
@@ -64,7 +81,8 @@ componentes CRM está en [CRM UI component protocol](CRM_UI_COMPONENT_PROTOCOL.m
 - [Auditoria de componentes](customer-360/CRM_CUSTOMER_360_COMPONENT_AUDIT.md)
 - [Contrato](customer-360/CRM_CUSTOMER_360_CONTRACT.md)
 - [Impact assessment](customer-360/CRM_CUSTOMER_360_IMPACT_ASSESSMENT.md)
-- [Handoff de implementacion](customer-360/CRM_CUSTOMER_360_IMPLEMENTATION_HANDOFF.md)
+- El handoff original está archivado en
+  [`archive/crm/customer-360/CRM_CUSTOMER_360_IMPLEMENTATION_HANDOFF.md`](../archive/crm/customer-360/CRM_CUSTOMER_360_IMPLEMENTATION_HANDOFF.md).
 
 ### Shared del piloto
 
@@ -84,7 +102,8 @@ verdad ya construida y no deben convertirse en una segunda implementacion dentro
 
 Para trabajo visual v2:
 
-1. Consultar `CRM_V2_FRONTEND_ALIGNMENT.md`.
+1. Consultar `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md` y
+   `CRM_FRONTEND_CLOSURE_MATRIX.md`.
 2. Usar rutas `/app/sales-crm/*`.
 3. Mantener la UI desacoplada del almacenamiento mediante `src/loopdev/domains/crm`.
 4. Usar el adapter local mientras se desarrolla la experiencia visual.

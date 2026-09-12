@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, Plus, RefreshCw, SearchX } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { contactName } from "@/loopdev/domains/crm/adapter";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Archive, AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { loopdevAdapter, contactName, type CRMContact, type CRMCreateContactInput, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import {
   DataCard,
   FilterDropdown,
@@ -9,10 +9,11 @@ import {
   PageHeader,
   SearchInput,
   StatusBadge,
-  TablePagination,
+  ConfirmDialog,
 } from "@/components/common";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -24,94 +25,220 @@ import {
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { formatDate, getInitials } from "@/lib/formatters";
 import { useCrmContacts } from "@/loopdev/domains/crm/hooks/use-crm";
+import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactFormDrawer";
+import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
+import { ContactMobileCard } from "@/loopdev/components/crm/contacts/ContactMobileCard";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const identityOptions = [
-  { label: "Verified", value: "verified" },
-  { label: "Pending review", value: "pending_identity_review" },
-];
-
-const channelOptions = [
-  { label: "Email", value: "email" },
-  { label: "Phone", value: "phone" },
-  { label: "WhatsApp", value: "whatsapp" },
-];
-
-type SortKey = "name" | "company" | "channel" | "identity" | "location" | "updated";
+const CONTACT_PAGE_SIZE = 10;
+type ContactSortKey = "name" | "company" | "channel" | "identity" | "location" | "updated";
 
 export default function SalesCRMContacts() {
   const { trail } = useBreadcrumbs();
   const navigate = useNavigate();
-  const { contacts, loading, error, reload } = useCrmContacts();
-  const [search, setSearch] = useState("");
-  const [identityStatuses, setIdentityStatuses] = useState<string[]>([]);
-  const [channels, setChannels] = useState<string[]>([]);
-  const [sortKey, setSortKey] = useState<SortKey>("updated");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<CRMContact | null>(null);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const query = searchParams.get("q") ?? "";
+  const cursor = searchParams.get("cursor");
+  const requestedPageSize = Number(searchParams.get("limit") ?? CONTACT_PAGE_SIZE);
+  const pageSize = [10, 20, 50].includes(requestedPageSize) ? requestedPageSize : CONTACT_PAGE_SIZE;
+  const identityStatuses = useMemo(() => searchParams.getAll("identity"), [searchParams]);
+  const channels = useMemo(() => searchParams.getAll("channel"), [searchParams]);
+  const sortBy = (searchParams.get("sort") ?? "updated") as ContactSortKey;
+  const sortDirection = (searchParams.get("direction") ?? "desc") as "asc" | "desc";
+  const [search, setSearch] = useState(query);
+  const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+  const { contacts, nextCursor, hasMore, loading, error, reload } = useCrmContacts({
+    query,
+    cursor,
+    limit: pageSize,
+    identityStatus: identityStatuses as ("verified" | "pending_identity_review")[],
+    preferredChannel: channels as ("email" | "phone" | "whatsapp")[],
+    sortBy,
+    sortDirection,
+  });
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  const openCreate = () => {
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setEditingContact(null);
+    setEditorOpen(true);
+  };
 
-    return contacts.filter((customer) => {
-      const matchesSearch =
-        !query ||
-        [
-          contactName(customer),
-          customer.email,
-          customer.phone,
-          customer.companyName,
-          customer.jobTitle,
-          customer.city,
-          customer.country,
-        ]
-          .filter((value): value is string => Boolean(value))
-          .some((value) => value.toLowerCase().includes(query));
-      const matchesIdentity = !identityStatuses.length || identityStatuses.includes(customer.identityStatus);
-      const matchesChannel = !channels.length || (customer.preferredChannel && channels.includes(customer.preferredChannel));
-      return matchesSearch && matchesIdentity && matchesChannel;
-    });
-  }, [contacts, search, identityStatuses, channels]);
+  const openEdit = (contact: CRMContact) => {
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setEditingContact(contact);
+    setEditorOpen(true);
+  };
 
-  const sorted = useMemo(() => {
-    const valueFor = (contact: (typeof contacts)[number]) => {
-      const values = {
-        name: contactName(contact),
-        company: `${contact.companyName ?? ""} ${contact.jobTitle ?? ""}`,
-        channel: contact.preferredChannel ?? "",
-        identity: contact.identityStatus,
-        location: `${contact.city ?? ""} ${contact.stateProvince ?? ""} ${contact.country ?? ""}`,
-        updated: contact.updatedAt,
+  const submitContact = async (values: ContactFormValues) => {
+    const optional = (value: string) => value.trim() || null;
+    if (editingContact) {
+      const patch: CRMUpdateContactPatch = {
+        organizationId: "local-development-organization",
+        firstName: values.firstName.trim(),
+        lastName: optional(values.lastName),
+        secondLastName: optional(values.secondLastName),
+        preferredName: optional(values.preferredName),
+        documentType: optional(values.documentType),
+        documentNumber: optional(values.documentNumber),
+        birthDate: optional(values.birthDate),
+        gender: optional(values.gender),
+        email: values.email.trim() || null,
+        secondaryEmail: optional(values.secondaryEmail),
+        phone: values.phone.trim() || null,
+        secondaryPhone: optional(values.secondaryPhone),
+        preferredChannel: values.preferredChannel,
+        preferredLanguage: optional(values.preferredLanguage),
+        companyName: optional(values.companyName),
+        jobTitle: optional(values.jobTitle),
+        department: optional(values.department),
+        addressLine1: optional(values.addressLine1),
+        addressLine2: optional(values.addressLine2),
+        city: optional(values.city),
+        stateProvince: optional(values.stateProvince),
+        postalCode: optional(values.postalCode),
+        country: optional(values.country),
       };
-      return values[sortKey].toLowerCase();
+      return loopdevAdapter.crm.updateContact(editingContact.id, patch, editingContact.updatedAt);
+    }
+
+    const input: CRMCreateContactInput = {
+      organizationId: "local-development-organization",
+      firstName: values.firstName.trim(),
+      lastName: optional(values.lastName),
+      secondLastName: optional(values.secondLastName),
+      preferredName: optional(values.preferredName),
+      documentType: optional(values.documentType),
+      documentNumber: optional(values.documentNumber),
+      birthDate: optional(values.birthDate),
+      gender: optional(values.gender),
+      email: values.email.trim() || null,
+      secondaryEmail: optional(values.secondaryEmail),
+      phone: values.phone.trim() || null,
+      secondaryPhone: optional(values.secondaryPhone),
+      preferredChannel: values.preferredChannel,
+      preferredLanguage: optional(values.preferredLanguage),
+      companyName: optional(values.companyName),
+      jobTitle: optional(values.jobTitle),
+      department: optional(values.department),
+      addressLine1: optional(values.addressLine1),
+      addressLine2: optional(values.addressLine2),
+      city: optional(values.city),
+      stateProvince: optional(values.stateProvince),
+      postalCode: optional(values.postalCode),
+      country: optional(values.country),
     };
+    return loopdevAdapter.crm.createContact(input);
+  };
 
-    return [...filtered].sort((a, b) => {
-      const result = valueFor(a).localeCompare(valueFor(b), undefined, { numeric: true });
-      return sortDirection === "asc" ? result : -result;
-    });
-  }, [filtered, sortDirection, sortKey, contacts]);
+  const handleEditorSuccess = () => {
+    setEditorOpen(false);
+    setEditingContact(null);
+    reload();
+  };
 
-  const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
-  const visibleContacts = sorted.slice((page - 1) * pageSize, page * pageSize);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, identityStatuses, channels, sortKey, sortDirection, pageSize]);
-
-  const toggleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDirection((direction) => direction === "asc" ? "desc" : "asc");
-    } else {
-      setSortKey(key);
-      setSortDirection("asc");
+  const archiveContact = async (contact: CRMContact) => {
+    setActionError(null);
+    setArchiveLoading(true);
+    try {
+      const result = await loopdevAdapter.crm.archiveContact(contact.id, contact.updatedAt);
+      if (result.status === "success") {
+        reload();
+        setArchiveTarget(null);
+        return;
+      }
+      setActionError(`${result.status === "forbidden" ? "Permission denied: " : result.status === "conflict" ? "Conflict: " : "Server error: "}${result.message}`);
+    } finally {
+      setArchiveLoading(false);
     }
   };
 
-  const sortIcon = (key: SortKey) => {
-    if (sortKey !== key) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
-    return sortDirection === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />;
+  useEffect(() => {
+    if (search.trim() === query) return;
+    const timeout = window.setTimeout(() => {
+      setSearchParams((current) => {
+        const next = new URLSearchParams(current);
+        if (search.trim()) next.set("q", search.trim());
+        else next.delete("q");
+        next.delete("cursor");
+        return next;
+      });
+      setCursorHistory([]);
+    }, 300);
+    return () => window.clearTimeout(timeout);
+  }, [query, search, setSearchParams]);
+
+  useEffect(() => {
+    setSearch(query);
+  }, [query]);
+
+  const goToNextPage = () => {
+    if (!nextCursor) return;
+    setCursorHistory((history) => [...history, cursor ?? ""]);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("cursor", nextCursor);
+      return next;
+    });
   };
+
+  const goToPreviousPage = () => {
+    const previous = cursorHistory.at(-1);
+    if (previous === undefined) return;
+    setCursorHistory((history) => history.slice(0, -1));
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (previous) next.set("cursor", previous);
+      else next.delete("cursor");
+      return next;
+    });
+  };
+
+  const changePageSize = (value: string) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("limit", value);
+      next.delete("cursor");
+      return next;
+    });
+    setCursorHistory([]);
+  };
+
+  const updateListParam = (name: string, values: string[]) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete(name);
+      values.forEach((value) => next.append(name, value));
+      next.delete("cursor");
+      return next;
+    });
+    setCursorHistory([]);
+  };
+
+  const toggleSort = (key: ContactSortKey) => {
+    const nextDirection = sortBy === key && sortDirection === "asc" ? "desc" : "asc";
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("sort", key);
+      next.set("direction", nextDirection);
+      next.delete("cursor");
+      return next;
+    });
+    setCursorHistory([]);
+  };
+
+  const pageOffset = Number.isFinite(Number(cursor)) ? Number(cursor) : 0;
 
   return (
     <PageContainer width="wide">
@@ -120,7 +247,7 @@ export default function SalesCRMContacts() {
         description="Manage people and customer relationships across CRM."
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Contacts" }]}
         actions={
-          <Button className="gap-1.5">
+          <Button className="gap-1.5" onClick={openCreate}>
             <Plus className="h-3.5 w-3.5" />
             New contact
           </Button>
@@ -139,8 +266,11 @@ export default function SalesCRMContacts() {
           label="Identity"
           multiple
           value={identityStatuses}
-          onChange={setIdentityStatuses}
-          options={identityOptions}
+          onChange={(values) => updateListParam("identity", values)}
+          options={[
+            { label: "Verified", value: "verified" },
+            { label: "Pending review", value: "pending_identity_review" },
+          ]}
           size="sm"
           align="end"
         />
@@ -148,12 +278,21 @@ export default function SalesCRMContacts() {
           label="Channel"
           multiple
           value={channels}
-          onChange={setChannels}
-          options={channelOptions}
+          onChange={(values) => updateListParam("channel", values)}
+          options={[
+            { label: "Email", value: "email" },
+            { label: "Phone", value: "phone" },
+            { label: "WhatsApp", value: "whatsapp" },
+          ]}
           size="sm"
           align="end"
         />
       </div>
+      {actionError && (
+        <div role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">
+          {actionError}
+        </div>
+      )}
 
       <DataCard
         flush
@@ -166,25 +305,39 @@ export default function SalesCRMContacts() {
             </Button>
           </>
         ) : undefined}
-        empty={!loading && !error && sorted.length === 0}
-        emptyIcon={search || identityStatuses.length || channels.length ? SearchX : AlertTriangle}
-        emptyTitle={search || identityStatuses.length || channels.length ? "No contacts found" : "No contacts yet"}
-        emptyDescription={search || identityStatuses.length || channels.length ? "Try changing the search or filters." : "Contacts will appear here when they are added to your workspace."}
+        empty={!loading && !error && contacts.length === 0}
+        emptyIcon={search ? SearchX : AlertTriangle}
+        emptyTitle={search ? "No contacts found" : "No contacts yet"}
+        emptyDescription={search ? "Try changing the search." : "Contacts will appear here when they are added to your workspace."}
       >
+        <div className="space-y-3 p-4 md:hidden">
+          {contacts.map((customer, index) => (
+            <ContactMobileCard
+              key={customer.id}
+              contact={customer}
+              index={pageOffset + index + 1}
+              onOpen={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
+              onEdit={() => openEdit(customer)}
+              onArchive={() => setArchiveTarget(customer)}
+            />
+          ))}
+        </div>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
-              <SortableHead label="Contact" icon={sortIcon("name")} onClick={() => toggleSort("name")} />
-              <SortableHead label="Company / role" icon={sortIcon("company")} onClick={() => toggleSort("company")} />
-              <SortableHead label="Channel" icon={sortIcon("channel")} onClick={() => toggleSort("channel")} />
-              <SortableHead label="Identity" icon={sortIcon("identity")} onClick={() => toggleSort("identity")} />
-              <SortableHead label="Location" icon={sortIcon("location")} onClick={() => toggleSort("location")} />
-              <SortableHead label="Updated" icon={sortIcon("updated")} onClick={() => toggleSort("updated")} />
+              <TableHead className="w-12 text-end">#</TableHead>
+              <SortableHead label="Contact" icon={sortIcon(sortBy, "name", sortDirection)} onClick={() => toggleSort("name")} />
+              <SortableHead label="Company / role" icon={sortIcon(sortBy, "company", sortDirection)} onClick={() => toggleSort("company")} />
+              <SortableHead label="Channel" icon={sortIcon(sortBy, "channel", sortDirection)} onClick={() => toggleSort("channel")} />
+              <SortableHead label="Identity" icon={sortIcon(sortBy, "identity", sortDirection)} onClick={() => toggleSort("identity")} />
+              <SortableHead label="Location" icon={sortIcon(sortBy, "location", sortDirection)} onClick={() => toggleSort("location")} />
+              <SortableHead label="Updated" icon={sortIcon(sortBy, "updated", sortDirection)} onClick={() => toggleSort("updated")} />
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {visibleContacts.map((customer) => (
+            {contacts.map((customer, index) => (
               <TableRow
                 key={customer.id}
                 className="cursor-pointer"
@@ -197,6 +350,7 @@ export default function SalesCRMContacts() {
                   }
                 }}
               >
+                <TableCell className="text-end text-xs tabular-nums text-muted-foreground">{pageOffset + index + 1}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8 border border-border">
@@ -229,31 +383,114 @@ export default function SalesCRMContacts() {
                   {formatDate(customer.updatedAt)}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <MoreHorizontal className="h-3.5 w-3.5" />
-                    <span className="sr-only">Contact actions</span>
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        aria-label={`Actions for ${contactName(customer)}`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}>
+                        <Eye className="mr-2 h-3.5 w-3.5" />
+                        View Customer 360
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openEdit(customer)}>
+                        <Pencil className="mr-2 h-3.5 w-3.5" />
+                        Edit contact
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled>
+                        <StickyNote className="mr-2 h-3.5 w-3.5" />
+                        Add note
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled>
+                        <CheckSquare className="mr-2 h-3.5 w-3.5" />
+                        Create task
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setArchiveTarget(customer)}>
+                        <Archive className="mr-2 h-3.5 w-3.5" />
+                        Archive contact
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-        <TablePagination
-          page={page}
-          pageCount={pageCount}
-          pageSize={pageSize}
-          total={sorted.length}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-        />
+        </div>
+        <nav aria-label="Contacts pagination" className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-card-muted/50 px-4 py-2.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <span>Page {cursorHistory.length + 1}</span>
+            <label className="flex items-center gap-1.5" htmlFor="contacts-page-size">
+              Rows
+              <select
+                id="contacts-page-size"
+                aria-label="Contacts per page"
+                value={String(pageSize)}
+                onChange={(event) => changePageSize(event.target.value)}
+                className="h-7 w-16 rounded-md border border-border bg-card px-2 text-xs"
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" className="h-7 gap-1" disabled={!cursorHistory.length || loading} onClick={goToPreviousPage}>
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Previous
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 gap-1" disabled={!hasMore || loading} onClick={goToNextPage}>
+              Next
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </nav>
       </DataCard>
+      <ContactFormDrawer
+        open={editorOpen}
+        contact={editingContact}
+        onOpenChange={(open) => {
+          setEditorOpen(open);
+          if (!open) setEditingContact(null);
+        }}
+        onSubmit={submitContact}
+        onSuccess={handleEditorSuccess}
+        restoreFocusRef={restoreFocusRef}
+      />
+      <ConfirmDialog
+        open={Boolean(archiveTarget)}
+        onOpenChange={(open) => { if (!open && !archiveLoading) setArchiveTarget(null); }}
+        title="Archive contact?"
+        description={archiveTarget ? `${contactName(archiveTarget)} will be removed from the active contacts list.` : undefined}
+        confirmLabel="Archive"
+        tone="destructive"
+        loading={archiveLoading}
+        onConfirm={async () => {
+          if (archiveTarget) await archiveContact(archiveTarget);
+        }}
+      />
     </PageContainer>
   );
+}
+
+function sortIcon(
+  activeKey: ContactSortKey,
+  key: ContactSortKey,
+  direction: "asc" | "desc",
+) {
+  if (activeKey !== key) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
+  return direction === "asc"
+    ? <ArrowUp className="h-3.5 w-3.5" />
+    : <ArrowDown className="h-3.5 w-3.5" />;
 }
 
 function SortableHead({

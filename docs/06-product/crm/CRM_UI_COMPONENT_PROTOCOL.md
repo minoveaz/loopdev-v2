@@ -21,6 +21,7 @@ LoopDev v2 frontend uses these concrete locations instead:
 | CRM-specific composition | `src/loopdev/components/*` |
 | CRM hooks, types and adapters | `src/loopdev/domains/crm/*` |
 | Shared page, table and state primitives | `src/components/common/*`, `src/components/ui/*` |
+| Shared contextual drawer shell | `src/components/platform/AppDrawer.tsx` |
 | Current data source during visual work | `src/loopdev/domains/crm/adapter/local.ts` |
 
 `SuiteCanvas`, `SuiteRuntime`, FSD folder names and named visual recipes in
@@ -165,6 +166,13 @@ Each CRM view must choose a registered recipe before components are created:
 
 Widgets must map to registered slots. They must not rely on arbitrary pixel
 coordinates or invent a layout mode.
+
+Contextual details and longer forms use the platform-owned `AppDrawer`
+(`ResponsiveDrawer` is its compatibility alias). CRM screens must not create
+entity-specific drawer shells. The shell owns the responsive right-side
+desktop layout, full-width mobile layout, fixed header, scrollable content,
+optional footer, focus restoration and optional dirty-close confirmation.
+Short transactions continue to use `Dialog` or `AlertDialog`.
 
 ## Required states and evidence
 

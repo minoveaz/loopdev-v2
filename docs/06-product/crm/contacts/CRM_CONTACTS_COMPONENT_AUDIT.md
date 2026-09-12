@@ -15,48 +15,42 @@ approved_at: 2026-08-13
 
 ## 1. Proposito
 
-Esta matriz define los componentes que necesita la vista de Contactos sobre `SuiteCanvas mode=data`
-y el detalle Customer 360 sobre `SuiteCanvas mode=split`. No es una autorizacion para implementar
-logica de negocio en el shell ni una lista de componentes del Design System que deban promoverse
+Esta matriz define los componentes que necesita la vista de Contactos y el detalle Customer 360 en
+LoopDev v2. No es una autorizacion para implementar
+logica de negocio en la navegación global ni una lista de componentes del Design System que deban promoverse
 automaticamente a `@loopdev/ui`.
 
 ## 2. Composicion de la vista
 
 ```text
-SuiteRuntime
-  -> SuiteCanvas mode=data
-    -> ContactWorkspaceHeader
-    -> ContactToolbar
-      -> ContactSearch
-      -> ContactFilters
-      -> ContactFieldViewSelector
-      -> CreateContactButton
-    -> ContactTable
-      -> ContactRow
-    -> Pagination
-    -> EmptyState / LoadingState / ErrorState / ForbiddenState
+ContactsPage
+  -> ContactHeader
+  -> ContactToolbar
+    -> ContactSearch
+    -> ContactFilters
+    -> CreateContactButton
+  -> ContactTable
+    -> ContactRow
+  -> Pagination
+  -> EmptyState / LoadingState / ErrorState / ForbiddenState
 
-SuiteCanvas mode=split
-  -> ContactDetailPanel
-    -> ContactIdentityHeader
-    -> ContactSummary
-    -> Customer360Tabs
-    -> ContactTimeline
-    -> RelatedLeads
-    -> RelatedOpportunities
-    -> RelatedTasks
-    -> NotesPanel
-    -> DuplicateReviewPanel
+Customer360Page
+  -> ContactProfile
+  -> Customer360Tabs
+  -> ContactTimeline
+  -> RelatedLeads
+  -> RelatedOpportunities
+  -> RelatedTasks
+  -> NotesPanel
+  -> DuplicateReviewPanel
 ```
 
 ## 3. Inventario de componentes
 
 | Componente | Capa | Estado | Decision |
 | --- | --- | --- | --- |
-| `SuiteRuntime` | Shell | Disponible/candidato aprobado | Reutilizar como runtime de suite; no conoce CRM |
-| `SuiteCanvas` | Shell | Disponible/candidato aprobado | Reutilizar `data` y `split`; no conoce CRM |
-| `ModuleHeader` / `PageHeader` | UI | Disponible | Reutilizar para contexto y titulo |
-| `ModuleToolbar` / `ContextBar` | UI | Disponible | Reutilizar y componer para toolbar CRM |
+| `PageHeader` | UI | Disponible | Reutilizar para contexto y titulo |
+| `ContactToolbar` | CRM | Disponible como composición local | Componer primitives existentes para el toolbar CRM |
 | `Button` / `IconButton` | UI | Disponible | Reutilizar |
 | `Input` | UI | Disponible | Reutilizar para busqueda y formularios |
 | `Select` / `FilterDropdown` | UI | Disponible | Reutilizar para filtros y opciones |
@@ -81,8 +75,8 @@ SuiteCanvas mode=split
 
 ## 4. Reglas de ownership
 
-- `SuiteRuntime` y `SuiteCanvas` no reciben contactos, leads, queries ni callbacks de negocio.
-- `ContactTable` y `ContactDetailPanel` son widgets CRM, no componentes del shell.
+- `ContactTable` y el detalle Customer 360 son componentes de dominio CRM, no componentes de
+  navegación global.
 - `ContactForm`, `DuplicateReviewPanel` y `ContactFieldViewSelector` son features CRM.
 - `Contact`, `Lead`, `Opportunity`, `Task` y `TimelineEvent` son entities CRM.
 - `@loopdev/ui` solo recibe un componente si existe un segundo consumidor real y no contiene reglas CRM.
@@ -98,7 +92,7 @@ dimensiones estables en desktop/tablet y usa responsive basico en mobile web. El
 
 - [x] Cada componente de UI existente tiene consumidor y contrato revisado.
 - [x] Los componentes CRM nuevos tienen owner de capa y API publica.
-- [x] Contactos puede componerse sin importar internals del shell.
+- [x] Contactos puede componerse sin importar internals de navegación global.
 - [x] No quedan fixtures como fuente autoritativa.
 - [x] La primera implementacion puede empezar con `ContactTable`, `ContactForm` y `ContactDetailPanel`.
 - [x] Product Owner y Tech Lead aprueban la matriz antes de abrir el slice CRM-01.

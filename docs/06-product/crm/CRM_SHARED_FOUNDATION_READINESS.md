@@ -11,7 +11,8 @@ scope: backend-foundation-reference
 > Este documento describe la fundacion backend, contratos, migraciones y RLS del producto
 > legacy. Se conserva como referencia para la futura conexion de Supabase, pero no define las
 > ubicaciones ni la implementacion visual del frontend v2. Para trabajo de UI usar
-> `CRM_V2_FRONTEND_ALIGNMENT.md`.
+> `tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md` y
+> `CRM_FRONTEND_CLOSURE_MATRIX.md`.
 
 ## Reconciliation
 

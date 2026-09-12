@@ -3,7 +3,7 @@ title: CRM Lead Contract
 status: approved
 version: 1.2
 created: 2026-08-13
-updated: 2026-09-04
+updated: 2026-09-10
 owner: crm
 program_track: tracks/active/crm/2026-08-13-crm-pilot-execution.md
 issue: https://github.com/minoveaz/loopdev/issues/84
@@ -118,6 +118,34 @@ type LeadErrorCode =
 - FSD layers are app -> widgets -> features -> entities -> shared.
 - Query keys include organization, workspace, filters and source dimensions.
 - State includes loading, empty, error, forbidden and success.
+
+## Frontend adapter alignment (2026-09-10)
+
+The local CRM adapter now implements the approved lifecycle separation. Lead status uses the
+stable technical codes `new`, `contacted`, `qualified`, `stalled`, `inactive`, and `converted`;
+these codes are never used as Pipeline stage codes. Opportunities use the independent Pipeline
+stages `prospecting`, `qualified`, `proposal`, `negotiation`, `won`, and `lost`. Pipeline renders
+Opportunities only. A qualified Lead conversion preserves the Contact and organization, starts
+the Opportunity at `qualified`, and is idempotent for each normalized Lead/product key. The
+first successful conversion changes the Lead to `converted`; additional product keys remain
+allowed. Moving an Opportunity, including to `lost`, does not mutate Lead status.
+
+Conversion modal UX follows the approved CRM/UI Kit pattern: a controlled Radix `Dialog` with
+`DialogHeader`, labelled `Input` fields, a responsive `max-h-[90vh]`/`sm:max-w-xl` content
+surface, form submit semantics, pending state, and inline validation/conflict/permission/server
+feedback. Focus is explicitly restored to the action that opened the modal. Dirty conversion
+details use the shared `ConfirmDialog` warning before dismissal. The existing CRM Contact
+`Sheet`/`ContactFormDrawer` uses the same dirty-state `ConfirmDialog` and focus-restoration
+behavior, and Contact archive confirmation now uses that system primitive as well; no browser
+native prompt/confirm is used for these CRM actions.
+
+### Fase 3 local
+
+The local adapter now also exposes `createLead`. Capture requires an existing Contact and an
+interest, accepts manually supplied source/attribution and local assignment, and starts at
+`new`. The Leads page provides a standard Dialog plus a contextual drawer workspace with
+contact, source, owner, related opportunities and conversion actions. This remains local-only;
+membership validation and persistence belong to the future Supabase adapter.
 
 ## Definition of contract readiness
 

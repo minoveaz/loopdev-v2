@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users } from "lucide-react";
+import { Boxes, LayoutDashboard, Settings, Users } from "lucide-react";
 import type { NavSection } from "@/app/nav-types";
 
 export const loopdevNavigation: NavSection[] = [
@@ -27,6 +27,24 @@ export const loopdevNavigation: NavSection[] = [
           { label: "Tasks", to: "/app/sales-crm/tasks" },
           { label: "Communications", to: "/app/sales-crm/communications" },
         ],
+      },
+      {
+        label: "ERP",
+        icon: Boxes,
+        children: [
+          { label: "Overview", to: "/app/erp/overview" },
+          { label: "Product Catalog", to: "/app/erp/product-catalog" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Workspace",
+    items: [
+      {
+        label: "Settings",
+        to: "/app/settings",
+        icon: Settings,
       },
     ],
   },

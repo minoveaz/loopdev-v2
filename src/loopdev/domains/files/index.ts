@@ -7,4 +7,5 @@ export * from "./data/localFileEvents";
 export * from "./data/checksum";
 export * from "./workers/localUploadWorker";
 export * from "./migration/attachments";
+export * from "./futureConsumers";
 export * from "./hooks/use-files";

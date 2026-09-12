@@ -526,6 +526,8 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
   Document Intelligence.
 - [x] Preparar contratos reutilizables para tags, checksum, filtros y acciones de retry/delete
   sin acoplar la biblioteca a un consumidor concreto.
+- [x] Preparar contextos provider-neutral para Marketing Studio, Content Studio y Document
+  Intelligence, con relaciones polimórficas y lifecycle temporal para documentos de sesión.
 - [ ] Sustituir el almacenamiento local por un adapter server-side cuando exista infraestructura:
   Storage, signed URLs, RLS/permisos, cuotas, antivirus, thumbnails, retención legal y
   export/delete.

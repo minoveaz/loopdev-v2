@@ -44,6 +44,7 @@ export interface FileRecord {
   permissions: PlatformPermissions;
   archivedAt?: string | null;
   deletedAt?: string | null;
+  tags?: string[];
 }
 
 export interface UploadSession {
@@ -72,6 +73,8 @@ export interface CreateFileMetadataInput {
   };
   uploadedById?: string | null;
   file?: File;
+  checksum?: string | null;
+  tags?: string[];
 }
 
 export interface FileListParams {
@@ -96,6 +99,7 @@ export interface ReplaceFileVersionInput {
   byteSize?: number;
   checksum?: string | null;
   file?: File;
+  tags?: string[];
 }
 
 export interface FilePreviewSource {

@@ -3,10 +3,15 @@ import {
   fileToNoteAttachment,
   noteAttachmentToFileMetadata,
 } from "@/loopdev/domains/files";
+import { checksumForFile } from "@/loopdev/domains/files";
 
 const scope = { organizationId: "org-1", workspaceId: "workspace-1" };
 
 describe("attachment migration bridges", () => {
+  it("produces a stable SHA-256 checksum for a file", async () => {
+    const checksum = await checksumForFile(new File(["same content"], "brief.txt", { type: "text/plain" }));
+    expect(checksum).toMatch(/^[a-f0-9]{64}$/);
+  });
   it("maps a note attachment to a Files Platform relation", () => {
     const result = noteAttachmentToFileMetadata({
       id: "note-attachment-1",

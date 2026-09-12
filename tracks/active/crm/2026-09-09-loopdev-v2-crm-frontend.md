@@ -481,11 +481,14 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
 - [x] Modelar estados `queued`, `uploading`, `processing`, `ready`, `failed`, `archived`
   y `expired`, además de `source: upload | conversation | manager | generated | temporary`.
 - [ ] Añadir categorías, tags, búsqueda autorizada, filtros, ordenación, colecciones y
-  vistas compacta/lista/grid sin imponer una taxonomía exclusiva de CRM.
+  vistas compacta/lista/grid sin imponer una taxonomía exclusiva de CRM. `FileList` ya
+  soporta query, categoría, ordenación, tags y vistas list/grid; falta conectarlo a una
+  biblioteca de página con autorización y colecciones.
 - [x] Preparar preview local seguro para imágenes y PDF; los demás tipos muestran metadata y
   quedan preparados para descarga cuando exista Storage.
 - [ ] Implementar versionado y reemplazo conservando historial, autoría, checksum y
-  `supersedesFileVersionId`; evitar duplicados por hash dentro del scope autorizado.
+  `supersedesFileVersionId`; el adapter local ya calcula SHA-256 y rechaza duplicados,
+  pero falta exponer el historial y reemplazo en la UI.
 - [x] Definir lifecycle temporal, retención, archivado, borrado lógico, expiración y cleanup
   local para documentos de sesión y assets abandonados.
 - [ ] Mantener permisos por organización/workspace/entidad, acceso sensible, links compartidos
@@ -521,6 +524,8 @@ binario detrás de un adapter y sin acoplar consumidores a Supabase Storage.
 - [ ] Completar checksum, deduplicación por hash y reemplazo/versionado con historial visible.
 - [ ] Conectar Leads y Opportunities, y posteriormente Marketing Studio, Content Studio y
   Document Intelligence.
+- [x] Preparar contratos reutilizables para tags, checksum, filtros y acciones de retry/delete
+  sin acoplar la biblioteca a un consumidor concreto.
 - [ ] Sustituir el almacenamiento local por un adapter server-side cuando exista infraestructura:
   Storage, signed URLs, RLS/permisos, cuotas, antivirus, thumbnails, retención legal y
   export/delete.

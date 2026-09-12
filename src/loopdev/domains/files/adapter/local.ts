@@ -1,5 +1,6 @@
 import { localPlatformAdapter, isScopeVisible, type EntityScope } from "@/loopdev/domains/platform";
 import type { CreateFileMetadataInput, FileListParams, FileRecord, FilePreviewSource, FileRelation, FileVersion, FilesAdapter, ReplaceFileVersionInput, UpdateFileMetadataInput } from "../types";
+import { checksumForFile } from "../data/checksum";
 import { FILES_LOCAL_STORAGE_KEY, localFilesDemoSeed } from "../data/localFiles";
 import { deleteLocalPreview, getLocalPreview, putLocalPreview } from "../data/localPreviewStore";
 import { recordFileEvent } from "../data/localFileEvents";
@@ -80,8 +81,12 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       if (!Number.isFinite(input.byteSize) || input.byteSize < 0) {
         throw new Error("File size must be a non-negative number.");
       }
-      const now = new Date().toISOString();
+      const checksum = input.checksum ?? (input.file ? await checksumForFile(input.file) : null);
       const existing = read();
+      if (checksum && existing.some((record) => record.scope.organizationId === input.scope.organizationId && record.versions.some((version) => version.checksum === checksum) && record.status !== "deleted")) {
+        throw new Error("A file with the same content already exists in this scope.");
+      }
+      const now = new Date().toISOString();
       const id = `local-file-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${existing.length + 1}`}`;
       const version: FileVersion = {
         id: `${id}-v1`,
@@ -90,7 +95,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
         fileName: input.fileName,
         mimeType: input.mimeType || "application/octet-stream",
         byteSize: input.byteSize,
-        checksum: null,
+        checksum,
         storageKey: null,
         createdById: input.uploadedById ?? localPlatformAdapter.getOrganizationContext().userId,
         createdAt: now,
@@ -112,6 +117,7 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
         createdAt: now,
         updatedAt: now,
         permissions: { canRead: true, canEdit: true, canDelete: true, canAssign: false, canModerate: false },
+        tags: input.tags ?? [],
       };
       write([record, ...existing]);
       if (input.file) await putLocalPreview(id, input.file);
@@ -196,7 +202,9 @@ export function createLocalFilesAdapter(storage: FileStorage | null = defaultSto
       assertScope(record.scope, "work.write");
       const now = new Date().toISOString();
       const nextVersion = record.versions.length + 1;
-      const version: FileVersion = { id: `${record.id}-v${nextVersion}`, fileId: record.id, version: nextVersion, fileName: input.fileName ?? record.fileName, mimeType: input.mimeType ?? record.mimeType, byteSize: input.byteSize ?? record.byteSize, checksum: input.checksum ?? null, storageKey: null, createdById: localPlatformAdapter.getOrganizationContext().userId, createdAt: now };
+      const checksum = input.checksum ?? (input.file ? await checksumForFile(input.file) : null);
+      if (checksum && record.versions.some((candidate) => candidate.checksum === checksum)) throw new Error("This file version already exists.");
+      const version: FileVersion = { id: `${record.id}-v${nextVersion}`, fileId: record.id, version: nextVersion, fileName: input.fileName ?? record.fileName, mimeType: input.mimeType ?? record.mimeType, byteSize: input.byteSize ?? record.byteSize, checksum, storageKey: null, createdById: localPlatformAdapter.getOrganizationContext().userId, createdAt: now };
       const replaced = { ...record, fileName: version.fileName, mimeType: version.mimeType, byteSize: version.byteSize, status: "ready" as const, versions: [...record.versions, version], currentVersion: record.currentVersion + 1, updatedAt: now };
       records[index] = replaced;
       write(records);

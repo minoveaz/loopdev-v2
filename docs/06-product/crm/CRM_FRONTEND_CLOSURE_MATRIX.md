@@ -2,7 +2,7 @@
 title: CRM and Communications frontend closure matrix
 status: current
 owner: loopdev-v2
-updated: 2026-09-11
+updated: 2026-09-12
 source_of_truth: tracks/active/crm/2026-09-09-loopdev-v2-crm-frontend.md
 ---
 
@@ -33,6 +33,7 @@ La fuente detallada por fases es `tracks/active/crm/2026-09-09-loopdev-v2-crm-fr
 | Tasks | Completado local | `/app/sales-crm/tasks`, `TaskWorkspace.tsx` | Backend de trabajo compartido |
 | Notes, Activities y Timeline | Completado local | `domains/platform`, paneles y read model local | Auditoría y persistencia remota |
 | Attachments | Completado local | Adapter y referencias Platform | Storage real |
+| Files Platform 8H | Parcial frontend | `domains/files`, primitives globales, Customer 360, Communications, Notes, Tasks, Leads y Opportunities | Biblioteca completa, rollback exhaustivo, Storage/signed URLs, RLS, antivirus, cuotas y workers |
 | Notifications | Completado local | Inbox in-app local | Email, push y canales externos |
 | Operations | Completado local | `pages/crm/Operations.tsx` | Búsqueda global y persistencia remota |
 | Tags y saved views | Completado local | Operaciones y contratos locales | Persistencia multi-tenant |

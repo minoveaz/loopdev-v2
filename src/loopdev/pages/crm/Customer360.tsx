@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
 import { EmptyState, NoteEditorDrawer, PageContainer, PageHeader, type NoteEditorValue } from "@/components/common";
@@ -16,6 +16,7 @@ import { Customer360TimelineCard } from "@/loopdev/components/customer360/Custom
 export default function SalesCRMCustomer360() {
   const { contactId } = useParams<{ contactId: string }>();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { trail } = useBreadcrumbs();
   const { view, loading, error, reload } = useCrmCustomer360(contactId);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -166,7 +167,7 @@ export default function SalesCRMCustomer360() {
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-3">
         <Customer360ProfileCard contact={contact} />
-        <Customer360DetailTabs contact={contact} leads={demoView.leads} opportunities={demoView.opportunities} tasks={view.tasks} notes={customerNotes} onEdit={openEditor} onNewNote={openNewNote} onEditNote={openExistingNote} />
+        <Customer360DetailTabs contact={contact} leads={demoView.leads} opportunities={demoView.opportunities} tasks={view.tasks} notes={customerNotes} onEdit={openEditor} onNewNote={openNewNote} onEditNote={openExistingNote} onViewCatalog={() => navigate("/app/erp/product-catalog")} />
       </div>
 
       <Customer360TimelineCard timeline={view.timeline} contactId={contact.id} />

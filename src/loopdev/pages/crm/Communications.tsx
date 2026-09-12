@@ -18,6 +18,7 @@ import {
   Phone,
   Play,
   Pause,
+  Package,
   Video,
   Link2,
   RefreshCw,
@@ -51,6 +52,8 @@ import { cn } from "@/lib/utils";
 import { CRMWorkspacePanel } from "@/loopdev/components/crm/CRMWorkspacePanel";
 import { ConversationOperationsPanel } from "@/loopdev/components/communications/ConversationOperationsPanel";
 import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
+import type { CatalogItem } from "@/loopdev/domains/catalog";
+import { LOCAL_CATALOG_ORGANIZATION_ID } from "@/loopdev/domains/catalog/data/localCatalog";
 import { MessageContextMenu } from "@/loopdev/components/communications/MessageContextMenu";
 import { toast } from "@/hooks/use-toast";
 import { localFilesAdapter } from "@/loopdev/domains/files";
@@ -190,6 +193,22 @@ function MessageContent({ message, outbound }: { message: import("@/loopdev/doma
     );
   }
 
+  if (message.contentType === "catalog_item") {
+    return (
+      <div className={cn("min-w-[240px] rounded-lg border p-3", outbound ? "border-primary-foreground/20 bg-primary-foreground/10" : "border-border bg-background/70")}>
+        <div className="flex items-start gap-3">
+          <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-md", outbound ? "bg-primary-foreground/20" : "bg-primary/10 text-primary")}><Package className="h-4 w-4" /></span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-wider opacity-70">Catalog item</p>
+            <p className="truncate text-xs font-semibold">{metadata?.name ?? message.body}</p>
+            <p className="mt-0.5 text-[10px] opacity-75">{metadata?.catalogItemType ?? "Product or service"} · {metadata?.catalogItemKey ?? "Reference"}</p>
+            {metadata?.catalogPrice && <p className="mt-2 text-xs font-semibold">{metadata.catalogPrice} {metadata.catalogCurrency ?? ""}</p>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <a href={metadata?.url ?? "#"} target="_blank" rel="noreferrer" className={cn("flex min-w-[220px] items-center gap-3 rounded-lg border p-2.5", outbound ? "border-primary-foreground/20 bg-primary-foreground/10" : "border-border bg-background/70")}>
       <Link2 className="h-5 w-5 shrink-0 text-primary" />
@@ -213,10 +232,15 @@ function ConversationComposer({
   draft: { body: string };
   onDraftChange: (draft: { body: string }) => void;
   actionError: string | null;
-  onReply: (body: string) => Promise<unknown>;
+  onReply: (body: string, content?: { contentType?: "catalog_item"; contentMetadata?: { catalogItemId?: string; catalogItemKey?: string; catalogItemType?: string; catalogPrice?: string; catalogCurrency?: string } }) => Promise<unknown>;
 }) {
   const [sending, setSending] = useState(false);
+  const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
+  const [catalogItemId, setCatalogItemId] = useState("");
   const { body } = draft;
+  useEffect(() => {
+    void loopdevAdapter.catalog.listCatalogItems({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID }).then(setCatalogItems).catch(() => setCatalogItems([]));
+  }, []);
   const windowExpired = Boolean(summary.windowExpiresAt && new Date(summary.windowExpiresAt).getTime() <= Date.now());
   const accountConnected = account?.state === "connected";
   const policyDisabled = account?.policyState === "disabled";
@@ -228,8 +252,10 @@ function ConversationComposer({
     if (!canSend || !body.trim()) return;
     setSending(true);
     try {
-      await onReply(body);
+      const selected = catalogItems.find((item) => item.id === catalogItemId);
+      await onReply(body, selected ? { contentType: "catalog_item", contentMetadata: { catalogItemId: selected.id, catalogItemKey: selected.key, catalogItemType: selected.type, catalogPrice: selected.metadata.price ? String(selected.metadata.price) : undefined, catalogCurrency: selected.metadata.currency ? String(selected.metadata.currency) : undefined } } : undefined);
       onDraftChange({ body: "" });
+      setCatalogItemId("");
     } catch {
       // The hook exposes the normalized operational error beside the composer.
     } finally {
@@ -253,6 +279,7 @@ function ConversationComposer({
         {accountConnected && <span className="text-[11px] font-medium text-muted-foreground">Queued</span>}
       </div>
       {actionError && <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive" role="alert">{actionError}</p>}
+      <div className="flex items-center gap-2"><Package className="h-3.5 w-3.5 text-muted-foreground" /><select aria-label="Attach catalog item" value={catalogItemId} onChange={(event) => setCatalogItemId(event.target.value)} disabled={!canSend || sending} className="h-8 max-w-full rounded-md border border-input bg-background px-2 text-xs"><option value="">Attach catalog item (optional)</option>{catalogItems.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.type}</option>)}</select></div>
       <div className="flex items-end gap-2">
         <Textarea
           value={body}
@@ -721,8 +748,8 @@ export default function Communications() {
                     draft={composerDraft}
                     onDraftChange={updateComposerDraft}
                     actionError={detail.actionError ?? inbox.actionError}
-                    onReply={async (body) => {
-                      await detail.sendReply(body);
+                    onReply={async (body, content) => {
+                      await detail.sendReply(body, undefined, content);
                       inbox.reload();
                     }}
                   />

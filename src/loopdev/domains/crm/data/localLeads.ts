@@ -12,6 +12,10 @@ export interface LocalLead {
   assignedUserId: string | null;
   ownerName: string | null;
   score: number | null;
+  estimatedValue: number | null;
+  estimatedCurrency: string | null;
+  qualificationNeed: string | null;
+  qualificationTimeline: string | null;
   lastActivityAt: string | null;
   nextActivityAt: string | null;
   duplicateReviewId: string | null;
@@ -41,6 +45,10 @@ const seed: LocalLead[] = crmCustomersStore.list().map((contact, index) => ({
   assignedUserId: owners[index % owners.length].id,
   ownerName: owners[index % owners.length].name,
   score: 42 + ((index * 11) % 57),
+  estimatedValue: contact.tier === "lead" ? 25000 : null,
+  estimatedCurrency: contact.tier === "lead" ? "EUR" : null,
+  qualificationNeed: contact.tier === "lead" ? "Expand existing commercial coverage" : null,
+  qualificationTimeline: contact.tier === "lead" ? "1–3 months" : null,
   lastActivityAt: index % 5 === 0 ? null : ago(index % 9),
   nextActivityAt: index % 4 === 0 ? null : fromNow((index % 6) + 1),
   duplicateReviewId: index === 7 ? "duplicate-review-7" : null,

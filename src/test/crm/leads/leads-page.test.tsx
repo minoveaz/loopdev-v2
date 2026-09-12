@@ -20,8 +20,9 @@ describe("Leads page", () => {
     );
 
     await waitFor(() => expect(screen.getAllByText("Enterprise expansion").length).toBeGreaterThan(0));
-    fireEvent.click(screen.getAllByText("Enterprise expansion")[0]);
-    fireEvent.click(screen.getByRole("button", { name: "Create opportunity" }));
+    const leadRow = screen.getAllByText("Enterprise expansion").map((node) => node.closest('[role="row"]')).find((row) => row?.querySelector('button[aria-label^="Actions for"]'))!;
+    fireEvent.click(within(leadRow as HTMLElement).getByRole("button", { name: /Actions for/i }));
+    fireEvent.click(await screen.findByText("Create opportunity"));
 
     const dialog = await screen.findByRole("dialog", { name: "Create opportunity" });
     fireEvent.change(within(dialog).getByLabelText("Product or interest key"), {
@@ -42,8 +43,9 @@ describe("Leads page", () => {
     );
 
     await waitFor(() => expect(screen.getAllByText("Enterprise expansion").length).toBeGreaterThan(0));
-    fireEvent.click(screen.getAllByText("Enterprise expansion")[0]);
-    fireEvent.click(screen.getByRole("button", { name: "Create opportunity" }));
+    const leadRow = screen.getAllByText("Enterprise expansion").map((node) => node.closest('[role="row"]')).find((row) => row?.querySelector('button[aria-label^="Actions for"]'))!;
+    fireEvent.click(within(leadRow as HTMLElement).getByRole("button", { name: /Actions for/i }));
+    fireEvent.click(await screen.findByText("Create opportunity"));
     const dialog = await screen.findByRole("dialog", { name: "Create opportunity" });
     expect(within(dialog).getByRole("heading", { name: "Create opportunity" })).toBeInTheDocument();
 
@@ -60,8 +62,9 @@ describe("Leads page", () => {
     );
 
     await waitFor(() => expect(screen.getAllByText("Enterprise expansion").length).toBeGreaterThan(0));
-    fireEvent.click(screen.getAllByText("Enterprise expansion")[0]);
-    fireEvent.click(screen.getByRole("button", { name: "Create opportunity" }));
+    const leadRow = screen.getAllByText("Enterprise expansion").map((node) => node.closest('[role="row"]')).find((row) => row?.querySelector('button[aria-label^="Actions for"]'))!;
+    fireEvent.click(within(leadRow as HTMLElement).getByRole("button", { name: /Actions for/i }));
+    fireEvent.click(await screen.findByText("Create opportunity"));
     const dialog = await screen.findByRole("dialog", { name: "Create opportunity" });
     fireEvent.change(within(dialog).getByLabelText("Opportunity name"), { target: { value: "Changed details" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
@@ -90,7 +93,7 @@ describe("Leads page", () => {
     await waitFor(() => expect(screen.getByRole("combobox", { name: "Saved view" })).toHaveTextContent("Qualified"));
   });
 
-  it("keeps the lead preview closed until a lead is selected", async () => {
+  it("keeps consultation out of the leads drawer", async () => {
     render(
       <MemoryRouter initialEntries={["/app/sales-crm/leads"]}>
         <SalesCRMLeads />
@@ -101,10 +104,10 @@ describe("Leads page", () => {
     expect(screen.queryByText("Lead preview")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getAllByText("Enterprise expansion")[0]);
-    expect(await screen.findByText("Lead preview")).toBeInTheDocument();
+    expect(screen.queryByText("Lead preview")).not.toBeInTheDocument();
   });
 
-  it("opens the shared drawer from a row and restores focus when it closes", async () => {
+  it("navigates to a stable lead URL instead of opening a drawer", async () => {
     render(
       <MemoryRouter initialEntries={["/app/sales-crm/leads"]}>
         <SalesCRMLeads />
@@ -115,9 +118,7 @@ describe("Leads page", () => {
     const row = screen.getAllByRole("row", { name: /Open lead for/ })[0];
     fireEvent.click(row);
 
-    expect(await screen.findByRole("dialog", { name: /Lead$/ })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
-    await waitFor(() => expect(document.activeElement).toBe(row));
+    expect(screen.queryByRole("dialog", { name: /Lead$/ })).not.toBeInTheDocument();
   });
 
   it("supports visible selection and honest supported/unsupported actions", async () => {

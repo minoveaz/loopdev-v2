@@ -1,10 +1,43 @@
 import { createLocalStore } from "@/lib/localStore";
-import type { CatalogItem, CatalogVariant, Offer, PriceBook, PriceEntry } from "../types";
+import type { CatalogAvailability, CatalogEligibility, CatalogItem, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole } from "../types";
 
 const localOrganizationId = "local-development-organization";
 const otherOrganizationId = "other-development-organization";
 const sharedWorkspace = null;
 const now = "2026-09-10T00:00:00.000Z";
+
+export const localOrganizationCatalogsStore = createLocalStore<OrganizationCatalog>({
+  key: "loopdev:catalog:catalogs",
+  idPrefix: "catalog",
+  seed: [
+    {
+      id: "catalog_products",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      key: "products",
+      name: "Products",
+      description: "Physical, digital and packaged products.",
+      kind: "products",
+      status: "active",
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "catalog_services",
+      organizationId: localOrganizationId,
+      workspaceId: sharedWorkspace,
+      key: "services",
+      name: "Services",
+      description: "Professional, healthcare and recurring services.",
+      kind: "services",
+      status: "active",
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
 
 export const localCatalogItemsStore = createLocalStore<CatalogItem>({
   key: "loopdev:catalog:items",
@@ -148,6 +181,71 @@ export const localCatalogVariantsStore = createLocalStore<CatalogVariant>({
       name: "25 seats",
       status: "active",
       attributes: { seats: "25" },
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogPartyRolesStore = createLocalStore<ProductPartyRole>({
+  key: "loopdev:catalog:party-roles",
+  idPrefix: "catalog_party_role",
+  seed: [
+    {
+      id: "catalog_party_role_health_provider",
+      organizationId: localOrganizationId,
+      workspaceId: "workspace-health",
+      catalogItemId: "catalog_item_health_consultation",
+      offerId: "catalog_offer_health_consultation",
+      role: "provider",
+      partyKey: "local-health-clinic",
+      partyName: "Local Health Clinic",
+      status: "active",
+      validFrom: now,
+      validTo: null,
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogAvailabilitiesStore = createLocalStore<CatalogAvailability>({
+  key: "loopdev:catalog:availabilities",
+  idPrefix: "catalog_availability",
+  seed: [
+    {
+      id: "catalog_availability_health_consultation",
+      organizationId: localOrganizationId,
+      workspaceId: "workspace-health",
+      catalogItemId: "catalog_item_health_consultation",
+      offerId: "catalog_offer_health_consultation",
+      channels: ["Online", "Branch / office"],
+      markets: ["Spain"],
+      status: "active",
+      validFrom: now,
+      validTo: null,
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+});
+
+export const localCatalogEligibilitiesStore = createLocalStore<CatalogEligibility>({
+  key: "loopdev:catalog:eligibilities",
+  idPrefix: "catalog_eligibility",
+  seed: [
+    {
+      id: "catalog_eligibility_health_consultation",
+      organizationId: localOrganizationId,
+      workspaceId: "workspace-health",
+      catalogItemId: "catalog_item_health_consultation",
+      offerId: "catalog_offer_health_consultation",
+      ruleKey: "open-access",
+      description: "Available to all customers in the selected market.",
+      status: "active",
       metadata: {},
       createdAt: now,
       updatedAt: now,

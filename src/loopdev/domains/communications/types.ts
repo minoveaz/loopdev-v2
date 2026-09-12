@@ -165,7 +165,7 @@ export interface CommunicationMessage {
   authorName: string;
   occurredAt: string;
   deliveryStatus: MessageDeliveryStatus | null;
-  contentType?: "text" | "document" | "audio" | "image" | "video" | "location" | "link";
+  contentType?: "text" | "document" | "audio" | "image" | "video" | "location" | "link" | "catalog_item";
   contentMetadata?: {
     name?: string;
     size?: string;
@@ -173,6 +173,11 @@ export interface CommunicationMessage {
     durationSeconds?: number;
     url?: string;
     locationLabel?: string;
+    catalogItemId?: string;
+    catalogItemKey?: string;
+    catalogItemType?: string;
+    catalogPrice?: string;
+    catalogCurrency?: string;
   };
   sequence?: number;
 }
@@ -298,6 +303,7 @@ export interface CommunicationsAdapter {
     body: string,
     expectedVersion?: number,
     idempotencyKey?: string,
+    content?: Pick<CommunicationMessage, "contentType" | "contentMetadata">,
   ): Promise<CommunicationSendResult>;
   addInternalNote(
     context: CommunicationsContext,

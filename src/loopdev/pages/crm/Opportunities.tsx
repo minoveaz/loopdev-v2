@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppDrawer } from "@/components/platform";
 import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
 import { RelatedFilesPanel } from "@/loopdev/components/files";
-import { ConfirmDialog, DataCard, FilterDropdown, PageContainer, PageHeader, SearchInput, StatusBadge, useFormLifecycle } from "@/components/common";
+import { ConfirmDialog, DataCard, FilterDropdown, FormSectionHeader, PageContainer, PageHeader, SearchInput, StatusBadge, useFormLifecycle } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,7 @@ import {
   type CRMPipelineStageCode,
 } from "@/loopdev/domains/crm/adapter";
 import type { CatalogItem } from "@/loopdev/domains/catalog";
-import { useCrmContacts, useCrmPipeline } from "@/loopdev/domains/crm/hooks/use-crm";
+import { useCrmContacts, useCrmLeads, useCrmPipeline } from "@/loopdev/domains/crm/hooks/use-crm";
 import { platformAdapter } from "@/loopdev/domains/platform";
 
 const labels: Record<CRMPipelineStageCode, string> = {
@@ -38,7 +38,9 @@ export default function SalesCRMOpportunities() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { contacts } = useCrmContacts({ limit: 100 });
+  const { leads } = useCrmLeads();
   const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const createFromLeadHandled = useRef(false);
   const createLifecycle = useFormLifecycle();
   const detailsLifecycle = useFormLifecycle();
   const reopenLifecycle = useFormLifecycle();
@@ -87,6 +89,22 @@ export default function SalesCRMOpportunities() {
     const opportunity = opportunities.find((item) => item.id === opportunityId);
     if (opportunity && !drawerOpen) openDetails(opportunity);
   }, [drawerOpen, openDetails, opportunities, searchParams]);
+
+  useEffect(() => {
+    const leadId = searchParams.get("leadId");
+    const contactId = searchParams.get("contactId");
+    if (createFromLeadHandled.current || !leadId || !contactId || !contacts.length) return;
+    const lead = leads.find((item) => item.id === leadId);
+    const contact = contacts.find((item) => item.id === contactId);
+    if (!lead || !contact) return;
+    createFromLeadHandled.current = true;
+    setNewContactId(contact.id);
+    setNewName(`${lead.interest || "New opportunity"} · ${contact.firstName} ${contact.lastName ?? ""}`.trim());
+    setNewProductKey(lead.interest ?? "");
+    setNewAmount(lead.estimatedValue == null ? "" : String(lead.estimatedValue));
+    createLifecycle.markClean();
+    setCreateOpen(true);
+  }, [contacts, createLifecycle, leads, searchParams]);
 
   const closeDetails = (open: boolean) => {
     setDrawerOpen(open);
@@ -163,10 +181,18 @@ export default function SalesCRMOpportunities() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         title="New opportunity"
+        eyebrow="CRM / Opportunities"
+        mode="New"
+        headerMeta={<span>Opportunity form</span>}
         description="Create a local opportunity with at least one catalog or legacy product line."
         restoreFocusRef={restoreFocusRef}
         dirty={() => createLifecycle.dirtyRef.current}
+        showDirtyState={createLifecycle.dirty}
         confirmOnClose
+        confirmTitle="Discard opportunity changes?"
+        confirmDescription="Your unsaved opportunity changes will be lost."
+        confirmLabel="Discard"
+        cancelLabel="Keep editing"
         onDiscard={() => {
           setNewContactId(""); setNewName(""); setNewProductKey(""); setNewCatalogItemId(""); setNewAmount(""); setNewLineQuantity("1");
           createLifecycle.markClean();
@@ -183,14 +209,14 @@ export default function SalesCRMOpportunities() {
           </div>
         }
       >
-          <form id="create-opportunity-form" className="space-y-4" onSubmit={(event) => void submitManualOpportunity(event)}>
+          <form id="create-opportunity-form" className="space-y-4" onSubmit={(event) => void submitManualOpportunity(event)}><section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs"><FormSectionHeader eyebrow="Pipeline" title="Opportunity details" description="Connect the opportunity to a contact and define its initial commercial line." mode="expanded" responsive="auto" meta={<span>Core details</span>} /><div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5"><Label htmlFor="manual-opportunity-contact">Contact</Label><CRMRecordPicker items={contacts.map((contact): CRMRecordPickerItem => ({ type: "contact", id: contact.id, label: `${contact.firstName} ${contact.lastName ?? ""}`.trim() }))} value={newContactId ? `contact:${newContactId}` : ""} onValueChange={(value) => { createLifecycle.markDirty(); setNewContactId(value.replace(/^contact:/, "")); }} placeholder="Search contacts..." ariaLabel="Search contact" /></div>
             <div className="space-y-1.5"><Label htmlFor="manual-opportunity-name">Opportunity name</Label><Input id="manual-opportunity-name" required value={newName} onChange={(event) => { createLifecycle.markDirty(); setNewName(event.target.value); }} /></div>
             <div className="space-y-1.5"><Label htmlFor="manual-opportunity-catalog">Catalog item</Label><Select value={newCatalogItemId || "legacy"} onValueChange={(value) => { createLifecycle.markDirty(); setNewCatalogItemId(value === "legacy" ? "" : value); }}><SelectTrigger id="manual-opportunity-catalog"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="legacy">Use legacy product key</SelectItem>{catalogItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name} ({item.key})</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-1.5"><Label htmlFor="manual-opportunity-product">Legacy product key</Label><Input id="manual-opportunity-product" value={newProductKey} onChange={(event) => { createLifecycle.markDirty(); setNewProductKey(event.target.value); }} placeholder="Optional when a catalog item is selected" /></div>
             <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="manual-opportunity-amount">Amount</Label><Input id="manual-opportunity-amount" type="number" min="0" value={newAmount} onChange={(event) => { createLifecycle.markDirty(); setNewAmount(event.target.value); }} /></div><div className="space-y-1.5"><Label htmlFor="manual-opportunity-quantity">Line quantity</Label><Input id="manual-opportunity-quantity" type="number" min="1" value={newLineQuantity} onChange={(event) => { createLifecycle.markDirty(); setNewLineQuantity(event.target.value); }} /></div></div>
             {createError && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{createError}</p>}
-          </form>
+          </div></section></form>
       </AppDrawer>
       <Dialog open={Boolean(reopenTarget)} onOpenChange={(open) => { if (!open) { if (reopenLifecycle.dirtyRef.current) setReopenDiscardOpen(true); else setReopenTarget(null); } }}>
         <DialogContent className="sm:max-w-md">

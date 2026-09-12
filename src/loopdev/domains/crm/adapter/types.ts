@@ -124,6 +124,10 @@ export interface CRMLead {
   assignedUserId?: string | null;
   ownerName?: string | null;
   score?: number | null;
+  estimatedValue?: number | null;
+  estimatedCurrency?: string | null;
+  qualificationNeed?: string | null;
+  qualificationTimeline?: string | null;
   lastActivityAt?: string | null;
   nextActivityAt?: string | null;
   duplicateReviewId?: string | null;
@@ -139,6 +143,10 @@ export interface CRMCreateLeadInput {
   assignedUserId?: string | null;
   ownerName?: string | null;
   score?: number | null;
+  estimatedValue?: number | null;
+  estimatedCurrency?: string | null;
+  qualificationNeed?: string | null;
+  qualificationTimeline?: string | null;
 }
 
 export const CRM_LEAD_STATUS_CODES = [
@@ -154,9 +162,15 @@ export type CRMLeadStatusCode = (typeof CRM_LEAD_STATUS_CODES)[number];
 
 export interface CRMUpdateLeadInput {
   organizationId: string;
+  interest?: string | null;
+  source?: string | null;
   status?: CRMLeadStatusCode;
   assignedUserId?: string | null;
   ownerName?: string | null;
+  estimatedValue?: number | null;
+  estimatedCurrency?: string | null;
+  qualificationNeed?: string | null;
+  qualificationTimeline?: string | null;
   expectedUpdatedAt?: string;
 }
 
@@ -183,6 +197,7 @@ export interface CRMOpportunity {
   ownerName: string | null;
   createdAt: string;
   updatedAt: string;
+  lines: CRMOpportunityLine[];
 }
 
 /** Stable product stage codes used by the first local Pipeline slice. */
@@ -245,6 +260,47 @@ export interface CRMOpportunityLine {
   unitAmount: number | null;
   currency: string | null;
   totalAmount: number | null;
+}
+
+export type CRMCustomerProductStatus = "interested" | "quoted" | "active" | "ended";
+
+export interface CRMCustomerProduct {
+  id: string;
+  organizationId: string;
+  contactId: string;
+  catalogItemId: string;
+  offerId: string | null;
+  variantId: string | null;
+  quantity: number;
+  unitAmount: number | null;
+  totalAmount: number | null;
+  currency: string | null;
+  associatedAt: string;
+  startDate: string | null;
+  endDate: string | null;
+  sourceOpportunityId: string | null;
+  sourceLeadId: string | null;
+  status: CRMCustomerProductStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CRMCreateCustomerProductInput {
+  organizationId: string;
+  contactId: string;
+  catalogItemId: string;
+  offerId?: string | null;
+  variantId?: string | null;
+  quantity: number;
+  unitAmount?: number | null;
+  totalAmount?: number | null;
+  currency?: string | null;
+  associatedAt?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  sourceOpportunityId?: string | null;
+  sourceLeadId?: string | null;
+  status: CRMCustomerProductStatus;
 }
 
 export interface CRMOpportunityListParams {

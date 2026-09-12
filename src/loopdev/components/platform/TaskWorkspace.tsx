@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Check, CheckCircle2, Circle, Clock3, ListChecks, Plus, RotateCcw, ChevronsUpDown } from "lucide-react";
-import { DataCard, StatusBadge, useFormLifecycle } from "@/components/common";
+import { DataCard, FormSectionHeader, StatusBadge, useFormLifecycle } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
 import { FilePicker } from "@/loopdev/components/files";
 import { Button } from "@/components/ui/button";
@@ -106,7 +106,7 @@ export function PlatformTaskForm({ relation, task, templates = [], formId = "pla
   };
 
   return (
-    <form id={formId} onSubmit={submit} className="space-y-4" aria-label={task ? "Edit task" : "Create task"}>
+    <form id={formId} onSubmit={submit} className="space-y-4" aria-label={task ? "Edit task" : "Create task"}><section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs"><FormSectionHeader eyebrow="Activity" title={task ? "Task details" : "New task"} description="Capture the action, timing and supporting files for this work item." mode="expanded" responsive="auto" meta={<span>{attachments.length} attachment{attachments.length === 1 ? "" : "s"}</span>} /><div className="space-y-4">
       {templates.length > 0 && (
         <div className="space-y-1.5">
           <Label htmlFor="platform-task-template">Task template</Label>
@@ -181,7 +181,7 @@ export function PlatformTaskForm({ relation, task, templates = [], formId = "pla
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {showSubmitButton && <Button type="submit" disabled={pending}><Plus className="mr-1.5 h-4 w-4" />{pending ? "Saving…" : submitLabel ?? (task ? "Save changes" : "Add task")}</Button>}
-    </form>
+    </div></section></form>
   );
 }
 
@@ -270,12 +270,20 @@ export function PlatformTaskWorkspace(props: PlatformTaskListProps & { relation?
             open={drawerOpen}
             onOpenChange={setDrawerOpen}
             title="New Platform task"
+            eyebrow="Platform / Tasks"
+            mode="New"
+            headerMeta={<span>Task form</span>}
             description="Create work related to this CRM entity."
             size="md"
             layoutMode="standard"
             responsive="auto"
             dirty={() => lifecycle.dirtyRef.current}
+            showDirtyState={lifecycle.dirty}
             confirmOnClose
+            confirmTitle="Discard task changes?"
+            confirmDescription="Your unsaved task changes will be lost."
+            confirmLabel="Discard"
+            cancelLabel="Keep editing"
             onDiscard={lifecycle.markClean}
           >
             <PlatformTaskForm

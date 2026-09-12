@@ -7,6 +7,7 @@ import {
 } from "../data/localOpportunities";
 import { localCrmLeadsStore, type LocalLead } from "../data/localLeads";
 import { localCrmStageHistoryStore } from "../data/localStageHistory";
+import { localCustomerProductsStore } from "../data/localCustomerProducts";
 import { localReferenceDataAdapter } from "@/loopdev/domains/reference-data/adapter/local";
 import { catalogAdapter } from "@/loopdev/domains/catalog";
 import { platformAdapter } from "@/loopdev/domains/platform";
@@ -37,6 +38,8 @@ import type {
   CRMPipelineStageCode,
   CRMTask,
   CRMUpdateContactPatch,
+  CRMCustomerProduct,
+  CRMCreateCustomerProductInput,
 } from "./types";
 import { contactName, CRMAdapterError, CRM_LEAD_STATUS_CODES, CRM_PIPELINE_STAGE_CODES } from "./types";
 import { localCrmOperationsAdapter } from "../operations/adapter/local";
@@ -201,6 +204,10 @@ function toLead(source: LocalLead): CRMLead {
     assignedUserId: source.assignedUserId,
     ownerName: source.ownerName,
     score: source.score,
+    estimatedValue: source.estimatedValue,
+    estimatedCurrency: source.estimatedCurrency,
+    qualificationNeed: source.qualificationNeed,
+    qualificationTimeline: source.qualificationTimeline,
     lastActivityAt: source.lastActivityAt,
     nextActivityAt: source.nextActivityAt,
     duplicateReviewId: source.duplicateReviewId,
@@ -409,6 +416,10 @@ export const localLoopdevAdapter = {
         assignedUserId: input.assignedUserId ?? null,
         ownerName: input.ownerName?.trim() || null,
         score: input.score ?? null,
+        estimatedValue: input.estimatedValue ?? null,
+        estimatedCurrency: input.estimatedCurrency ?? null,
+        qualificationNeed: input.qualificationNeed?.trim() || null,
+        qualificationTimeline: input.qualificationTimeline?.trim() || null,
         lastActivityAt: null,
         nextActivityAt: null,
         duplicateReviewId: null,
@@ -434,8 +445,14 @@ export const localLoopdevAdapter = {
       }
       const updated = localCrmLeadsStore.update(leadId, {
         ...(input.status ? { status: input.status } : {}),
+        ...(input.interest !== undefined ? { interest: input.interest } : {}),
+        ...(input.source !== undefined ? { source: input.source } : {}),
         ...(input.assignedUserId !== undefined ? { assignedUserId: input.assignedUserId } : {}),
         ...(input.ownerName !== undefined ? { ownerName: input.ownerName } : {}),
+        ...(input.estimatedValue !== undefined ? { estimatedValue: input.estimatedValue } : {}),
+        ...(input.estimatedCurrency !== undefined ? { estimatedCurrency: input.estimatedCurrency } : {}),
+        ...(input.qualificationNeed !== undefined ? { qualificationNeed: input.qualificationNeed } : {}),
+        ...(input.qualificationTimeline !== undefined ? { qualificationTimeline: input.qualificationTimeline } : {}),
       });
       return updated
         ? { status: "success", lead: toLead(updated) }
@@ -891,6 +908,9 @@ export const localLoopdevAdapter = {
           ownerName: opportunity.ownerName,
           createdAt: opportunity.createdAt,
           updatedAt: opportunity.updatedAt,
+          lines: localCrmOpportunityLinesStore.list()
+            .filter((line) => line.opportunityId === opportunity.id)
+            .map(toOpportunityLine),
         }));
       const tasks: CRMTask[] = [
         { id: "local-task-1", title: "Review renewal requirements", status: "open", priority: "high", dueAt: new Date().toISOString(), relationId: contactId },
@@ -914,6 +934,28 @@ export const localLoopdevAdapter = {
         sectionState: state,
         sectionPermissions: { profile: true, leads: true, opportunities: true, tasks: true, notes: true, timeline: true },
       };
+    },
+    async listCustomerProducts(contactId: string): Promise<CRMCustomerProduct[]> {
+      return localCustomerProductsStore.list().filter((item) => item.organizationId === organizationId && item.contactId === contactId);
+    },
+    async createCustomerProduct(input: CRMCreateCustomerProductInput): Promise<CRMCustomerProduct> {
+      if (input.organizationId !== organizationId) throw new CRMAdapterError("The active CRM scope is not available.", "server-error");
+      if (!crmCustomersStore.get(input.contactId)) throw new CRMAdapterError("Contact not found.", "server-error");
+      if (input.quantity <= 0) throw new CRMAdapterError("Quantity must be greater than zero.", "server-error");
+      const now = new Date().toISOString();
+      return localCustomerProductsStore.create({
+        ...input,
+        offerId: input.offerId ?? null,
+        variantId: input.variantId ?? null,
+        unitAmount: input.unitAmount ?? null,
+        totalAmount: input.totalAmount ?? null,
+        currency: input.currency ?? null,
+        associatedAt: input.associatedAt ?? now,
+        startDate: input.startDate ?? null,
+        endDate: input.endDate ?? null,
+        sourceOpportunityId: input.sourceOpportunityId ?? null,
+        sourceLeadId: input.sourceLeadId ?? null,
+      });
     },
   },
 } as const;

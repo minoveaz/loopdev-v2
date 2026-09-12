@@ -1,16 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import {
-  AlertTriangle, ArrowRight, CalendarClock, Mail,
-  MoreHorizontal, Phone, Plus, RefreshCw, SearchX, UserRound,
+  AlertTriangle, CalendarClock,
+  MoreHorizontal, Plus, RefreshCw, SearchX, UserRound,
 } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   ConfirmDialog, DataCard, EmptyState, FilterDropdown, PageContainer, PageHeader,
-  SearchInput, StatusBadge, useFormLifecycle,
+  FormSectionHeader, SearchInput, StatusBadge, useFormLifecycle,
 } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
 import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
-import { RelatedFilesPanel } from "@/loopdev/components/files";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -25,9 +24,8 @@ import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import {
   CRM_LEAD_STATUS_CODES, contactName, type CRMLead, type CRMLeadStatusCode,
 } from "@/loopdev/domains/crm/adapter";
-import { useCrmContacts, useCrmCustomer360, useCrmLeads, useCrmPipeline } from "@/loopdev/domains/crm/hooks/use-crm";
+import { useCrmContacts, useCrmLeads, useCrmPipeline } from "@/loopdev/domains/crm/hooks/use-crm";
 import { formatDate, getInitials } from "@/lib/formatters";
-import { platformAdapter } from "@/loopdev/domains/platform";
 
 const STATUS_LABELS: Record<CRMLeadStatusCode, string> = {
   new: "New", contacted: "Contacted", qualified: "Qualified", stalled: "Stalled",
@@ -56,6 +54,7 @@ const SAVED_VIEWS: Array<{ key: ViewKey; label: string; statuses?: CRMLeadStatus
 
 export default function SalesCRMLeads() {
   const { trail } = useBreadcrumbs();
+  const navigate = useNavigate();
   const {
     leads, loading, error, reload, conversion, createOpportunityFromLead, updateLead, resetConversion,
     creation, createLead,
@@ -69,8 +68,6 @@ export default function SalesCRMLeads() {
   const [opportunityFilter, setOpportunityFilter] = useState<OpportunityFilter>("all");
   const [noRecentActivity, setNoRecentActivity] = useState(false);
   const [viewKey, setViewKey] = useState<ViewKey>("all");
-  const [selectedLeadId, setSelectedLeadId] = useState<string>();
-  const [searchParams] = useSearchParams();
   const leadRestoreFocusRef = useRef<HTMLElement | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -113,20 +110,12 @@ export default function SalesCRMLeads() {
         && (!noRecentActivity || stale);
     });
   }, [contactById, leads, noRecentActivity, opportunityCountByLeadOrContact, opportunityFilter, owners, search, source, statuses]);
-  const selectedLead = filtered.find((lead) => lead.id === selectedLeadId);
-  const selectedContact = selectedLead ? contactById.get(selectedLead.contactId) : undefined;
-  const { view: selectedView, loading: previewLoading, error: previewError, reload: reloadCustomer360 } = useCrmCustomer360(selectedContact?.id);
   const allVisibleSelected = filtered.length > 0 && filtered.every((lead) => selectedIds.includes(lead.id));
   const hasFilters = Boolean(search || statuses.length || source.length || owners.length || opportunityFilter !== "all" || noRecentActivity);
   const openLead = (leadId: string, trigger: HTMLElement) => {
     leadRestoreFocusRef.current = trigger;
-    setSelectedLeadId(leadId);
+    navigate(`/app/sales-crm/leads/${encodeURIComponent(leadId)}`);
   };
-
-  useEffect(() => {
-    const leadId = searchParams.get("lead");
-    if (leadId && leads.some((lead) => lead.id === leadId)) setSelectedLeadId(leadId);
-  }, [leads, searchParams]);
 
   const selectView = (key: ViewKey) => {
     const view = SAVED_VIEWS.find((item) => item.key === key)!;
@@ -181,7 +170,6 @@ export default function SalesCRMLeads() {
     });
     if (result.status === "success") {
       setProductKey(""); setOpportunityName(""); setAmount(""); conversionLifecycle.markClean();
-      reloadCustomer360();
       reloadOpportunities();
     }
   };
@@ -287,7 +275,7 @@ export default function SalesCRMLeads() {
                       lead={lead}
                       contact={contactById.get(lead.contactId)}
                       opportunityCount={opportunityCountByLeadOrContact.get(lead.id) ?? opportunityCountByLeadOrContact.get(`contact:${lead.contactId}`) ?? 0}
-                      selected={lead.id === selectedLead?.id}
+                      selected={false}
                       checked={selectedIds.includes(lead.id)}
                       onSelect={(checked) => toggleSelected(lead.id, checked)}
                       onOpen={(trigger) => openLead(lead.id, trigger)}
@@ -309,7 +297,7 @@ export default function SalesCRMLeads() {
                     lead={lead}
                     contact={contactById.get(lead.contactId)}
                     opportunityCount={opportunityCountByLeadOrContact.get(lead.id) ?? opportunityCountByLeadOrContact.get(`contact:${lead.contactId}`) ?? 0}
-                    selected={lead.id === selectedLead?.id}
+                    selected={false}
                     checked={selectedIds.includes(lead.id)}
                     onSelect={(checked) => toggleSelected(lead.id, checked)}
                     onOpen={(trigger) => openLead(lead.id, trigger)}
@@ -324,41 +312,21 @@ export default function SalesCRMLeads() {
         </DataCard>
       </div>
       <AppDrawer
-        open={Boolean(selectedLead && selectedContact)}
-        onOpenChange={(open) => { if (!open) setSelectedLeadId(undefined); }}
-        title={selectedContact ? `${contactName(selectedContact)} · Lead` : "Lead preview"}
-        description="Contact, commercial and activity context"
-        restoreFocusRef={leadRestoreFocusRef}
-        size="lg"
-        layoutMode="expanded"
-        responsive="auto"
-      >
-        {selectedLead && selectedContact ? (
-          <LeadPreview
-            lead={selectedLead}
-            contact={selectedContact}
-            view={selectedView}
-            loading={previewLoading}
-            error={previewError}
-            opportunityCount={opportunityCountByLeadOrContact.get(selectedLead.id) ?? opportunityCountByLeadOrContact.get(`contact:${selectedLead.contactId}`) ?? 0}
-            onRetry={reloadCustomer360}
-            onStatus={(status) => void runUpdate(selectedLead, { status })}
-            onAssign={() => void runUpdate(selectedLead, { assignedUserId: CURRENT_USER_ID, ownerName: CURRENT_USER_NAME })}
-            onConvert={openConversion}
-          />
-        ) : null}
-      </AppDrawer>
-
-      <AppDrawer
         open={Boolean(conversionLead)}
         onOpenChange={(open) => { if (!open) closeConversion(); }}
         title="Create opportunity"
+        eyebrow="CRM / Lead conversion"
+        mode="New"
+        headerMeta={<span>Opportunity form</span>}
         description="Create a qualified-stage opportunity for this lead. The contact relationship is preserved."
         restoreFocusRef={conversionRestoreFocusRef}
         dirty={() => conversionLifecycle.dirtyRef.current}
+        showDirtyState={conversionLifecycle.dirty}
         confirmOnClose
         confirmTitle="Discard opportunity details?"
         confirmDescription="Your conversion details will be lost."
+        confirmLabel="Discard"
+        cancelLabel="Keep editing"
         onDiscard={closeConversion}
         size="md"
         layoutMode="standard"
@@ -374,13 +342,13 @@ export default function SalesCRMLeads() {
           </div>
         )}
       >
-          <form id="lead-conversion-form" className="space-y-4" onSubmit={(event) => { event.preventDefault(); void submitConversion(); }}>
+          <form id="lead-conversion-form" className="space-y-4" onSubmit={(event) => { event.preventDefault(); void submitConversion(); }}><section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs"><FormSectionHeader eyebrow="Conversion" title="Opportunity details" description="Define the commercial opportunity created from this qualified lead." mode="expanded" responsive="auto" meta={<span>Core details</span>} /><div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5"><Label htmlFor="lead-product-key">Product or interest key</Label><Input id="lead-product-key" value={productKey} onChange={(event) => { conversionLifecycle.markDirty(); setProductKey(event.target.value); }} placeholder="e.g. enterprise-plan" /></div>
             <div className="space-y-1.5"><Label htmlFor="lead-opportunity-name">Opportunity name</Label><Input id="lead-opportunity-name" value={opportunityName} onChange={(event) => { conversionLifecycle.markDirty(); setOpportunityName(event.target.value); }} placeholder="Optional display name" /></div>
             <div className="space-y-1.5"><Label htmlFor="lead-opportunity-amount">Amount</Label><Input id="lead-opportunity-amount" type="number" min="0" value={amount} onChange={(event) => { conversionLifecycle.markDirty(); setAmount(event.target.value); }} placeholder="Optional" /></div>
             {conversion.status !== "idle" && conversion.status !== "pending" && conversion.status !== "success" ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{conversion.message}</p> : null}
             {conversion.status === "success" ? <p role="status" className="text-sm text-success">Opportunity created.</p> : null}
-          </form>
+          </div></section></form>
       </AppDrawer>
       <ConfirmDialog
         open={conversionDiscardOpen}
@@ -398,10 +366,18 @@ export default function SalesCRMLeads() {
         open={createLeadOpen}
         onOpenChange={setCreateLeadOpen}
         title="Create lead"
+        eyebrow="CRM / Leads"
+        mode="New"
+        headerMeta={<span>Lead form</span>}
         description="Capture commercial intent locally and assign it to an existing contact."
         restoreFocusRef={leadRestoreFocusRef}
         dirty={() => createLeadLifecycle.dirtyRef.current}
+        showDirtyState={createLeadLifecycle.dirty}
         confirmOnClose
+        confirmTitle="Discard lead changes?"
+        confirmDescription="Your unsaved lead changes will be lost."
+        confirmLabel="Discard"
+        cancelLabel="Keep editing"
         onDiscard={() => {
           setNewLeadContactId(""); setNewLeadInterest(""); setNewLeadSource(""); setNewLeadOwner("");
           createLeadLifecycle.markClean();
@@ -418,13 +394,13 @@ export default function SalesCRMLeads() {
           </div>
         }
       >
-          <form id="create-lead-form" className="space-y-4" onSubmit={(event) => void submitLead(event)}>
+          <form id="create-lead-form" className="space-y-4" onSubmit={(event) => void submitLead(event)}><section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs"><FormSectionHeader eyebrow="Profile" title="Lead details" description="Capture commercial intent and connect it to an existing contact." mode="expanded" responsive="auto" meta={<span>Core details</span>} /><div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5"><Label htmlFor="new-lead-contact">Contact</Label><CRMRecordPicker items={contacts.map((contact): CRMRecordPickerItem => ({ type: "contact", id: contact.id, label: contactName(contact) }))} value={newLeadContactId ? `contact:${newLeadContactId}` : ""} onValueChange={(value) => { createLeadLifecycle.markDirty(); setNewLeadContactId(value.replace(/^contact:/, "")); }} placeholder="Search contacts..." ariaLabel="Search contact" /></div>
             <div className="space-y-1.5"><Label htmlFor="new-lead-interest">Interest</Label><Input id="new-lead-interest" required value={newLeadInterest} onChange={(event) => { createLeadLifecycle.markDirty(); setNewLeadInterest(event.target.value); }} placeholder="e.g. Enterprise expansion" /></div>
             <div className="space-y-1.5"><Label htmlFor="new-lead-source">Source / attribution</Label><Input id="new-lead-source" value={newLeadSource} onChange={(event) => { createLeadLifecycle.markDirty(); setNewLeadSource(event.target.value); }} placeholder="Website, referral, event…" /></div>
             <div className="space-y-1.5"><Label htmlFor="new-lead-owner">Owner</Label><Select value={newLeadOwner || "unassigned"} onValueChange={(value) => { createLeadLifecycle.markDirty(); setNewLeadOwner(value === "unassigned" ? "" : value); }}><SelectTrigger id="new-lead-owner"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unassigned">Unassigned</SelectItem>{ownerOptions.map((owner) => <SelectItem key={owner.value} value={owner.value}>{owner.label}</SelectItem>)}</SelectContent></Select></div>
             {"message" in creation && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{creation.message}</p>}
-          </form>
+          </div></section></form>
       </AppDrawer>
     </PageContainer>
   );
@@ -514,47 +490,9 @@ function LeadActions({ lead, onStatus, onAssign, onConvert }: Pick<LeadActionPro
         <DropdownMenuLabel>Lead actions</DropdownMenuLabel><DropdownMenuSeparator />
         <DropdownMenuItem onClick={(event) => { event.stopPropagation(); onStatus("contacted"); }} disabled={lead.status === "contacted"}>Mark contacted</DropdownMenuItem>
         <DropdownMenuItem onClick={(event) => { event.stopPropagation(); onAssign(); }}><UserRound className="mr-2 h-3.5 w-3.5" />Assign to Maya Chen</DropdownMenuItem>
-        {lead.status === "qualified" && <DropdownMenuItem onClick={(event) => { event.stopPropagation(); onConvert(); }}><Plus className="mr-2 h-3.5 w-3.5" />Create opportunity</DropdownMenuItem>}
+        <DropdownMenuItem onClick={(event) => { event.stopPropagation(); onConvert(); }}><Plus className="mr-2 h-3.5 w-3.5" />Create opportunity</DropdownMenuItem>
         <DropdownMenuItem disabled title="Task and note commands are not available in the current adapter.">Add task or note (unavailable)</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
-
-function LeadPreview({ lead, contact, view, loading, error, opportunityCount, onRetry, onStatus, onAssign, onConvert }: {
-  lead?: CRMLead;
-  contact?: ReturnType<typeof useCrmContacts>["contacts"][number];
-  view: ReturnType<typeof useCrmCustomer360>["view"];
-  loading: boolean;
-  error: string | null;
-  opportunityCount: number;
-  onRetry: () => void;
-  onStatus: (status: CRMLeadStatusCode) => void;
-  onAssign: () => void;
-  onConvert: (lead: CRMLead) => void;
-}) {
-  if (!lead || !contact) return <DataCard title="Lead preview" description="Select a lead to inspect it."><EmptyState title="No lead selected" description="Choose a row from the table." /></DataCard>;
-  return (
-    <DataCard title="Lead preview" description="Contact, commercial and activity context" action={<LeadActions lead={lead} onStatus={onStatus} onAssign={onAssign} onConvert={() => onConvert(lead)} />}>
-      <div className="space-y-5">
-        <header className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary">{getInitials(contactName(contact))}</div>
-          <div className="min-w-0"><h2 className="truncate text-lg font-semibold">{contactName(contact)}</h2><p className="truncate text-sm text-muted-foreground">{contact.companyName || "No company"} · {contact.jobTitle || "No title"}</p><div className="mt-2 flex flex-wrap gap-2"><StatusBadge tone={STATUS_TONES[lead.status]}>{STATUS_LABELS[lead.status]}</StatusBadge><StatusBadge tone="neutral">{lead.source || "Unknown source"}</StatusBadge></div></div>
-        </header>
-        <div className="grid gap-2 text-sm"><p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-muted-foreground" />{contact.email || "No email"}</p><p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-muted-foreground" />{contact.phone || "No phone"}</p></div>
-        <dl className="grid gap-3 sm:grid-cols-2"><PreviewField label="Interest / product" value={lead.interest} /><PreviewField label="Owner" value={lead.ownerName || "Unassigned"} /><PreviewField label="Score" value={lead.score === null || lead.score === undefined ? null : String(lead.score)} /><PreviewField label="Created" value={formatDate(lead.createdAt)} /><PreviewField label="Opportunities" value={String(opportunityCount)} /><PreviewField label="Next activity" value={lead.nextActivityAt ? formatDate(lead.nextActivityAt) : null} /></dl>
-        <DataCard title="Activity" description="Recent customer timeline" flush borderless loading={loading} error={error ? <><span>{error}</span><Button className="mt-2" size="sm" variant="outline" onClick={onRetry}>Try again</Button></> : undefined} empty={!loading && !error && !view?.timeline.length} emptyTitle="No activity yet" emptyDescription="Activity will appear here when captured.">
-          <div className="space-y-3">{view?.timeline.slice(0, 5).map((item) => <div key={item.id} className="border-l-2 border-primary/30 pl-3"><p className="text-sm">{item.summary}</p><p className="text-xs text-muted-foreground">{formatDate(item.occurredAt)}</p></div>)}</div>
-        </DataCard>
-        {view?.opportunities.length ? <div><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Related opportunities</p><div className="space-y-2">{view.opportunities.map((opportunity) => <div key={opportunity.id} className="flex items-center justify-between rounded-md border border-border p-2 text-sm"><span className="truncate">{opportunity.name}</span><StatusBadge tone="info">{opportunity.stageKey}</StatusBadge></div>)}</div></div> : <p className="text-sm text-muted-foreground">No related opportunities.</p>}
-        <RelatedFilesPanel relation={{ entityType: "lead", entityId: lead.id, scope: platformAdapter.getScope() }} />
-        <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => onStatus("contacted")} disabled={lead.status === "contacted"}>Mark contacted</Button>{lead.status === "qualified" && <Button onClick={() => onConvert(lead)}><Plus className="mr-1.5 h-3.5 w-3.5" />Create opportunity</Button>}</div>
-        <Button className="w-full" asChild><Link to={`/app/sales-crm/contacts/${contact.id}`}>Open Customer 360 <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link></Button>
-      </div>
-    </DataCard>
-  );
-}
-
-function PreviewField({ label, value }: { label: string; value: string | null }) {
-  return <div className="rounded-md border border-border bg-card-muted/30 p-3"><dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt><dd className="mt-0.5 text-sm">{value || "—"}</dd></div>;
 }

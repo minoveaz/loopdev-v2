@@ -11,7 +11,8 @@ export type ConversationMilestoneType =
   | "image_received"
   | "video_received"
   | "location_received"
-  | "link_received";
+  | "link_received"
+  | "catalog_item_received";
 
 export interface ConversationMilestone {
   id: string;
@@ -44,6 +45,7 @@ const milestoneTypeByContentType: Record<
   video: "video_received",
   location: "location_received",
   link: "link_received",
+  catalog_item: "catalog_item_received",
 };
 
 function getContentSummary(message: CommunicationMessage): string {

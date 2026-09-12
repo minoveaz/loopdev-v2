@@ -195,7 +195,7 @@ export function useCommunicationConversation(
   }, []);
 
   const sendReply = useCallback(
-    (body: string, idempotencyKey?: string) => {
+    (body: string, idempotencyKey?: string, content?: Parameters<typeof loopdevAdapter.communications.sendReply>[5]) => {
       if (!conversation) return Promise.reject(new Error("No conversation selected."));
       return loopdevAdapter.communications.getConversation(context, conversation.summary.id).then((current) => {
         if (!current) throw new Error("No conversation selected.");
@@ -205,6 +205,7 @@ export function useCommunicationConversation(
           body,
           current.summary.version,
           idempotencyKey,
+          content,
         ));
       });
     },

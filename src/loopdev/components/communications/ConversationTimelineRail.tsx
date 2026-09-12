@@ -5,6 +5,7 @@ import {
   Link2,
   MapPin,
   Mic,
+  Package,
   Search,
   Video,
 } from "lucide-react";
@@ -37,6 +38,7 @@ const markerIcons: Record<TimelineMarkerType, typeof CalendarDays> = {
   video: Video,
   location: MapPin,
   link: Link2,
+  catalog_item: Package,
 };
 
 const contentLabels: Record<NonNullable<CommunicationMessage["contentType"]>, string> = {
@@ -47,6 +49,7 @@ const contentLabels: Record<NonNullable<CommunicationMessage["contentType"]>, st
   video: "Video",
   location: "Location",
   link: "Link",
+  catalog_item: "Catalog item",
 };
 
 export function buildConversationTimelineMarkers(messages: CommunicationMessage[]): TimelineMarker[] {

@@ -7,6 +7,7 @@ const CommunicationsSettings = lazy(() => import("@/loopdev/pages/settings/Commu
 const SalesCRM = lazy(() => import("@/loopdev/pages/crm/Overview"));
 const SalesCRMContacts = lazy(() => import("@/loopdev/pages/crm/Contacts"));
 const SalesCRMLeads = lazy(() => import("@/loopdev/pages/crm/Leads"));
+const SalesCRMLeadDetail = lazy(() => import("@/loopdev/pages/crm/LeadDetail"));
 const SalesCRMPipeline = lazy(() => import("@/loopdev/pages/crm/Pipeline"));
 const SalesCRMOpportunities = lazy(() => import("@/loopdev/pages/crm/Opportunities"));
 const SalesCRMCustomer360 = lazy(() => import("@/loopdev/pages/crm/Customer360"));
@@ -16,6 +17,8 @@ const SalesCRMAutomations = lazy(() => import("@/loopdev/pages/crm/Automations")
 const SalesCRMCommunications = lazy(() => import("@/loopdev/pages/crm/Communications"));
 const PlatformWorkspace = lazy(() => import("@/loopdev/pages/platform/Workspace"));
 const TaskTemplates = lazy(() => import("@/loopdev/pages/platform/TaskTemplates"));
+const ERPOverview = lazy(() => import("@/loopdev/pages/erp/Overview"));
+const ERPProductCatalog = lazy(() => import("@/loopdev/pages/erp/ProductCatalog"));
 
 export const loopdevRouteElements = (
   <Fragment>
@@ -31,6 +34,7 @@ export const loopdevRouteElements = (
     <Route path="/app/sales-crm/contacts/:contactId" element={<SalesCRMCustomer360 />} />
     <Route path="/app/sales-crm/contacts/:contactId/activity" element={<SalesCRMContactActivity />} />
     <Route path="/app/sales-crm/leads" element={<SalesCRMLeads />} />
+    <Route path="/app/sales-crm/leads/:leadId" element={<SalesCRMLeadDetail />} />
     <Route path="/app/sales-crm/pipeline" element={<SalesCRMPipeline />} />
     <Route path="/app/sales-crm/opportunities" element={<SalesCRMOpportunities />} />
     <Route path="/app/sales-crm/operations" element={<Navigate to="/app/settings/crm/operations" replace />} />
@@ -39,5 +43,9 @@ export const loopdevRouteElements = (
     <Route path="/app/sales-crm/communications/:conversationId" element={<SalesCRMCommunications />} />
     <Route path="/app/sales-crm/tasks" element={<PlatformWorkspace />} />
     <Route path="/app/sales-crm/task-templates" element={<TaskTemplates />} />
+    <Route path="/app/erp" element={<Navigate to="/app/erp/overview" replace />} />
+    <Route path="/app/erp/overview" element={<ERPOverview />} />
+    <Route path="/app/erp/product-catalog/:catalogId" element={<ERPProductCatalog />} />
+    <Route path="/app/erp/product-catalog" element={<ERPProductCatalog />} />
   </Fragment>
 );

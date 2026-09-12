@@ -17,6 +17,7 @@ export interface FilesDropzoneProps extends FileValidationOptions {
   disabled?: boolean;
   accept?: string;
   className?: string;
+  compact?: boolean;
   onFilesSelected?: (files: File[]) => void;
   onValidationError?: (errors: string[]) => void;
   onOpenReady?: (open: () => void) => void;
@@ -31,6 +32,7 @@ export function FilesDropzone({
   maxSizeBytes,
   accept,
   className,
+  compact = false,
   onFilesSelected,
   onValidationError,
   onOpenReady,
@@ -143,7 +145,8 @@ export function FilesDropzone({
         onDrop={onDrop}
         onPaste={onPaste}
         className={cn(
-          "rounded-lg border-2 border-dashed p-6 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "rounded-lg border-2 border-dashed text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          compact ? "p-4" : "p-6",
           dragging ? "border-primary bg-primary/5" : "border-border",
           disabled && "cursor-not-allowed opacity-60",
         )}
@@ -157,7 +160,7 @@ export function FilesDropzone({
           disabled={disabled}
           onChange={onChange}
         />
-        <FileUp className="mx-auto mb-2 h-6 w-6 text-muted-foreground" aria-hidden="true" />
+        <FileUp className={cn("mx-auto text-muted-foreground", compact ? "mb-1.5 h-5 w-5" : "mb-2 h-6 w-6")} aria-hidden="true" />
         <p className="text-sm font-medium">Drop files here or browse</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Drop, browse or paste an image with Cmd/Ctrl + V.

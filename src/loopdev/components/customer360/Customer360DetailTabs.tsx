@@ -19,11 +19,13 @@ interface Customer360DetailTabsProps {
   onEdit: () => void;
   onNewNote?: () => void;
   onEditNote?: (note: GlobalNoteRecord) => void;
+  onViewCatalog: () => void;
 }
 
-export function Customer360DetailTabs({ contact, leads, opportunities, tasks, notes, onEdit, onNewNote, onEditNote }: Customer360DetailTabsProps) {
+export function Customer360DetailTabs({ contact, leads, opportunities, tasks, notes, onEdit, onNewNote, onEditNote, onViewCatalog }: Customer360DetailTabsProps) {
   const [activeTab, setActiveTab] = useState("contact");
   const [documentUploadTrigger, setDocumentUploadTrigger] = useState<(() => void) | null>(null);
+  const [productSelectorOpen, setProductSelectorOpen] = useState(false);
   const tabs = [
     { value: "contact", label: "Contact information" },
     { value: "sales", label: "Sales", count: leads.length + opportunities.length },
@@ -36,7 +38,7 @@ export function Customer360DetailTabs({ contact, leads, opportunities, tasks, no
     sales: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New opportunity</Button><Button variant="outline"><UserPlus className="mr-1.5 h-3.5 w-3.5" />New lead</Button><Button variant="outline">View pipeline</Button></>,
     work: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New task</Button><Button variant="outline" onClick={onNewNote}><FileText className="mr-1.5 h-3.5 w-3.5" />New note</Button></>,
     documents: <><Button onClick={() => documentUploadTrigger?.()}><Upload className="mr-1.5 h-3.5 w-3.5" />Upload document</Button><Button variant="outline"><FileText className="mr-1.5 h-3.5 w-3.5" />View all</Button></>,
-    products: <><Button><PackagePlus className="mr-1.5 h-3.5 w-3.5" />Add product</Button><Button variant="outline">View catalog</Button></>,
+    products: <><Button onClick={() => setProductSelectorOpen(true)}><PackagePlus className="mr-1.5 h-3.5 w-3.5" />Add product</Button><Button variant="outline" onClick={onViewCatalog}>View catalog</Button></>,
   }[activeTab as keyof typeof footer];
   return (
     <DataCard className="min-w-0 lg:col-span-2 h-[580px] max-h-[calc(100vh-8rem)]" bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden p-0" title="Customer workspace" description="Everything we know about this relationship" headerContent={<div role="tablist" aria-label="Customer workspace sections" className="flex w-full gap-1 overflow-x-auto bg-card-muted p-1">
@@ -52,7 +54,7 @@ export function Customer360DetailTabs({ contact, leads, opportunities, tasks, no
             onUploadTriggerReady={(trigger) => setDocumentUploadTrigger(() => trigger)}
           />
         )}
-        {activeTab === "products" && <Customer360ProductsTab />}
+        {activeTab === "products" && <Customer360ProductsTab contactId={contact.id} opportunities={opportunities} leads={leads} selectorOpen={productSelectorOpen} onSelectorOpenChange={setProductSelectorOpen} />}
       </div>
       <div className="flex shrink-0 flex-wrap gap-2 border-t border-border bg-card px-5 py-4">{footer}</div>
     </DataCard>

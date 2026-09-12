@@ -4,6 +4,7 @@ import {
   type CollaborationPresenceState,
   type ComposerMode,
   type CommunicationSendResult,
+  type CommunicationMessage,
   type CommunicationChannelAccount,
   type CommunicationsAdapter,
   type CommunicationsContext,
@@ -152,6 +153,7 @@ function sendLocalMessage(
   direction: "outbound" | "internal",
   actor: CollaborationAgent,
   idempotencyKey?: string,
+  content?: Pick<CommunicationMessage, "contentType" | "contentMetadata">,
 ): CommunicationSendResult {
   const { detail, account } = actionContext(conversationId);
   if (idempotencyKey) {
@@ -181,6 +183,7 @@ function sendLocalMessage(
     body: normalizedBody,
     authorName: direction === "internal" ? "Local operator" : "Local operator",
     deliveryStatus: direction === "outbound" ? "queued" : null,
+    ...content,
   }, actor, idempotencyKey);
   if (!result) throw new CommunicationsAdapterError("Conversation not found.", "NOT_FOUND");
   return result;
@@ -474,9 +477,9 @@ export const localCommunicationsAdapter: CommunicationsAdapter = {
     return next;
   },
 
-  async sendReply(context, conversationId, body, expectedVersion, idempotencyKey) {
+  async sendReply(context, conversationId, body, expectedVersion, idempotencyKey, content) {
     assertScope(context);
-    return sendLocalMessage(conversationId, body, expectedVersion, "outbound", actorFor(context), idempotencyKey);
+    return sendLocalMessage(conversationId, body, expectedVersion, "outbound", actorFor(context), idempotencyKey, content);
   },
 
   async addInternalNote(context, conversationId, body, expectedVersion, idempotencyKey) {

@@ -24,6 +24,8 @@ import type {
   CRMPipelineOpportunity,
   CRMPipelineStageCode,
   CRMUpdateContactPatch,
+  CRMCustomerProduct,
+  CRMCreateCustomerProductInput,
 } from "./types";
 import type { CRMOperationsAdapter } from "../operations/types";
 import type { CRMAutomationsAdapter } from "../automations";
@@ -64,6 +66,8 @@ export interface LoopdevCrmAdapter {
   listPipelineStages(): Promise<CRMStageDefinition[]>;
   listOpportunityStageHistory(opportunityId: string): Promise<CRMOpportunityStageHistory[]>;
   getCustomer360(contactId: string): Promise<Customer360View | null>;
+  listCustomerProducts(contactId: string): Promise<CRMCustomerProduct[]>;
+  createCustomerProduct(input: CRMCreateCustomerProductInput): Promise<CRMCustomerProduct>;
 }
 
 export interface LoopdevAdapter {

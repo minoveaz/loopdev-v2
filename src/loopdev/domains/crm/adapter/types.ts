@@ -114,6 +114,16 @@ export type CRMContactMutationResult =
   | { status: "conflict"; message: string; contact: CRMContact }
   | { status: "server-error"; message: string };
 
+export interface CRMPotentialDuplicate {
+  contact: CRMContact;
+  score: number;
+  reasons: string[];
+}
+
+export type CRMDuplicateReviewResult =
+  | { status: "success"; reviewId: string; dismissedAt: string }
+  | { status: "forbidden" | "not-found" | "server-error"; message: string };
+
 export interface CRMLead {
   id: string;
   organizationId: string;

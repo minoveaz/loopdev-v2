@@ -8,9 +8,9 @@ import {
 import { localCrmLeadsStore, type LocalLead } from "../data/localLeads";
 import { localCrmStageHistoryStore } from "../data/localStageHistory";
 import { localCustomerProductsStore } from "../data/localCustomerProducts";
-import { localReferenceDataAdapter } from "@/loopdev/domains/reference-data/adapter/local";
-import { catalogAdapter } from "@/loopdev/domains/catalog";
-import { platformAdapter } from "@/loopdev/domains/platform";
+import { localReferenceDataAdapter } from "../../reference-data/adapter/local";
+import { catalogAdapter } from "../../catalog";
+import { platformAdapter } from "../../platform";
 import type {
   Customer360View,
   CRMContact,
@@ -40,14 +40,17 @@ import type {
   CRMUpdateContactPatch,
   CRMCustomerProduct,
   CRMCreateCustomerProductInput,
+  CRMPotentialDuplicate,
+  CRMDuplicateReviewResult,
 } from "./types";
 import { contactName, CRMAdapterError, CRM_LEAD_STATUS_CODES, CRM_PIPELINE_STAGE_CODES } from "./types";
 import { localCrmOperationsAdapter } from "../operations/adapter/local";
 import { localCrmAutomationsAdapter } from "../automations";
-import { localCommunicationsAdapter } from "@/loopdev/domains/communications/adapter/local";
-import { localNotesAdapter, type GlobalNoteRecord, type NoteRelationRef } from "@/loopdev/domains/notes";
+import { localCommunicationsAdapter } from "../../communications/adapter/local";
+import { localNotesAdapter, type GlobalNoteRecord, type NoteRelationRef } from "../../notes";
 
 const organizationId = "local-development-organization";
+const dismissedDuplicateReviews = new Set<string>();
 
 const PIPELINE_STAGE_LABELS: Record<CRMPipelineStageCode, string> = {
   prospecting: "Prospecting",
@@ -389,6 +392,27 @@ export const localLoopdevAdapter = {
       const archived = crmCustomersStore.update(contactId, { archivedAt: new Date().toISOString() });
       if (!archived) return { status: "server-error", message: "The contact could not be archived." };
       return { status: "success", contact: toContact(archived) };
+    },
+
+    async findPotentialDuplicates(contactId: string): Promise<CRMPotentialDuplicate[]> {
+      const source = crmCustomersStore.get(contactId);
+      if (!source) return [];
+      const contact = toContact(source);
+      return crmCustomersStore.list().filter((candidate) => candidate.id !== contactId && !candidate.archivedAt).map((candidate) => {
+        const other = toContact(candidate);
+        const reasons: string[] = [];
+        if (contact.email && other.email && contact.email.toLowerCase() === other.email.toLowerCase()) reasons.push("Same email address");
+        if (contact.phone && other.phone && contact.phone === other.phone) reasons.push("Same phone number");
+        if (`${contact.firstName} ${contact.lastName ?? ""}`.trim().toLowerCase() === `${other.firstName} ${other.lastName ?? ""}`.trim().toLowerCase()) reasons.push("Same name");
+        return { contact: other, score: Math.min(99, reasons.length * 35 + (reasons.length ? 10 : 0)), reasons };
+      }).filter((candidate) => candidate.reasons.length && !dismissedDuplicateReviews.has(`${contactId}:${candidate.contact.id}`));
+    },
+
+    async dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<CRMDuplicateReviewResult> {
+      if (confirmation !== "DISMISS_DUPLICATE_REVIEW") return { status: "server-error", message: "Audit confirmation is required." };
+      if (!crmCustomersStore.get(contactId) || !crmCustomersStore.get(candidateId)) return { status: "not-found", message: "The duplicate review contact could not be found." };
+      dismissedDuplicateReviews.add(`${contactId}:${candidateId}`);
+      return { status: "success", reviewId: `${contactId}:${candidateId}`, dismissedAt: new Date().toISOString() };
     },
 
     async listLeads(): Promise<CRMLead[]> {

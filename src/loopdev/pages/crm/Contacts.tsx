@@ -29,6 +29,7 @@ import { useCrmContacts } from "@/loopdev/domains/crm/hooks/use-crm";
 import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactFormDrawer";
 import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
 import { ContactMobileCard } from "@/loopdev/components/crm/contacts/ContactMobileCard";
+import { DuplicateReviewPanel } from "@/loopdev/components/crm/contacts/DuplicateReviewPanel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +50,7 @@ export default function SalesCRMContacts() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<CRMContact | null>(null);
   const [archiveLoading, setArchiveLoading] = useState(false);
+  const [duplicateTarget, setDuplicateTarget] = useState<CRMContact | null>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const query = searchParams.get("q") ?? "";
   const cursor = searchParams.get("cursor");
@@ -248,12 +250,13 @@ export default function SalesCRMContacts() {
         description="Manage people and customer relationships across CRM."
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Contacts" }]}
         actions={
-          <Button className="gap-1.5" onClick={openCreate}>
+        <div className="flex gap-2"><Button variant="outline" onClick={() => contacts[0] && setDuplicateTarget(contacts[0])}>Review duplicates</Button><Button className="gap-1.5" onClick={openCreate}>
             <Plus className="h-3.5 w-3.5" />
             New contact
-          </Button>
+        </Button></div>
         }
       />
+      {duplicateTarget && <DuplicateReviewPanel contact={duplicateTarget} onClose={() => setDuplicateTarget(null)} />}
 
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput

@@ -1,5 +1,5 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useMemo, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
 import {
   getBottomNavigationItems,
   getContextualActions,
@@ -7,7 +7,12 @@ import {
   type SharedContextualAction,
 } from "../../packages/contracts/src/navigation";
 import { launchpadSuites } from "../../packages/contracts/src/launchpad";
-import { contactListFixtures } from "../../packages/contracts/src/contact-fixtures";
+// The runtime bridge is intentionally loaded at runtime so Expo can share the
+// canonical local adapter without compiling the desktop-only dependency graph.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { contactPort } = require("../../src/loopdev/domains/crm/adapter") as { contactPort: any };
+type CRMContact = any;
+type Customer360View = any;
 import { MobileAccountScreen } from "./components/MobileAccountScreen";
 import { MobileAccountSheet } from "./components/MobileAccountSheet";
 import { MobileAppShell } from "./components/MobileAppShell";
@@ -18,8 +23,10 @@ import { MobileNavigationDrawer } from "./components/MobileNavigationDrawer";
 import { MobileRouteScreen } from "./components/MobileRouteScreen";
 import { MobileSuiteCard } from "./components/MobileSuiteCard";
 import { MobileWorkspaceScreen } from "./components/MobileWorkspaceScreen";
-import { MobileContactsScreen, type MobileContactPreview } from "./components/MobileContactsScreen";
+import { MobileContactsScreen } from "./components/MobileContactsScreen";
 import { MobileCreateContactScreen } from "./components/MobileCreateContactScreen";
+import { MobileCustomer360Screen } from "./components/MobileCustomer360Screen";
+import { MobileDuplicateReviewScreen } from "./components/MobileDuplicateReviewScreen";
 
 const launchpadPath = loopdevNavigationContract.launchpad.path;
 const morePath = getBottomNavigationItems().find((item) => item.slot === "more")!.path;
@@ -32,24 +39,17 @@ export default function App() {
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [actionsSheetOpen, setActionsSheetOpen] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
-  const [contacts, setContacts] = useState<MobileContactPreview[]>(() => contactListFixtures.map((contact) => {
-    const [firstName, ...lastNameParts] = contact.name.split(" ");
-    return {
-      id: contact.id,
-      firstName,
-      lastName: lastNameParts.join(" "),
-      companyName: contact.companyName,
-      jobTitle: contact.jobTitle,
-      preferredChannel: contact.preferredChannel,
-      identityStatus: contact.identityStatus,
-      city: contact.city,
-      stateProvince: "",
-      country: contact.country,
-      email: contact.email,
-      phone: contact.phone,
-      updatedAt: contact.updatedAt,
-    };
-  }));
+  const [contacts, setContacts] = useState<CRMContact[]>([]);
+  const [customer360, setCustomer360] = useState<Customer360View | null>(null);
+  const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
+  const [duplicateCandidates, setDuplicateCandidates] = useState<any[]>([]);
+  const [duplicateContact, setDuplicateContact] = useState<CRMContact | null>(null);
+  const [contactError, setContactError] = useState<string | null>(null);
+  useEffect(() => {
+    void contactPort.listContacts({ organizationId: "local-development-organization", limit: 100, cursor: null })
+      .then((page: any) => setContacts(page.items))
+      .catch((cause: unknown) => setContactError(cause instanceof Error ? cause.message : "Unable to load contacts."));
+  }, []);
   const activeSuite = useMemo(
     () => launchpadSuites.find((suite) => suite.entryPath && currentPath.startsWith(suite.entryPath)),
     [currentPath],
@@ -84,8 +84,24 @@ export default function App() {
 
   function renderContent() {
     if (currentPath === morePath) return <MobileAccountScreen />;
-    if (currentPath === "/app/sales-crm/contacts") return <MobileContactsScreen contacts={contacts} onCreate={() => navigate("/app/sales-crm/contacts/new")} onView={(contact) => navigate(`/app/sales-crm/contacts/${contact.id}`)} onArchive={(contact) => setContacts((current) => current.filter((item) => item.id !== contact.id))} />;
+    if (currentPath === "/app/sales-crm/contacts") return <MobileContactsScreen contacts={contacts} onCreate={() => { setEditingContact(null); navigate("/app/sales-crm/contacts/new"); }} onView={(contact) => { void contactPort.getCustomer360(contact.id).then(setCustomer360); navigate(`/app/sales-crm/contacts/${contact.id}`); }} onEdit={(contact) => { setEditingContact(contact); navigate(`/app/sales-crm/contacts/${contact.id}/edit`); }} onDuplicates={() => { const source = contacts[0]; if (!source) return; setDuplicateContact(source); void contactPort.findPotentialDuplicates(source.id).then(setDuplicateCandidates); navigate(`/app/sales-crm/contacts/${source.id}/duplicates`); }} onArchive={async (contact) => { const result = await contactPort.archiveContact(contact.id, contact.updatedAt); if (result.status === "success") setContacts((current) => current.filter((item) => item.id !== contact.id)); }} />;
     if (currentPath === "/app/sales-crm/contacts/new") return <MobileCreateContactScreen onCancel={() => navigate("/app/sales-crm/contacts")} onCreated={(contact) => { setContacts((current) => [...current, contact]); navigate("/app/sales-crm/contacts"); }} />;
+    const editMatch = currentPath.match(/^\/app\/sales-crm\/contacts\/([^/]+)\/edit$/);
+    if (editMatch) {
+      const contact = editingContact ?? contacts.find((item) => item.id === decodeURIComponent(editMatch[1]));
+      return <MobileCreateContactScreen editingContact={contact} onCancel={() => navigate(`/app/sales-crm/contacts/${editMatch[1]}`)} onUpdated={(updated) => { setContacts((current) => current.map((item) => item.id === updated.id ? updated : item)); void contactPort.getCustomer360(updated.id).then(setCustomer360); navigate(`/app/sales-crm/contacts/${updated.id}`); }} />;
+    }
+    const duplicateMatch = currentPath.match(/^\/app\/sales-crm\/contacts\/([^/]+)\/duplicates$/);
+    if (duplicateMatch) return <MobileDuplicateReviewScreen contact={duplicateContact ?? contacts.find((item) => item.id === decodeURIComponent(duplicateMatch[1]))} candidates={duplicateCandidates} onBack={() => navigate("/app/sales-crm/contacts")} onDismiss={(candidate) => Alert.alert("Confirm dismissal", "This action will be recorded in the duplicate-review audit trail.", [{ text: "Cancel", style: "cancel" }, { text: "Dismiss", onPress: () => { void contactPort.dismissDuplicateReview(decodeURIComponent(duplicateMatch[1]), candidate.id, "DISMISS_DUPLICATE_REVIEW").then(() => contactPort.findPotentialDuplicates(decodeURIComponent(duplicateMatch[1])).then(setDuplicateCandidates)); } }])} />;
+    const contactMatch = currentPath.match(/^\/app\/sales-crm\/contacts\/([^/]+)$/);
+    if (contactMatch) {
+      const contact = contacts.find((item) => item.id === decodeURIComponent(contactMatch[1]));
+      if (!customer360 || customer360.contact.id !== contact?.id) {
+        if (contact) void contactPort.getCustomer360(contact.id).then(setCustomer360);
+        return <MobileCustomer360Screen loading={!contactError} error={contactError} onBack={() => navigate("/app/sales-crm/contacts")} />;
+      }
+      return <MobileCustomer360Screen view={customer360} onBack={() => navigate("/app/sales-crm/contacts")} onEdit={() => { setEditingContact(contact); navigate(`/app/sales-crm/contacts/${contact.id}/edit`); }} onArchive={async (target) => { const result = await contactPort.archiveContact(target.id, target.updatedAt); if (result.status === "success") { setContacts((current) => current.filter((item) => item.id !== target.id)); navigate("/app/sales-crm/contacts"); } }} />;
+    }
     if (activeSuite) {
       return <MobileWorkspaceScreen suite={activeSuite} onBack={() => navigate(launchpadPath)} />;
     }

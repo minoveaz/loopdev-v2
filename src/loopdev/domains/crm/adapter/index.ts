@@ -26,6 +26,8 @@ import type {
   CRMUpdateContactPatch,
   CRMCustomerProduct,
   CRMCreateCustomerProductInput,
+  CRMPotentialDuplicate,
+  CRMDuplicateReviewResult,
 } from "./types";
 import type { CRMOperationsAdapter } from "../operations/types";
 import type { CRMAutomationsAdapter } from "../automations";
@@ -66,8 +68,21 @@ export interface LoopdevCrmAdapter {
   listPipelineStages(): Promise<CRMStageDefinition[]>;
   listOpportunityStageHistory(opportunityId: string): Promise<CRMOpportunityStageHistory[]>;
   getCustomer360(contactId: string): Promise<Customer360View | null>;
+  findPotentialDuplicates(contactId: string): Promise<CRMPotentialDuplicate[]>;
+  dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<CRMDuplicateReviewResult>;
   listCustomerProducts(contactId: string): Promise<CRMCustomerProduct[]>;
   createCustomerProduct(input: CRMCreateCustomerProductInput): Promise<CRMCustomerProduct>;
+}
+
+/** Canonical contact boundary shared by desktop and the Expo mobile runtime. */
+export interface ContactPort {
+  listContacts(params: CRMContactListParams): Promise<CRMContactPage>;
+  createContact(input: CRMCreateContactInput): Promise<CRMContactMutationResult>;
+  updateContact(contactId: string, patch: CRMUpdateContactPatch, expectedUpdatedAt: string): Promise<CRMContactMutationResult>;
+  archiveContact(contactId: string, expectedUpdatedAt: string): Promise<CRMContactMutationResult>;
+  getCustomer360(contactId: string): Promise<Customer360View | null>;
+  findPotentialDuplicates(contactId: string): Promise<CRMPotentialDuplicate[]>;
+  dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<CRMDuplicateReviewResult>;
 }
 
 export interface LoopdevAdapter {
@@ -81,6 +96,7 @@ export interface LoopdevAdapter {
 
 // The adapter boundary is global to Loopdev; CRM is the first connected domain.
 export const loopdevAdapter: LoopdevAdapter = localLoopdevAdapter;
+export const contactPort: ContactPort = localLoopdevAdapter.crm;
 
 export * from "./types";
 export * from "../operations/types";

@@ -1,0 +1,69 @@
+{
+  "run_id": "MOD-CONTACTS-20260913-001",
+  "module": "Contacts",
+  "status": "blocked",
+  "current_phase": "03-build",
+  "attempt": 1,
+  "started_at": "2026-09-13T21:40:27.366Z",
+  "updated_at": "2026-09-14T00:40:00+02:00",
+  "input_fingerprint": "sha256:58ef83c66b9107dbe378570af216e2c612f78f89c758ca903bd24d179024f338",
+  "approvals": {
+    "design": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "gate": "design"
+    },
+    "plan": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "gate": "plan"
+    },
+    "verification": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "gate": "verification"
+    },
+    "release": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "gate": "release"
+    }
+  },
+  "approval_gates": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "b1caa20",
+    "working_tree": "modified",
+    "desktop_runtime_url": "http://localhost:8080/app/sales-crm/contacts",
+    "mobile_runtime_url": "http://localhost:8082/app/sales-crm/contacts",
+    "runtime_port": 8080
+  },
+  "platform_impact": [],
+  "checkpoint_paths": [
+    "docs/implementation/crm/contacts/runs/MOD-CONTACTS-20260913-001/00-discovery.json"
+  ],
+  "evidence_links": [],
+  "change_requests": [],
+  "blocked_by": [],
+  "next_action": "Resolve mobile edit and duplicate-review scope, then rerun verification and release gates.",
+  "commit": null,
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

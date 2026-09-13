@@ -7,58 +7,31 @@ import {
   WalletIllustration,
 } from "./illustrations";
 import { SuiteCard } from "./SuiteCard";
+import { launchpadSuites } from "../../../packages/contracts/src/launchpad";
 
-const suites = [
-  {
-    title: "Marketing Studio",
-    description: "High-performance identity governance and generative content engine for modern teams.",
-    version: "1.0.4",
-    isLocked: true,
-    illustration: <UIKitIllustration className="h-full w-full" />,
-  },
-  {
-    title: "Sales & CRM",
-    description: "Pipeline intelligence and relationship management powered by predictive neural models.",
-    version: "0.8.2",
-    to: "/app/sales-crm/overview",
-    illustration: <PartnersIllustration />,
-  },
-  {
-    title: "ERP",
-    description: "Shared product and service catalogs for the next generation of LoopDev operations.",
-    version: "0.1.0",
-    to: "/app/erp/overview",
-    illustration: <ERPIllustration />,
-  },
-  {
-    title: "Financial Ops",
-    description: "Automated billing, payroll, and industrial-grade fiscal compliance orchestration.",
-    version: "0.5.0",
-    isLocked: true,
-    illustration: <WalletIllustration />,
-  },
-  {
-    title: "Quant Ops",
-    description: "Algorithmic trading engine and high-frequency execution command center.",
-    version: "0.0.1",
-    status: "lab" as const,
-    isLocked: true,
-    illustration: <TargetIllustration />,
-  },
-  {
-    title: "Health OS",
-    description: "Industrial-grade clinical care, electronic health records, and medical agenda for IPS providers.",
-    version: "0.1.0",
-    isLocked: true,
-    illustration: <HealthIllustration />,
-  },
-] as const;
+const illustrations = {
+  marketing: <UIKitIllustration className="h-full w-full" />,
+  crm: <PartnersIllustration />,
+  erp: <ERPIllustration />,
+  financial: <WalletIllustration />,
+  quant: <TargetIllustration />,
+  health: <HealthIllustration />,
+};
 
 export function SuiteCatalog() {
   return (
     <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-      {suites.map((suite) => (
-        <SuiteCard key={suite.title} {...suite} />
+      {launchpadSuites.map((suite) => (
+        <SuiteCard
+          key={suite.id}
+          title={suite.title}
+          description={suite.description}
+          version={suite.version}
+          status={suite.status === "lab" ? "lab" : undefined}
+          isLocked={suite.status === "locked"}
+          to={suite.entryPath}
+          illustration={illustrations[suite.illustration]}
+        />
       ))}
     </div>
   );

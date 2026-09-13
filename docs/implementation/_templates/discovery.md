@@ -92,6 +92,18 @@ Do not add these to MVP without product approval.
 - Explicit exclusions:
 - Existing approvals:
 
+### Legacy reference policy
+
+Legacy documentation and component/view inventories are informational
+evidence, not implementation authority. They must not result in new legacy
+components, routes or parallel views. Map any still-required behavior to the
+current Rivera template, shared LoopDev primitives and existing LoopDev v2
+modules.
+
+| Legacy reference | Informational meaning | Current reuse target | Decision |
+|---|---|---|---|
+| | | | `INFORMATIONAL_ONLY` / `REUSE_CURRENT_PRIMITIVE` / `EXTEND_PLATFORM` / `REJECTED_DUPLICATE` |
+
 ## Existing LoopDev implementation
 
 | Area | Existing route/code/doc | Behavior observed | Evidence |

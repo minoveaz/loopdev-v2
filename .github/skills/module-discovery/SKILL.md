@@ -56,6 +56,15 @@ Product documentation is the definition of approved intent. Market knowledge
 is a discovery input, not authority to expand scope. Existing source is
 baseline evidence, not proof of compliance.
 
+Legacy documentation, screenshots, component inventories and view lists are
+informational evidence only. They must not be interpreted as approval to
+create new legacy components, routes or parallel views. When a documented
+capability is still required, discovery must map it to the current Rivera
+template, shared LoopDev primitives and existing LoopDev v2 modules before
+design or implementation. The default decision is `REUSE`; use
+`EXTEND_PLATFORM` only when an existing shared capability is genuinely
+insufficient, and record the reason and approval.
+
 ## External research and differentiation
 
 For modules with a meaningful market analogue, perform bounded web research
@@ -135,6 +144,8 @@ coherent LoopDev differentiators over a long feature list.
 - What exists but conflicts with the approved product contract?
 - What is present but not tested?
 - Which legacy paths, routes or models coexist?
+- Which legacy references are informational only, and what current template,
+  primitive or module must replace each one?
 
 ## Capability classification
 
@@ -163,6 +174,10 @@ NOT_APPLICABLE
 
 Never mark a capability as aligned solely because a file, route or component
 exists. Require observable behavior, contract or test evidence.
+
+For every legacy reference, record whether it is `INFORMATIONAL_ONLY`,
+`REUSE_CURRENT_PRIMITIVE`, `EXTEND_PLATFORM` or `REJECTED_DUPLICATE`. A
+legacy name is never by itself a valid implementation target.
 
 ## Required output
 

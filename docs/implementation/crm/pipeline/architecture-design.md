@@ -27,6 +27,15 @@
 - Explicitly out of scope: backend persistence, forecasting, quotes, AI,
   documents, billing and external integrations.
 
+### Legacy references and reuse-first rule
+
+Legacy component and view documentation is informational evidence for product
+intent and regression analysis only. It is not a construction blueprint and
+must not produce new legacy components, routes or parallel views. Required
+behavior must reuse the current Rivera template, shared LoopDev primitives
+and existing LoopDev v2 surfaces. A missing cross-cutting capability must be
+proposed as a Platform extension before any module-local implementation.
+
 ### Layer map
 
 | Layer | Responsibilities | Files/areas | Allowed dependencies | Forbidden dependencies |
@@ -122,6 +131,8 @@ detail activation and responsive/mobile behavior.
 | Notes and Tasks | `REUSE` | Platform contracts | Opportunity detail | yes |
 | Activity / stage history | `REUSE` | CRM/Platform activity contract | Pipeline and Customer 360 | yes |
 | Relations / Customer 360 | `REUSE` | CRM relation contracts | Contact and Lead links | yes |
+
+| Legacy components and views | `REUSE` or `EXTEND_PLATFORM` only | Current Rivera/Platform primitives and canonical Pipeline route | Regression evidence and behavior mapping | yes |
 
 ## Structural quality baseline
 

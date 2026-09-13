@@ -81,6 +81,16 @@ contract. A module-local copy of Notes, Files, Activity, Tasks, Relations,
 Document Intelligence or permissions is prohibited unless an approved
 `EXTEND_PLATFORM` or exception decision exists.
 
+### Legacy documentation is not implementation authority
+
+Legacy component names, screenshots, route lists and view inventories are
+historical/informational evidence only. They do not authorize creating new
+legacy components, routes or parallel views. Required behavior must first be
+mapped to the current Rivera template, shared LoopDev primitives and existing
+LoopDev v2 modules. Use `REUSE` by default; propose `EXTEND_PLATFORM` for a
+missing cross-cutting capability; reject duplicate module-local paths unless
+an explicit architecture decision approves an exception.
+
 ## Structural quality criteria
 
 Reviews must assess:

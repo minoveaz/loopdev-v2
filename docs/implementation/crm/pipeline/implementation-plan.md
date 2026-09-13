@@ -38,7 +38,9 @@
 
 - [x] Environment truth audit (runtime blocked).
 - [x] Platform reuse audit (initial baseline).
-- [ ] Legacy-flow audit.
+- [ ] Legacy-flow audit: classify old component/view references as
+  informational and map required behavior to current Rivera/LoopDev v2
+  primitives; do not create parallel legacy paths.
 - [ ] Route and runtime audit.
 - [ ] Surface-state audit.
 - [ ] Accessibility and i18n audit.

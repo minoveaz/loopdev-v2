@@ -77,6 +77,18 @@ Considera estas convenciones como restricciones de diseño:
 No inventes componentes, adapters o contratos existentes sin marcarlo como
 propuesta. Reutiliza primero los patrones compartidos de LoopDev.
 
+### Legacy documentation and reuse-first rule
+
+Legacy component names, screenshots, route lists and view descriptions are
+historical/informational references only. They do not authorize rebuilding
+those components or adding parallel views. For every required legacy
+capability, map the behavior to the current Rivera template, shared UI
+primitives and existing LoopDev v2 modules first. Prefer `REUSE`; if a shared
+capability is insufficient, propose `EXTEND_PLATFORM` with an explicit
+reason, owner and approval. A new module-specific component is allowed only
+when the behavior is genuinely module-specific and no reusable current
+primitive or Platform extension is appropriate.
+
 ## Visual baseline: Rivera
 
 Rivera es la base visual obligatoria de LoopDev. Usa su design system y sus

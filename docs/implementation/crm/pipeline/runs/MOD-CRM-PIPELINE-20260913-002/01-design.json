@@ -5,12 +5,12 @@
   "skill": "module-design",
   "parent_span_id": null,
   "module": "CRM Pipeline",
-  "status": "running",
+  "status": "completed",
   "decision_status": "open",
   "architecture_quality": "PENDING",
   "attempt": 1,
   "started_at": "2026-09-13T10:23:24+02:00",
-  "completed_at": null,
+  "completed_at": "2026-09-13T12:18:30+02:00",
   "environment": {
     "repository": "minoveaz/loopdev-v2",
     "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
@@ -49,7 +49,7 @@
     "Added the proposed Opportunity card hierarchy, states, permissions and responsive rules to the design baseline."
   ],
   "output_artifacts": [
-    "docs/implementation/crm/pipeline/runs/MOD-CRM-PIPELINE-20260913-002/run.json"
+    "docs/implementation/crm/pipeline/discovery.md"
   ],
   "validation": [
     {
@@ -61,8 +61,9 @@
   "requirements": [],
   "detected_failure": null,
   "likely_failure_origin": null,
-  "next_handoff": "Complete baseline comparison and architecture design before specialized analysis and planning.",
+  "next_handoff": "WAITING_DESIGN_APPROVAL: review discovery and architecture design before specialized analysis.",
   "evidence_links": [
+    "docs/implementation/crm/pipeline/discovery.md",
     "src/loopdev/pages/crm/Pipeline.tsx",
     "src/loopdev/domains/crm/adapter/local.ts",
     "src/test/crm/pipeline/pipeline-page.test.tsx",

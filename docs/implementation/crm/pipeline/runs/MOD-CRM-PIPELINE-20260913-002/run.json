@@ -3,7 +3,7 @@
   "module": "CRM Pipeline",
   "mode": "existing_implementation_baseline",
   "status": "running",
-  "current_phase": "INTAKE",
+  "current_phase": "WAITING_DESIGN_APPROVAL",
   "attempt": 1,
   "started_at": "2026-09-13T10:23:24+02:00",
   "updated_at": "2026-09-13T10:23:24+02:00",
@@ -64,7 +64,7 @@
   ],
   "change_requests": [],
   "blocked_by": [],
-  "next_action": "Run INTAKE and CONTEXT_AUDIT, then compare the existing baseline to the approved full pilot scope.",
+  "next_action": "Review discovery and architecture design, then approve or request changes before specialized analysis.",
   "commit": "c80b814",
   "pull_request": null,
   "retention": {

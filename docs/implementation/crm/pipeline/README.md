@@ -16,12 +16,12 @@
 | Field | Value |
 |---|---|
 | Status | `in_progress` |
-| Current phase | `INTAKE` / `CONTEXT_AUDIT` |
+| Current phase | `WAITING_DESIGN_APPROVAL` |
 | Current issue | Not created until plan approval |
 | Branch | `feature/crm-v2-foundation` |
 | Commit | `c80b814` |
 | Runtime | `http://localhost:8081/app/sales-crm/pipeline` running from canonical checkout |
-| Last evidence | Existing implementation registered as baseline; HTTP 200 on canonical runtime |
+| Last evidence | Discovery and expected-versus-existing matrix completed; HTTP 200 on canonical runtime |
 
 ## Scope
 
@@ -45,7 +45,7 @@
 
 | Phase | Issue | Status | Checkpoint | Evidence |
 |---|---:|---|---|---|
-| 01 Design | pending | `running` | `runs/MOD-CRM-PIPELINE-20260913-002/01-design.json` | Baseline comparison and design audit |
+| 01 Design | pending | `waiting_user` | `runs/MOD-CRM-PIPELINE-20260913-002/01-design.json` | Discovery and baseline comparison complete |
 | 02 Domain | pending | pending | pending | pending |
 | 03 Access | pending | pending | pending | pending |
 | 04 API | pending | pending | pending | pending |

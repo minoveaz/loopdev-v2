@@ -15,6 +15,21 @@ permissions:
   pull-requests: read
 
 jobs:
+  module-traceability:
+    name: Validar trazabilidad de módulos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validar contratos y checkpoints
+        run: npm run validate:module-runs
+
   changes:
     name: Identificar qué cambió
     runs-on: ubuntu-latest

@@ -1,0 +1,47 @@
+{
+  "run_id": "MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>",
+  "module": "<Module name>",
+  "status": "pending",
+  "current_phase": "01-design",
+  "attempt": 1,
+  "started_at": "<RFC3339 timestamp>",
+  "updated_at": "<RFC3339 timestamp>",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "<absolute path when needed>",
+    "checkout_type": "branch",
+    "branch": "<branch>",
+    "base_branch": "develop",
+    "head_commit": "<commit>",
+    "working_tree": "clean",
+    "runtime_url": "<URL>",
+    "runtime_port": null
+  },
+  "approvals": {
+    "design": "pending",
+    "plan": "pending",
+    "verification": "pending",
+    "release": "pending"
+  },
+  "platform_impact": [
+    {
+      "capability": "<Notes|Files|Activity|Tasks|Relations|Document Intelligence>",
+      "decision": "REUSE",
+      "consumers": [],
+      "affected_tests": [],
+      "migration_required": false
+    }
+  ],
+  "checkpoint_paths": [],
+  "evidence_links": [],
+  "change_requests": [],
+  "blocked_by": [],
+  "next_action": "<next action>",
+  "commit": null,
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

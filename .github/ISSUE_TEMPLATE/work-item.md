@@ -34,3 +34,20 @@ assignees: ""
 <!-- Link the active track that owns this work. -->
 
 - Track: `tracks/active/<area>/<track>.md`
+
+## 🔍 Traceability
+
+- Run ID: `MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>`
+- Phase/span: `<phase>` / `<span-id>`
+- Implementation docs: `docs/implementation/<module>/`
+- Product definition: `docs/06-product/<suite>/<module>/`
+- Evidence:
+
+## ✅ Closure rule
+
+<!-- Close only when acceptance criteria, evidence and the phase checkpoint are complete. -->
+
+- [ ] Acceptance criteria complete.
+- [ ] Evidence linked.
+- [ ] Checkpoint updated.
+- [ ] Next handoff or final review recorded.

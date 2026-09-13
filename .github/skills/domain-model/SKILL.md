@@ -30,6 +30,8 @@ unless they directly affect the domain model.
 ### Input context
 
 - module objective and available `module-design`;
+- `module-discovery` artifact, including expected capabilities and domain
+  baseline;
 - existing domain contracts or repository evidence;
 - known tenant, ownership and lifecycle constraints.
 
@@ -72,3 +74,7 @@ skill, decisions, domain artifact, unresolved questions, detected failure,
 likely origin and status. Use
 `docs/implementation/_templates/phase-evidence.md` for the human-readable
 phase record.
+
+Do not infer the domain only from existing code. Reconcile discovery's
+expected entities and lifecycle with the approved product definition and
+record missing or conflicting baseline items as decisions.

@@ -30,6 +30,8 @@ test cases. Do not invent backend infrastructure or modify code.
 ### Input context
 
 - module specification and domain model;
+- `module-discovery` artifact with lifecycle, outputs and recovery
+  expectations;
 - current local adapter/storage patterns;
 - known remote API and connectivity constraints.
 
@@ -64,6 +66,10 @@ Define recovery after reload, offline rejection, permission changes, version
 conflicts, failed jobs, migration rollback and partial synchronization.
 Distinguish business state, connectivity, entity sync state and mutation state
 in every operation matrix.
+
+Use discovery to identify which expected capabilities must work local-first
+and which outputs/events require durable reconciliation. Existing local
+behavior is baseline evidence, not the target sync contract.
 
 ### Traceability
 

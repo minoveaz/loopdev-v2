@@ -53,6 +53,7 @@ release verdict there and do not create a parallel documentation root.
 ### Input context
 
 - `module-design`;
+- `module-discovery`;
 - `module-plan`;
 - `module-verify` evidence;
 - current repository and release constraints.
@@ -96,6 +97,11 @@ are resolved or explicitly accepted by the responsible approver.
 Review the module architecture artifact against
 `docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md`. The verdict
 must cover:
+
+Review whether the final implementation satisfies the discovery baseline and
+whether each approved differentiation hypothesis was delivered, deferred or
+rejected with evidence. Benchmark parity is not a release requirement unless
+product scope explicitly approved it.
 
 - target versus actual boundaries and dependency direction;
 - separation of presentation, application, domain, ports and adapters;

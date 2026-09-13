@@ -71,6 +71,7 @@ Never create a parallel flat directory or replace prior phase evidence.
 
 - approved `module-design`;
 - approved `module-plan`;
+- completed `module-discovery` baseline and expected-versus-existing matrix;
 - actual repository, checkout, branch, commit and working-tree state.
 
 ### Decision status

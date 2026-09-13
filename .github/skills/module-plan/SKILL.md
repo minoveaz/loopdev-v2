@@ -92,6 +92,7 @@ consumers.
 ### Input context
 
 - approved or latest `module-design` specification;
+- completed `module-discovery` artifact and expected-versus-existing matrix;
 - repository, checkout, branch, commit and working-tree state;
 - existing implementation patterns and constraints.
 
@@ -109,6 +110,10 @@ risk, validation command and definition of done. End with:
 - acceptance evidence plan;
 - decisions and blockers;
 - state `complete`, `partial` or `blocked`.
+
+The plan must convert discovery gaps and approved design decisions into
+executable tasks. It must retain each baseline classification and evidence
+link instead of repeating discovery or treating source presence as completion.
 
 ### Action boundaries
 

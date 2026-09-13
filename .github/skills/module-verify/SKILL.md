@@ -57,6 +57,7 @@ checkpoint. Do not create a second implementation directory.
 ### Input context
 
 - `module-design`;
+- `module-discovery`;
 - `module-plan`;
 - implementation checkout and runtime URL/port;
 - available test, build and lint configuration.
@@ -101,6 +102,11 @@ Leave the issue open for `PARTIAL`, `FAIL` or `NOT_TESTED` outcomes.
 Use the module `architecture-design.md` and
 `docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` as the
 baseline. Record:
+
+Compare implementation evidence against discovery's expected-versus-existing
+matrix, not only against the implementation plan. A capability marked
+`MISSING`, `EXISTS_PARTIALLY` or `NOT_TESTED` remains a gap until verified or
+remediated.
 
 - actual versus planned layer and module boundaries;
 - forbidden or unexplained imports and dependency direction;

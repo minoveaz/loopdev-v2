@@ -29,6 +29,8 @@ choose infrastructure without an approved parent plan.
 ### Input context
 
 - module specification and domain decisions;
+- `module-discovery` artifact with inputs, outputs, events and expected
+  integrations;
 - current adapter interfaces and repository evidence;
 - future backend constraints when known.
 
@@ -59,6 +61,11 @@ Prefer existing Platform contracts for Notes, Files, Document Intelligence,
 Activity, Tasks and Relations. Define an extension only when the shared
 contract lacks a generic capability, and identify existing consumers affected
 by that extension.
+
+Use discovery's input/output/event inventory as the completeness baseline.
+Every missing or conflicting contract must become an explicit decision or
+plan task; do not let the current adapter define the target contract by
+accident.
 
 Every contract must define direct-URL authorization behavior, tenant scope,
 sensitive-field handling, retryability, idempotency, version conflicts,

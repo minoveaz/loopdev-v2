@@ -27,6 +27,7 @@ Return a permission matrix, rules, test cases and open decisions.
 ### Input context
 
 - module and domain model;
+- `module-discovery` artifact and actor/outcome matrix;
 - organization, workspace, team and tenant assumptions;
 - existing auth and policy patterns.
 
@@ -56,6 +57,11 @@ Shared capabilities must reuse their established permission and audit
 contracts. Define only module-specific conditions, scopes or sensitive fields;
 do not create a parallel authorization model for Notes, Files, Tasks or
 Document Intelligence.
+
+Use discovery to verify that every expected actor, outcome and sensitive
+operation is represented. If the existing implementation exposes less or more
+access than discovery expects, record the gap rather than treating the UI as
+the authorization policy.
 
 Include tests for deep-link access, stale cached data after permission
 changes, cross-organization records, bulk actions, exports, attachments and

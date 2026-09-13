@@ -25,6 +25,19 @@ La respuesta debe explicar:
 
 Responde en español salvo que el usuario solicite otro idioma.
 
+## Discovery handoff
+
+Consume the completed
+`docs/implementation/<suite>/<module>/discovery.md` from
+`module-discovery`. Treat it as the authoritative discovery handoff for
+expected capabilities, market references, differentiation hypotheses and the
+expected-versus-existing matrix. Do not repeat discovery or silently promote
+an exploratory hypothesis into approved scope.
+
+Resolve every discovery `OPEN_DECISION`, `MISSING` and
+`EXISTS_BUT_CONFLICTS` item in the design output or explicitly hand it off as
+blocked. Preserve source URLs and evidence for external benchmark claims.
+
 ## Implementation workspace handoff
 
 The `delivery` agent creates the canonical workspace before invoking this

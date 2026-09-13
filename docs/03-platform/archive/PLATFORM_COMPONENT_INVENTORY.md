@@ -51,7 +51,7 @@ primitive when the behavior belongs to Platform.
 - Local preview persistence: `src/loopdev/domains/files/data/localPreviewStore.ts`.
 - Audit and retention events: `src/loopdev/domains/files/data/localFileEvents.ts`.
 - Future suite contexts: `src/loopdev/domains/files/futureConsumers.ts`.
-- Backend mapping boundary: `docs/03-platform/FILES_BACKEND_MAPPING.md`.
+- Backend mapping boundary: `docs/03-platform/backend/FILES_BACKEND_MAPPING.md`.
 
 ## Which primitive to choose
 

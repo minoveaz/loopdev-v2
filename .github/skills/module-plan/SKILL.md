@@ -9,6 +9,10 @@ user-invocable: true
 Consume a `module-design` specification and convert it into an executable
 implementation plan without writing production code.
 
+Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first. Do not turn
+proposed `SAAS_*` references or archive-only documents into implementation
+dependencies without verified V2 source, route, test, or checkpoint evidence.
+
 ## Responsibilities
 
 - Verify repository, checkout, branch, commit and local changes before planning.
@@ -50,7 +54,8 @@ Do not claim implementation is complete and do not modify production files.
 
 The first planning task must inspect:
 
-- `docs/03-platform/PLATFORM_COMPONENT_INVENTORY.md`;
+- `docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md` and
+  `docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md`;
 - existing Notes, Files, Activity, Tasks, Relations and Document Intelligence
   contracts;
 - current consumers and adapters;
@@ -92,6 +97,8 @@ consumers.
 ### Input context
 
 - approved or latest `module-design` specification;
+- approved `module-visual-design` source and evidence; planning is blocked
+  while the visual-design subgate is awaiting approval;
 - completed `module-discovery` artifact and expected-versus-existing matrix;
 - repository, checkout, branch, commit and working-tree state;
 - existing implementation patterns and constraints.
@@ -125,7 +132,7 @@ create commits or silently expand the approved scope.
 Create or update `docs/implementation/<suite>/<module>/implementation-plan.md`
 and its phase evidence in the initialized workspace. Create a checkpoint for
 the plan phase using
-`docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`. Record the environment
+`docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`. Record the environment
 evidence, design input, audit-task results, plan artifact, blockers, detected
 failure, likely origin and next handoff. Use
 `docs/implementation/_templates/implementation-plan.md` and create/update the

@@ -70,7 +70,7 @@ providers y permisos server-side no invalida el cierre local: pertenece a las fa
 ## Fase transversal siguiente
 
 La siguiente unidad transversal es el **Sistema global de formularios**. Su contrato y alcance
-viven en `docs/03-platform/LOOPDEV_GLOBAL_FORMS_PHASE.md`. Esta fase debe ejecutarse antes de
+viven en `docs/03-platform/frontend/LOOPDEV_GLOBAL_FORMS_PHASE.md`. Esta fase debe ejecutarse antes de
 seguir ampliando formularios de CRM o conectar nuevas superficies de persistencia, y aplica por
 igual a drawer, modal, página completa, wizard e inline edit. Rivera se utiliza como referencia
 visual auditada; `AppDrawer` y los primitives de `src/components/ui` son la base implementable

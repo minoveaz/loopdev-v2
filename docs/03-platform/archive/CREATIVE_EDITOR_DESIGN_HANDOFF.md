@@ -87,9 +87,9 @@ editor's domain logic.
 Read these authorities in order:
 
 1. [Platform Shell mode inventory](./PLATFORM_SHELL_MODE_INVENTORY.md)
-2. [SaaS visual recipes](./SAAS_VISUAL_RECIPES.md)
-3. [SaaS configurable composition contract](./SAAS_COMPOSITION_CONTRACT.md)
-4. [SaaS reference compositions](./SAAS_REFERENCE_COMPOSITIONS.md)
+2. [Archived SaaS visual recipes](./archive/SAAS_VISUAL_RECIPES.md)
+3. [Archived SaaS configurable composition contract](./archive/SAAS_COMPOSITION_CONTRACT.md)
+4. [Archived SaaS reference compositions](./archive/SAAS_REFERENCE_COMPOSITIONS.md)
 5. [ModuleHeader implementation](../../ds/packages/ui/src/components/composites/workspace/ModuleHeader/index.tsx)
 6. [ModuleContextSidebar implementation](../../ds/packages/ui/src/components/composites/shell/ModuleContextSidebar/index.tsx)
 7. [CreativeEditor fixture](../../ds/packages/ui/src/components/composites/workspace/CompositionGrid/fixtures.ts)

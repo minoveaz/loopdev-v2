@@ -6,7 +6,7 @@
   "parent_span_id": null,
   "module": "CRM Pipeline",
   "status": "completed",
-  "decision_status": "approved",
+  "decision_status": "confirmed",
   "architecture_quality": "PENDING",
   "attempt": 1,
   "started_at": "2026-09-13T10:23:24+02:00",
@@ -17,8 +17,8 @@
     "checkout_type": "branch",
     "branch": "feature/crm-v2-foundation",
     "base_branch": "develop",
-    "head_commit": "48f6ff2",
-    "working_tree": "modified by approval checkpoint",
+    "head_commit": "c03a5d812fb72a97b4e0d90866d0415cef7395de",
+    "working_tree": "modified by documentation run",
     "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
     "runtime_port": 8081,
     "runtime_status": "running"
@@ -61,7 +61,7 @@
   "requirements": [],
   "detected_failure": null,
   "likely_failure_origin": null,
-  "next_handoff": "SPECIALIZED_ANALYSIS: run domain, access, API and sync analysis before creating the implementation plan.",
+  "next_handoff": "01-visual-design: create normative visual source and evidence before specialized analysis or plan approval.",
   "evidence_links": [
     "docs/implementation/crm/pipeline/discovery.md",
     "src/loopdev/pages/crm/Pipeline.tsx",

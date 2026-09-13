@@ -6,6 +6,10 @@ user-invocable: true
 
 # LoopDev Module Design
 
+Before designing, read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md`.
+Treat proposed `SAAS_*` documents as non-runtime intent and require source
+evidence before describing a platform capability as implemented.
+
 ## Role
 
 Actúa como arquitecto de producto SaaS, dominio y plataforma para LoopDev.
@@ -146,9 +150,10 @@ Incluye obligatoriamente estas tablas:
 |---|---|---|---|---|---|
 
 Documenta también cualquier excepción y por qué no puede resolverse con
-Platform. La fuente inicial del inventario es
-`docs/03-platform/PLATFORM_COMPONENT_INVENTORY.md` y la documentación de cada
-capacidad en `docs/03-platform` y `docs/06-product`.
+Platform. Las fuentes iniciales de reutilización son
+`docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md` y
+`docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md`, junto con la
+documentación de cada capacidad en `docs/03-platform` y `docs/06-product`.
 
 ## Operational truth and regression prevention
 
@@ -180,7 +185,7 @@ explícita.
 
 ## Architecture and structural design
 
-Apply `docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` to every
+Apply `docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` to every
 module. Produce or update
 `docs/implementation/<module>/architecture-design.md` from
 `docs/implementation/_templates/architecture-design.md`.
@@ -581,8 +586,14 @@ afirma que una capacidad esté implementada.
 
 ### Traceability
 
+Design must hand off to the mandatory `module-visual-design` subgate before
+specialized domain/access/API/sync analysis or plan approval. The visual
+skill owns the normative wireframe source, view/state matrix and review
+evidence; design must not treat existing screenshots or legacy view docs as
+visual approval.
+
 Create or update a versioned checkpoint for the current run using the contract
-in `docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`. Use the
+in `docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`. Use the
 documentation templates in `docs/implementation/_templates/` and record the
 product-to-implementation links. Report the run ID, phase, skill, parent
 phase, input artifacts, decisions, output artifacts, acceptance evidence,

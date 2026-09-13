@@ -1,9 +1,9 @@
 ---
 title: SaaS reference compositions
-status: phase-1-reference-baseline
+status: proposed-not-implemented
 owner: platform
 reviewed_at: 2026-08-14
----
+---> **PROPOSED — NOT IMPLEMENTED:** This document is a design/reference proposal, not a runtime contract. No V2 runtime registry, resolver, or consumer is available unless independently verified by source, route, test, and active checkpoint evidence.
 
 # SaaS reference compositions
 

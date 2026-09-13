@@ -20,15 +20,15 @@ Every run maintains an `ARCHITECTURE_QUALITY` status:
 | Concern | Location |
 |---|---|
 | Agent profile | `.github/agents/delivery.agent.md` |
-| Agent contract | `docs/03-platform/MODULE_DELIVERY_AGENT_CONTRACT.md` |
-| Traceability | `docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md` |
+| Agent contract | `docs/03-platform/governance/MODULE_DELIVERY_AGENT_CONTRACT.md` |
+| Traceability | `docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md` |
 | Product definition | `docs/06-product/<suite>/<module>/` |
 | Implementation documentation | `docs/implementation/<module>/` |
 | Implementation templates | `docs/implementation/_templates/` |
 | Track template | `tracks/templates/module-development-track.md` |
 | Issue templates | `.github/ISSUE_TEMPLATE/` |
 | CI validation | `.github/workflows/ci.yml` |
-| Architecture contract | `docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` |
+| Architecture contract | `docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` |
 
 ## Inputs
 
@@ -98,6 +98,8 @@ INTAKE
   → DISCOVERY
   → DESIGN
   → WAITING_DESIGN_APPROVAL
+  → 01-VISUAL-DESIGN
+  → WAITING_VISUAL_DESIGN_APPROVAL
   → SPECIALIZED_ANALYSIS
   → PLAN
   → WAITING_PLAN_APPROVAL
@@ -131,6 +133,7 @@ deviated.
 | Phase | Skill | Output |
 |---|---|---|
 | Design | `module-design` | Product and architecture specification |
+| Visual design | `module-visual-design` | Normative visual source, view/state matrix and wireframe evidence |
 | Discovery | `module-discovery` | Expected capabilities, domain baseline and expected-versus-existing matrix |
 | Domain | `domain-model` | Entities, states, invariants and events |
 | Access | `access-design` | Permission, scope and security matrix |
@@ -192,6 +195,7 @@ The agent must wait for explicit approval at:
 | Gate | Required decision |
 |---|---|
 | Design | Scope, MVP, UX and architecture |
+| Visual design | Wireframes, states, breakpoints, accessibility and Rivera/shared primitive reuse |
 | Plan | Tasks, dependencies, risk and effort |
 | Open decision | Product, domain, access, API, sync or data ambiguity |
 | Platform extension | Shared capability or contract change |
@@ -200,6 +204,13 @@ The agent must wait for explicit approval at:
 | Release | Review verdict and unresolved risks |
 | Push | Publish branch to remote |
 | Pull request | Create or update PR |
+
+`01-visual-design` is mandatory after discovery/module-design and before
+specialized analysis or plan approval. Its Markdown source is normative;
+wireframe SVGs are review evidence only. The gate covers wireframes, visual
+states, desktop/mobile breakpoints, accessibility, Rivera/shared LoopDev
+primitive reuse and approval evidence. The run stops at
+`WAITING_VISUAL_DESIGN_APPROVAL` until explicit approval is recorded.
 
 Local commits are allowed after approved scope and validation gates pass.
 Pushes and pull requests always require explicit approval.

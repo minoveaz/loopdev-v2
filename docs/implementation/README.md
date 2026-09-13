@@ -3,6 +3,14 @@
 This directory contains the versioned execution record for implementing
 LoopDev modules. It must not replace product specifications.
 
+## Documentation governance cleanup
+
+Delivery runs must read
+`docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` before product or
+platform references. Proposed `SAAS_*` documents are non-runtime context only;
+archived material is traceability only. A run must pause when authority or
+implementation evidence is ambiguous.
+
 ## Source-of-truth boundaries
 
 | Concern | Canonical location |
@@ -25,6 +33,8 @@ docs/implementation/<suite>/<module>/
 ├── README.md
 ├── implementation-plan.md
 ├── architecture-design.md
+├── visual-design.md
+├── view-state-matrix.md
 ├── phase-01-discovery.md
 ├── phase-02-foundation.md
 ├── phase-03-build.md
@@ -58,6 +68,13 @@ Every module must include `architecture-design.md`. It is the structural
 baseline for layer boundaries, responsibilities, dependencies, refactors and
 technical debt, and is linked from the design, plan, checkpoints, evidence
 matrix and review issue.
+
+Every module must also include `visual-design.md` and `view-state-matrix.md`.
+These Markdown files are the normative visual source: they define wireframes,
+visual states, responsive breakpoints, accessibility, Rivera/shared LoopDev
+primitive reuse and open decisions. SVG or other visual artifacts are review
+evidence only and must link back to the Markdown source; they do not replace
+the source or constitute visual approval.
 
 The operational JSON templates are:
 

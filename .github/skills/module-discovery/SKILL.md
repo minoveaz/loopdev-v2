@@ -43,6 +43,13 @@ an alternate documentation root.
 
 ## Discovery sources
 
+Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first, then use
+`docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md` and
+`docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md` for current UI and shell
+reuse. Apply its authority tiers while evaluating sources: `SAAS_*` documents
+are proposed, non-runtime references, and archive-only documents cannot prove
+active capabilities.
+
 Inspect and distinguish:
 
 1. the user's requested business outcome;
@@ -242,5 +249,5 @@ Record:
 - `detected_by` and `likely_origin` for failures;
 - exact handoff to `module-design`.
 
-Use `docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md` and keep evidence
+Use `docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md` and keep evidence
 redacted of secrets and unnecessary PII.

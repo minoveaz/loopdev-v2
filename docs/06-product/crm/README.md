@@ -1,5 +1,10 @@
 # Documentacion de producto CRM
 
+> **Source of truth:** read
+> [`../../03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md`](../../03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md)
+> first. The `SAAS_*` platform documents are proposed, non-runtime references;
+> they do not prove that a registry, resolver, or consumer exists.
+
 Documentacion funcional del CRM de LoopDev v2. Esta carpeta conserva contratos y evidencia
 funcional procedentes del producto legacy, pero la implementacion visual autoritativa es la
 aplicacion LoopDev v2 de este repositorio.

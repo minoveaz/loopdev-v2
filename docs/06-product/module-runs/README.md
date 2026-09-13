@@ -26,7 +26,7 @@ module-runs/<run-id>/
 ```
 
 The canonical contract is
-`docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`.
+`docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`.
 
 ## Review states
 

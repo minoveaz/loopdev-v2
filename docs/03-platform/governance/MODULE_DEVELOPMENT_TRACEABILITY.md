@@ -23,6 +23,7 @@ production repository and should be reviewed with the module design.
 | Phase | Primary skill | Purpose | Completion gate |
 |---|---|---|---|
 | `01-design` | `module-design` | Functional, product and architecture specification | Requirements, platform reuse and acceptance matrix complete |
+| `01-visual-design` | `module-visual-design` | Normative visual source, view/state matrix and wireframe evidence | Visual evidence complete and explicit approval recorded |
 | `00-discovery` | `module-discovery` | Expected capabilities and existing-state comparison | Scope, domain baseline and handoff matrix complete |
 | `02-domain` | `domain-model` | Entities, states, invariants and events | Domain decisions resolved or explicitly open |
 | `03-access` | `access-design` | RBAC, scopes, sensitive data and audit | Permission matrix and security tests defined |
@@ -34,7 +35,8 @@ production repository and should be reviewed with the module design.
 | `09-review` | `module-review` | Release and architecture decision | Verdict and blocking findings recorded |
 | `10-git` | `git-workflow` | Commit, push and pull request operations | Git evidence recorded separately from product evidence |
 
-Helper phases may run as child spans of `01-design` or `06-plan`. They must
+Helper phases may run as child spans of `01-design`, `01-visual-design` or
+`06-plan`. They must
 not silently become independent implementations.
 
 ## Run identity
@@ -73,6 +75,7 @@ canonical checkpoint location is the implementation documentation directory:
 docs/implementation/<module>/runs/<run-id>/
 ├── run.json
 ├── 01-design.json
+├── 01-visual-design.json
 ├── 02-domain.json
 ├── 03-access.json
 ├── 04-api.json
@@ -272,7 +275,8 @@ The workflow pauses for explicit approval at these boundaries:
 
 | Boundary | Required approval |
 |---|---|
-| `01-design` → `06-plan` | Product and architecture design approved |
+| `01-design` → `01-visual-design` | Product and architecture design approved |
+| `01-visual-design` → specialized analysis | Visual source and review evidence approved |
 | `06-plan` → `07-build` | Implementation scope and dependencies approved |
 | `08-verify` → `09-review` | Verification evidence accepted for review |
 | `09-review` → `10-git` | Release decision approved; commit may be automatic, push/PR require explicit approval |

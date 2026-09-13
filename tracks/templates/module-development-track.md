@@ -34,7 +34,7 @@ implementation_docs:
 
 - Product definition: `docs/06-product/<suite>/<module>/`
 - Implementation documentation: `docs/implementation/<module>/`
-- Traceability contract: `docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`
+- Traceability contract: `docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`
 
 ## Scope
 

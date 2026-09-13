@@ -37,6 +37,7 @@
 - [ ] Surface-state audit.
 - [ ] Accessibility and i18n audit.
 - [ ] Security and rollback audit.
+- [ ] Visual design approval (`01-visual-design`) recorded before specialized analysis and plan approval.
 
 ## Issue execution policy
 

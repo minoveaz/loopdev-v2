@@ -25,7 +25,7 @@ LoopDev checkout.
 - Keep business logic in contracts, hooks, services and adapters.
 - Keep presentation, application/use-case, domain, port/contract and adapter
   responsibilities separate according to
-  `docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md`.
+  `docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md`.
 - Record significant refactors with their reason, preserved behavior, affected
   files and consumers, risk, before/after tests, rollback and residual debt.
 - Stop and report an unapproved dependency-boundary or responsibility
@@ -99,7 +99,7 @@ declare backend/release readiness without corresponding evidence.
 ### Traceability
 
 Create a checkpoint for every coherent build phase using
-`docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`. Record the exact files
+`docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`. Record the exact files
 changed, tests, commands, runtime evidence, plan deviations, migrations,
 detected failure, likely origin and next handoff. Mark the phase `blocked` or
 `deviated` instead of claiming completion when evidence is incomplete. Update

@@ -53,7 +53,10 @@ this order:
    for visual foundations and non-negotiable principles.
 2. [Component Composition Protocol](../../02-frontend/COMPONENT_COMPOSITION_PROTOCOL.md)
    for the component lifecycle, structure, tokens and quality gates.
-3. [SaaS visual recipes](../../03-platform/SAAS_VISUAL_RECIPES.md) for Canvas
+3. The archived SaaS visual recipes
+   (`../../03-platform/archive/SAAS_VISUAL_RECIPES.md`) are historical
+   context only; current V2 views must use the approved module visual-design
+   artifact and verified LoopDev primitives.
    recipes, surfaces, depth and density.
 4. This protocol for CRM ownership, domain contracts and CRM-specific examples.
 

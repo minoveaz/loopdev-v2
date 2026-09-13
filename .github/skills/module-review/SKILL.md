@@ -6,6 +6,12 @@ user-invocable: true
 
 # LoopDev Module Review
 
+Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first, then use
+`docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md` and
+`docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md` for current reusable UI and
+shell evidence. Keep proposed `SAAS_*` documents and archive-only history
+separate from implemented V2 evidence when reviewing delivery claims.
+
 Perform a final product and architecture review using the design, plan and
 verification evidence.
 
@@ -82,7 +88,7 @@ replace missing verification evidence with assumptions.
 ### Traceability
 
 Create a review checkpoint linked to the design, plan and verification
-checkpoints using `docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`.
+checkpoints using `docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`.
 Record the verdict, findings, confidence, blocking status, detected failure,
 likely origin, release decision and next handoff. Update the implementation
 README from `docs/implementation/_templates/module-implementation-readme.md`,
@@ -95,7 +101,7 @@ are resolved or explicitly accepted by the responsible approver.
 ## Architecture quality gate
 
 Review the module architecture artifact against
-`docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md`. The verdict
+`docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md`. The verdict
 must cover:
 
 Review whether the final implementation satisfies the discovery baseline and

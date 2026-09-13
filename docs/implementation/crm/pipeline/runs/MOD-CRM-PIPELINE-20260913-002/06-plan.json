@@ -1,0 +1,108 @@
+{
+  "input_artifacts": [
+    "docs/implementation/crm/pipeline/discovery.md",
+    "docs/implementation/crm/pipeline/architecture-design.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_UX_SPEC.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_IMPACT_ASSESSMENT.md"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-module-runs.mjs",
+      "result": "passed",
+      "evidence": "All CRM Pipeline phase checkpoints and run manifest parse and satisfy schema"
+    },
+    {
+      "command": "node scripts/report-module-runs.mjs",
+      "result": "passed",
+      "evidence": "Run report generated without malformed checkpoint data"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "Documentation diff has no whitespace errors"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "PLAN-SCOPE-001",
+      "status": "PASS",
+      "evidence": "Approved Kanban/table/detail/manual-create scope retained in implementation plan"
+    },
+    {
+      "id": "PLAN-REUSE-001",
+      "status": "PASS",
+      "evidence": "Rivera and shared LoopDev primitives/Platform contracts are explicit dependencies"
+    },
+    {
+      "id": "PLAN-AUDITS-001",
+      "status": "PASS",
+      "evidence": "Mandatory audit tasks included before build"
+    },
+    {
+      "id": "PLAN-APPROVAL-001",
+      "status": "PARTIAL",
+      "evidence": "Plan is complete and awaiting explicit plan approval before issue execution"
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "c03a5d812fb72a97b4e0d90866d0415cef7395de",
+    "working_tree": "modified by documentation run",
+    "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
+    "runtime_port": 8081,
+    "runtime_status": "running"
+  },
+  "attempt": 1,
+  "run_id": "MOD-CRM-PIPELINE-20260913-002",
+  "span_id": "MOD-CRM-PIPELINE-20260913-002:06-plan",
+  "phase": "06-plan",
+  "skill": "module-plan",
+  "parent_span_id": "MOD-CRM-PIPELINE-20260913-002:01-design",
+  "module": "CRM Pipeline",
+  "status": "completed",
+  "decision_status": "open",
+  "architecture_quality": "PENDING",
+  "started_at": "2026-09-13T12:30:00+02:00",
+  "completed_at": "2026-09-13T12:30:00+02:00",
+  "decisions": [
+    {
+      "id": "DEC-PIPELINE-PLAN-001",
+      "status": "confirmed",
+      "summary": "Plan sequences mandatory audits before implementation and reuses Rivera/shared LoopDev/Platform primitives."
+    },
+    {
+      "id": "DEC-PIPELINE-PLAN-002",
+      "status": "open",
+      "summary": "Plan approval is required before any implementation phase or issue execution."
+    },
+    {
+      "id": "DEC-PIPELINE-PLAN-003",
+      "status": "assumed",
+      "summary": "Durable remote queue and final authorization claim names will be resolved during approved build planning."
+    }
+  ],
+  "actions": [
+    "Converted discovery gaps and helper outputs into dependency-aware implementation work breakdown.",
+    "Added explicit platform-reuse, legacy-flow, route/runtime, state, accessibility/i18n, security/rollback, architecture-boundary, responsibility and refactor-safety audits.",
+    "Preserved plan artifact, but visual-design subgate now supersedes plan approval; no production implementation started."
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/implementation-plan.md",
+    "docs/implementation/crm/pipeline/README.md"
+  ],
+  "next_handoff": "WAITING_VISUAL_DESIGN_APPROVAL",
+  "evidence_links": [
+    "docs/implementation/crm/pipeline/implementation-plan.md",
+    "docs/implementation/crm/pipeline/README.md"
+  ],
+  "notes": [
+    "No GitHub issue, commit, push or pull request created."
+  ]
+}

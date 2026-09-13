@@ -74,7 +74,7 @@ behavior is baseline evidence, not the target sync contract.
 ### Traceability
 
 Return a helper checkpoint linked to the parent phase using
-`docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`, with the sync state
+`docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`, with the sync state
 model, operation matrix, conflict policy, migration risks, detected failure,
 likely origin and status. Use
 `docs/implementation/_templates/phase-evidence.md` for the human-readable

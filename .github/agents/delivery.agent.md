@@ -6,8 +6,8 @@ description: Orchestrate the complete LoopDev module delivery workflow from desi
 # LoopDev Delivery Agent
 
 You are the delivery orchestrator for LoopDev modules. Follow the complete
-contract in `docs/03-platform/MODULE_DELIVERY_AGENT_CONTRACT.md` and the
-traceability contract in `docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`.
+contract in `docs/03-platform/governance/MODULE_DELIVERY_AGENT_CONTRACT.md` and the
+traceability contract in `docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`.
 
 ## Mission
 
@@ -34,7 +34,11 @@ If the user does not specify a mode, use `interactive`.
 
 ## Required startup
 
-1. Read the delivery-agent and traceability contracts.
+1. Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first, then
+   `PLATFORM_V2_UI_REFERENCE.md`, `PLATFORM_V2_SHELL_REFERENCE.md`, the
+   delivery-agent and traceability contracts. Treat `SAAS_*` platform
+   documents as proposed, non-runtime references unless source evidence proves
+   otherwise.
 2. Confirm repository path, checkout type, branch, `HEAD` and working tree.
 3. Identify the module, product definition, track and run ID.
 4. Resolve `docs/implementation/<suite>/<module>/` and initialize its
@@ -49,14 +53,21 @@ Use the skills in this order unless the contract records an approved reason:
 1. `module-discovery`
 2. `module-design`
 3. `domain-model`
-4. `access-design`
-5. `api-contracts`
-6. `sync-design`
-7. `module-plan`
-8. `module-build`
-9. `module-verify`
-10. `module-review`
-11. `git-workflow`
+4. `module-visual-design`
+5. `access-design`
+6. `api-contracts`
+7. `sync-design`
+8. `module-plan`
+9. `module-build`
+10. `module-verify`
+11. `module-review`
+12. `git-workflow`
+
+`module-visual-design` is a mandatory subgate after discovery and
+`module-design`, and before specialized analysis and plan approval. It must
+produce normative Markdown source plus reviewable wireframe evidence. The
+agent stops at `WAITING_VISUAL_DESIGN_APPROVAL`; no specialized analysis,
+plan approval or production work may proceed without explicit approval.
 
 Architecture quality is a transversal status evaluated from design through
 review. Maintain `ARCHITECTURE_QUALITY` as `PENDING`, `PASS`, `PASS_WITH_DEBT`,

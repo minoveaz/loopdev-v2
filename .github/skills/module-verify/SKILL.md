@@ -8,6 +8,13 @@ user-invocable: true
 
 Evaluate the implemented module against `module-design` and `module-plan`.
 
+Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first, then use
+`docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md` and
+`docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md` when verifying reusable UI
+and shell claims. Verify runtime claims from source, tests, and active
+checkpoints; proposed `SAAS_*` documents and archived history are not
+implementation evidence.
+
 ## Responsibilities
 
 - Verify the actual checkout, branch, commit and running application port.
@@ -86,7 +93,7 @@ code, approve its own remediation or claim success from source presence alone.
 ### Traceability
 
 Create a verification checkpoint following
-`docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`. Include the environment
+`docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`. Include the environment
 snapshot, requirement matrix, command results, runtime evidence,
 visual/accessibility evidence, detected failures, likely implementation origin
 and exact next handoff. Use
@@ -100,7 +107,7 @@ Leave the issue open for `PARTIAL`, `FAIL` or `NOT_TESTED` outcomes.
 ## Architecture quality verification
 
 Use the module `architecture-design.md` and
-`docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` as the
+`docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` as the
 baseline. Record:
 
 Compare implementation evidence against discovery's expected-versus-existing

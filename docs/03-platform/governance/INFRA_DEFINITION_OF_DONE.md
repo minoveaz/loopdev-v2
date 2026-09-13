@@ -13,7 +13,8 @@ Este documento define cuándo un trabajo de infraestructura o backend se conside
 - [ ] No existen paths de ejecución "a medias" o TODOs críticos.
 
 ### 2️⃣ API clara y contractual (API-first)
-- [ ] Los endpoints siguen `API_STANDARDS.md`.
+- [ ] Los endpoints siguen
+      [`../backend/API_STANDARDS.md`](../backend/API_STANDARDS.md).
 - [ ] Request y Response definidos por contrato (**Zod / TS**).
 - [ ] Los errores siguen el esquema estándar (Code, Message, TraceId).
 - [ ] **Regla:** Si el frontend no sabe qué esperar, NO está Done.
@@ -30,7 +31,9 @@ Este documento define cuándo un trabajo de infraestructura o backend se conside
 
 ### 5️⃣ Persistencia y Datos (DB / Storage)
 - [ ] **DB:** Migraciones versionadas y reproducibles (Prisma/Drizzle).
-- [ ] **Storage:** Rutas siguen `STORAGE_CONVENTIONS.md`. No hay accesos públicos sin control.
+- [ ] **Storage:** Rutas siguen
+      [`../backend/STORAGE_CONVENTIONS.md`](../backend/STORAGE_CONVENTIONS.md).
+      No hay accesos públicos sin control.
 - [ ] Seeds disponibles para el entorno de desarrollo.
 
 ### 6️⃣ Estados para Frontend (Fidelidad Visual)

@@ -13,6 +13,12 @@ reviewed_at: 2026-09-04
 > activas del frontend usan `/app/sales-crm/*`; las filas que mencionan `/sales-crm/*`,
 > `apps/loopdev-os` o `packages/contracts` son evidencia historica/backend y no ubicaciones
 > del codigo v2.
+>
+> **Scope warning:** este catálogo es únicamente un inventario y una ayuda para
+> decisiones. La evidencia actual de rutas, runtime e implementación vive en
+> `CRM_FRONTEND_CLOSURE_MATRIX.md`, los contratos/protocolo actuales, el código,
+> las pruebas y los checkpoints de implementación. Las entradas legacy no pueden
+> tratarse como capacidades activas ni como única fuente de verdad.
 
 # CRM component catalog
 

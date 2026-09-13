@@ -69,7 +69,7 @@ persistence constraint or authorization condition.
 ### Traceability
 
 Return a helper checkpoint linked to the parent phase using
-`docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`, with its run ID, parent
+`docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`, with its run ID, parent
 skill, decisions, domain artifact, unresolved questions, detected failure,
 likely origin and status. Use
 `docs/implementation/_templates/phase-evidence.md` for the human-readable

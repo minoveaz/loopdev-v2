@@ -2,8 +2,8 @@
 
 Use this checklist before introducing a business table or a suite that owns
 organization data. It complements the platform
-[Definition of Ready](./INFRA_DEFINITION_OF_READY.md) and
-[Definition of Done](./INFRA_DEFINITION_OF_DONE.md).
+[Definition of Ready](../governance/INFRA_DEFINITION_OF_READY.md) and
+[Definition of Done](../governance/INFRA_DEFINITION_OF_DONE.md).
 
 ## Definition of Ready
 

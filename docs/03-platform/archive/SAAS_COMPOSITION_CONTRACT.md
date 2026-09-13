@@ -1,9 +1,9 @@
 ---
 title: SaaS configurable composition contract
-status: phase-1-proposed-contract
+status: proposed-not-implemented
 owner: platform
 reviewed_at: 2026-08-14
----
+---> **PROPOSED — NOT IMPLEMENTED:** This document is a design/reference proposal, not a runtime contract. No V2 runtime registry, resolver, or consumer is available unless independently verified by source, route, test, and active checkpoint evidence.
 
 # SaaS configurable composition contract
 

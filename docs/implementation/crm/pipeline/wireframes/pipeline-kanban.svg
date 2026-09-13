@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">CRM Pipeline low fidelity Kanban wireframe</title>
+  <desc id="desc">Review evidence for visual-design.md annotations K1 through K7 and C1 through C4.</desc>
+  <style>text{font:14px Arial;fill:#17202a} .line{stroke:#667085;stroke-width:1;fill:#fff} .muted{fill:#f2f4f7;stroke:#98a2b3} .note{fill:#fff7ed;stroke:#f79009} .accent{fill:#eef4ff;stroke:#4e73df}</style>
+  <rect width="1200" height="760" fill="#fafafa"/>
+  <text x="30" y="32" font-size="22" font-weight="bold">K1 Rivera shell / Pipeline</text>
+  <rect class="line" x="30" y="52" width="1140" height="54" rx="6"/><text x="50" y="85">Breadcrumb · Pipeline</text><rect class="accent" x="960" y="68" width="180" height="28" rx="4"/><text x="985" y="87">K2 + Create</text>
+  <rect class="line" x="30" y="124" width="1140" height="48" rx="6"/><text x="50" y="154">K3 Filters: stage ▾  owner ▾  health ▾  search …</text><text x="920" y="154">sync status ●</text>
+  <g transform="translate(30,194)">
+    <rect class="muted" width="260" height="470" rx="6"/><rect class="muted" x="280" width="260" height="470" rx="6"/><rect class="muted" x="560" width="260" height="470" rx="6"/><rect class="muted" x="840" width="260" height="470" rx="6"/>
+    <text x="18" y="30" font-weight="bold">K4 Prospecting · 12</text><text x="298" y="30" font-weight="bold">Qualified · 8</text><text x="578" y="30" font-weight="bold">Proposal · 4</text><text x="858" y="30" font-weight="bold">Won · 2</text>
+    <g transform="translate(12,48)"><rect class="line" width="236" height="112" rx="5"/><text x="12" y="24" font-weight="bold">C1 Acme renewal</text><text x="12" y="47">$48,000 · Maya</text><text x="12" y="68">Health: healthy</text><text x="12" y="91">Next: call today  ⋮</text></g>
+    <g transform="translate(292,48)"><rect class="line" width="236" height="112" rx="5"/><text x="304" y="72" font-weight="bold">C2 Globex expansion</text><text x="304" y="95">$22,000 · Lee</text><text x="304" y="116">Next action · ⋮</text></g>
+    <g transform="translate(572,48)"><rect class="note" width="236" height="112" rx="5"/><text x="584" y="72" font-weight="bold">C3 stale move</text><text x="584" y="95">Conflict · Review</text><text x="584" y="116">K5 keep / refresh</text></g>
+    <g transform="translate(852,48)"><rect class="line" width="236" height="112" rx="5"/><text x="864" y="72" font-weight="bold">C4 queued win</text><text x="864" y="95">Offline · Pending</text><text x="864" y="116">K6 sync later</text></g>
+    <text x="18" y="220">Loading: skeleton cards</text><text x="298" y="220">Empty: explain + create</text><text x="578" y="220">Error: retry inline</text><text x="858" y="220">Forbidden: no records</text>
+    <rect class="accent" x="12" y="270" width="1076" height="72" rx="5"/><text x="28" y="298">K7 Mobile adaptation: stage selector → one column → swipe/scroll cards</text><text x="28" y="323">Keyboard alternative: card menu → Move to stage command (drag is optional)</text>
+  </g>
+  <text x="30" y="710">Review links: visual-design.md § Kanban / Opportunity card; view-state-matrix.md</text>
+</svg>

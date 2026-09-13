@@ -71,7 +71,7 @@ and rechecked during synchronization or background processing.
 ### Traceability
 
 Return a helper checkpoint linked to the parent phase using
-`docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`, with the permission
+`docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`, with the permission
 matrix, security test cases, unresolved decisions, detected failure, likely
 origin and status. Use
 `docs/implementation/_templates/phase-evidence.md` for the human-readable

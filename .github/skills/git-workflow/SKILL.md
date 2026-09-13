@@ -53,7 +53,7 @@ git diff --cached --check
   external integrations when applicable.
 - Merge only after required CI and review checks pass.
 
-The canonical reference is `docs/03-platform/GIT_WORKFLOW.md`.
+The canonical reference is `docs/03-platform/governance/GIT_WORKFLOW.md`.
 
 ## Common Contract
 
@@ -95,7 +95,7 @@ amend, force-push or rewrite history autonomously.
 ### Traceability
 
 Record a Git checkpoint linked to the module run using
-`docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`, with repository path,
+`docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`, with repository path,
 branch, base, `HEAD`, working-tree state, commit/push/PR evidence, detected
 failure, likely origin and status. Git evidence must never be presented as
 functional or runtime evidence. Use

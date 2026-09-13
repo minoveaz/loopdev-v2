@@ -1,23 +1,35 @@
-import { Bell, Search } from "lucide-react-native";
+import { Bell, Menu, Search } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { BrandMark } from "./BrandMark";
 
 type MobileHeaderProps = {
   onAccountPress?: () => void;
+  onMenuPress?: () => void;
   leading?: ReactNode;
   showActions?: boolean;
 };
 
 export function MobileHeader({
   onAccountPress,
+  onMenuPress,
   leading,
   showActions = true,
 }: MobileHeaderProps) {
   return (
     <View style={styles.topBar}>
-      {leading}
-      <BrandMark />
+      <View style={styles.leadingGroup}>
+        <Pressable
+          accessibilityLabel="Open navigation"
+          accessibilityRole="button"
+          onPress={onMenuPress}
+          style={styles.topBarButton}
+        >
+          <Menu color="#64748b" size={20} strokeWidth={2.2} />
+        </Pressable>
+        {leading}
+        <BrandMark />
+      </View>
       <View style={styles.topBarActions}>
         {showActions && (
           <>
@@ -63,6 +75,7 @@ const styles = StyleSheet.create({
     minHeight: 64,
     paddingHorizontal: 22,
   },
+  leadingGroup: { alignItems: "center", flexDirection: "row", gap: 12 },
   topBarActions: { alignItems: "center", flexDirection: "row", gap: 10 },
   topBarButton: {
     alignItems: "center",

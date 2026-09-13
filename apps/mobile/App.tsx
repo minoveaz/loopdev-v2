@@ -2,15 +2,19 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useState } from "react";
 import { launchpadSuites } from "../../packages/contracts/src/launchpad";
 import { MobileAccountScreen } from "./components/MobileAccountScreen";
+import { MobileAccountSheet } from "./components/MobileAccountSheet";
 import { MobileAppShell } from "./components/MobileAppShell";
 import { MobileBottomNav, type MobileTab } from "./components/MobileBottomNav";
 import { MobileHeader } from "./components/MobileHeader";
+import { MobileNavigationDrawer } from "./components/MobileNavigationDrawer";
 import { MobileSuiteCard } from "./components/MobileSuiteCard";
 import { MobileWorkspaceScreen } from "./components/MobileWorkspaceScreen";
 
 export default function App() {
   const [activeSuiteId, setActiveSuiteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<MobileTab>("launchpad");
+  const [accountSheetOpen, setAccountSheetOpen] = useState(false);
+  const [navigationOpen, setNavigationOpen] = useState(false);
   const activeSuite = launchpadSuites.find((suite) => suite.id === activeSuiteId);
 
   if (activeSuite) {
@@ -26,7 +30,10 @@ export default function App() {
 
   return (
     <MobileAppShell>
-      <MobileHeader onAccountPress={() => setActiveTab("account")} />
+      <MobileHeader
+        onAccountPress={() => setAccountSheetOpen(true)}
+        onMenuPress={() => setNavigationOpen(true)}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.eyebrow}><View style={styles.liveDot} /><Text style={styles.eyebrowText}>WORKSPACE LAUNCHER</Text></View>
         <Text style={styles.title}>Welcome, <Text style={styles.titleAccent}>Admin</Text>{`\n`}choose your next work context.</Text>
@@ -44,6 +51,14 @@ export default function App() {
         ))}
       </ScrollView>
       <MobileBottomNav activeTab="launchpad" onTabPress={handleTabPress} />
+      <MobileAccountSheet
+        onClose={() => setAccountSheetOpen(false)}
+        visible={accountSheetOpen}
+      />
+      <MobileNavigationDrawer
+        onClose={() => setNavigationOpen(false)}
+        visible={navigationOpen}
+      />
     </MobileAppShell>
   );
 }

@@ -5,6 +5,7 @@ import { BrandMark } from "./BrandMark";
 
 type MobileHeaderProps = {
   onAccountPress?: () => void;
+  onLogoPress?: () => void;
   onMenuPress?: () => void;
   leading?: ReactNode;
   showActions?: boolean;
@@ -12,6 +13,7 @@ type MobileHeaderProps = {
 
 export function MobileHeader({
   onAccountPress,
+  onLogoPress,
   onMenuPress,
   leading,
   showActions = true,
@@ -28,7 +30,14 @@ export function MobileHeader({
           <Menu color="#64748b" size={20} strokeWidth={2.2} />
         </Pressable>
         {leading}
-        <BrandMark />
+        <Pressable
+          accessibilityLabel="Go to Launchpad"
+          accessibilityRole="button"
+          disabled={!onLogoPress}
+          onPress={onLogoPress}
+        >
+          <BrandMark />
+        </Pressable>
       </View>
       <View style={styles.topBarActions}>
         {showActions && (

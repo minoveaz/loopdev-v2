@@ -2,6 +2,7 @@ import {
   Boxes,
   ChevronDown,
   ChevronRight,
+  House,
   Settings,
   Users,
 } from "lucide-react-native";
@@ -21,6 +22,8 @@ import { loopdevNavigationContract } from "../../../packages/contracts/src/navig
 type MobileNavigationDrawerProps = {
   visible: boolean;
   onClose: () => void;
+  activePath?: string;
+  onNavigate: (path: string) => void;
 };
 
 type DrawerItem = {
@@ -43,6 +46,8 @@ const sections = loopdevNavigationContract.groups.map((group) => ({
 export function MobileNavigationDrawer({
   visible,
   onClose,
+  activePath,
+  onNavigate,
 }: MobileNavigationDrawerProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const translateX = useRef(new Animated.Value(-500)).current;
@@ -100,10 +105,25 @@ export function MobileNavigationDrawer({
 
             <View style={styles.contextCard}>
               <Text style={styles.contextLabel}>ACTIVE SUITE</Text>
-              <Text style={styles.contextName}>Launchpad</Text>
+              <Text style={styles.contextName}>
+                {activePath?.startsWith("/app/sales-crm") ? "CRM" : activePath?.startsWith("/app/erp") ? "ERP" : "Launchpad"}
+              </Text>
               <Text style={styles.contextHint}>Select a work context</Text>
               <Text style={styles.contextArrow}>›</Text>
             </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: activePath === loopdevNavigationContract.launchpad.path }}
+              onPress={() => {
+                onNavigate(loopdevNavigationContract.launchpad.path);
+                onClose();
+              }}
+              style={[styles.launchpadItem, activePath === loopdevNavigationContract.launchpad.path && styles.activeItem]}
+            >
+              <House color="#64748b" size={20} strokeWidth={2} />
+              <Text style={styles.itemLabel}>{loopdevNavigationContract.launchpad.label}</Text>
+            </Pressable>
 
             {sections.map((section) => {
               const expanded = expandedSection === section.label;
@@ -131,8 +151,12 @@ export function MobileNavigationDrawer({
                       <Pressable
                         key={item.id}
                         accessibilityRole="button"
-                        onPress={onClose}
-                        style={styles.item}
+                        accessibilityState={{ selected: activePath === item.path }}
+                        onPress={() => {
+                          onNavigate(item.path);
+                          onClose();
+                        }}
+                        style={[styles.item, activePath === item.path && styles.activeItem]}
                       >
                         <Text style={styles.itemLabel}>{item.label}</Text>
                       </Pressable>
@@ -217,6 +241,7 @@ const styles = StyleSheet.create({
   contextHint: { color: "#64748b", fontSize: 12, marginTop: 5 },
   contextArrow: { color: "#135bec", fontSize: 30, position: "absolute", right: 16, top: 24 },
   section: { marginBottom: 24 },
+  launchpadItem: { alignItems: "center", flexDirection: "row", minHeight: 48, marginBottom: 20, paddingHorizontal: 4 },
   sectionTitle: { alignItems: "center", flexDirection: "row", gap: 12 },
   sectionTrigger: {
     alignItems: "center",
@@ -238,5 +263,6 @@ const styles = StyleSheet.create({
     paddingLeft: 32,
     paddingVertical: 5,
   },
+  activeItem: { backgroundColor: "#eff6ff", borderRadius: 8 },
   itemLabel: { color: "#111827", fontSize: 16, fontWeight: "600", marginLeft: 16 },
 });

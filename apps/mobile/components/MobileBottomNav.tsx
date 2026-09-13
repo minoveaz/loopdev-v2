@@ -1,25 +1,41 @@
-import { Clock3, Grid2X2, House, UserCircle, type LucideIcon } from "lucide-react-native";
+import { Boxes, House, MessageCircle, MoreHorizontal, Plus, Users } from "lucide-react-native";
+import type { ComponentType } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { getBottomNavigationItems, type BottomNavigationContext } from "../../../packages/contracts/src/navigation";
+import { BrandInfinityIcon } from "./BrandMark";
 
-export type MobileTab = "launchpad" | "activity" | "suites" | "account";
+export type MobileTab = "launchpad" | "conversations" | "copilot" | "crm" | "erp" | "more";
 
 type MobileBottomNavProps = {
+  context: BottomNavigationContext;
   activeTab: MobileTab;
   onTabPress: (tab: MobileTab) => void;
+  onActionPress: () => void;
 };
 
-const tabs: { label: string; tab: MobileTab; icon: LucideIcon }[] = [
-  { label: "Launchpad", tab: "launchpad", icon: House },
-  { label: "Activity", tab: "activity", icon: Clock3 },
-  { label: "Suites", tab: "suites", icon: Grid2X2 },
-  { label: "Account", tab: "account", icon: UserCircle },
-];
+type BottomNavIcon = ComponentType<{ color?: string; size?: number; strokeWidth?: number }>;
 
-export function MobileBottomNav({ activeTab, onTabPress }: MobileBottomNavProps) {
+const icons: Record<string, BottomNavIcon> = {
+  conversations: MessageCircle,
+  crm: Users,
+  erp: Boxes,
+  launchpad: House,
+  more: MoreHorizontal,
+  copilot: BrandInfinityIcon,
+};
+
+export function MobileBottomNav({ context, activeTab, onTabPress, onActionPress }: MobileBottomNavProps) {
+  const tabs: { label: string; tab: MobileTab; icon: BottomNavIcon }[] = getBottomNavigationItems().map((item) => ({
+    label: item.label,
+    tab: item.slot === "copilot" ? "copilot" : item.slot,
+    icon: icons[item.iconKey],
+  }));
+
   return (
     <View style={styles.bottomNav}>
       {tabs.map(({ label, tab, icon: Icon }) => {
         const active = activeTab === tab;
+        const isCopilot = tab === "copilot";
         return (
           <Pressable
             key={tab}
@@ -28,11 +44,23 @@ export function MobileBottomNav({ activeTab, onTabPress }: MobileBottomNavProps)
             onPress={() => onTabPress(tab)}
             style={styles.navItem}
           >
-            <Icon color={active ? "#135bec" : "#94a3b8"} size={21} strokeWidth={active ? 2.5 : 2} />
+            <Icon
+              color={active ? "#135bec" : "#94a3b8"}
+              size={21}
+              strokeWidth={isCopilot ? 10 : active ? 2.5 : 2}
+            />
             <Text style={[styles.navLabel, active && styles.activeNavLabel]}>{label}</Text>
           </Pressable>
         );
       })}
+      <Pressable
+        accessibilityLabel="Open contextual actions"
+        accessibilityRole="button"
+        onPress={onActionPress}
+        style={styles.actionButton}
+      >
+        <Plus color="#ffffff" size={26} strokeWidth={2.5} />
+      </Pressable>
     </View>
   );
 }
@@ -48,6 +76,26 @@ const styles = StyleSheet.create({
     minHeight: 72,
     paddingHorizontal: 8,
     paddingTop: 9,
+    position: "relative",
+  },
+  actionButton: {
+    alignItems: "center",
+    backgroundColor: "#135bec",
+    borderColor: "#ffffff",
+    borderRadius: 28,
+    borderWidth: 4,
+    elevation: 8,
+    height: 56,
+    justifyContent: "center",
+    left: "50%",
+    marginLeft: -28,
+    position: "absolute",
+    shadowColor: "#135bec",
+    shadowOffset: { height: 4, width: 0 },
+    shadowOpacity: 0.28,
+    shadowRadius: 8,
+    top: -28,
+    width: 56,
   },
   navItem: { alignItems: "center", gap: 4, minWidth: 68, paddingHorizontal: 8 },
   navLabel: { color: "#64748b", fontSize: 10, fontWeight: "600" },

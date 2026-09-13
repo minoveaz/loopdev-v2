@@ -1,24 +1,10 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { MobileBottomNav, type MobileTab } from "./MobileBottomNav";
-import { MobileHeader } from "./MobileHeader";
-import { MobileAppShell } from "./MobileAppShell";
-
-type MobileAccountScreenProps = {
-  onBack: () => void;
-  onTabPress: (tab: MobileTab) => void;
-};
-
-export function MobileAccountScreen({ onBack, onTabPress }: MobileAccountScreenProps) {
+export function MobileAccountScreen() {
   return (
-    <MobileAppShell>
-      <MobileHeader showActions={false} />
       <ScrollView contentContainerStyle={styles.accountContent}>
-        <Pressable accessibilityLabel="Back to Launchpad" accessibilityRole="button" onPress={onBack} style={styles.accountBack}>
-          <Text style={styles.accountBackText}>← Launchpad</Text>
-        </Pressable>
-        <Text style={styles.accountEyebrow}>ACCOUNT</Text>
-        <Text style={styles.accountTitle}>Help & resources</Text>
-        <Text style={styles.accountDescription}>Everything you need to get the most from LoopDev.</Text>
+        <Text style={styles.accountEyebrow}>MORE</Text>
+        <Text style={styles.accountTitle}>Workspace & account</Text>
+        <Text style={styles.accountDescription}>Manage your LoopDev experience, resources, and preferences.</Text>
         <View style={styles.accountCard}>
           <AccountRow label="Profile" detail="Your personal information and account" />
           <AccountRow label="Preferences" detail="Language, theme, and appearance" />
@@ -32,8 +18,6 @@ export function MobileAccountScreen({ onBack, onTabPress }: MobileAccountScreenP
         </View>
         <View style={styles.aboutCard}><Text style={styles.aboutName}>Loopdev</Text><Text style={styles.aboutVersion}>v0.0.1 · © 2026 LoopDev</Text></View>
       </ScrollView>
-      <MobileBottomNav activeTab="account" onTabPress={onTabPress} />
-    </MobileAppShell>
   );
 }
 
@@ -43,9 +27,7 @@ function AccountRow({ label, detail }: { label: string; detail: string }) {
 
 const styles = StyleSheet.create({
   accountContent: { paddingBottom: 40, paddingHorizontal: 22, paddingTop: 30 },
-  accountBack: { alignSelf: "flex-start", marginBottom: 32 },
-  accountBackText: { color: "#135bec", fontSize: 14, fontWeight: "700" },
-  accountEyebrow: { color: "#135bec", fontSize: 10, fontWeight: "800", letterSpacing: 2, marginBottom: 12 },
+  accountEyebrow: { color: "#135bec", fontSize: 10, fontWeight: "800", letterSpacing: 2, marginBottom: 12, marginTop: 30 },
   accountTitle: { color: "#111827", fontSize: 32, fontWeight: "800", letterSpacing: -0.8, marginBottom: 12 },
   accountDescription: { color: "#64748b", fontSize: 16, lineHeight: 24, marginBottom: 28 },
   accountCard: { backgroundColor: "#ffffff", borderColor: "#e5e7eb", borderRadius: 16, borderWidth: 1, overflow: "hidden" },

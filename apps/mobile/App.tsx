@@ -1,39 +1,74 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import {
+  getBottomNavigationItems,
+  getContextualActions,
+  loopdevNavigationContract,
+  type SharedContextualAction,
+} from "../../packages/contracts/src/navigation";
 import { launchpadSuites } from "../../packages/contracts/src/launchpad";
 import { MobileAccountScreen } from "./components/MobileAccountScreen";
 import { MobileAccountSheet } from "./components/MobileAccountSheet";
 import { MobileAppShell } from "./components/MobileAppShell";
 import { MobileBottomNav, type MobileTab } from "./components/MobileBottomNav";
+import { MobileCommandPalette } from "./components/MobileCommandPalette";
 import { MobileHeader } from "./components/MobileHeader";
 import { MobileNavigationDrawer } from "./components/MobileNavigationDrawer";
+import { MobileRouteScreen } from "./components/MobileRouteScreen";
 import { MobileSuiteCard } from "./components/MobileSuiteCard";
 import { MobileWorkspaceScreen } from "./components/MobileWorkspaceScreen";
 
-export default function App() {
-  const [activeSuiteId, setActiveSuiteId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<MobileTab>("launchpad");
-  const [accountSheetOpen, setAccountSheetOpen] = useState(false);
-  const [navigationOpen, setNavigationOpen] = useState(false);
-  const activeSuite = launchpadSuites.find((suite) => suite.id === activeSuiteId);
+const launchpadPath = loopdevNavigationContract.launchpad.path;
+const morePath = getBottomNavigationItems().find((item) => item.slot === "more")!.path;
 
-  if (activeSuite) {
-    return <MobileWorkspaceScreen suite={activeSuite} onBack={() => setActiveSuiteId(null)} />;
-  }
-  if (activeTab === "account") {
-    return <MobileAccountScreen onBack={() => setActiveTab("launchpad")} onTabPress={handleTabPress} />;
+export default function App() {
+  const [currentPath, setCurrentPath] = useState(launchpadPath);
+  const [accountSheetOpen, setAccountSheetOpen] = useState(false);
+  const [actionsSheetOpen, setActionsSheetOpen] = useState(false);
+  const [navigationOpen, setNavigationOpen] = useState(false);
+  const activeSuite = useMemo(
+    () => launchpadSuites.find((suite) => suite.entryPath && currentPath.startsWith(suite.entryPath)),
+    [currentPath],
+  );
+  const context = currentPath.startsWith("/app/sales-crm")
+    ? "crm"
+    : currentPath.startsWith("/app/erp")
+      ? "erp"
+      : "launchpad";
+  const activeTab: MobileTab = currentPath === morePath ? "more" : context;
+  const actionContext = currentPath.startsWith("/app/conversations") ? "conversations" : context;
+
+  function navigate(path: string) {
+    setCurrentPath(path);
+    setNavigationOpen(false);
   }
 
   function handleTabPress(tab: MobileTab) {
-    if (tab === "account" || tab === "launchpad") setActiveTab(tab);
+    const paths: Partial<Record<MobileTab, string>> = {
+      launchpad: launchpadPath,
+      conversations: "/app/conversations",
+      crm: "/app/sales-crm/overview",
+      erp: "/app/erp/overview",
+      more: morePath,
+    };
+    const path = paths[tab];
+    if (path) navigate(path);
   }
 
-  return (
-    <MobileAppShell>
-      <MobileHeader
-        onAccountPress={() => setAccountSheetOpen(true)}
-        onMenuPress={() => setNavigationOpen(true)}
-      />
+  function renderContent() {
+    if (currentPath === morePath) return <MobileAccountScreen />;
+    if (activeSuite) {
+      return <MobileWorkspaceScreen suite={activeSuite} onBack={() => navigate(launchpadPath)} />;
+    }
+    if (currentPath !== launchpadPath) {
+      const item = loopdevNavigationContract.groups.flatMap((group) => group.items).find((entry) => entry.path === currentPath);
+      const action = (["launchpad", "crm", "erp", "conversations"] as const)
+        .flatMap((actionContextKey) => getContextualActions(actionContextKey))
+        .find((entry) => entry.path === currentPath);
+      return <MobileRouteScreen label={item?.label ?? action?.label ?? "Workspace"} path={currentPath} />;
+    }
+
+    return (
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.eyebrow}><View style={styles.liveDot} /><Text style={styles.eyebrowText}>WORKSPACE LAUNCHER</Text></View>
         <Text style={styles.title}>Welcome, <Text style={styles.titleAccent}>Admin</Text>{`\n`}choose your next work context.</Text>
@@ -46,17 +81,41 @@ export default function App() {
             version={suite.version}
             kind={suite.illustration}
             status={suite.status}
-            onPress={suite.status === "ready" ? () => setActiveSuiteId(suite.id) : undefined}
+            onPress={suite.status === "ready" && suite.entryPath ? () => navigate(suite.entryPath!) : undefined}
           />
         ))}
       </ScrollView>
-      <MobileBottomNav activeTab="launchpad" onTabPress={handleTabPress} />
-      <MobileAccountSheet
-        onClose={() => setAccountSheetOpen(false)}
-        visible={accountSheetOpen}
+    );
+  }
+
+  return (
+    <MobileAppShell>
+      <MobileHeader
+        onAccountPress={() => setAccountSheetOpen(true)}
+        onLogoPress={() => navigate(launchpadPath)}
+        onMenuPress={() => setNavigationOpen(true)}
+      />
+      <View style={styles.main}>{renderContent()}</View>
+      <MobileBottomNav
+        context={context}
+        activeTab={activeTab}
+        onActionPress={() => setActionsSheetOpen(true)}
+        onTabPress={handleTabPress}
+      />
+      <MobileAccountSheet onClose={() => setAccountSheetOpen(false)} visible={accountSheetOpen} />
+      <MobileCommandPalette
+        context={actionContext}
+        onAction={(action: SharedContextualAction) => {
+          setActionsSheetOpen(false);
+          navigate(action.path);
+        }}
+        onClose={() => setActionsSheetOpen(false)}
+        visible={actionsSheetOpen}
       />
       <MobileNavigationDrawer
+        activePath={currentPath}
         onClose={() => setNavigationOpen(false)}
+        onNavigate={navigate}
         visible={navigationOpen}
       />
     </MobileAppShell>
@@ -64,6 +123,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  main: { flex: 1 },
   content: { paddingBottom: 32, paddingHorizontal: 22, paddingTop: 32 },
   eyebrow: { alignItems: "center", flexDirection: "row", gap: 8, marginBottom: 24 },
   liveDot: { backgroundColor: "#135bec", borderRadius: 5, height: 8, width: 8 },

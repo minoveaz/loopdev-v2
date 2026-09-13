@@ -4,6 +4,21 @@ import { View, Text, StyleSheet } from "react-native";
 const infinityPath =
   "M31.5,50c-8.5,0-15.5-7-15.5-15.5S23,19,31.5,19c5.2,0,9.8,2.5,12.5,6.5L56,43.5c2.7,4,7.3,6.5,12.5,6.5c8.5,0,15.5-7,15.5-15.5S77,19,68.5,19c-5.2,0-9.8,2.5-12.5,6.5L44,43.5C41.3,47.5,36.7,50,31.5,50z";
 
+export function BrandInfinityIcon({ color = "#ffffff", size = 22, strokeWidth = 10 }: { color?: string; size?: number; strokeWidth?: number }) {
+  return (
+    <Svg height={size} viewBox="0 0 100 69" width={size}>
+      <Path
+        d={infinityPath}
+        fill="none"
+        stroke={color}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={strokeWidth}
+      />
+    </Svg>
+  );
+}
+
 export function BrandMark() {
   return (
     <View style={styles.container}>
@@ -17,16 +32,7 @@ export function BrandMark() {
             strokeWidth="1"
           />
         </Svg>
-        <Svg height={28} style={styles.innerMark} viewBox="0 0 100 69" width={28}>
-          <Path
-            d={infinityPath}
-            fill="none"
-            stroke="#ffffff"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="10"
-          />
-        </Svg>
+        <View style={styles.innerMark}><BrandInfinityIcon size={28} /></View>
       </View>
       <Text style={styles.wordmark}>loop.dev</Text>
     </View>

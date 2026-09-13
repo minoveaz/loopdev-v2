@@ -1,6 +1,4 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { MobileAppShell } from "./MobileAppShell";
-import { MobileHeader } from "./MobileHeader";
 import { SuiteIllustration } from "./SuiteIllustration";
 import type { launchpadSuites } from "../../../packages/contracts/src/launchpad";
 
@@ -11,12 +9,10 @@ type MobileWorkspaceScreenProps = {
 
 export function MobileWorkspaceScreen({ suite, onBack }: MobileWorkspaceScreenProps) {
   return (
-    <MobileAppShell>
-      <MobileHeader
-        showActions={false}
-        leading={<Pressable accessibilityLabel="Back to Launchpad" accessibilityRole="button" onPress={onBack} style={styles.backButton}><Text style={styles.backButtonText}>←</Text></Pressable>}
-      />
-      <ScrollView contentContainerStyle={styles.workspaceContent}>
+    <ScrollView contentContainerStyle={styles.workspaceContent}>
+      <Pressable accessibilityLabel="Back to Launchpad" accessibilityRole="button" onPress={onBack} style={styles.backButton}>
+        <Text style={styles.backButtonText}>← Back to Launchpad</Text>
+      </Pressable>
         <View style={styles.workspaceEyebrow}><Text style={styles.workspaceEyebrowText}>ACTIVE WORK CONTEXT</Text></View>
         <Text style={styles.workspaceTitle}>{suite.title}</Text>
         <Text style={styles.workspaceDescription}>{suite.description}</Text>
@@ -26,14 +22,13 @@ export function MobileWorkspaceScreen({ suite, onBack }: MobileWorkspaceScreenPr
           <Text style={styles.domainCardValue}>{suite.entryPath ?? "Workspace pending"}</Text>
           <Text style={styles.domainCardDescription}>This workspace is connected to the shared LoopDev suite context.</Text>
         </View>
-      </ScrollView>
-    </MobileAppShell>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  backButton: { alignItems: "center", borderColor: "#e5e7eb", borderRadius: 18, borderWidth: 1, height: 36, justifyContent: "center", width: 36 },
-  backButtonText: { color: "#135bec", fontSize: 22, lineHeight: 24 },
+  backButton: { alignSelf: "flex-start", marginBottom: 28 },
+  backButtonText: { color: "#135bec", fontSize: 14, fontWeight: "700" },
   workspaceContent: { paddingBottom: 40, paddingHorizontal: 22, paddingTop: 38 },
   workspaceEyebrow: { alignSelf: "flex-start", backgroundColor: "#eff6ff", borderRadius: 6, marginBottom: 18, paddingHorizontal: 10, paddingVertical: 7 },
   workspaceEyebrowText: { color: "#135bec", fontSize: 9, fontWeight: "800", letterSpacing: 1.5 },

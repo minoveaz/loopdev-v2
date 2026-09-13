@@ -1,6 +1,8 @@
 # Product documentation
 
 Product and suite-specific documentation is organized under this directory.
+
+For new multiplatform SaaS suites, start from the reusable [suite multiplatform documentation template](./_templates/SUITE_MULTIPLATFORM_DOCUMENTATION_TEMPLATE.md). It is a proposed template, not runtime evidence; classify and link implemented evidence according to the source-of-truth governance.
 Active product work should be represented by an approved track and keep its
 implementation contracts close to the owning suite.
 

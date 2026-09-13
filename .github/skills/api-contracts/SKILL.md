@@ -80,3 +80,9 @@ artifacts, consumer impact, unresolved decisions, detected failure, likely
 origin and status. Use
 `docs/implementation/_templates/phase-evidence.md` for the human-readable
 phase record.
+## Multiplatform API gate
+
+Commands, queries, errors and events must be client-agnostic and consumed by
+desktop and mobile adapters. Record the impact on each platform, including
+pagination, retries, idempotency, version conflicts, deep links and offline
+reconciliation.

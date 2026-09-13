@@ -49,7 +49,7 @@ Active platform references are organized by responsibility:
 - `docs/03-platform/mobile/` — native iOS/Android design reference. The
   mobile reference is not evidence that native apps exist;
 - `docs/03-platform/governance/` — architecture, delivery, workflow,
-  readiness, and traceability contracts; and
+  readiness, multiplatform delivery, and traceability contracts; and
 - `docs/03-platform/archive/` — historical material only.
 
 ## Archive context
@@ -62,13 +62,16 @@ current source code, routes, tests, and active implementation evidence.
 ## Safe reading order for delivery
 
 1. Read this document first.
-2. Confirm the active track and its status under `tracks/active/`.
-3. Read the applicable product README and current closure/contract documents.
-4. Read the V2 UI and shell references, then inspect the implementation
+2. Read `MULTIPLATFORM_DELIVERY_CONTRACT.md` and declare the platform scope.
+3. For component work, read `MULTIPLATFORM_COMPONENT_INVENTORY.md` before
+   proposing new shared or platform-specific UI.
+4. Confirm the active track and its status under `tracks/active/`.
+5. Read the applicable product README and current closure/contract documents.
+6. Read the V2 UI and shell references, then inspect the implementation
    workspace/checkpoints.
-5. Inspect source routes, domains, adapters, tests, and runtime evidence.
-6. Use approved product intent to identify gaps and acceptance criteria.
-7. Consult proposed or archived documents only as clearly labelled context;
+7. Inspect source routes, domains, adapters, tests, and runtime evidence.
+8. Use approved product intent to identify gaps and acceptance criteria.
+9. Consult proposed or archived documents only as clearly labelled context;
    never promote their claims without source evidence.
 
 When sources conflict, stop the delivery gate, record the conflict in the

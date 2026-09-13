@@ -3,6 +3,7 @@ import { AppDrawer } from "@/components/platform";
 import { FormSectionNav } from "@/components/common";
 import type { CRMContact, CRMContactMutationResult } from "@/loopdev/domains/crm/adapter";
 import { ContactForm, type ContactFormValues } from "./ContactForm";
+import { contactFormSections } from "../../../../../packages/contracts/src/contact-form";
 
 interface ContactFormDrawerProps {
   open: boolean;
@@ -54,12 +55,7 @@ export function ContactFormDrawer({
       headerMeta={<span>Profile form</span>}
       headerNav={
         <FormSectionNav
-          items={[
-            { id: "contact-form-identity", label: "Identity" },
-            { id: "contact-form-address", label: "Address" },
-            { id: "contact-form-organization", label: "Organization" },
-            { id: "contact-form-channels", label: "Contact channels" },
-          ]}
+          items={contactFormSections.map((section) => ({ id: `contact-form-${section.id}`, label: section.label }))}
           onSelect={scrollToSection}
         />
       }

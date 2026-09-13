@@ -7,6 +7,7 @@ import {
   type SharedContextualAction,
 } from "../../packages/contracts/src/navigation";
 import { launchpadSuites } from "../../packages/contracts/src/launchpad";
+import { contactListFixtures } from "../../packages/contracts/src/contact-fixtures";
 import { MobileAccountScreen } from "./components/MobileAccountScreen";
 import { MobileAccountSheet } from "./components/MobileAccountSheet";
 import { MobileAppShell } from "./components/MobileAppShell";
@@ -17,15 +18,38 @@ import { MobileNavigationDrawer } from "./components/MobileNavigationDrawer";
 import { MobileRouteScreen } from "./components/MobileRouteScreen";
 import { MobileSuiteCard } from "./components/MobileSuiteCard";
 import { MobileWorkspaceScreen } from "./components/MobileWorkspaceScreen";
+import { MobileContactsScreen, type MobileContactPreview } from "./components/MobileContactsScreen";
+import { MobileCreateContactScreen } from "./components/MobileCreateContactScreen";
 
 const launchpadPath = loopdevNavigationContract.launchpad.path;
 const morePath = getBottomNavigationItems().find((item) => item.slot === "more")!.path;
+const initialPath = typeof window !== "undefined" && window.location.pathname.startsWith("/app/")
+  ? window.location.pathname
+  : launchpadPath;
 
 export default function App() {
-  const [currentPath, setCurrentPath] = useState(launchpadPath);
+  const [currentPath, setCurrentPath] = useState(initialPath);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [actionsSheetOpen, setActionsSheetOpen] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
+  const [contacts, setContacts] = useState<MobileContactPreview[]>(() => contactListFixtures.map((contact) => {
+    const [firstName, ...lastNameParts] = contact.name.split(" ");
+    return {
+      id: contact.id,
+      firstName,
+      lastName: lastNameParts.join(" "),
+      companyName: contact.companyName,
+      jobTitle: contact.jobTitle,
+      preferredChannel: contact.preferredChannel,
+      identityStatus: contact.identityStatus,
+      city: contact.city,
+      stateProvince: "",
+      country: contact.country,
+      email: contact.email,
+      phone: contact.phone,
+      updatedAt: contact.updatedAt,
+    };
+  }));
   const activeSuite = useMemo(
     () => launchpadSuites.find((suite) => suite.entryPath && currentPath.startsWith(suite.entryPath)),
     [currentPath],
@@ -40,6 +64,9 @@ export default function App() {
 
   function navigate(path: string) {
     setCurrentPath(path);
+    if (typeof window !== "undefined" && window.location.pathname !== path) {
+      window.history.pushState({}, "", path);
+    }
     setNavigationOpen(false);
   }
 
@@ -57,6 +84,8 @@ export default function App() {
 
   function renderContent() {
     if (currentPath === morePath) return <MobileAccountScreen />;
+    if (currentPath === "/app/sales-crm/contacts") return <MobileContactsScreen contacts={contacts} onCreate={() => navigate("/app/sales-crm/contacts/new")} />;
+    if (currentPath === "/app/sales-crm/contacts/new") return <MobileCreateContactScreen onCancel={() => navigate("/app/sales-crm/contacts")} onCreated={(contact) => { setContacts((current) => [...current, contact]); navigate("/app/sales-crm/contacts"); }} />;
     if (activeSuite) {
       return <MobileWorkspaceScreen suite={activeSuite} onBack={() => navigate(launchpadPath)} />;
     }

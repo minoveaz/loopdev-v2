@@ -10,6 +10,9 @@
 - Run ID: `MOD-CRM-PIPELINE-20260913-002`
 - Track: `WAITING_VISUAL_DESIGN_APPROVAL`
 - Main issue: pending plan phase
+- Multiplatform contract: `docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md`
+- Platform scope: `platform-scope.md`
+- Platform evidence: `platform-evidence-matrix.md`
 
 ## Current status
 

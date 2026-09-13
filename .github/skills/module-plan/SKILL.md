@@ -139,3 +139,10 @@ failure, likely origin and next handoff. Use
 implementation track and phase issues before execution. Use the
 `.github/ISSUE_TEMPLATE/module-phase.md` structure and do not start a phase
 without an issue containing its acceptance criteria and dependencies.
+## Multiplatform planning gate
+
+Read the Multiplatform Delivery Contract and create explicit shared, desktop
+and mobile work items. Every task must identify its platform scope, validation
+command and evidence needed for closure. Include mobile navigation, touch,
+safe-area, offline and deep-link work whenever applicable; do not hide mobile
+work inside a generic frontend task.

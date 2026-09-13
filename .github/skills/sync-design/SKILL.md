@@ -79,3 +79,8 @@ model, operation matrix, conflict policy, migration risks, detected failure,
 likely origin and status. Use
 `docs/implementation/_templates/phase-evidence.md` for the human-readable
 phase record.
+## Multiplatform synchronization gate
+
+Define one semantic sync policy for web, iOS and Android. Distinguish storage
+and lifecycle adaptations from business behavior, and include reload, offline,
+permission changes, conflicts, tenant changes, reinstall and recovery evidence.

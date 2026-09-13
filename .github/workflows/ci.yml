@@ -30,12 +30,16 @@ jobs:
       - name: Validar contratos y checkpoints
         run: npm run validate:module-runs
 
+      - name: Validar contrato multiplataforma
+        run: npm run validate:multiplatform
+
   changes:
     name: Identificar qué cambió
     runs-on: ubuntu-latest
     outputs:
       application: ${{ steps.filter.outputs.application }}
       build: ${{ steps.filter.outputs.build }}
+      mobile: ${{ steps.filter.outputs.mobile }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -68,6 +72,12 @@ jobs:
               - 'tsconfig*.json'
               - 'tailwind.config.*'
               - 'postcss.config.*'
+            mobile:
+              - '.github/workflows/**'
+              - 'apps/mobile/**'
+              - 'packages/contracts/**'
+              - 'package.json'
+              - 'package-lock.json'
   code-quality:
     name: Revisar reglas y tipos del código
     needs: changes
@@ -133,3 +143,35 @@ jobs:
 
       - name: Crear build de producción
         run: npm run build
+
+  mobile-quality:
+    name: Validar plataforma mobile
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - name: Instalar dependencias mobile
+        working-directory: apps/mobile
+        run: npm ci
+
+      - name: Comprobar tipos mobile
+        working-directory: apps/mobile
+        run: npx tsc --noEmit
+
+      - name: Validar Expo
+        working-directory: apps/mobile
+        run: npx expo-doctor
+
+      - name: Generar bundle web mobile
+        working-directory: apps/mobile
+        run: npx expo export --platform web --output-dir /tmp/loopdev-mobile-web

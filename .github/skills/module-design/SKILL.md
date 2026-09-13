@@ -598,3 +598,11 @@ documentation templates in `docs/implementation/_templates/` and record the
 product-to-implementation links. Report the run ID, phase, skill, parent
 phase, input artifacts, decisions, output artifacts, acceptance evidence,
 detected failure, likely failure origin, next handoff and status.
+## Multiplatform design gate
+
+Read `docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md` and
+include `platform-scope.md` in the implementation workspace. Define the
+desktop, mobile web, iOS and Android composition for every primary view,
+shared contracts, navigation/deep-link behavior, responsive states and
+platform-specific interaction. A desktop-only design is an approved scope
+exception, not a default.

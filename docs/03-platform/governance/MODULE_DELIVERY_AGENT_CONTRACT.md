@@ -29,6 +29,7 @@ Every run maintains an `ARCHITECTURE_QUALITY` status:
 | Issue templates | `.github/ISSUE_TEMPLATE/` |
 | CI validation | `.github/workflows/ci.yml` |
 | Architecture contract | `docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` |
+| Multiplatform delivery | `docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md` |
 
 ## Inputs
 
@@ -49,13 +50,15 @@ Every run must:
 
 1. generate a stable ID using `MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>`;
 2. confirm repository path, checkout, branch, base, `HEAD` and working tree;
-3. locate or create the product definition;
-4. resolve the canonical implementation path as
+3. declare `PLATFORM_SCOPE` using the Multiplatform Delivery Contract;
+4. create the desktop/mobile capability and evidence matrices;
+5. locate or create the product definition;
+6. resolve the canonical implementation path as
    `docs/implementation/<suite>/<module>/`;
-5. create the implementation workspace from the approved templates;
-6. create or update the implementation track;
-7. initialize `runs/<run-id>/run.json`;
-8. record approvals, Platform impact and current phase.
+7. create the implementation workspace from the approved templates;
+8. create or update the implementation track;
+9. initialize `runs/<run-id>/run.json`;
+10. record approvals, Platform impact and current phase.
 
 The agent must stop if the intended checkout or runtime cannot be confirmed.
 
@@ -76,6 +79,8 @@ docs/implementation/<suite>/<module>/
 ├── architecture-design.md
 ├── implementation-plan.md
 ├── requirement-evidence-matrix.md
+├── platform-scope.md
+├── platform-evidence-matrix.md
 └── runs/<run-id>/
     └── run.json
 ```
@@ -212,6 +217,10 @@ states, desktop/mobile breakpoints, accessibility, Rivera/shared LoopDev
 primitive reuse and approval evidence. The run stops at
 `WAITING_VISUAL_DESIGN_APPROVAL` until explicit approval is recorded.
 
+The visual gate also requires a declared platform scope and an explicit
+desktop/mobile decision for every view and state. Desktop-only delivery is an
+approved scope exception, never an implicit fallback.
+
 Local commits are allowed after approved scope and validation gates pass.
 Pushes and pull requests always require explicit approval.
 
@@ -220,6 +229,11 @@ Pushes and pull requests always require explicit approval.
 Every phase writes a JSON checkpoint and, where applicable, a human-readable
 document from `docs/implementation/_templates/`. The checkpoint must include
 environment, inputs, decisions, outputs, validation, failures and handoff.
+
+Every run maintains `platform-scope.md` and
+`platform-evidence-matrix.md`. Build, verify and review phases update the
+matrix with separate desktop and mobile evidence. iOS and Android may remain
+`planned` or `not_applicable` only with an owner and follow-up decision.
 
 The architecture artifact must also record significant refactor decisions:
 reason, behavior preserved, affected files and consumers, risk, before/after
@@ -245,6 +259,7 @@ history rewriting are forbidden.
 A run is complete only when:
 
 - product requirements have implementation evidence;
+- every in-scope desktop and mobile surface has evidence in the platform matrix;
 - Platform and cross-module integrations are verified;
 - all applicable UI states are covered;
 - routes, runtime, accessibility, i18n and RTL are checked;

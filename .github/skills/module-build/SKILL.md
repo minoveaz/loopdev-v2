@@ -142,3 +142,11 @@ loading, empty, error, forbidden, conflict, offline, pending, success
 Respect the approved accessibility, i18n, RTL, security, migration and
 rollback decisions. A build or typecheck cannot substitute for functional,
 permission or runtime evidence.
+## Multiplatform build gate
+
+Use the platform scope and update `platform-evidence-matrix.md` during each
+coherent phase. For in-scope mobile work, run `cd apps/mobile && npm ci`,
+`npx tsc --noEmit`, `npx expo-doctor` and an Expo Web export in addition to
+desktop validation. Record runtime URLs, platform-specific deviations and
+shared-contract consumers; a desktop-only implementation is a deviation unless
+approved.

@@ -76,3 +76,9 @@ matrix, security test cases, unresolved decisions, detected failure, likely
 origin and status. Use
 `docs/implementation/_templates/phase-evidence.md` for the human-readable
 phase record.
+## Multiplatform access gate
+
+Permissions are shared semantically across desktop and mobile. Include
+deep-link access, cached permission changes, native permission prompts and
+offline mutation behavior in the matrix; never treat mobile visibility as
+authorization.

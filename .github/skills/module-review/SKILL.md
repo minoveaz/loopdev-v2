@@ -150,3 +150,9 @@ A module is not `READY` unless evidence covers:
 
 Compilation, tests without behavioral coverage, a commit or a clean working
 tree cannot alone justify a release-ready verdict.
+## Multiplatform release gate
+
+Return separate desktop and mobile verdicts in the release review. A module is
+not `READY` when an in-scope mobile surface lacks functional, visual,
+accessibility or runtime evidence. Record approved platform exceptions,
+residual gaps, owners and follow-up issues explicitly.

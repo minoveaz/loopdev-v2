@@ -21,6 +21,7 @@
     "test:quality": "vitest run --exclude src/test/visual-regression.test.tsx --exclude src/test/visual-regression-rtl.test.tsx",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "validate:module-runs": "node scripts/validate-module-runs.mjs",
+    "validate:multiplatform": "node scripts/validate-multiplatform-delivery.mjs",
     "report:module-runs": "node scripts/report-module-runs.mjs"
   },
   "dependencies": {

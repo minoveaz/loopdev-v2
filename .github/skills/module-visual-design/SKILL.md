@@ -68,3 +68,10 @@ analysis or `module-plan`.
 The next handoff is `SPECIALIZED_ANALYSIS` only after approval. Keep any
 unresolved visual decision visible in the matrix and checkpoint; do not infer
 approval from source presence, SVG rendering or a passing build.
+## Multiplatform visual gate
+
+The visual source must include desktop web and mobile web compositions for every
+view and applicable state, with iOS/Android notes when those surfaces are in
+scope. Record touch targets, viewport behavior, keyboard/focus, safe areas,
+responsive breakpoints and shared token/primitive reuse in
+`platform-scope.md` and the platform evidence matrix.

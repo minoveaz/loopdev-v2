@@ -222,6 +222,15 @@ discovery documentation/checkpoints. It must not:
 - declare existing behavior compliant without evidence;
 - design concrete UI/API structure that belongs to `module-design`.
 
+## Multiplatform discovery gate
+
+Read `docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md` and
+declare `PLATFORM_SCOPE` before handoff. Add a capability matrix covering
+desktop web, mobile web, iOS and Android, and classify each capability as
+shared contract, desktop adaptation, mobile adaptation or deferred. Discovery
+must identify mobile navigation, touch, viewport, offline and lifecycle
+impacts; do not assume the desktop route or interaction is sufficient.
+
 ## Completion states
 
 End with exactly one state:

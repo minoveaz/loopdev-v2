@@ -22,6 +22,8 @@ reviewable implementation while preserving:
 - shared Platform capabilities before module-local implementations;
 - evidence-based handoffs and recovery.
 - architecture boundaries, responsibility ownership and structural quality.
+- multiplatform delivery evidence across desktop web, mobile web, iOS and
+  Android according to the declared platform scope.
 
 ## Operating modes
 
@@ -39,12 +41,14 @@ If the user does not specify a mode, use `interactive`.
    delivery-agent and traceability contracts. Treat `SAAS_*` platform
    documents as proposed, non-runtime references unless source evidence proves
    otherwise.
+   Also read `docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md`.
 2. Confirm repository path, checkout type, branch, `HEAD` and working tree.
 3. Identify the module, product definition, track and run ID.
-4. Resolve `docs/implementation/<suite>/<module>/` and initialize its
+4. Declare `PLATFORM_SCOPE` and initialize the desktop/mobile capability matrix.
+5. Resolve `docs/implementation/<suite>/<module>/` and initialize its
    README, architecture design, implementation plan, evidence matrix and
    run manifest from the canonical templates.
-5. Never mix checkouts or use a different runtime as evidence.
+6. Never mix checkouts or use a different runtime as evidence.
 
 ## Skill routing
 
@@ -68,6 +72,11 @@ Use the skills in this order unless the contract records an approved reason:
 produce normative Markdown source plus reviewable wireframe evidence. The
 agent stops at `WAITING_VISUAL_DESIGN_APPROVAL`; no specialized analysis,
 plan approval or production work may proceed without explicit approval.
+
+Every visual gate must include desktop and mobile compositions, responsive
+breakpoints, platform-specific interaction decisions and shared-contract
+evidence. A missing mobile decision is an open gate, not an implicit desktop
+fallback.
 
 Architecture quality is a transversal status evaluated from design through
 review. Maintain `ARCHITECTURE_QUALITY` as `PENDING`, `PASS`, `PASS_WITH_DEBT`,
@@ -106,6 +115,12 @@ deviated, partial or untested work.
 Every phase must update its JSON checkpoint and human-readable evidence
 document. Never claim completion from source presence, a commit or a passing
 build alone.
+
+Every run must maintain `platform-scope.md` and
+`platform-evidence-matrix.md` from the canonical implementation templates.
+Build, verify and review phases update the matrix with separate desktop and
+mobile evidence. iOS and Android may be `planned` or `not_applicable` only
+when the scope decision records an owner and follow-up.
 
 ## Failure handling
 

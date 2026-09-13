@@ -6,6 +6,9 @@
 - Track: `tracks/active/<area>/<track>.md`
 - Run ID: `MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>`
 - Main issue: `owner/repo#<number>`
+- Multiplatform contract: `docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md`
+- Platform scope: `platform-scope.md`
+- Platform evidence: `platform-evidence-matrix.md`
 
 ## Current status
 
@@ -20,6 +23,15 @@
 | Last evidence | |
 
 ## Scope
+
+### Platform scope
+
+| Surface | Scope | Owner | Evidence |
+|---|---|---|---|
+| Desktop web | `required/planned/not_applicable` | | |
+| Mobile web | `required/planned/not_applicable` | | |
+| iOS | `required/planned/not_applicable` | | |
+| Android | `required/planned/not_applicable` | | |
 
 ### Included
 

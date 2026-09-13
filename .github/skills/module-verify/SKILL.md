@@ -164,3 +164,10 @@ Verify:
 
 Do not treat source presence, a passing typecheck or a clean commit as
 functional evidence.
+## Multiplatform verification gate
+
+Use `platform-evidence-matrix.md` as a required output. Verify desktop web and
+mobile web separately, including direct routes, refresh, navigation, responsive
+layout, accessibility and all applicable states. Verify iOS and Android or mark
+them `NOT_APPLICABLE`/`NOT_TESTED` with an owner and follow-up. Do not mark a
+module complete from desktop evidence alone.

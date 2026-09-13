@@ -46,16 +46,17 @@ If the user does not specify a mode, use `interactive`.
 
 Use the skills in this order unless the contract records an approved reason:
 
-1. `module-design`
-2. `domain-model`
-3. `access-design`
-4. `api-contracts`
-5. `sync-design`
-6. `module-plan`
-7. `module-build`
-8. `module-verify`
-9. `module-review`
-10. `git-workflow`
+1. `module-discovery`
+2. `module-design`
+3. `domain-model`
+4. `access-design`
+5. `api-contracts`
+6. `sync-design`
+7. `module-plan`
+8. `module-build`
+9. `module-verify`
+10. `module-review`
+11. `git-workflow`
 
 Architecture quality is a transversal status evaluated from design through
 review. Maintain `ARCHITECTURE_QUALITY` as `PENDING`, `PASS`, `PASS_WITH_DEBT`,

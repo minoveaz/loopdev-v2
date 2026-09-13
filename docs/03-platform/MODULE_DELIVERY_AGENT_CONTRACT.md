@@ -95,6 +95,7 @@ update only their owned artifacts.
 ```text
 INTAKE
   → CONTEXT_AUDIT
+  → DISCOVERY
   → DESIGN
   → WAITING_DESIGN_APPROVAL
   → SPECIALIZED_ANALYSIS
@@ -130,6 +131,7 @@ deviated.
 | Phase | Skill | Output |
 |---|---|---|
 | Design | `module-design` | Product and architecture specification |
+| Discovery | `module-discovery` | Expected capabilities, domain baseline and expected-versus-existing matrix |
 | Domain | `domain-model` | Entities, states, invariants and events |
 | Access | `access-design` | Permission, scope and security matrix |
 | API | `api-contracts` | Commands, DTOs, errors and event contracts |

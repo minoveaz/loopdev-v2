@@ -1,0 +1,64 @@
+{
+  "run_id": "MOD-CRM-PIPELINE-20260913-001",
+  "module": "CRM Pipeline",
+  "status": "running",
+  "current_phase": "01-design",
+  "attempt": 1,
+  "started_at": "2026-09-13T10:15:45+02:00",
+  "updated_at": "2026-09-13T10:17:10+02:00",
+  "architecture_quality": "PENDING",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "c80b814",
+    "working_tree": "clean before implementation workspace initialization",
+    "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
+    "runtime_port": 8081,
+    "runtime_status": "running"
+  },
+  "approvals": {
+    "design": "pending",
+    "plan": "pending",
+    "verification": "pending",
+    "release": "pending"
+  },
+  "platform_impact": [
+    {
+      "capability": "Kanban and shared UI primitives",
+      "decision": "REUSE",
+      "consumers": ["CRM Pipeline"],
+      "affected_tests": ["src/test/crm/pipeline/pipeline-page.test.tsx"],
+      "migration_required": false
+    },
+    {
+      "capability": "Activity, Tasks, Notes, Relations and Customer 360",
+      "decision": "REUSE",
+      "consumers": ["CRM Pipeline", "Opportunity detail"],
+      "affected_tests": ["CRM platform integration tests"],
+      "migration_required": false
+    }
+  ],
+  "checkpoint_paths": [
+    "docs/implementation/crm/pipeline/runs/MOD-CRM-PIPELINE-20260913-001/01-design.json"
+  ],
+  "evidence_links": [
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_UX_SPEC.md",
+    "src/loopdev/pages/crm/Pipeline.tsx",
+    "src/test/crm/pipeline/pipeline-page.test.tsx",
+    "src/test/crm/pipeline/pipeline-adapter.test.ts"
+  ],
+  "change_requests": [],
+  "blocked_by": [],
+  "next_action": "Review the existing Pipeline at localhost:8081, confirm pilot scope and approve the design phase.",
+  "commit": "c80b814",
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

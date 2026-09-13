@@ -1,0 +1,76 @@
+{
+  "run_id": "MOD-CRM-PIPELINE-20260913-002",
+  "span_id": "MOD-CRM-PIPELINE-20260913-002:01-design",
+  "phase": "01-design",
+  "skill": "module-design",
+  "parent_span_id": null,
+  "module": "CRM Pipeline",
+  "status": "running",
+  "decision_status": "open",
+  "architecture_quality": "PENDING",
+  "attempt": 1,
+  "started_at": "2026-09-13T10:23:24+02:00",
+  "completed_at": null,
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "c80b814",
+    "working_tree": "modified by implementation documentation",
+    "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
+    "runtime_port": 8081,
+    "runtime_status": "running"
+  },
+  "input_artifacts": [
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_UX_SPEC.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_COMPONENT_AUDIT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_IMPACT_ASSESSMENT.md",
+    "docs/implementation/crm/pipeline/runs/MOD-CRM-PIPELINE-20260913-001/"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-PIPELINE-BASELINE-001",
+      "status": "confirmed",
+      "summary": "Existing Kanban and CRM adapter are a baseline to verify, not proof of compliance."
+    },
+    {
+      "id": "DEC-PIPELINE-SCOPE-001",
+      "status": "confirmed",
+      "summary": "The target pilot includes Kanban, table, detail and manual opportunity creation."
+    }
+  ],
+  "actions": [
+    "Started a fresh delivery run without discarding the existing implementation.",
+    "Registered the existing route, adapter and tests as baseline evidence.",
+    "Preserved the previous intake run as historical evidence.",
+    "Added the proposed Opportunity card hierarchy, states, permissions and responsive rules to the design baseline."
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/runs/MOD-CRM-PIPELINE-20260913-002/run.json"
+  ],
+  "validation": [
+    {
+      "command": "curl -I http://localhost:8081/app/sales-crm/pipeline",
+      "result": "passed",
+      "evidence": "HTTP 200 from the canonical runtime"
+    }
+  ],
+  "requirements": [],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "Complete baseline comparison and architecture design before specialized analysis and planning.",
+  "evidence_links": [
+    "src/loopdev/pages/crm/Pipeline.tsx",
+    "src/loopdev/domains/crm/adapter/local.ts",
+    "src/test/crm/pipeline/pipeline-page.test.tsx",
+    "src/test/crm/pipeline/pipeline-adapter.test.ts"
+  ],
+  "notes": [
+    "This run intentionally starts from INTAKE and does not inherit completion claims from run 001.",
+    "Existing code must be classified requirement-by-requirement as PASS, PARTIAL, FAIL or NOT_TESTED.",
+    "The current card is a partial baseline: it has core commercial fields and movement actions, but the proposed design requires explicit product/origin, activity health, indicators, permission states and responsive evidence."
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "run_id": "MOD-CRM-PIPELINE-20260913-002",
+  "module": "CRM Pipeline",
+  "mode": "existing_implementation_baseline",
+  "status": "running",
+  "current_phase": "INTAKE",
+  "attempt": 1,
+  "started_at": "2026-09-13T10:23:24+02:00",
+  "updated_at": "2026-09-13T10:23:24+02:00",
+  "architecture_quality": "PENDING",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "c80b814",
+    "working_tree": "modified by implementation documentation",
+    "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
+    "runtime_port": 8081,
+    "runtime_status": "running"
+  },
+  "baseline": {
+    "exists": true,
+    "route": "/app/sales-crm/pipeline",
+    "implementation": [
+      "src/loopdev/pages/crm/Pipeline.tsx",
+      "src/loopdev/domains/crm/adapter/local.ts",
+      "src/test/crm/pipeline/pipeline-page.test.tsx",
+      "src/test/crm/pipeline/pipeline-adapter.test.ts"
+    ],
+    "rule": "Verify existing behavior against the new delivery design; do not assume source presence is compliance."
+  },
+  "approvals": {
+    "design": "pending",
+    "plan": "pending",
+    "verification": "pending",
+    "release": "pending"
+  },
+  "platform_impact": [
+    {
+      "capability": "Kanban and shared UI primitives",
+      "decision": "REUSE",
+      "consumers": ["CRM Pipeline"],
+      "affected_tests": ["src/test/crm/pipeline/pipeline-page.test.tsx"],
+      "migration_required": false
+    },
+    {
+      "capability": "Activity, Tasks, Notes, Relations and Customer 360",
+      "decision": "REUSE",
+      "consumers": ["CRM Pipeline", "Opportunity detail"],
+      "affected_tests": ["CRM platform integration tests"],
+      "migration_required": false
+    }
+  ],
+  "checkpoint_paths": [
+    "docs/implementation/crm/pipeline/runs/MOD-CRM-PIPELINE-20260913-002/01-design.json"
+  ],
+  "evidence_links": [
+    "docs/06-product/crm/pipeline/",
+    "src/loopdev/pages/crm/Pipeline.tsx",
+    "src/loopdev/domains/crm/adapter/local.ts",
+    "http://localhost:8081/app/sales-crm/pipeline"
+  ],
+  "change_requests": [],
+  "blocked_by": [],
+  "next_action": "Run INTAKE and CONTEXT_AUDIT, then compare the existing baseline to the approved full pilot scope.",
+  "commit": "c80b814",
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

@@ -60,6 +60,13 @@ Never claim completion without evidence from the actual checkout.
 
 ## Common Contract
 
+### Documentation workspace
+
+Use the workspace created by `delivery` at
+`docs/implementation/<suite>/<module>/`. Update only the build phase evidence,
+architecture deviations/refactoring records, checkpoints and linked issue.
+Never create a parallel flat directory or replace prior phase evidence.
+
 ### Input context
 
 - approved `module-design`;

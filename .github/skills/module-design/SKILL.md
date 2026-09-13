@@ -25,6 +25,23 @@ La respuesta debe explicar:
 
 Responde en español salvo que el usuario solicite otro idioma.
 
+## Implementation workspace handoff
+
+The `delivery` agent creates the canonical workspace before invoking this
+skill:
+`docs/implementation/<suite>/<module>/`.
+
+If it does not exist, stop with a `BLOCKED` handoff instead of creating an
+alternate path. This skill is the first skill to populate:
+
+- `README.md` with the module implementation scope and links;
+- `architecture-design.md` with the target boundaries and responsibilities;
+- the design phase evidence and checkpoint under `runs/<run-id>/`.
+
+Do not create documentation under `docs/06-product`, `tracks` or another
+implementation root. Link to product truth and leave issue/track creation to
+`module-plan` and the delivery orchestration.
+
 ## LoopDev Context
 
 Considera estas convenciones como restricciones de diseño:

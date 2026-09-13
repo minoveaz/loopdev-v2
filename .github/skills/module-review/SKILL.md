@@ -44,6 +44,12 @@ Do not implement fixes in review mode.
 
 ## Common Contract
 
+### Documentation workspace
+
+Review and update the canonical workspace at
+`docs/implementation/<suite>/<module>/`. Record the final structural and
+release verdict there and do not create a parallel documentation root.
+
 ### Input context
 
 - `module-design`;

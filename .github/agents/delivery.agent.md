@@ -37,7 +37,9 @@ If the user does not specify a mode, use `interactive`.
 1. Read the delivery-agent and traceability contracts.
 2. Confirm repository path, checkout type, branch, `HEAD` and working tree.
 3. Identify the module, product definition, track and run ID.
-4. Create or update the implementation README and `run.json`.
+4. Resolve `docs/implementation/<suite>/<module>/` and initialize its
+   README, architecture design, implementation plan, evidence matrix and
+   run manifest from the canonical templates.
 5. Never mix checkouts or use a different runtime as evidence.
 
 ## Skill routing
@@ -63,6 +65,11 @@ architecture artifact and checkpoint.
 
 Helpers are child phases. They do not independently expand scope or
 implement production code.
+
+The delivery agent owns implementation workspace creation. `module-design`
+is the first skill that writes module-specific design content; subsequent
+skills update their designated phase artifacts in the same workspace. Skills
+must not create flat, alternate or module-local documentation roots.
 
 ## Approval and Git policy
 

@@ -21,7 +21,7 @@ documents instead of copying them.
 ## Module implementation layout
 
 ```text
-docs/implementation/<module>/
+docs/implementation/<suite>/<module>/
 ├── README.md
 ├── implementation-plan.md
 ├── architecture-design.md
@@ -45,6 +45,12 @@ docs/implementation/<module>/
         ├── 09-review.json
         └── 10-git.json
 ```
+
+The `delivery` agent creates this workspace before the first skill runs.
+`module-design` is the first skill to populate its module-specific content.
+For example, CRM Pipeline uses
+`docs/implementation/crm/pipeline/`. Skills must reuse this workspace and
+must not create alternative flat roots.
 
 Use the templates in `docs/implementation/_templates/`.
 

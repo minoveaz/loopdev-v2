@@ -50,12 +50,45 @@ Every run must:
 1. generate a stable ID using `MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>`;
 2. confirm repository path, checkout, branch, base, `HEAD` and working tree;
 3. locate or create the product definition;
-4. create or update `docs/implementation/<module>/README.md`;
-5. create or update the implementation track;
-6. initialize `runs/<run-id>/run.json`;
-7. record approvals, Platform impact and current phase.
+4. resolve the canonical implementation path as
+   `docs/implementation/<suite>/<module>/`;
+5. create the implementation workspace from the approved templates;
+6. create or update the implementation track;
+7. initialize `runs/<run-id>/run.json`;
+8. record approvals, Platform impact and current phase.
 
 The agent must stop if the intended checkout or runtime cannot be confirmed.
+
+### Implementation workspace initialization
+
+The `delivery` agent owns the first creation of the implementation workspace.
+For a CRM Pipeline run, the canonical location is:
+
+```text
+docs/implementation/crm/pipeline/
+```
+
+The agent must create or preserve this structure:
+
+```text
+docs/implementation/<suite>/<module>/
+├── README.md
+├── architecture-design.md
+├── implementation-plan.md
+├── requirement-evidence-matrix.md
+└── runs/<run-id>/
+    └── run.json
+```
+
+It must copy or materialize the corresponding files from
+`docs/implementation/_templates/` and never invent a second implementation
+root. Existing files are updated in place; they are not overwritten without
+preserving prior evidence.
+
+`module-design` is the first skill to populate this workspace after
+initialization. It owns the initial architecture/design content, while
+`module-plan`, `module-build`, `module-verify` and `module-review` append or
+update only their owned artifacts.
 
 ## State machine
 

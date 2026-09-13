@@ -48,6 +48,12 @@ Do not change production code unless the user explicitly requests remediation.
 
 ## Common Contract
 
+### Documentation workspace
+
+Read the canonical workspace at `docs/implementation/<suite>/<module>/` and
+write verification results to its requirement matrix, phase evidence and
+checkpoint. Do not create a second implementation directory.
+
 ### Input context
 
 - `module-design`;

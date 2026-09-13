@@ -29,6 +29,8 @@ implementation plan without writing production code.
 - Convert every `REUSE` and `EXTEND_PLATFORM` decision from the design into
   explicit dependencies and acceptance evidence.
 - Assign dependencies, sequencing, risk and acceptance criteria.
+- Continue in the implementation workspace initialized by `delivery`; do not
+  create a second documentation root.
 - Delegate focused analysis to helper skills when needed:
   `domain-model`, `api-contracts`, `access-design` and `sync-design`.
 
@@ -115,7 +117,9 @@ create commits or silently expand the approved scope.
 
 ### Traceability
 
-Create a checkpoint for the plan phase using
+Create or update `docs/implementation/<suite>/<module>/implementation-plan.md`
+and its phase evidence in the initialized workspace. Create a checkpoint for
+the plan phase using
 `docs/03-platform/MODULE_DEVELOPMENT_TRACEABILITY.md`. Record the environment
 evidence, design input, audit-task results, plan artifact, blockers, detected
 failure, likely origin and next handoff. Use

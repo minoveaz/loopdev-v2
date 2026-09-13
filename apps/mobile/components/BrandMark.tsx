@@ -8,8 +8,16 @@ export function BrandMark() {
   return (
     <View style={styles.container}>
       <View style={styles.mark}>
-        <Svg height={22} viewBox="0 0 100 69" width={30}>
-          <Rect fill="#135bec" height="69" rx="12" width="100" />
+        <Svg height={40} viewBox="0 0 100 100" width={40}>
+          <Rect fill="#135bec" height="100" rx="24" width="100" />
+          <Path
+            d="M0 20H100M0 40H100M0 60H100M0 80H100M20 0V100M40 0V100M60 0V100M80 0V100"
+            opacity={0.12}
+            stroke="#ffffff"
+            strokeWidth="1"
+          />
+        </Svg>
+        <Svg height={28} style={styles.innerMark} viewBox="0 0 100 69" width={28}>
           <Path
             d={infinityPath}
             fill="none"
@@ -29,16 +37,26 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 9,
+    gap: 12,
   },
   mark: {
     alignItems: "center",
+    borderRadius: 12,
+    elevation: 4,
     justifyContent: "center",
+    position: "relative",
+    shadowColor: "#135bec",
+    shadowOffset: { height: 8, width: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+  },
+  innerMark: {
+    position: "absolute",
   },
   wordmark: {
     color: "#135bec",
     fontSize: 18,
     fontWeight: "900",
-    letterSpacing: -1,
+    letterSpacing: -0.8,
   },
 });

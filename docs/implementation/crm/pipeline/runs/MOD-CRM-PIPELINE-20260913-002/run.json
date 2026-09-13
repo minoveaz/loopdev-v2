@@ -3,10 +3,10 @@
   "module": "CRM Pipeline",
   "mode": "existing_implementation_baseline",
   "status": "running",
-  "current_phase": "WAITING_DESIGN_APPROVAL",
+  "current_phase": "SPECIALIZED_ANALYSIS",
   "attempt": 1,
   "started_at": "2026-09-13T10:23:24+02:00",
-  "updated_at": "2026-09-13T10:23:24+02:00",
+  "updated_at": "2026-09-13T12:23:22+02:00",
   "architecture_quality": "PENDING",
   "environment": {
     "repository": "minoveaz/loopdev-v2",
@@ -14,8 +14,8 @@
     "checkout_type": "branch",
     "branch": "feature/crm-v2-foundation",
     "base_branch": "develop",
-    "head_commit": "c80b814",
-    "working_tree": "modified by implementation documentation",
+    "head_commit": "48f6ff2",
+    "working_tree": "modified by approval checkpoint",
     "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
     "runtime_port": 8081,
     "runtime_status": "running"
@@ -32,7 +32,7 @@
     "rule": "Verify existing behavior against the new delivery design; do not assume source presence is compliance."
   },
   "approvals": {
-    "design": "pending",
+    "design": "approved",
     "plan": "pending",
     "verification": "pending",
     "release": "pending"
@@ -64,8 +64,8 @@
   ],
   "change_requests": [],
   "blocked_by": [],
-  "next_action": "Review discovery and architecture design, then approve or request changes before specialized analysis.",
-  "commit": "c80b814",
+  "next_action": "Run domain-model, access-design, api-contracts and sync-design, then produce the implementation plan and stop at WAITING_PLAN_APPROVAL.",
+  "commit": "48f6ff2",
   "pull_request": null,
   "retention": {
     "contains_pii": false,

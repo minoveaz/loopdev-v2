@@ -6,7 +6,7 @@
   "parent_span_id": null,
   "module": "CRM Pipeline",
   "status": "completed",
-  "decision_status": "open",
+  "decision_status": "approved",
   "architecture_quality": "PENDING",
   "attempt": 1,
   "started_at": "2026-09-13T10:23:24+02:00",
@@ -17,8 +17,8 @@
     "checkout_type": "branch",
     "branch": "feature/crm-v2-foundation",
     "base_branch": "develop",
-    "head_commit": "c80b814",
-    "working_tree": "modified by implementation documentation",
+    "head_commit": "48f6ff2",
+    "working_tree": "modified by approval checkpoint",
     "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
     "runtime_port": 8081,
     "runtime_status": "running"
@@ -61,7 +61,7 @@
   "requirements": [],
   "detected_failure": null,
   "likely_failure_origin": null,
-  "next_handoff": "WAITING_DESIGN_APPROVAL: review discovery and architecture design before specialized analysis.",
+  "next_handoff": "SPECIALIZED_ANALYSIS: run domain, access, API and sync analysis before creating the implementation plan.",
   "evidence_links": [
     "docs/implementation/crm/pipeline/discovery.md",
     "src/loopdev/pages/crm/Pipeline.tsx",
@@ -72,6 +72,7 @@
   "notes": [
     "This run intentionally starts from INTAKE and does not inherit completion claims from run 001.",
     "Existing code must be classified requirement-by-requirement as PASS, PARTIAL, FAIL or NOT_TESTED.",
-    "The current card is a partial baseline: it has core commercial fields and movement actions, but the proposed design requires explicit product/origin, activity health, indicators, permission states and responsive evidence."
+    "The current card is a partial baseline: it has core commercial fields and movement actions, but the proposed design requires explicit product/origin, activity health, indicators, permission states and responsive evidence.",
+    "Approved by the product owner on 2026-09-13: legacy component and view documentation is informational only; reuse the current Rivera template, shared LoopDev primitives and existing LoopDev v2 surfaces."
   ]
 }

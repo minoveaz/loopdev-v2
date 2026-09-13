@@ -8,7 +8,7 @@
 - Existing adapter: `src/loopdev/domains/crm/adapter/local.ts`
 - Existing tests: `src/test/crm/pipeline/`
 - Run ID: `MOD-CRM-PIPELINE-20260913-002`
-- Track: pending design approval
+- Track: specialized analysis in progress
 - Main issue: pending plan phase
 
 ## Current status
@@ -16,10 +16,10 @@
 | Field | Value |
 |---|---|
 | Status | `in_progress` |
-| Current phase | `WAITING_DESIGN_APPROVAL` |
+| Current phase | `SPECIALIZED_ANALYSIS` |
 | Current issue | Not created until plan approval |
 | Branch | `feature/crm-v2-foundation` |
-| Commit | `c80b814` |
+| Commit | `48f6ff2` |
 | Runtime | `http://localhost:8081/app/sales-crm/pipeline` running from canonical checkout |
 | Last evidence | Discovery and expected-versus-existing matrix completed; HTTP 200 on canonical runtime |
 
@@ -45,7 +45,7 @@
 
 | Phase | Issue | Status | Checkpoint | Evidence |
 |---|---:|---|---|---|
-| 01 Design | pending | `waiting_user` | `runs/MOD-CRM-PIPELINE-20260913-002/01-design.json` | Discovery and baseline comparison complete |
+| 01 Design | pending | `approved` | `runs/MOD-CRM-PIPELINE-20260913-002/01-design.json` | Discovery and baseline comparison approved |
 | 02 Domain | pending | pending | pending | pending |
 | 03 Access | pending | pending | pending | pending |
 | 04 API | pending | pending | pending | pending |
@@ -76,3 +76,4 @@
 | Date | Change | Run/commit | Approved by |
 |---|---|---|---|
 | 2026-09-13 | Initialized delivery workspace and audited existing Pipeline baseline | `MOD-CRM-PIPELINE-20260913-001` | pending |
+| 2026-09-13 | Approved discovery/design gate; legacy references constrained to informational evidence and reuse-first implementation | `MOD-CRM-PIPELINE-20260913-002` / `48f6ff2` | Product Owner |

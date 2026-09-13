@@ -150,3 +150,12 @@ coherent phase. For in-scope mobile work, run `cd apps/mobile && npm ci`,
 desktop validation. Record runtime URLs, platform-specific deviations and
 shared-contract consumers; a desktop-only implementation is a deviation unless
 approved.
+
+### Shared capability contract gate
+
+Implement actions, labels, validation, permissions, lifecycle and state
+transitions from the shared capability contract. Do not hardcode a second
+desktop or mobile action list. When a renderer needs a platform adaptation,
+keep the semantic identifier stable and record the adaptation and accessibility
+equivalence in phase evidence. Add contract-level regression tests whenever
+the capability changes.

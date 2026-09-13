@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Archive, AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote } from "lucide-react";
+import { contactActions } from "../../../../packages/contracts/src/contact-actions";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { loopdevAdapter, contactName, type CRMContact, type CRMCreateContactInput, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import {
@@ -398,24 +399,24 @@ export default function SalesCRMContacts() {
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem onClick={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}>
                         <Eye className="mr-2 h-3.5 w-3.5" />
-                        View Customer 360
+                        {contactActions.find((action) => action.id === "view")?.label}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => openEdit(customer)}>
                         <Pencil className="mr-2 h-3.5 w-3.5" />
-                        Edit contact
+                        {contactActions.find((action) => action.id === "edit")?.label}
                       </DropdownMenuItem>
                       <DropdownMenuItem disabled>
                         <StickyNote className="mr-2 h-3.5 w-3.5" />
-                        Add note
+                        {contactActions.find((action) => action.id === "add-note")?.label}
                       </DropdownMenuItem>
                       <DropdownMenuItem disabled>
                         <CheckSquare className="mr-2 h-3.5 w-3.5" />
-                        Create task
+                        {contactActions.find((action) => action.id === "create-task")?.label}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setArchiveTarget(customer)}>
                         <Archive className="mr-2 h-3.5 w-3.5" />
-                        Archive contact
+                        {contactActions.find((action) => action.id === "archive")?.label}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

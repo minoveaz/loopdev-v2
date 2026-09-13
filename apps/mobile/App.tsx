@@ -84,7 +84,7 @@ export default function App() {
 
   function renderContent() {
     if (currentPath === morePath) return <MobileAccountScreen />;
-    if (currentPath === "/app/sales-crm/contacts") return <MobileContactsScreen contacts={contacts} onCreate={() => navigate("/app/sales-crm/contacts/new")} />;
+    if (currentPath === "/app/sales-crm/contacts") return <MobileContactsScreen contacts={contacts} onCreate={() => navigate("/app/sales-crm/contacts/new")} onView={(contact) => navigate(`/app/sales-crm/contacts/${contact.id}`)} onArchive={(contact) => setContacts((current) => current.filter((item) => item.id !== contact.id))} />;
     if (currentPath === "/app/sales-crm/contacts/new") return <MobileCreateContactScreen onCancel={() => navigate("/app/sales-crm/contacts")} onCreated={(contact) => { setContacts((current) => [...current, contact]); navigate("/app/sales-crm/contacts"); }} />;
     if (activeSuite) {
       return <MobileWorkspaceScreen suite={activeSuite} onBack={() => navigate(launchpadPath)} />;

@@ -43,6 +43,45 @@ required when a native client is in scope; otherwise they remain `planned` or
 No platform may introduce a second business rule, permission model, route
 meaning or entity lifecycle.
 
+## Required shared capability contract
+
+Every user-facing functionality must define one shared capability contract
+before platform renderers are implemented. The contract is the semantic source
+of truth for desktop web, mobile web, iOS and Android; it is not a visual
+component contract and must not contain platform-specific layout details.
+
+At minimum, the contract must define:
+
+- capability name, owner and stable identifiers;
+- inputs, outputs, commands, queries and events;
+- entity lifecycle, invariants and validation rules;
+- action catalog, labels, enabled/disabled states and destructive tone;
+- loading, empty, error, forbidden, conflict, offline, pending and success
+  states;
+- navigation and deep-link meaning;
+- permission and tenant-scope requirements;
+- accessibility semantics and copy keys;
+- platform adaptations explicitly allowed without changing meaning;
+- consumers, versioning, migration and compatibility expectations.
+
+Store the contract beside the shared domain or feature contract, normally under
+`packages/contracts/src/<capability>.ts`, and document its consumers in the
+implementation workspace. Desktop and mobile renderers must consume the same
+contract rather than duplicating action lists, labels, validation or lifecycle
+rules.
+
+Any platform difference must be recorded as:
+
+```text
+PLATFORM_ADAPTATION:
+- shared_semantics: [stable meaning]
+- desktop_renderer: [desktop composition]
+- mobile_renderer: [mobile composition]
+- native_renderer: [ios/android composition or N/A]
+- accessibility_equivalence: [how the same meaning is preserved]
+- evidence: [test/runtime evidence]
+```
+
 ## Definition of Ready
 
 A module cannot enter build until its implementation workspace contains:

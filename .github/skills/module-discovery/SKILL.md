@@ -121,6 +121,15 @@ coherent LoopDev differentiators over a long feature list.
 
 ## Required discovery questions
 
+### Shared capability contract
+
+For every user-facing capability, define or locate the shared contract before
+design begins. Discovery must identify the stable actions, states, validation,
+permissions, navigation meaning, copy and platform adaptations. If desktop and
+mobile currently implement different action catalogs or lifecycle rules,
+classify the mismatch as a delivery gap; do not normalize it by documenting
+only one renderer.
+
 ### Business capability
 
 - What problem does the module solve?

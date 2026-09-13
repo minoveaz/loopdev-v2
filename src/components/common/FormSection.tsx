@@ -9,6 +9,7 @@ interface FormSectionProps {
   /** Optional aside (e.g. helper card) shown to the right on lg+. */
   aside?: ReactNode;
   children: ReactNode;
+  id?: string;
   className?: string;
   eyebrow?: string;
   meta?: ReactNode;
@@ -33,6 +34,7 @@ export function FormSection({
   icon,
   aside,
   children,
+  id,
   className,
   eyebrow,
   meta,
@@ -48,7 +50,7 @@ export function FormSection({
 }: FormSectionProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   return (
-    <section
+    <section id={id}
       className={cn(
         "grid gap-6 rounded-xl border border-border-strong/70 bg-card-muted/45 p-5 shadow-xs md:p-6 lg:grid-cols-[260px_1fr]",
         className,

@@ -171,3 +171,12 @@ mobile web separately, including direct routes, refresh, navigation, responsive
 layout, accessibility and all applicable states. Verify iOS and Android or mark
 them `NOT_APPLICABLE`/`NOT_TESTED` with an owner and follow-up. Do not mark a
 module complete from desktop evidence alone.
+
+### Shared capability contract verification
+
+For every capability, verify that desktop and mobile consume the same contract
+for actions, labels, validation, permissions, navigation and lifecycle states.
+Compare the rendered action catalog and state matrix, not only source imports.
+Report duplicated or divergent contracts as `FAIL` or `PARTIAL`, and include
+the contract path plus desktop/mobile runtime evidence in the requirement
+matrix.

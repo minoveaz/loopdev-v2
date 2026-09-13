@@ -146,3 +146,12 @@ and mobile work items. Every task must identify its platform scope, validation
 command and evidence needed for closure. Include mobile navigation, touch,
 safe-area, offline and deep-link work whenever applicable; do not hide mobile
 work inside a generic frontend task.
+
+### Shared capability contract gate
+
+The first implementation task for each capability must create or verify its
+shared contract before building platform UI. The plan must identify the
+contract path, all desktop/mobile/native consumers, versioning impact and
+contract tests. Include separate renderer tasks only after the shared
+semantics, action catalog, state matrix, permissions and navigation meaning are
+approved.

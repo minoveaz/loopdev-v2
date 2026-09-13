@@ -606,3 +606,12 @@ desktop, mobile web, iOS and Android composition for every primary view,
 shared contracts, navigation/deep-link behavior, responsive states and
 platform-specific interaction. A desktop-only design is an approved scope
 exception, not a default.
+
+### Shared capability contract gate
+
+For each primary capability, design the shared semantic contract before
+designing platform-specific composition. Record stable action IDs, copy keys,
+validation, lifecycle states, permissions, navigation meaning, accessibility
+semantics and the allowed desktop/mobile/native adaptations. The visual design
+may change density and layout, but it must not redefine the capability or
+create a renderer-local action catalog.

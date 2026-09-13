@@ -2,7 +2,7 @@ import { useCallback, useRef, useState, type RefObject } from "react";
 import { AppDrawer } from "@/components/platform";
 import { FormSectionNav } from "@/components/common";
 import type { CRMContact, CRMContactMutationResult } from "@/loopdev/domains/crm/adapter";
-import { ContactForm, type ContactFormValues } from "./ContactForm";
+import { ContactForm, type ContactFormValues, type ContactSectionStats } from "./ContactForm";
 import { contactFormSections } from "../../../../../packages/contracts/src/contact-form";
 
 interface ContactFormDrawerProps {
@@ -25,6 +25,7 @@ export function ContactFormDrawer({
   const editing = Boolean(contact);
   const dirtyRef = useRef(false);
   const [dirty, setDirty] = useState(false);
+  const [sectionStats, setSectionStats] = useState<Record<string, ContactSectionStats>>({});
   const handleDirtyChange = useCallback((dirty: boolean) => {
     dirtyRef.current = dirty;
     setDirty(dirty);
@@ -55,7 +56,7 @@ export function ContactFormDrawer({
       headerMeta={<span>Profile form</span>}
       headerNav={
         <FormSectionNav
-          items={contactFormSections.map((section) => ({ id: `contact-form-${section.id}`, label: section.label }))}
+          items={contactFormSections.map((section) => ({ id: `contact-form-${section.id}`, label: section.label, status: sectionStats[section.id]?.status ?? "neutral" }))}
           onSelect={scrollToSection}
         />
       }
@@ -78,6 +79,7 @@ export function ContactFormDrawer({
           onSubmit={onSubmit}
           onSuccess={onSuccess}
           onDirtyChange={handleDirtyChange}
+          onSectionStatsChange={setSectionStats}
         />
       )}
     </AppDrawer>

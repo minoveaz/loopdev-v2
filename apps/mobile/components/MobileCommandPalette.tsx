@@ -105,7 +105,7 @@ function ActionRow({ action, onPress }: { action: SharedContextualAction; onPres
 const styles = StyleSheet.create({
   overlay: { alignItems: "center", flex: 1, justifyContent: "center", paddingHorizontal: 22 },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(15,23,42,0.42)" },
-  palette: { backgroundColor: "#ffffff", borderColor: "#e5e7eb", borderRadius: 18, borderWidth: 1, elevation: 18, maxWidth: 420, padding: 16, shadowColor: "#0f172a", shadowOffset: { height: 8, width: 0 }, shadowOpacity: 0.22, shadowRadius: 24, width: "100%" },
+  palette: { backgroundColor: "#ffffff", borderColor: "#e5e7eb", borderRadius: 18, borderWidth: 1, boxShadow: "0px 8px 24px rgba(15,23,42,0.22)", elevation: 18, maxWidth: 420, padding: 16, width: "100%" },
   header: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
   heading: { flex: 1 },
   title: { color: "#111827", fontSize: 17, fontWeight: "800" },

@@ -3,7 +3,12 @@ import { useEffect, useState } from "react";
 import { contactFormSections, getContactSectionStats, type ContactFormFieldDefinition, type ContactFormSectionId } from "../../../packages/contracts/src/contact-form";
 import { referenceDataAdapter } from "../../../src/loopdev/domains/reference-data/adapter";
 import { useMobileForm } from "./forms/MobileFormEngine";
-import { MobileComboboxField, MobileFormField, MobileFormSection, MobileFormTabs, MobileSelectField, type MobileOption } from "./forms/MobileFormPrimitives";
+import { MobileComboboxField, MobileFormField, MobileFormTabs, MobileSelectField, type MobileOption } from "./forms/MobileFormPrimitives";
+import { MobileConfirmDialog } from "./MobileModal";
+import { AddressTab } from "./contact-tabs/AddressTab";
+import { ChannelsTab } from "./contact-tabs/ChannelsTab";
+import { IdentityTab } from "./contact-tabs/IdentityTab";
+import { OrganizationTab } from "./contact-tabs/OrganizationTab";
 
 export function MobileCreateContactScreen({ onCancel, onCreated }: { onCancel: () => void; onCreated: (contact: { id: string; firstName: string; lastName: string; companyName: string; jobTitle: string; preferredChannel: "email" | "phone" | "whatsapp"; identityStatus: string; city: string; stateProvince: string; country: string; email: string; phone: string; updatedAt: string }) => void }) {
   const form = useMobileForm();
@@ -17,6 +22,9 @@ export function MobileCreateContactScreen({ onCancel, onCreated }: { onCancel: (
   const [activeSection, setActiveSection] = useState(contactFormSections[0].id);
   const activeIndex = contactFormSections.findIndex((section) => section.id === activeSection);
   const activeDefinition = contactFormSections[activeIndex] ?? contactFormSections[0];
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const hasChanges = Object.entries(form.values).some(([id, value]) => id !== "preferredChannel" && typeof value === "string" && Boolean(value.trim()));
+  const requestCancel = () => { if (hasChanges) setDiscardOpen(true); else onCancel(); };
   function save() {
     const errors = form.submit();
     if (Object.keys(errors).length) return;
@@ -69,10 +77,11 @@ export function MobileCreateContactScreen({ onCancel, onCreated }: { onCancel: (
       : <MobileFormField key={definition.id} label={definition.label} required={definition.required} type={definition.type} value={form.values[definition.id]} onChangeText={(value) => form.setValue(definition.id, value)} error={form.errors[definition.id]} keyboardType={definition.type === "email" ? "email-address" : definition.type === "phone" ? "phone-pad" : "default"} />
   );
   const completedSections = contactFormSections.filter((section) => stats[section.id].status === "complete").map((section) => section.id);
-  return <View style={styles.screen}><View style={styles.formHeader}><View style={styles.headerRow}><Pressable accessibilityLabel="Cancel create contact" accessibilityRole="button" onPress={onCancel} style={[styles.headerAction, styles.cancelAction]}><Text style={styles.cancelText}>Cancel</Text></Pressable><Text accessibilityRole="header" style={styles.headerTitle}>Create contact</Text><Pressable accessibilityLabel="Save contact" accessibilityRole="button" onPress={save} style={[styles.headerAction, styles.saveAction]}><Text style={styles.saveText}>Save</Text></Pressable></View><MobileFormTabs sections={contactFormSections} activeId={activeSection} completedIds={completedSections} onSelect={selectSection} /></View><ScrollView contentContainerStyle={styles.content}>
-    <MobileFormSection definition={activeDefinition} {...stats[activeDefinition.id]}>{activeDefinition.fields.map(renderField)}</MobileFormSection>
+  const Tab = activeDefinition.id === "identity" ? IdentityTab : activeDefinition.id === "address" ? AddressTab : activeDefinition.id === "organization" ? OrganizationTab : ChannelsTab;
+  return <View style={styles.screen}><View style={styles.formHeader}><View style={styles.headerRow}><Pressable accessibilityLabel="Cancel create contact" accessibilityRole="button" onPress={requestCancel} style={[styles.headerAction, styles.cancelAction]}><Text style={styles.cancelText}>Cancel</Text></Pressable><Text accessibilityRole="header" style={styles.headerTitle}>Create contact</Text><Pressable accessibilityLabel="Save contact" accessibilityRole="button" onPress={save} style={[styles.headerAction, styles.saveAction]}><Text style={styles.saveText}>Save</Text></Pressable></View><MobileFormTabs sections={contactFormSections} activeId={activeSection} completedIds={completedSections} onSelect={selectSection} /></View><ScrollView contentContainerStyle={styles.content}>
+    <Tab definition={activeDefinition} stats={stats[activeDefinition.id]} renderField={renderField} />
     <View style={styles.sectionFooter}><Pressable accessibilityLabel="Previous form section" accessibilityRole="button" disabled={activeIndex === 0} onPress={() => setActiveSection(contactFormSections[activeIndex - 1].id)} style={[styles.sectionButton, activeIndex === 0 && styles.disabledButton]}><Text style={styles.sectionButtonText}>Back</Text></Pressable><Text style={styles.sectionCount}>{activeIndex + 1} of {contactFormSections.length}</Text><Pressable accessibilityLabel="Next form section" accessibilityRole="button" disabled={activeIndex === contactFormSections.length - 1} onPress={() => setActiveSection(contactFormSections[activeIndex + 1].id)} style={[styles.sectionButton, activeIndex === contactFormSections.length - 1 && styles.disabledButton]}><Text style={styles.sectionButtonText}>Next</Text></Pressable></View>
-  </ScrollView></View>;
+  </ScrollView><MobileConfirmDialog visible={discardOpen} title="Discard contact changes?" description="Your unsaved contact details will be lost." cancelLabel="Keep editing" confirmLabel="Discard" destructive onCancel={() => setDiscardOpen(false)} onConfirm={() => { setDiscardOpen(false); onCancel(); }} /></View>;
 }
 
 function ReferenceMobileField({ definition, value, options, error, onChange }: { definition: ContactFormFieldDefinition; value: string; options: readonly MobileOption[]; error?: string; onChange: (value: string) => void }) {

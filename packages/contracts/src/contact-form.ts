@@ -45,13 +45,12 @@ export const contactFormSections: readonly ContactFormSectionDefinition[] = [
     ],
   },
   {
-    id: "channels", label: "Contact channels", eyebrow: "Communication",
-    description: "At least an email address or phone number is required.", iconKey: "contact", meta: "At least one",
+    id: "address", label: "Address", eyebrow: "Location",
+    description: "Optional location information.", iconKey: "map-pin", meta: "Optional",
     fields: [
-      field("email", "Primary email", "email", false, "email-or-phone"),
-      field("secondaryEmail", "Secondary email", "email"), field("phone", "Primary phone", "phone", false, "email-or-phone"),
-      field("secondaryPhone", "Secondary phone", "phone"), field("preferredChannel", "Preferred channel", "select"),
-      field("preferredLanguage", "Preferred language", "select"),
+      field("country", "Country", "select"), field("city", "City", "combobox"),
+      field("stateProvince", "State / province", "select"), field("postalCode", "Postal code"),
+      field("addressLine1", "Address line 1"), field("addressLine2", "Address line 2"),
     ],
   },
   {
@@ -60,12 +59,13 @@ export const contactFormSections: readonly ContactFormSectionDefinition[] = [
     fields: [field("companyName", "Company"), field("jobTitle", "Job title"), field("department", "Department")],
   },
   {
-    id: "address", label: "Address", eyebrow: "Location",
-    description: "Optional location information.", iconKey: "map-pin", meta: "Optional",
+    id: "channels", label: "Contact channels", eyebrow: "Communication",
+    description: "At least an email address or phone number is required.", iconKey: "contact", meta: "At least one",
     fields: [
-      field("country", "Country", "select"), field("city", "City", "combobox"),
-      field("stateProvince", "State / province", "select"), field("postalCode", "Postal code"),
-      field("addressLine1", "Address line 1"), field("addressLine2", "Address line 2"),
+      field("email", "Primary email", "email", false, "email-or-phone"),
+      field("secondaryEmail", "Secondary email", "email"), field("phone", "Primary phone", "phone", false, "email-or-phone"),
+      field("secondaryPhone", "Secondary phone", "phone"), field("preferredChannel", "Preferred channel", "select"),
+      field("preferredLanguage", "Preferred language", "select"),
     ],
   },
 ] as const;

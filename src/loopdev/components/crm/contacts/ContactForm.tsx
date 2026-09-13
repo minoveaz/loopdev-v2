@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { FormSectionHeader } from "@/components/common";
+import { FormSection } from "@/components/common";
 
 export type { ContactFormValues };
 const contactFormResolver: Resolver<ContactFormValues> = async (values) => {
@@ -106,9 +106,12 @@ interface ContactFormProps {
   onSubmit: (values: ContactFormValues) => Promise<CRMContactMutationResult>;
   onSuccess: (contact: CRMContact) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  onSectionStatsChange?: (stats: Record<string, ContactSectionStats>) => void;
 }
 
-export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyChange }: ContactFormProps) {
+export type ContactSectionStats = { completed: number; total: number; errors: number; status: "error" | "complete" | "progress" | "neutral" };
+
+export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyChange, onSectionStatsChange }: ContactFormProps) {
   const organizationId = "local-development-organization";
   const form = useForm<ContactFormValues>({
     resolver: contactFormResolver,
@@ -116,7 +119,11 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
   });
   const { formState } = form;
   const values = form.watch();
-  const sectionStats = getContactSectionStats(values, formState.errors as Record<string, string>) as Record<string, { completed: number; total: number; errors: number; status: "error" | "complete" | "progress" | "neutral" }>;
+  const sectionStats = getContactSectionStats(values, formState.errors as Record<string, string>) as Record<string, ContactSectionStats>;
+  const sectionStatsSignature = contactFormSections.map((section) => {
+    const stats = sectionStats[section.id];
+    return `${section.id}:${stats.completed}:${stats.errors}:${stats.status}`;
+  }).join("|");
   const countryValue = form.watch("country");
   const { items: countries } = useCountries(organizationId);
   const country = countries.find((item) => item.code === countryValue || item.label === countryValue);
@@ -134,6 +141,10 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
   useEffect(() => {
     onDirtyChange?.(formState.isDirty);
   }, [formState.isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    onSectionStatsChange?.(sectionStats);
+  }, [onSectionStatsChange, sectionStatsSignature]);
 
   const submit = async (values: ContactFormValues) => {
     const result = await onSubmit({
@@ -199,10 +210,9 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
         {contactFormSections.map((section) => {
           const Icon = iconByKey[section.iconKey];
           const stats = sectionStats[section.id];
-          return <section key={section.id} id={`contact-form-${section.id}`} className="scroll-mt-14 loopdev-form-section space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs">
-            <FormSectionHeader eyebrow={section.eyebrow} title={section.label} description={section.description} icon={<Icon className="h-4 w-4" />} completed={stats.completed} total={stats.total} errorCount={stats.errors} status={stats.status} mode="expanded" responsive="auto" meta={section.meta ? <span>{section.meta}</span> : undefined} />
+          return <FormSection key={section.id} id={`contact-form-${section.id}`} className="scroll-mt-14 loopdev-form-section" eyebrow={section.eyebrow} title={section.label} description={section.description} icon={<Icon className="h-4 w-4" />} completed={stats.completed} total={stats.total} errorCount={stats.errors} status={stats.status} mode="expanded" responsive="auto" meta={section.meta ? <span>{section.meta}</span> : undefined}>
             <div className="grid gap-4 sm:grid-cols-2">{section.fields.map((field) => <div key={field.id} className={field.id === "addressLine1" || field.id === "addressLine2" ? "sm:col-span-2" : undefined}>{renderField(field.id)}</div>)}</div>
-          </section>;
+          </FormSection>;
         })}
         {formState.errors.root?.server && (() => { const message = formState.errors.root.server.message ?? ""; const conflict = message.startsWith("Conflict:"); const permission = message.startsWith("Permission denied:"); return <p role="alert" className={`rounded-md border px-3 py-2 text-sm ${conflict ? "border-amber-500/30 bg-amber-500/10 text-amber-700" : permission ? "border-slate-400/40 bg-slate-500/10 text-slate-700" : "border-destructive/30 bg-destructive-soft text-destructive"}`}>{message}</p>; })()}
         <div className="flex justify-end gap-2 border-t border-border pt-5"><Button type="button" variant="ghost" onClick={onCancel} disabled={formState.isSubmitting}>Cancel</Button><Button type="submit" disabled={formState.isSubmitting}>{formState.isSubmitting ? "Saving..." : contact ? "Save changes" : "Create contact"}</Button></div>

@@ -156,3 +156,11 @@ Return separate desktop and mobile verdicts in the release review. A module is
 not `READY` when an in-scope mobile surface lacks functional, visual,
 accessibility or runtime evidence. Record approved platform exceptions,
 residual gaps, owners and follow-up issues explicitly.
+
+### Shared capability contract release gate
+
+The review must confirm that every in-scope capability has one semantic
+contract consumed by each renderer. Check action catalogs, labels, enabled and
+destructive states, validation, permissions, navigation and lifecycle states
+across desktop and mobile. A renderer-local action list or undocumented
+platform deviation is a release gap even when both platforms compile.

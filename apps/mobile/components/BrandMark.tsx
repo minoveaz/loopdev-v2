@@ -51,10 +51,7 @@ const styles = StyleSheet.create({
     elevation: 4,
     justifyContent: "center",
     position: "relative",
-    shadowColor: "#135bec",
-    shadowOffset: { height: 8, width: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
+    boxShadow: "0px 8px 10px rgba(19,91,236,0.2)",
   },
   innerMark: {
     position: "absolute",

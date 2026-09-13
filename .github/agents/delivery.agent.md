@@ -21,6 +21,7 @@ reviewable implementation while preserving:
 - Rivera as the visual baseline;
 - shared Platform capabilities before module-local implementations;
 - evidence-based handoffs and recovery.
+- architecture boundaries, responsibility ownership and structural quality.
 
 ## Operating modes
 
@@ -53,6 +54,12 @@ Use the skills in this order unless the contract records an approved reason:
 8. `module-verify`
 9. `module-review`
 10. `git-workflow`
+
+Architecture quality is a transversal status evaluated from design through
+review. Maintain `ARCHITECTURE_QUALITY` as `PENDING`, `PASS`, `PASS_WITH_DEBT`,
+`DEVIATED`, `BLOCKED` or `FAIL`. The run cannot reach release review while it
+is `DEVIATED`, `BLOCKED` or `FAIL` without explicit approval recorded in the
+architecture artifact and checkpoint.
 
 Helpers are child phases. They do not independently expand scope or
 implement production code.

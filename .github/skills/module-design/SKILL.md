@@ -136,6 +136,30 @@ Define también, cuando se reemplace una UX:
 No deben quedar dos caminos activos para la misma capacidad sin una decisión
 explícita.
 
+## Architecture and structural design
+
+Apply `docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` to every
+module. Produce or update
+`docs/implementation/<module>/architecture-design.md` from
+`docs/implementation/_templates/architecture-design.md`.
+
+The design must explicitly define:
+
+- target architecture and module boundaries;
+- presentation, application, domain, ports and adapter layers;
+- allowed and forbidden dependency directions;
+- responsibility owner for UI, use cases, domain rules, persistence, APIs,
+  authorization, synchronization and shared Platform capabilities;
+- cohesion, coupling, SRP and duplication risks;
+- public contracts and extension points;
+- architecture decisions, assumptions and open decisions;
+- significant refactors, preserved behavior and residual debt.
+
+Do not prescribe Clean or Hexagonal Architecture mechanically. Select the
+smallest structure that preserves boundaries, testability and replaceable
+local/remote adapters. Any exception must have an owner, risk, approval and
+follow-up evidence.
+
 ## Suite interaction, navigation and quality
 
 Documenta rutas, navegación lateral, breadcrumbs, deep links, refresh,

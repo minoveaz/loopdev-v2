@@ -7,6 +7,7 @@
   "module": "<Module name>",
   "status": "pending",
   "decision_status": "open",
+  "architecture_quality": "PENDING",
   "attempt": 1,
   "started_at": "<RFC3339 timestamp>",
   "completed_at": null,

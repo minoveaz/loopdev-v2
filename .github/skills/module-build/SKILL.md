@@ -23,6 +23,13 @@ LoopDev checkout.
   `@/components/ui/select`, `Command`, `Popover` and `Calendar`, unless a
   documented accessibility or platform requirement justifies an exception.
 - Keep business logic in contracts, hooks, services and adapters.
+- Keep presentation, application/use-case, domain, port/contract and adapter
+  responsibilities separate according to
+  `docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md`.
+- Record significant refactors with their reason, preserved behavior, affected
+  files and consumers, risk, before/after tests, rollback and residual debt.
+- Stop and report an unapproved dependency-boundary or responsibility
+  deviation; do not hide it inside a cleanup commit.
 - Reuse Platform capabilities instead of implementing module-local versions.
   This includes Notes, Files/upload/preview, Activity/Timeline, Tasks,
   Relations and Document Intelligence.

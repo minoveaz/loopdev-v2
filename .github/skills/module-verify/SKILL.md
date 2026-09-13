@@ -24,6 +24,10 @@ Evaluate the implemented module against `module-design` and `module-plan`.
 - Check that new product UI does not use native `<select>` controls or browser
   default substitutes where an established LoopDev primitive exists.
 - Compare requirements with observed evidence, not source presence alone.
+- Verify architecture boundaries, responsibility ownership, dependency
+  direction, SRP, cohesion, coupling and duplicate implementations.
+- For refactors, compare behavior before and after, run regression tests and
+  record every affected route, state, consumer and contract.
 
 ## Required Output
 
@@ -85,6 +89,23 @@ issues until every applicable requirement has evidence or an explicit gap.
 Leave the issue open for `PARTIAL`, `FAIL` or `NOT_TESTED` outcomes.
 
 ## Platform integration verification
+
+## Architecture quality verification
+
+Use the module `architecture-design.md` and
+`docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` as the
+baseline. Record:
+
+- actual versus planned layer and module boundaries;
+- forbidden or unexplained imports and dependency direction;
+- responsibility and SRP findings;
+- cohesion, coupling and duplication findings;
+- behavior-preservation evidence for refactors;
+- regression tests before/after and affected UI/domain states;
+- rollback readiness and residual debt ownership.
+
+Classify an unapproved deviation as `FAIL` or `BLOCKED`; a passing build or
+typecheck does not override this result.
 
 For every applicable Platform capability, verify:
 

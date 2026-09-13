@@ -13,6 +13,7 @@ modules. Every module run must make it possible to answer:
 - which evidence passed or failed;
 - where a failure was detected and where it likely originated;
 - which phase must resume next.
+- whether architecture quality passed, contains approved debt or is blocking.
 
 This is versioned product and engineering documentation. It belongs in the
 production repository and should be reviewed with the module design.
@@ -102,6 +103,7 @@ checkpoints. The canonical checkpoint shape is:
   "module": "Opportunities",
   "status": "completed",
   "decision_status": "confirmed",
+  "architecture_quality": "PASS",
   "started_at": "2026-09-13T09:00:00+02:00",
   "completed_at": "2026-09-13T09:30:00+02:00",
   "environment": {

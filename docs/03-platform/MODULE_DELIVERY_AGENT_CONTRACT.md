@@ -11,6 +11,10 @@ The agent coordinates work. Domain, access, API, synchronization, planning,
 implementation, verification, review and Git decisions remain governed by
 their respective skills.
 
+Architecture quality is a transversal concern, not an optional final review.
+Every run maintains an `ARCHITECTURE_QUALITY` status:
+`PENDING`, `PASS`, `PASS_WITH_DEBT`, `DEVIATED`, `BLOCKED` or `FAIL`.
+
 ## Authoritative artifacts
 
 | Concern | Location |
@@ -24,6 +28,7 @@ their respective skills.
 | Track template | `tracks/templates/module-development-track.md` |
 | Issue templates | `.github/ISSUE_TEMPLATE/` |
 | CI validation | `.github/workflows/ci.yml` |
+| Architecture contract | `docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` |
 
 ## Inputs
 
@@ -170,6 +175,11 @@ Every phase writes a JSON checkpoint and, where applicable, a human-readable
 document from `docs/implementation/_templates/`. The checkpoint must include
 environment, inputs, decisions, outputs, validation, failures and handoff.
 
+The architecture artifact must also record significant refactor decisions:
+reason, behavior preserved, affected files and consumers, risk, before/after
+tests, rollback and residual technical debt. An unapproved architecture
+deviation blocks dependent phases and release, even if build and tests pass.
+
 When a phase fails:
 
 1. mark it `failed` or `blocked`;
@@ -195,6 +205,8 @@ A run is complete only when:
 - security, tenant isolation and rollback are addressed;
 - phase issues and checkpoints are complete;
 - `module-review` has issued a final verdict;
+- `ARCHITECTURE_QUALITY` is `PASS` or `PASS_WITH_DEBT` with approved residual
+  debt and follow-up ownership;
 - Git delivery evidence is recorded separately.
 
 `READY_WITH_GAPS`, `BLOCKED`, `FAIL`, `PARTIAL` and `NOT_TESTED` are not

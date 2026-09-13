@@ -24,6 +24,8 @@ implementation plan without writing production code.
   permissions, migrations and tests.
 - Add a mandatory `platform-reuse-audit` task before planning new shared
   components, adapters or persistence.
+- Add mandatory `architecture-boundary-audit`, `responsibility-audit` and
+  `refactor-safety-audit` tasks before implementation.
 - Convert every `REUSE` and `EXTEND_PLATFORM` decision from the design into
   explicit dependencies and acceptance evidence.
 - Assign dependencies, sequencing, risk and acceptance criteria.
@@ -62,6 +64,12 @@ Also create explicit audit tasks before implementation:
   pending and success;
 - `accessibility-and-i18n-audit`: keyboard, portals, responsive, i18n and RTL;
 - `security-and-rollback-audit`: isolation, sensitive data, flags and recovery.
+- `architecture-boundary-audit`: layers, module boundaries, dependency
+  direction, public contracts and forbidden imports.
+- `responsibility-audit`: UI/application/domain/infrastructure ownership,
+  SRP, cohesion, coupling and duplication risks.
+- `refactor-safety-audit`: behavior preserved, before/after evidence,
+  regression tests, rollback and residual technical debt.
 
 Each task must define the evidence required to close it. A clean build,
 commit or source file is not sufficient evidence for behavior.

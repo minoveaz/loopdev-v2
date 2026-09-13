@@ -25,6 +25,8 @@ verification evidence.
 - Test coverage and evidence quality.
 - Migration, observability and rollout readiness.
 - Unnecessary MVP scope and Enterprise leakage.
+- Architecture and structural quality: layer boundaries, SRP, cohesion,
+  coupling, duplication, dependency direction and residual technical debt.
 - Platform reuse and suite integration.
 - Operational truth and runtime evidence.
 - Legacy-flow removal, accessibility, security and rollback readiness.
@@ -82,6 +84,23 @@ The review issue may close only after the verdict and all blocking findings
 are resolved or explicitly accepted by the responsible approver.
 
 ## Platform and cross-module review
+
+## Architecture quality gate
+
+Review the module architecture artifact against
+`docs/03-platform/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md`. The verdict
+must cover:
+
+- target versus actual boundaries and dependency direction;
+- separation of presentation, application, domain, ports and adapters;
+- SRP, cohesion, coupling and duplicate implementation risks;
+- significant refactors and their before/after regression evidence;
+- approved versus unapproved deviations;
+- rollback and residual debt ownership.
+
+An unapproved structural deviation is blocking even when functional tests,
+typecheck and build pass. Record the finding, confidence, affected consumers
+and exact remediation issue.
 
 Review every applicable integration with:
 

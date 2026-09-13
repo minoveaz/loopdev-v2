@@ -24,6 +24,7 @@ documents instead of copying them.
 docs/implementation/<module>/
 ├── README.md
 ├── implementation-plan.md
+├── architecture-design.md
 ├── phase-01-discovery.md
 ├── phase-02-foundation.md
 ├── phase-03-build.md
@@ -46,6 +47,11 @@ docs/implementation/<module>/
 ```
 
 Use the templates in `docs/implementation/_templates/`.
+
+Every module must include `architecture-design.md`. It is the structural
+baseline for layer boundaries, responsibilities, dependencies, refactors and
+technical debt, and is linked from the design, plan, checkpoints, evidence
+matrix and review issue.
 
 The operational JSON templates are:
 

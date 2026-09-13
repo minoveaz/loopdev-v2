@@ -112,5 +112,12 @@
     "reason": "Documentation governance must be reviewed before resuming delivery.",
     "preserved_gate": "WAITING_VISUAL_DESIGN_APPROVAL",
     "visual_design_approval": "pending"
-  }
+  },
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
 }

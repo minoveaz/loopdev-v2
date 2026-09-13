@@ -29,15 +29,24 @@
     {
       "capability": "Kanban and shared UI primitives",
       "decision": "REUSE",
-      "consumers": ["CRM Pipeline"],
-      "affected_tests": ["src/test/crm/pipeline/pipeline-page.test.tsx"],
+      "consumers": [
+        "CRM Pipeline"
+      ],
+      "affected_tests": [
+        "src/test/crm/pipeline/pipeline-page.test.tsx"
+      ],
       "migration_required": false
     },
     {
       "capability": "Activity, Tasks, Notes, Relations and Customer 360",
       "decision": "REUSE",
-      "consumers": ["CRM Pipeline", "Opportunity detail"],
-      "affected_tests": ["CRM platform integration tests"],
+      "consumers": [
+        "CRM Pipeline",
+        "Opportunity detail"
+      ],
+      "affected_tests": [
+        "CRM platform integration tests"
+      ],
       "migration_required": false
     }
   ],
@@ -60,5 +69,12 @@
     "contains_pii": false,
     "redacted": true,
     "retention_class": "engineering-documentation"
-  }
+  },
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "approval_gates": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ]
 }

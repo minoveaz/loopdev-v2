@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDate, getInitials } from "@/lib/formatters";
 import { contactName, type CRMContact } from "@/loopdev/domains/crm/adapter";
+import { contactActions } from "../../../../../packages/contracts/src/contact-actions";
 
 interface ContactMobileCardProps {
   contact: CRMContact;
@@ -69,11 +70,11 @@ export function ContactMobileCard({
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={(event) => { event.stopPropagation(); onOpen(); }}>
               <Eye className="mr-2 h-3.5 w-3.5" />
-              View Customer 360
+              {contactActions.find((action) => action.id === "view")?.label}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={(event) => { event.stopPropagation(); onEdit(); }}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
-              Edit contact
+              {contactActions.find((action) => action.id === "edit")?.label}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -81,7 +82,7 @@ export function ContactMobileCard({
               onClick={(event) => { event.stopPropagation(); onArchive(); }}
             >
               <Archive className="mr-2 h-3.5 w-3.5" />
-              Archive contact
+              {contactActions.find((action) => action.id === "archive")?.label}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

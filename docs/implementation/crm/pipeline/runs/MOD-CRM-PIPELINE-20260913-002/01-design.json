@@ -74,5 +74,12 @@
     "Existing code must be classified requirement-by-requirement as PASS, PARTIAL, FAIL or NOT_TESTED.",
     "The current card is a partial baseline: it has core commercial fields and movement actions, but the proposed design requires explicit product/origin, activity health, indicators, permission states and responsive evidence.",
     "Approved by the product owner on 2026-09-13: legacy component and view documentation is informational only; reuse the current Rivera template, shared LoopDev primitives and existing LoopDev v2 surfaces."
-  ]
+  ],
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
 }

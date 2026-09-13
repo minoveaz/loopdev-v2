@@ -72,7 +72,7 @@ operational templates live in `docs/implementation/_templates/` and the
 canonical checkpoint location is the implementation documentation directory:
 
 ```text
-docs/implementation/<module>/runs/<run-id>/
+docs/implementation/<suite>/<module>/runs/<run-id>/
 ├── run.json
 ├── 01-design.json
 ├── 01-visual-design.json

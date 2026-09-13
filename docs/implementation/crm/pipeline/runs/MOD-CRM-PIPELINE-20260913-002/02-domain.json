@@ -66,5 +66,12 @@
   ],
   "notes": [
     "Legacy component/view documentation treated as informational only. Rivera template, shared LoopDev primitives and existing Platform contracts are mandatory reuse targets."
-  ]
+  ],
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
 }

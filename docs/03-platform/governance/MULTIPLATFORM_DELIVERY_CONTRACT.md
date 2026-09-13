@@ -116,6 +116,10 @@ A module is complete only when:
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `[capability]` | `[route/test]` | `[route/test]` | `[test/N/A]` | `[test/N/A]` | `[path]` | `[link]` | `[PASS/PARTIAL/FAIL]` |
 
+The executable matrix validator additionally requires an owner and follow-up
+for every `NOT_TESTED` or `N/A` row, and commit/timestamp/runtime or test
+evidence for `PASS`. Run `npm run validate:multiplatform` before handoff.
+
 Source presence, a clean commit or a passing typecheck is not behavioral
 evidence. Runtime and test evidence must identify the actual checkout, branch,
 commit, URL/port and validation timestamp.
@@ -143,3 +147,8 @@ Any change to a shared contract requires impact analysis for desktop, mobile
 web, iOS and Android consumers. Any platform-only behavior requires a documented
 reason, accessibility impact, rollback strategy and owner. A module review must
 return separate desktop and mobile verdicts before release approval.
+
+The repository gate for this contract is `npm run validate:contracts`. It
+discovers capability metadata under `packages/contracts/src`, rejects
+renderer-local Contacts action catalogs, and requires renderers to import the
+shared action/capability contract.

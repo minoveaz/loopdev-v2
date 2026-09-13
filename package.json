@@ -22,7 +22,16 @@
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "validate:module-runs": "node scripts/validate-module-runs.mjs",
     "validate:multiplatform": "node scripts/validate-multiplatform-delivery.mjs",
-    "report:module-runs": "node scripts/report-module-runs.mjs"
+    "report:module-runs": "node scripts/report-module-runs.mjs",
+    "validate:contracts": "node scripts/validate-capability-contracts.mjs",
+    "delivery": "node scripts/delivery-run.mjs",
+    "delivery:init": "node scripts/delivery-run.mjs init",
+    "delivery:checkpoint": "node scripts/delivery-run.mjs checkpoint",
+    "delivery:handoff": "node scripts/delivery-run.mjs handoff",
+    "delivery:validate": "node scripts/delivery-run.mjs validate",
+    "delivery:report": "node scripts/delivery-run.mjs report",
+    "delivery:resume": "node scripts/delivery-run.mjs resume",
+    "smoke:routes": "node scripts/smoke-routes.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

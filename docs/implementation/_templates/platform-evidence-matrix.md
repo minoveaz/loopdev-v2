@@ -1,8 +1,8 @@
 # Platform evidence matrix
 
-| Requirement | Desktop web evidence | Mobile web evidence | iOS evidence | Android evidence | Shared contract | Status | Gap/next action |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `[requirement]` | `[route/test/screenshot]` | `[route/test/screenshot]` | `[test/N/A]` | `[test/N/A]` | `[path]` | `[PASS/PARTIAL/FAIL/NOT_TESTED]` | `[action]` |
+| Requirement | Desktop web evidence | Mobile web evidence | iOS evidence | Android evidence | Shared contract | Status | Owner | Gap/next action |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `[requirement]` | `[route/test/screenshot]` | `[route/test/screenshot]` | `[test/N/A]` | `[test/N/A]` | `[path]` | `[PASS/PARTIAL/FAIL/NOT_TESTED/N/A]` | `[owner]` | `[action]` |
 
 ## Runtime snapshot
 

@@ -4,6 +4,7 @@ import { FormSectionNav } from "@/components/common";
 import type { CRMContact, CRMContactMutationResult } from "@/loopdev/domains/crm/adapter";
 import { ContactForm, type ContactFormValues, type ContactSectionStats } from "./ContactForm";
 import { contactFormSections } from "../../../../../packages/contracts/src/contact-form";
+import { contactActions } from "../../../../../packages/contracts/src/contact-actions";
 
 interface ContactFormDrawerProps {
   open: boolean;
@@ -47,7 +48,7 @@ export function ContactFormDrawer({
     <AppDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title={editing ? "Edit contact" : "Create contact"}
+      title={editing ? contactActions.find((action) => action.id === "edit")?.label : "Create contact"}
       eyebrow="CRM / Contact"
       mode={editing ? "Editing" : "New"}
       layoutMode="expanded"

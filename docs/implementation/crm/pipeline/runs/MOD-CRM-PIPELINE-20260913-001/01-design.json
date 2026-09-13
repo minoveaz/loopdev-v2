@@ -87,5 +87,12 @@
     "No production source files were changed during intake.",
     "Runtime started from the canonical checkout on 127.0.0.1:8081.",
     "No GitHub issues were created because plan approval has not occurred."
-  ]
+  ],
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
 }

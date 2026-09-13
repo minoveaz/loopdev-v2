@@ -23,7 +23,7 @@ Every run maintains an `ARCHITECTURE_QUALITY` status:
 | Agent contract | `docs/03-platform/governance/MODULE_DELIVERY_AGENT_CONTRACT.md` |
 | Traceability | `docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md` |
 | Product definition | `docs/06-product/<suite>/<module>/` |
-| Implementation documentation | `docs/implementation/<module>/` |
+| Implementation documentation | `docs/implementation/<suite>/<module>/` |
 | Implementation templates | `docs/implementation/_templates/` |
 | Track template | `tracks/templates/module-development-track.md` |
 | Issue templates | `.github/ISSUE_TEMPLATE/` |

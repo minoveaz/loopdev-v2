@@ -1,0 +1,30 @@
+{
+  "desktop_web": {
+    "runtime_dependent": true,
+    "routes": [
+      { "path": "/app/sales-crm/contacts", "surface": "Contacts list" },
+      { "path": "/app/sales-crm/pipeline", "surface": "Pipeline" }
+    ],
+    "checks": [
+      { "kind": "route", "evidence": "AppRoutes.tsx route registration" },
+      { "kind": "refresh", "evidence": "Vite history fallback; verify with deployed host" },
+      { "kind": "filter-reset", "evidence": "Contacts page filter and reset tests" },
+      { "kind": "form", "evidence": "contacts-form.test.tsx" },
+      { "kind": "action", "evidence": "contacts-page-states.test.tsx" }
+    ]
+  },
+  "mobile_web": {
+    "runtime_dependent": true,
+    "routes": [
+      { "path": "/contacts", "surface": "Mobile contacts" },
+      { "path": "/contacts/new", "surface": "Mobile create contact" }
+    ],
+    "checks": [
+      { "kind": "route", "evidence": "Expo web route manifest" },
+      { "kind": "refresh", "evidence": "Expo web runtime check required" },
+      { "kind": "filter-reset", "evidence": "MobileContactsScreen filter controls" },
+      { "kind": "form", "evidence": "MobileCreateContactScreen and shared contact-form contract" },
+      { "kind": "action", "evidence": "MobileContactsScreen shared contactActions catalog" }
+    ]
+  }
+}

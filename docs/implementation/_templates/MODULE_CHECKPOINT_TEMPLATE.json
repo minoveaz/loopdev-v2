@@ -9,6 +9,7 @@
   "decision_status": "open",
   "architecture_quality": "PENDING",
   "attempt": 1,
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
   "started_at": "<RFC3339 timestamp>",
   "completed_at": null,
   "environment": {},
@@ -21,6 +22,12 @@
   "detected_failure": null,
   "likely_failure_origin": null,
   "next_handoff": null,
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false,
   "evidence_links": [],
   "notes": []
 }

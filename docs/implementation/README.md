@@ -16,8 +16,8 @@ implementation evidence is ambiguous.
 | Concern | Canonical location |
 |---|---|
 | Product, domain and UX definition | `docs/06-product/<suite>/<module>/` |
-| Implementation plan and phase evidence | `docs/implementation/<module>/` |
-| Cross-phase execution state | `docs/implementation/<module>/runs/<run-id>/` |
+| Implementation plan and phase evidence | `docs/implementation/<suite>/<module>/` |
+| Cross-phase execution state | `docs/implementation/<suite>/<module>/runs/<run-id>/` |
 | Long-running work and dependencies | `tracks/active/<area>/<track>.md` |
 | Executable work units and acceptance | GitHub issues |
 | Code and tests | `src/`, `public/`, `scripts/` and repository configuration |
@@ -63,6 +63,31 @@ For example, CRM Pipeline uses
 must not create alternative flat roots.
 
 Use the templates in `docs/implementation/_templates/`.
+
+## Executable delivery runs
+
+The delivery lifecycle is intentionally append-only: it never resets, amends,
+force-pushes or overwrites an existing run.
+
+```bash
+npm run delivery:init -- --suite crm --module Contacts
+npm run delivery:checkpoint -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --phase 01-design
+npm run delivery:handoff -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --from 01-design --to 02-build
+npm run delivery:validate
+npm run delivery:report
+npm run delivery:resume -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001
+```
+
+Runs persist an input fingerprint for `packages/contracts/src`, explicit
+approval gate records, and invalidated phases. A changed shared contract
+blocks resume and marks the current phase for downstream revalidation.
+Approvals are records (`status`, `approved_by`, `approved_at`), not inferred
+from status or source-file presence.
+
+`npm run validate:contracts` checks stable IDs, action catalogs, labels,
+validation/navigation metadata and renderer imports. `npm run smoke:routes`
+checks the deterministic desktop/mobile route manifest; checks marked
+`runtime_dependent` still require runtime evidence in the platform matrix.
 
 Every module must include `architecture-design.md`. It is the structural
 baseline for layer boundaries, responsibilities, dependencies, refactors and

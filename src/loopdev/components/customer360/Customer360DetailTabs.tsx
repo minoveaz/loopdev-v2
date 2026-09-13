@@ -9,6 +9,7 @@ import { Customer360DocumentsTab } from "./Customer360DocumentsTab";
 import { Customer360ProductsTab } from "./Customer360ProductsTab";
 import { Customer360SalesTab } from "./Customer360SalesTab";
 import { Customer360WorkTab } from "./Customer360WorkTab";
+import { contactActions } from "../../../../packages/contracts/src/contact-actions";
 
 interface Customer360DetailTabsProps {
   contact: CRMContact;
@@ -34,7 +35,7 @@ export function Customer360DetailTabs({ contact, leads, opportunities, tasks, no
     { value: "products", label: "Products" },
   ];
   const footer = {
-    contact: <Button onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit contact</Button>,
+    contact: <Button onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />{contactActions.find((action) => action.id === "edit")?.label}</Button>,
     sales: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New opportunity</Button><Button variant="outline"><UserPlus className="mr-1.5 h-3.5 w-3.5" />New lead</Button><Button variant="outline">View pipeline</Button></>,
     work: <><Button><Plus className="mr-1.5 h-3.5 w-3.5" />New task</Button><Button variant="outline" onClick={onNewNote}><FileText className="mr-1.5 h-3.5 w-3.5" />New note</Button></>,
     documents: <><Button onClick={() => documentUploadTrigger?.()}><Upload className="mr-1.5 h-3.5 w-3.5" />Upload document</Button><Button variant="outline"><FileText className="mr-1.5 h-3.5 w-3.5" />View all</Button></>,

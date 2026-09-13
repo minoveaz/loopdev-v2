@@ -136,7 +136,7 @@ including when tests and build pass.
 ## Required module artifact
 
 Each module implementation must maintain
-`docs/implementation/<module>/architecture-design.md` from
+`docs/implementation/<suite>/<module>/architecture-design.md` from
 `docs/implementation/_templates/architecture-design.md`. The document is
 linked from the design, plan, checkpoints, evidence matrix and review issue.
 

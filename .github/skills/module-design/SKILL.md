@@ -187,7 +187,7 @@ explícita.
 
 Apply `docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` to every
 module. Produce or update
-`docs/implementation/<module>/architecture-design.md` from
+`docs/implementation/<suite>/<module>/architecture-design.md` from
 `docs/implementation/_templates/architecture-design.md`.
 
 The design must explicitly define:

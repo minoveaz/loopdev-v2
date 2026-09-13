@@ -30,6 +30,12 @@ jobs:
       - name: Validar contratos y checkpoints
         run: npm run validate:module-runs
 
+      - name: Validar contratos de capacidades
+        run: npm run validate:contracts
+
+      - name: Validar superficies de smoke
+        run: npm run smoke:routes
+
       - name: Validar contrato multiplataforma
         run: npm run validate:multiplatform
 

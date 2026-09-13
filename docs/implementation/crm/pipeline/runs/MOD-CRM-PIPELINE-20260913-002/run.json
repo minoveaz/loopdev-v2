@@ -107,5 +107,12 @@
   "detected_failure": {
     "code": "DOCUMENTATION_GOVERNANCE_PAUSE",
     "message": "Run is PAUSED pending documentation governance review; existing visual-design gate is preserved."
-  }
+  },
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "approval_gates": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ]
 }

@@ -6,6 +6,7 @@
   "attempt": 1,
   "started_at": "<RFC3339 timestamp>",
   "updated_at": "<RFC3339 timestamp>",
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
   "environment": {
     "repository": "minoveaz/loopdev-v2",
     "repository_path": "<absolute path when needed>",
@@ -18,11 +19,37 @@
     "runtime_port": null
   },
   "approvals": {
-    "design": "pending",
-    "plan": "pending",
-    "verification": "pending",
-    "release": "pending"
+    "design": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "gate": "design"
+    },
+    "plan": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "gate": "plan"
+    },
+    "verification": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "gate": "verification"
+    },
+    "release": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "gate": "release"
+    }
   },
+  "approval_gates": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
   "platform_impact": [
     {
       "capability": "<Notes|Files|Activity|Tasks|Relations|Document Intelligence>",
@@ -43,5 +70,11 @@
     "contains_pii": false,
     "redacted": true,
     "retention_class": "engineering-documentation"
-  }
+  },
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
 }

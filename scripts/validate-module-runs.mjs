@@ -29,6 +29,9 @@ const requiredCheckpointFields = [
   "detected_failure",
   "likely_failure_origin",
   "next_handoff",
+  "input_fingerprint",
+  "approval_gate",
+  "invalidated",
 ];
 const requiredManifestFields = [
   "run_id",
@@ -45,6 +48,10 @@ const requiredManifestFields = [
   "blocked_by",
   "next_action",
   "retention",
+  "input_fingerprint",
+  "approval_gates",
+  "invalidated_phases",
+  "shared_contract_inputs",
 ];
 
 const errors = [];
@@ -134,6 +141,27 @@ function validateManifest(file) {
   if (manifest.retention && typeof manifest.retention !== "object") {
     addError(file, "retention must be an object");
   }
+  if (!/^sha256:[a-f0-9]{64}$/.test(manifest.input_fingerprint ?? "")) {
+    addError(file, "input_fingerprint must be a sha256:<64 hex> value");
+  }
+  if (!Array.isArray(manifest.approval_gates) || !Array.isArray(manifest.invalidated_phases) || !Array.isArray(manifest.shared_contract_inputs)) {
+    addError(file, "approval_gates, invalidated_phases and shared_contract_inputs must be arrays");
+  }
+  if (manifest.approvals && typeof manifest.approvals !== "object") addError(file, "approvals must be an object");
+  for (const [gate, approval] of Object.entries(manifest.approvals ?? {})) {
+    if (typeof approval === "string") continue; // legacy manifests remain readable
+    if (!approval || !["pending", "approved", "rejected"].includes(approval.status)) addError(file, `approval "${gate}" has invalid status`);
+    if (approval.status === "approved" && (!approval.approved_by || !approval.approved_at)) addError(file, `approved "${gate}" requires approved_by and approved_at`);
+  }
+}
+
+function validateCheckpointApproval(file, checkpoint) {
+  if (!/^sha256:[a-f0-9]{64}$/.test(checkpoint.input_fingerprint ?? "")) addError(file, "input_fingerprint must be a sha256:<64 hex> value");
+  if (!checkpoint.approval_gate || typeof checkpoint.approval_gate !== "object") addError(file, "approval_gate must be an object");
+  if (checkpoint.approval_gate?.status === "approved" && (!checkpoint.approval_gate.approved_by || !checkpoint.approval_gate.approved_at)) {
+    addError(file, "approved checkpoint gate requires approved_by and approved_at");
+  }
+  if (typeof checkpoint.invalidated !== "boolean") addError(file, "invalidated must be boolean");
 }
 
 const checkpointFiles = runsRoots
@@ -147,7 +175,12 @@ const checkpointFiles = runsRoots
 
 for (const file of checkpointFiles) {
   if (file.endsWith(`${sep}run.json`)) validateManifest(file);
-  else validateCheckpoint(file);
+  else {
+    let checkpoint;
+    try { checkpoint = JSON.parse(readFileSync(file, "utf8")); } catch { continue; }
+    validateCheckpoint(file);
+    validateCheckpointApproval(file, checkpoint);
+  }
 }
 
 if (errors.length > 0) {

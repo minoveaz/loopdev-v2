@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { LockKeyhole, Pencil, Save, UsersRound } from "lucide-react";
-import { ConfirmDialog, DataCard, NoteComposer, useFormLifecycle } from "@/components/common";
+import { ConfirmDialog, DataCard, NoteEditorDrawer, useFormLifecycle, type NoteEditorValue } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { AttachmentRecord, EntityRef, NoteRecord, PlatformVisibility } from "@/loopdev/domains/platform";
 
@@ -26,19 +24,9 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
   const [editingBody, setEditingBody] = useState("");
   const [editPending, setEditPending] = useState(false);
   const [discardEditOpen, setDiscardEditOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<NoteRecord | null>(null);
   const lifecycle = useFormLifecycle();
-
-  const submit = async (body: string, _mode: "quick" | "rich", attachments?: File[]) => {
-    if (!onCreate) return;
-    setFormError(null);
-    try {
-      if (attachments?.length) await onCreate(body.trim(), visibility, attachments);
-      else await onCreate(body.trim(), visibility);
-      lifecycle.markClean();
-    } catch (cause) {
-      setFormError(cause instanceof Error ? cause.message : "Unable to save note.");
-    }
-  };
 
   const saveEdit = async (note: NoteRecord) => {
     if (!onUpdate || !editingBody.trim()) return;
@@ -56,9 +44,11 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
   };
 
   return (
+    <>
     <DataCard
       title={`Notes (${notes.length})`}
       description="Contextual notes with explicit visibility"
+      action={onCreate && relation ? <Button type="button" size="sm" onClick={() => { setSelectedNote(null); setEditorOpen(true); }}>Add note</Button> : undefined}
       loading={loading}
       error={forbidden ? "Notes are not available in this scope." : error}
       empty={!loading && !error && !forbidden && notes.length === 0}
@@ -77,41 +67,40 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
                   <Button type="button" size="sm" variant="ghost" onClick={() => { if (lifecycle.dirtyRef.current) setDiscardEditOpen(true); else setEditingId(null); }} disabled={editPending}>Cancel</Button>
                 </div>
               </div>
-            ) : <p className="whitespace-pre-wrap text-sm">{note.body}</p>}
+            ) : <button type="button" className="w-full text-left" onClick={() => { if (onUpdate && note.permissions.canEdit) { setSelectedNote(note); setEditorOpen(true); } }}><p className="whitespace-pre-wrap text-sm">{note.body}</p></button>}
             {attachments.filter((attachment) => attachment.relation.entityType === "note" && attachment.relation.entityId === note.id).map((attachment) => (
               <p key={attachment.id} className="mt-2 text-xs text-muted-foreground">{attachment.fileName} · {attachment.attachmentStatus}</p>
             ))}
             <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
               {note.visibility === "private" ? <LockKeyhole className="h-3 w-3" /> : <UsersRound className="h-3 w-3" />}
               {note.visibility} · {new Date(note.updatedAt).toLocaleDateString()}
-              {onUpdate && note.permissions.canEdit && editingId !== note.id && <Button type="button" size="sm" variant="ghost" className="ml-auto h-7 px-2" onClick={() => { lifecycle.markClean(); setEditingId(note.id); setEditingBody(note.body); }}><Pencil className="mr-1 h-3 w-3" />Edit</Button>}
+              {onUpdate && note.permissions.canEdit && <Button type="button" size="sm" variant="ghost" className="ml-auto h-7 px-2" onClick={() => { setSelectedNote(note); setEditorOpen(true); }}><Pencil className="mr-1 h-3 w-3" />Edit</Button>}
             </div>
           </li>
         ))}
       </ul>
-      {formError && !onCreate && <p role="alert" className="mt-3 text-sm text-destructive">{formError}</p>}
-      {relation && onCreate && (
-        <div className="mt-4 border-t border-border pt-4" aria-label="Add note">
-        <NoteComposer
-          onSubmit={submit}
-          compact
-          error={formError}
-          footerContent={(
-            <div className="flex items-center gap-2">
-              <Label htmlFor="platform-note-visibility" className="text-xs text-muted-foreground">Visibility</Label>
-              <Select value={visibility} onValueChange={(value) => { lifecycle.markDirty(); setVisibility(value as PlatformVisibility); }}>
-                <SelectTrigger id="platform-note-visibility" className="h-8 w-36"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="private">Private</SelectItem>
-                  <SelectItem value="team">Team</SelectItem>
-                  <SelectItem value="organization">Organization</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          onAttachmentUpload={onCreate ? undefined : onAttachmentUpload}
+    </DataCard>
+      {formError && <p role="alert" className="mt-3 text-sm text-destructive">{formError}</p>}
+      {relation && (onCreate || selectedNote) && (
+        <NoteEditorDrawer
+          open={editorOpen}
+          onOpenChange={(open) => { setEditorOpen(open); if (!open) setSelectedNote(null); }}
+          title={selectedNote ? "Edit note" : "New note"}
+          relation={{ type: relation.entityType as "contact" | "lead" | "opportunity" | "task", id: relation.entityId, label: relation.entityId }}
+          initialValue={selectedNote ? { plainTextPreview: selectedNote.body, visibility: selectedNote.visibility } : undefined}
+          onSubmit={async (value: NoteEditorValue) => {
+            setFormError(null);
+            if (selectedNote && onUpdate) {
+              await onUpdate(selectedNote.id, value.plainTextPreview, selectedNote.version);
+            } else if (onCreate) {
+              const files = value.attachments.filter((attachment) => attachment.file).map((attachment) => attachment.file as File);
+              await onCreate(value.plainTextPreview, value.visibility, files);
+            }
+            setEditorOpen(false);
+            setSelectedNote(null);
+          }}
+          onDelete={selectedNote?.permissions.canDelete ? async () => undefined : undefined}
         />
-        </div>
       )}
       <ConfirmDialog
         open={discardEditOpen}
@@ -126,6 +115,6 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
           lifecycle.markClean();
         }}
       />
-    </DataCard>
+    </>
   );
 }

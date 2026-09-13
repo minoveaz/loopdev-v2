@@ -24,6 +24,7 @@ export interface NoteAttachment {
   url: string;
   status: "uploading" | "uploaded" | "error";
   error?: string;
+  file?: File;
 }
 
 export interface WorkspaceUser {

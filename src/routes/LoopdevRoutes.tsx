@@ -10,6 +10,7 @@ const SalesCRMLeads = lazy(() => import("@/loopdev/pages/crm/Leads"));
 const SalesCRMLeadDetail = lazy(() => import("@/loopdev/pages/crm/LeadDetail"));
 const SalesCRMPipeline = lazy(() => import("@/loopdev/pages/crm/Pipeline"));
 const SalesCRMOpportunities = lazy(() => import("@/loopdev/pages/crm/Opportunities"));
+const SalesCRMOpportunityDetail = lazy(() => import("@/loopdev/pages/crm/OpportunityDetail"));
 const SalesCRMCustomer360 = lazy(() => import("@/loopdev/pages/crm/Customer360"));
 const SalesCRMContactActivity = lazy(() => import("@/loopdev/pages/crm/ContactActivity"));
 const SalesCRMOperations = lazy(() => import("@/loopdev/pages/crm/Operations"));
@@ -37,6 +38,7 @@ export const loopdevRouteElements = (
     <Route path="/app/sales-crm/leads/:leadId" element={<SalesCRMLeadDetail />} />
     <Route path="/app/sales-crm/pipeline" element={<SalesCRMPipeline />} />
     <Route path="/app/sales-crm/opportunities" element={<SalesCRMOpportunities />} />
+    <Route path="/app/sales-crm/opportunities/:opportunityId" element={<SalesCRMOpportunityDetail />} />
     <Route path="/app/sales-crm/operations" element={<Navigate to="/app/settings/crm/operations" replace />} />
     <Route path="/app/sales-crm/automations" element={<Navigate to="/app/settings/crm/automations" replace />} />
     <Route path="/app/sales-crm/communications" element={<SalesCRMCommunications />} />

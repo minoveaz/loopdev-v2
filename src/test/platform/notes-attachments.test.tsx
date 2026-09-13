@@ -27,7 +27,7 @@ describe("platform notes attachments", () => {
     const onAttachmentUpload = vi.fn(() => Promise.resolve());
     const file = new File(["attachment"], "context.txt", { type: "text/plain" });
 
-    const { container } = render(
+    render(
       <PlatformNotesPanel
         notes={[note]}
         relation={relation}
@@ -36,11 +36,13 @@ describe("platform notes attachments", () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Add a note" }), { target: { value: "Context with attachment" } });
-    fireEvent.change(container.querySelector('input[type="file"]')!, { target: { files: [file] } });
+    const addNoteButtons = screen.getAllByRole("button", { name: "Add note" });
+    fireEvent.click(addNoteButtons[addNoteButtons.length - 1]);
+    fireEvent.change(screen.getByRole("textbox", { name: "Note content" }), { target: { value: "Context with attachment" } });
+    fireEvent.change(document.querySelector('input[type="file"]')!, { target: { files: [file] } });
     await waitFor(() => expect(screen.getByText("context.txt")).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByText(/ready/)).toBeInTheDocument(), { timeout: 3000 });
-    fireEvent.click(screen.getByRole("button", { name: "Add note" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save note" })).not.toBeDisabled(), { timeout: 3000 });
+    fireEvent.click(screen.getByRole("button", { name: "Save note" }));
 
     await waitFor(() => expect(onCreate).toHaveBeenCalledWith("Context with attachment", "team", [file]));
     expect(onAttachmentUpload).not.toHaveBeenCalled();

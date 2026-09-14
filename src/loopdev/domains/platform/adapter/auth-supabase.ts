@@ -61,8 +61,9 @@ export class SupabaseAuthAdapter implements AuthPort {
 
   constructor(config: SupabaseAuthAdapterConfig = {}) {
     this.storage = config.storage ?? new BrowserLocalStorageAdapter();
-    const url = config.supabaseUrl || (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL ? import.meta.env.VITE_SUPABASE_URL : (config.storage ? undefined : DEFAULT_SUPABASE_URL));
-    const key = config.supabaseAnonKey || (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY ? import.meta.env.VITE_SUPABASE_ANON_KEY : (config.storage ? undefined : DEFAULT_SUPABASE_ANON_KEY));
+    const isTest = typeof process !== "undefined" && (process.env?.NODE_ENV === "test" || process.env?.VITEST);
+    const url = config.supabaseUrl || (!isTest && typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL ? import.meta.env.VITE_SUPABASE_URL : undefined);
+    const key = config.supabaseAnonKey || (!isTest && typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY ? import.meta.env.VITE_SUPABASE_ANON_KEY : undefined);
 
     if (config.supabaseClient) {
       this.client = config.supabaseClient;
@@ -386,4 +387,7 @@ export class SupabaseAuthAdapter implements AuthPort {
   }
 }
 
-export const defaultWebAuthAdapter = new SupabaseAuthAdapter();
+export const defaultWebAuthAdapter = new SupabaseAuthAdapter({
+  supabaseUrl: DEFAULT_SUPABASE_URL,
+  supabaseAnonKey: DEFAULT_SUPABASE_ANON_KEY,
+});

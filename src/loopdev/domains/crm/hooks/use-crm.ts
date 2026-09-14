@@ -22,7 +22,7 @@ import type {
   Customer360View,
 } from "@/loopdev/domains/crm/adapter";
 
-const LOCAL_ORGANIZATION_ID = "80fce911-57c5-4a83-809f-78df6a3736f7";
+const LOCAL_ORGANIZATION_ID = "local-development-organization";
 const DEFAULT_CONTACT_LIMIT = 10;
 
 export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
@@ -34,7 +34,7 @@ export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
-  const orgId = params.organizationId || activeOrganization?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
+  const orgId = params.organizationId || activeOrganization?.id || "local-development-organization";
 
   useEffect(() => {
     let active = true;

@@ -11,7 +11,7 @@ import type {
   DuplicateReviewResult,
 } from "../../../../../packages/contracts/src/contact-port";
 import { validateContactMutationInput } from "../../../../../packages/contracts/src/contact-port";
-import { createLocalContactAdapter } from "../../../../../packages/contracts/src/contact-local-adapter";
+import { localLoopdevAdapter } from "./local";
 import { defaultWebAuthAdapter, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY } from "@/loopdev/domains/platform/adapter/auth-supabase";
 
 function isUUID(str?: string | null): boolean {
@@ -90,22 +90,15 @@ async function getHeaders(): Promise<HeadersInit> {
 }
 
 export function createDesktopContactAdapter(): ContactPort {
-  const localAdapters = new Map<string, ContactPort>();
-  const getFallback = (orgId: string) => {
-    let adapter = localAdapters.get(orgId);
-    if (!adapter) {
-      adapter = createLocalContactAdapter({ organizationId: orgId });
-      localAdapters.set(orgId, adapter);
-    }
-    return adapter;
-  };
+  const localFallback = localLoopdevAdapter.crm;
 
   return {
     async listContacts(params: ContactListParams): Promise<ContactPage> {
-      const activeOrgId =
-        params.organizationId && isUUID(params.organizationId)
-          ? params.organizationId
-          : "80fce911-57c5-4a83-809f-78df6a3736f7";
+      if (!params.organizationId || !isUUID(params.organizationId)) {
+        return localFallback.listContacts(params);
+      }
+
+      const activeOrgId = params.organizationId;
 
       try {
         const queryParams = new URLSearchParams();
@@ -119,13 +112,13 @@ export function createDesktopContactAdapter(): ContactPort {
         });
 
         if (!resp.ok) {
-          return getFallback(params.organizationId).listContacts(params);
+          return localFallback.listContacts(params);
         }
 
         const rows = await resp.json();
         let items: ContactRecord[] = Array.isArray(rows) && rows.length > 0 ? rows.map(mapRowToContact) : [];
         if (items.length === 0) {
-          return getFallback(params.organizationId).listContacts(params);
+          return localFallback.listContacts(params);
         }
 
         if (params.query?.trim()) {
@@ -158,6 +151,10 @@ export function createDesktopContactAdapter(): ContactPort {
     },
 
     async getCustomer360(contactId: string): Promise<ContactCustomer360View | null> {
+      if (!contactId || !isUUID(contactId)) {
+        return localFallback.getCustomer360(contactId);
+      }
+
       try {
         const headers = await getHeaders();
         const resp = await fetch(`${DEFAULT_SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}&select=*`, {
@@ -192,11 +189,12 @@ export function createDesktopContactAdapter(): ContactPort {
       const validation = validateContactMutationInput(input);
       if (validation) return validation;
 
+      if (!input.organizationId || !isUUID(input.organizationId)) {
+        return localFallback.createContact(input);
+      }
+
       try {
-        const orgId =
-          input.organizationId && isUUID(input.organizationId)
-            ? input.organizationId
-            : "80fce911-57c5-4a83-809f-78df6a3736f7";
+        const orgId = input.organizationId;
 
         const payload: Record<string, any> = {
           organization_id: orgId,
@@ -245,6 +243,10 @@ export function createDesktopContactAdapter(): ContactPort {
     },
 
     async updateContact(contactId: string, patch: UpdateContactPatch, _expectedUpdatedAt: string): Promise<ContactMutationResult> {
+      if (!contactId || !isUUID(contactId)) {
+        return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
+      }
+
       try {
         const payload: Record<string, any> = {
           updated_at: new Date().toISOString(),
@@ -258,7 +260,7 @@ export function createDesktopContactAdapter(): ContactPort {
         if (patch.phone !== undefined) payload.phone = patch.phone?.trim() || null;
         if (patch.secondaryPhone !== undefined) payload.secondary_phone = patch.secondaryPhone?.trim() || null;
         if (patch.preferredChannel !== undefined) payload.preferred_channel = patch.preferredChannel;
-        if (patch.preferredLanguage !== undefined) payload.preferred_language = patch.preferredLanguage?.trim() || null;
+        if (patch.preferredLanguage !== undefined) payload.preferred_language = patch.preferredLanguage;
         if (patch.companyName !== undefined) payload.company_name = patch.companyName?.trim() || null;
         if (patch.jobTitle !== undefined) payload.job_title = patch.jobTitle?.trim() || null;
         if (patch.department !== undefined) payload.department = patch.department?.trim() || null;
@@ -272,6 +274,7 @@ export function createDesktopContactAdapter(): ContactPort {
         if (patch.documentNumber !== undefined) payload.document_number = patch.documentNumber?.trim() || null;
         if (patch.birthDate !== undefined) payload.birth_date = patch.birthDate?.trim() || null;
         if (patch.gender !== undefined) payload.gender = patch.gender?.trim() || null;
+        if (patch.attributes !== undefined) payload.attributes = patch.attributes;
 
         const headers = await getHeaders();
         const resp = await fetch(`${DEFAULT_SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}`, {
@@ -292,6 +295,9 @@ export function createDesktopContactAdapter(): ContactPort {
     },
 
     async archiveContact(contactId: string, _expectedUpdatedAt: string): Promise<ContactMutationResult> {
+      if (!contactId || !isUUID(contactId)) {
+        return localFallback.archiveContact(contactId, _expectedUpdatedAt);
+      }
       try {
         const headers = await getHeaders();
         const resp = await fetch(`${DEFAULT_SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}`, {

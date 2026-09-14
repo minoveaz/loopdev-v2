@@ -27,6 +27,30 @@ const REAL_PLATFORM_ORGANIZATIONS: Organization[] = [
     status: "active",
     createdAt: "2026-09-14T10:00:00.000Z",
   },
+  {
+    id: "org_acme_corp",
+    slug: "acme-corp",
+    name: "Acme Corporation",
+    logoUrl: null,
+    status: "active",
+    createdAt: "2026-01-15T10:00:00.000Z",
+  },
+  {
+    id: "org_starlight",
+    slug: "starlight-media",
+    name: "Starlight Media",
+    logoUrl: null,
+    status: "active",
+    createdAt: "2026-02-20T11:30:00.000Z",
+  },
+  {
+    id: "org_nexus_health",
+    slug: "nexus-health",
+    name: "Nexus Health",
+    logoUrl: null,
+    status: "active",
+    createdAt: "2026-03-05T09:15:00.000Z",
+  },
 ];
 
 const PLATFORM_WORKSPACES: Record<string, Workspace[]> = {
@@ -48,6 +72,44 @@ const PLATFORM_WORKSPACES: Record<string, Workspace[]> = {
       name: "Main Workspace",
       isDefault: true,
       createdAt: "2026-09-14T10:00:00.000Z",
+    },
+  ],
+  org_acme_corp: [
+    {
+      id: "ws_acme_sales",
+      organizationId: "org_acme_corp",
+      slug: "sales",
+      name: "Sales & CRM",
+      isDefault: true,
+      createdAt: "2026-01-15T10:05:00.000Z",
+    },
+    {
+      id: "ws_acme_ops",
+      organizationId: "org_acme_corp",
+      slug: "operations",
+      name: "Operations & Logistics",
+      isDefault: false,
+      createdAt: "2026-01-15T10:10:00.000Z",
+    },
+  ],
+  org_starlight: [
+    {
+      id: "ws_starlight_main",
+      organizationId: "org_starlight",
+      slug: "default",
+      name: "Main Workspace",
+      isDefault: true,
+      createdAt: "2026-02-20T11:35:00.000Z",
+    },
+  ],
+  org_nexus_health: [
+    {
+      id: "ws_nexus_clinical",
+      organizationId: "org_nexus_health",
+      slug: "clinical",
+      name: "Clinical Trials",
+      isDefault: true,
+      createdAt: "2026-03-05T09:20:00.000Z",
     },
   ],
 };

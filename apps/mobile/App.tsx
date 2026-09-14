@@ -52,6 +52,7 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
+  const [switchingOrg, setSwitchingOrg] = useState<{ isSwitching: boolean; orgName: string } | null>(null);
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
   const [customer360, setCustomer360] = useState<ContactCustomer360View | null>(null);
   const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
@@ -282,6 +283,18 @@ export default function App() {
     );
   }
 
+  if (switchingOrg) {
+    return (
+      <MobileAppShell>
+        <View style={styles.logoutTransitionContainer}>
+          <MobileLogoSpinner size={72} />
+          <Text style={styles.transitionTitle}>Switching to {switchingOrg.orgName}</Text>
+          <Text style={styles.transitionSubtitle}>Clearing local caches &amp; reloading workspace launcher...</Text>
+        </View>
+      </MobileAppShell>
+    );
+  }
+
   if (!session) {
     if (authMode === "forgot_password") {
       return (
@@ -318,7 +331,21 @@ export default function App() {
         onActionPress={() => setActionsSheetOpen(true)}
         onTabPress={handleTabPress}
       />
-      <MobileAccountSheet onClose={() => setAccountSheetOpen(false)} visible={accountSheetOpen} />
+      <MobileAccountSheet
+        onClose={() => setAccountSheetOpen(false)}
+        onSwitchOrg={(orgName) => {
+          setAccountSheetOpen(false);
+          setSwitchingOrg({ isSwitching: true, orgName });
+          setCurrentPath(launchpadPath);
+          if (typeof window !== "undefined" && window.location.pathname !== launchpadPath) {
+            window.history.pushState({}, "", launchpadPath);
+          }
+          setTimeout(() => {
+            setSwitchingOrg(null);
+          }, 750);
+        }}
+        visible={accountSheetOpen}
+      />
       <MobileCommandPalette
         context={actionContext}
         onAction={(action: SharedContextualAction) => {

@@ -179,7 +179,7 @@ export const mobileAuthAdapter: AuthPort = {
         return {
           success: false,
           error: {
-            code: "INVALID_CREDENTIALS",
+            code: "AUTH_INVALID_CREDENTIALS",
             message: err.error_description || err.msg || err.message || "Invalid email or password",
           },
         };
@@ -220,7 +220,7 @@ export const mobileAuthAdapter: AuthPort = {
       return {
         success: false,
         error: {
-          code: "NETWORK_ERROR",
+          code: "AUTH_NETWORK_ERROR",
           message: err instanceof Error ? err.message : "Network error during login",
         },
       };
@@ -251,7 +251,7 @@ export const mobileAuthAdapter: AuthPort = {
       success: true,
       data: {
         sent: true,
-        deliveryChannel: "supabase_auth",
+        deliveryChannel: "smtp",
         message: "Password reset link sent.",
       },
     };

@@ -64,6 +64,7 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
   const [cmdOpen, setCmdOpen] = useState(false);
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [switchingOrg, setSwitchingOrg] = useState<{ isSwitching: boolean; orgName: string } | null>(null);
   const [availableOrgs, setAvailableOrgs] = useState<Organization[]>([]);
 
   useEffect(() => {
@@ -103,15 +104,21 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
 
   const handleOrgSwitch = async (orgId: string, orgName: string) => {
     if (orgId === activeOrganization?.id) return;
+    toast.dismiss();
+    setSwitchingOrg({ isSwitching: true, orgName });
     const res = await selectOrganization(orgId);
     if (res.success) {
-      toast.success(`Switched to ${orgName}`, {
-        description: "Local caches purged. Tenant context updated.",
-      });
-      // Refresh organization list if needed
       const orgsRes = await listOrganizations();
       if (orgsRes.success) setAvailableOrgs(orgsRes.data);
+      setTimeout(() => {
+        setSwitchingOrg(null);
+        navigate("/launchpad", { replace: true });
+        toast.success(`Switched to ${orgName}`, {
+          description: "Workspace reloaded & local tenant caches purged.",
+        });
+      }, 750);
     } else {
+      setSwitchingOrg(null);
       toast.error("Failed to switch organization", {
         description: (res as { error: { message: string } }).error.message,
       });
@@ -342,6 +349,22 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
               <div className="text-center space-y-1">
                 <p className="text-sm font-semibold text-foreground tracking-tight">Signing out of LoopDev...</p>
                 <p className="text-xs text-muted-foreground">Purging local tenant cache and session security tokens...</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {switchingOrg && (
+          <div className="fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-background/85 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="flex flex-col items-center gap-5">
+              <LogoSpinner size="2xl" speed="fast" />
+              <div className="text-center space-y-1">
+                <p className="text-sm font-semibold text-foreground tracking-tight">
+                  Switching to {switchingOrg.orgName}...
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Purging local cache and reloading workspace launchpad...
+                </p>
               </div>
             </div>
           </div>

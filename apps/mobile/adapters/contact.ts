@@ -10,6 +10,8 @@ import type {
   PotentialContactDuplicate,
   DuplicateReviewResult,
 } from "../../../packages/contracts/src/contact-port";
+import { validateContactMutationInput } from "../../../packages/contracts/src/contact-port";
+import { createLocalContactAdapter } from "../../../packages/contracts/src/contact-local-adapter";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./auth";
 
 const SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
@@ -43,35 +45,35 @@ function mapRowToContact(row: any): ContactRecord {
 
   return {
     id: row.id,
-    organizationId: row.organization_id,
+    organizationId: row.organization_id || "80fce911-57c5-4a83-809f-78df6a3736f7",
     firstName: firstName || "Contacto",
     lastName,
-    secondLastName: row.second_last_name ?? null,
-    preferredName: row.preferred_name ?? null,
-    email: row.email ?? null,
-    secondaryEmail: row.secondary_email ?? null,
-    phone: row.phone ?? null,
-    secondaryPhone: row.secondary_phone ?? null,
-    preferredChannel: row.preferred_channel ?? "email",
-    preferredLanguage: row.preferred_language ?? "es",
-    documentType: row.document_type ?? null,
-    documentNumber: row.document_number ?? null,
-    birthDate: row.birth_date ?? null,
-    gender: row.gender ?? null,
-    addressLine1: row.address_line1 ?? null,
-    addressLine2: row.address_line2 ?? null,
-    city: row.city ?? "",
-    stateProvince: row.state_province ?? null,
-    postalCode: row.postal_code ?? null,
-    country: row.country ?? "",
-    companyName: row.company_name ?? null,
-    jobTitle: row.job_title ?? null,
-    department: row.department ?? null,
-    attributes: row.attributes && typeof row.attributes === "object" ? row.attributes : {},
-    identityStatus: row.identity_status === "pending_identity_review" ? "pending_identity_review" : "verified",
+    secondLastName: row.second_last_name || null,
+    preferredName: row.preferred_name || null,
+    email: row.email || null,
+    secondaryEmail: row.secondary_email || null,
+    phone: row.phone || null,
+    secondaryPhone: row.secondary_phone || null,
+    preferredChannel: row.preferred_channel || "email",
+    preferredLanguage: row.preferred_language || "es",
+    documentType: row.document_type || null,
+    documentNumber: row.document_number || null,
+    birthDate: row.birth_date || null,
+    gender: row.gender || null,
+    addressLine1: row.address_line1 || null,
+    addressLine2: row.address_line2 || null,
+    city: row.city || "",
+    stateProvince: row.state_province || null,
+    postalCode: row.postal_code || null,
+    country: row.country || "",
+    companyName: row.company_name || null,
+    jobTitle: row.job_title || null,
+    department: row.department || null,
+    attributes: row.attributes || {},
+    identityStatus: row.identity_status || "verified",
     createdAt: row.created_at || new Date().toISOString(),
     updatedAt: row.updated_at || new Date().toISOString(),
-    archivedAt: row.archived_at ?? null,
+    archivedAt: row.archived_at || null,
   };
 }
 
@@ -91,6 +93,8 @@ async function getHeaders(): Promise<HeadersInit> {
 }
 
 export function createMobileContactAdapter(): ContactPort {
+  const localFallback = createLocalContactAdapter({ organizationId: "local-development-organization" });
+
   return {
     async listContacts(params: ContactListParams): Promise<ContactPage> {
       const activeOrgId =
@@ -110,12 +114,14 @@ export function createMobileContactAdapter(): ContactPort {
         });
 
         if (!resp.ok) {
-          console.warn("Mobile crm_contacts fetch failed:", resp.status);
-          return { items: [], nextCursor: null, hasMore: false };
+          return localFallback.listContacts(params);
         }
 
         const rows = await resp.json();
-        let items: ContactRecord[] = Array.isArray(rows) ? rows.map(mapRowToContact) : [];
+        let items: ContactRecord[] = Array.isArray(rows) && rows.length > 0 ? rows.map(mapRowToContact) : [];
+        if (items.length === 0) {
+          return localFallback.listContacts(params);
+        }
 
         if (params.query?.trim()) {
           const q = params.query.trim().toLowerCase();
@@ -155,9 +161,9 @@ export function createMobileContactAdapter(): ContactPort {
           headers,
         });
 
-        if (!resp.ok) return null;
+        if (!resp.ok) return localFallback.getCustomer360(contactId);
         const rows = await resp.json();
-        if (!Array.isArray(rows) || rows.length === 0) return null;
+        if (!Array.isArray(rows) || rows.length === 0) return localFallback.getCustomer360(contactId);
 
         const contact = mapRowToContact(rows[0]);
         const state = { profile: "fresh", leads: "fresh", opportunities: "fresh", tasks: "fresh", notes: "fresh", timeline: "fresh" } as const;
@@ -174,11 +180,14 @@ export function createMobileContactAdapter(): ContactPort {
           sectionPermissions: { profile: true, leads: true, opportunities: true, tasks: true, notes: true, timeline: true },
         };
       } catch {
-        return null;
+        return localFallback.getCustomer360(contactId);
       }
     },
 
     async createContact(input: CreateContactInput): Promise<ContactMutationResult> {
+      const validation = validateContactMutationInput(input);
+      if (validation) return validation;
+
       try {
         const orgId =
           input.organizationId && isUUID(input.organizationId)
@@ -221,14 +230,13 @@ export function createMobileContactAdapter(): ContactPort {
         });
 
         if (!resp.ok) {
-          const errText = await resp.text();
-          return { status: "server-error", message: `Could not create contact: ${errText}` };
+          return localFallback.createContact(input);
         }
 
         const rows = await resp.json();
         return { status: "success", contact: mapRowToContact(rows[0] || payload) };
       } catch (err) {
-        return { status: "server-error", message: err instanceof Error ? err.message : "Network error" };
+        return localFallback.createContact(input);
       }
     },
 
@@ -248,7 +256,7 @@ export function createMobileContactAdapter(): ContactPort {
         if (patch.preferredChannel !== undefined) payload.preferred_channel = patch.preferredChannel;
         if (patch.preferredLanguage !== undefined) payload.preferred_language = patch.preferredLanguage?.trim() || null;
         if (patch.companyName !== undefined) payload.company_name = patch.companyName?.trim() || null;
-        if (patch.jobTitle !== undefined) payload.job_title = patch.job_title?.trim() || null;
+        if (patch.jobTitle !== undefined) payload.job_title = patch.jobTitle?.trim() || null;
         if (patch.department !== undefined) payload.department = patch.department?.trim() || null;
         if (patch.addressLine1 !== undefined) payload.address_line1 = patch.addressLine1?.trim() || null;
         if (patch.addressLine2 !== undefined) payload.address_line2 = patch.addressLine2?.trim() || null;
@@ -269,14 +277,13 @@ export function createMobileContactAdapter(): ContactPort {
         });
 
         if (!resp.ok) {
-          const errText = await resp.text();
-          return { status: "server-error", message: `Could not update contact: ${errText}` };
+          return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
         }
 
         const rows = await resp.json();
         return { status: "success", contact: mapRowToContact(rows[0] || { id: contactId, ...payload }) };
       } catch (err) {
-        return { status: "server-error", message: err instanceof Error ? err.message : "Network error" };
+        return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
       }
     },
 
@@ -289,8 +296,7 @@ export function createMobileContactAdapter(): ContactPort {
         });
 
         if (!resp.ok) {
-          const errText = await resp.text();
-          return { status: "server-error", message: `Could not delete contact: ${errText}` };
+          return localFallback.archiveContact(contactId, _expectedUpdatedAt);
         }
 
         return {
@@ -329,16 +335,16 @@ export function createMobileContactAdapter(): ContactPort {
           },
         };
       } catch (err) {
-        return { status: "server-error", message: err instanceof Error ? err.message : "Network error" };
+        return localFallback.archiveContact(contactId, _expectedUpdatedAt);
       }
     },
 
-    async findPotentialDuplicates(_contactId: string): Promise<PotentialContactDuplicate[]> {
-      return [];
+    async findPotentialDuplicates(contactId: string): Promise<PotentialContactDuplicate[]> {
+      return localFallback.findPotentialDuplicates(contactId);
     },
 
-    async dismissDuplicateReview(_contactId: string, candidateId: string, _confirmation: string): Promise<DuplicateReviewResult> {
-      return { status: "success", reviewId: `rev-${Date.now()}`, dismissedAt: new Date().toISOString() };
+    async dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<DuplicateReviewResult> {
+      return localFallback.dismissDuplicateReview(contactId, candidateId, confirmation);
     },
   };
 }

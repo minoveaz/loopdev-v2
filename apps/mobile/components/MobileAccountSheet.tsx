@@ -9,6 +9,7 @@ import type { Organization, TenantContextSnapshot } from "../../../packages/cont
 type MobileAccountSheetProps = {
   visible: boolean;
   onClose: () => void;
+  onSwitchOrg?: (orgName: string) => void;
 };
 
 const items = [
@@ -18,7 +19,7 @@ const items = [
   { label: "Billing", icon: CreditCard },
 ];
 
-export function MobileAccountSheet({ visible, onClose }: MobileAccountSheetProps) {
+export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAccountSheetProps) {
   const [context, setContext] = useState<TenantContextSnapshot | null>(() =>
     mobileTenantContextAdapter.getTenantContext(),
   );
@@ -44,8 +45,17 @@ export function MobileAccountSheet({ visible, onClose }: MobileAccountSheetProps
     };
   }, []);
 
-  const handleSelectOrg = async (orgId: string) => {
+  const handleSelectOrg = async (orgId: string, orgName: string) => {
+    if (orgId === activeOrgId) {
+      onClose();
+      return;
+    }
     await mobileTenantContextAdapter.selectOrganization(orgId);
+    if (onSwitchOrg) {
+      onSwitchOrg(orgName);
+    } else {
+      onClose();
+    }
   };
 
   const handleExecuteSignOut = async () => {
@@ -89,7 +99,7 @@ export function MobileAccountSheet({ visible, onClose }: MobileAccountSheetProps
             return (
               <Pressable
                 key={org.id}
-                onPress={() => handleSelectOrg(org.id)}
+                onPress={() => handleSelectOrg(org.id, org.name)}
                 style={[styles.orgCard, isActive && styles.activeOrgCard]}
               >
                 <View style={styles.orgIcon}>

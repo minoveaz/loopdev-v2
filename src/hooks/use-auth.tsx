@@ -14,7 +14,7 @@ export interface LegacyCompatSession {
 interface AuthContextValue {
   session: LegacyCompatSession | null;
   authSession: SharedAuthSession | null;
-  signIn: (email: string, password?: string) => Promise<boolean>;
+  signIn: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<{ sent: boolean; message: string }>;
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     : null;
 
-  const signIn = async (email: string, password: string = "loopdev"): Promise<boolean> => {
+  const signIn = async (email: string, password: string = "loopdev"): Promise<{ success: boolean; error?: string }> => {
     toast.dismiss();
     const result = await defaultWebAuthAdapter.signInWithPassword({ email, password });
     if (result.success) {
@@ -58,9 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         summary: `Signed in as ${result.data.user.fullName}`,
         toastOptions: { silent: true },
       });
-      return true;
+      return { success: true };
     }
-    return false;
+    const errorMsg = (result as { error: { message: string } }).error?.message || "Invalid credentials provided.";
+    return { success: false, error: errorMsg };
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {

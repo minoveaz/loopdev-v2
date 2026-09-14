@@ -10,71 +10,44 @@ import type {
 } from "@contracts/auth-port";
 import { BrowserLocalStorageAdapter } from "./auth-supabase";
 
-// Mock catalog for dev environments and super admin view
-const MOCK_PLATFORM_ORGANIZATIONS: Organization[] = [
+const REAL_PLATFORM_ORGANIZATIONS: Organization[] = [
   {
-    id: "org_acme_corp",
-    slug: "acme-global",
-    name: "Acme Global Corp",
+    id: "80fce911-57c5-4a83-809f-78df6a3736f7",
+    slug: "loopdev",
+    name: "LoopDev",
     logoUrl: null,
     status: "active",
-    createdAt: "2026-01-15T10:00:00.000Z",
+    createdAt: "2026-09-14T10:00:00.000Z",
   },
   {
-    id: "org_starlight",
-    slug: "starlight-ventures",
-    name: "Starlight Ventures",
+    id: "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+    slug: "estar-protegidos",
+    name: "Estar Protegidos",
     logoUrl: null,
     status: "active",
-    createdAt: "2026-02-20T11:30:00.000Z",
-  },
-  {
-    id: "org_nexus_health",
-    slug: "nexus-health",
-    name: "Nexus Health SL",
-    logoUrl: null,
-    status: "active",
-    createdAt: "2026-03-05T09:15:00.000Z",
+    createdAt: "2026-09-14T10:00:00.000Z",
   },
 ];
 
-const MOCK_WORKSPACES: Record<string, Workspace[]> = {
-  org_acme_corp: [
+const PLATFORM_WORKSPACES: Record<string, Workspace[]> = {
+  "80fce911-57c5-4a83-809f-78df6a3736f7": [
     {
-      id: "ws_acme_sales",
-      organizationId: "org_acme_corp",
-      slug: "sales",
-      name: "Sales & CRM",
-      isDefault: true,
-      createdAt: "2026-01-15T10:05:00.000Z",
-    },
-    {
-      id: "ws_acme_ops",
-      organizationId: "org_acme_corp",
-      slug: "operations",
-      name: "Operations & Logistics",
-      isDefault: false,
-      createdAt: "2026-01-15T10:10:00.000Z",
-    },
-  ],
-  org_starlight: [
-    {
-      id: "ws_starlight_main",
-      organizationId: "org_starlight",
-      slug: "default",
+      id: "ws_loopdev_main",
+      organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+      slug: "main",
       name: "Main Workspace",
       isDefault: true,
-      createdAt: "2026-02-20T11:35:00.000Z",
+      createdAt: "2026-09-14T10:00:00.000Z",
     },
   ],
-  org_nexus_health: [
+  "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed": [
     {
-      id: "ws_nexus_clinical",
-      organizationId: "org_nexus_health",
-      slug: "clinical",
-      name: "Clinical Trials",
+      id: "ws_estarprotegidos_main",
+      organizationId: "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+      slug: "main",
+      name: "Main Workspace",
       isDefault: true,
-      createdAt: "2026-03-05T09:20:00.000Z",
+      createdAt: "2026-09-14T10:00:00.000Z",
     },
   ],
 };
@@ -133,7 +106,7 @@ export class TenantContextAdapter implements TenantContextPort {
   }
 
   private async buildAndSetSnapshot(org: Organization, isSuperAdmin: boolean, workspaceId?: string | null) {
-    const workspaces = MOCK_WORKSPACES[org.id] ?? [];
+    const workspaces = PLATFORM_WORKSPACES[org.id] ?? [];
     const activeWs = workspaceId ? workspaces.find((w) => w.id === workspaceId) ?? null : workspaces[0] ?? null;
     const role: PlatformRole = isSuperAdmin ? "owner" : "admin";
 
@@ -195,11 +168,11 @@ export class TenantContextAdapter implements TenantContextPort {
 
     // DEC-AUTH-003: If user is Super Admin / Owner global, return ALL platform organizations.
     if (session.user.isSuperAdmin) {
-      return { success: true, data: MOCK_PLATFORM_ORGANIZATIONS };
+      return { success: true, data: REAL_PLATFORM_ORGANIZATIONS };
     }
 
     // Standard user gets their assigned organizations
-    const userOrgs = MOCK_PLATFORM_ORGANIZATIONS.slice(0, 1);
+    const userOrgs = REAL_PLATFORM_ORGANIZATIONS.slice(0, 1);
     return { success: true, data: userOrgs };
   }
 
@@ -234,7 +207,7 @@ export class TenantContextAdapter implements TenantContextPort {
   }
 
   async listWorkspaces(organizationId: string): Promise<AuthResult<Workspace[]>> {
-    const wsList = MOCK_WORKSPACES[organizationId] ?? [];
+    const wsList = PLATFORM_WORKSPACES[organizationId] ?? [];
     return { success: true, data: wsList };
   }
 

@@ -28,10 +28,12 @@ export default function Login() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+  const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     toast.dismiss();
+    setGlobalError(null);
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
       const next: typeof errors = {};
@@ -44,21 +46,28 @@ export default function Login() {
     }
     setErrors({});
     setSubmitting(true);
-    setTimeout(() => {
+    try {
+      const res = await signIn(result.data.email, result.data.password);
+      if (res.success) {
+        setTransitioning(true);
+        setTimeout(() => {
+          navigate("/launchpad", { replace: true });
+        }, 600);
+      } else {
+        setGlobalError(res.error || "Invalid email or password. Please verify your credentials.");
+      }
+    } catch (err: unknown) {
+      setGlobalError(err instanceof Error ? err.message : "Failed to sign in. Please check your credentials.");
+    } finally {
       setSubmitting(false);
-      setTransitioning(true);
-      signIn(result.data.email);
-      setTimeout(() => {
-        navigate("/launchpad", { replace: true });
-      }, 750);
-    }, 450);
+    }
   };
 
   return (
     <AuthLayout
       eyebrow="Sign in"
       title="Welcome back"
-      description="Use any email and password — LoopDev runs on multi-tenant auth context."
+      description="Use your account credentials to access your LoopDev multi-tenant workspace."
       footer={
         <>
           New to LoopDev?{" "}
@@ -69,6 +78,11 @@ export default function Login() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        {globalError && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs font-medium text-destructive">
+            {globalError}
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="login-email" className="text-xs font-semibold">Email</Label>
           <div className="relative">
@@ -124,6 +138,31 @@ export default function Login() {
             Forgot password?
           </Link>
         </div>
+
+        {/* Quick Demo Accounts Selection */}
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1.5">
+          <div className="font-semibold text-foreground flex items-center justify-between">
+            <span>Demo Accounts (Supabase Live)</span>
+            <span className="text-[10px] text-primary uppercase font-bold tracking-wider">Multi-Tenant</span>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => { setEmail("admin@loop.dev"); setPassword("loopdev"); setErrors({}); setGlobalError(null); }}
+              className="rounded bg-background px-2.5 py-1 text-[11px] font-medium border border-border hover:border-primary/50 hover:bg-muted transition-colors cursor-pointer text-foreground"
+            >
+              admin@loop.dev (loopdev)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmail("admin@localhost.com"); setPassword("password123"); setErrors({}); setGlobalError(null); }}
+              className="rounded bg-background px-2.5 py-1 text-[11px] font-medium border border-border hover:border-primary/50 hover:bg-muted transition-colors cursor-pointer text-foreground"
+            >
+              admin@localhost.com (password123)
+            </button>
+          </div>
+        </div>
+
         <Button
           type="submit"
           variant="premium"

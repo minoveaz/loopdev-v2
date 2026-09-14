@@ -50,6 +50,9 @@ export interface SupabaseAuthAdapterConfig {
   supabaseClient?: SupabaseClient;
 }
 
+export const DEFAULT_SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
+export const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845";
+
 export class SupabaseAuthAdapter implements AuthPort {
   private client: SupabaseClient | null = null;
   private storage: PlatformAuthStorage;
@@ -58,8 +61,8 @@ export class SupabaseAuthAdapter implements AuthPort {
 
   constructor(config: SupabaseAuthAdapterConfig = {}) {
     this.storage = config.storage ?? new BrowserLocalStorageAdapter();
-    const url = config.supabaseUrl || (typeof import.meta !== "undefined" && import.meta.env ? import.meta.env.VITE_SUPABASE_URL : undefined);
-    const key = config.supabaseAnonKey || (typeof import.meta !== "undefined" && import.meta.env ? import.meta.env.VITE_SUPABASE_ANON_KEY : undefined);
+    const url = config.supabaseUrl || (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL ? import.meta.env.VITE_SUPABASE_URL : (config.storage ? undefined : DEFAULT_SUPABASE_URL));
+    const key = config.supabaseAnonKey || (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY ? import.meta.env.VITE_SUPABASE_ANON_KEY : (config.storage ? undefined : DEFAULT_SUPABASE_ANON_KEY));
 
     if (config.supabaseClient) {
       this.client = config.supabaseClient;
@@ -89,6 +92,10 @@ export class SupabaseAuthAdapter implements AuthPort {
         }
       });
     }
+  }
+
+  public getClient(): SupabaseClient | null {
+    return this.client;
   }
 
   private mapSupabaseEvent(event: SupabaseAuthChangeEvent): AuthChangeEvent {

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
+import { desktopContactAdapter } from "@/loopdev/domains/crm/adapter/contact";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 export { useCrmAutomations } from "./use-crm-automations";
 import type {
   CRMContact,
@@ -20,10 +22,11 @@ import type {
   Customer360View,
 } from "@/loopdev/domains/crm/adapter";
 
-const LOCAL_ORGANIZATION_ID = "local-development-organization";
+const LOCAL_ORGANIZATION_ID = "80fce911-57c5-4a83-809f-78df6a3736f7";
 const DEFAULT_CONTACT_LIMIT = 10;
 
-export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organizationId">> = {}) {
+export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
+  const { activeOrganization } = useTenantContext();
   const [contacts, setContacts] = useState<CRMContact[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -31,12 +34,14 @@ export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organ
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
+  const orgId = params.organizationId || activeOrganization?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
+
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError(null);
     const request: CRMContactListParams = {
-      organizationId: LOCAL_ORGANIZATION_ID,
+      organizationId: orgId,
       query: params.query,
       cursor: params.cursor ?? null,
       limit: params.limit ?? DEFAULT_CONTACT_LIMIT,
@@ -45,7 +50,7 @@ export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organ
       sortBy: params.sortBy,
       sortDirection: params.sortDirection,
     };
-    void loopdevAdapter.crm.listContacts(request)
+    void desktopContactAdapter.listContacts(request)
       .then((page) => {
         if (active) {
           setContacts(page.items);
@@ -61,6 +66,7 @@ export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organ
       });
     return () => { active = false; };
   }, [
+    orgId,
     params.cursor,
     params.limit,
     params.query,

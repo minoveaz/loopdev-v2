@@ -7,3 +7,4 @@ export * from "./contact-capability";
 export * from "./contact-port";
 export * from "./contact-local-adapter";
 export * from "./pipeline-capability";
+export * from "./notes";

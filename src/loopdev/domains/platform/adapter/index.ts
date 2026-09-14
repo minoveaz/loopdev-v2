@@ -49,6 +49,7 @@ export interface PlatformAdapter {
 export const platformAdapter: PlatformAdapter = localPlatformAdapter;
 export { localPlatformAdapter } from "./local";
 export { localPlatformWorkAdapter, platformWorkAdapter } from "./local";
+export { createDesktopNotesPort } from "./notes-port";
 
 export class PlatformAdapterError extends Error {
   constructor(

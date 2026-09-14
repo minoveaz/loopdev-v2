@@ -13,11 +13,12 @@ export interface PlatformNotesPanelProps {
   relation?: EntityRef;
   onCreate?: (body: string, visibility: PlatformVisibility, attachments?: File[]) => Promise<unknown>;
   onUpdate?: (noteId: string, body: string, expectedVersion: number) => Promise<unknown>;
+  onDelete?: (noteId: string, expectedVersion: number) => Promise<unknown>;
   onAttachmentUpload?: (file: File) => Promise<unknown>;
   attachments?: AttachmentRecord[];
 }
 
-export function PlatformNotesPanel({ notes, loading = false, error, forbidden = false, relation, onCreate, onUpdate, onAttachmentUpload, attachments = [] }: PlatformNotesPanelProps) {
+export function PlatformNotesPanel({ notes, loading = false, error, forbidden = false, relation, onCreate, onUpdate, onDelete, onAttachmentUpload, attachments = [] }: PlatformNotesPanelProps) {
   const [visibility, setVisibility] = useState<PlatformVisibility>("team");
   const [formError, setFormError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -99,7 +100,7 @@ export function PlatformNotesPanel({ notes, loading = false, error, forbidden = 
             setEditorOpen(false);
             setSelectedNote(null);
           }}
-          onDelete={selectedNote?.permissions.canDelete ? async () => undefined : undefined}
+          onDelete={selectedNote?.permissions.canDelete && onDelete ? async () => { await onDelete(selectedNote.id, selectedNote.version); } : undefined}
         />
       )}
       <ConfirmDialog

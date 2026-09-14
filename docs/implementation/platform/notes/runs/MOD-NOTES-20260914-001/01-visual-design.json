@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-NOTES-20260914-001",
+  "span_id": "MOD-NOTES-20260914-001:01-visual-design",
+  "phase": "01-visual-design",
+  "skill": "module-visual-design",
+  "parent_span_id": null,
+  "module": "Notes",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 3,
+  "started_at": "2026-09-14T12:11:53.229Z",
+  "completed_at": "2026-09-14T12:12:01.865Z",
+  "input_fingerprint": "sha256:985a6062db35eeee46ee3d68b1bf03042358fd858d5c70908ec022df1c053fe4",
+  "environment": {
+    "repository_path": "/workspaces/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": null,
+    "head_commit": "7ee970db79438f96db160ab03ca5acb2074dc1a8",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [],
+  "output_artifacts": [
+    "docs/implementation/platform/notes/visual-design.md",
+    "docs/implementation/platform/notes/view-state-matrix.md",
+    "docs/implementation/platform/notes/wireframes/notes-desktop.svg",
+    "docs/implementation/platform/notes/wireframes/notes-mobile.svg",
+    "docs/implementation/platform/notes/wireframes/notes-mobile-card.svg",
+    "docs/implementation/platform/notes/wireframes/notes-mobile-create-states.svg"
+  ],
+  "decisions": [],
+  "actions": [],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed"
+    }
+  ],
+  "requirements": [],
+  "evidence": [
+    "visual-design.md",
+    "view-state-matrix.md"
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "02-domain",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

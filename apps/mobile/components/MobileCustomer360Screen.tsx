@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { Archive, ArrowLeft, BriefcaseBusiness, CheckSquare, Clock3, Mail, MapPin, Phone, ShieldCheck, StickyNote, Users } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { contactActions } from "../../../packages/contracts/src/contact-actions";
 import type { ContactCustomer360View } from "../../../packages/contracts/src/contact-port";
+import type { NoteRecord } from "../../../packages/contracts/src/notes";
+import { MobileNoteEditor, type MobileNoteDraft } from "./MobileNoteEditor";
+import { MobileNotesList } from "./MobileNotesList";
 
 type Props = {
   view?: ContactCustomer360View;
@@ -10,9 +14,16 @@ type Props = {
   onBack: () => void;
   onEdit?: () => void;
   onArchive?: (contact: ContactCustomer360View["contact"]) => void;
+  notes?: NoteRecord[];
+  notesLoading?: boolean;
+  onCreateNote?: (draft: MobileNoteDraft) => Promise<void>;
+  onUpdateNote?: (noteId: string, version: number, draft: MobileNoteDraft) => Promise<void>;
+  onDeleteNote?: (note: NoteRecord) => Promise<void>;
 };
 
-export function MobileCustomer360Screen({ view, loading, error, onBack, onEdit, onArchive }: Props) {
+export function MobileCustomer360Screen({ view, loading, error, onBack, onEdit, onArchive, notes = [], notesLoading, onCreateNote, onUpdateNote, onDeleteNote }: Props) {
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<NoteRecord | undefined>();
   if (loading) return <StateScreen title="Loading Customer 360" detail="Reading the shared CRM boundary." onBack={onBack} />;
   if (error) return <StateScreen title="Unable to load contact" detail={error} onBack={onBack} />;
   if (!view) return <StateScreen title="Contact not found" detail="This contact may have been archived." onBack={onBack} />;
@@ -26,7 +37,25 @@ export function MobileCustomer360Screen({ view, loading, error, onBack, onEdit, 
     <Section title="Leads" icon={<Users size={18} color="#135bec" />}><ListState count={view.leads.length} label="lead" /></Section>
     <Section title="Opportunities" icon={<BriefcaseBusiness size={18} color="#135bec" />}><ListState count={view.opportunities.length} label="opportunity" />{view.opportunities.map((item: any) => <Row key={item.id} label={item.name} value={`${item.stageKey} · ${item.amount ?? "—"}`} />)}</Section>
     <Section title="Tasks" icon={<CheckSquare size={18} color="#135bec" />}><ListState count={view.tasks.length} label="task" /></Section>
-    <Section title="Notes" icon={<StickyNote size={18} color="#135bec" />}><ListState count={view.notes.length} label="note" /></Section>
+    <Section title="Notes" icon={<StickyNote size={18} color="#135bec" />}>
+      {editorOpen && onCreateNote ? <MobileNoteEditor
+        initialNote={selectedNote}
+        relationLabel={name}
+        onCancel={() => { setEditorOpen(false); setSelectedNote(undefined); }}
+        onSave={async (draft) => {
+          if (selectedNote && onUpdateNote) await onUpdateNote(selectedNote.id, selectedNote.version, draft);
+          else await onCreateNote(draft);
+          setEditorOpen(false);
+          setSelectedNote(undefined);
+        }}
+      /> : <MobileNotesList
+        notes={notes}
+        loading={notesLoading}
+        onCreate={() => { setSelectedNote(undefined); setEditorOpen(true); }}
+        onOpen={(note) => { setSelectedNote(note); setEditorOpen(true); }}
+        onDelete={(note) => { if (onDeleteNote) void onDeleteNote(note); }}
+      />}
+    </Section>
     <Section title="Activity & timeline" icon={<Clock3 size={18} color="#135bec" />}><ListState count={view.timeline.length} label="activity" />{view.timeline.slice(0, 5).map((item: any) => <Row key={item.id} label={item.summary} value={new Date(item.occurredAt).toLocaleDateString()} />)}</Section>
     <Section title="Relations & sales summary" icon={<Users size={18} color="#135bec" />}><Row label="Open opportunities" value={String(view.opportunities.length)} /><Row label="Preferred channel" value={contact.preferredChannel || "Not provided"} /><Row label="Contact ID" value={contact.id} /></Section>
   </ScrollView>;

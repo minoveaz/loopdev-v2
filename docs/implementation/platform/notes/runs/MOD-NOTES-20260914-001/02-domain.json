@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-NOTES-20260914-001",
+  "span_id": "MOD-NOTES-20260914-001:02-domain",
+  "phase": "02-domain",
+  "skill": "domain-model",
+  "parent_span_id": null,
+  "module": "Notes",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 3,
+  "started_at": "2026-09-14T12:12:14.104Z",
+  "completed_at": "2026-09-14T12:12:14.294Z",
+  "input_fingerprint": "sha256:985a6062db35eeee46ee3d68b1bf03042358fd858d5c70908ec022df1c053fe4",
+  "environment": {
+    "repository_path": "/workspaces/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": null,
+    "head_commit": "7ee970db79438f96db160ab03ca5acb2074dc1a8",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [],
+  "output_artifacts": [
+    "docs/implementation/platform/notes/domain-model.md",
+    "docs/implementation/platform/notes/access-design.md",
+    "docs/implementation/platform/notes/api-contracts.md",
+    "docs/implementation/platform/notes/sync-design.md"
+  ],
+  "decisions": [],
+  "actions": [],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed"
+    }
+  ],
+  "requirements": [],
+  "evidence": [
+    "domain-model.md",
+    "access-design.md",
+    "api-contracts.md",
+    "sync-design.md"
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": null,
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

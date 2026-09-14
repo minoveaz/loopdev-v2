@@ -75,9 +75,20 @@ describe("Platform work components", () => {
     const onCreate = vi.fn(() => Promise.resolve());
     render(<PlatformNotesPanel notes={[note]} relation={relation} onCreate={onCreate} />);
     expect(screen.getByText("Remember the preferred channel.")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Add a note"), { target: { value: "Follow up tomorrow" } });
     fireEvent.click(screen.getByRole("button", { name: "Add note" }));
-    await waitFor(() => expect(onCreate).toHaveBeenCalledWith("Follow up tomorrow", "team"));
+    fireEvent.change(screen.getByLabelText("Note content"), { target: { value: "Follow up tomorrow" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save note" }));
+    await waitFor(() => expect(onCreate).toHaveBeenCalledWith("Follow up tomorrow", "team", []));
+  });
+
+  it("deletes an authorized note through the existing drawer confirmation", async () => {
+    const onDelete = vi.fn(() => Promise.resolve());
+    const onUpdate = vi.fn(() => Promise.resolve());
+    render(<PlatformNotesPanel notes={[{ ...note, permissions: { ...permissions, canDelete: true } }]} relation={relation} onUpdate={onUpdate} onDelete={onDelete} />);
+    fireEvent.click(screen.getByText("Remember the preferred channel."));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete note" }));
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith("note-test", 1));
   });
 
   it("keeps timeline events in an accessible ordered list", () => {

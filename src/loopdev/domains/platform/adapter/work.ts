@@ -147,6 +147,7 @@ export interface CreateNoteInput extends PlatformScopeParams {
 export interface UpdateNoteInput extends PlatformScopeParams {
   body: string;
   expectedVersion: number;
+  visibility?: PlatformVisibility;
 }
 
 export interface CreateActivityInput extends PlatformScopeParams {
@@ -225,6 +226,9 @@ export interface PlatformWorkAdapter {
   listNotes(params?: PlatformNoteListParams): Promise<PlatformPage<NoteRecord>>;
   createNote(input: CreateNoteInput): Promise<NoteRecord>;
   updateNote(noteId: string, input: UpdateNoteInput): Promise<NoteRecord>;
+  updateNoteVisibility(noteId: string, visibility: PlatformVisibility, expectedVersion: number, params?: PlatformScopeParams): Promise<NoteRecord>;
+  deleteNote(noteId: string, expectedVersion: number, params?: PlatformScopeParams): Promise<NoteRecord>;
+  relateNote(noteId: string, relation: EntityRef, expectedVersion: number, params?: PlatformScopeParams): Promise<NoteRecord>;
   listActivities(params?: PlatformActivityListParams): Promise<PlatformPage<ActivityRecord>>;
   recordActivity(input: CreateActivityInput): Promise<ActivityRecord>;
   listTimeline(params?: PlatformTimelineListParams): Promise<PlatformPage<TimelineEvent>>;
@@ -614,7 +618,14 @@ export function createLocalPlatformWorkAdapter(deps: LocalPlatformWorkDependenci
       let items = visible(localPlatformNotesStore.list(), scope)
         .filter((note) => note.status !== "archived")
         .filter((note) => relationMatches(note.relation, params.relation))
-        .filter((note) => !params.visibility?.length || params.visibility.includes(note.visibility));
+        .filter((note) => !params.visibility?.length || params.visibility.includes(note.visibility))
+        .map((note) => ({
+          ...note,
+          permissions: {
+            ...note.permissions,
+            canDelete: note.createdById === currentActor() || note.permissions.canModerate,
+          },
+        }));
       const query = params.query?.trim().toLocaleLowerCase();
       if (query) items = items.filter((note) => note.body.toLocaleLowerCase().includes(query));
       return page(items.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)), params.cursor, params.limit);
@@ -668,11 +679,56 @@ export function createLocalPlatformWorkAdapter(deps: LocalPlatformWorkDependenci
       if (!input.body?.trim()) throw new PlatformWorkAdapterError("Note content is required.", "validation-error");
       const next = localPlatformNotesStore.update(noteId, {
         body: input.body.trim(),
+        visibility: input.visibility ?? current.visibility,
         version: current.version + 1,
         updatedById: currentActor(),
       });
       if (!next) throw new PlatformWorkAdapterError("The requested Platform record was not found.", "not-found");
       await appendSystemEvent(scope, next.relation, "note", "note", "note_revision", `${next.id}:${next.version}`, "Note updated");
+      return next;
+    },
+
+    async deleteNote(noteId, expectedVersion, params = {}) {
+      const scope = resolve(params);
+      assertScope(scope, "work.write");
+      const current = find(localPlatformNotesStore.list(), noteId, scope);
+      if (!current.permissions.canDelete && current.createdById !== currentActor()) throw new PlatformWorkAdapterError("You do not have permission to delete this note.", "forbidden");
+      if (current.version !== expectedVersion) throw new PlatformWorkAdapterError("The note changed before it could be deleted.", "conflict");
+      const next = localPlatformNotesStore.update(noteId, {
+        status: "archived",
+        version: current.version + 1,
+        updatedById: currentActor(),
+      });
+      if (!next) throw new PlatformWorkAdapterError("The requested Platform record was not found.", "not-found");
+      await appendSystemEvent(scope, next.relation, "note", "note", "note_deleted", `${next.id}:${next.version}`, "Note deleted");
+      return next;
+    },
+
+    async updateNoteVisibility(noteId, visibility, expectedVersion, params = {}) {
+      const scope = resolve(params);
+      assertScope(scope, "work.write");
+      const current = find(localPlatformNotesStore.list(), noteId, scope);
+      if (!current.permissions.canModerate) throw new PlatformWorkAdapterError("You do not have permission to change note visibility.", "forbidden");
+      if (current.version !== expectedVersion) throw new PlatformWorkAdapterError("The note changed before its visibility could be updated.", "conflict");
+      const next = localPlatformNotesStore.update(noteId, { visibility, version: current.version + 1, updatedById: currentActor() });
+      if (!next) throw new PlatformWorkAdapterError("The requested Platform record was not found.", "not-found");
+      await appendSystemEvent(scope, next.relation, "note", "note", "note_visibility", `${next.id}:${next.version}`, "Note visibility updated");
+      return next;
+    },
+
+    async relateNote(noteId, relation, expectedVersion, params = {}) {
+      const scope = resolve(params);
+      assertScope(scope, "work.write");
+      assertRelation(relation, scope);
+      const current = find(localPlatformNotesStore.list(), noteId, scope);
+      if (current.version !== expectedVersion) throw new PlatformWorkAdapterError("The note changed before its relation could be updated.", "conflict");
+      const next = localPlatformNotesStore.update(noteId, {
+        relation,
+        version: current.version + 1,
+        updatedById: currentActor(),
+      });
+      if (!next) throw new PlatformWorkAdapterError("The requested Platform record was not found.", "not-found");
+      await appendSystemEvent(scope, next.relation, "note", "note", "note_relation", `${next.id}:${next.version}`, "Note relation updated");
       return next;
     },
 

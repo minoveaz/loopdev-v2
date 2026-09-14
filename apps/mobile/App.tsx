@@ -9,7 +9,9 @@ import {
 import { launchpadSuites } from "../../packages/contracts/src/launchpad";
 import { contactNavigationRoutes, matchContactRoute } from "../../packages/contracts/src/contact-capability";
 import type { ContactCustomer360View, ContactRecord, PotentialContactDuplicate } from "../../packages/contracts/src/contact-port";
+import type { NoteRecord } from "../../packages/contracts/src/notes";
 import { mobileContactAdapter } from "./adapters/contact";
+import { mobileNotesAdapter } from "./adapters/notes";
 import { MobileAccountScreen } from "./components/MobileAccountScreen";
 import { MobileAccountSheet } from "./components/MobileAccountSheet";
 import { MobileAppShell } from "./components/MobileAppShell";
@@ -24,6 +26,7 @@ import { MobileContactsScreen } from "./components/MobileContactsScreen";
 import { MobileCreateContactScreen } from "./components/MobileCreateContactScreen";
 import { MobileCustomer360Screen } from "./components/MobileCustomer360Screen";
 import { MobileDuplicateReviewScreen } from "./components/MobileDuplicateReviewScreen";
+import type { MobileNoteDraft } from "./components/MobileNoteEditor";
 
 const launchpadPath = loopdevNavigationContract.launchpad.path;
 const morePath = getBottomNavigationItems().find((item) => item.slot === "more")!.path;
@@ -42,11 +45,49 @@ export default function App() {
   const [duplicateCandidates, setDuplicateCandidates] = useState<PotentialContactDuplicate[]>([]);
   const [duplicateContact, setDuplicateContact] = useState<ContactRecord | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
+  const [mobileNotes, setMobileNotes] = useState<NoteRecord[]>([]);
+  const [mobileNotesLoading, setMobileNotesLoading] = useState(false);
   useEffect(() => {
     void mobileContactAdapter.listContacts({ organizationId: "local-development-organization", limit: 100, cursor: null })
       .then((page) => setContacts(page.items))
       .catch((cause: unknown) => setContactError(cause instanceof Error ? cause.message : "Unable to load contacts."));
   }, []);
+  useEffect(() => {
+    const contactMatch = matchContactRoute(contactNavigationRoutes.detail, currentPath);
+    if (!contactMatch) return;
+    const contact = contacts.find((item) => item.id === contactMatch.contactId);
+    if (!contact || customer360?.contact.id === contact.id) return;
+    void mobileContactAdapter.getCustomer360(contact.id).then(setCustomer360);
+    loadMobileNotes(contact.id);
+  }, [contacts, currentPath, customer360]);
+  function loadMobileNotes(contactId: string) {
+    setMobileNotesLoading(true);
+    void mobileNotesAdapter.listNotes({ scope: { organizationId: "local-development-organization", workspaceId: null }, relation: { type: "contact", id: contactId }, limit: 25 })
+      .then((result) => {
+        if (result.status === "success") setMobileNotes(result.data.items);
+      })
+      .finally(() => setMobileNotesLoading(false));
+  }
+  function noteRelation(contact: ContactRecord) {
+    const scope = { organizationId: "local-development-organization", workspaceId: null };
+    return { type: "contact" as const, id: contact.id, label: [contact.preferredName || contact.firstName, contact.lastName].filter(Boolean).join(" "), scope };
+  }
+  async function createMobileNote(contact: ContactRecord, draft: MobileNoteDraft) {
+    const scope = { organizationId: "local-development-organization", workspaceId: null };
+    const result = await mobileNotesAdapter.createNote({ scope, authorId: "local-development-user", mode: draft.mode, content: draft.content, plainTextPreview: draft.body, visibility: draft.visibility, relations: [noteRelation(contact)], idempotencyKey: `mobile-${Date.now()}` });
+    if (result.status === "error") throw new Error(result.error.message);
+    loadMobileNotes(contact.id);
+  }
+  async function updateMobileNote(noteId: string, version: number, contact: ContactRecord, draft: MobileNoteDraft) {
+    const result = await mobileNotesAdapter.updateNote(noteId, { mode: draft.mode, content: draft.content, plainTextPreview: draft.body, visibility: draft.visibility, expectedVersion: version, idempotencyKey: `mobile-update-${Date.now()}` });
+    if (result.status === "error") throw new Error(result.error.message);
+    loadMobileNotes(contact.id);
+  }
+  async function deleteMobileNote(note: NoteRecord, contact: ContactRecord) {
+    const result = await mobileNotesAdapter.deleteNote(note.id, { expectedVersion: note.version, idempotencyKey: `mobile-delete-${Date.now()}` });
+    if (result.status === "error") throw new Error(result.error.message);
+    loadMobileNotes(contact.id);
+  }
   const activeSuite = useMemo(
     () => launchpadSuites.find((suite) => suite.entryPath && currentPath.startsWith(suite.entryPath)),
     [currentPath],
@@ -81,7 +122,7 @@ export default function App() {
 
   function renderContent() {
     if (currentPath === morePath) return <MobileAccountScreen />;
-    if (currentPath === contactNavigationRoutes.list) return <MobileContactsScreen contacts={contacts} onCreate={() => { setEditingContact(null); navigate(contactNavigationRoutes.create); }} onView={(contact) => { void mobileContactAdapter.getCustomer360(contact.id).then(setCustomer360); navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contact.id))); }} onEdit={(contact) => { setEditingContact(contact); navigate(contactNavigationRoutes.edit.replace(":contactId", encodeURIComponent(contact.id))); }} onDuplicates={() => { const source = contacts[0]; if (!source) return; setDuplicateContact(source); void mobileContactAdapter.findPotentialDuplicates(source.id).then(setDuplicateCandidates); navigate(contactNavigationRoutes.duplicates.replace(":contactId", encodeURIComponent(source.id))); }} onArchive={async (contact) => { const result = await mobileContactAdapter.archiveContact(contact.id, contact.updatedAt); if (result.status === "success") setContacts((current) => current.filter((item) => item.id !== contact.id)); }} />;
+    if (currentPath === contactNavigationRoutes.list) return <MobileContactsScreen contacts={contacts} onCreate={() => { setEditingContact(null); navigate(contactNavigationRoutes.create); }} onView={(contact) => { void mobileContactAdapter.getCustomer360(contact.id).then(setCustomer360); loadMobileNotes(contact.id); navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contact.id))); }} onEdit={(contact) => { setEditingContact(contact); navigate(contactNavigationRoutes.edit.replace(":contactId", encodeURIComponent(contact.id))); }} onDuplicates={() => { const source = contacts[0]; if (!source) return; setDuplicateContact(source); void mobileContactAdapter.findPotentialDuplicates(source.id).then(setDuplicateCandidates); navigate(contactNavigationRoutes.duplicates.replace(":contactId", encodeURIComponent(source.id))); }} onArchive={async (contact) => { const result = await mobileContactAdapter.archiveContact(contact.id, contact.updatedAt); if (result.status === "success") setContacts((current) => current.filter((item) => item.id !== contact.id)); }} />;
     if (currentPath === contactNavigationRoutes.create) return <MobileCreateContactScreen onCancel={() => navigate(contactNavigationRoutes.list)} onCreated={(contact) => { setContacts((current) => [...current, contact]); navigate(contactNavigationRoutes.list); }} />;
     const editMatch = matchContactRoute(contactNavigationRoutes.edit, currentPath);
     if (editMatch) {
@@ -94,10 +135,9 @@ export default function App() {
     if (contactMatch) {
       const contact = contacts.find((item) => item.id === contactMatch.contactId);
       if (!customer360 || customer360.contact.id !== contact?.id) {
-        if (contact) void mobileContactAdapter.getCustomer360(contact.id).then(setCustomer360);
         return <MobileCustomer360Screen loading={!contactError} error={contactError} onBack={() => navigate(contactNavigationRoutes.list)} />;
       }
-      return <MobileCustomer360Screen view={customer360} onBack={() => navigate(contactNavigationRoutes.list)} onEdit={() => { setEditingContact(contact); navigate(contactNavigationRoutes.edit.replace(":contactId", encodeURIComponent(contact.id))); }} onArchive={async (target) => { const result = await mobileContactAdapter.archiveContact(target.id, target.updatedAt); if (result.status === "success") { setContacts((current) => current.filter((item) => item.id !== target.id)); navigate(contactNavigationRoutes.list); } }} />;
+      return <MobileCustomer360Screen view={customer360} notes={mobileNotes} notesLoading={mobileNotesLoading} onCreateNote={(draft) => createMobileNote(contact, draft)} onUpdateNote={(noteId, version, draft) => updateMobileNote(noteId, version, contact, draft)} onDeleteNote={(note) => deleteMobileNote(note, contact)} onBack={() => navigate(contactNavigationRoutes.list)} onEdit={() => { setEditingContact(contact); navigate(contactNavigationRoutes.edit.replace(":contactId", encodeURIComponent(contact.id))); }} onArchive={async (target) => { const result = await mobileContactAdapter.archiveContact(target.id, target.updatedAt); if (result.status === "success") { setContacts((current) => current.filter((item) => item.id !== target.id)); navigate(contactNavigationRoutes.list); } }} />;
     }
     if (activeSuite) {
       return <MobileWorkspaceScreen suite={activeSuite} onBack={() => navigate(launchpadPath)} />;

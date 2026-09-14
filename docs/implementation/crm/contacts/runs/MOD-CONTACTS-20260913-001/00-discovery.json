@@ -5,9 +5,9 @@
   "skill": "module-discovery",
   "parent_span_id": null,
   "module": "Contacts",
-  "status": "completed",
+  "status": "blocked",
   "decision_status": "open",
-  "architecture_quality": "PENDING",
+  "architecture_quality": "BLOCKED",
   "attempt": 1,
   "input_fingerprint": "sha256:58ef83c66b9107dbe378570af216e2c612f78f89c758ca903bd24d179024f338",
   "started_at": "2026-09-13T23:40:30+02:00",
@@ -90,8 +90,8 @@
       "evidence": "Expo/React Native iOS and Android targets are configured; this run observed only Expo Web and did not execute native targets"
     }
   ],
-  "detected_failure": null,
-  "likely_failure_origin": null,
+  "detected_failure": "Discovery contains open decisions and lacks runtime/native evidence required for completion.",
+  "likely_failure_origin": "The historical run treated a partial discovery artifact as a completed phase.",
   "next_handoff": "WAITING_DISCOVERY_REVIEW",
   "approval_gate": {
     "status": "pending",

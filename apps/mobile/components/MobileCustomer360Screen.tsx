@@ -1,15 +1,15 @@
 import { Archive, ArrowLeft, BriefcaseBusiness, CheckSquare, Clock3, Mail, MapPin, Phone, ShieldCheck, StickyNote, Users } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { contactActions } from "../../../packages/contracts/src/contact-actions";
-type Customer360View = any;
+import type { ContactCustomer360View } from "../../../packages/contracts/src/contact-port";
 
 type Props = {
-  view?: Customer360View;
+  view?: ContactCustomer360View;
   loading?: boolean;
   error?: string | null;
   onBack: () => void;
   onEdit?: () => void;
-  onArchive?: (contact: Customer360View["contact"]) => void;
+  onArchive?: (contact: ContactCustomer360View["contact"]) => void;
 };
 
 export function MobileCustomer360Screen({ view, loading, error, onBack, onEdit, onArchive }: Props) {

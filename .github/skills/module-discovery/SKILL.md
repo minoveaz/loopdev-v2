@@ -130,6 +130,12 @@ mobile currently implement different action catalogs or lifecycle rules,
 classify the mismatch as a delivery gap; do not normalize it by documenting
 only one renderer.
 
+For every capability, inventory each user operation separately across desktop,
+mobile web, iOS and Android. Record `implemented`, `adapted`, `missing` or
+`not_applicable`, plus an approved decision reference for every adaptation.
+Record `domain`, `renderer` and `operations` parity independently. A visible
+mobile section is not evidence that its desktop operation is available.
+
 ### Business capability
 
 - What problem does the module solve?
@@ -218,6 +224,15 @@ Create or update `docs/implementation/<suite>/<module>/discovery.md` using
 
 The capability matrix must include capability, expected behavior, product
 source, existing implementation, status, evidence and next action.
+
+Discovery must also create or update
+`docs/implementation/<suite>/<module>/delivery-ledger.json`. Assign stable,
+uppercase IDs to every approved requirement and capability. Record the product
+source, classification, required platforms, acceptance criteria and minimum
+evidence level. IDs are append-only: never rename or remove one to simplify a
+later plan. A removal requires an approved change request against the previous
+ledger. Discovery does not create implementation tasks, so it may leave the
+ledger `draft`, but it cannot complete with empty requirements or capabilities.
 
 ## Action boundaries
 

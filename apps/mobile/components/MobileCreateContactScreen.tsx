@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEffect, useState } from "react";
 import { contactFormSections, getContactSectionStats, type ContactFormFieldDefinition, type ContactFormSectionId } from "../../../packages/contracts/src/contact-form";
-import { referenceDataAdapter } from "../../../src/loopdev/domains/reference-data/adapter";
+import { mobileReferenceDataAdapter } from "../adapters/reference-data";
 import { useMobileForm } from "./forms/MobileFormEngine";
 import { MobileComboboxField, MobileFormField, MobileFormTabs, MobileSelectField, type MobileOption } from "./forms/MobileFormPrimitives";
 import { MobileConfirmDialog } from "./MobileModal";
@@ -10,13 +10,10 @@ import { ChannelsTab } from "./contact-tabs/ChannelsTab";
 import { IdentityTab } from "./contact-tabs/IdentityTab";
 import { OrganizationTab } from "./contact-tabs/OrganizationTab";
 import { contactActions } from "../../../packages/contracts/src/contact-actions";
-// Loaded through the canonical desktop adapter at runtime; Expo does not
-// compile the desktop-only dependency graph into its typecheck.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { contactPort } = require("../../../src/loopdev/domains/crm/adapter") as { contactPort: any };
-type CRMContact = any;
+import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
+import { mobileContactAdapter } from "../adapters/contact";
 
-export function MobileCreateContactScreen({ onCancel, onCreated, editingContact, onUpdated }: { onCancel: () => void; onCreated?: (contact: CRMContact) => void; editingContact?: CRMContact | null; onUpdated?: (contact: CRMContact) => void }) {
+export function MobileCreateContactScreen({ onCancel, onCreated, editingContact, onUpdated }: { onCancel: () => void; onCreated?: (contact: ContactRecord) => void; editingContact?: ContactRecord | null; onUpdated?: (contact: ContactRecord) => void }) {
   const form = useMobileForm(editingContact ? {
     firstName: editingContact.firstName ?? "", lastName: editingContact.lastName ?? "",
     email: editingContact.email ?? "", phone: editingContact.phone ?? "",
@@ -27,12 +24,12 @@ export function MobileCreateContactScreen({ onCancel, onCreated, editingContact,
     preferredLanguage: editingContact.preferredLanguage ?? "",
   } : {});
   const organizationId = "local-development-organization";
-  const countries = useReferenceOptions(() => referenceDataAdapter.listCountries(organizationId), [organizationId]);
-  const subdivisions = useReferenceOptions(() => form.values.country ? referenceDataAdapter.listSubdivisions(form.values.country, organizationId) : Promise.resolve([]), [form.values.country, organizationId]);
-  const cities = useReferenceOptions(() => form.values.country ? referenceDataAdapter.searchCities({ countryCode: form.values.country, subdivisionCode: form.values.stateProvince || null, query: "", organizationId }) : Promise.resolve([]), [form.values.country, form.values.stateProvince, organizationId]);
-  const documentTypes = useReferenceOptions(() => form.values.country ? referenceDataAdapter.listDocumentTypes(form.values.country, organizationId) : Promise.resolve([]), [form.values.country, organizationId]);
-  const genders = useReferenceOptions(() => referenceDataAdapter.listGenderOptions(organizationId), [organizationId]);
-  const languages = useReferenceOptions(() => referenceDataAdapter.listLanguages(organizationId), [organizationId]);
+  const countries = useReferenceOptions(() => mobileReferenceDataAdapter.listCountries(), [organizationId]);
+  const subdivisions = useReferenceOptions(() => form.values.country ? mobileReferenceDataAdapter.listSubdivisions(form.values.country) : Promise.resolve([]), [form.values.country, organizationId]);
+  const cities = useReferenceOptions(() => form.values.country ? mobileReferenceDataAdapter.searchCities({ countryCode: form.values.country, subdivisionCode: form.values.stateProvince || null, query: "" }) : Promise.resolve([]), [form.values.country, form.values.stateProvince, organizationId]);
+  const documentTypes = useReferenceOptions(() => form.values.country ? mobileReferenceDataAdapter.listDocumentTypes(form.values.country) : Promise.resolve([]), [form.values.country, organizationId]);
+  const genders = useReferenceOptions(() => mobileReferenceDataAdapter.listGenderOptions(), [organizationId]);
+  const languages = useReferenceOptions(() => mobileReferenceDataAdapter.listLanguages(), [organizationId]);
   const [activeSection, setActiveSection] = useState(contactFormSections[0].id);
   const activeIndex = contactFormSections.findIndex((section) => section.id === activeSection);
   const activeDefinition = contactFormSections[activeIndex] ?? contactFormSections[0];
@@ -62,8 +59,8 @@ export function MobileCreateContactScreen({ onCancel, onCreated, editingContact,
       preferredLanguage: form.values.preferredLanguage || null,
     };
     const result = editingContact
-      ? await contactPort.updateContact(editingContact.id, input, editingContact.updatedAt)
-      : await contactPort.createContact(input);
+      ? await mobileContactAdapter.updateContact(editingContact.id, input, editingContact.updatedAt)
+      : await mobileContactAdapter.createContact(input);
     setSaving(false);
     if (result.status === "success") (editingContact ? onUpdated : onCreated)?.(result.contact);
     else setSaveError(`${result.status === "conflict" ? "Conflict: " : result.status === "forbidden" ? "Permission denied: " : ""}${result.message}`);

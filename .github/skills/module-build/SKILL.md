@@ -58,6 +58,13 @@ Use helper skills for focused decisions, not as independent implementers:
 
 Never claim completion without evidence from the actual checkout.
 
+Build work must reference a `ready` task from the approved
+`delivery-ledger.json`. Implement only that task's requirements, capabilities
+and platforms, and attach evidence references before marking it `done`. Do not
+start `pending` or `blocked` tasks, and do not remove uncovered requirements to
+make validation pass. Run `npm run validate:delivery-ledgers` after every task
+status or scope change.
+
 ## Common Contract
 
 ### Documentation workspace
@@ -159,3 +166,13 @@ desktop or mobile action list. When a renderer needs a platform adaptation,
 keep the semantic identifier stable and record the adaptation and accessibility
 equivalence in phase evidence. Add contract-level regression tests whenever
 the capability changes.
+
+### Renderer operation parity gate
+
+Implement and verify the operations assigned to the current task, not merely
+the data projection or route. Update the ledger operation inventory after each
+platform change. Use a focused component test for every changed interactive
+operation and cover its applicable success, pending, error, forbidden and
+conflict states. Browser journeys are required only when the task's evidence
+level or risk calls for one. Do not declare a capability functionally
+multiplatform unless domain, renderer and operations parity are all verified.

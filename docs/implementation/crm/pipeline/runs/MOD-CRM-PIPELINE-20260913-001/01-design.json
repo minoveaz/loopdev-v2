@@ -5,9 +5,9 @@
   "skill": "module-design",
   "parent_span_id": null,
   "module": "CRM Pipeline",
-  "status": "running",
+  "status": "deviated",
   "decision_status": "open",
-  "architecture_quality": "PENDING",
+  "architecture_quality": "DEVIATED",
   "attempt": 1,
   "started_at": "2026-09-13T10:15:45+02:00",
   "completed_at": null,
@@ -76,9 +76,9 @@
       "evidence": "Approved product artifacts, existing source, tests and live route audited."
     }
   ],
-  "detected_failure": null,
-  "likely_failure_origin": null,
-  "next_handoff": "Review the live Pipeline route and approve 01-design before specialized analysis.",
+  "detected_failure": "Historical design started without a canonical completed 00-discovery checkpoint.",
+  "likely_failure_origin": "The previous CLI initialized runs at 01-design.",
+  "next_handoff": "Keep this superseded run blocked; use run 002 only after resolving its visual gate.",
   "evidence_links": [
     "docs/implementation/crm/pipeline/architecture-design.md",
     "docs/implementation/crm/pipeline/README.md"

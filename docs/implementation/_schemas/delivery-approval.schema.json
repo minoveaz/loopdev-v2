@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "delivery-approval.schema.json",
+  "type": "object",
+  "required": ["status", "approved_by", "approved_at", "role", "artifact", "artifact_fingerprint", "source"],
+  "properties": {
+    "status": { "enum": ["pending", "approved", "rejected"] },
+    "approved_by": { "type": ["string", "null"] },
+    "approved_at": { "type": ["string", "null"], "format": "date-time" },
+    "role": { "type": ["string", "null"] },
+    "artifact": { "type": ["string", "null"] },
+    "artifact_fingerprint": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+    "source": { "type": ["string", "null"] },
+    "invalidated_at": { "type": "string", "format": "date-time" },
+    "invalidation_reason": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -22,9 +22,9 @@ production repository and should be reviewed with the module design.
 
 | Phase | Primary skill | Purpose | Completion gate |
 |---|---|---|---|
+| `00-discovery` | `module-discovery` | Expected capabilities and existing-state comparison | Scope, domain baseline and handoff matrix complete |
 | `01-design` | `module-design` | Functional, product and architecture specification | Requirements, platform reuse and acceptance matrix complete |
 | `01-visual-design` | `module-visual-design` | Normative visual source, view/state matrix and wireframe evidence | Visual evidence complete and explicit approval recorded |
-| `00-discovery` | `module-discovery` | Expected capabilities and existing-state comparison | Scope, domain baseline and handoff matrix complete |
 | `02-domain` | `domain-model` | Entities, states, invariants and events | Domain decisions resolved or explicitly open |
 | `03-access` | `access-design` | RBAC, scopes, sensitive data and audit | Permission matrix and security tests defined |
 | `04-api` | `api-contracts` | Commands, DTOs, errors and events | Contract and consumer impact defined |
@@ -74,6 +74,7 @@ canonical checkpoint location is the implementation documentation directory:
 ```text
 docs/implementation/<suite>/<module>/runs/<run-id>/
 ├── run.json
+├── 00-discovery.json
 ├── 01-design.json
 ├── 01-visual-design.json
 ├── 02-domain.json

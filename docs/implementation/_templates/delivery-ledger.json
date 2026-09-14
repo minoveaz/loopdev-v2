@@ -1,0 +1,39 @@
+{
+  "$schema": "../../_schemas/delivery-ledger.schema.json",
+  "schema_version": 1,
+  "suite": "<suite>",
+  "module": "<module>",
+  "status": "draft",
+  "approved_by": null,
+  "approved_at": null,
+  "approval_source": null,
+  "product_sources": ["docs/06-product/<suite>/<module>/"],
+  "previous_ledger": null,
+  "requirements": [],
+  "capabilities": [
+    {
+      "id": "<CAPABILITY-ID>",
+      "name": "<capability>",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["<REQUIREMENT-ID>"],
+      "semantics": { "operations": ["<operation-id>"], "validation_contract": null, "errors": [] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "<surface>", "route": null },
+        "mobile_web": { "required": true, "surface": "<surface>", "route": null },
+        "ios": { "required": false, "surface": "planned", "route": null },
+        "android": { "required": false, "surface": "planned", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "<operation-id>", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "success"],
+      "permissions": ["<permission>"],
+      "contract_refs": ["packages/contracts/src/<capability>.ts"],
+      "task_ids": []
+    }
+  ],
+  "tasks": [],
+  "change_requests": [],
+  "blockers": ["Populate and approve the ledger before plan completion."]
+}

@@ -82,6 +82,25 @@ PLATFORM_ADAPTATION:
 - evidence: [test/runtime evidence]
 ```
 
+## Parity classification and operation inventory
+
+Parity is three independent claims. Delivery documentation, checkpoints and
+reviews must name the level being claimed:
+
+| Level | What it proves | What it does not prove |
+| --- | --- | --- |
+| `domain` | Shared entities, rules, permissions, errors and lifecycle behave the same | The interaction exists in every renderer |
+| `renderer` | Required sections, states, navigation and accessibility semantics render | The user can execute every related command |
+| `operations` | Each declared user operation is available or has an approved adaptation | A different, undeclared mobile flow is equivalent |
+
+Every capability ledger entry must list every operation and classify it on
+desktop, mobile web, iOS and Android as `implemented`, `adapted`, `missing` or
+`not_applicable`. An `adapted` operation requires a decision reference that
+preserves the semantic ID and accessibility meaning. A ledger cannot be
+approved if an operation is `missing` or `not_applicable` on a required
+platform. Split broad capabilities into operation-level work when that is the
+smallest unit that can be implemented and verified.
+
 ## Definition of Ready
 
 A module cannot enter build until its implementation workspace contains:
@@ -124,12 +143,19 @@ Source presence, a clean commit or a passing typecheck is not behavioral
 evidence. Runtime and test evidence must identify the actual checkout, branch,
 commit, URL/port and validation timestamp.
 
+Focused component tests are the default renderer evidence for changed actions.
+Browser journeys are required only by a task with `E4_JOURNEY`, an approved
+high-risk regression strategy or a release gate; Playwright is one optional
+tool, never a universal requirement.
+
 ## Mandatory validation baseline
 
 ```bash
 npm run lint
 npm run typecheck
 npm run test:quality
+npm run test:multiplatform-contracts
+npm run validate:mobile-boundaries
 npm run build
 cd apps/mobile
 npm ci
@@ -148,7 +174,9 @@ web, iOS and Android consumers. Any platform-only behavior requires a documented
 reason, accessibility impact, rollback strategy and owner. A module review must
 return separate desktop and mobile verdicts before release approval.
 
-The repository gate for this contract is `npm run validate:contracts`. It
-discovers capability metadata under `packages/contracts/src`, rejects
-renderer-local Contacts action catalogs, and requires renderers to import the
-shared action/capability contract.
+The repository gates for this contract are `npm run validate:contracts`,
+`npm run test:multiplatform-contracts` and
+`npm run validate:mobile-boundaries`. They discover capability metadata, run
+the same behavioral suite against desktop and mobile adapters, reject mobile
+imports from the desktop `src/` runtime, reject renderer-local Contacts action
+catalogs and require renderers to import the shared capability contracts.

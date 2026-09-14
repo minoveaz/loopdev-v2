@@ -35,15 +35,14 @@ docs/implementation/<suite>/<module>/
 ├── architecture-design.md
 ├── visual-design.md
 ├── view-state-matrix.md
-├── phase-01-discovery.md
-├── phase-02-foundation.md
-├── phase-03-build.md
-├── phase-04-verify.md
-├── phase-05-review.md
 ├── requirement-evidence-matrix.md
+├── delivery-ledger.json
+├── platform-scope.md
+├── platform-evidence-matrix.md
 └── runs/
     └── <run-id>/
         ├── run.json
+        ├── 00-discovery.json
         ├── 01-design.json
         ├── 02-domain.json
         ├── 03-access.json
@@ -71,18 +70,20 @@ force-pushes or overwrites an existing run.
 
 ```bash
 npm run delivery:init -- --suite crm --module Contacts
-npm run delivery:checkpoint -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --phase 01-design
-npm run delivery:handoff -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --from 01-design --to 02-build
+npm run delivery:start-phase -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --phase 00-discovery --skill module-discovery
+npm run delivery:complete-phase -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --phase 00-discovery --data path/to/completion-data.json
+npm run delivery:handoff -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --from 00-discovery --to 01-design
 npm run delivery:validate
+npm run validate:delivery-ledgers
+npm run report:delivery-ledgers
 npm run delivery:report
-npm run delivery:resume -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001
+npm run delivery:resume -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --reason "Resolved blocker"
 ```
 
-Runs persist an input fingerprint for `packages/contracts/src`, explicit
-approval gate records, and invalidated phases. A changed shared contract
-blocks resume and marks the current phase for downstream revalidation.
-Approvals are records (`status`, `approved_by`, `approved_at`), not inferred
-from status or source-file presence.
+Runs persist fingerprints for product, design, plan, contracts, code and tests,
+explicit approval records, and invalidated phases. Changed inputs invalidate
+dependent phases and approvals. Approvals identify actor, role, artifact,
+fingerprint and source; they are never inferred from status or source presence.
 
 `npm run validate:contracts` checks stable IDs, action catalogs, labels,
 validation/navigation metadata and renderer imports. `npm run smoke:routes`
@@ -104,7 +105,8 @@ the source or constitute visual approval.
 The operational JSON templates are:
 
 - `MODULE_RUN_TEMPLATE.json`;
-- `MODULE_CHECKPOINT_TEMPLATE.json`.
+- `MODULE_CHECKPOINT_TEMPLATE.json`;
+- `delivery-ledger.json`.
 
 ## Issue and track linkage
 

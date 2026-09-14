@@ -5,9 +5,9 @@
   "skill": "module-design",
   "parent_span_id": null,
   "module": "CRM Pipeline",
-  "status": "completed",
-  "decision_status": "confirmed",
-  "architecture_quality": "PENDING",
+  "status": "deviated",
+  "decision_status": "open",
+  "architecture_quality": "DEVIATED",
   "attempt": 1,
   "started_at": "2026-09-13T10:23:24+02:00",
   "completed_at": "2026-09-13T12:18:30+02:00",
@@ -59,8 +59,8 @@
     }
   ],
   "requirements": [],
-  "detected_failure": null,
-  "likely_failure_origin": null,
+  "detected_failure": "The historical run started design without a canonical completed 00-discovery checkpoint.",
+  "likely_failure_origin": "The previous CLI initialized runs at 01-design.",
   "next_handoff": "01-visual-design: create normative visual source and evidence before specialized analysis or plan approval.",
   "evidence_links": [
     "docs/implementation/crm/pipeline/discovery.md",

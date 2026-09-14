@@ -36,7 +36,7 @@ for (const { file, text } of source) {
 for (const { file, text } of source) {
   const isCapability = /CapabilityContract|capabilityContract|Capability\s*[:=]/.test(text);
   if (isCapability) {
-    for (const field of ["id", "owner", "actions", "states", "labels", "validation", "navigation", "permissions"]) {
+    for (const field of ["id", "owner", "actions", "states", "labels", "validation", "navigation", "permissions", "platforms"]) {
       if (!new RegExp(`\\b${field}\\s*:`).test(text)) addError(file, `capability contract is missing "${field}"`);
     }
   }
@@ -46,7 +46,7 @@ for (const { file, text } of source) {
   if (text.includes("contactFormSections") && !file.endsWith("contact-form.ts") && !text.includes("from \"./contact-form\"")) {
     addError(file, "contactFormSections must be imported from the shared form contract");
   }
-  if (/\b(const|let)\s+\w*(actions|Actions)\s*=\s*\[/.test(text) && !file.includes("contact-actions.ts")) {
+  if (/\b(const|let)\s+\w*(actions|Actions)\s*=\s*\[/.test(text) && !file.includes("contact-actions.ts") && !file.includes("-capability.ts")) {
     warnings.push(`${relative(root, file)}: local action array found; prefer a shared capability action catalog`);
   }
 }

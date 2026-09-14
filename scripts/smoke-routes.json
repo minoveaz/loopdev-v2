@@ -3,10 +3,13 @@
     "runtime_dependent": true,
     "routes": [
       { "path": "/app/sales-crm/contacts", "surface": "Contacts list" },
+      { "path": "/app/sales-crm/contacts/:contactId", "example": "/app/sales-crm/contacts/crm_cust_1", "surface": "Customer 360", "deep_link": true },
+      { "path": "/app/sales-crm/contacts/:contactId/activity", "example": "/app/sales-crm/contacts/crm_cust_1/activity", "surface": "Contact activity", "deep_link": true },
       { "path": "/app/sales-crm/pipeline", "surface": "Pipeline" }
     ],
     "checks": [
-      { "kind": "route", "evidence": "AppRoutes.tsx route registration" },
+      { "kind": "route", "evidence": "AppRoutes.tsx and LoopdevRoutes.tsx route registration" },
+      { "kind": "deep-link", "evidence": "Parameterized route registration and concrete manifest example" },
       { "kind": "refresh", "evidence": "Vite history fallback; verify with deployed host" },
       { "kind": "filter-reset", "evidence": "Contacts page filter and reset tests" },
       { "kind": "form", "evidence": "contacts-form.test.tsx" },
@@ -16,11 +19,15 @@
   "mobile_web": {
     "runtime_dependent": true,
     "routes": [
-      { "path": "/contacts", "surface": "Mobile contacts" },
-      { "path": "/contacts/new", "surface": "Mobile create contact" }
+      { "path": "/app/sales-crm/contacts", "surface": "Mobile contacts" },
+      { "path": "/app/sales-crm/contacts/new", "surface": "Mobile create contact", "deep_link": true },
+      { "path": "/app/sales-crm/contacts/:contactId", "example": "/app/sales-crm/contacts/crm_cust_1", "surface": "Mobile Customer 360", "deep_link": true },
+      { "path": "/app/sales-crm/contacts/:contactId/edit", "example": "/app/sales-crm/contacts/crm_cust_1/edit", "surface": "Mobile edit contact", "deep_link": true },
+      { "path": "/app/sales-crm/contacts/:contactId/duplicates", "example": "/app/sales-crm/contacts/crm_cust_1/duplicates", "surface": "Mobile duplicate review", "deep_link": true }
     ],
     "checks": [
-      { "kind": "route", "evidence": "Expo web route manifest" },
+      { "kind": "route", "evidence": "Expo App.tsx route matcher" },
+      { "kind": "deep-link", "evidence": "Parameterized route matcher and concrete manifest example" },
       { "kind": "refresh", "evidence": "Expo web runtime check required" },
       { "kind": "filter-reset", "evidence": "MobileContactsScreen filter controls" },
       { "kind": "form", "evidence": "MobileCreateContactScreen and shared contact-form contract" },

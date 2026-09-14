@@ -1,8 +1,12 @@
 # Platform evidence matrix
 
-| Requirement | Desktop web evidence | Mobile web evidence | iOS evidence | Android evidence | Shared contract | Status | Owner | Gap/next action |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `[requirement]` | `[route/test/screenshot]` | `[route/test/screenshot]` | `[test/N/A]` | `[test/N/A]` | `[path]` | `[PASS/PARTIAL/FAIL/NOT_TESTED/N/A]` | `[owner]` | `[action]` |
+| Capability/operation | Domain parity | Desktop renderer/action | Mobile renderer/action | iOS | Android | Status | Owner | Gap/next action |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `[capability.operation]` | `[contract/test]` | `[implemented/adapted/missing + evidence]` | `[implemented/adapted/missing + evidence]` | `[state]` | `[state]` | `[PASS/PARTIAL/FAIL/NOT_TESTED/N/A]` | `[owner]` | `[action]` |
+
+`PASS` requires verified domain, renderer and operations on every required
+platform. A shared port, a visible section or a registered route alone does not
+prove action parity.
 
 ## Runtime snapshot
 

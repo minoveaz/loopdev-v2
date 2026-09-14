@@ -92,6 +92,24 @@ permissions, events and validation evidence. If Platform must be extended,
 plan that change before the consuming module and identify all affected
 consumers.
 
+`delivery-ledger.json` is the executable plan source. Create small tasks with
+stable IDs and explicit requirement IDs, capability IDs, platform, owner,
+risk, dependencies, files/areas, acceptance criteria, validation commands and
+minimum evidence level. Shared-contract work must precede renderer tasks.
+Every required platform for every capability needs at least one task. Run
+`npm run validate:delivery-ledgers` before requesting plan approval. Set the
+ledger to `approved` and tasks to `ready` only after recording approver,
+timestamp and approval source; Markdown plan completion alone is insufficient.
+
+For every declared operation, populate `operation_coverage` with a decision for
+each platform and keep `domain`, `renderer` and `operations` parity separate.
+Create platform tasks and measurable acceptance criteria at operation level
+when a renderer can expose data without providing the action. A required
+platform may be `adapted` only with an approved adaptation reference; it cannot
+be `missing` at plan approval. Plan focused component tests for changed
+operations. Browser journeys are only planned for E4, high-risk or release
+work and are not synonymous with Playwright.
+
 ## Common Contract
 
 ### Input context

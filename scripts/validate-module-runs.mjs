@@ -1,7 +1,10 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 
 const root = process.cwd();
+const workflow = JSON.parse(readFileSync(join(root, "docs", "03-platform", "governance", "delivery-workflow.json"), "utf8"));
+const phaseById = new Map(workflow.phases.map((phase) => [phase.id, phase]));
+const architectureCompletionStates = new Set(workflow.architecture_completion_states);
 const runsRoots = [
   join(root, "docs", "implementation"),
   join(root, "docs", "06-product"),
@@ -14,6 +17,8 @@ const allowedPhaseStatuses = new Set([
   "failed",
   "deviated",
   "skipped",
+  "waiting_user",
+  "paused",
 ]);
 const allowedDecisionStatuses = new Set(["confirmed", "assumed", "open", "rejected"]);
 const requiredCheckpointFields = [
@@ -56,6 +61,19 @@ const requiredManifestFields = [
 
 const errors = [];
 
+const phaseIds = new Set();
+for (const phase of workflow.phases) {
+  if (phaseIds.has(phase.id)) errors.push(`delivery-workflow.json: duplicate phase "${phase.id}"`);
+  phaseIds.add(phase.id);
+  if (!phase.skill) errors.push(`delivery-workflow.json: phase "${phase.id}" requires a skill owner`);
+}
+if (!phaseIds.has(workflow.initial_phase)) errors.push(`delivery-workflow.json: unknown initial phase "${workflow.initial_phase}"`);
+if (!phaseIds.has(workflow.terminal_phase)) errors.push(`delivery-workflow.json: unknown terminal phase "${workflow.terminal_phase}"`);
+for (const phase of workflow.phases) {
+  for (const predecessor of phase.predecessors) if (!phaseIds.has(predecessor)) errors.push(`delivery-workflow.json: phase "${phase.id}" has unknown predecessor "${predecessor}"`);
+  if (phase.required_gate && !workflow.gates.includes(phase.required_gate)) errors.push(`delivery-workflow.json: phase "${phase.id}" has unknown gate "${phase.required_gate}"`);
+}
+
 function addError(file, message) {
   errors.push(`${relative(root, file)}: ${message}`);
 }
@@ -91,6 +109,26 @@ function validateCheckpoint(file) {
   }
   if (checkpoint.status === "completed" && !checkpoint.completed_at) {
     addError(file, "completed checkpoints require completed_at");
+  }
+  const phase = phaseById.get(checkpoint.phase);
+  if (!phase) {
+    addError(file, `unknown canonical phase "${checkpoint.phase}"`);
+  } else if (checkpoint.skill !== phase.skill) {
+    addError(file, `phase "${checkpoint.phase}" must be owned by skill "${phase.skill}", found "${checkpoint.skill}"`);
+  }
+  if (checkpoint.status === "completed") {
+    if (checkpoint.decision_status !== "confirmed") addError(file, `completed checkpoint requires decision_status confirmed, found "${checkpoint.decision_status ?? "missing"}"`);
+    if (!architectureCompletionStates.has(checkpoint.architecture_quality)) {
+      addError(file, `completed checkpoint requires architecture_quality PASS or PASS_WITH_DEBT, found "${checkpoint.architecture_quality ?? "missing"}"`);
+    }
+    if (!["approved", "not_required"].includes(checkpoint.approval_gate?.status)) {
+      addError(file, `completed checkpoint requires an approved or not_required approval gate, found "${checkpoint.approval_gate?.status ?? "missing"}"`);
+    }
+    if (!checkpoint.output_artifacts?.length) addError(file, "completed checkpoint requires output_artifacts");
+    if (!checkpoint.validation?.length) addError(file, "completed checkpoint requires validation evidence");
+    for (const validation of checkpoint.validation ?? []) {
+      if (!/^(passed|pass)(\b|\s|\()/i.test(validation.result ?? "")) addError(file, `completed checkpoint contains non-passing validation result "${validation.result ?? "missing"}"`);
+    }
   }
   if (checkpoint.status === "blocked" && !checkpoint.detected_failure) {
     addError(file, "blocked checkpoints require detected_failure");
@@ -152,6 +190,49 @@ function validateManifest(file) {
     if (typeof approval === "string") continue; // legacy manifests remain readable
     if (!approval || !["pending", "approved", "rejected"].includes(approval.status)) addError(file, `approval "${gate}" has invalid status`);
     if (approval.status === "approved" && (!approval.approved_by || !approval.approved_at)) addError(file, `approved "${gate}" requires approved_by and approved_at`);
+  }
+  if (manifest.schema_version === 1) {
+    for (const field of ["workflow_version", "suite", "platform_scope", "fingerprints", "handoffs"]) {
+      if (!(field in manifest)) addError(file, `schema v1 manifest is missing "${field}"`);
+    }
+    if (!Array.isArray(manifest.platform_scope) || !manifest.platform_scope.length) addError(file, "schema v1 platform_scope must be a non-empty array");
+    for (const category of Object.keys(workflow.fingerprint_invalidation)) {
+      if (!/^sha256:[a-f0-9]{64}$/.test(manifest.fingerprints?.[category] ?? "")) addError(file, `schema v1 fingerprint "${category}" is missing or invalid`);
+    }
+    for (const requiredFile of workflow.required_schema_v1_files) {
+      if (!existsSync(join(workspace, requiredFile))) addError(file, `schema v1 workspace is missing required file "${requiredFile}"`);
+    }
+  }
+
+  const workspace = dirname(dirname(dirname(file)));
+  for (const requiredFile of workflow.required_workspace_files) {
+    if (!existsSync(join(workspace, requiredFile))) addError(file, `workspace is missing required file "${requiredFile}"`);
+  }
+
+  const runDirectory = dirname(file);
+  const checkpoints = new Map();
+  for (const checkpointFile of walk(runDirectory).filter((candidate) => !candidate.endsWith(`${sep}run.json`))) {
+    try {
+      const checkpoint = JSON.parse(readFileSync(checkpointFile, "utf8"));
+      if (checkpoint.run_id === manifest.run_id && checkpoint.phase) checkpoints.set(checkpoint.phase, checkpoint);
+    } catch {
+      // Malformed JSON is reported by the checkpoint validator.
+    }
+  }
+  for (const checkpointPath of manifest.checkpoint_paths ?? []) {
+    if (!existsSync(join(root, checkpointPath))) addError(file, `checkpoint path does not exist: "${checkpointPath}"`);
+  }
+  for (const [phaseId, checkpoint] of checkpoints) {
+    const phase = phaseById.get(phaseId);
+    if (!phase || checkpoint.status !== "completed") continue;
+    for (const predecessor of phase.predecessors) {
+      if (checkpoints.get(predecessor)?.status !== "completed") addError(file, `completed phase "${phaseId}" requires completed predecessor "${predecessor}"`);
+    }
+    if (phase.required_gate) {
+      const approval = manifest.approvals?.[phase.required_gate];
+      const approvalStatus = typeof approval === "string" ? approval : approval?.status;
+      if (approvalStatus !== "approved") addError(file, `completed phase "${phaseId}" requires approved gate "${phase.required_gate}"`);
+    }
   }
 }
 

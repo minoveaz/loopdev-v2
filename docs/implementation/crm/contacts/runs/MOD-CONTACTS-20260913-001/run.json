@@ -2,7 +2,7 @@
   "run_id": "MOD-CONTACTS-20260913-001",
   "module": "Contacts",
   "status": "blocked",
-  "current_phase": "03-build",
+  "current_phase": "00-discovery",
   "attempt": 1,
   "started_at": "2026-09-13T21:40:27.366Z",
   "updated_at": "2026-09-14T00:40:00+02:00",
@@ -53,12 +53,15 @@
   },
   "platform_impact": [],
   "checkpoint_paths": [
-    "docs/implementation/crm/contacts/runs/MOD-CONTACTS-20260913-001/00-discovery.json"
+    "docs/implementation/crm/contacts/runs/MOD-CONTACTS-20260913-001/00-discovery.json",
+    "docs/implementation/crm/contacts/runs/MOD-CONTACTS-20260913-001/03-build.json"
   ],
   "evidence_links": [],
   "change_requests": [],
-  "blocked_by": [],
-  "next_action": "Resolve mobile edit and duplicate-review scope, then rerun verification and release gates.",
+  "blocked_by": [
+    "Canonical discovery, design, visual approval, specialized analysis and plan are incomplete."
+  ],
+  "next_action": "Resume at 00-discovery and do not treat the historical build checkpoint as phase completion.",
   "commit": null,
   "pull_request": null,
   "retention": {

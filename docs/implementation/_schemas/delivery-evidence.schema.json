@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "delivery-evidence.schema.json",
+  "type": "object",
+  "required": ["type", "created_at", "commit", "platform", "requirement_id", "task_id"],
+  "properties": {
+    "type": { "enum": ["command_result", "test_result", "runtime_journey", "screenshot", "manual_approval"] },
+    "path": { "type": "string" },
+    "url": { "type": "string" },
+    "command": { "type": "string" },
+    "exit_code": { "type": "integer" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "commit": { "type": "string", "minLength": 7 },
+    "platform": { "enum": ["shared", "desktop_web", "mobile_web", "ios", "android"] },
+    "requirement_id": { "type": "string", "minLength": 1 },
+    "task_id": { "type": "string", "minLength": 1 },
+    "checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+  },
+  "anyOf": [{ "required": ["path"] }, { "required": ["url"] }, { "required": ["command", "exit_code"] }]
+}

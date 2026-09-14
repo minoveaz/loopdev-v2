@@ -19,8 +19,8 @@
     }
   ],
   "requirements": [],
-  "detected_failure": null,
-  "likely_failure_origin": null,
+  "detected_failure": "Specialized analysis was produced before visual-design approval.",
+  "likely_failure_origin": "The historical agent routing placed domain analysis before the visual gate.",
   "environment": {
     "repository": "minoveaz/loopdev-v2",
     "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
@@ -40,9 +40,9 @@
   "skill": "domain-model",
   "parent_span_id": "MOD-CRM-PIPELINE-20260913-002:01-design",
   "module": "CRM Pipeline",
-  "status": "completed",
-  "decision_status": "confirmed",
-  "architecture_quality": "PENDING",
+  "status": "deviated",
+  "decision_status": "open",
+  "architecture_quality": "DEVIATED",
   "started_at": "2026-09-13T12:24:00+02:00",
   "completed_at": "2026-09-13T12:30:00+02:00",
   "decisions": [

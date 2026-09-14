@@ -1,4 +1,6 @@
 import { localLoopdevAdapter } from "./local";
+import { desktopContactAdapter } from "./contact";
+import type { ContactPort } from "../../../../../packages/contracts/src/contact-port";
 import type { ReferenceDataAdapter } from "@/loopdev/domains/reference-data";
 import type { CatalogAdapter } from "@/loopdev/domains/catalog";
 import type { PlatformAdapter } from "@/loopdev/domains/platform";
@@ -74,17 +76,6 @@ export interface LoopdevCrmAdapter {
   createCustomerProduct(input: CRMCreateCustomerProductInput): Promise<CRMCustomerProduct>;
 }
 
-/** Canonical contact boundary shared by desktop and the Expo mobile runtime. */
-export interface ContactPort {
-  listContacts(params: CRMContactListParams): Promise<CRMContactPage>;
-  createContact(input: CRMCreateContactInput): Promise<CRMContactMutationResult>;
-  updateContact(contactId: string, patch: CRMUpdateContactPatch, expectedUpdatedAt: string): Promise<CRMContactMutationResult>;
-  archiveContact(contactId: string, expectedUpdatedAt: string): Promise<CRMContactMutationResult>;
-  getCustomer360(contactId: string): Promise<Customer360View | null>;
-  findPotentialDuplicates(contactId: string): Promise<CRMPotentialDuplicate[]>;
-  dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<CRMDuplicateReviewResult>;
-}
-
 export interface LoopdevAdapter {
   platform: PlatformAdapter;
   catalog: CatalogAdapter;
@@ -96,7 +87,9 @@ export interface LoopdevAdapter {
 
 // The adapter boundary is global to Loopdev; CRM is the first connected domain.
 export const loopdevAdapter: LoopdevAdapter = localLoopdevAdapter;
-export const contactPort: ContactPort = localLoopdevAdapter.crm;
+export const contactPort: ContactPort = desktopContactAdapter;
+export { desktopContactAdapter } from "./contact";
+export type { ContactPort } from "../../../../../packages/contracts/src/contact-port";
 
 export * from "./types";
 export * from "../operations/types";

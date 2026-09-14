@@ -196,3 +196,13 @@ LoopDev shared primitives and the active contracts above.
 - **Platform reuse/extension questions:** Which existing Activity, Tasks, Notes, Relations and Customer 360 capabilities are consumed versus extended?
 - **Required decisions before planning:** Duplicate-review MVP status, backend persistence boundary, mobile detail/edit behavior, native simulator/device coverage and required error/offline/conflict evidence.
 - **Discovery state:** `partial`
+
+## Customer 360 parity remediation
+
+The 2026-09-14 renderer comparison found that shared Customer 360 data does
+not establish functional parity. The detailed baseline and operation inventory
+are recorded in `customer360-parity-remediation.md`. This is a
+`REQUIRED_FOLLOW_UP` user-directed scope addition, pending canonical design and
+plan approval. The new `CONTACTS-CAP-CUSTOMER360-OPERATIONS` ledger capability
+must remain blocked until Platform Notes, Tasks, Files and Catalog expose
+mobile-safe ports.

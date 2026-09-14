@@ -48,6 +48,7 @@ import { localCrmOperationsAdapter } from "../operations/adapter/local";
 import { localCrmAutomationsAdapter } from "../automations";
 import { localCommunicationsAdapter } from "../../communications/adapter/local";
 import { localNotesAdapter, type GlobalNoteRecord, type NoteRelationRef } from "../../notes";
+import { validateContactMutationInput } from "../../../../../packages/contracts/src/contact-port";
 
 const organizationId = "local-development-organization";
 const dismissedDuplicateReviews = new Set<string>();
@@ -290,7 +291,7 @@ export const localLoopdevAdapter = {
         return { status: "forbidden", message: "You do not have permission to create contacts in this organization." };
       }
 
-      const validation = validateContactInput(input);
+      const validation = validateContactMutationInput(input);
       if (validation) return validation;
 
       const created = crmCustomersStore.create({
@@ -339,7 +340,7 @@ export const localLoopdevAdapter = {
         return { status: "conflict", message: "The contact changed before it could be updated.", contact: currentContact };
       }
 
-      const validation = validateContactInput({ ...currentContact, ...patch });
+      const validation = validateContactMutationInput({ ...currentContact, ...patch });
       if (validation) return validation;
 
       const firstName = patch.firstName ?? currentContact.firstName;
@@ -983,19 +984,3 @@ export const localLoopdevAdapter = {
     },
   },
 } as const;
-
-function validateContactInput(input: {
-  firstName?: string | null;
-  email?: string | null;
-  phone?: string | null;
-}): Extract<CRMContactMutationResult, { status: "validation-error" }> | null {
-  const fieldErrors: Record<string, string> = {};
-  if (!input.firstName?.trim()) fieldErrors.firstName = "First name is required.";
-  if (!input.email?.trim() && !input.phone?.trim()) {
-    fieldErrors.email = "Email or phone is required.";
-    fieldErrors.phone = "Email or phone is required.";
-  }
-  return Object.keys(fieldErrors).length
-    ? { status: "validation-error", message: "Check the contact details and try again.", fieldErrors }
-    : null;
-}

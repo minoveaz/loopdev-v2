@@ -557,6 +557,16 @@ Antes de entregar, comprueba que la propuesta:
 
 ## Common Contract
 
+### Executable requirement ledger
+
+Consume `delivery-ledger.json` and preserve every requirement and capability
+ID from discovery. Complete each capability's shared operations, errors,
+validation contract, states, permissions, contract references and explicit
+desktop/mobile/native decisions. Do not rename, merge or remove IDs in prose.
+Record an approved change request when product scope changes. Design cannot
+complete while ledger coverage is invalid or a required platform lacks an
+explicit capability decision.
+
 ### Input context
 
 - módulo y objetivo;

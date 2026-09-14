@@ -1,0 +1,362 @@
+{
+  "$schema": "../../_schemas/delivery-ledger.schema.json",
+  "schema_version": 1,
+  "suite": "crm",
+  "module": "contacts",
+  "status": "blocked",
+  "approved_by": null,
+  "approved_at": null,
+  "approval_source": null,
+  "product_sources": [
+    "docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md",
+    "docs/06-product/crm/contacts/CRM_CONTACT_IMPACT_ASSESSMENT.md"
+  ],
+  "previous_ledger": null,
+  "requirements": [
+    {
+      "id": "CONTACTS-REQ-LIST-SEARCH",
+      "title": "Authorized contact list, search and filtering",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Authorized users can list, search, filter, sort and paginate contacts with equivalent semantics"],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["CONTACTS-CAP-LIST-SEARCH"]
+    },
+    {
+      "id": "CONTACTS-REQ-CREATE",
+      "title": "Validated contact creation",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Creation enforces required identity, contact channel, source and configured organization fields"],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["CONTACTS-CAP-CREATE"]
+    },
+    {
+      "id": "CONTACTS-REQ-EDIT",
+      "title": "Authorized contact editing with optimistic conflict handling",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Update uses expected version and exposes validation, forbidden and conflict outcomes"],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["CONTACTS-CAP-EDIT"]
+    },
+    {
+      "id": "CONTACTS-REQ-DETAIL",
+      "title": "Authorized Customer 360 contact detail",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Direct navigation preserves contact identity and shows the permitted Customer 360 summary"],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["CONTACTS-CAP-DETAIL"]
+    },
+    {
+      "id": "CONTACTS-REQ-ACTIONS",
+      "title": "Stable contact actions and archive lifecycle",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web"],
+      "acceptance_criteria": ["View, edit, note, task and archive use stable semantics and archived contacts leave the default list"],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["CONTACTS-CAP-ACTIONS"]
+    },
+    {
+      "id": "CONTACTS-REQ-DUPLICATES",
+      "title": "Potential duplicate review and human-approved merge",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Ambiguous matches never merge automatically and approved merges preserve references and audit data"],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["CONTACTS-CAP-DUPLICATES"]
+    },
+    {
+      "id": "CONTACTS-REQ-ACCESS",
+      "title": "Server-side tenant and permission enforcement",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Reads and mutations enforce active user, organization, workspace and permission outside the UI"],
+      "evidence_level": "E5_DEVICE",
+      "capability_ids": ["CONTACTS-CAP-ACCESS"]
+    },
+    {
+      "id": "CONTACTS-REQ-STATES",
+      "title": "Complete user-visible state and error contract",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Both clients expose loading, empty, error, forbidden, conflict, pending and success behavior without leaking tenant data"],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["CONTACTS-CAP-STATES"]
+    },
+    {
+      "id": "CONTACTS-REQ-CUSTOMER360-OPERATIONS",
+      "title": "Customer 360 operational parity remediation",
+      "classification": "REQUIRED_FOLLOW_UP",
+      "source": "docs/implementation/crm/contacts/customer360-parity-remediation.md",
+      "platforms": ["desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Each Customer 360 operation has an explicit platform decision and required mobile operations are implemented through shared Platform contracts"],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["CONTACTS-CAP-CUSTOMER360-OPERATIONS"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "CONTACTS-CAP-LIST-SEARCH",
+      "name": "Contact list and search",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["CONTACTS-REQ-LIST-SEARCH"],
+      "semantics": { "operations": ["listContacts", "searchContacts"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "contacts table", "route": "/app/sales-crm/contacts" },
+        "mobile_web": { "required": true, "surface": "semantic contact cards", "route": "/contacts" },
+        "ios": { "required": false, "surface": "planned native list", "route": "/contacts" },
+        "android": { "required": false, "surface": "planned native list", "route": "/contacts" }
+      },
+      "parity": { "domain": "verified", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "listContacts", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "searchContacts", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "success"],
+      "permissions": ["crm.contacts.read"],
+      "contract_refs": ["packages/contracts/src/contact-capability.ts"],
+      "task_ids": ["CONTACTS-CONTRACT-LIST-SEARCH", "CONTACTS-DESKTOP-LIST-SEARCH", "CONTACTS-MOBILE-LIST-SEARCH"]
+    },
+    {
+      "id": "CONTACTS-CAP-CREATE",
+      "name": "Contact creation",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["CONTACTS-REQ-CREATE"],
+      "semantics": { "operations": ["createContact"], "validation_contract": "packages/contracts/src/contact-form.ts", "errors": ["UNAUTHENTICATED", "FORBIDDEN", "VALIDATION_ERROR", "DUPLICATE_REVIEW_REQUIRED"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "create drawer", "route": "/app/sales-crm/contacts" },
+        "mobile_web": { "required": true, "surface": "create screen", "route": "/contacts/new" },
+        "ios": { "required": false, "surface": "planned native create screen", "route": "/contacts/new" },
+        "android": { "required": false, "surface": "planned native create screen", "route": "/contacts/new" }
+      },
+      "parity": { "domain": "verified", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "createContact", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "pending", "error", "forbidden", "success"],
+      "permissions": ["crm.contacts.write"],
+      "contract_refs": ["packages/contracts/src/contact-form.ts"],
+      "task_ids": ["CONTACTS-CONTRACT-CREATE", "CONTACTS-DESKTOP-CREATE", "CONTACTS-MOBILE-CREATE"]
+    },
+    {
+      "id": "CONTACTS-CAP-EDIT",
+      "name": "Contact editing",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["CONTACTS-REQ-EDIT"],
+      "semantics": { "operations": ["updateContact"], "validation_contract": "packages/contracts/src/contact-form.ts", "errors": ["UNAUTHENTICATED", "FORBIDDEN", "NOT_FOUND", "CONFLICT", "VALIDATION_ERROR"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "edit drawer", "route": "/app/sales-crm/contacts/:contactId" },
+        "mobile_web": { "required": true, "surface": "edit screen", "route": "/contacts/:contactId/edit" },
+        "ios": { "required": false, "surface": "planned native edit screen", "route": "/contacts/:contactId/edit" },
+        "android": { "required": false, "surface": "planned native edit screen", "route": "/contacts/:contactId/edit" }
+      },
+      "parity": { "domain": "verified", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "updateContact", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "pending", "error", "forbidden", "conflict", "success"],
+      "permissions": ["crm.contacts.write"],
+      "contract_refs": ["packages/contracts/src/contact-form.ts"],
+      "task_ids": ["CONTACTS-CONTRACT-EDIT", "CONTACTS-DESKTOP-EDIT", "CONTACTS-MOBILE-EDIT"]
+    },
+    {
+      "id": "CONTACTS-CAP-DETAIL",
+      "name": "Customer 360 detail",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["CONTACTS-REQ-DETAIL"],
+      "semantics": { "operations": ["getContact"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN", "NOT_FOUND"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "Customer 360 route", "route": "/app/sales-crm/contacts/:contactId" },
+        "mobile_web": { "required": true, "surface": "Customer 360 screen", "route": "/contacts/:contactId" },
+        "ios": { "required": false, "surface": "planned native detail screen", "route": "/contacts/:contactId" },
+        "android": { "required": false, "surface": "planned native detail screen", "route": "/contacts/:contactId" }
+      },
+      "parity": { "domain": "verified", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "getContact", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "success"],
+      "permissions": ["crm.contacts.read"],
+      "contract_refs": ["packages/contracts/src/contact-capability.ts"],
+      "task_ids": ["CONTACTS-CONTRACT-DETAIL", "CONTACTS-DESKTOP-DETAIL", "CONTACTS-MOBILE-DETAIL"]
+    },
+    {
+      "id": "CONTACTS-CAP-ACTIONS",
+      "name": "Contact actions and archive lifecycle",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["CONTACTS-REQ-ACTIONS"],
+      "semantics": { "operations": ["view", "edit", "add-note", "create-task", "archiveContact"], "validation_contract": "packages/contracts/src/contact-actions.ts", "errors": ["UNAUTHENTICATED", "FORBIDDEN", "CONFLICT"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "row and detail actions", "route": "/app/sales-crm/contacts" },
+        "mobile_web": { "required": true, "surface": "contact action sheet", "route": "/contacts" },
+        "ios": { "required": false, "surface": "planned native action sheet", "route": "/contacts" },
+        "android": { "required": false, "surface": "planned native action sheet", "route": "/contacts" }
+      },
+      "parity": { "domain": "verified", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "view", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "edit", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "add-note", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "create-task", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "archiveContact", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "pending", "error", "forbidden", "conflict", "success"],
+      "permissions": ["crm.contacts.read", "crm.contacts.write", "notes.create", "tasks.create"],
+      "contract_refs": ["packages/contracts/src/contact-actions.ts"],
+      "task_ids": ["CONTACTS-CONTRACT-ACTIONS", "CONTACTS-DESKTOP-ACTIONS", "CONTACTS-MOBILE-ACTIONS"]
+    },
+    {
+      "id": "CONTACTS-CAP-CUSTOMER360-OPERATIONS",
+      "name": "Customer 360 related-record operations",
+      "classification": "REQUIRED_FOLLOW_UP",
+      "requirement_ids": ["CONTACTS-REQ-CUSTOMER360-OPERATIONS"],
+      "semantics": { "operations": ["navigateLead", "navigateOpportunity", "navigateTask", "createNote", "editNote", "deleteNote", "uploadDocument", "previewDocument", "deleteDocument", "associateProduct", "viewCatalog", "navigateActivity"], "validation_contract": "docs/implementation/crm/contacts/customer360-parity-remediation.md", "errors": ["FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "CONFLICT"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "Customer 360 tabs and activity timeline", "route": "/app/sales-crm/contacts/:contactId" },
+        "mobile_web": { "required": true, "surface": "Customer 360 mobile sections and routes", "route": "/app/sales-crm/contacts/:contactId" },
+        "ios": { "required": false, "surface": "planned native Customer 360 actions", "route": "/app/sales-crm/contacts/:contactId" },
+        "android": { "required": false, "surface": "planned native Customer 360 actions", "route": "/app/sales-crm/contacts/:contactId" }
+      },
+      "parity": { "domain": "partial", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "navigateLead", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "navigateOpportunity", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "navigateTask", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "createNote", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "editNote", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "deleteNote", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "uploadDocument", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "previewDocument", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "deleteDocument", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "associateProduct", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "viewCatalog", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "navigateActivity", "desktop_web": "implemented", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "pending", "success"],
+      "permissions": ["crm.contacts.read", "notes.create", "tasks.create", "files.upload", "catalog.read"],
+      "contract_refs": ["docs/implementation/crm/contacts/customer360-parity-remediation.md"],
+      "task_ids": ["CUSTOMER360-CONTRACT-PLATFORM-PORTS", "CUSTOMER360-MOBILE-WORK", "CUSTOMER360-MOBILE-SALES-ACTIVITY", "CUSTOMER360-MOBILE-DOCUMENTS", "CUSTOMER360-MOBILE-PRODUCTS"]
+    },
+    {
+      "id": "CONTACTS-CAP-DUPLICATES",
+      "name": "Duplicate review and merge",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["CONTACTS-REQ-DUPLICATES"],
+      "semantics": { "operations": ["findPotentialDuplicates", "approveContactMerge", "dismissDuplicateReview"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN", "CONFLICT", "MERGE_NOT_ALLOWED"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "duplicate review panel", "route": "/app/sales-crm/contacts/:contactId/duplicates" },
+        "mobile_web": { "required": true, "surface": "duplicate review screen", "route": "/contacts/:contactId/duplicates" },
+        "ios": { "required": false, "surface": "planned native duplicate review", "route": "/contacts/:contactId/duplicates" },
+        "android": { "required": false, "surface": "planned native duplicate review", "route": "/contacts/:contactId/duplicates" }
+      },
+      "parity": { "domain": "verified", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "findPotentialDuplicates", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "approveContactMerge", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "dismissDuplicateReview", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "pending", "error", "forbidden", "conflict", "success"],
+      "permissions": ["crm.contacts.read", "crm.contacts.merge"],
+      "contract_refs": ["docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md"],
+      "task_ids": ["CONTACTS-CONTRACT-DUPLICATES", "CONTACTS-DESKTOP-DUPLICATES", "CONTACTS-MOBILE-DUPLICATES"]
+    },
+    {
+      "id": "CONTACTS-CAP-ACCESS",
+      "name": "Tenant and permission enforcement",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["CONTACTS-REQ-ACCESS"],
+      "semantics": { "operations": ["authorizeContactRead", "authorizeContactMutation"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "all contact operations", "route": "/app/sales-crm/contacts" },
+        "mobile_web": { "required": true, "surface": "all contact operations", "route": "/contacts" },
+        "ios": { "required": false, "surface": "planned native authorization", "route": "/contacts" },
+        "android": { "required": false, "surface": "planned native authorization", "route": "/contacts" }
+      },
+      "parity": { "domain": "partial", "renderer": "not_tested", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "authorizeContactRead", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "authorizeContactMutation", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "forbidden", "success"],
+      "permissions": ["crm.contacts.read", "crm.contacts.write", "crm.contacts.merge"],
+      "contract_refs": ["docs/06-product/crm/contacts/CRM_CONTACT_CONTRACT.md"],
+      "task_ids": ["CONTACTS-CONTRACT-ACCESS", "CONTACTS-DESKTOP-ACCESS", "CONTACTS-MOBILE-ACCESS"]
+    },
+    {
+      "id": "CONTACTS-CAP-STATES",
+      "name": "Shared state and error behavior",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["CONTACTS-REQ-STATES"],
+      "semantics": { "operations": ["renderContactState"], "validation_contract": "packages/contracts/src/contact-capability.ts", "errors": ["UNAUTHENTICATED", "FORBIDDEN", "NOT_FOUND", "CONFLICT", "VALIDATION_ERROR", "DUPLICATE_REVIEW_REQUIRED", "MERGE_NOT_ALLOWED"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "all Contacts surfaces", "route": "/app/sales-crm/contacts" },
+        "mobile_web": { "required": true, "surface": "all Contacts screens", "route": "/contacts" },
+        "ios": { "required": false, "surface": "planned native states", "route": "/contacts" },
+        "android": { "required": false, "surface": "planned native states", "route": "/contacts" }
+      },
+      "parity": { "domain": "verified", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "renderContactState", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["crm.contacts.read"],
+      "contract_refs": ["packages/contracts/src/contact-capability.ts"],
+      "task_ids": ["CONTACTS-CONTRACT-STATES", "CONTACTS-DESKTOP-STATES", "CONTACTS-MOBILE-STATES"]
+    }
+  ],
+  "tasks": [
+    { "id": "CONTACTS-CONTRACT-LIST-SEARCH", "phase": "07-build", "type": "shared_contract", "status": "blocked", "title": "Verify list and search contract", "requirement_ids": ["CONTACTS-REQ-LIST-SEARCH"], "capability_ids": ["CONTACTS-CAP-LIST-SEARCH"], "platforms": ["shared"], "dependencies": [], "owner": "CRM Platform", "risk": "high", "evidence_level": "E2_UNIT", "acceptance_criteria": ["List, search, filters, cursor and sort semantics are platform-neutral"], "validation": [{ "command": "npm run validate:contracts", "required": true }], "files": ["packages/contracts/src/contact-capability.ts"], "blocked_by": ["CONTACTS-BLOCK-DESIGN"], "evidence_refs": [] },
+    { "id": "CONTACTS-DESKTOP-LIST-SEARCH", "phase": "07-build", "type": "desktop_renderer", "status": "blocked", "title": "Implement and verify desktop list and search", "requirement_ids": ["CONTACTS-REQ-LIST-SEARCH"], "capability_ids": ["CONTACTS-CAP-LIST-SEARCH"], "platforms": ["desktop_web"], "dependencies": ["CONTACTS-CONTRACT-LIST-SEARCH"], "owner": "CRM Web", "risk": "medium", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Desktop list, search, filter, sort and pagination pass the shared contract"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts", "required": true }], "files": ["src/loopdev/pages/crm/Contacts.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+    { "id": "CONTACTS-MOBILE-LIST-SEARCH", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Implement and verify mobile list and search", "requirement_ids": ["CONTACTS-REQ-LIST-SEARCH"], "capability_ids": ["CONTACTS-CAP-LIST-SEARCH"], "platforms": ["mobile_web"], "dependencies": ["CONTACTS-CONTRACT-LIST-SEARCH"], "owner": "CRM Mobile", "risk": "high", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile list and filters return the same authorized result set as desktop"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/components/MobileContactsScreen.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+
+    { "id": "CONTACTS-CONTRACT-CREATE", "phase": "07-build", "type": "shared_contract", "status": "blocked", "title": "Verify contact creation contract", "requirement_ids": ["CONTACTS-REQ-CREATE"], "capability_ids": ["CONTACTS-CAP-CREATE"], "platforms": ["shared"], "dependencies": [], "owner": "CRM Platform", "risk": "high", "evidence_level": "E2_UNIT", "acceptance_criteria": ["Create validation and errors are shared across clients"], "validation": [{ "command": "npm run validate:contracts", "required": true }], "files": ["packages/contracts/src/contact-form.ts"], "blocked_by": ["CONTACTS-BLOCK-DESIGN"], "evidence_refs": [] },
+    { "id": "CONTACTS-DESKTOP-CREATE", "phase": "07-build", "type": "desktop_renderer", "status": "blocked", "title": "Implement and verify desktop contact creation", "requirement_ids": ["CONTACTS-REQ-CREATE"], "capability_ids": ["CONTACTS-CAP-CREATE"], "platforms": ["desktop_web"], "dependencies": ["CONTACTS-CONTRACT-CREATE"], "owner": "CRM Web", "risk": "high", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Desktop creation persists and exposes validation and duplicate-review outcomes"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts/contacts-form.test.tsx", "required": true }], "files": ["src/loopdev/components/crm/contacts/ContactForm.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+    { "id": "CONTACTS-MOBILE-CREATE", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Implement and verify mobile contact creation", "requirement_ids": ["CONTACTS-REQ-CREATE"], "capability_ids": ["CONTACTS-CAP-CREATE"], "platforms": ["mobile_web"], "dependencies": ["CONTACTS-CONTRACT-CREATE"], "owner": "CRM Mobile", "risk": "high", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile creation uses the same validation and persistence semantics"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/components/MobileCreateContactScreen.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+
+    { "id": "CONTACTS-CONTRACT-EDIT", "phase": "07-build", "type": "shared_contract", "status": "blocked", "title": "Define update and conflict contract", "requirement_ids": ["CONTACTS-REQ-EDIT"], "capability_ids": ["CONTACTS-CAP-EDIT"], "platforms": ["shared"], "dependencies": [], "owner": "CRM Platform", "risk": "critical", "evidence_level": "E2_UNIT", "acceptance_criteria": ["Update requires expected version and returns typed conflicts"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts/contacts-adapter.test.ts", "required": true }], "files": ["src/loopdev/domains/crm/adapter/index.ts"], "blocked_by": ["CONTACTS-BLOCK-DESIGN"], "evidence_refs": [] },
+    { "id": "CONTACTS-DESKTOP-EDIT", "phase": "07-build", "type": "desktop_renderer", "status": "blocked", "title": "Verify desktop contact editing", "requirement_ids": ["CONTACTS-REQ-EDIT"], "capability_ids": ["CONTACTS-CAP-EDIT"], "platforms": ["desktop_web"], "dependencies": ["CONTACTS-CONTRACT-EDIT"], "owner": "CRM Web", "risk": "high", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Desktop editing persists and renders conflict, forbidden and success states"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts/contacts-form.test.tsx", "required": true }], "files": ["src/loopdev/pages/crm/Contacts.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+    { "id": "CONTACTS-MOBILE-EDIT", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Implement mobile contact editing", "requirement_ids": ["CONTACTS-REQ-EDIT"], "capability_ids": ["CONTACTS-CAP-EDIT"], "platforms": ["mobile_web"], "dependencies": ["CONTACTS-CONTRACT-EDIT"], "owner": "CRM Mobile", "risk": "critical", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile edit is enabled and persists through the shared update contract"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/App.tsx", "apps/mobile/components/MobileCreateContactScreen.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+
+    { "id": "CONTACTS-CONTRACT-DETAIL", "phase": "07-build", "type": "shared_contract", "status": "blocked", "title": "Verify Customer 360 detail contract", "requirement_ids": ["CONTACTS-REQ-DETAIL"], "capability_ids": ["CONTACTS-CAP-DETAIL"], "platforms": ["shared"], "dependencies": [], "owner": "CRM Platform", "risk": "high", "evidence_level": "E2_UNIT", "acceptance_criteria": ["Detail query and navigation identity are shared"], "validation": [{ "command": "npm run validate:contracts", "required": true }], "files": ["packages/contracts/src/contact-capability.ts"], "blocked_by": ["CONTACTS-BLOCK-DESIGN"], "evidence_refs": [] },
+    { "id": "CONTACTS-DESKTOP-DETAIL", "phase": "07-build", "type": "desktop_renderer", "status": "blocked", "title": "Verify desktop Customer 360", "requirement_ids": ["CONTACTS-REQ-DETAIL"], "capability_ids": ["CONTACTS-CAP-DETAIL"], "platforms": ["desktop_web"], "dependencies": ["CONTACTS-CONTRACT-DETAIL"], "owner": "CRM Web", "risk": "medium", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Desktop direct route, refresh and authorized summary pass"], "validation": [{ "command": "npm run smoke:routes", "required": true }], "files": ["src/loopdev/pages/crm/Contacts.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+    { "id": "CONTACTS-MOBILE-DETAIL", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Complete mobile Customer 360", "requirement_ids": ["CONTACTS-REQ-DETAIL"], "capability_ids": ["CONTACTS-CAP-DETAIL"], "platforms": ["mobile_web"], "dependencies": ["CONTACTS-CONTRACT-DETAIL"], "owner": "CRM Mobile", "risk": "high", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile direct route renders the permitted Customer 360 context"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/components/MobileCustomer360Screen.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+
+    { "id": "CONTACTS-CONTRACT-ACTIONS", "phase": "07-build", "type": "shared_contract", "status": "blocked", "title": "Complete action and archive contract", "requirement_ids": ["CONTACTS-REQ-ACTIONS"], "capability_ids": ["CONTACTS-CAP-ACTIONS"], "platforms": ["shared"], "dependencies": [], "owner": "CRM Platform", "risk": "high", "evidence_level": "E2_UNIT", "acceptance_criteria": ["Every action has stable availability, permission and lifecycle semantics"], "validation": [{ "command": "npm run validate:contracts", "required": true }], "files": ["packages/contracts/src/contact-actions.ts"], "blocked_by": ["CONTACTS-BLOCK-DESIGN"], "evidence_refs": [] },
+    { "id": "CONTACTS-DESKTOP-ACTIONS", "phase": "07-build", "type": "desktop_renderer", "status": "blocked", "title": "Verify desktop contact actions", "requirement_ids": ["CONTACTS-REQ-ACTIONS"], "capability_ids": ["CONTACTS-CAP-ACTIONS"], "platforms": ["desktop_web"], "dependencies": ["CONTACTS-CONTRACT-ACTIONS"], "owner": "CRM Web", "risk": "high", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Desktop actions respect availability, permissions and archive persistence"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts/contacts-page-states.test.tsx", "required": true }], "files": ["src/loopdev/pages/crm/Contacts.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+    { "id": "CONTACTS-MOBILE-ACTIONS", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Complete mobile contact actions", "requirement_ids": ["CONTACTS-REQ-ACTIONS"], "capability_ids": ["CONTACTS-CAP-ACTIONS"], "platforms": ["mobile_web"], "dependencies": ["CONTACTS-CONTRACT-ACTIONS"], "owner": "CRM Mobile", "risk": "critical", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile actions match the approved catalog and persist archive behavior"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/components/MobileContactsScreen.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+
+    { "id": "CONTACTS-CONTRACT-DUPLICATES", "phase": "07-build", "type": "shared_contract", "status": "blocked", "title": "Define duplicate review and merge contract", "requirement_ids": ["CONTACTS-REQ-DUPLICATES"], "capability_ids": ["CONTACTS-CAP-DUPLICATES"], "platforms": ["shared"], "dependencies": [], "owner": "CRM Platform", "risk": "critical", "evidence_level": "E2_UNIT", "acceptance_criteria": ["Review, dismissal and merge preserve tenant scope, versions, references and audit"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts/contacts-adapter.test.ts", "required": true }], "files": ["src/loopdev/domains/crm/adapter/index.ts"], "blocked_by": ["CONTACTS-BLOCK-DESIGN"], "evidence_refs": [] },
+    { "id": "CONTACTS-DESKTOP-DUPLICATES", "phase": "07-build", "type": "desktop_renderer", "status": "blocked", "title": "Complete desktop duplicate review", "requirement_ids": ["CONTACTS-REQ-DUPLICATES"], "capability_ids": ["CONTACTS-CAP-DUPLICATES"], "platforms": ["desktop_web"], "dependencies": ["CONTACTS-CONTRACT-DUPLICATES"], "owner": "CRM Web", "risk": "critical", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Desktop review supports candidate inspection, dismissal and approved merge"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts/contacts-page-states.test.tsx", "required": true }], "files": ["src/loopdev/components/crm/contacts/DuplicateReviewPanel.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+    { "id": "CONTACTS-MOBILE-DUPLICATES", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Complete mobile duplicate review", "requirement_ids": ["CONTACTS-REQ-DUPLICATES"], "capability_ids": ["CONTACTS-CAP-DUPLICATES"], "platforms": ["mobile_web"], "dependencies": ["CONTACTS-CONTRACT-DUPLICATES"], "owner": "CRM Mobile", "risk": "critical", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile review exposes the same candidates and permitted decisions"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/components/MobileDuplicateReviewScreen.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+
+    { "id": "CONTACTS-CONTRACT-ACCESS", "phase": "07-build", "type": "backend", "status": "blocked", "title": "Implement tenant and permission enforcement", "requirement_ids": ["CONTACTS-REQ-ACCESS"], "capability_ids": ["CONTACTS-CAP-ACCESS"], "platforms": ["shared"], "dependencies": [], "owner": "CRM Backend", "risk": "critical", "evidence_level": "E5_DEVICE", "acceptance_criteria": ["Authorization is enforced server-side for two organizations and cannot be bypassed by direct requests"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts/contacts-access.test.ts", "required": true }], "files": ["src/loopdev/domains/crm/adapter/index.ts"], "blocked_by": ["CONTACTS-BLOCK-ACCESS-DESIGN"], "evidence_refs": [] },
+    { "id": "CONTACTS-DESKTOP-ACCESS", "phase": "07-build", "type": "desktop_renderer", "status": "blocked", "title": "Verify desktop permission states", "requirement_ids": ["CONTACTS-REQ-ACCESS"], "capability_ids": ["CONTACTS-CAP-ACCESS"], "platforms": ["desktop_web"], "dependencies": ["CONTACTS-CONTRACT-ACCESS"], "owner": "CRM Web", "risk": "critical", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Desktop direct routes and actions reflect server authorization without acting as enforcement"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts/contacts-page-states.test.tsx", "required": true }], "files": ["src/loopdev/pages/crm/Contacts.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+    { "id": "CONTACTS-MOBILE-ACCESS", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Verify mobile permission states", "requirement_ids": ["CONTACTS-REQ-ACCESS"], "capability_ids": ["CONTACTS-CAP-ACCESS"], "platforms": ["mobile_web"], "dependencies": ["CONTACTS-CONTRACT-ACCESS"], "owner": "CRM Mobile", "risk": "critical", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile routes and actions expose forbidden behavior without leaking cached tenant data"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/App.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+
+    { "id": "CONTACTS-CONTRACT-STATES", "phase": "07-build", "type": "shared_contract", "status": "blocked", "title": "Complete shared state and error matrix", "requirement_ids": ["CONTACTS-REQ-STATES"], "capability_ids": ["CONTACTS-CAP-STATES"], "platforms": ["shared"], "dependencies": [], "owner": "CRM Platform", "risk": "high", "evidence_level": "E2_UNIT", "acceptance_criteria": ["State and error identifiers are shared and exhaustive"], "validation": [{ "command": "npm run validate:contracts", "required": true }], "files": ["packages/contracts/src/contact-capability.ts"], "blocked_by": ["CONTACTS-BLOCK-DESIGN"], "evidence_refs": [] },
+    { "id": "CONTACTS-DESKTOP-STATES", "phase": "07-build", "type": "desktop_renderer", "status": "blocked", "title": "Verify desktop state matrix", "requirement_ids": ["CONTACTS-REQ-STATES"], "capability_ids": ["CONTACTS-CAP-STATES"], "platforms": ["desktop_web"], "dependencies": ["CONTACTS-CONTRACT-STATES"], "owner": "CRM Web", "risk": "high", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Every applicable desktop state has component and runtime evidence"], "validation": [{ "command": "npm run test -- --run src/test/crm/contacts/contacts-page-states.test.tsx", "required": true }], "files": ["src/loopdev/pages/crm/Contacts.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+    { "id": "CONTACTS-MOBILE-STATES", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Implement and verify mobile state matrix", "requirement_ids": ["CONTACTS-REQ-STATES"], "capability_ids": ["CONTACTS-CAP-STATES"], "platforms": ["mobile_web"], "dependencies": ["CONTACTS-CONTRACT-STATES"], "owner": "CRM Mobile", "risk": "critical", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Every applicable mobile state has component and runtime evidence"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/components/MobileContactsScreen.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+
+    { "id": "CUSTOMER360-CONTRACT-PLATFORM-PORTS", "phase": "07-build", "type": "shared_contract", "status": "blocked", "title": "Define mobile-safe Customer 360 Platform ports", "requirement_ids": ["CONTACTS-REQ-CUSTOMER360-OPERATIONS"], "capability_ids": ["CONTACTS-CAP-CUSTOMER360-OPERATIONS"], "platforms": ["shared"], "dependencies": [], "owner": "CRM Platform", "risk": "critical", "evidence_level": "E2_UNIT", "acceptance_criteria": ["Notes, Tasks, Files and Catalog operations used by Customer 360 have neutral contracts and explicit desktop/mobile adapters without importing desktop src from mobile"], "validation": [{ "command": "npm run validate:mobile-boundaries && npm run test:multiplatform-contracts", "required": true }], "files": ["packages/contracts/src"], "blocked_by": ["CONTACTS-BLOCK-DESIGN", "CONTACTS-BLOCK-PLAN"], "evidence_refs": [] },
+    { "id": "CUSTOMER360-MOBILE-WORK", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Implement Customer 360 mobile Notes and Tasks", "requirement_ids": ["CONTACTS-REQ-CUSTOMER360-OPERATIONS"], "capability_ids": ["CONTACTS-CAP-CUSTOMER360-OPERATIONS"], "platforms": ["mobile_web"], "dependencies": ["CUSTOMER360-CONTRACT-PLATFORM-PORTS"], "owner": "CRM Mobile", "risk": "critical", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile Customer 360 exposes task navigation and note create, edit and delete through shared ports with success, pending, error, forbidden and conflict component coverage"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/components/MobileCustomer360Screen.tsx", "apps/mobile/adapters"], "blocked_by": ["CONTACTS-BLOCK-PLAN", "CUSTOMER360-BLOCK-PLATFORM-PORTS"], "evidence_refs": [] },
+    { "id": "CUSTOMER360-MOBILE-SALES-ACTIVITY", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Implement Customer 360 mobile sales and activity navigation", "requirement_ids": ["CONTACTS-REQ-CUSTOMER360-OPERATIONS"], "capability_ids": ["CONTACTS-CAP-CUSTOMER360-OPERATIONS"], "platforms": ["mobile_web"], "dependencies": ["CUSTOMER360-CONTRACT-PLATFORM-PORTS"], "owner": "CRM Mobile", "risk": "high", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile related lead, opportunity, task and activity records navigate through declared routes while preserving contact context"], "validation": [{ "command": "npm run smoke:routes && cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["apps/mobile/App.tsx", "apps/mobile/components/MobileCustomer360Screen.tsx"], "blocked_by": ["CONTACTS-BLOCK-PLAN", "CUSTOMER360-BLOCK-PLATFORM-PORTS"], "evidence_refs": [] },
+    { "id": "CUSTOMER360-MOBILE-DOCUMENTS", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Implement Customer 360 mobile document operations", "requirement_ids": ["CONTACTS-REQ-CUSTOMER360-OPERATIONS"], "capability_ids": ["CONTACTS-CAP-CUSTOMER360-OPERATIONS"], "platforms": ["mobile_web"], "dependencies": ["CUSTOMER360-CONTRACT-PLATFORM-PORTS"], "owner": "Platform Files", "risk": "critical", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile supports permitted upload, preview, delete and category filtering through a shared Files port without browser-only APIs"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["packages/contracts/src", "apps/mobile/components"], "blocked_by": ["CONTACTS-BLOCK-PLAN", "CUSTOMER360-BLOCK-PLATFORM-PORTS"], "evidence_refs": [] },
+    { "id": "CUSTOMER360-MOBILE-PRODUCTS", "phase": "07-build", "type": "mobile_renderer", "status": "blocked", "title": "Implement Customer 360 mobile product operations", "requirement_ids": ["CONTACTS-REQ-CUSTOMER360-OPERATIONS"], "capability_ids": ["CONTACTS-CAP-CUSTOMER360-OPERATIONS"], "platforms": ["mobile_web"], "dependencies": ["CUSTOMER360-CONTRACT-PLATFORM-PORTS"], "owner": "CRM Catalog", "risk": "high", "evidence_level": "E4_JOURNEY", "acceptance_criteria": ["Mobile can view customer products, associate a permitted catalog item and navigate to the catalog through shared contracts"], "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }], "files": ["packages/contracts/src", "apps/mobile/components"], "blocked_by": ["CONTACTS-BLOCK-PLAN", "CUSTOMER360-BLOCK-PLATFORM-PORTS"], "evidence_refs": [] }
+  ],
+  "change_requests": [],
+  "blockers": [
+    "CONTACTS-BLOCK-DESIGN: canonical design and visual design are not approved",
+    "CONTACTS-BLOCK-ACCESS-DESIGN: server authorization and tenant enforcement require approved access design",
+    "CONTACTS-BLOCK-PLAN: implementation tasks require plan approval before becoming ready"
+  ]
+}

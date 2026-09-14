@@ -45,8 +45,8 @@
       "evidence": "Plan is complete and awaiting explicit plan approval before issue execution"
     }
   ],
-  "detected_failure": null,
-  "likely_failure_origin": null,
+  "detected_failure": "Plan artifact was produced before visual-design approval and valid specialized-analysis handoffs.",
+  "likely_failure_origin": "The historical workflow treated artifact creation as phase completion.",
   "environment": {
     "repository": "minoveaz/loopdev-v2",
     "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
@@ -66,9 +66,9 @@
   "skill": "module-plan",
   "parent_span_id": "MOD-CRM-PIPELINE-20260913-002:01-design",
   "module": "CRM Pipeline",
-  "status": "completed",
+  "status": "deviated",
   "decision_status": "open",
-  "architecture_quality": "PENDING",
+  "architecture_quality": "DEVIATED",
   "started_at": "2026-09-13T12:30:00+02:00",
   "completed_at": "2026-09-13T12:30:00+02:00",
   "decisions": [

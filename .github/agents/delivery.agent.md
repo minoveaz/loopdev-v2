@@ -36,7 +36,9 @@ If the user does not specify a mode, use `interactive`.
 
 ## Required startup
 
-1. Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first, then
+1. Read `docs/03-platform/governance/delivery-workflow.json` as the executable
+  phase/gate source, then read
+  `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md`, then
    `PLATFORM_V2_UI_REFERENCE.md`, `PLATFORM_V2_SHELL_REFERENCE.md`, the
    delivery-agent and traceability contracts. Treat `SAAS_*` platform
    documents as proposed, non-runtime references unless source evidence proves
@@ -45,6 +47,13 @@ If the user does not specify a mode, use `interactive`.
 2. Confirm repository path, checkout type, branch, `HEAD` and working tree.
 3. Identify the module, product definition, track and run ID.
 4. Declare `PLATFORM_SCOPE` and initialize the desktop/mobile capability matrix.
+  Maintain stable requirement, capability and task IDs in
+  `delivery-ledger.json`; run `npm run validate:delivery-ledgers` before every
+  design, plan or build handoff.
+  For each capability, record `domain`, `renderer` and `operations` parity
+  separately and classify every user operation on every platform. Never call a
+  capability "multiplatform parity" without naming these levels; a shared
+  contract, route or visible section proves neither renderer nor action parity.
 5. Resolve `docs/implementation/<suite>/<module>/` and initialize its
    README, architecture design, implementation plan, evidence matrix and
    run manifest from the canonical templates.
@@ -56,8 +65,8 @@ Use the skills in this order unless the contract records an approved reason:
 
 1. `module-discovery`
 2. `module-design`
-3. `domain-model`
-4. `module-visual-design`
+3. `module-visual-design`
+4. `domain-model`
 5. `access-design`
 6. `api-contracts`
 7. `sync-design`
@@ -66,6 +75,13 @@ Use the skills in this order unless the contract records an approved reason:
 10. `module-verify`
 11. `module-review`
 12. `git-workflow`
+
+The ordered phase graph, predecessors, owners and gates in
+`docs/03-platform/governance/delivery-workflow.json` override any duplicated
+prose. Use `delivery:start-phase`, `delivery:complete-phase`, `delivery:block`,
+`delivery:approve`, `delivery:handoff` and `delivery:resume` for state changes.
+Never edit a checkpoint status directly or claim completion when the CLI rejects
+the transition.
 
 `module-visual-design` is a mandatory subgate after discovery and
 `module-design`, and before specialized analysis and plan approval. It must
@@ -121,6 +137,10 @@ Every run must maintain `platform-scope.md` and
 Build, verify and review phases update the matrix with separate desktop and
 mobile evidence. iOS and Android may be `planned` or `not_applicable` only
 when the scope decision records an owner and follow-up.
+
+Use focused component tests for changed renderer operations by default. Require
+browser journeys only for explicit E4, high-risk or release work; Playwright is
+an optional implementation choice, not a delivery-wide gate.
 
 ## Failure handling
 

@@ -23,15 +23,7 @@ import {
   type CRMPipelineStageCode,
 } from "@/loopdev/domains/crm/adapter";
 import { useCrmPipeline } from "@/loopdev/domains/crm/hooks/use-crm";
-
-const STAGE_LABELS: Record<CRMPipelineStageCode, string> = {
-  prospecting: "Prospecting",
-  qualified: "Qualified",
-  proposal: "Proposal",
-  negotiation: "Negotiation",
-  won: "Won",
-  lost: "Lost",
-};
+import { pipelineStageLabels as STAGE_LABELS } from "../../../../packages/contracts/src/pipeline-capability";
 
 const STAGE_TONES: Record<CRMPipelineStageCode, string> = {
   prospecting: "bg-muted text-muted-foreground",

@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { MobileModalSheet } from "./MobileModal";
 import { contactActions } from "../../../packages/contracts/src/contact-actions";
-export type MobileContactPreview = any;
+import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
+export type MobileContactPreview = ContactRecord;
 
 export function MobileContactsScreen({ contacts, onCreate, onView, onEdit, onArchive, onDuplicates }: { contacts: MobileContactPreview[]; onCreate: () => void; onView?: (contact: MobileContactPreview) => void; onEdit?: (contact: MobileContactPreview) => void; onArchive?: (contact: MobileContactPreview) => void; onDuplicates?: () => void }) {
   const [query, setQuery] = useState("");

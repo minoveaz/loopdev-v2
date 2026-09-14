@@ -30,6 +30,15 @@ jobs:
       - name: Validar contratos y checkpoints
         run: npm run validate:module-runs
 
+      - name: Probar máquina de estados de delivery
+        run: npm run test:delivery
+
+      - name: Validar cobertura de requisitos y capacidades
+        run: npm run validate:delivery-ledgers
+
+      - name: Validar evidencia de delivery
+        run: npm run validate:delivery-evidence
+
       - name: Validar contratos de capacidades
         run: npm run validate:contracts
 
@@ -38,6 +47,9 @@ jobs:
 
       - name: Validar contrato multiplataforma
         run: npm run validate:multiplatform
+
+      - name: Validar boundaries mobile
+        run: npm run validate:mobile-boundaries
 
   changes:
     name: Identificar qué cambió
@@ -128,6 +140,9 @@ jobs:
 
       - name: Ejecutar tests unitarios y estructurales
         run: npm run test:quality
+
+      - name: Ejecutar contratos contra adapters desktop y mobile
+        run: npm run test:multiplatform-contracts
 
   build:
     name: Comprobar que la aplicación compila

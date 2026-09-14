@@ -30,6 +30,7 @@ Every run maintains an `ARCHITECTURE_QUALITY` status:
 | CI validation | `.github/workflows/ci.yml` |
 | Architecture contract | `docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md` |
 | Multiplatform delivery | `docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md` |
+| Executable phase graph | `docs/03-platform/governance/delivery-workflow.json` |
 
 ## Inputs
 
@@ -96,6 +97,10 @@ initialization. It owns the initial architecture/design content, while
 update only their owned artifacts.
 
 ## State machine
+
+`delivery-workflow.json` is the canonical machine-readable source for phase
+IDs, ordering, ownership, predecessors, gates and invalidation. This diagram is
+the human-readable projection of that source.
 
 ```text
 INTAKE

@@ -1,8 +1,9 @@
 {
+  "schema_version": 1,
   "run_id": "MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>",
-  "span_id": "MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>:01-design",
-  "phase": "01-design",
-  "skill": "module-design",
+  "span_id": "MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>:00-discovery",
+  "phase": "00-discovery",
+  "skill": "module-discovery",
   "parent_span_id": null,
   "module": "<Module name>",
   "status": "pending",
@@ -19,11 +20,12 @@
   "output_artifacts": [],
   "validation": [],
   "requirements": [],
+  "evidence": [],
   "detected_failure": null,
   "likely_failure_origin": null,
   "next_handoff": null,
   "approval_gate": {
-    "status": "pending",
+    "status": "not_required",
     "approved_by": null,
     "approved_at": null
   },

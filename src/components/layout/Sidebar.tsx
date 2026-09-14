@@ -1,32 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { NavLink, useLocation, useNavigate, Link } from "react-router-dom";
-import {
-  ChevronDown,
-  User,
-  Settings as SettingsIcon,
-  ShieldCheck,
-  CreditCard,
-  LogOut,
-  ChevronsUpDown,
-} from "lucide-react";
-import { toast } from "sonner";
+import { NavLink, useLocation } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import { launchpadNavigation, navigation } from "@/app/navigation";
 import type { NavNode, NavSection } from "@/app/nav-types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/use-auth";
 import { useT, useI18n } from "@/i18n";
 
 function useNavLabel() {
@@ -524,155 +504,7 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose, navigationOverri
   );
 }
 
-function SidebarUserMenu({ collapsed }: { collapsed: boolean }) {
-  const { session, signOut } = useAuth();
-  const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
 
-  const name = session?.name ?? "Guest";
-  const email = session?.email ?? "Not signed in";
-  const role = session?.role ?? "viewer";
-  const initials = name
-    .split(" ")
-    .map((s) => s[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
-  const handleSignOut = () => {
-    setOpen(false);
-    signOut();
-    toast.success("Signed out", { description: "See you soon." });
-    navigate("/pages/login", { replace: true });
-  };
-
-  // Global keyboard shortcuts for the account menu.
-  useEffect(() => {
-    const isTyping = (el: EventTarget | null) => {
-      const t = el as HTMLElement | null;
-      if (!t) return false;
-      const tag = t.tagName;
-      return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t.isContentEditable;
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e.target)) return;
-      const meta = e.metaKey || e.ctrlKey;
-      // Toggle account menu: ⌘/Ctrl + .
-      if (meta && e.key === ".") {
-        e.preventDefault();
-        setOpen((o) => !o);
-        return;
-      }
-      if (!(meta && e.shiftKey)) return;
-      const key = e.key.toLowerCase();
-      const map: Record<string, string> = {
-        p: "/account/profile",
-        a: "/account/settings",
-        s: "/account/security",
-        b: "/account/billing",
-      };
-      if (map[key]) {
-        e.preventDefault();
-        setOpen(false);
-        navigate(map[key]);
-        return;
-      }
-      if (key === "q") {
-        e.preventDefault();
-        handleSignOut();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const triggerLabel = `Account menu — ${name}`;
-  const trigger = (
-    <DropdownMenuTrigger
-      aria-label={triggerLabel}
-      title={collapsed ? undefined : triggerLabel}
-      className={cn(
-        "group flex w-full items-center gap-2.5 rounded-lg border border-sidebar-border/60 bg-sidebar-accent/40 p-2 text-start transition-smooth hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[state=open]:bg-sidebar-accent data-[state=open]:ring-2 data-[state=open]:ring-sidebar-ring",
-        collapsed && "justify-center p-1.5",
-      )}
-    >
-      <Avatar className="h-8 w-8 shrink-0">
-        <AvatarFallback className="bg-gradient-primary text-xs font-semibold text-primary-foreground">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-      {!collapsed && (
-        <>
-          <div className="min-w-0 flex-1 leading-tight">
-            <p className="truncate text-xs font-semibold text-sidebar-foreground">{name}</p>
-            <p className="truncate text-[10px] uppercase tracking-wider text-sidebar-foreground/75">{role}</p>
-          </div>
-          <ChevronsUpDown aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-sidebar-foreground/70" />
-        </>
-      )}
-    </DropdownMenuTrigger>
-  );
-
-  return (
-    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
-      {collapsed ? (
-        <Tooltip>
-          <TooltipTrigger asChild>{trigger}</TooltipTrigger>
-          <TooltipContent side="right" sideOffset={10} className="font-medium">
-            <div className="flex flex-col">
-              <span>{name}</span>
-              <span className="text-[10px] uppercase tracking-wider opacity-70">{role}</span>
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        trigger
-      )}
-      <DropdownMenuContent side="top" align="end" sideOffset={8} className="w-64">
-        <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="text-sm font-semibold text-foreground">{name}</span>
-          <span className="text-xs font-normal text-muted-foreground">{email}</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/account/profile" className="gap-2">
-            <User className="h-4 w-4" />
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/account/settings" className="gap-2">
-            <SettingsIcon className="h-4 w-4" />
-            Account Settings
-            <DropdownMenuShortcut>⇧⌘A</DropdownMenuShortcut>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/account/security" className="gap-2">
-            <ShieldCheck className="h-4 w-4" />
-            Security
-            <DropdownMenuShortcut>⇧⌘S</DropdownMenuShortcut>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/account/billing" className="gap-2">
-            <CreditCard className="h-4 w-4" />
-            Billing
-            <DropdownMenuShortcut>⇧⌘B</DropdownMenuShortcut>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive focus:text-destructive">
-          <LogOut className="h-4 w-4" />
-          Logout
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 function SidebarNode({
   node,

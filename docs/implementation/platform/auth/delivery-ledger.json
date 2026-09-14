@@ -1,0 +1,631 @@
+{
+  "$schema": "../../_schemas/delivery-ledger.schema.json",
+  "schema_version": 1,
+  "suite": "platform",
+  "module": "auth",
+  "status": "approved",
+  "approved_by": "minoveaz",
+  "approved_at": "2026-09-14T15:27:51.000Z",
+  "approval_source": "USER_REQUEST",
+  "product_sources": [
+    "docs/implementation/platform/auth/HANDOFF.md",
+    "tracks/active/platform/2026-09-09-loopdev-v2-monorepo-multitenancy.md"
+  ],
+  "previous_ledger": null,
+  "requirements": [
+    {
+      "id": "REQ-AUTH-PORT",
+      "title": "Neutral AuthPort contract",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/platform/auth/HANDOFF.md",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "Contract exposes stable session operations, auth state change subscription and typed errors without DOM or browser dependencies."
+      ],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ]
+    },
+    {
+      "id": "REQ-AUTH-TENANT-CONTEXT",
+      "title": "Tenant & organization context resolution",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/platform/auth/HANDOFF.md",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "Tenant context resolves active organization, workspace, membership status and permissions snapshot without hardcoded mock IDs."
+      ],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ]
+    },
+    {
+      "id": "REQ-AUTH-SUPABASE-ADAPTER",
+      "title": "Web runtime Supabase Auth adapter",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/platform/auth/HANDOFF.md",
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "Browser Supabase Auth adapter restores session on reload, manages refresh token and enforces user-authenticated sessions."
+      ],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ]
+    },
+    {
+      "id": "REQ-AUTH-MOBILE-STORAGE",
+      "title": "Mobile storage adapter boundary",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/platform/auth/HANDOFF.md",
+      "platforms": [
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "Mobile adapter consumes neutral contract and implements platform-appropriate secure storage boundary without importing desktop src."
+      ],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ]
+    },
+    {
+      "id": "REQ-AUTH-ISOLATION-CLEANUP",
+      "title": "Tenant isolation and logout cleanup",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/platform/auth/HANDOFF.md",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "Logout or organization switch purges active tenant context, cached tokens and local queues to prevent cross-tenant data leakage."
+      ],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "CAP-AUTH-CORE",
+      "name": "Platform Auth and Tenant Context shared capability",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-AUTH-PORT",
+        "REQ-AUTH-TENANT-CONTEXT",
+        "REQ-AUTH-SUPABASE-ADAPTER",
+        "REQ-AUTH-MOBILE-STORAGE",
+        "REQ-AUTH-ISOLATION-CLEANUP"
+      ],
+      "semantics": {
+        "operations": [
+          "getSession",
+          "onAuthStateChange",
+          "signInWithPassword",
+          "signOut",
+          "requestPasswordReset",
+          "updatePassword",
+          "listOrganizations",
+          "selectOrganization",
+          "listWorkspaces",
+          "selectWorkspace",
+          "getTenantContext"
+        ],
+        "validation_contract": null,
+        "errors": [
+          "invalid-credentials",
+          "session-expired",
+          "forbidden",
+          "user-not-found",
+          "tenant-not-found",
+          "network-error"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "Web login/profile/tenant selector",
+          "route": "/pages/login"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Mobile auth and tenant switch",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "partial",
+        "renderer": "partial",
+        "operations": "partial"
+      },
+      "operation_coverage": [
+        {
+          "id": "getSession",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-001"
+        },
+        {
+          "id": "onAuthStateChange",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-001"
+        },
+        {
+          "id": "signInWithPassword",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-001"
+        },
+        {
+          "id": "signOut",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-001"
+        },
+        {
+          "id": "requestPasswordReset",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-001"
+        },
+        {
+          "id": "updatePassword",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-001"
+        },
+        {
+          "id": "listOrganizations",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-002"
+        },
+        {
+          "id": "selectOrganization",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-002"
+        },
+        {
+          "id": "listWorkspaces",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-002"
+        },
+        {
+          "id": "selectWorkspace",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-002"
+        },
+        {
+          "id": "getTenantContext",
+          "desktop_web": "adapted",
+          "mobile_web": "adapted",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": "DESIGN-AUTH-002"
+        }
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "unauthenticated",
+        "authenticated",
+        "session-expired",
+        "success"
+      ],
+      "permissions": [
+        "auth.session",
+        "tenant.switch",
+        "workspace.access"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/auth-port.ts",
+        "src/loopdev/domains/platform/types.ts"
+      ],
+      "task_ids": [
+        "TASK-AUTH-CONTRACT",
+        "TASK-AUTH-WEB-ADAPTER",
+        "TASK-AUTH-TENANT-CONTEXT",
+        "TASK-AUTH-WEB-HOOKS",
+        "TASK-AUTH-WEB-TOPBAR",
+        "TASK-AUTH-MOBILE-ADAPTER",
+        "TASK-AUTH-MOBILE-SHEET",
+        "TASK-AUTH-QUALITY"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-AUTH-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "done",
+      "title": "Implement neutral AuthPort and TenantContextPort contracts",
+      "requirement_ids": [
+        "REQ-AUTH-PORT",
+        "REQ-AUTH-TENANT-CONTEXT"
+      ],
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [],
+      "owner": "Platform",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Contract defines AuthPort, TenantContextPort, PlatformAuthStorage and DTOs without DOM or browser dependencies."
+      ],
+      "validation": [
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/auth-port.ts",
+        "packages/contracts/src/index.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/auth-port.ts",
+        "npm run typecheck"
+      ]
+    },
+    {
+      "id": "TASK-AUTH-WEB-ADAPTER",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Implement web runtime Supabase Auth adapter",
+      "requirement_ids": [
+        "REQ-AUTH-SUPABASE-ADAPTER"
+      ],
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "TASK-AUTH-CONTRACT"
+      ],
+      "owner": "Platform",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "SupabaseAuthAdapter restores browser session, manages refresh token and satisfies AuthPort contract."
+      ],
+      "validation": [
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/platform/adapter/auth-supabase.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/domains/platform/adapter/auth-supabase.ts",
+        "src/test/platform/auth-port.test.ts"
+      ]
+    },
+    {
+      "id": "TASK-AUTH-TENANT-CONTEXT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "done",
+      "title": "Implement tenant context provider with Super Admin directory support",
+      "requirement_ids": [
+        "REQ-AUTH-TENANT-CONTEXT",
+        "REQ-AUTH-ISOLATION-CLEANUP"
+      ],
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ],
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "TASK-AUTH-CONTRACT"
+      ],
+      "owner": "Platform",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Resolves active organization and workspace; exposes all orgs for Super Admin; triggers atomic cache purge on tenant switch."
+      ],
+      "validation": [
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/providers/TenantContextProvider.tsx",
+        "src/hooks/use-tenant-context.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/hooks/use-tenant-context.tsx",
+        "src/loopdev/domains/platform/adapter/tenant-context.ts"
+      ]
+    },
+    {
+      "id": "TASK-AUTH-WEB-HOOKS",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Refactor useAuth and ProtectedRoute to consume AuthPort",
+      "requirement_ids": [
+        "REQ-AUTH-PORT",
+        "REQ-AUTH-SUPABASE-ADAPTER"
+      ],
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "TASK-AUTH-WEB-ADAPTER",
+        "TASK-AUTH-TENANT-CONTEXT"
+      ],
+      "owner": "Platform",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Replaces mock session in useAuth with reactive AuthPort state; ProtectedRoute guards authenticated routes."
+      ],
+      "validation": [
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/hooks/use-auth.tsx",
+        "src/components/layout/ProtectedRoute.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/hooks/use-auth.tsx",
+        "npm run typecheck"
+      ]
+    },
+    {
+      "id": "TASK-AUTH-WEB-TOPBAR",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Integrate Organization Selector into Topbar Account Dropdown",
+      "requirement_ids": [
+        "REQ-AUTH-TENANT-CONTEXT"
+      ],
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "TASK-AUTH-WEB-HOOKS"
+      ],
+      "owner": "Platform",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Topbar user dropdown renders active organization, selectable switch list, Super Admin badge and sign-out trigger."
+      ],
+      "validation": [
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/components/layout/Topbar.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/components/layout/Topbar.tsx",
+        "src/test/topbar-system-mode.test.tsx"
+      ]
+    },
+    {
+      "id": "TASK-AUTH-MOBILE-ADAPTER",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Implement mobile secure storage adapter and auth boundary",
+      "requirement_ids": [
+        "REQ-AUTH-MOBILE-STORAGE",
+        "REQ-AUTH-PORT"
+      ],
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "TASK-AUTH-CONTRACT"
+      ],
+      "owner": "Platform",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Mobile adapter consumes neutral contracts and secure storage boundary without importing desktop src."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        },
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/adapters/auth.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "apps/mobile/adapters/auth.ts",
+        "npm run validate:mobile-boundaries"
+      ]
+    },
+    {
+      "id": "TASK-AUTH-MOBILE-SHEET",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Embed organization selector in MobileAccountSheet",
+      "requirement_ids": [
+        "REQ-AUTH-TENANT-CONTEXT",
+        "REQ-AUTH-ISOLATION-CLEANUP"
+      ],
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "TASK-AUTH-MOBILE-ADAPTER"
+      ],
+      "owner": "Platform",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "MobileAccountSheet allows switching active organization and triggers tenant cache eviction."
+      ],
+      "validation": [
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/components/MobileAccountSheet.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "apps/mobile/components/MobileAccountSheet.tsx",
+        "cd apps/mobile && npx tsc --noEmit"
+      ]
+    },
+    {
+      "id": "TASK-AUTH-QUALITY",
+      "phase": "07-build",
+      "type": "test",
+      "status": "done",
+      "title": "Run test quality, typecheck and boundary validation suite",
+      "requirement_ids": [
+        "REQ-AUTH-PORT",
+        "REQ-AUTH-TENANT-CONTEXT",
+        "REQ-AUTH-SUPABASE-ADAPTER",
+        "REQ-AUTH-MOBILE-STORAGE",
+        "REQ-AUTH-ISOLATION-CLEANUP"
+      ],
+      "capability_ids": [
+        "CAP-AUTH-CORE"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "TASK-AUTH-WEB-TOPBAR",
+        "TASK-AUTH-MOBILE-SHEET"
+      ],
+      "owner": "Platform",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Unit tests, boundary audits and typechecks pass across all suites."
+      ],
+      "validation": [
+        {
+          "command": "npm run test:quality",
+          "required": true
+        },
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts",
+        "src",
+        "apps/mobile"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "npm run test:quality",
+        "npm run validate:delivery-ledgers"
+      ]
+    }
+  ],
+  "change_requests": [],
+  "blockers": []
+}

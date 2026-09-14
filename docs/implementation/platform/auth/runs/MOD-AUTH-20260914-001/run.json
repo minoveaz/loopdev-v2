@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "workflow_version": 1,
+  "run_id": "MOD-AUTH-20260914-001",
+  "suite": "platform",
+  "module": "auth",
+  "status": "running",
+  "current_phase": "08-verify",
+  "attempt": 1,
+  "started_at": "2026-09-14T14:46:04.083Z",
+  "updated_at": "2026-09-14T15:36:30.326Z",
+  "input_fingerprint": "sha256:c59c93405dc4df0d7603aa54dcc7f80bd2328d324f06c5bdaa10af39656aa7f7",
+  "fingerprints": {
+    "product": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scope": "sha256:399927f0246a765d0210411a901174ff6354b2d764edfde1a0af53b140c2cbda",
+    "design": "sha256:815cc05dc0e2a3d743abc81b86bc52b196169f34977fa8afbf2f6bd9f0630f62",
+    "plan": "sha256:30161cd34478bf26bf410eca58b9ecfc80f5580456a2011e110a46770f322a4a",
+    "contracts": "sha256:1a11205dc2abbb9c923d1d3132fb336959cb73d249228e1e330c936997a6f2d4",
+    "code": "sha256:6ad306017cd298168edfe36d87e7af8d200fd202d30196728f69bc978a05f6e2",
+    "tests": "sha256:103d8f7fe5a35b8d5f6b05abab7277e30dc1b058fc5cd520455fbea563c31844"
+  },
+  "environment": {
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": null,
+    "head_commit": "0423c81211993027f7ceb7894f8a7701edf5cfd1",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "platform_scope": [
+    "desktop_web",
+    "mobile_web",
+    "ios",
+    "android"
+  ],
+  "approvals": {
+    "design": {
+      "status": "approved",
+      "approved_by": "minoveaz",
+      "approved_at": "2026-09-14T15:08:10.307Z",
+      "role": "product_owner",
+      "artifact": "docs/implementation/platform/auth/architecture-design.md",
+      "artifact_fingerprint": "sha256:c2da8e2fe58f063674c63263e3d5f9e1cf8f04fe2222b7fa7cab5a5779667d02",
+      "source": "USER_REQUEST"
+    },
+    "visual_design": {
+      "status": "approved",
+      "approved_by": "minoveaz",
+      "approved_at": "2026-09-14T15:23:09.891Z",
+      "role": "product_owner",
+      "artifact": "docs/implementation/platform/auth/visual-design.md",
+      "artifact_fingerprint": "sha256:b74b40939cd320402766e139a5045b5f813cb0d2af78eafbbdc3d5ce34cef977",
+      "source": "USER_REQUEST"
+    },
+    "plan": {
+      "status": "approved",
+      "approved_by": "minoveaz",
+      "approved_at": "2026-09-14T15:28:30.614Z",
+      "role": "product_owner",
+      "artifact": "docs/implementation/platform/auth/implementation-plan.md",
+      "artifact_fingerprint": "sha256:4c7c12a15a1f72642d9181682c855c759241ab6f8769133a1da677ae3b5de064",
+      "source": "USER_REQUEST"
+    },
+    "verification": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "release": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "push": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "pull_request": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    }
+  },
+  "approval_gates": [
+    "design",
+    "visual_design",
+    "plan"
+  ],
+  "architecture_quality": "PASS",
+  "platform_impact": [],
+  "checkpoint_paths": [
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/00-discovery.json",
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/01-design.json",
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/01-visual-design.json",
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/02-domain.json",
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/03-access.json",
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/04-api.json",
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/05-sync.json",
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/06-plan.json",
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/07-build.json",
+    "docs/implementation/platform/auth/runs/MOD-AUTH-20260914-001/08-verify.json"
+  ],
+  "evidence_links": [],
+  "change_requests": [],
+  "blocked_by": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
+  "next_action": "Record the handoff from 08-verify.",
+  "handoffs": [
+    {
+      "from": "01-visual-design",
+      "to": "02-domain",
+      "owner": "delivery",
+      "at": "2026-09-14T15:23:12.798Z",
+      "input_fingerprint": "sha256:c59c93405dc4df0d7603aa54dcc7f80bd2328d324f06c5bdaa10af39656aa7f7"
+    },
+    {
+      "from": "02-domain",
+      "to": "03-access",
+      "owner": "delivery",
+      "at": "2026-09-14T15:23:43.240Z",
+      "input_fingerprint": "sha256:c59c93405dc4df0d7603aa54dcc7f80bd2328d324f06c5bdaa10af39656aa7f7"
+    },
+    {
+      "from": "03-access",
+      "to": "04-api",
+      "owner": "delivery",
+      "at": "2026-09-14T15:24:28.316Z",
+      "input_fingerprint": "sha256:c59c93405dc4df0d7603aa54dcc7f80bd2328d324f06c5bdaa10af39656aa7f7"
+    },
+    {
+      "from": "04-api",
+      "to": "05-sync",
+      "owner": "delivery",
+      "at": "2026-09-14T15:24:52.057Z",
+      "input_fingerprint": "sha256:c59c93405dc4df0d7603aa54dcc7f80bd2328d324f06c5bdaa10af39656aa7f7"
+    },
+    {
+      "from": "05-sync",
+      "to": "06-plan",
+      "owner": "delivery",
+      "at": "2026-09-14T15:25:32.977Z",
+      "input_fingerprint": "sha256:c59c93405dc4df0d7603aa54dcc7f80bd2328d324f06c5bdaa10af39656aa7f7"
+    },
+    {
+      "from": "06-plan",
+      "to": "07-build",
+      "owner": "delivery",
+      "at": "2026-09-14T15:28:33.115Z",
+      "input_fingerprint": "sha256:c59c93405dc4df0d7603aa54dcc7f80bd2328d324f06c5bdaa10af39656aa7f7"
+    },
+    {
+      "from": "07-build",
+      "to": "08-verify",
+      "owner": "delivery",
+      "at": "2026-09-14T15:35:17.965Z",
+      "input_fingerprint": "sha256:c59c93405dc4df0d7603aa54dcc7f80bd2328d324f06c5bdaa10af39656aa7f7"
+    }
+  ],
+  "commit": null,
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

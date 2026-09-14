@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LogoSpinner } from "@/loopdev/components";
 import { cn } from "@/lib/utils";
 
 const loginSchema = z.object({
@@ -21,14 +22,16 @@ export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("admin@rivera.app");
-  const [password, setPassword] = useState("rivera");
+  const [email, setEmail] = useState("admin@loop.dev");
+  const [password, setPassword] = useState("loopdev");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    toast.dismiss();
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
       const next: typeof errors = {};
@@ -42,20 +45,23 @@ export default function Login() {
     setErrors({});
     setSubmitting(true);
     setTimeout(() => {
+      setSubmitting(false);
+      setTransitioning(true);
       signIn(result.data.email);
-      toast.success("Welcome back to Rivera");
-      navigate("/launchpad", { replace: true });
-    }, 600);
+      setTimeout(() => {
+        navigate("/launchpad", { replace: true });
+      }, 750);
+    }, 450);
   };
 
   return (
     <AuthLayout
       eyebrow="Sign in"
       title="Welcome back"
-      description="Use any email and password — Rivera runs on mock auth for this demo."
+      description="Use any email and password — LoopDev runs on multi-tenant auth context."
       footer={
         <>
-          New to Rivera?{" "}
+          New to LoopDev?{" "}
           <Link to="/pages/register" className="font-semibold text-primary hover:underline">
             Create an account
           </Link>
@@ -125,12 +131,24 @@ export default function Login() {
           loading={submitting}
           className="w-full"
         >
-          {submitting ? "Signing in…" : "Sign in to Rivera"}
+          {submitting ? "Signing in…" : "Sign in to LoopDev"}
         </Button>
       </form>
       <div className="mt-6">
         <SocialAuthButtons />
       </div>
+
+      {transitioning && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-5">
+            <LogoSpinner size="2xl" speed="fast" />
+            <div className="text-center space-y-1">
+              <p className="text-sm font-semibold text-foreground tracking-tight">Entering LoopDev Workspace</p>
+              <p className="text-xs text-muted-foreground">Initializing tenant &amp; multi-org context...</p>
+            </div>
+          </div>
+        </div>
+      )}
     </AuthLayout>
   );
 }

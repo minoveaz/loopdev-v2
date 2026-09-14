@@ -26,6 +26,11 @@ import { MobileContactsScreen } from "./components/MobileContactsScreen";
 import { MobileCreateContactScreen } from "./components/MobileCreateContactScreen";
 import { MobileCustomer360Screen } from "./components/MobileCustomer360Screen";
 import { MobileDuplicateReviewScreen } from "./components/MobileDuplicateReviewScreen";
+import { MobileLoginScreen } from "./components/MobileLoginScreen";
+import { MobileForgotPasswordScreen } from "./components/MobileForgotPasswordScreen";
+import { MobileLogoSpinner } from "./components/MobileLogoSpinner";
+import { mobileAuthAdapter, mobileTenantContextAdapter } from "./adapters/auth";
+import type { AuthSession, TenantContextSnapshot } from "../../packages/contracts/src/auth-port";
 import type { MobileNoteDraft } from "./components/MobileNoteEditor";
 
 const launchpadPath = loopdevNavigationContract.launchpad.path;
@@ -39,6 +44,14 @@ export default function App() {
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [actionsSheetOpen, setActionsSheetOpen] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [tenantContext, setTenantContext] = useState<TenantContextSnapshot | null>(() =>
+    mobileTenantContextAdapter.getTenantContext(),
+  );
+  const [authMode, setAuthMode] = useState<"login" | "forgot_password">("login");
+  const [authChecked, setAuthChecked] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
   const [customer360, setCustomer360] = useState<ContactCustomer360View | null>(null);
   const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
@@ -47,11 +60,58 @@ export default function App() {
   const [contactError, setContactError] = useState<string | null>(null);
   const [mobileNotes, setMobileNotes] = useState<NoteRecord[]>([]);
   const [mobileNotesLoading, setMobileNotesLoading] = useState(false);
+
   useEffect(() => {
-    void mobileContactAdapter.listContacts({ organizationId: "local-development-organization", limit: 100, cursor: null })
+    void mobileAuthAdapter.getSession().then((sess) => {
+      setSession(sess);
+      setTenantContext(mobileTenantContextAdapter.getTenantContext());
+      setAuthChecked(true);
+    });
+    const unsubAuth = mobileAuthAdapter.onAuthStateChange((event, nextSession) => {
+      if (event === "SIGNED_OUT") {
+        setSigningOut(true);
+        setTimeout(() => {
+          setSession(null);
+          setTenantContext(null);
+          setSigningOut(false);
+          setAuthChecked(true);
+        }, 650);
+      } else if (event === "SIGNED_IN") {
+        setSigningIn(true);
+        setTimeout(() => {
+          setSession(nextSession);
+          setTenantContext(mobileTenantContextAdapter.getTenantContext());
+          setSigningIn(false);
+          setAuthChecked(true);
+        }, 750);
+      } else {
+        setSession(nextSession);
+        setTenantContext(mobileTenantContextAdapter.getTenantContext());
+        setAuthChecked(true);
+      }
+    });
+    const unsubTenant = mobileTenantContextAdapter.onTenantContextChange((nextCtx) => {
+      setTenantContext(nextCtx);
+    });
+    return () => {
+      unsubAuth();
+      unsubTenant();
+    };
+  }, []);
+
+  const activeOrgId = tenantContext?.activeOrganizationId || "80fce911-57c5-4a83-809f-78df6a3736f7";
+
+  useEffect(() => {
+    if (!session) {
+      setContacts([]);
+      return;
+    }
+    setContactError(null);
+    void mobileContactAdapter.listContacts({ organizationId: activeOrgId, limit: 100, cursor: null })
       .then((page) => setContacts(page.items))
       .catch((cause: unknown) => setContactError(cause instanceof Error ? cause.message : "Unable to load contacts."));
-  }, []);
+  }, [session, activeOrgId]);
+
   useEffect(() => {
     const contactMatch = matchContactRoute(contactNavigationRoutes.detail, currentPath);
     if (!contactMatch) return;
@@ -60,31 +120,55 @@ export default function App() {
     void mobileContactAdapter.getCustomer360(contact.id).then(setCustomer360);
     loadMobileNotes(contact.id);
   }, [contacts, currentPath, customer360]);
+
   function loadMobileNotes(contactId: string) {
     setMobileNotesLoading(true);
-    void mobileNotesAdapter.listNotes({ scope: { organizationId: "local-development-organization", workspaceId: null }, relation: { type: "contact", id: contactId }, limit: 25 })
+    void mobileNotesAdapter.listNotes({ scope: { organizationId: activeOrgId, workspaceId: null }, relation: { type: "contact", id: contactId }, limit: 25 })
       .then((result) => {
         if (result.status === "success") setMobileNotes(result.data.items);
       })
       .finally(() => setMobileNotesLoading(false));
   }
+
   function noteRelation(contact: ContactRecord) {
-    const scope = { organizationId: "local-development-organization", workspaceId: null };
+    const scope = { organizationId: activeOrgId, workspaceId: null };
     return { type: "contact" as const, id: contact.id, label: [contact.preferredName || contact.firstName, contact.lastName].filter(Boolean).join(" "), scope };
   }
+
   async function createMobileNote(contact: ContactRecord, draft: MobileNoteDraft) {
-    const scope = { organizationId: "local-development-organization", workspaceId: null };
-    const result = await mobileNotesAdapter.createNote({ scope, authorId: "local-development-user", mode: draft.mode, content: draft.content, plainTextPreview: draft.body, visibility: draft.visibility, relations: [noteRelation(contact)], idempotencyKey: `mobile-${Date.now()}` });
+    const scope = { organizationId: activeOrgId, workspaceId: null };
+    const result = await mobileNotesAdapter.createNote({
+      scope,
+      authorId: session?.user.id || "local-development-user",
+      mode: draft.mode,
+      content: draft.content,
+      plainTextPreview: draft.body,
+      visibility: draft.visibility,
+      relations: [noteRelation(contact)],
+      idempotencyKey: `mobile-${Date.now()}`,
+    });
     if (result.status === "error") throw new Error(result.error.message);
     loadMobileNotes(contact.id);
   }
+
   async function updateMobileNote(noteId: string, version: number, contact: ContactRecord, draft: MobileNoteDraft) {
-    const result = await mobileNotesAdapter.updateNote(noteId, { mode: draft.mode, content: draft.content, plainTextPreview: draft.body, visibility: draft.visibility, expectedVersion: version, idempotencyKey: `mobile-update-${Date.now()}` });
+    const result = await mobileNotesAdapter.updateNote(noteId, {
+      mode: draft.mode,
+      content: draft.content,
+      plainTextPreview: draft.body,
+      visibility: draft.visibility,
+      expectedVersion: version,
+      idempotencyKey: `mobile-update-${Date.now()}`,
+    });
     if (result.status === "error") throw new Error(result.error.message);
     loadMobileNotes(contact.id);
   }
+
   async function deleteMobileNote(note: NoteRecord, contact: ContactRecord) {
-    const result = await mobileNotesAdapter.deleteNote(note.id, { expectedVersion: note.version, idempotencyKey: `mobile-delete-${Date.now()}` });
+    const result = await mobileNotesAdapter.deleteNote(note.id, {
+      expectedVersion: note.version,
+      idempotencyKey: `mobile-delete-${Date.now()}`,
+    });
     if (result.status === "error") throw new Error(result.error.message);
     loadMobileNotes(contact.id);
   }
@@ -170,6 +254,56 @@ export default function App() {
     );
   }
 
+  if (!authChecked) {
+    return null;
+  }
+
+  if (signingOut) {
+    return (
+      <MobileAppShell>
+        <View style={styles.logoutTransitionContainer}>
+          <MobileLogoSpinner size={72} />
+          <Text style={styles.transitionTitle}>Signing out of LoopDev</Text>
+          <Text style={styles.transitionSubtitle}>Clearing session &amp; cached workspace context...</Text>
+        </View>
+      </MobileAppShell>
+    );
+  }
+
+  if (signingIn) {
+    return (
+      <MobileAppShell>
+        <View style={styles.logoutTransitionContainer}>
+          <MobileLogoSpinner size={72} />
+          <Text style={styles.transitionTitle}>Entering LoopDev Mobile</Text>
+          <Text style={styles.transitionSubtitle}>Setting up workspace and permissions...</Text>
+        </View>
+      </MobileAppShell>
+    );
+  }
+
+  if (!session) {
+    if (authMode === "forgot_password") {
+      return (
+        <MobileAppShell>
+          <MobileForgotPasswordScreen
+            onBackToLogin={() => setAuthMode("login")}
+          />
+        </MobileAppShell>
+      );
+    }
+    return (
+      <MobileAppShell>
+        <MobileLoginScreen
+          onLoginSuccess={() => {
+            navigate(launchpadPath);
+          }}
+          onForgotPassword={() => setAuthMode("forgot_password")}
+        />
+      </MobileAppShell>
+    );
+  }
+
   return (
     <MobileAppShell>
       <MobileHeader
@@ -212,7 +346,41 @@ const styles = StyleSheet.create({
   eyebrowText: { color: "#135bec", fontSize: 11, fontWeight: "700", letterSpacing: 2 },
   title: { color: "#111827", fontSize: 34, fontWeight: "700", letterSpacing: -1, lineHeight: 43, marginBottom: 14 },
   titleAccent: { color: "#135bec", fontWeight: "900" },
-  sectionHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginBottom: 14 },
-  sectionLabel: { color: "#64748b", fontSize: 11, fontWeight: "700", letterSpacing: 2 },
-  sectionCount: { color: "#64748b", fontSize: 10, fontWeight: "700", letterSpacing: 1 },
+  sectionHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginBottom: 16, marginTop: 14 },
+  sectionLabel: { color: "#64748b", fontSize: 11, fontWeight: "700", letterSpacing: 1.4 },
+  sectionCount: { color: "#135bec", fontSize: 11, fontWeight: "800", letterSpacing: 1.4 },
+  logoutTransitionContainer: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  brandIconLarge: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: "#135bec",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  infinityTextLarge: {
+    color: "#ffffff",
+    fontSize: 36,
+    fontWeight: "900",
+    lineHeight: 40,
+  },
+  transitionTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0f172a",
+    marginTop: 8,
+    letterSpacing: -0.4,
+  },
+  transitionSubtitle: {
+    fontSize: 13,
+    color: "#64748b",
+    marginTop: 4,
+  },
 });

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 import { AuthLayout } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +15,15 @@ const forgotSchema = z.object({
 });
 
 export default function ForgotPassword() {
+  const { requestPasswordReset } = useAuth();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string>();
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    toast.dismiss();
     const result = forgotSchema.safeParse({ email });
     if (!result.success) {
       setError(result.error.issues[0]?.message);
@@ -28,18 +31,20 @@ export default function ForgotPassword() {
     }
     setError(undefined);
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    const res = await requestPasswordReset(result.data.email);
+    setSubmitting(false);
+    if (res.sent) {
       setSent(true);
-      toast.success("Recovery link sent", { description: `Check ${result.data.email} for instructions.` });
-    }, 700);
+    } else {
+      setError(res.message || "Unable to send recovery instructions. Please try again.");
+    }
   };
 
   return (
     <AuthLayout
       eyebrow="Reset password"
       title="Forgot your password?"
-      description="Enter your email and we'll send a recovery link. (Mock — no email is actually sent.)"
+      description="Enter your work email address and we'll send password recovery instructions."
       footer={
         <Link to="/pages/login" className="font-semibold text-primary transition-fast hover:underline">
           Back to sign in

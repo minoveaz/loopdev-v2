@@ -32,7 +32,7 @@ interface SocialAuthButtonsProps {
 
 export function SocialAuthButtons({ label = "Or continue with" }: SocialAuthButtonsProps) {
   const handle = (provider: string) => {
-    toast.info(`${provider} sign-in is not configured in this demo.`);
+    toast.info(`${provider} OAuth is managed via LoopDev Enterprise SSO settings.`);
   };
   return (
     <div className="space-y-4">

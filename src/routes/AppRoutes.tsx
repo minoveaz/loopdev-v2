@@ -467,8 +467,13 @@ export function AppRoutes() {
       <Route path="/pages/404" element={<NotFound />} />
       <Route path="/pages/500" element={<Error500 />} />
 
-      {/* Legacy alias */}
+      {/* Auth route aliases */}
+      <Route path="/login" element={<Navigate to="/pages/login" replace />} />
       <Route path="/sign-in" element={<Navigate to="/pages/login" replace />} />
+      <Route path="/register" element={<Navigate to="/pages/register" replace />} />
+      <Route path="/sign-up" element={<Navigate to="/pages/register" replace />} />
+      <Route path="/forgot-password" element={<Navigate to="/pages/forgot-password" replace />} />
+      <Route path="/reset-password" element={<Navigate to="/pages/reset-password" replace />} />
 
       {/* Authenticated app shell */}
       <Route

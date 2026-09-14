@@ -38,7 +38,15 @@ export function logActivity(input: {
     metadata: input.metadata,
   });
 
-  if (input.toastOptions?.silent) return;
+  if (
+    input.toastOptions?.silent ||
+    input.action === "logged_in" ||
+    input.action === "logged_out" ||
+    input.entity === "session" ||
+    input.entity === "auth"
+  ) {
+    return;
+  }
 
   const tone = TONE[input.action] ?? "default";
   const title = input.toastOptions?.title ?? defaultTitle(input.action, input.entity);

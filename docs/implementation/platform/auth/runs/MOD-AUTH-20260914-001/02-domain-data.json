@@ -1,0 +1,69 @@
+{
+  "status": "completed",
+  "decision_status": "approved",
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/implementation/platform/auth/architecture-design.md",
+    "docs/implementation/platform/auth/visual-design.md",
+    "docs/implementation/platform/auth/HANDOFF.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/platform/auth/domain-model.md"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-AUTH-DOM-001",
+      "statement": "Explicit, immutable execution context required for every authenticated interaction (organizationId + optional workspaceId)."
+    },
+    {
+      "id": "DEC-AUTH-DOM-002",
+      "statement": "Super Admins view all platform organizations via listOrganizations, but execute actions against a single active tenant at any instant."
+    },
+    {
+      "id": "DEC-AUTH-DOM-003",
+      "statement": "Atomic purge and cache eviction invariant on tenant switch and sign out (zero cross-tenant leakage)."
+    }
+  ],
+  "actions": [
+    "Created domain-model.md defining PlatformUser, AuthSession, Organization, OrganizationMembership, Workspace, TenantContextSnapshot and AuthError entities.",
+    "Specified role hierarchy (owner > admin > editor > viewer), state machine, commands, queries, and domain events."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "pass"
+    },
+    {
+      "command": "test -f docs/implementation/platform/auth/domain-model.md",
+      "result": "pass"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-AUTH-PORT",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-TENANT-CONTEXT",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-SUPABASE-ADAPTER",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-MOBILE-STORAGE",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-ISOLATION-CLEANUP",
+      "status": "pass"
+    }
+  ],
+  "evidence": [
+    {
+      "description": "Domain model specification for Platform Auth & Tenant Context",
+      "path": "docs/implementation/platform/auth/domain-model.md"
+    }
+  ]
+}

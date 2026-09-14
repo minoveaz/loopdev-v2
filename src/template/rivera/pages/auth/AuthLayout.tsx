@@ -14,7 +14,7 @@ export function AuthLayout({ eyebrow, title, description, children, footer }: Au
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       <aside
-        aria-label="Rivera marketing"
+        aria-label="LoopDev platform"
         className="dark relative hidden overflow-hidden bg-gradient-editorial lg:block"
       >
         <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(hsl(var(--accent)/0.4)_1px,transparent_1px)] [background-size:32px_32px]" />
@@ -23,10 +23,10 @@ export function AuthLayout({ eyebrow, title, description, children, footer }: Au
           <Logo />
           <div>
             <p className="font-display text-5xl font-semibold leading-tight tracking-tight text-balance text-foreground">
-              The admin workspace your team will actually enjoy.
+              The platform workspace built for modern engineering & operations.
             </p>
             <p className="mt-4 max-w-md text-muted-foreground">
-              Rivera unifies projects, customers and revenue with thoughtful, editorial design.
+              LoopDev unifies multi-tenant business operations, CRM, and cloud intelligence with speed and precision.
             </p>
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">v1.0.0 · 2026 Edition</p>
@@ -49,7 +49,7 @@ export function AuthLayout({ eyebrow, title, description, children, footer }: Au
           <div className="mt-8">{children}</div>
           {footer && <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>}
           <p className="mt-10 text-center text-[11px] text-muted-foreground">
-            <Link to="/" className="transition-fast hover:text-foreground">← Back to dashboard</Link>
+            <Link to="/launchpad" className="transition-fast hover:text-foreground">← Back to Launchpad</Link>
           </p>
         </div>
       </main>

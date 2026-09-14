@@ -21,7 +21,8 @@ export function LogoSpinner({
   isStatic = false,
   className,
 }: LogoSpinnerProps) {
-  const gradientId = useId();
+  const rawId = useId();
+  const gradientId = `loopdev-spin-${rawId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const finalSize = typeof size === "number" ? size : sizeMap[size];
   const duration = useMemo(() => {
     if (speed === "fast") return "1.5s";

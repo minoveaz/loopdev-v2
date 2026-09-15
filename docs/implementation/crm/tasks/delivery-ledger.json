@@ -16,17 +16,17 @@
       "classification": "PLATFORM_REUSE",
       "source": "docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md",
       "platforms": ["shared", "desktop_web", "mobile_web"],
-      "acceptance_criteria": ["Contract exposes stable polymorphic task operations and typed outcomes without desktop runtime imports."],
+      "acceptance_criteria": ["Contract exposes stable polymorphic task operations, templates, checklists and typed outcomes."],
       "evidence_level": "E2_UNIT",
       "capability_ids": ["CAP-TASKS-CORE"]
     },
     {
       "id": "REQ-TSK-CRUD",
-      "title": "Shared Tasks lifecycle operations",
+      "title": "Shared Tasks lifecycle and advanced operations",
       "classification": "REQUIRED_MVP",
       "source": "docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md",
       "platforms": ["shared", "desktop_web", "mobile_web"],
-      "acceptance_criteria": ["listTasks, createTask, updateTask, completeTask, deleteTask preserve shared validation, version and error semantics."],
+      "acceptance_criteria": ["listTasks, createTask, updateTask, completeTask, quickReschedule, toggleChecklistItem and deleteTask preserve validation, version and error semantics."],
       "evidence_level": "E2_UNIT",
       "capability_ids": ["CAP-TASKS-CORE"]
     },
@@ -56,7 +56,7 @@
       "classification": "REQUIRED_MVP",
       "source": "docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md",
       "platforms": ["mobile_web"],
-      "acceptance_criteria": ["Mobile list, compact card, quick create modal and checkbox toggle meet touch target standards (>44px)."],
+      "acceptance_criteria": ["Mobile list, compact card, quick create modal, quick reschedule and checkbox toggle meet touch target standards (>44px)."],
       "evidence_level": "E3_COMPONENT",
       "capability_ids": ["CAP-TASKS-CORE"]
     }
@@ -68,13 +68,13 @@
       "classification": "REQUIRED_MVP",
       "requirement_ids": ["REQ-TSK-PORT", "REQ-TSK-CRUD", "REQ-TSK-ACCESS", "REQ-TSK-RELATION", "REQ-TSK-MOBILE-UI"],
       "semantics": {
-        "operations": ["listTasks", "createTask", "updateTask", "completeTask", "deleteTask", "relateToEntity"],
+        "operations": ["listTasks", "createTask", "updateTask", "completeTask", "quickReschedule", "toggleChecklistItem", "deleteTask", "relateToEntity", "listTemplates"],
         "validation_contract": "packages/contracts/src/contact-port.ts",
         "errors": ["forbidden", "not-found", "validation-error", "conflict", "offline-pending"]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "Customer 360 Tasks tab and CRM Workspace", "route": "/app/sales-crm/contacts/:contactId" },
-        "mobile_web": { "required": true, "surface": "Customer 360 mobile Tasks list and Quick Task modal", "route": "/app/sales-crm/contacts/:contactId" },
+        "desktop_web": { "required": true, "surface": "Customer 360 Tasks tab, CRM Workspace and Dedicated Tasks page", "route": "/app/sales-crm/tasks" },
+        "mobile_web": { "required": true, "surface": "Customer 360 mobile Tasks list, Quick Task modal and Bottom Nav Tasks", "route": "/app/sales-crm/tasks" },
         "ios": { "required": false, "surface": "planned", "route": null },
         "android": { "required": false, "surface": "planned", "route": null }
       },
@@ -84,8 +84,11 @@
         { "id": "createTask", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
         { "id": "updateTask", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
         { "id": "completeTask", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
+        { "id": "quickReschedule", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
+        { "id": "toggleChecklistItem", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
         { "id": "deleteTask", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
-        { "id": "relateToEntity", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" }
+        { "id": "relateToEntity", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
+        { "id": "listTemplates", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" }
       ],
       "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
       "permissions": ["tasks.read", "tasks.create", "tasks.update", "tasks.delete", "tasks.assign"],
@@ -99,7 +102,7 @@
       "phase": "07-build",
       "type": "shared_contract",
       "status": "ready",
-      "title": "Implement neutral TasksPort and shared DTOs",
+      "title": "Implement neutral TasksPort, templates, checklists and shared DTOs",
       "requirement_ids": ["REQ-TSK-PORT", "REQ-TSK-CRUD"],
       "capability_ids": ["CAP-TASKS-CORE"],
       "platforms": ["shared", "desktop_web", "mobile_web"],
@@ -107,7 +110,7 @@
       "owner": "Platform",
       "risk": "medium",
       "evidence_level": "E2_UNIT",
-      "acceptance_criteria": ["TasksPort exposes all lifecycle operations and typed result/error states."],
+      "acceptance_criteria": ["TasksPort exposes all lifecycle operations, templates, checklists, reschedule and typed result/error states."],
       "validation": [{ "command": "npm run test", "required": true }],
       "files": ["packages/contracts/src/notes.ts"],
       "blocked_by": [],

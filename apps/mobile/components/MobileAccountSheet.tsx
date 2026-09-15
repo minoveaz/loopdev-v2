@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { MobileConfirmDialog } from "./MobileModal";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "../adapters/auth";
-import type { Organization, TenantContextSnapshot } from "../../../packages/contracts/src/auth-port";
+import type { AuthSession, Organization, TenantContextSnapshot } from "../../../packages/contracts/src/auth-port";
 
 type MobileAccountSheetProps = {
   visible: boolean;
@@ -67,7 +67,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
   const activeOrgId = context?.activeOrganizationId ?? orgs[0]?.id;
   const userName = session?.user.fullName || session?.user.email?.split("@")[0] || "User";
   const userEmail = session?.user.email || "user@loopdev.com";
-  const initials = (session?.user.fullName ? session.user.fullName.split(" ").map((p) => p[0]).join("") : userName.slice(0, 2)).toUpperCase().slice(0, 2);
+  const initials = (session?.user.fullName ? session.user.fullName.split(" ").map((p: string) => p[0]).join("") : userName.slice(0, 2)).toUpperCase().slice(0, 2);
 
   return (
     <MobileBottomSheet onClose={onClose} title="Account" visible={visible}>

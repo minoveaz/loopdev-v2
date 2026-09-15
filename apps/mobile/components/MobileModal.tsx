@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 type MobileModalSheetProps = {
   visible: boolean;
@@ -9,20 +9,44 @@ type MobileModalSheetProps = {
   children: ReactNode;
   footer?: ReactNode;
   fullHeight?: boolean;
+  scrollable?: boolean;
 };
 
-export function MobileModalSheet({ visible, onClose, title, header, children, footer, fullHeight = false }: MobileModalSheetProps) {
-  return <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
-    <View style={styles.overlay}>
-      <Pressable accessibilityLabel="Close modal" accessibilityRole="button" onPress={onClose} style={styles.backdrop} />
-      <View onStartShouldSetResponder={() => true} style={[styles.sheet, fullHeight && styles.fullHeight]}>
-        <View style={styles.handle} />
-        {header ?? (title ? <Text accessibilityRole="header" style={styles.title}>{title}</Text> : null)}
-        <View style={styles.body}>{children}</View>
-        {footer ? <View style={styles.footer}>{footer}</View> : null}
+export function MobileModalSheet({
+  visible,
+  onClose,
+  title,
+  header,
+  children,
+  footer,
+  fullHeight = false,
+  scrollable = true,
+}: MobileModalSheetProps) {
+  return (
+    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
+      <View style={styles.overlay}>
+        <Pressable accessibilityLabel="Close modal" accessibilityRole="button" onPress={onClose} style={styles.backdrop} />
+        <View onStartShouldSetResponder={() => true} style={[styles.sheet, fullHeight && styles.fullHeight]}>
+          <View style={styles.handle} />
+          {header ?? (title ? <Text accessibilityRole="header" style={styles.title}>{title}</Text> : null)}
+          {scrollable ? (
+            <ScrollView
+              style={styles.scrollBody}
+              contentContainerStyle={styles.scrollBodyContent}
+              showsVerticalScrollIndicator={true}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled={true}
+            >
+              {children}
+            </ScrollView>
+          ) : (
+            <View style={styles.body}>{children}</View>
+          )}
+          {footer ? <View style={styles.footer}>{footer}</View> : null}
+        </View>
       </View>
-    </View>
-  </Modal>;
+    </Modal>
+  );
 }
 
 export function MobileConfirmDialog({ visible, title, description, cancelLabel = "Cancel", confirmLabel = "Confirm", destructive = false, onCancel, onConfirm }: {
@@ -50,11 +74,13 @@ export function MobileConfirmDialog({ visible, title, description, cancelLabel =
 const styles = StyleSheet.create({
   overlay: { backgroundColor: "rgba(15,23,42,0.42)", flex: 1, justifyContent: "flex-end" },
   backdrop: { ...StyleSheet.absoluteFill },
-  sheet: { backgroundColor: "#fff", borderTopLeftRadius: 22, borderTopRightRadius: 22, maxHeight: "85%", padding: 20 },
+  sheet: { backgroundColor: "#fff", borderTopLeftRadius: 22, borderTopRightRadius: 22, maxHeight: "90%", paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24, display: "flex", flexDirection: "column" },
   fullHeight: { height: "92%" },
-  handle: { alignSelf: "center", backgroundColor: "#cbd5e1", borderRadius: 99, height: 4, marginBottom: 16, width: 38 },
-  title: { color: "#111827", fontSize: 20, fontWeight: "800", marginBottom: 14, textAlign: "center" },
+  handle: { alignSelf: "center", backgroundColor: "#cbd5e1", borderRadius: 99, height: 4, marginBottom: 14, width: 38 },
+  title: { color: "#111827", fontSize: 18, fontWeight: "800", marginBottom: 12, textAlign: "center" },
   body: { minHeight: 0 },
+  scrollBody: { flexShrink: 1 },
+  scrollBodyContent: { paddingBottom: 20 },
   footer: { borderTopColor: "#e2e8f0", borderTopWidth: 1, marginTop: 16, paddingTop: 14 },
   confirmOverlay: { alignItems: "center", backgroundColor: "rgba(15,23,42,0.5)", flex: 1, justifyContent: "center", padding: 22 },
   confirmCard: { backgroundColor: "#fff", borderRadius: 16, maxWidth: 440, padding: 22, width: "100%" },

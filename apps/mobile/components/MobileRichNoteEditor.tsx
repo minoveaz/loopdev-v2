@@ -15,4 +15,4 @@ export function MobileRichNoteEditor({ initialContent, disabled, onChange }: Pro
   </View>;
 }
 
-const styles = StyleSheet.create({ container: { borderColor: "#94a3b8", borderRadius: 7, borderWidth: 1, overflow: "hidden" }, toolbar: { alignItems: "center", backgroundColor: "#f1f5f9", borderBottomColor: "#cbd5e1", borderBottomWidth: 1, flexDirection: "row", gap: 16, padding: 11 }, tool: { color: "#334155", fontSize: 12 }, editor: { color: "#334155", height: 190, padding: 12 }, });
+const styles = StyleSheet.create({ container: { borderColor: "#94a3b8", borderRadius: 7, borderWidth: 1, overflow: "hidden" }, toolbar: { alignItems: "center", backgroundColor: "#f1f5f9", borderBottomColor: "#cbd5e1", borderBottomWidth: 1, flexDirection: "row", gap: 16, padding: 11 }, tool: { color: "#334155", fontSize: 12 }, editor: { color: "#334155", minHeight: 160, padding: 12 }, });

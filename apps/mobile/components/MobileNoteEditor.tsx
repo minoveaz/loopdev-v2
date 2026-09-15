@@ -55,7 +55,7 @@ export function MobileNoteEditor({ initialNote, relationLabel, onCancel, onSave 
     }
   }
 
-  return <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+  return <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" nestedScrollEnabled={true}>
     <View style={styles.header}><View><Text style={styles.eyebrow}>{initialNote ? "EDIT NOTE" : "NEW NOTE"}</Text><Text style={styles.title}>{mode === "rich" ? "New rich note" : "New quick note"}</Text><Text style={styles.relation}>Related to {relationLabel}</Text></View><Pressable accessibilityRole="button" onPress={onCancel}><Text style={styles.close}>×</Text></Pressable></View>
     <View accessibilityRole="tablist" style={styles.modeSwitch}>
       {(["quick", "rich"] as NoteMode[]).map((option) => <Pressable key={option} accessibilityRole="tab" accessibilityState={{ selected: mode === option }} onPress={() => setMode(option)} style={[styles.modeButton, mode === option && styles.modeButtonSelected]}><Text style={[styles.modeText, mode === option && styles.modeTextSelected]}>{option === "quick" ? "Quick note" : "Rich note"}</Text></Pressable>)}
@@ -86,4 +86,35 @@ const visibilityStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  content: { padding: 18, paddingBottom: 42 }, header: { alignItems: "flex-start", flexDirection: "row", justifyContent: "space-between", marginBottom: 18 }, eyebrow: { color: "#64748b", fontSize: 10, fontWeight: "800", letterSpacing: 1.2 }, title: { color: "#0f172a", fontSize: 22, fontWeight: "900", marginTop: 4 }, relation: { color: "#64748b", fontSize: 12, marginTop: 5 }, close: { color: "#64748b", fontSize: 28, lineHeight: 28 }, modeSwitch: { backgroundColor: "#f1f5f9", borderColor: "#cbd5e1", borderRadius: 8, borderWidth: 1, flexDirection: "row", marginBottom: 18, padding: 3 }, modeButton: { borderRadius: 6, flex: 1, paddingHorizontal: 12, paddingVertical: 10 }, modeButtonSelected: { backgroundColor: "#fff" }, modeText: { color: "#64748b", fontSize: 12, textAlign: "center" }, modeTextSelected: { color: "#0f172a", fontWeight: "800" }, label: { color: "#475569", fontSize: 11, fontWeight: "800", marginBottom: 6 }, input: { borderColor: "#94a3b8", borderRadius: 7, borderWidth: 1, color: "#0f172a", marginBottom: 16, paddingHorizontal: 12, paddingVertical: 10 }, toolbar: { alignItems: "center", backgroundColor: "#f1f5f9", borderColor: "#cbd5e1", borderRadius: 7, borderWidth: 1, flexDirection: "row", gap: 16, marginBottom: 10, overflow: "hidden", paddingHorizontal: 12, paddingVertical: 11 }, tool: { color: "#334155", fontSize: 12 }, toolBold: { color: "#334155", fontSize: 13, fontWeight: "900" }, toolItalic: { color: "#334155", fontSize: 13, fontStyle: "italic" }, toolUnderline: { color: "#334155", fontSize: 13, textDecorationLine: "underline" }, editor: { borderColor: "#94a3b8", borderRadius: 7, borderWidth: 1, color: "#334155", height: 150, marginBottom: 16, padding: 12 }, richEditor: { height: 210 }, visibilityRow: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 20 }, visibility: { backgroundColor: "#f8fafc", borderColor: "#cbd5e1", borderRadius: 14, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 7 }, visibilitySelected: { backgroundColor: "#eff6ff", borderColor: "#2563eb" }, visibilityText: { color: "#475569", fontSize: 11 }, footer: { flexDirection: "row", gap: 9, justifyContent: "flex-end" }, cancel: { borderRadius: 7, paddingHorizontal: 16, paddingVertical: 12 }, cancelText: { color: "#475569", fontWeight: "700" }, save: { backgroundColor: "#2563eb", borderRadius: 7, paddingHorizontal: 18, paddingVertical: 12 }, saveText: { color: "#fff", fontWeight: "800" }, error: { color: "#b91c1c", fontSize: 13, marginTop: 12 }, });
+  scroll: { flexGrow: 1 },
+  content: { padding: 18, paddingBottom: 42 },
+  header: { alignItems: "flex-start", flexDirection: "row", justifyContent: "space-between", marginBottom: 18 },
+  eyebrow: { color: "#64748b", fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
+  title: { color: "#0f172a", fontSize: 22, fontWeight: "900", marginTop: 4 },
+  relation: { color: "#64748b", fontSize: 12, marginTop: 5 },
+  close: { color: "#64748b", fontSize: 28, lineHeight: 28 },
+  modeSwitch: { backgroundColor: "#f1f5f9", borderColor: "#cbd5e1", borderRadius: 8, borderWidth: 1, flexDirection: "row", marginBottom: 18, padding: 3 },
+  modeButton: { borderRadius: 6, flex: 1, paddingHorizontal: 12, paddingVertical: 10 },
+  modeButtonSelected: { backgroundColor: "#fff" },
+  modeText: { color: "#64748b", fontSize: 12, textAlign: "center" },
+  modeTextSelected: { color: "#0f172a", fontWeight: "800" },
+  label: { color: "#475569", fontSize: 11, fontWeight: "800", marginBottom: 6 },
+  input: { borderColor: "#94a3b8", borderRadius: 7, borderWidth: 1, color: "#0f172a", marginBottom: 16, paddingHorizontal: 12, paddingVertical: 10 },
+  toolbar: { alignItems: "center", backgroundColor: "#f1f5f9", borderColor: "#cbd5e1", borderRadius: 7, borderWidth: 1, flexDirection: "row", gap: 16, marginBottom: 10, overflow: "hidden", paddingHorizontal: 12, paddingVertical: 11 },
+  tool: { color: "#334155", fontSize: 12 },
+  toolBold: { color: "#334155", fontSize: 13, fontWeight: "900" },
+  toolItalic: { color: "#334155", fontSize: 13, fontStyle: "italic" },
+  toolUnderline: { color: "#334155", fontSize: 13, textDecorationLine: "underline" },
+  editor: { borderColor: "#94a3b8", borderRadius: 7, borderWidth: 1, color: "#334155", minHeight: 140, marginBottom: 16, padding: 12 },
+  richEditor: { minHeight: 180 },
+  visibilityRow: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 20 },
+  visibility: { backgroundColor: "#f8fafc", borderColor: "#cbd5e1", borderRadius: 14, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 7 },
+  visibilitySelected: { backgroundColor: "#eff6ff", borderColor: "#2563eb" },
+  visibilityText: { color: "#475569", fontSize: 11 },
+  footer: { flexDirection: "row", gap: 9, justifyContent: "flex-end" },
+  cancel: { borderRadius: 7, paddingHorizontal: 16, paddingVertical: 12 },
+  cancelText: { color: "#475569", fontWeight: "700" },
+  save: { backgroundColor: "#2563eb", borderRadius: 7, paddingHorizontal: 18, paddingVertical: 12 },
+  saveText: { color: "#fff", fontWeight: "800" },
+  error: { color: "#b91c1c", fontSize: 13, marginTop: 12 },
+});

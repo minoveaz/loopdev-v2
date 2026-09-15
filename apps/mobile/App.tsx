@@ -29,6 +29,7 @@ import { MobileDuplicateReviewScreen } from "./components/MobileDuplicateReviewS
 import { MobileLoginScreen } from "./components/MobileLoginScreen";
 import { MobileForgotPasswordScreen } from "./components/MobileForgotPasswordScreen";
 import { MobileLogoSpinner } from "./components/MobileLogoSpinner";
+import { MobileTasksScreen } from "./components/MobileTasksScreen";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./adapters/auth";
 import type { AuthSession, TenantContextSnapshot } from "../../packages/contracts/src/auth-port";
 import type { MobileNoteDraft } from "./components/MobileNoteEditor";
@@ -223,6 +224,16 @@ export default function App() {
         return <MobileCustomer360Screen loading={!contactError} error={contactError} onBack={() => navigate(contactNavigationRoutes.list)} />;
       }
       return <MobileCustomer360Screen view={customer360} notes={mobileNotes} notesLoading={mobileNotesLoading} onCreateNote={(draft) => createMobileNote(contact, draft)} onUpdateNote={(noteId, version, draft) => updateMobileNote(noteId, version, contact, draft)} onDeleteNote={(note) => deleteMobileNote(note, contact)} onBack={() => navigate(contactNavigationRoutes.list)} onEdit={() => { setEditingContact(contact); navigate(contactNavigationRoutes.edit.replace(":contactId", encodeURIComponent(contact.id))); }} onArchive={async (target) => { const result = await mobileContactAdapter.archiveContact(target.id, target.updatedAt); if (result.status === "success") { setContacts((current) => current.filter((item) => item.id !== target.id)); navigate(contactNavigationRoutes.list); } }} />;
+    }
+    if (currentPath === "/app/sales-crm/tasks" || currentPath === "/app/tasks") {
+      return (
+        <MobileTasksScreen
+          onBack={() => navigate("/app/sales-crm/overview")}
+          onNavigateToContact={(contactId) => {
+            navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
+          }}
+        />
+      );
     }
     if (activeSuite) {
       return <MobileWorkspaceScreen suite={activeSuite} onBack={() => navigate(launchpadPath)} />;

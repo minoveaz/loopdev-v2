@@ -9,3 +9,4 @@ export * from "./contact-local-adapter";
 export * from "./pipeline-capability";
 export * from "./notes";
 export * from "./auth-port";
+export * from "./tasks";

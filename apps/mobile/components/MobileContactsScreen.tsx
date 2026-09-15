@@ -1,4 +1,4 @@
-import { Archive, Building2, CalendarDays, ChevronDown, Eye, Mail, MapPin, MessageCircle, MoreHorizontal, Pencil, Phone, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react-native";
+import { Archive, Building2, CalendarDays, CheckSquare, ChevronDown, Eye, FileText, Mail, MapPin, MessageCircle, MoreHorizontal, Pencil, Phone, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react-native";
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useMemo, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
@@ -72,8 +72,8 @@ function ContactActionsSheet({ contact, onClose, onView, onEdit, onArchive }: { 
 function EyeIcon() { return <Eye color="#475569" size={18} />; }
 function PencilIcon() { return <Pencil color="#475569" size={18} />; }
 function ArchiveIcon() { return <Archive color="#475569" size={18} />; }
-function NoteIcon() { return <Text style={styles.actionIcon}>□</Text>; }
-function TaskIcon() { return <Text style={styles.actionIcon}>☑</Text>; }
+function NoteIcon() { return <FileText color="#475569" size={18} />; }
+function TaskIcon() { return <CheckSquare color="#475569" size={18} />; }
 
 function Detail({ icon: Icon, value }: { icon: typeof Mail; value: string }) {
   return <View style={styles.detail}><Icon size={15} color="#64748b" /><Text style={styles.detailText} numberOfLines={1}>{value}</Text></View>;

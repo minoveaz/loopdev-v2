@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "workflow_version": 1,
+  "run_id": "MOD-TASKS-20260915-001",
+  "suite": "crm",
+  "module": "tasks",
+  "status": "running",
+  "current_phase": "01-design",
+  "attempt": 1,
+  "started_at": "2026-09-15T05:13:26.361Z",
+  "updated_at": "2026-09-15T05:14:43.220Z",
+  "input_fingerprint": "sha256:0367a97cdaebef4fe1c7dd584247ea75baf0e8fec8313a0e7a4eb4823fda2e64",
+  "fingerprints": {
+    "product": "sha256:2381bdd5c00d40fa85eaf5117c0c5e048b740021dff582bbda4a93219e532ade",
+    "scope": "sha256:3e92fa519b1e8d2287bd9fad9a68414bf1f0e0890a3d80f8b9e0b563f2667005",
+    "design": "sha256:d98171096dc78092db9d206fdad17664b2c5e2e4e78104fae3cc5386465aa79b",
+    "plan": "sha256:b53f13edf1d4719aa1adfed777d709664b7f3860e504a80ea7e41eb6fe117c08",
+    "contracts": "sha256:11cea38690fff945ec7faec06894fafbaa335b3fb4f7c92b16507e471984dc32",
+    "code": "sha256:5931d5dc9d04177f2dbbc89bb4b72c88e8806082f321946702d286c027f81083",
+    "tests": "sha256:3643a676b7f3a5047d4ba55ac33c052d17c4afe2ba15f7f286dbb66188e36c7a"
+  },
+  "environment": {
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": null,
+    "head_commit": "0d543e71e389a27834444cee3015145912716960",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "platform_scope": [
+    "desktop_web",
+    "mobile_web",
+    "ios",
+    "android"
+  ],
+  "approvals": {
+    "design": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "visual_design": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "plan": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "verification": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "release": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "push": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "pull_request": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    }
+  },
+  "approval_gates": [],
+  "architecture_quality": "PASS",
+  "platform_impact": [],
+  "checkpoint_paths": [
+    "docs/implementation/crm/tasks/runs/MOD-TASKS-20260915-001/00-discovery.json",
+    "docs/implementation/crm/tasks/runs/MOD-TASKS-20260915-001/01-design.json"
+  ],
+  "evidence_links": [],
+  "change_requests": [],
+  "blocked_by": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
+  "next_action": "Record the handoff from 01-design.",
+  "handoffs": [],
+  "commit": null,
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "../../_schemas/delivery-ledger.schema.json",
+  "schema_version": 1,
+  "suite": "crm",
+  "module": "tasks",
+  "status": "draft",
+  "approved_by": null,
+  "approved_at": null,
+  "approval_source": null,
+  "product_sources": ["docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md"],
+  "previous_ledger": null,
+  "requirements": [
+    {
+      "id": "REQ-TSK-PORT",
+      "title": "Neutral TasksPort contract and DTOs",
+      "classification": "PLATFORM_REUSE",
+      "source": "docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Contract exposes stable polymorphic task operations and typed outcomes without desktop runtime imports."],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": ["CAP-TASKS-CORE"]
+    },
+    {
+      "id": "REQ-TSK-CRUD",
+      "title": "Shared Tasks lifecycle operations",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": ["listTasks, createTask, updateTask, completeTask, deleteTask preserve shared validation, version and error semantics."],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": ["CAP-TASKS-CORE"]
+    },
+    {
+      "id": "REQ-TSK-ACCESS",
+      "title": "Visibility, permissions and multi-tenant isolation",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Tenant scope filtering by organization_id and RBAC permissions are strictly enforced."],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": ["CAP-TASKS-CORE"]
+    },
+    {
+      "id": "REQ-TSK-RELATION",
+      "title": "Polymorphic Entity and Customer 360 relations",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": ["Tasks can be listed and mutated against Contact, Lead, and Opportunity relations."],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": ["CAP-TASKS-CORE"]
+    },
+    {
+      "id": "REQ-TSK-MOBILE-UI",
+      "title": "Mobile touch-first Task components and boundary isolation",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md",
+      "platforms": ["mobile_web"],
+      "acceptance_criteria": ["Mobile list, compact card, quick create modal and checkbox toggle meet touch target standards (>44px)."],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": ["CAP-TASKS-CORE"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "CAP-TASKS-CORE",
+      "name": "Platform Tasks shared capability",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["REQ-TSK-PORT", "REQ-TSK-CRUD", "REQ-TSK-ACCESS", "REQ-TSK-RELATION", "REQ-TSK-MOBILE-UI"],
+      "semantics": {
+        "operations": ["listTasks", "createTask", "updateTask", "completeTask", "deleteTask", "relateToEntity"],
+        "validation_contract": "packages/contracts/src/contact-port.ts",
+        "errors": ["forbidden", "not-found", "validation-error", "conflict", "offline-pending"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "Customer 360 Tasks tab and CRM Workspace", "route": "/app/sales-crm/contacts/:contactId" },
+        "mobile_web": { "required": true, "surface": "Customer 360 mobile Tasks list and Quick Task modal", "route": "/app/sales-crm/contacts/:contactId" },
+        "ios": { "required": false, "surface": "planned", "route": null },
+        "android": { "required": false, "surface": "planned", "route": null }
+      },
+      "parity": { "domain": "partial", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "listTasks", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
+        { "id": "createTask", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
+        { "id": "updateTask", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
+        { "id": "completeTask", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
+        { "id": "deleteTask", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" },
+        { "id": "relateToEntity", "desktop_web": "adapted", "mobile_web": "adapted", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": "DESIGN-001" }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["tasks.read", "tasks.create", "tasks.update", "tasks.delete", "tasks.assign"],
+      "contract_refs": ["packages/contracts/src/contact-port.ts", "src/loopdev/domains/platform/types.ts"],
+      "task_ids": ["TASK-TSK-CONTRACT"]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-TSK-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "ready",
+      "title": "Implement neutral TasksPort and shared DTOs",
+      "requirement_ids": ["REQ-TSK-PORT", "REQ-TSK-CRUD"],
+      "capability_ids": ["CAP-TASKS-CORE"],
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "dependencies": [],
+      "owner": "Platform",
+      "risk": "medium",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": ["TasksPort exposes all lifecycle operations and typed result/error states."],
+      "validation": [{ "command": "npm run test", "required": true }],
+      "files": ["packages/contracts/src/notes.ts"],
+      "blocked_by": [],
+      "evidence_refs": []
+    }
+  ],
+  "change_requests": [],
+  "blockers": []
+}

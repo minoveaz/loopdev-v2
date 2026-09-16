@@ -132,10 +132,10 @@ export function MobileDocumentIntelligenceScreen({
         {isExtracting ? (
           <View style={styles.progressContainer}>
             <View style={styles.progressBarBackground}>
-              <View style={[styles.progressBarFill, { width: \`${extractionProgress}%`} ]} />
+              <View style={[styles.progressBarFill, { width: `${extractionProgress}%` }]} />
             </View>
             <Text style={styles.progressText}>
-              Extrayendo datos de identidad por visión neuronal (${extractionProgress}%)...
+              Extrayendo datos de identidad por visión neuronal ({extractionProgress}%)...
             </Text>
           </View>
         ) : (
@@ -320,7 +320,7 @@ export function MobileDocumentIntelligenceScreen({
                 onPress={() => {
                   Alert.alert(
                     "Datos aplicados",
-                    \`Se han estructurado los datos de \${selectedFixture.name} para su uso en CRM y Formularios.\`
+                    `Se han estructurado los datos de ${selectedFixture.name} para su uso en CRM y Formularios.`
                   );
                   setSelectedFixture(null);
                 }}

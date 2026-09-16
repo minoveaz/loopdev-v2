@@ -84,7 +84,10 @@ export function MobileCustomer360Timeline({ timeline, contactId }: Props) {
 
       {/* Feed List */}
       <View style={styles.feedCard}>
-        <Text style={styles.feedTitle}>Historial de Interacciones</Text>
+        <View style={styles.feedHeader}>
+          <Text style={styles.feedTitle}>Activity timeline</Text>
+          <Text style={styles.feedSubtitle}>Eventos y actividades recientes de la relación</Text>
+        </View>
 
         {orderedTimeline.length === 0 ? (
           <View style={styles.emptyBox}>
@@ -178,11 +181,18 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
     padding: 16,
   },
+  feedHeader: {
+    marginBottom: 16,
+  },
   feedTitle: {
     fontSize: 15,
     fontWeight: "800",
     color: "#0f172a",
-    marginBottom: 16,
+  },
+  feedSubtitle: {
+    fontSize: 12,
+    color: "#64748b",
+    marginTop: 2,
   },
   emptyBox: {
     alignItems: "center",

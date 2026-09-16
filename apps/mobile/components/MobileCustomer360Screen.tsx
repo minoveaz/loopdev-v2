@@ -15,7 +15,7 @@ import { MobileCustomer360Products } from "./customer360/MobileCustomer360Produc
 import { MobileCustomer360Timeline } from "./customer360/MobileCustomer360Timeline";
 import type { MobileNoteDraft } from "./MobileNoteEditor";
 
-type TabId = "contact" | "sales" | "work" | "documents" | "products";
+type TabId = "contact" | "sales" | "work" | "documents" | "products" | "activity";
 
 type Props = {
   view?: ContactCustomer360View;
@@ -203,6 +203,7 @@ export function MobileCustomer360Screen({
     { id: "work", label: "Work", count: workCount },
     { id: "documents", label: "Documents" },
     { id: "products", label: "Products" },
+    { id: "activity", label: "Activity timeline", count: timeline.length },
   ];
 
   return (
@@ -296,13 +297,12 @@ export function MobileCustomer360Screen({
         />
       )}
 
-      {/* Customer 360 Activity & Timeline (mirroring Desktop layout) */}
-      <View style={styles.timelineSection}>
+      {activeTab === "activity" && (
         <MobileCustomer360Timeline
           timeline={timeline}
           contactId={contact.id}
         />
-      </View>
+      )}
     </ScrollView>
   );
 }
@@ -380,9 +380,6 @@ const styles = StyleSheet.create({
     height: 3,
     backgroundColor: "#135bec",
     borderRadius: 3,
-  },
-  timelineSection: {
-    marginTop: 16,
   },
   stateContainer: {
     flex: 1,

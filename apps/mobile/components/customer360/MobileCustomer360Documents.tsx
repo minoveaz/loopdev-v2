@@ -124,34 +124,45 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
         </>
       )}
 
-      {/* Header with Upload Triggers */}
+      {/* Header */}
       <View style={styles.cardHeader}>
         <View>
           <Text style={styles.cardTitle}>{t("crm.customer360.documents.title")} ({files.length})</Text>
           <Text style={styles.cardSubtitle}>{t("crm.customer360.documents.subtitle")}</Text>
         </View>
-        <View style={styles.uploadRow}>
+      </View>
+
+      {/* Modern Dropzone with In-Dropzone Action Buttons */}
+      <View style={styles.dropzoneCard}>
+        <View style={styles.dropzoneIconCircle}>
+          <Upload size={22} color="#135bec" />
+        </View>
+        <Text style={styles.dropzoneTitle}>{t("crm.customer360.documents.dropzoneTitle")}</Text>
+        <Text style={styles.dropzoneDesc}>{t("crm.customer360.documents.dropzoneDesc")}</Text>
+
+        <View style={styles.dropzoneActionsRow}>
           <Pressable
-            style={styles.uploadButton}
+            style={styles.dropzoneUploadBtn}
             onPress={() => {
               if (Platform.OS === "web" && fileInputRef.current) {
                 fileInputRef.current.click();
               }
             }}
           >
-            <Upload size={13} color="#135bec" />
-            <Text style={styles.uploadButtonText}>{t("crm.customer360.documents.upload")}</Text>
+            <Upload size={14} color="#135bec" />
+            <Text style={styles.dropzoneUploadBtnText}>{t("crm.customer360.documents.upload")}</Text>
           </Pressable>
+
           <Pressable
-            style={[styles.uploadButton, styles.cameraButton]}
+            style={styles.dropzoneCameraBtn}
             onPress={() => {
               if (Platform.OS === "web" && cameraInputRef.current) {
                 cameraInputRef.current.click();
               }
             }}
           >
-            <Camera size={13} color="#ffffff" />
-            <Text style={[styles.uploadButtonText, styles.cameraButtonText]}>Photo</Text>
+            <Camera size={14} color="#ffffff" />
+            <Text style={styles.dropzoneCameraBtnText}>{t("crm.customer360.documents.takePhoto")}</Text>
           </Pressable>
         </View>
       </View>
@@ -180,7 +191,7 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
       <View style={styles.documentsContainer}>
         {filteredFiles.length === 0 ? (
           <View style={styles.emptyBox}>
-            <FileText size={28} color="#94a3b8" />
+            <FileText size={24} color="#94a3b8" />
             <Text style={styles.emptyTitle}>{t("crm.customer360.documents.noDocuments")}</Text>
             <Text style={styles.emptySubtitle}>{t("crm.customer360.documents.noDocumentsDesc")}</Text>
           </View>
@@ -289,9 +300,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     marginBottom: 12,
   },
   cardTitle: {
@@ -304,31 +312,82 @@ const styles = StyleSheet.create({
     color: "#64748b",
     marginTop: 2,
   },
-  uploadRow: {
-    flexDirection: "row",
-    gap: 6,
+  dropzoneCard: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1.5,
+    borderColor: "#bfdbfe",
+    borderStyle: "dashed",
+    borderRadius: 14,
+    padding: 20,
+    alignItems: "center",
+    marginBottom: 16,
   },
-  uploadButton: {
+  dropzoneIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#eff6ff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  dropzoneTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#0f172a",
+    textAlign: "center",
+  },
+  dropzoneDesc: {
+    fontSize: 11,
+    color: "#64748b",
+    textAlign: "center",
+    marginTop: 4,
+    marginBottom: 14,
+    maxWidth: 280,
+  },
+  dropzoneActionsRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    backgroundColor: "#eff6ff",
+    justifyContent: "center",
+    gap: 8,
+    width: "100%",
+  },
+  dropzoneUploadBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#ffffff",
     borderColor: "#bfdbfe",
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    flex: 1,
+    maxWidth: 160,
   },
-  uploadButtonText: {
+  dropzoneUploadBtnText: {
     fontSize: 12,
     fontWeight: "700",
     color: "#135bec",
   },
-  cameraButton: {
+  dropzoneCameraBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
     backgroundColor: "#135bec",
     borderColor: "#135bec",
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    flex: 1,
+    maxWidth: 160,
   },
-  cameraButtonText: {
+  dropzoneCameraBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
     color: "#ffffff",
   },
   categoryScroll: {

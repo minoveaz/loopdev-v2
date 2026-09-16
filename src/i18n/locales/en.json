@@ -359,6 +359,9 @@
         "title": "Documents",
         "subtitle": "Files, invoices, and contracts",
         "upload": "Upload document",
+        "takePhoto": "Take photo",
+        "dropzoneTitle": "Upload documents or take photos",
+        "dropzoneDesc": "Drag and drop or tap to select PNG, JPG, PDF or TXT up to 10MB",
         "noDocuments": "No documents uploaded",
         "noDocumentsDesc": "Documents and files attached to this contact will appear here."
       },

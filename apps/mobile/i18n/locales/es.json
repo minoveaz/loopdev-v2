@@ -359,6 +359,9 @@
         "title": "Documentos",
         "subtitle": "Archivos, facturas y contratos",
         "upload": "Subir documento",
+        "takePhoto": "Tomar foto",
+        "dropzoneTitle": "Subir documentos o tomar fotos",
+        "dropzoneDesc": "Arrastra archivos o pulsa para seleccionar PNG, JPG, PDF o TXT hasta 10MB",
         "noDocuments": "Sin documentos cargados",
         "noDocumentsDesc": "Los documentos y archivos adjuntos a este contacto aparecerán aquí."
       },

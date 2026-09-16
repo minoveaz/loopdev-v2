@@ -283,7 +283,7 @@
       },
       "subtabs": {
         "identity": "Identity",
-        "channels": "Contact",
+        "channels": "Channels",
         "organization": "Organization",
         "address": "Address"
       },

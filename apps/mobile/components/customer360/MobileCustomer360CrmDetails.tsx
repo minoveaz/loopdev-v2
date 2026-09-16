@@ -6,27 +6,26 @@ import {
   Check,
   CheckCircle2,
   Copy,
-  Globe,
-  Mail,
   MapPin,
   Phone,
-  Shield,
   User,
 } from "lucide-react-native";
 import type { ContactRecord } from "../../../../packages/contracts/src/contact-port";
+import { useT } from "../../i18n";
 
 interface Props {
   contact: ContactRecord;
 }
 
 export function MobileCustomer360CrmDetails({ contact }: Props) {
+  const t = useT();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const missingFields = [
-    !contact.email && "email",
-    !contact.phone && "teléfono",
-    !contact.country && "país",
-    !contact.documentNumber && "documento",
+    !contact.email && t("crm.customer360.fields.primaryEmail"),
+    !contact.phone && t("crm.customer360.fields.primaryPhone"),
+    !contact.country && t("crm.customer360.fields.country"),
+    !contact.documentNumber && t("crm.customer360.fields.docNumber"),
   ].filter((f): f is string => Boolean(f));
 
   const copyToClipboard = (text: string, label: string) => {
@@ -59,12 +58,12 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             ]}
           >
             {missingFields.length > 0
-              ? "Información del contacto incompleta"
-              : "Perfil completo y listo para CRM"}
+              ? t("crm.customer360.completeness.incomplete")
+              : t("crm.customer360.completeness.complete")}
           </Text>
           {missingFields.length > 0 && (
             <Text style={styles.bannerSubtitle}>
-              Falta: {missingFields.join(", ")}
+              {t("crm.customer360.completeness.missing", { fields: missingFields.join(", ") })}
             </Text>
           )}
         </View>
@@ -77,20 +76,21 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <User size={15} color="#135bec" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.sectionTitle}>Identidad y Datos Personales</Text>
-            <Text style={styles.sectionSubtitle}>Nombres, documentos y registro oficial</Text>
+            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.identityTitle")}</Text>
+            <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.identitySubtitle")}</Text>
           </View>
         </View>
 
         <View style={styles.fieldsList}>
-          <FieldItem label="Primer Nombre" value={contact.firstName} />
-          <FieldItem label="Primer Apellido" value={contact.lastName} />
-          <FieldItem label="Segundo Apellido" value={contact.secondLastName} />
-          <FieldItem label="Nombre Preferido" value={contact.preferredName} />
-          <FieldItem label="Tipo de Documento" value={contact.documentType} />
+          <FieldItem label={t("crm.customer360.fields.firstName")} value={contact.firstName} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.lastName")} value={contact.lastName} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.secondLastName")} value={contact.secondLastName} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.preferredName")} value={contact.preferredName} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.docType")} value={contact.documentType} emptyText={t("crm.customer360.fields.notRegistered")} />
           <FieldItem
-            label="Número de Documento"
+            label={t("crm.customer360.fields.docNumber")}
             value={contact.documentNumber}
+            emptyText={t("crm.customer360.fields.notRegistered")}
             mono
             onCopy={
               contact.documentNumber
@@ -100,10 +100,11 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             copied={copiedKey === "doc"}
           />
           <FieldItem
-            label="Fecha de Nacimiento"
+            label={t("crm.customer360.fields.birthDate")}
             value={contact.birthDate ? new Date(contact.birthDate).toLocaleDateString() : null}
+            emptyText={t("crm.customer360.fields.notRegistered")}
           />
-          <FieldItem label="Género" value={contact.gender} />
+          <FieldItem label={t("crm.customer360.fields.gender")} value={contact.gender} emptyText={t("crm.customer360.fields.notRegistered")} />
         </View>
       </View>
 
@@ -114,30 +115,33 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <Phone size={15} color="#135bec" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.sectionTitle}>Canales de Contacto</Text>
-            <Text style={styles.sectionSubtitle}>Emails, teléfonos y preferencias</Text>
+            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.channelsTitle")}</Text>
+            <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.channelsSubtitle")}</Text>
           </View>
         </View>
 
         <View style={styles.fieldsList}>
           <FieldItem
-            label="Email Principal"
+            label={t("crm.customer360.fields.primaryEmail")}
             value={contact.email}
+            emptyText={t("crm.customer360.fields.notRegistered")}
             onCopy={contact.email ? () => copyToClipboard(contact.email!, "email") : undefined}
             copied={copiedKey === "email"}
           />
-          <FieldItem label="Email Secundario" value={contact.secondaryEmail} />
+          <FieldItem label={t("crm.customer360.fields.secondaryEmail")} value={contact.secondaryEmail} emptyText={t("crm.customer360.fields.notRegistered")} />
           <FieldItem
-            label="Teléfono Principal"
+            label={t("crm.customer360.fields.primaryPhone")}
             value={contact.phone}
+            emptyText={t("crm.customer360.fields.notRegistered")}
             onCopy={contact.phone ? () => copyToClipboard(contact.phone!, "phone") : undefined}
             copied={copiedKey === "phone"}
           />
-          <FieldItem label="Teléfono Secundario" value={contact.secondaryPhone} />
-          <FieldItem label="Canal Preferido" value={contact.preferredChannel} />
+          <FieldItem label={t("crm.customer360.fields.secondaryPhone")} value={contact.secondaryPhone} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.preferredChannel")} value={contact.preferredChannel} emptyText={t("crm.customer360.fields.notRegistered")} />
           <FieldItem
-            label="Idioma Preferido"
-            value={contact.preferredLanguage || "Español (es)"}
+            label={t("crm.customer360.fields.preferredLanguage")}
+            value={contact.preferredLanguage}
+            emptyText={t("crm.customer360.fields.notRegistered")}
           />
         </View>
       </View>
@@ -149,33 +153,36 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <Building2 size={15} color="#135bec" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.sectionTitle}>Organización y Relación</Text>
-            <Text style={styles.sectionSubtitle}>Empresa, cargo y metadatos del CRM</Text>
+            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.orgTitle")}</Text>
+            <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.orgSubtitle")}</Text>
           </View>
         </View>
 
         <View style={styles.fieldsList}>
-          <FieldItem label="Empresa" value={contact.companyName} />
-          <FieldItem label="Cargo / Posición" value={contact.jobTitle} />
-          <FieldItem label="Departamento" value={contact.department} />
-          <FieldItem label="Estado de Identidad" value={contact.identityStatus} />
+          <FieldItem label={t("crm.customer360.fields.company")} value={contact.companyName} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.jobTitle")} value={contact.jobTitle} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.department")} value={contact.department} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.identityStatus")} value={contact.identityStatus} emptyText={t("crm.customer360.fields.notRegistered")} />
           <FieldItem
-            label="ID del Contacto"
+            label={t("crm.customer360.fields.contactId")}
             value={contact.id}
             mono
+            emptyText={t("crm.customer360.fields.notRegistered")}
             onCopy={() => copyToClipboard(contact.id, "id")}
             copied={copiedKey === "id"}
           />
           <FieldItem
-            label="Fecha de Registro"
+            label={t("crm.customer360.fields.createdAt")}
             value={new Date(contact.createdAt).toLocaleString()}
+            emptyText={t("crm.customer360.fields.notRegistered")}
           />
           <FieldItem
-            label="Última Actualización"
+            label={t("crm.customer360.fields.updatedAt")}
             value={new Date(contact.updatedAt).toLocaleString()}
+            emptyText={t("crm.customer360.fields.notRegistered")}
           />
           {Object.entries(contact.attributes || {}).map(([key, val]) => (
-            <FieldItem key={key} label={`Personalizado · ${key}`} value={String(val)} />
+            <FieldItem key={key} label={key} value={String(val)} emptyText={t("crm.customer360.fields.notRegistered")} />
           ))}
         </View>
       </View>
@@ -187,18 +194,18 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <MapPin size={15} color="#135bec" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.sectionTitle}>Ubicación y Dirección</Text>
-            <Text style={styles.sectionSubtitle}>Domicilio fiscal y postal</Text>
+            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.addressTitle")}</Text>
+            <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.addressSubtitle")}</Text>
           </View>
         </View>
 
         <View style={styles.fieldsList}>
-          <FieldItem label="País" value={contact.country} />
-          <FieldItem label="Ciudad" value={contact.city} />
-          <FieldItem label="Provincia / Estado" value={contact.stateProvince} />
-          <FieldItem label="Código Postal" value={contact.postalCode} />
-          <FieldItem label="Dirección Línea 1" value={contact.addressLine1} />
-          <FieldItem label="Dirección Línea 2" value={contact.addressLine2} />
+          <FieldItem label={t("crm.customer360.fields.country")} value={contact.country} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.city")} value={contact.city} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.state")} value={contact.stateProvince} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.postalCode")} value={contact.postalCode} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.addressLine1")} value={contact.addressLine1} emptyText={t("crm.customer360.fields.notRegistered")} />
+          <FieldItem label={t("crm.customer360.fields.addressLine2")} value={contact.addressLine2} emptyText={t("crm.customer360.fields.notRegistered")} />
         </View>
       </View>
     </View>
@@ -208,12 +215,14 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
 function FieldItem({
   label,
   value,
+  emptyText,
   mono,
   onCopy,
   copied,
 }: {
   label: string;
   value?: string | null;
+  emptyText?: string;
   mono?: boolean;
   onCopy?: () => void;
   copied?: boolean;
@@ -233,7 +242,7 @@ function FieldItem({
           numberOfLines={2}
           selectable
         >
-          {value || "No registrado"}
+          {value || emptyText || "—"}
         </Text>
         {onCopy && value && (
           <Pressable hitSlop={6} onPress={onCopy} style={styles.copyButton}>

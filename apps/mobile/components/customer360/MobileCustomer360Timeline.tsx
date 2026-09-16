@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Activity, Calendar, CheckSquare, Clock3, FileText, Mail, MessageSquare, PhoneCall, StickyNote, Users } from "lucide-react-native";
 import type { CRMActivity } from "../../adapters/crm";
+import { useT } from "../../i18n";
 
 interface Props {
   timeline: CRMActivity[];
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function MobileCustomer360Timeline({ timeline, contactId }: Props) {
+  const t = useT();
   const orderedTimeline = [...timeline].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
   const firstActivity = [...timeline].sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))[0];
   const lastActivity = orderedTimeline[0];
@@ -42,17 +44,17 @@ export function MobileCustomer360Timeline({ timeline, contactId }: Props) {
   const getActivityLabel = (type: string) => {
     switch (type) {
       case "call_logged":
-        return "Llamada registrada";
+        return "Call logged";
       case "meeting_scheduled":
-        return "Reunión programada";
+        return "Meeting scheduled";
       case "email_sent":
-        return "Correo electrónico enviado";
+        return "Email sent";
       case "note_added":
-        return "Nota añadida";
+        return "Note added";
       case "task_completed":
-        return "Tarea completada";
+        return "Task completed";
       case "document_uploaded":
-        return "Documento cargado";
+        return "Document uploaded";
       default:
         return type.replace(/_/g, " ");
     }
@@ -64,37 +66,37 @@ export function MobileCustomer360Timeline({ timeline, contactId }: Props) {
       <View style={styles.metricsCard}>
         <View style={styles.metricItem}>
           <Text style={styles.metricVal}>{timeline.length}</Text>
-          <Text style={styles.metricLabel}>Total eventos</Text>
+          <Text style={styles.metricLabel}>{t("crm.customer360.timeline.totalEvents")}</Text>
         </View>
         <View style={styles.metricDivider} />
         <View style={styles.metricItem}>
           <Text style={styles.metricVal}>
             {firstActivity ? new Date(firstActivity.occurredAt).toLocaleDateString() : "—"}
           </Text>
-          <Text style={styles.metricLabel}>Primer contacto</Text>
+          <Text style={styles.metricLabel}>{t("crm.customer360.timeline.firstContact")}</Text>
         </View>
         <View style={styles.metricDivider} />
         <View style={styles.metricItem}>
           <Text style={styles.metricVal}>
             {lastActivity ? new Date(lastActivity.occurredAt).toLocaleDateString() : "—"}
           </Text>
-          <Text style={styles.metricLabel}>Último contacto</Text>
+          <Text style={styles.metricLabel}>{t("crm.customer360.timeline.lastContact")}</Text>
         </View>
       </View>
 
       {/* Feed List */}
       <View style={styles.feedCard}>
         <View style={styles.feedHeader}>
-          <Text style={styles.feedTitle}>Activity timeline</Text>
-          <Text style={styles.feedSubtitle}>Eventos y actividades recientes de la relación</Text>
+          <Text style={styles.feedTitle}>{t("crm.customer360.timeline.title")}</Text>
+          <Text style={styles.feedSubtitle}>{t("crm.customer360.timeline.subtitle")}</Text>
         </View>
 
         {orderedTimeline.length === 0 ? (
           <View style={styles.emptyBox}>
             <Clock3 size={28} color="#94a3b8" />
-            <Text style={styles.emptyTitle}>Sin actividad registrada</Text>
+            <Text style={styles.emptyTitle}>{t("crm.customer360.timeline.noActivity")}</Text>
             <Text style={styles.emptySubtitle}>
-              Las llamadas, reuniones, correos y notas aparecerán aquí.
+              {t("crm.customer360.timeline.noActivityDesc")}
             </Text>
           </View>
         ) : (

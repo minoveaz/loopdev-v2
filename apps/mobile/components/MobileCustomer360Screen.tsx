@@ -6,6 +6,7 @@ import type { NoteRecord } from "../../../packages/contracts/src/notes";
 import type { TaskRecord } from "../../../packages/contracts/src/tasks";
 import type { CRMActivity, CRMLead, CRMOpportunity } from "../adapters/crm";
 import { mobileTasksAdapter } from "../adapters/tasks";
+import { useT } from "../i18n";
 import { MobileCustomer360ProfileHeader } from "./customer360/MobileCustomer360ProfileHeader";
 import { MobileCustomer360CrmDetails } from "./customer360/MobileCustomer360CrmDetails";
 import { MobileCustomer360Sales } from "./customer360/MobileCustomer360Sales";
@@ -44,6 +45,7 @@ export function MobileCustomer360Screen({
   onUpdateNote,
   onDeleteNote,
 }: Props) {
+  const t = useT();
   const [activeTab, setActiveTab] = useState<TabId>("contact");
   const [contactTasks, setContactTasks] = useState<TaskRecord[]>([]);
   const [leads, setLeads] = useState<CRMLead[]>([]);
@@ -163,11 +165,11 @@ export function MobileCustomer360Screen({
       <View style={styles.stateContainer}>
         <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
           <ArrowLeft size={16} color="#135bec" />
-          <Text style={styles.backButtonText}>Contactos</Text>
+          <Text style={styles.backButtonText}>{t("crm.contacts.back")}</Text>
         </Pressable>
         <View style={styles.stateCenter}>
-          <Text style={styles.stateTitle}>Cargando Customer 360...</Text>
-          <Text style={styles.stateSubtitle}>Obteniendo datos del CRM unificado.</Text>
+          <Text style={styles.stateTitle}>{t("common.loading")}</Text>
+          <Text style={styles.stateSubtitle}>{t("crm.contacts.title")}</Text>
         </View>
       </View>
     );
@@ -178,11 +180,11 @@ export function MobileCustomer360Screen({
       <View style={styles.stateContainer}>
         <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
           <ArrowLeft size={16} color="#135bec" />
-          <Text style={styles.backButtonText}>Contactos</Text>
+          <Text style={styles.backButtonText}>{t("crm.contacts.back")}</Text>
         </Pressable>
         <View style={styles.stateCenter}>
-          <Text style={styles.stateTitle}>No se pudo cargar el contacto</Text>
-          <Text style={styles.stateSubtitle}>{error || "El contacto solicitado no existe o fue archivado."}</Text>
+          <Text style={styles.stateTitle}>{t("crm.contacts.noContacts")}</Text>
+          <Text style={styles.stateSubtitle}>{error || t("crm.contacts.noContacts")}</Text>
         </View>
       </View>
     );
@@ -198,12 +200,12 @@ export function MobileCustomer360Screen({
   const workCount = openTasksCount + notes.length;
 
   const tabs: Array<{ id: TabId; label: string; count?: number }> = [
-    { id: "contact", label: "Contact information" },
-    { id: "sales", label: "Sales", count: salesCount },
-    { id: "work", label: "Work", count: workCount },
-    { id: "documents", label: "Documents" },
-    { id: "products", label: "Products" },
-    { id: "activity", label: "Activity timeline", count: timeline.length },
+    { id: "contact", label: t("crm.customer360.tabs.contactInfo") },
+    { id: "sales", label: t("crm.customer360.tabs.sales"), count: salesCount },
+    { id: "work", label: t("crm.customer360.tabs.work"), count: workCount },
+    { id: "documents", label: t("crm.customer360.tabs.documents") },
+    { id: "products", label: t("crm.customer360.tabs.products") },
+    { id: "activity", label: t("crm.customer360.tabs.activity"), count: timeline.length },
   ];
 
   return (
@@ -211,7 +213,7 @@ export function MobileCustomer360Screen({
       {/* Back to Contacts Navigation */}
       <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
         <ArrowLeft size={16} color="#135bec" />
-        <Text style={styles.backButtonText}>Volver a contactos</Text>
+        <Text style={styles.backButtonText}>{t("crm.contacts.back")}</Text>
       </Pressable>
 
       {/* Top Profile Header Card */}

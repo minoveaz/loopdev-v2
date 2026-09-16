@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { BriefcaseBusiness, Calendar, Plus, TrendingUp, UserCheck, Users, X } from "lucide-react-native";
 import type { CRMLead, CRMOpportunity } from "../../adapters/crm";
+import { useT } from "../../i18n";
 
 interface Props {
   leads: CRMLead[];
@@ -20,6 +21,7 @@ export function MobileCustomer360Sales({
   onCreateLead,
   onCreateOpportunity,
 }: Props) {
+  const t = useT();
   const [activeSection, setActiveSection] = useState<"leads" | "opportunities">("leads");
   const [createLeadOpen, setCreateLeadOpen] = useState(false);
   const [createOppOpen, setCreateOppOpen] = useState(false);
@@ -80,7 +82,7 @@ export function MobileCustomer360Sales({
         >
           <Users size={14} color={activeSection === "leads" ? "#ffffff" : "#64748b"} />
           <Text style={[styles.tabButtonText, activeSection === "leads" && styles.tabButtonTextActive]}>
-            Leads ({leads.length})
+            {t("crm.customer360.sales.leads")} ({leads.length})
           </Text>
         </Pressable>
 
@@ -90,7 +92,7 @@ export function MobileCustomer360Sales({
         >
           <TrendingUp size={14} color={activeSection === "opportunities" ? "#ffffff" : "#64748b"} />
           <Text style={[styles.tabButtonText, activeSection === "opportunities" && styles.tabButtonTextActive]}>
-            Oportunidades ({opportunities.length})
+            {t("crm.customer360.sales.opportunities")} ({opportunities.length})
           </Text>
         </Pressable>
       </View>
@@ -99,18 +101,18 @@ export function MobileCustomer360Sales({
       {activeSection === "leads" && (
         <View style={styles.contentCard}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Leads asociados ({leads.length})</Text>
+            <Text style={styles.cardTitle}>{t("crm.customer360.sales.leads")} ({leads.length})</Text>
             <Pressable style={styles.addButton} onPress={() => setCreateLeadOpen(true)}>
               <Plus size={13} color="#135bec" />
-              <Text style={styles.addButtonText}>Nuevo Lead</Text>
+              <Text style={styles.addButtonText}>{t("crm.customer360.sales.newLead")}</Text>
             </Pressable>
           </View>
 
           {leads.length === 0 ? (
             <View style={styles.emptyBox}>
               <Users size={28} color="#94a3b8" />
-              <Text style={styles.emptyTitle}>Sin leads vinculados</Text>
-              <Text style={styles.emptySubtitle}>Los leads asociados a este cliente aparecerán aquí.</Text>
+              <Text style={styles.emptyTitle}>{t("crm.customer360.sales.noLeads")}</Text>
+              <Text style={styles.emptySubtitle}>{t("crm.customer360.sales.noLeadsDesc")}</Text>
             </View>
           ) : (
             <View style={styles.itemsList}>
@@ -121,7 +123,7 @@ export function MobileCustomer360Sales({
                   <View key={lead.id} style={styles.leadCard}>
                     <View style={styles.leadTopRow}>
                       <Text style={styles.leadTitle} numberOfLines={2}>
-                        {lead.interest || "Interés General"}
+                        {lead.interest || t("crm.customer360.sales.interest")}
                       </Text>
                       <View
                         style={[
@@ -142,21 +144,21 @@ export function MobileCustomer360Sales({
 
                     <View style={styles.metadataGrid}>
                       <View style={styles.metaCol}>
-                        <Text style={styles.metaLabel}>Origen</Text>
-                        <Text style={styles.metaVal}>{lead.source || "Directo"}</Text>
+                        <Text style={styles.metaLabel}>{t("crm.customer360.sales.source")}</Text>
+                        <Text style={styles.metaVal}>{lead.source || "Direct"}</Text>
                       </View>
                       <View style={styles.metaCol}>
-                        <Text style={styles.metaLabel}>Score</Text>
+                        <Text style={styles.metaLabel}>{t("crm.customer360.sales.score")}</Text>
                         <Text style={[styles.metaVal, { color: "#135bec", fontWeight: "700" }]}>
                           {lead.score ?? "—"}/100
                         </Text>
                       </View>
                       <View style={styles.metaCol}>
-                        <Text style={styles.metaLabel}>Propietario</Text>
-                        <Text style={styles.metaVal}>{lead.ownerName || "Sin asignar"}</Text>
+                        <Text style={styles.metaLabel}>{t("crm.customer360.sales.owner")}</Text>
+                        <Text style={styles.metaVal}>{lead.ownerName || "—"}</Text>
                       </View>
                       <View style={styles.metaCol}>
-                        <Text style={styles.metaLabel}>Fecha inicio</Text>
+                        <Text style={styles.metaLabel}>{t("crm.customer360.sales.startDate")}</Text>
                         <Text style={styles.metaVal}>
                           {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "—"}
                         </Text>
@@ -167,7 +169,7 @@ export function MobileCustomer360Sales({
                       <View style={styles.nextActivityRow}>
                         <Calendar size={12} color="#64748b" />
                         <Text style={styles.nextActivityText}>
-                          Próxima actividad: {new Date(lead.nextActivityAt).toLocaleDateString()}
+                          {t("crm.customer360.sales.nextActivity", { date: new Date(lead.nextActivityAt).toLocaleDateString() })}
                         </Text>
                       </View>
                     )}
@@ -183,18 +185,18 @@ export function MobileCustomer360Sales({
       {activeSection === "opportunities" && (
         <View style={styles.contentCard}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Oportunidades de Venta ({opportunities.length})</Text>
+            <Text style={styles.cardTitle}>{t("crm.customer360.sales.opportunities")} ({opportunities.length})</Text>
             <Pressable style={styles.addButton} onPress={() => setCreateOppOpen(true)}>
               <Plus size={13} color="#135bec" />
-              <Text style={styles.addButtonText}>Nueva Oportunidad</Text>
+              <Text style={styles.addButtonText}>{t("crm.customer360.sales.newOpportunity")}</Text>
             </Pressable>
           </View>
 
           {opportunities.length === 0 ? (
             <View style={styles.emptyBox}>
               <BriefcaseBusiness size={28} color="#94a3b8" />
-              <Text style={styles.emptyTitle}>Sin oportunidades activas</Text>
-              <Text style={styles.emptySubtitle}>Crea una oportunidad para dar seguimiento comercial.</Text>
+              <Text style={styles.emptyTitle}>{t("crm.customer360.sales.noOpportunities")}</Text>
+              <Text style={styles.emptySubtitle}>{t("crm.customer360.sales.noOpportunitiesDesc")}</Text>
             </View>
           ) : (
             <View style={styles.itemsList}>
@@ -207,7 +209,7 @@ export function MobileCustomer360Sales({
                       <View style={{ flex: 1, marginRight: 8 }}>
                         <Text style={styles.leadTitle}>{opp.name}</Text>
                         <Text style={styles.oppAmount}>
-                          {opp.amount != null ? `${opp.amount.toLocaleString()} ${opp.currency || "EUR"}` : "Sin importe"}
+                          {opp.amount != null ? `${opp.amount.toLocaleString()} ${opp.currency || "EUR"}` : t("crm.customer360.fields.notRegistered")}
                         </Text>
                       </View>
                       <View
@@ -229,23 +231,23 @@ export function MobileCustomer360Sales({
 
                     <View style={styles.metadataGrid}>
                       <View style={styles.metaCol}>
-                        <Text style={styles.metaLabel}>Propietario</Text>
-                        <Text style={styles.metaVal}>{opp.ownerName || "Sin asignar"}</Text>
+                        <Text style={styles.metaLabel}>{t("crm.customer360.sales.owner")}</Text>
+                        <Text style={styles.metaVal}>{opp.ownerName || "—"}</Text>
                       </View>
                       <View style={styles.metaCol}>
-                        <Text style={styles.metaLabel}>Origen</Text>
+                        <Text style={styles.metaLabel}>{t("crm.customer360.sales.source")}</Text>
                         <Text style={styles.metaVal}>
-                          {opp.origin === "lead_conversion" ? "Conversión de Lead" : "Manual"}
+                          {opp.origin === "lead_conversion" ? "Lead Conversion" : "Manual"}
                         </Text>
                       </View>
                       <View style={styles.metaCol}>
-                        <Text style={styles.metaLabel}>Cierre Estimado</Text>
+                        <Text style={styles.metaLabel}>{t("crm.customer360.sales.expectedClose", { date: "" }).replace(": ", "")}</Text>
                         <Text style={styles.metaVal}>
-                          {opp.expectedCloseAt ? new Date(opp.expectedCloseAt).toLocaleDateString() : "No definido"}
+                          {opp.expectedCloseAt ? new Date(opp.expectedCloseAt).toLocaleDateString() : "—"}
                         </Text>
                       </View>
                       <View style={styles.metaCol}>
-                        <Text style={styles.metaLabel}>Iniciado</Text>
+                        <Text style={styles.metaLabel}>{t("crm.customer360.sales.startDate")}</Text>
                         <Text style={styles.metaVal}>
                           {opp.createdAt ? new Date(opp.createdAt).toLocaleDateString() : "—"}
                         </Text>

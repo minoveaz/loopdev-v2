@@ -3,6 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { ChevronRight, Package, PackagePlus, Plus, Search, Tag, X } from "lucide-react-native";
 import { mobileCatalogAdapter as localCatalogAdapter, type CatalogItem } from "../../adapters/catalog";
 import { mobileCrmAdapter as loopdevAdapter, type CRMCustomerProduct } from "../../adapters/crm";
+import { useT } from "../../i18n";
 
 interface Props {
   contactId: string;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function MobileCustomer360Products({ contactId, onViewCatalog }: Props) {
+  const t = useT();
   const [customerProducts, setCustomerProducts] = useState<CRMCustomerProduct[]>([]);
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -90,12 +92,12 @@ export function MobileCustomer360Products({ contactId, onViewCatalog }: Props) {
       {/* Header with Associate Button */}
       <View style={styles.cardHeader}>
         <View>
-          <Text style={styles.cardTitle}>Productos y Servicios ({customerProducts.length})</Text>
-          <Text style={styles.cardSubtitle}>Catálogo contratado y en seguimiento</Text>
+          <Text style={styles.cardTitle}>{t("crm.customer360.products.title")} ({customerProducts.length})</Text>
+          <Text style={styles.cardSubtitle}>{t("crm.customer360.products.subtitle")}</Text>
         </View>
         <Pressable style={styles.addButton} onPress={() => setModalOpen(true)}>
           <Plus size={13} color="#135bec" />
-          <Text style={styles.addButtonText}>Asociar</Text>
+          <Text style={styles.addButtonText}>{t("crm.customer360.products.associate")}</Text>
         </Pressable>
       </View>
 
@@ -104,9 +106,9 @@ export function MobileCustomer360Products({ contactId, onViewCatalog }: Props) {
         {customerProducts.length === 0 ? (
           <View style={styles.emptyBox}>
             <Package size={28} color="#94a3b8" />
-            <Text style={styles.emptyTitle}>Sin productos asociados</Text>
+            <Text style={styles.emptyTitle}>{t("crm.customer360.products.noProducts")}</Text>
             <Text style={styles.emptySubtitle}>
-              Asocia productos o servicios del catálogo a este cliente.
+              {t("crm.customer360.products.noProductsDesc")}
             </Text>
           </View>
         ) : (
@@ -147,9 +149,9 @@ export function MobileCustomer360Products({ contactId, onViewCatalog }: Props) {
                   </View>
 
                   <View style={styles.priceRow}>
-                    <Text style={styles.quantityText}>Cant: {p.quantity}</Text>
+                    <Text style={styles.quantityText}>Qty: {p.quantity}</Text>
                     <Text style={styles.priceText}>
-                      {p.totalAmount != null ? `${p.totalAmount.toLocaleString()} ${p.currency || "EUR"}` : "Sin importe"}
+                      {p.totalAmount != null ? `${p.totalAmount.toLocaleString()} ${p.currency || "EUR"}` : t("crm.customer360.fields.notRegistered")}
                     </Text>
                   </View>
                 </View>

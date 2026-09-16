@@ -255,5 +255,134 @@
     "Gallery": "Galería",
     "Dropzone Mock": "Dropzone",
     "Miscellaneous": "Misceláneo"
+  },
+  "crm": {
+    "contacts": {
+      "title": "Contactos",
+      "back": "Volver a contactos",
+      "search": "Buscar contactos…",
+      "noContacts": "No se encontraron contactos",
+      "archived": "Contacto archivado ({{date}})",
+      "call": "Llamar",
+      "email": "Email",
+      "edit": "Editar",
+      "archive": "Archivar",
+      "verified": "Identidad Verificada",
+      "pendingReview": "Pendiente de Revisión",
+      "registeredOn": "Alta: {{date}}",
+      "updatedOn": "Actualizado: {{date}}"
+    },
+    "customer360": {
+      "tabs": {
+        "contactInfo": "Información de contacto",
+        "sales": "Ventas",
+        "work": "Trabajo",
+        "documents": "Documentos",
+        "products": "Productos",
+        "activity": "Línea de actividad"
+      },
+      "sections": {
+        "identityTitle": "Identidad y Datos Personales",
+        "identitySubtitle": "Nombres, documentos y registro oficial",
+        "channelsTitle": "Canales de Contacto",
+        "channelsSubtitle": "Correos electrónicos, teléfonos y preferencias de comunicación",
+        "orgTitle": "Organización y Relación",
+        "orgSubtitle": "Empresa, cargo y metadatos del CRM",
+        "addressTitle": "Ubicación y Dirección",
+        "addressSubtitle": "Domicilio fiscal y postal"
+      },
+      "fields": {
+        "firstName": "Primer Nombre",
+        "lastName": "Primer Apellido",
+        "secondLastName": "Segundo Apellido",
+        "preferredName": "Nombre Preferido",
+        "docType": "Tipo de Documento",
+        "docNumber": "Número de Documento",
+        "birthDate": "Fecha de Nacimiento",
+        "gender": "Género",
+        "primaryEmail": "Email Principal",
+        "secondaryEmail": "Email Secundario",
+        "primaryPhone": "Teléfono Principal",
+        "secondaryPhone": "Teléfono Secundario",
+        "preferredChannel": "Canal Preferido",
+        "preferredLanguage": "Idioma Preferido",
+        "company": "Empresa",
+        "jobTitle": "Cargo / Posición",
+        "department": "Departamento",
+        "identityStatus": "Estado de Identidad",
+        "contactId": "ID del Contacto",
+        "createdAt": "Fecha de Registro",
+        "updatedAt": "Última Actualización",
+        "country": "País",
+        "city": "Ciudad",
+        "state": "Provincia / Estado",
+        "postalCode": "Código Postal",
+        "addressLine1": "Dirección Línea 1",
+        "addressLine2": "Dirección Línea 2",
+        "notRegistered": "No registrado"
+      },
+      "completeness": {
+        "complete": "Perfil completo y listo para CRM",
+        "incomplete": "Información del contacto incompleta",
+        "missing": "Falta: {{fields}}"
+      },
+      "sales": {
+        "leads": "Leads",
+        "opportunities": "Oportunidades",
+        "newLead": "Nuevo Lead",
+        "newOpportunity": "Nueva Oportunidad",
+        "noLeads": "Sin leads vinculados",
+        "noLeadsDesc": "Los leads asociados a este cliente aparecerán aquí.",
+        "noOpportunities": "Sin oportunidades vinculadas",
+        "noOpportunitiesDesc": "Las oportunidades comerciales aparecerán aquí.",
+        "interest": "Interés",
+        "source": "Origen",
+        "score": "Puntuación",
+        "owner": "Propietario",
+        "startDate": "Fecha de inicio",
+        "nextActivity": "Próxima actividad: {{date}}",
+        "value": "Valor",
+        "stage": "Etapa",
+        "expectedClose": "Cierre estimado: {{date}}"
+      },
+      "work": {
+        "tasks": "Tareas",
+        "notes": "Notas",
+        "newTask": "Nueva Tarea",
+        "newNote": "Nueva Nota",
+        "noTasks": "Sin tareas pendientes",
+        "noTasksDesc": "Las tareas asignadas para este contacto aparecerán aquí.",
+        "noNotes": "Sin notas registradas",
+        "noNotesDesc": "Las notas y minutas de reunión aparecerán aquí."
+      },
+      "documents": {
+        "title": "Documentos",
+        "subtitle": "Archivos, facturas y contratos",
+        "upload": "Subir documento",
+        "noDocuments": "Sin documentos cargados",
+        "noDocumentsDesc": "Los documentos y archivos adjuntos a este contacto aparecerán aquí."
+      },
+      "products": {
+        "title": "Productos y Servicios",
+        "subtitle": "Catálogo contratado y en seguimiento",
+        "associate": "Asociar",
+        "noProducts": "Sin productos asociados",
+        "noProductsDesc": "Asocia productos o servicios del catálogo a este cliente.",
+        "status": {
+          "interested": "INTERESADO",
+          "active": "ACTIVO",
+          "churned": "CANCELADO"
+        }
+      },
+      "timeline": {
+        "title": "Línea de actividad",
+        "subtitle": "Eventos y actividades recientes de la relación",
+        "totalEvents": "Total eventos",
+        "firstContact": "Primer contacto",
+        "lastContact": "Último contacto",
+        "noActivity": "Sin actividad registrada",
+        "noActivityDesc": "Las llamadas, reuniones, correos y notas aparecerán aquí."
+      }
+    }
   }
 }

@@ -5,6 +5,7 @@ import type { TaskRecord } from "../../../../packages/contracts/src/tasks";
 import type { NoteRecord } from "../../../../packages/contracts/src/notes";
 import { MobileNoteEditor, type MobileNoteDraft } from "../MobileNoteEditor";
 import { MobileNotesList } from "../MobileNotesList";
+import { useT } from "../../i18n";
 
 interface Props {
   tasks: TaskRecord[];
@@ -31,6 +32,7 @@ export function MobileCustomer360Work({
   onUpdateNote,
   onDeleteNote,
 }: Props) {
+  const t = useT();
   const [activeSubTab, setActiveSubTab] = useState<"tasks" | "notes">("tasks");
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -58,7 +60,7 @@ export function MobileCustomer360Work({
         >
           <CheckSquare size={14} color={activeSubTab === "tasks" ? "#ffffff" : "#64748b"} />
           <Text style={[styles.tabButtonText, activeSubTab === "tasks" && styles.tabButtonTextActive]}>
-            Tareas ({openTasksCount} abiertas)
+            {t("crm.customer360.work.tasks")} ({openTasksCount})
           </Text>
         </Pressable>
 
@@ -68,7 +70,7 @@ export function MobileCustomer360Work({
         >
           <StickyNote size={14} color={activeSubTab === "notes" ? "#ffffff" : "#64748b"} />
           <Text style={[styles.tabButtonText, activeSubTab === "notes" && styles.tabButtonTextActive]}>
-            Notas ({notes.length})
+            {t("crm.customer360.work.notes")} ({notes.length})
           </Text>
         </Pressable>
       </View>
@@ -77,25 +79,25 @@ export function MobileCustomer360Work({
       {activeSubTab === "tasks" && (
         <View style={styles.contentCard}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Tareas pendientes ({openTasksCount})</Text>
+            <Text style={styles.cardTitle}>{t("crm.customer360.work.tasks")} ({openTasksCount})</Text>
             <Pressable style={styles.addButton} onPress={() => setCreateTaskOpen(true)}>
               <Plus size={13} color="#135bec" />
-              <Text style={styles.addButtonText}>Nueva Tarea</Text>
+              <Text style={styles.addButtonText}>{t("crm.customer360.work.newTask")}</Text>
             </Pressable>
           </View>
 
           {createTaskOpen && (
             <View style={styles.inlineCreateBox}>
-              <Text style={styles.inlineLabel}>Título de la tarea</Text>
+              <Text style={styles.inlineLabel}>Task title</Text>
               <TextInput
                 style={styles.inlineInput}
-                placeholder="Ej. Llamar para seguimiento de propuesta..."
+                placeholder="Follow-up with customer..."
                 placeholderTextColor="#94a3b8"
                 value={newTaskTitle}
                 onChangeText={setNewTaskTitle}
               />
               <View style={styles.priorityRow}>
-                <Text style={styles.priorityLabel}>Prioridad:</Text>
+                <Text style={styles.priorityLabel}>Priority:</Text>
                 {(["low", "normal", "high"] as const).map((p) => (
                   <Pressable
                     key={p}
@@ -105,17 +107,17 @@ export function MobileCustomer360Work({
                     <Text
                       style={[styles.priorityPillText, newTaskPriority === p && styles.priorityPillTextActive]}
                     >
-                      {p === "high" ? "Alta" : p === "normal" ? "Normal" : "Baja"}
+                      {p.toUpperCase()}
                     </Text>
                   </Pressable>
                 ))}
               </View>
               <View style={styles.inlineActionRow}>
                 <Pressable style={styles.inlineCancel} onPress={() => setCreateTaskOpen(false)}>
-                  <Text style={styles.inlineCancelText}>Cancelar</Text>
+                  <Text style={styles.inlineCancelText}>{t("common.cancel")}</Text>
                 </Pressable>
                 <Pressable style={styles.inlineSubmit} onPress={handleSaveTask}>
-                  <Text style={styles.inlineSubmitText}>Guardar Tarea</Text>
+                  <Text style={styles.inlineSubmitText}>{t("common.save")}</Text>
                 </Pressable>
               </View>
             </View>
@@ -124,8 +126,8 @@ export function MobileCustomer360Work({
           {tasks.length === 0 ? (
             <View style={styles.emptyBox}>
               <CheckSquare size={28} color="#94a3b8" />
-              <Text style={styles.emptyTitle}>Sin tareas pendientes</Text>
-              <Text style={styles.emptySubtitle}>Agrega tareas de seguimiento para este cliente.</Text>
+              <Text style={styles.emptyTitle}>{t("crm.customer360.work.noTasks")}</Text>
+              <Text style={styles.emptySubtitle}>{t("crm.customer360.work.noTasksDesc")}</Text>
             </View>
           ) : (
             <View style={styles.taskList}>

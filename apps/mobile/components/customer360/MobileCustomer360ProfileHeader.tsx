@@ -2,6 +2,7 @@ import React from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { Archive, Building2, Calendar, Clock, Mail, MapPin, Pencil, Phone, ShieldAlert, ShieldCheck } from "lucide-react-native";
 import type { ContactRecord } from "../../../../packages/contracts/src/contact-port";
+import { useT } from "../../i18n";
 
 interface Props {
   contact: ContactRecord;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function MobileCustomer360ProfileHeader({ contact, onEdit, onArchive }: Props) {
+  const t = useT();
   const name = [contact.preferredName || contact.firstName, contact.lastName, contact.secondLastName]
     .filter(Boolean)
     .join(" ");
@@ -42,7 +44,7 @@ export function MobileCustomer360ProfileHeader({ contact, onEdit, onArchive }: P
         <View style={styles.archivedBanner}>
           <ShieldAlert size={14} color="#b91c1c" />
           <Text style={styles.archivedText}>
-            Contacto archivado ({new Date(contact.archivedAt).toLocaleDateString()})
+            {t("crm.contacts.archived", { date: new Date(contact.archivedAt).toLocaleDateString() })}
           </Text>
         </View>
       )}
@@ -56,7 +58,7 @@ export function MobileCustomer360ProfileHeader({ contact, onEdit, onArchive }: P
           <Text style={styles.eyebrow}>CUSTOMER 360 · {contact.id}</Text>
           <Text style={styles.title} numberOfLines={1}>{name}</Text>
           <Text style={styles.subtitle} numberOfLines={1}>
-            {[contact.jobTitle, contact.companyName].filter(Boolean).join(" · ") || "Sin cargo o empresa"}
+            {[contact.jobTitle, contact.companyName].filter(Boolean).join(" · ") || t("crm.customer360.fields.notRegistered")}
           </Text>
 
           <View style={styles.badgeRow}>
@@ -71,7 +73,7 @@ export function MobileCustomer360ProfileHeader({ contact, onEdit, onArchive }: P
                 <ShieldAlert size={12} color="#b45309" />
               )}
               <Text style={[styles.statusBadgeText, contact.identityStatus === "verified" ? styles.verifiedText : styles.pendingText]}>
-                {contact.identityStatus === "verified" ? "Identidad Verificada" : "Pendiente de Revisión"}
+                {contact.identityStatus === "verified" ? t("crm.contacts.verified") : t("crm.contacts.pendingReview")}
               </Text>
             </View>
           </View>
@@ -83,26 +85,26 @@ export function MobileCustomer360ProfileHeader({ contact, onEdit, onArchive }: P
         {contact.email ? (
           <Pressable style={styles.actionButton} onPress={handleEmail}>
             <Mail size={14} color="#135bec" />
-            <Text style={styles.actionButtonText}>Email</Text>
+            <Text style={styles.actionButtonText}>{t("crm.contacts.email")}</Text>
           </Pressable>
         ) : null}
 
         {contact.phone ? (
           <Pressable style={styles.actionButton} onPress={handleCall}>
             <Phone size={14} color="#135bec" />
-            <Text style={styles.actionButtonText}>Llamar</Text>
+            <Text style={styles.actionButtonText}>{t("crm.contacts.call")}</Text>
           </Pressable>
         ) : null}
 
         <Pressable style={[styles.actionButton, styles.editActionButton]} onPress={onEdit}>
           <Pencil size={14} color="#ffffff" />
-          <Text style={[styles.actionButtonText, styles.editActionText]}>Editar</Text>
+          <Text style={[styles.actionButtonText, styles.editActionText]}>{t("crm.contacts.edit")}</Text>
         </Pressable>
 
         {onArchive && (
           <Pressable style={[styles.actionButton, styles.archiveActionButton]} onPress={onArchive}>
             <Archive size={14} color="#dc2626" />
-            <Text style={[styles.actionButtonText, styles.archiveActionText]}>Archivar</Text>
+            <Text style={[styles.actionButtonText, styles.archiveActionText]}>{t("crm.contacts.archive")}</Text>
           </Pressable>
         )}
       </View>
@@ -126,13 +128,13 @@ export function MobileCustomer360ProfileHeader({ contact, onEdit, onArchive }: P
         <View style={styles.snapshotItem}>
           <Calendar size={13} color="#64748b" />
           <Text style={styles.snapshotText} numberOfLines={1}>
-            Alta: {new Date(contact.createdAt).toLocaleDateString()}
+            {t("crm.contacts.registeredOn", { date: new Date(contact.createdAt).toLocaleDateString() })}
           </Text>
         </View>
         <View style={styles.snapshotItem}>
           <Clock size={13} color="#64748b" />
           <Text style={styles.snapshotText} numberOfLines={1}>
-            Actualizado: {new Date(contact.updatedAt).toLocaleDateString()}
+            {t("crm.contacts.updatedOn", { date: new Date(contact.updatedAt).toLocaleDateString() })}
           </Text>
         </View>
       </View>

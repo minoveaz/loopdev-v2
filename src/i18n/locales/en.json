@@ -255,5 +255,134 @@
     "Gallery": "Gallery",
     "Dropzone Mock": "Dropzone Mock",
     "Miscellaneous": "Miscellaneous"
+  },
+  "crm": {
+    "contacts": {
+      "title": "Contacts",
+      "back": "Back to contacts",
+      "search": "Search contacts…",
+      "noContacts": "No contacts found",
+      "archived": "Archived contact ({{date}})",
+      "call": "Call",
+      "email": "Email",
+      "edit": "Edit",
+      "archive": "Archive",
+      "verified": "Identity Verified",
+      "pendingReview": "Pending Review",
+      "registeredOn": "Registered: {{date}}",
+      "updatedOn": "Updated: {{date}}"
+    },
+    "customer360": {
+      "tabs": {
+        "contactInfo": "Contact information",
+        "sales": "Sales",
+        "work": "Work",
+        "documents": "Documents",
+        "products": "Products",
+        "activity": "Activity timeline"
+      },
+      "sections": {
+        "identityTitle": "Identity & Personal Data",
+        "identitySubtitle": "Names, official identification, and registration",
+        "channelsTitle": "Contact Channels",
+        "channelsSubtitle": "Email addresses, phone numbers, and communication preferences",
+        "orgTitle": "Organization & Relationship",
+        "orgSubtitle": "Company, job title, and CRM metadata",
+        "addressTitle": "Location & Address",
+        "addressSubtitle": "Billing and shipping addresses"
+      },
+      "fields": {
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "secondLastName": "Second Last Name",
+        "preferredName": "Preferred Name",
+        "docType": "Document Type",
+        "docNumber": "Document Number",
+        "birthDate": "Date of Birth",
+        "gender": "Gender",
+        "primaryEmail": "Primary Email",
+        "secondaryEmail": "Secondary Email",
+        "primaryPhone": "Primary Phone",
+        "secondaryPhone": "Secondary Phone",
+        "preferredChannel": "Preferred Channel",
+        "preferredLanguage": "Preferred Language",
+        "company": "Company",
+        "jobTitle": "Job Title",
+        "department": "Department",
+        "identityStatus": "Identity Status",
+        "contactId": "Contact ID",
+        "createdAt": "Registration Date",
+        "updatedAt": "Last Updated",
+        "country": "Country",
+        "city": "City",
+        "state": "State / Province",
+        "postalCode": "Postal Code",
+        "addressLine1": "Address Line 1",
+        "addressLine2": "Address Line 2",
+        "notRegistered": "Not registered"
+      },
+      "completeness": {
+        "complete": "Profile complete and CRM ready",
+        "incomplete": "Contact information incomplete",
+        "missing": "Missing: {{fields}}"
+      },
+      "sales": {
+        "leads": "Leads",
+        "opportunities": "Opportunities",
+        "newLead": "New Lead",
+        "newOpportunity": "New Opportunity",
+        "noLeads": "No related leads",
+        "noLeadsDesc": "Leads associated with this contact will appear here.",
+        "noOpportunities": "No related opportunities",
+        "noOpportunitiesDesc": "Opportunities linked to this contact will appear here.",
+        "interest": "Interest",
+        "source": "Source",
+        "score": "Score",
+        "owner": "Owner",
+        "startDate": "Start date",
+        "nextActivity": "Next activity: {{date}}",
+        "value": "Value",
+        "stage": "Stage",
+        "expectedClose": "Expected close: {{date}}"
+      },
+      "work": {
+        "tasks": "Tasks",
+        "notes": "Notes",
+        "newTask": "New Task",
+        "newNote": "New Note",
+        "noTasks": "No open tasks",
+        "noTasksDesc": "Tasks associated with this contact will appear here.",
+        "noNotes": "No notes recorded",
+        "noNotesDesc": "Notes and meeting minutes will appear here."
+      },
+      "documents": {
+        "title": "Documents",
+        "subtitle": "Files, invoices, and contracts",
+        "upload": "Upload document",
+        "noDocuments": "No documents uploaded",
+        "noDocumentsDesc": "Documents and files attached to this contact will appear here."
+      },
+      "products": {
+        "title": "Products & Services",
+        "subtitle": "Contracted and tracked catalog items",
+        "associate": "Associate",
+        "noProducts": "No products associated",
+        "noProductsDesc": "Associate products or services from the catalog with this contact.",
+        "status": {
+          "interested": "INTERESTED",
+          "active": "ACTIVE",
+          "churned": "CHURNED"
+        }
+      },
+      "timeline": {
+        "title": "Activity timeline",
+        "subtitle": "Recent relationship events and activities",
+        "totalEvents": "Total events",
+        "firstContact": "First contact",
+        "lastContact": "Last contact",
+        "noActivity": "No recent activity",
+        "noActivityDesc": "Calls, meetings, emails, and notes will appear here."
+      }
+    }
   }
 }

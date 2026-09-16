@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Alert, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Camera, File, FileText, Image as ImageIcon, Plus, Trash2, Upload, X } from "lucide-react-native";
 import { mobileFilesAdapter as localFilesAdapter, type FileCategory, type FileRecord } from "../../adapters/files";
+import { useT } from "../../i18n";
 
 interface Props {
   contactId: string;
@@ -9,13 +10,13 @@ interface Props {
 }
 
 const categories: Array<{ id: FileCategory | "all"; label: string }> = [
-  { id: "all", label: "Todos" },
-  { id: "identity", label: "Identidad" },
-  { id: "contracts", label: "Contratos" },
-  { id: "proposals", label: "Propuestas" },
-  { id: "billing", label: "Facturación" },
-  { id: "communications", label: "Comunicaciones" },
-  { id: "other", label: "Otros" },
+  { id: "all", label: "All" },
+  { id: "identity", label: "Identity" },
+  { id: "contracts", label: "Contracts" },
+  { id: "proposals", label: "Proposals" },
+  { id: "billing", label: "Billing" },
+  { id: "communications", label: "Communications" },
+  { id: "other", label: "Other" },
 ];
 
 function formatBytes(bytes: number) {
@@ -25,6 +26,7 @@ function formatBytes(bytes: number) {
 }
 
 export function MobileCustomer360Documents({ contactId, contactName }: Props) {
+  const t = useT();
   const [files, setFiles] = useState<FileRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<FileCategory | "all">("all");
@@ -75,16 +77,16 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
 
   const handleDeleteFile = async (file: FileRecord) => {
     if (Platform.OS === "web") {
-      const confirmed = window.confirm(`¿Estás seguro de eliminar el archivo "${file.name}"?`);
+      const confirmed = window.confirm(`Delete file "${file.name}"?`);
       if (confirmed) {
         await localFilesAdapter.deleteFile(file.id);
         await loadFiles();
       }
     } else {
-      Alert.alert("Eliminar archivo", `¿Estás seguro de eliminar "${file.name}"?`, [
-        { text: "Cancelar", style: "cancel" },
+      Alert.alert(t("common.delete"), `Delete "${file.name}"?`, [
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Eliminar",
+          text: t("common.delete"),
           style: "destructive",
           onPress: async () => {
             await localFilesAdapter.deleteFile(file.id);
@@ -125,8 +127,8 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
       {/* Header with Upload Triggers */}
       <View style={styles.cardHeader}>
         <View>
-          <Text style={styles.cardTitle}>Documentos y Archivos ({files.length})</Text>
-          <Text style={styles.cardSubtitle}>Expediente digital vinculado al cliente</Text>
+          <Text style={styles.cardTitle}>{t("crm.customer360.documents.title")} ({files.length})</Text>
+          <Text style={styles.cardSubtitle}>{t("crm.customer360.documents.subtitle")}</Text>
         </View>
         <View style={styles.uploadRow}>
           <Pressable
@@ -138,7 +140,7 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
             }}
           >
             <Upload size={13} color="#135bec" />
-            <Text style={styles.uploadButtonText}>Subir</Text>
+            <Text style={styles.uploadButtonText}>{t("crm.customer360.documents.upload")}</Text>
           </Pressable>
           <Pressable
             style={[styles.uploadButton, styles.cameraButton]}
@@ -149,7 +151,7 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
             }}
           >
             <Camera size={13} color="#ffffff" />
-            <Text style={[styles.uploadButtonText, styles.cameraButtonText]}>Foto</Text>
+            <Text style={[styles.uploadButtonText, styles.cameraButtonText]}>Photo</Text>
           </Pressable>
         </View>
       </View>
@@ -179,8 +181,8 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
         {filteredFiles.length === 0 ? (
           <View style={styles.emptyBox}>
             <FileText size={28} color="#94a3b8" />
-            <Text style={styles.emptyTitle}>Sin documentos en esta categoría</Text>
-            <Text style={styles.emptySubtitle}>Pulsa 'Subir' o 'Foto' para adjuntar un documento.</Text>
+            <Text style={styles.emptyTitle}>{t("crm.customer360.documents.noDocuments")}</Text>
+            <Text style={styles.emptySubtitle}>{t("crm.customer360.documents.noDocumentsDesc")}</Text>
           </View>
         ) : (
           <View style={styles.filesList}>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FileText, PackagePlus, Pencil, Plus, Upload, UserPlus } from "lucide-react";
 import { DataCard } from "@/components/common";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n";
 import type { CRMContact, CRMLead, CRMOpportunity, CRMTask } from "@/loopdev/domains/crm/adapter";
 import type { GlobalNoteRecord } from "@/loopdev/domains/notes";
 import { Customer360CrmDetailsTab } from "./Customer360CrmDetailsTab";
@@ -24,15 +25,16 @@ interface Customer360DetailTabsProps {
 }
 
 export function Customer360DetailTabs({ contact, leads, opportunities, tasks, notes, onEdit, onNewNote, onEditNote, onViewCatalog }: Customer360DetailTabsProps) {
+  const t = useT();
   const [activeTab, setActiveTab] = useState("contact");
   const [documentUploadTrigger, setDocumentUploadTrigger] = useState<(() => void) | null>(null);
   const [productSelectorOpen, setProductSelectorOpen] = useState(false);
   const tabs = [
-    { value: "contact", label: "Contact information" },
-    { value: "sales", label: "Sales", count: leads.length + opportunities.length },
-    { value: "work", label: "Work", count: tasks.filter((task) => task.status !== "completed").length + notes.length },
-    { value: "documents", label: "Documents" },
-    { value: "products", label: "Products" },
+    { value: "contact", label: t("crm.customer360.tabs.contactInfo") },
+    { value: "sales", label: t("crm.customer360.tabs.sales"), count: leads.length + opportunities.length },
+    { value: "work", label: t("crm.customer360.tabs.work"), count: tasks.filter((task) => task.status !== "completed").length + notes.length },
+    { value: "documents", label: t("crm.customer360.tabs.documents") },
+    { value: "products", label: t("crm.customer360.tabs.products") },
   ];
   const footer = {
     contact: <Button onClick={onEdit}><Pencil className="mr-1.5 h-3.5 w-3.5" />{contactActions.find((action) => action.id === "edit")?.label}</Button>,

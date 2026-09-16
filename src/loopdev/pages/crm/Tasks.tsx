@@ -36,19 +36,13 @@ import {
   SearchInput,
   StatCard,
   StatusBadge,
+  type BulkAction,
   type DataTableAction,
   type DataTableColumn,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -146,11 +140,9 @@ export default function CRMTasksPage() {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(() => new Date());
   const [dragOverCol, setDragOverCol] = useState<TaskStatus | null>(null);
 
-  // Batch actions
-  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
-
   // Confirmation dialogs & Toasts
   const [taskToDelete, setTaskToDelete] = useState<TaskRecord | null>(null);
+  const [batchRowsToDelete, setBatchRowsToDelete] = useState<TaskRecord[]>([]);
   const [batchDeleteConfirm, setBatchDeleteConfirm] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -308,35 +300,12 @@ export default function CRMTasksPage() {
     if (id) void moveTaskStatus(id, col);
   };
 
-  // Batch Selection Handlers
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedTaskIds(visibleTasks.map((t) => t.id));
-    } else {
-      setSelectedTaskIds([]);
-    }
-  };
-
-  const handleToggleSelectTask = (taskId: string) => {
-    setSelectedTaskIds((prev) =>
-      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId],
-    );
-  };
-
-  const handleBatchComplete = async () => {
-    for (const id of selectedTaskIds) {
-      await completeTask(id);
-    }
-    showToast(`${selectedTaskIds.length} tareas marcadas como completadas`);
-    setSelectedTaskIds([]);
-  };
-
   const handleBatchDelete = async () => {
-    for (const id of selectedTaskIds) {
-      await deleteTask(id);
+    for (const task of batchRowsToDelete) {
+      await deleteTask(task.id);
     }
-    showToast(`${selectedTaskIds.length} tareas eliminadas`);
-    setSelectedTaskIds([]);
+    showToast(`${batchRowsToDelete.length} tareas eliminadas`);
+    setBatchRowsToDelete([]);
     setBatchDeleteConfirm(false);
   };
 
@@ -350,30 +319,10 @@ export default function CRMTasksPage() {
   const columns: DataTableColumn<TaskRecord>[] = useMemo(
     () => [
       {
-        key: "selection",
-        header: (
-          <Checkbox
-            checked={selectedTaskIds.length > 0 && selectedTaskIds.length === visibleTasks.length}
-            onCheckedChange={handleSelectAll}
-            aria-label="Select all"
-          />
-        ),
-        sortable: false,
-        render: (task) => (
-          <div onClick={(e) => e.stopPropagation()}>
-            <Checkbox
-              checked={selectedTaskIds.includes(task.id)}
-              onCheckedChange={() => handleToggleSelectTask(task.id)}
-              aria-label={`Select ${task.title}`}
-            />
-          </div>
-        ),
-      },
-      {
         key: "status",
         header: "",
         sortable: false,
-        render: (task) => (
+        cell: (task) => (
           <div onClick={(e) => e.stopPropagation()} className="flex items-center">
             <Checkbox
               checked={task.status === "completed"}
@@ -395,7 +344,7 @@ export default function CRMTasksPage() {
         key: "title",
         header: "Tarea & Sub-tareas",
         sortable: true,
-        render: (task) => {
+        cell: (task) => {
           const totalChecklist = task.checklist?.length || 0;
           const completedChecklist = task.checklist?.filter((c) => c.completed).length || 0;
           return (
@@ -437,7 +386,7 @@ export default function CRMTasksPage() {
         key: "priority",
         header: "Prioridad",
         sortable: true,
-        render: (task) => (
+        cell: (task) => (
           <StatusBadge tone={priorityTone[task.priority]} dot>
             {task.priority.toUpperCase()}
           </StatusBadge>
@@ -447,7 +396,7 @@ export default function CRMTasksPage() {
         key: "relation",
         header: "Relacionado con",
         sortable: true,
-        render: (task) => {
+        cell: (task) => {
           if (!task.relation?.label) return <span className="text-xs text-muted-foreground">—</span>;
           return (
             <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
@@ -461,7 +410,7 @@ export default function CRMTasksPage() {
         key: "dueAt",
         header: "Vencimiento",
         sortable: true,
-        render: (task) => {
+        cell: (task) => {
           if (!task.dueAt) return <span className="text-xs text-muted-foreground">—</span>;
           const overdue = isOverdue(task);
           return (
@@ -481,7 +430,7 @@ export default function CRMTasksPage() {
         key: "assignedUser",
         header: "Asignado",
         sortable: false,
-        render: (task) => (
+        cell: (task) => (
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
               <AvatarFallback className="text-[10px] bg-primary-soft text-primary font-bold">
@@ -497,7 +446,7 @@ export default function CRMTasksPage() {
         ),
       },
     ],
-    [completeTask, reopenTask, selectedTaskIds, visibleTasks],
+    [completeTask, reopenTask],
   );
 
   const rowActions: DataTableAction<TaskRecord>[] = useMemo(
@@ -539,13 +488,38 @@ export default function CRMTasksPage() {
       {
         label: "Eliminar tarea",
         icon: Trash2,
-        tone: "destructive",
+        destructive: true,
         onClick: (task) => {
           setTaskToDelete(task);
         },
       },
     ],
     [completeTask, quickReschedule],
+  );
+
+  const bulkActions: BulkAction<TaskRecord>[] = useMemo(
+    () => [
+      {
+        label: "Marcar completadas",
+        icon: Check,
+        onClick: async (selectedRows) => {
+          for (const row of selectedRows) {
+            await completeTask(row.id, row.version);
+          }
+          showToast(`${selectedRows.length} tareas completadas`);
+        },
+      },
+      {
+        label: "Eliminar seleccionadas",
+        icon: Trash2,
+        destructive: true,
+        onClick: (selectedRows) => {
+          setBatchRowsToDelete(selectedRows);
+          setBatchDeleteConfirm(true);
+        },
+      },
+    ],
+    [completeTask],
   );
 
   const handleOpenTemplate = (tpl: TaskTemplateRecord) => {
@@ -672,6 +646,7 @@ export default function CRMTasksPage() {
             data={visibleTasks}
             columns={columns}
             rowActions={rowActions}
+            bulkActions={bulkActions}
             onRowClick={(task) => {
               setSelectedTask(task);
               setIsDetailOpen(true);
@@ -903,7 +878,6 @@ export default function CRMTasksPage() {
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => {
-                    const step = calendarSubView === "week" ? 7 : 30;
                     const next = new Date(cursor);
                     if (calendarSubView === "week") {
                       next.setDate(next.getDate() - 7);
@@ -1218,41 +1192,6 @@ export default function CRMTasksPage() {
         </DataCard>
       )}
 
-      {/* Floating Batch Actions Bar */}
-      {selectedTaskIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-foreground text-background px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 border border-border animate-in slide-in-from-bottom-5">
-          <span className="text-xs font-bold bg-primary text-primary-foreground px-2.5 py-1 rounded-full">
-            {selectedTaskIds.length} seleccionadas
-          </span>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="h-8 text-xs font-bold"
-            onClick={handleBatchComplete}
-          >
-            <Check className="mr-1.5 h-3.5 w-3.5" />
-            Marcar completadas
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            className="h-8 text-xs font-bold"
-            onClick={() => setBatchDeleteConfirm(true)}
-          >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-            Eliminar
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-8 text-xs font-semibold text-background hover:text-background/80 hover:bg-background/20"
-            onClick={() => setSelectedTaskIds([])}
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      )}
-
       {/* Confirmation Dialog for Single Delete */}
       <Dialog open={Boolean(taskToDelete)} onOpenChange={(open) => !open && setTaskToDelete(null)}>
         <DialogContent className="sm:max-w-md">
@@ -1277,7 +1216,7 @@ export default function CRMTasksPage() {
       <Dialog open={batchDeleteConfirm} onOpenChange={setBatchDeleteConfirm}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>¿Eliminar {selectedTaskIds.length} tareas seleccionadas?</DialogTitle>
+            <DialogTitle>¿Eliminar {batchRowsToDelete.length} tareas seleccionadas?</DialogTitle>
             <DialogDescription>
               Se eliminarán de forma permanente todas las tareas marcadas en el lote.
             </DialogDescription>
@@ -1287,7 +1226,7 @@ export default function CRMTasksPage() {
               Cancelar
             </Button>
             <Button variant="destructive" onClick={handleBatchDelete}>
-              Eliminar {selectedTaskIds.length} tareas
+              Eliminar {batchRowsToDelete.length} tareas
             </Button>
           </DialogFooter>
         </DialogContent>

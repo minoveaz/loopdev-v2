@@ -126,6 +126,8 @@ export default function CRMTasksPage() {
     reopenTask,
     quickReschedule,
     toggleChecklistItem,
+    addChecklistItem,
+    deleteChecklistItem,
     deleteTask,
   } = useTasks({ suite: "crm" });
 
@@ -1248,9 +1250,39 @@ export default function CRMTasksPage() {
           setIsDetailOpen(false);
           setSelectedTask(null);
         }}
-        onComplete={completeTask}
-        onReschedule={quickReschedule}
-        onToggleChecklist={toggleChecklistItem}
+        onComplete={async (taskId) => {
+          await completeTask(taskId);
+          setSelectedTask((prev) => (prev ? { ...prev, status: "completed", updatedAt: new Date().toISOString() } : null));
+          showToast("Tarea completada");
+        }}
+        onReopen={async (taskId) => {
+          await reopenTask(taskId);
+          setSelectedTask((prev) => (prev ? { ...prev, status: "open", updatedAt: new Date().toISOString() } : null));
+          showToast("Tarea reabierta");
+        }}
+        onReschedule={async (taskId, newDueAt) => {
+          await quickReschedule(taskId, newDueAt);
+          setSelectedTask((prev) => (prev ? { ...prev, dueAt: newDueAt, updatedAt: new Date().toISOString() } : null));
+          showToast("Tarea reprogramada");
+        }}
+        onToggleChecklist={async (taskId, itemId, completed) => {
+          const modified = await toggleChecklistItem(taskId, itemId, completed);
+          if (modified) setSelectedTask(modified);
+        }}
+        onAddChecklist={async (taskId, title) => {
+          const modified = await addChecklistItem(taskId, title);
+          if (modified) setSelectedTask(modified);
+          showToast(`Subtarea añadida: "${title}"`);
+        }}
+        onDeleteChecklist={async (taskId, itemId) => {
+          const modified = await deleteChecklistItem(taskId, itemId);
+          if (modified) setSelectedTask(modified);
+          showToast("Subtarea eliminada");
+        }}
+        onDeleteTask={(task) => {
+          setIsDetailOpen(false);
+          setTaskToDelete(task);
+        }}
       />
 
       {/* Quick Task Creation Modal */}

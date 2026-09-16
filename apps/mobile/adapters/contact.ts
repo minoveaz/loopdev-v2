@@ -93,14 +93,15 @@ async function getHeaders(): Promise<HeadersInit> {
 }
 
 export function createMobileContactAdapter(): ContactPort {
-  const localFallback = createLocalContactAdapter({ organizationId: "local-development-organization" });
+  const fallbackOrgId = "80fce911-57c5-4a83-809f-78df6a3736f7";
+  const localFallback = createLocalContactAdapter({ organizationId: fallbackOrgId });
 
   return {
     async listContacts(params: ContactListParams): Promise<ContactPage> {
       const activeOrgId =
         params.organizationId && isUUID(params.organizationId)
           ? params.organizationId
-          : mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "80fce911-57c5-4a83-809f-78df6a3736f7";
+          : mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || fallbackOrgId;
 
       try {
         const queryParams = new URLSearchParams();
@@ -114,13 +115,13 @@ export function createMobileContactAdapter(): ContactPort {
         });
 
         if (!resp.ok) {
-          return localFallback.listContacts(params);
+          return localFallback.listContacts({ ...params, organizationId: fallbackOrgId });
         }
 
         const rows = await resp.json();
         let items: ContactRecord[] = Array.isArray(rows) && rows.length > 0 ? rows.map(mapRowToContact) : [];
         if (items.length === 0) {
-          return localFallback.listContacts(params);
+          return localFallback.listContacts({ ...params, organizationId: fallbackOrgId });
         }
 
         if (params.query?.trim()) {
@@ -148,8 +149,8 @@ export function createMobileContactAdapter(): ContactPort {
           hasMore: nextOffset < items.length,
         };
       } catch (err) {
-        console.warn("Mobile listContacts error:", err);
-        return { items: [], nextCursor: null, hasMore: false };
+        console.warn("Mobile listContacts error, using local fallback:", err);
+        return localFallback.listContacts({ ...params, organizationId: fallbackOrgId });
       }
     },
 

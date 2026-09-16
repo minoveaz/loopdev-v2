@@ -1,13 +1,21 @@
-import { useEffect, useState } from "react";
-import { Archive, ArrowLeft, BriefcaseBusiness, Check, CheckSquare, Clock, Clock3, Mail, MapPin, Phone, Plus, ShieldCheck, StickyNote, Users, X } from "lucide-react-native";
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { contactActions } from "../../../packages/contracts/src/contact-actions";
+import React, { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { ContactCustomer360View } from "../../../packages/contracts/src/contact-port";
 import type { NoteRecord } from "../../../packages/contracts/src/notes";
 import type { TaskRecord } from "../../../packages/contracts/src/tasks";
+import type { CRMActivity, CRMLead, CRMOpportunity } from "../adapters/crm";
 import { mobileTasksAdapter } from "../adapters/tasks";
-import { MobileNoteEditor, type MobileNoteDraft } from "./MobileNoteEditor";
-import { MobileNotesList } from "./MobileNotesList";
+import { MobileCustomer360ProfileHeader } from "./customer360/MobileCustomer360ProfileHeader";
+import { MobileCustomer360CrmDetails } from "./customer360/MobileCustomer360CrmDetails";
+import { MobileCustomer360Sales } from "./customer360/MobileCustomer360Sales";
+import { MobileCustomer360Work } from "./customer360/MobileCustomer360Work";
+import { MobileCustomer360Documents } from "./customer360/MobileCustomer360Documents";
+import { MobileCustomer360Products } from "./customer360/MobileCustomer360Products";
+import { MobileCustomer360Timeline } from "./customer360/MobileCustomer360Timeline";
+import type { MobileNoteDraft } from "./MobileNoteEditor";
+
+type TabId = "contact" | "sales" | "work" | "documents" | "products";
 
 type Props = {
   view?: ContactCustomer360View;
@@ -23,16 +31,34 @@ type Props = {
   onDeleteNote?: (note: NoteRecord) => Promise<void>;
 };
 
-export function MobileCustomer360Screen({ view, loading, error, onBack, onEdit, onArchive, notes = [], notesLoading, onCreateNote, onUpdateNote, onDeleteNote }: Props) {
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<NoteRecord | undefined>();
+export function MobileCustomer360Screen({
+  view,
+  loading,
+  error,
+  onBack,
+  onEdit,
+  onArchive,
+  notes = [],
+  notesLoading,
+  onCreateNote,
+  onUpdateNote,
+  onDeleteNote,
+}: Props) {
+  const [activeTab, setActiveTab] = useState<TabId>("contact");
   const [contactTasks, setContactTasks] = useState<TaskRecord[]>([]);
-  const [tasksLoading, setTasksLoading] = useState(false);
-  const [createTaskOpen, setCreateTaskOpen] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [leads, setLeads] = useState<CRMLead[]>([]);
+  const [opportunities, setOpportunities] = useState<CRMOpportunity[]>([]);
+  const [timeline, setTimeline] = useState<CRMActivity[]>([]);
+
+  useEffect(() => {
+    if (view) {
+      setLeads(view.leads || []);
+      setOpportunities(view.opportunities || []);
+      setTimeline(view.timeline || []);
+    }
+  }, [view]);
 
   const loadTasks = async (contactId: string) => {
-    setTasksLoading(true);
     try {
       const res = await mobileTasksAdapter.listTasks({
         organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
@@ -42,8 +68,6 @@ export function MobileCustomer360Screen({ view, loading, error, onBack, onEdit, 
       setContactTasks(res.items);
     } catch {
       // fallback
-    } finally {
-      setTasksLoading(false);
     }
   };
 
@@ -58,7 +82,11 @@ export function MobileCustomer360Screen({ view, loading, error, onBack, onEdit, 
     setContactTasks((curr) =>
       curr.map((t) =>
         t.id === task.id
-          ? { ...t, status: isCompleted ? "open" : "completed", completedAt: isCompleted ? null : new Date().toISOString() }
+          ? {
+              ...t,
+              status: isCompleted ? "open" : "completed",
+              completedAt: isCompleted ? null : new Date().toISOString(),
+            }
           : t,
       ),
     );
@@ -69,269 +97,312 @@ export function MobileCustomer360Screen({ view, loading, error, onBack, onEdit, 
     }
   };
 
-  const handleCreateContactTask = async () => {
-    if (!newTaskTitle.trim() || !view) return;
+  const handleCreateContactTask = async (
+    title: string,
+    priority: "normal" | "high" | "low",
+    dueAt?: string,
+  ) => {
+    if (!view) return;
+    const name = [view.contact.firstName, view.contact.lastName].filter(Boolean).join(" ");
     const res = await mobileTasksAdapter.createTask({
       organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
       suite: "crm",
-      title: newTaskTitle.trim(),
-      priority: "normal",
+      title,
+      priority,
       relation: { entityType: "contact", entityId: view.contact.id, label: name },
-      dueAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      dueAt: dueAt || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
     });
     if (res.status === "success") {
       setContactTasks((curr) => [res.task, ...curr]);
-      setNewTaskTitle("");
-      setCreateTaskOpen(false);
     }
   };
 
-  if (loading) return <StateScreen title="Loading Customer 360" detail="Reading the shared CRM boundary." onBack={onBack} />;
-  if (error) return <StateScreen title="Unable to load contact" detail={error} onBack={onBack} />;
-  if (!view) return <StateScreen title="Contact not found" detail="This contact may have been archived." onBack={onBack} />;
-  const { contact } = view;
-  const name = [contact.preferredName || contact.firstName, contact.lastName, contact.secondLastName].filter(Boolean).join(" ");
-  return <ScrollView contentContainerStyle={styles.content}>
-    <Pressable accessibilityRole="button" onPress={onBack} style={styles.back}><ArrowLeft size={17} color="#135bec" /><Text style={styles.backText}>Back to contacts</Text></Pressable>
-    <View style={styles.hero}><View style={styles.avatar}><Text style={styles.avatarText}>{name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</Text></View><View style={styles.heroCopy}><Text style={styles.eyebrow}>CUSTOMER 360 · {contact.id}</Text><Text style={styles.title}>{name}</Text><Text style={styles.subtitle}>{[contact.jobTitle, contact.companyName].filter(Boolean).join(" · ") || "No role or company recorded"}</Text><Text style={styles.verified}><ShieldCheck size={14} color="#15803d" /> {contact.identityStatus === "verified" ? "Verified identity" : "Pending review"}</Text></View></View>
-    <View style={styles.actions}><Pressable accessibilityRole="button" onPress={onEdit} style={styles.edit}><Text style={styles.editText}>Edit contact</Text></Pressable><Pressable accessibilityRole="button" onPress={() => onArchive?.(contact)} style={styles.archive}><Archive size={16} color="#b91c1c" /><Text style={styles.archiveText}>{contactActions[4].label}</Text></Pressable></View>
-    <Section title="Profile & identity" icon={<Users size={18} color="#135bec" />}><Detail icon={<Mail size={15} color="#64748b" />} label="Email" value={contact.email || "Not provided"} /><Detail icon={<Phone size={15} color="#64748b" />} label="Phone" value={contact.phone || "Not provided"} /><Detail icon={<MapPin size={15} color="#64748b" />} label="Location" value={[contact.city, contact.stateProvince, contact.country].filter(Boolean).join(", ") || "Not provided"} /></Section>
-    <Section title="Leads" icon={<Users size={18} color="#135bec" />}><ListState count={view.leads.length} label="lead" /></Section>
-    <Section title="Opportunities" icon={<BriefcaseBusiness size={18} color="#135bec" />}><ListState count={view.opportunities.length} label="opportunity" />{view.opportunities.map((item: any) => <Row key={item.id} label={item.name} value={`${item.stageKey} · ${item.amount ?? "—"}`} />)}</Section>
-    
-    {/* Interactive Tasks Section */}
-    <Section
-      title={`Tasks (${contactTasks.length})`}
-      icon={<CheckSquare size={18} color="#135bec" />}
-      action={
-        <Pressable
-          style={c360TaskStyles.addTaskButton}
-          onPress={() => setCreateTaskOpen(true)}
-        >
-          <Plus size={13} color="#135bec" />
-          <Text style={c360TaskStyles.addTaskButtonText}>Nueva tarea</Text>
+  const handleCreateLead = async (lead: Partial<CRMLead>) => {
+    const newLead: CRMLead = {
+      id: `lead_${Date.now()}`,
+      organizationId: "local-development-organization",
+      contactId: view?.contact.id || "",
+      interest: lead.interest || "General",
+      source: lead.source || "Direct",
+      score: lead.score || 50,
+      status: lead.status || "new",
+      ownerName: lead.ownerName || "Alex Morgan",
+      assignedUserId: "owner-alex",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      lastActivityAt: new Date().toISOString(),
+      nextActivityAt: null,
+    };
+    setLeads((curr) => [newLead, ...curr]);
+  };
+
+  const handleCreateOpp = async (opp: Partial<CRMOpportunity>) => {
+    const newOpp: CRMOpportunity = {
+      id: `opp_${Date.now()}`,
+      organizationId: "local-development-organization",
+      contactId: view?.contact.id || "",
+      leadId: null,
+      catalogItemId: null,
+      productKey: null,
+      name: opp.name || "Nueva Oportunidad",
+      amount: opp.amount || 0,
+      currency: opp.currency || "EUR",
+      stageKey: opp.stageKey || "prospecting",
+      origin: opp.origin || "manual",
+      ownerName: opp.ownerName || "Alex Morgan",
+      ownerId: "owner-alex",
+      expectedCloseAt: opp.expectedCloseAt || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setOpportunities((curr) => [newOpp, ...curr]);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.stateContainer}>
+        <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
+          <ArrowLeft size={16} color="#135bec" />
+          <Text style={styles.backButtonText}>Contactos</Text>
         </Pressable>
-      }
-    >
-      {contactTasks.map((t) => {
-        const isDone = t.status === "completed";
-        return (
-          <View key={t.id} style={c360TaskStyles.taskRow}>
-            <Pressable
-              hitSlop={8}
-              style={c360TaskStyles.checkboxTarget}
-              onPress={() => handleToggleTask(t)}
-            >
-              <View style={[c360TaskStyles.checkboxBox, isDone && c360TaskStyles.checkboxBoxDone]}>
-                {isDone && <Check size={12} color="#ffffff" strokeWidth={3} />}
-              </View>
-            </Pressable>
-            <View style={{ flex: 1 }}>
-              <Text style={[c360TaskStyles.taskTitle, isDone && c360TaskStyles.taskTitleDone]}>
-                {t.title}
-              </Text>
-              {t.dueAt && (
-                <Text style={c360TaskStyles.taskDue}>
-                  Vence: {new Date(t.dueAt).toLocaleDateString()}
-                </Text>
-              )}
-            </View>
-          </View>
-        );
-      })}
-      {contactTasks.length === 0 && !tasksLoading && (
-        <Text style={styles.stateDetail}>No tasks associated with this contact.</Text>
-      )}
-
-      {createTaskOpen && (
-        <View style={c360TaskStyles.inlineCreateBox}>
-          <TextInput
-            style={c360TaskStyles.inlineInput}
-            placeholder="Título de la nueva tarea..."
-            placeholderTextColor="#94a3b8"
-            value={newTaskTitle}
-            onChangeText={setNewTaskTitle}
-          />
-          <View style={c360TaskStyles.inlineActionRow}>
-            <Pressable
-              style={c360TaskStyles.inlineCancel}
-              onPress={() => setCreateTaskOpen(false)}
-            >
-              <Text style={c360TaskStyles.inlineCancelText}>Cancelar</Text>
-            </Pressable>
-            <Pressable
-              style={c360TaskStyles.inlineSubmit}
-              onPress={handleCreateContactTask}
-            >
-              <Text style={c360TaskStyles.inlineSubmitText}>Guardar Tarea</Text>
-            </Pressable>
-          </View>
+        <View style={styles.stateCenter}>
+          <Text style={styles.stateTitle}>Cargando Customer 360...</Text>
+          <Text style={styles.stateSubtitle}>Obteniendo datos del CRM unificado.</Text>
         </View>
-      )}
-    </Section>
+      </View>
+    );
+  }
 
-    <Section title="Notes" icon={<StickyNote size={18} color="#135bec" />}>
-      {editorOpen && onCreateNote ? <MobileNoteEditor
-        initialNote={selectedNote}
-        relationLabel={name}
-        onCancel={() => { setEditorOpen(false); setSelectedNote(undefined); }}
-        onSave={async (draft) => {
-          if (selectedNote && onUpdateNote) await onUpdateNote(selectedNote.id, selectedNote.version, draft);
-          else await onCreateNote(draft);
-          setEditorOpen(false);
-          setSelectedNote(undefined);
-        }}
-      /> : <MobileNotesList
-        notes={notes}
-        loading={notesLoading}
-        onCreate={() => { setSelectedNote(undefined); setEditorOpen(true); }}
-        onOpen={(note) => { setSelectedNote(note); setEditorOpen(true); }}
-        onDelete={(note) => { if (onDeleteNote) void onDeleteNote(note); }}
-      />}
-    </Section>
-    <Section title="Activity & timeline" icon={<Clock3 size={18} color="#135bec" />}><ListState count={view.timeline.length} label="activity" />{view.timeline.slice(0, 5).map((item: any) => <Row key={item.id} label={item.summary} value={new Date(item.occurredAt).toLocaleDateString()} />)}</Section>
-    <Section title="Relations & sales summary" icon={<Users size={18} color="#135bec" />}><Row label="Open opportunities" value={String(view.opportunities.length)} /><Row label="Preferred channel" value={contact.preferredChannel || "Not provided"} /><Row label="Contact ID" value={contact.id} /></Section>
-  </ScrollView>;
+  if (error || !view) {
+    return (
+      <View style={styles.stateContainer}>
+        <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
+          <ArrowLeft size={16} color="#135bec" />
+          <Text style={styles.backButtonText}>Contactos</Text>
+        </Pressable>
+        <View style={styles.stateCenter}>
+          <Text style={styles.stateTitle}>No se pudo cargar el contacto</Text>
+          <Text style={styles.stateSubtitle}>{error || "El contacto solicitado no existe o fue archivado."}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const { contact } = view;
+  const fullName = [contact.preferredName || contact.firstName, contact.lastName, contact.secondLastName]
+    .filter(Boolean)
+    .join(" ");
+
+  const openTasksCount = contactTasks.filter((t) => t.status !== "completed").length;
+  const salesCount = leads.length + opportunities.length;
+  const workCount = openTasksCount + notes.length;
+
+  const tabs: Array<{ id: TabId; label: string; count?: number }> = [
+    { id: "contact", label: "Contact information" },
+    { id: "sales", label: "Sales", count: salesCount },
+    { id: "work", label: "Work", count: workCount },
+    { id: "documents", label: "Documents" },
+    { id: "products", label: "Products" },
+  ];
+
+  return (
+    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* Back to Contacts Navigation */}
+      <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
+        <ArrowLeft size={16} color="#135bec" />
+        <Text style={styles.backButtonText}>Volver a contactos</Text>
+      </Pressable>
+
+      {/* Top Profile Header Card */}
+      <MobileCustomer360ProfileHeader
+        contact={contact}
+        onEdit={onEdit}
+        onArchive={() => onArchive?.(contact)}
+      />
+
+      {/* Horizontal Scrollable Tab Bar with Active Underline */}
+      <View style={styles.tabBarContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabBarContent}
+        >
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <Pressable
+                key={tab.id}
+                onPress={() => setActiveTab(tab.id)}
+                style={[styles.tabItem, isActive && styles.tabItemActive]}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isActive }}
+              >
+                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                  {tab.label}
+                </Text>
+                {tab.count !== undefined && (
+                  <View style={[styles.tabBadge, isActive && styles.tabBadgeActive]}>
+                    <Text style={[styles.tabBadgeText, isActive && styles.tabBadgeTextActive]}>
+                      {tab.count}
+                    </Text>
+                  </View>
+                )}
+                {isActive && <View style={styles.activeIndicator} />}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Active Tab Workspace */}
+      {activeTab === "contact" && <MobileCustomer360CrmDetails contact={contact} />}
+
+      {activeTab === "sales" && (
+        <MobileCustomer360Sales
+          leads={leads}
+          opportunities={opportunities}
+          contactId={contact.id}
+          contactName={fullName}
+          onCreateLead={handleCreateLead}
+          onCreateOpportunity={handleCreateOpp}
+        />
+      )}
+
+      {activeTab === "work" && (
+        <MobileCustomer360Work
+          tasks={contactTasks}
+          notes={notes}
+          contactId={contact.id}
+          contactName={fullName}
+          notesLoading={notesLoading}
+          onToggleTask={handleToggleTask}
+          onCreateTask={handleCreateContactTask}
+          onCreateNote={onCreateNote}
+          onUpdateNote={onUpdateNote}
+          onDeleteNote={onDeleteNote}
+        />
+      )}
+
+      {activeTab === "documents" && (
+        <MobileCustomer360Documents
+          contactId={contact.id}
+          contactName={fullName}
+        />
+      )}
+
+      {activeTab === "products" && (
+        <MobileCustomer360Products
+          contactId={contact.id}
+        />
+      )}
+
+      {/* Customer 360 Activity & Timeline (mirroring Desktop layout) */}
+      <View style={styles.timelineSection}>
+        <MobileCustomer360Timeline
+          timeline={timeline}
+          contactId={contact.id}
+        />
+      </View>
+    </ScrollView>
+  );
 }
 
-function StateScreen({ title, detail, onBack }: { title: string; detail: string; onBack: () => void }) { return <View style={styles.content}><Pressable accessibilityRole="button" onPress={onBack} style={styles.back}><ArrowLeft size={17} color="#135bec" /><Text style={styles.backText}>Back to contacts</Text></Pressable><View style={styles.state}><Text style={styles.stateTitle}>{title}</Text><Text style={styles.stateDetail}>{detail}</Text></View></View>; }
-function Section({ title, icon, action, children }: { title: string; icon: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) { return <View style={styles.section}><View style={styles.sectionHeader}><View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>{icon}<Text style={styles.sectionTitle}>{title}</Text></View>{action}</View>{children}</View>; }
-function ListState({ count, label }: { count: number; label: string }) { return <Text style={styles.stateDetail}>{count ? `${count} ${label}${count === 1 ? "" : "s"} from the shared CRM boundary.` : `No ${label}s associated with this contact.`}</Text>; }
-function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return <View style={styles.detail}>{icon}<View><Text style={styles.detailLabel}>{label}</Text><Text style={styles.detailValue}>{value}</Text></View></View>; }
-function Row({ label, value }: { label: string; value: string }) { return <View style={styles.row}><Text style={styles.rowLabel}>{label}</Text><Text style={styles.rowValue}>{value}</Text></View>; }
-
-const c360TaskStyles = StyleSheet.create({
-  addTaskButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#eff6ff",
-    borderColor: "#bfdbfe",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  addTaskButtonText: {
-    color: "#135bec",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  taskRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 8,
-    borderBottomColor: "#f1f5f9",
-    borderBottomWidth: 1,
-  },
-  checkboxTarget: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxBox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    borderColor: "#94a3b8",
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxBoxDone: {
-    backgroundColor: "#10b981",
-    borderColor: "#10b981",
-  },
-  taskTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1e293b",
-  },
-  taskTitleDone: {
-    color: "#94a3b8",
-    textDecorationLine: "line-through",
-  },
-  taskDue: {
-    fontSize: 11,
-    color: "#64748b",
-    marginTop: 2,
-  },
-  inlineCreateBox: {
-    marginTop: 10,
-    backgroundColor: "#f8fafc",
-    borderRadius: 10,
-    padding: 10,
-    borderColor: "#cbd5e1",
-    borderWidth: 1,
-  },
-  inlineInput: {
-    backgroundColor: "#ffffff",
-    borderColor: "#e2e8f0",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 13,
-    color: "#111827",
-  },
-  inlineActionRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 8,
-    marginTop: 8,
-  },
-  inlineCancel: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  inlineCancelText: {
-    fontSize: 12,
-    color: "#64748b",
-    fontWeight: "600",
-  },
-  inlineSubmit: {
-    backgroundColor: "#135bec",
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  inlineSubmitText: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-});
-
 const styles = StyleSheet.create({
-  content: { paddingBottom: 30, paddingHorizontal: 18, paddingTop: 14 },
-  back: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 14 },
-  backText: { color: "#135bec", fontSize: 13, fontWeight: "700" },
-  hero: { flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 16 },
-  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#dbeafe", alignItems: "center", justifyContent: "center" },
-  avatarText: { color: "#135bec", fontSize: 18, fontWeight: "800" },
-  heroCopy: { flex: 1 },
-  eyebrow: { color: "#135bec", fontSize: 10, fontWeight: "800", letterSpacing: 1.5 },
-  title: { color: "#111827", fontSize: 22, fontWeight: "800", marginTop: 2 },
-  subtitle: { color: "#64748b", fontSize: 13, marginTop: 2 },
-  verified: { flexDirection: "row", alignItems: "center", gap: 4, color: "#15803d", fontSize: 12, fontWeight: "700", marginTop: 4 },
-  actions: { flexDirection: "row", gap: 10, marginBottom: 16 },
-  edit: { flex: 1, backgroundColor: "#135bec", borderRadius: 10, paddingVertical: 10, alignItems: "center" },
-  editText: { color: "#ffffff", fontSize: 13, fontWeight: "800" },
-  archive: { flexDirection: "row", alignItems: "center", gap: 6, borderColor: "#fecaca", borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
-  archiveText: { color: "#dc2626", fontSize: 13, fontWeight: "700" },
-  section: { backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 12 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-  sectionTitle: { color: "#111827", fontSize: 15, fontWeight: "800" },
-  state: { paddingVertical: 40, alignItems: "center" },
-  stateTitle: { color: "#111827", fontSize: 18, fontWeight: "800" },
-  stateDetail: { color: "#64748b", fontSize: 13, marginTop: 4 },
-  detail: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
-  detailLabel: { color: "#64748b", fontSize: 11, fontWeight: "700", textTransform: "uppercase" },
-  detailValue: { color: "#111827", fontSize: 13, fontWeight: "600" },
-  row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 6, borderBottomColor: "#f1f5f9", borderBottomWidth: 1 },
-  rowLabel: { color: "#64748b", fontSize: 13 },
-  rowValue: { color: "#111827", fontSize: 13, fontWeight: "600" },
+  content: {
+    paddingBottom: 40,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 12,
+  },
+  backButtonText: {
+    color: "#135bec",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  tabBarContainer: {
+    backgroundColor: "#ffffff",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginBottom: 14,
+    overflow: "hidden",
+  },
+  tabBarContent: {
+    flexDirection: "row",
+    paddingHorizontal: 8,
+    alignItems: "center",
+  },
+  tabItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    position: "relative",
+    gap: 6,
+  },
+  tabItemActive: {},
+  tabLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#64748b",
+  },
+  tabLabelActive: {
+    color: "#135bec",
+    fontWeight: "700",
+  },
+  tabBadge: {
+    backgroundColor: "#f1f5f9",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  tabBadgeActive: {
+    backgroundColor: "#eff6ff",
+  },
+  tabBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#64748b",
+  },
+  tabBadgeTextActive: {
+    color: "#135bec",
+  },
+  activeIndicator: {
+    position: "absolute",
+    bottom: 0,
+    left: 14,
+    right: 14,
+    height: 3,
+    backgroundColor: "#135bec",
+    borderRadius: 3,
+  },
+  timelineSection: {
+    marginTop: 16,
+  },
+  stateContainer: {
+    flex: 1,
+    padding: 20,
+  },
+  stateCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  stateTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0f172a",
+    marginBottom: 6,
+  },
+  stateSubtitle: {
+    fontSize: 13,
+    color: "#64748b",
+    textAlign: "center",
+  },
 });
-

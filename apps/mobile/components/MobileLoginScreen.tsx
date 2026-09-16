@@ -21,19 +21,28 @@ export function MobileLoginScreen({
   onLoginSuccess,
   onForgotPassword,
 }: MobileLoginScreenProps) {
-  const [email, setEmail] = useState("admin@localhost");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@rivera.app");
+  const [password, setPassword] = useState("loopdev");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSignIn = async () => {
-    if (!email.trim()) {
+  const fillDemo = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword("loopdev");
+    setErrorMessage(null);
+  };
+
+  const handleSignIn = async (overrideEmail?: string, overridePassword?: string) => {
+    const targetEmail = (overrideEmail || email).trim();
+    const targetPassword = overridePassword !== undefined ? overridePassword : (password || "loopdev");
+
+    if (!targetEmail) {
       setErrorMessage("Please enter your email address.");
       return;
     }
-    if (!password) {
+    if (!targetPassword) {
       setErrorMessage("Please enter your password.");
       return;
     }
@@ -41,8 +50,8 @@ export function MobileLoginScreen({
     setLoading(true);
     try {
       const res = await mobileAuthAdapter.signInWithPassword({
-        email: email.trim(),
-        password,
+        email: targetEmail,
+        password: targetPassword,
       });
       if (!res.success) {
         setErrorMessage(res.error.message || "Failed to sign in.");
@@ -155,15 +164,52 @@ export function MobileLoginScreen({
 
         {/* Development Helper Box */}
         <View style={styles.devBox}>
-          <Text style={styles.devBoxTitle}>Demo Mode (Mock / Supabase Local)</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <Text style={styles.devBoxTitle}>Demo Mode (Mock / Supabase Local)</Text>
+            <Text style={{ fontSize: 10, color: "#135bec", fontWeight: "700" }}>Toca para autocompletar</Text>
+          </View>
           <Text style={styles.devBoxDesc}>
-            Use <Text style={styles.bold}>admin@rivera.app</Text> for Super Admin or any email to test multi-tenant organization context.
+            Selecciona una cuenta demo para acceder instantáneamente:
           </Text>
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+            <Pressable
+              style={[
+                styles.demoPill,
+                email === "admin@rivera.app" && styles.demoPillActive,
+              ]}
+              onPress={() => fillDemo("admin@rivera.app")}
+            >
+              <Text
+                style={[
+                  styles.demoPillText,
+                  email === "admin@rivera.app" && styles.demoPillTextActive,
+                ]}
+              >
+                admin@rivera.app (Super Admin)
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.demoPill,
+                email === "admin@loop.dev" && styles.demoPillActive,
+              ]}
+              onPress={() => fillDemo("admin@loop.dev")}
+            >
+              <Text
+                style={[
+                  styles.demoPillText,
+                  email === "admin@loop.dev" && styles.demoPillTextActive,
+                ]}
+              >
+                admin@loop.dev (Org Admin)
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <Pressable
           style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-          onPress={handleSignIn}
+          onPress={() => handleSignIn()}
           disabled={loading}
         >
           {loading ? (
@@ -333,6 +379,26 @@ const styles = StyleSheet.create({
   },
   bold: {
     fontWeight: "700",
+  },
+  demoPill: {
+    backgroundColor: "#ffffff",
+    borderColor: "#bfdbfe",
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  demoPillActive: {
+    backgroundColor: "#135bec",
+    borderColor: "#135bec",
+  },
+  demoPillText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#1d4ed8",
+  },
+  demoPillTextActive: {
+    color: "#ffffff",
   },
   submitButton: {
     backgroundColor: "#135bec",

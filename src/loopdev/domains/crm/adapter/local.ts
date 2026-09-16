@@ -909,11 +909,80 @@ export const localLoopdevAdapter = {
 
     async getCustomer360(contactId: string): Promise<Customer360View | null> {
       const contact = crmCustomersStore.get(contactId);
-      if (!contact) return null;
+      let resolvedContact: CRMContact | null = contact ? toContact(contact) : null;
+
+      if (!resolvedContact) {
+        try {
+          const { DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY, defaultWebAuthAdapter } = await import("@/loopdev/domains/platform/adapter/auth-supabase");
+          const session = await defaultWebAuthAdapter.getSession();
+          const headers: Record<string, string> = {
+            apikey: DEFAULT_SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+          };
+          if (session?.accessToken) {
+            headers.Authorization = `Bearer ${session.accessToken}`;
+          } else {
+            headers.Authorization = `Bearer ${DEFAULT_SUPABASE_ANON_KEY}`;
+          }
+          const resp = await fetch(`${DEFAULT_SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}&select=*`, {
+            method: "GET",
+            headers,
+          });
+          if (resp.ok) {
+            const rows = await resp.json();
+            if (Array.isArray(rows) && rows.length > 0) {
+              const row = rows[0];
+              let firstName = (row.first_name || "").trim();
+              let lastName = (row.last_name || "").trim() || null;
+              if (!firstName && row.name) {
+                const parts = row.name.trim().split(" ");
+                firstName = parts[0] || "Contacto";
+                lastName = parts.slice(1).join(" ") || null;
+              }
+              resolvedContact = {
+                id: row.id,
+                organizationId: row.organization_id || "80fce911-57c5-4a83-809f-78df6a3736f7",
+                firstName: firstName || "Contacto",
+                lastName,
+                secondLastName: row.second_last_name || null,
+                preferredName: row.preferred_name || null,
+                email: row.email || null,
+                secondaryEmail: row.secondary_email || null,
+                phone: row.phone || null,
+                secondaryPhone: row.secondary_phone || null,
+                preferredChannel: row.preferred_channel || "email",
+                preferredLanguage: row.preferred_language || "es",
+                documentType: row.document_type || null,
+                documentNumber: row.document_number || null,
+                birthDate: row.birth_date || null,
+                gender: row.gender || null,
+                addressLine1: row.address_line1 || null,
+                addressLine2: row.address_line2 || null,
+                city: row.city || "",
+                stateProvince: row.state_province || null,
+                postalCode: row.postal_code || null,
+                country: row.country || "",
+                companyName: row.company_name || null,
+                jobTitle: row.job_title || null,
+                department: row.department || null,
+                attributes: row.attributes || {},
+                identityStatus: row.identity_status || "verified",
+                createdAt: row.created_at || new Date().toISOString(),
+                updatedAt: row.updated_at || new Date().toISOString(),
+                archivedAt: row.archived_at || null,
+              };
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to fetch remote contact for Customer360:", err);
+        }
+      }
+
+      if (!resolvedContact) return null;
 
       const leads = localCrmLeadsStore.list().filter((lead) => lead.contactId === contactId).map(toLead);
       const opportunities: CRMOpportunity[] = localCrmOpportunitiesStore.list()
-        .filter((opportunity) => opportunity.organizationId === organizationId && opportunity.contactId === contactId && !opportunity.archivedAt)
+        .filter((opportunity) => (opportunity.organizationId === organizationId || opportunity.organizationId === resolvedContact!.organizationId) && opportunity.contactId === contactId && !opportunity.archivedAt)
         .map((opportunity) => ({
           id: opportunity.id,
           organizationId: opportunity.organizationId,
@@ -941,15 +1010,16 @@ export const localLoopdevAdapter = {
         { id: "local-task-1", title: "Review renewal requirements", status: "open", priority: "high", dueAt: new Date().toISOString(), relationId: contactId },
         { id: "local-task-2", title: "Schedule technical follow-up", status: "open", priority: "medium", dueAt: new Date(Date.now() + 86400000).toISOString(), relationId: contactId },
       ];
-      const relation = { type: "contact" as const, id: contactId, label: contact.name };
-      const legacyCreatedAt = localActivities[2]?.occurredAt ?? contact.updatedAt;
+      const contactNameLabel = [resolvedContact.preferredName || resolvedContact.firstName, resolvedContact.lastName].filter(Boolean).join(" ");
+      const relation = { type: "contact" as const, id: contactId, label: contactNameLabel };
+      const legacyCreatedAt = localActivities[2]?.occurredAt ?? resolvedContact.updatedAt;
       // Import legacy CRM data into the global adapter before reading Customer 360 notes.
-      await localNotesAdapter.seed([legacyCustomerNote(contactId, contact.name, legacyCreatedAt)]);
+      await localNotesAdapter.seed([legacyCustomerNote(contactId, contactNameLabel, legacyCreatedAt)]);
       const notes = await localNotesAdapter.list(relation);
       const state = { profile: "fresh", leads: "fresh", opportunities: "fresh", tasks: "fresh", notes: "fresh", timeline: "fresh" } as const;
 
       return {
-        contact: toContact(contact),
+        contact: resolvedContact,
         leads,
         opportunities,
         tasks,

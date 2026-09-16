@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { DetailDrawer } from "@/components/common/DetailDrawer";
-import { Button } from "@/template/rivera/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { RotateCcw, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 

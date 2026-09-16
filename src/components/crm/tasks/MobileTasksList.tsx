@@ -153,8 +153,9 @@ export function MobileTasksList({
                           : "neutral"
                       }
                       dot
-                      label={task.priority.toUpperCase()}
-                    />
+                    >
+                      {task.priority.toUpperCase()}
+                    </StatusBadge>
                     {isOverdue && (
                       <span className="text-[11px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />

@@ -296,7 +296,6 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
   const toggleChecklistItem = useCallback(
     async (taskId: string, itemId: string, completed: boolean) => {
       const now = new Date().toISOString();
-      let modifiedTask: TaskRecord | null = null;
       const updated = tasks.map((t) => {
         if (t.id !== taskId) return t;
         const checklist = (t.checklist || []).map((item) => {
@@ -307,66 +306,14 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
             completedAt: completed ? now : null,
           };
         });
-        const next = {
+        return {
           ...t,
           checklist,
           updatedAt: now,
           version: t.version + 1,
         };
-        modifiedTask = next;
-        return next;
       });
       persistTasks(updated);
-      return modifiedTask;
-    },
-    [persistTasks, tasks],
-  );
-
-  const addChecklistItem = useCallback(
-    async (taskId: string, title: string) => {
-      const now = new Date().toISOString();
-      let modifiedTask: TaskRecord | null = null;
-      const updated = tasks.map((t) => {
-        if (t.id !== taskId) return t;
-        const currentChecklist = t.checklist || [];
-        const newItem: TaskChecklistItem = {
-          id: `chk-${Date.now()}`,
-          title: title.trim(),
-          completed: false,
-        };
-        const next = {
-          ...t,
-          checklist: [...currentChecklist, newItem],
-          updatedAt: now,
-          version: t.version + 1,
-        };
-        modifiedTask = next;
-        return next;
-      });
-      persistTasks(updated);
-      return modifiedTask;
-    },
-    [persistTasks, tasks],
-  );
-
-  const deleteChecklistItem = useCallback(
-    async (taskId: string, itemId: string) => {
-      const now = new Date().toISOString();
-      let modifiedTask: TaskRecord | null = null;
-      const updated = tasks.map((t) => {
-        if (t.id !== taskId) return t;
-        const currentChecklist = t.checklist || [];
-        const next = {
-          ...t,
-          checklist: currentChecklist.filter((c) => c.id !== itemId),
-          updatedAt: now,
-          version: t.version + 1,
-        };
-        modifiedTask = next;
-        return next;
-      });
-      persistTasks(updated);
-      return modifiedTask;
     },
     [persistTasks, tasks],
   );
@@ -389,8 +336,6 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
     reopenTask,
     quickReschedule,
     toggleChecklistItem,
-    addChecklistItem,
-    deleteChecklistItem,
     deleteTask,
     refresh: async () => {},
   };

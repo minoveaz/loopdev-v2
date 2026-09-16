@@ -25,10 +25,9 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const missingFields = [
-    !contact.email && t("crm.customer360.fields.primaryEmail"),
-    !contact.phone && t("crm.customer360.fields.primaryPhone"),
-    !contact.country && t("crm.customer360.fields.country"),
-    !contact.documentNumber && t("crm.customer360.fields.docNumber"),
+    !contact.email && "email",
+    !contact.phone && "phone",
+    !contact.country && "country",
   ].filter((f): f is string => Boolean(f));
 
   const copyToClipboard = (text: string, label: string) => {
@@ -188,7 +187,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <FieldItem label={t("crm.customer360.fields.company")} value={contact.companyName} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.jobTitle")} value={contact.jobTitle} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.department")} value={contact.department} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.identityStatus")} value={contact.identityStatus} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.identityStatus")} value={contact.identityStatus?.replace("_", " ")} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem
               label={t("crm.customer360.fields.contactId")}
               value={contact.id}
@@ -199,16 +198,16 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             />
             <FieldItem
               label={t("crm.customer360.fields.createdAt")}
-              value={new Date(contact.createdAt).toLocaleString()}
+              value={new Date(contact.createdAt).toLocaleDateString()}
               emptyText={t("crm.customer360.fields.notRegistered")}
             />
             <FieldItem
               label={t("crm.customer360.fields.updatedAt")}
-              value={new Date(contact.updatedAt).toLocaleString()}
+              value={new Date(contact.updatedAt).toLocaleDateString()}
               emptyText={t("crm.customer360.fields.notRegistered")}
             />
             {Object.entries(contact.attributes || {}).map(([key, val]) => (
-              <FieldItem key={key} label={key} value={String(val)} emptyText={t("crm.customer360.fields.notRegistered")} />
+              <FieldItem key={key} label={`Custom · ${key}`} value={typeof val === "object" ? JSON.stringify(val) : String(val)} emptyText={t("crm.customer360.fields.notRegistered")} />
             ))}
           </View>
         </View>

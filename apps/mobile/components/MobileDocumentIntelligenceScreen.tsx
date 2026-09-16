@@ -197,14 +197,15 @@ export function MobileDocumentIntelligenceScreen({
           </View>
         ) : (
           filteredFixtures.map((item) => {
-            const fields = item.record.extractedFields;
-            const docNum = fields.documentNumber?.value || "N/A";
+            const fields = item.record?.fields || ({} as any);
+            const docNum = fields.documentNumber || "N/A";
             const docTypeLabel =
               item.documentType === "spanish-dni"
                 ? "DNI Español"
                 : item.documentType === "spanish-nie"
                 ? "NIE Español"
                 : "Pasaporte";
+            const confidencePercent = Math.round((item.record?.overallConfidence ?? 0.95) * 100);
 
             return (
               <Pressable
@@ -224,7 +225,7 @@ export function MobileDocumentIntelligenceScreen({
                     <View style={styles.confidenceBadge}>
                       <CheckCircle2 size={11} color={mobileTheme.colors.success} />
                       <Text style={styles.confidenceText}>
-                        {Math.round(item.record.confidence * 100)}%
+                        {confidencePercent}%
                       </Text>
                     </View>
                   </View>
@@ -258,7 +259,7 @@ export function MobileDocumentIntelligenceScreen({
                 <Text style={styles.sheetDocName}>{selectedFixture.name}</Text>
                 <Text style={styles.sheetDocType}>
                   {selectedFixture.documentType.toUpperCase()} · Confianza{" "}
-                  {Math.round(selectedFixture.record.confidence * 100)}%
+                  {Math.round((selectedFixture.record?.overallConfidence ?? 0.95) * 100)}%
                 </Text>
               </View>
               <View style={styles.verifiedPill}>
@@ -271,11 +272,12 @@ export function MobileDocumentIntelligenceScreen({
             <Text style={styles.sheetSectionTitle}>DATOS IDENTIFICATIVOS</Text>
 
             <View style={styles.fieldsContainer}>
-              {Object.entries(selectedFixture.record.extractedFields).map(([key, fieldData]) => {
-                if (!fieldData || !fieldData.value) return null;
+              {Object.entries(selectedFixture.record?.fields || {}).map(([key, value]) => {
+                if (!value || key === "mrz" || key === "issuingCountry") return null;
                 const isCopied = copiedField === key;
 
                 const labels: Record<string, string> = {
+                  fullName: "Nombre Completo",
                   givenNames: "Nombre",
                   firstSurname: "Primer Apellido",
                   secondSurname: "Segundo Apellido",
@@ -285,18 +287,26 @@ export function MobileDocumentIntelligenceScreen({
                   nationality: "Nacionalidad",
                   sex: "Sexo",
                   expiryDate: "Fecha de Caducidad",
+                  issueDate: "Fecha de Emisión",
+                  supportNumber: "Número de Soporte",
                   address: "Dirección Registrada",
+                  birthplace: "Lugar de Nacimiento",
                 };
+
+                const fieldConfidence =
+                  selectedFixture.record?.fieldConfidence?.[key as keyof typeof selectedFixture.record.fieldConfidence] ??
+                  selectedFixture.record?.overallConfidence ??
+                  0.95;
 
                 return (
                   <View key={key} style={styles.fieldRow}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.fieldLabel}>{labels[key] || key}</Text>
-                      <Text style={styles.fieldValue}>{String(fieldData.value)}</Text>
+                      <Text style={styles.fieldValue}>{String(value)}</Text>
                     </View>
                     <View style={styles.fieldActions}>
                       <Text style={styles.fieldConfidence}>
-                        {Math.round((fieldData.confidence || 0.95) * 100)}%
+                        {Math.round(fieldConfidence * 100)}%
                       </Text>
                       <Pressable
                         onPress={() => handleCopyText(key)}

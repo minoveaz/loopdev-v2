@@ -17,7 +17,7 @@ interface Props {
   contact: ContactRecord;
 }
 
-type CrmSubTab = "identity" | "channels" | "organization" | "address";
+type CrmSubTab = "identity" | "address" | "organization" | "channels";
 
 export function MobileCustomer360CrmDetails({ contact }: Props) {
   const t = useT();
@@ -72,7 +72,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
         </View>
       </View>
 
-      {/* Sub-tab strip */}
+      {/* Sub-tab strip in requested order: Identity, Address, Organization, Channels */}
       <View style={styles.tabStrip}>
         <Pressable
           style={[styles.tabButton, activeSubTab === "identity" && styles.tabButtonActive]}
@@ -85,12 +85,12 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
         </Pressable>
 
         <Pressable
-          style={[styles.tabButton, activeSubTab === "channels" && styles.tabButtonActive]}
-          onPress={() => setActiveSubTab("channels")}
+          style={[styles.tabButton, activeSubTab === "address" && styles.tabButtonActive]}
+          onPress={() => setActiveSubTab("address")}
         >
-          <Phone size={13} color={activeSubTab === "channels" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSubTab === "channels" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.subtabs.channels")}
+          <MapPin size={13} color={activeSubTab === "address" ? "#ffffff" : "#64748b"} />
+          <Text style={[styles.tabButtonText, activeSubTab === "address" && styles.tabButtonTextActive]}>
+            {t("crm.customer360.subtabs.address")}
           </Text>
         </Pressable>
 
@@ -105,12 +105,12 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
         </Pressable>
 
         <Pressable
-          style={[styles.tabButton, activeSubTab === "address" && styles.tabButtonActive]}
-          onPress={() => setActiveSubTab("address")}
+          style={[styles.tabButton, activeSubTab === "channels" && styles.tabButtonActive]}
+          onPress={() => setActiveSubTab("channels")}
         >
-          <MapPin size={13} color={activeSubTab === "address" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSubTab === "address" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.subtabs.address")}
+          <Phone size={13} color={activeSubTab === "channels" ? "#ffffff" : "#64748b"} />
+          <Text style={[styles.tabButtonText, activeSubTab === "channels" && styles.tabButtonTextActive]}>
+            {t("crm.customer360.subtabs.channels")}
           </Text>
         </Pressable>
       </View>
@@ -156,42 +156,26 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
         </View>
       )}
 
-      {/* 2. Contact Channels Section */}
-      {activeSubTab === "channels" && (
+      {/* 2. Address Section */}
+      {activeSubTab === "address" && (
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={styles.iconCircle}>
-              <Phone size={15} color="#135bec" />
+              <MapPin size={15} color="#135bec" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>{t("crm.customer360.sections.channelsTitle")}</Text>
-              <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.channelsSubtitle")}</Text>
+              <Text style={styles.sectionTitle}>{t("crm.customer360.sections.addressTitle")}</Text>
+              <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.addressSubtitle")}</Text>
             </View>
           </View>
 
           <View style={styles.fieldsList}>
-            <FieldItem
-              label={t("crm.customer360.fields.primaryEmail")}
-              value={contact.email}
-              emptyText={t("crm.customer360.fields.notRegistered")}
-              onCopy={contact.email ? () => copyToClipboard(contact.email!, "email") : undefined}
-              copied={copiedKey === "email"}
-            />
-            <FieldItem label={t("crm.customer360.fields.secondaryEmail")} value={contact.secondaryEmail} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem
-              label={t("crm.customer360.fields.primaryPhone")}
-              value={contact.phone}
-              emptyText={t("crm.customer360.fields.notRegistered")}
-              onCopy={contact.phone ? () => copyToClipboard(contact.phone!, "phone") : undefined}
-              copied={copiedKey === "phone"}
-            />
-            <FieldItem label={t("crm.customer360.fields.secondaryPhone")} value={contact.secondaryPhone} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.preferredChannel")} value={contact.preferredChannel} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem
-              label={t("crm.customer360.fields.preferredLanguage")}
-              value={contact.preferredLanguage}
-              emptyText={t("crm.customer360.fields.notRegistered")}
-            />
+            <FieldItem label={t("crm.customer360.fields.country")} value={contact.country} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.city")} value={contact.city} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.state")} value={contact.stateProvince} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.postalCode")} value={contact.postalCode} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.addressLine1")} value={contact.addressLine1} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.addressLine2")} value={contact.addressLine2} emptyText={t("crm.customer360.fields.notRegistered")} />
           </View>
         </View>
       )}
@@ -239,26 +223,42 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
         </View>
       )}
 
-      {/* 4. Address Section */}
-      {activeSubTab === "address" && (
+      {/* 4. Contact Channels Section */}
+      {activeSubTab === "channels" && (
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={styles.iconCircle}>
-              <MapPin size={15} color="#135bec" />
+              <Phone size={15} color="#135bec" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>{t("crm.customer360.sections.addressTitle")}</Text>
-              <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.addressSubtitle")}</Text>
+              <Text style={styles.sectionTitle}>{t("crm.customer360.sections.channelsTitle")}</Text>
+              <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.channelsSubtitle")}</Text>
             </View>
           </View>
 
           <View style={styles.fieldsList}>
-            <FieldItem label={t("crm.customer360.fields.country")} value={contact.country} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.city")} value={contact.city} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.state")} value={contact.stateProvince} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.postalCode")} value={contact.postalCode} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.addressLine1")} value={contact.addressLine1} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.addressLine2")} value={contact.addressLine2} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem
+              label={t("crm.customer360.fields.primaryEmail")}
+              value={contact.email}
+              emptyText={t("crm.customer360.fields.notRegistered")}
+              onCopy={contact.email ? () => copyToClipboard(contact.email!, "email") : undefined}
+              copied={copiedKey === "email"}
+            />
+            <FieldItem label={t("crm.customer360.fields.secondaryEmail")} value={contact.secondaryEmail} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem
+              label={t("crm.customer360.fields.primaryPhone")}
+              value={contact.phone}
+              emptyText={t("crm.customer360.fields.notRegistered")}
+              onCopy={contact.phone ? () => copyToClipboard(contact.phone!, "phone") : undefined}
+              copied={copiedKey === "phone"}
+            />
+            <FieldItem label={t("crm.customer360.fields.secondaryPhone")} value={contact.secondaryPhone} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.preferredChannel")} value={contact.preferredChannel} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem
+              label={t("crm.customer360.fields.preferredLanguage")}
+              value={contact.preferredLanguage}
+              emptyText={t("crm.customer360.fields.notRegistered")}
+            />
           </View>
         </View>
       )}

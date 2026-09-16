@@ -10,29 +10,39 @@ export interface SegmentOption<T extends string> {
 }
 
 interface MobileSegmentedControlProps<T extends string> {
-  options: SegmentOption<T>[];
-  selected: T;
-  onChange: (id: T) => void;
+  options?: SegmentOption<T>[];
+  segments?: SegmentOption<T>[];
+  selected?: T;
+  activeId?: T;
+  onChange?: (id: T) => void;
+  onSelect?: (id: T) => void;
   style?: object;
 }
 
 export function MobileSegmentedControl<T extends string>({
   options,
+  segments,
   selected,
+  activeId,
   onChange,
+  onSelect,
   style,
 }: MobileSegmentedControlProps<T>) {
+  const items = options || segments || [];
+  const currentSelected = selected ?? activeId;
+  const handleSelect = onChange || onSelect || (() => {});
+
   return (
     <View style={[styles.container, style]}>
-      {options.map((opt) => {
-        const isActive = opt.id === selected;
+      {items.map((opt) => {
+        const isActive = opt.id === currentSelected;
         const IconComponent = opt.icon;
         return (
           <Pressable
             key={opt.id}
             accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
-            onPress={() => onChange(opt.id)}
+            onPress={() => handleSelect(opt.id)}
             style={[styles.tab, isActive && styles.tabActive]}
           >
             {IconComponent && (

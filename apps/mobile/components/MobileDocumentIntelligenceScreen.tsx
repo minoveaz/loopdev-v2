@@ -161,13 +161,13 @@ export function MobileDocumentIntelligenceScreen({
       {/* Filter Tabs */}
       <View style={{ marginBottom: 12 }}>
         <MobileSegmentedControl
-          segments={[
+          options={[
             { id: "all", label: "Todos" },
             { id: "dni", label: "DNI / NIE" },
             { id: "passport", label: "Pasaportes" },
           ]}
-          activeId={filterTab}
-          onSelect={setFilterTab}
+          selected={filterTab}
+          onChange={setFilterTab}
         />
       </View>
 

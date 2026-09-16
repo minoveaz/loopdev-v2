@@ -122,10 +122,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <View style={styles.iconCircle}>
               <User size={15} color="#135bec" />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>{t("crm.customer360.sections.identityTitle")}</Text>
-              <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.identitySubtitle")}</Text>
-            </View>
+            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.identityTitle")}</Text>
           </View>
 
           <View style={styles.fieldsList}>
@@ -163,10 +160,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <View style={styles.iconCircle}>
               <MapPin size={15} color="#135bec" />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>{t("crm.customer360.sections.addressTitle")}</Text>
-              <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.addressSubtitle")}</Text>
-            </View>
+            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.addressTitle")}</Text>
           </View>
 
           <View style={styles.fieldsList}>
@@ -187,10 +181,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <View style={styles.iconCircle}>
               <Building2 size={15} color="#135bec" />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>{t("crm.customer360.sections.orgTitle")}</Text>
-              <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.orgSubtitle")}</Text>
-            </View>
+            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.orgTitle")}</Text>
           </View>
 
           <View style={styles.fieldsList}>
@@ -230,10 +221,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <View style={styles.iconCircle}>
               <Phone size={15} color="#135bec" />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>{t("crm.customer360.sections.channelsTitle")}</Text>
-              <Text style={styles.sectionSubtitle}>{t("crm.customer360.sections.channelsSubtitle")}</Text>
-            </View>
+            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.channelsTitle")}</Text>
           </View>
 
           <View style={styles.fieldsList}>
@@ -385,27 +373,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingBottom: 12,
-    marginBottom: 8,
+    paddingBottom: 10,
+    marginBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: "#f1f5f9",
   },
   iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: "#eff6ff",
     alignItems: "center",
     justifyContent: "center",
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
     color: "#0f172a",
-  },
-  sectionSubtitle: {
-    fontSize: 11,
-    color: "#64748b",
   },
   fieldsList: {
     gap: 8,

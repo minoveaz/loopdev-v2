@@ -274,12 +274,18 @@
     },
     "customer360": {
       "tabs": {
-        "contactInfo": "Contact information",
+        "contactInfo": "Contact Information",
         "sales": "Sales",
         "work": "Work",
         "documents": "Documents",
         "products": "Products",
         "activity": "Activity timeline"
+      },
+      "subtabs": {
+        "identity": "Identity",
+        "channels": "Contact",
+        "organization": "Organization",
+        "address": "Address"
       },
       "sections": {
         "identityTitle": "Identity & Personal Data",

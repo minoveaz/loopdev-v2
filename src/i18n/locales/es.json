@@ -281,6 +281,12 @@
         "products": "Productos",
         "activity": "Línea de actividad"
       },
+      "subtabs": {
+        "identity": "Identidad",
+        "channels": "Contacto",
+        "organization": "Organización",
+        "address": "Dirección"
+      },
       "sections": {
         "identityTitle": "Identidad y Datos Personales",
         "identitySubtitle": "Nombres, documentos y registro oficial",

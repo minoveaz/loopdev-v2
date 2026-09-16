@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import en from "../../src/i18n/locales/en.json";
-import es from "../../src/i18n/locales/es.json";
+import en from "./locales/en.json";
+import es from "./locales/es.json";
 
 export type MobileLangCode = "en" | "es";
 

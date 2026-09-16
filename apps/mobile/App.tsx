@@ -30,6 +30,7 @@ import { MobileLoginScreen } from "./components/MobileLoginScreen";
 import { MobileForgotPasswordScreen } from "./components/MobileForgotPasswordScreen";
 import { MobileLogoSpinner } from "./components/MobileLogoSpinner";
 import { MobileTasksScreen } from "./components/MobileTasksScreen";
+import { MobileDocumentIntelligenceScreen } from "./components/MobileDocumentIntelligenceScreen";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./adapters/auth";
 import type { AuthSession, TenantContextSnapshot } from "../../packages/contracts/src/auth-port";
 import type { MobileNoteDraft } from "./components/MobileNoteEditor";
@@ -235,6 +236,16 @@ export default function App() {
       return (
         <MobileTasksScreen
           onBack={() => navigate("/app/sales-crm/overview")}
+          onNavigateToContact={(contactId) => {
+            navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
+          }}
+        />
+      );
+    }
+    if (currentPath.startsWith("/app/tools/document-intelligence")) {
+      return (
+        <MobileDocumentIntelligenceScreen
+          onBack={() => navigate(launchpadPath)}
           onNavigateToContact={(contactId) => {
             navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
           }}

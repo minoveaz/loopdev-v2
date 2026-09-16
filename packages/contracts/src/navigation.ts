@@ -7,7 +7,8 @@ export type NavigationIconKey =
   | "launchpad"
   | "more"
   | "settings"
-  | "suites";
+  | "suites"
+  | "tools";
 
 export type SharedNavigationItem = {
   id: string;
@@ -53,6 +54,14 @@ export const loopdevNavigationContract: {
       items: [
         { id: "erp-overview", label: "Overview", path: "/app/erp/overview" },
         { id: "erp-product-catalog", label: "Product Catalog", path: "/app/erp/product-catalog" },
+      ],
+    },
+    {
+      id: "tools",
+      label: "Tools",
+      iconKey: "tools",
+      items: [
+        { id: "tools-doc-intelligence", label: "Document Intelligence", path: "/app/tools/document-intelligence" },
       ],
     },
     {

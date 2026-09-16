@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckSquare, ChevronRight, MessageCircle, TrendingUp, Users } from "lucide-react-native";
+import { ArrowLeft, CheckSquare, ChevronRight, FileSearch, MessageCircle, Scan, TrendingUp, Users } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SuiteIllustration } from "./SuiteIllustration";
 import type { launchpadSuites } from "../../../packages/contracts/src/launchpad";
@@ -11,6 +11,7 @@ type MobileWorkspaceScreenProps = {
 
 export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorkspaceScreenProps) {
   const isCrm = suite.id === "sales-crm";
+  const isDocIntelligence = suite.id === "document-intelligence";
 
   const crmShortcuts = [
     {
@@ -45,6 +46,24 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
     },
   ];
 
+  const docIntelligenceShortcuts = [
+    {
+      id: "doc-ocr",
+      title: "OCR y Extracción de Documentos",
+      subtitle: "Escaneo y lectura de DNI, NIE y Pasaportes",
+      icon: Scan,
+      path: "/app/tools/document-intelligence",
+      badge: "IA Vision",
+    },
+    {
+      id: "doc-overview",
+      title: "Visor y Extracciones",
+      subtitle: "Inspección de campos y tipificación documental",
+      icon: FileSearch,
+      path: "/app/tools/document-intelligence",
+    },
+  ];
+
   return (
     <ScrollView contentContainerStyle={styles.workspaceContent}>
       <Pressable accessibilityLabel="Back to Launchpad" accessibilityRole="button" onPress={onBack} style={styles.backButton}>
@@ -60,6 +79,40 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
           <Text style={styles.sectionHeading}>MÓDULOS DE TRABAJO</Text>
           <View style={styles.shortcutList}>
             {crmShortcuts.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Pressable
+                  key={item.id}
+                  style={styles.shortcutCard}
+                  onPress={() => onNavigate(item.path)}
+                >
+                  <View style={styles.shortcutIconWrap}>
+                    <Icon size={22} color="#135bec" />
+                  </View>
+                  <View style={styles.shortcutContent}>
+                    <View style={styles.shortcutHeader}>
+                      <Text style={styles.shortcutTitle}>{item.title}</Text>
+                      {item.badge && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>{item.badge}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.shortcutSubtitle}>{item.subtitle}</Text>
+                  </View>
+                  <ChevronRight size={18} color="#94a3b8" />
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      )}
+
+      {isDocIntelligence && onNavigate && (
+        <View style={styles.shortcutsSection}>
+          <Text style={styles.sectionHeading}>HERRAMIENTAS DE EXTRACCIÓN</Text>
+          <View style={styles.shortcutList}>
+            {docIntelligenceShortcuts.map((item) => {
               const Icon = item.icon;
               return (
                 <Pressable

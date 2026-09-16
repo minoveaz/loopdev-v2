@@ -2,6 +2,7 @@ import {
   Boxes,
   ChevronDown,
   ChevronRight,
+  FileSearch,
   House,
   Settings,
   Users,
@@ -35,6 +36,7 @@ type DrawerItem = {
 const groupIcons: Record<string, LucideIcon> = {
   crm: Users,
   erp: Boxes,
+  tools: FileSearch,
   settings: Settings,
 };
 

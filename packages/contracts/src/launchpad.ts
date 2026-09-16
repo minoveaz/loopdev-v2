@@ -37,6 +37,15 @@ export const launchpadSuites: LaunchpadSuite[] = [
     entryPath: "/app/sales-crm/overview",
   },
   {
+    id: "document-intelligence",
+    title: "Document Intelligence",
+    description: "OCR inteligente, extracción de identidad y tipificación de documentos.",
+    version: "1.0.0",
+    status: "ready",
+    illustration: "crm",
+    entryPath: "/app/tools/document-intelligence",
+  },
+  {
     id: "erp",
     title: "ERP",
     description: "Shared product and service catalogs for the next generation of LoopDev operations.",

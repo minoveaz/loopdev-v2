@@ -225,7 +225,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
 
           <View style={styles.fieldsList}>
             <FieldItem
-              label={t("crm.customer360.fields.primaryEmail")}
+              label={t("crm.customer360.fields.email")}
               value={contact.email}
               emptyText={t("crm.customer360.fields.notRegistered")}
               onCopy={contact.email ? () => copyToClipboard(contact.email!, "email") : undefined}
@@ -233,7 +233,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             />
             <FieldItem label={t("crm.customer360.fields.secondaryEmail")} value={contact.secondaryEmail} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem
-              label={t("crm.customer360.fields.primaryPhone")}
+              label={t("crm.customer360.fields.phone")}
               value={contact.phone}
               emptyText={t("crm.customer360.fields.notRegistered")}
               onCopy={contact.phone ? () => copyToClipboard(contact.phone!, "phone") : undefined}

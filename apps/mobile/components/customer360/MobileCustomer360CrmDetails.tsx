@@ -22,21 +22,12 @@ type CrmSubTab = "identity" | "address" | "organization" | "channels";
 export function MobileCustomer360CrmDetails({ contact }: Props) {
   const t = useT();
   const [activeSubTab, setActiveSubTab] = useState<CrmSubTab>("identity");
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const missingFields = [
     !contact.email && "email",
     !contact.phone && "phone",
     !contact.country && "country",
   ].filter((f): f is string => Boolean(f));
-
-  const copyToClipboard = (text: string, label: string) => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      void navigator.clipboard.writeText(text);
-    }
-    setCopiedKey(label);
-    setTimeout(() => setCopiedKey(null), 2000);
-  };
 
   return (
     <View style={styles.container}>
@@ -130,18 +121,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <FieldItem label={t("crm.customer360.fields.secondLastName")} value={contact.secondLastName} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.preferredName")} value={contact.preferredName} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.docType")} value={contact.documentType} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem
-              label={t("crm.customer360.fields.docNumber")}
-              value={contact.documentNumber}
-              emptyText={t("crm.customer360.fields.notRegistered")}
-              mono
-              onCopy={
-                contact.documentNumber
-                  ? () => copyToClipboard(contact.documentNumber!, "doc")
-                  : undefined
-              }
-              copied={copiedKey === "doc"}
-            />
+            <FieldItem label={t("crm.customer360.fields.docNumber")} value={contact.documentNumber} mono emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem
               label={t("crm.customer360.fields.birthDate")}
               value={contact.birthDate ? new Date(contact.birthDate).toLocaleDateString() : null}
@@ -188,14 +168,7 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             <FieldItem label={t("crm.customer360.fields.jobTitle")} value={contact.jobTitle} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.department")} value={contact.department} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.identityStatus")} value={contact.identityStatus?.replace("_", " ")} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem
-              label={t("crm.customer360.fields.contactId")}
-              value={contact.id}
-              mono
-              emptyText={t("crm.customer360.fields.notRegistered")}
-              onCopy={() => copyToClipboard(contact.id, "id")}
-              copied={copiedKey === "id"}
-            />
+            <FieldItem label={t("crm.customer360.fields.contactId")} value={contact.id} mono emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem
               label={t("crm.customer360.fields.createdAt")}
               value={new Date(contact.createdAt).toLocaleDateString()}
@@ -224,21 +197,9 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
           </View>
 
           <View style={styles.fieldsList}>
-            <FieldItem
-              label={t("crm.customer360.fields.email")}
-              value={contact.email}
-              emptyText={t("crm.customer360.fields.notRegistered")}
-              onCopy={contact.email ? () => copyToClipboard(contact.email!, "email") : undefined}
-              copied={copiedKey === "email"}
-            />
+            <FieldItem label={t("crm.customer360.fields.email")} value={contact.email} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.secondaryEmail")} value={contact.secondaryEmail} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem
-              label={t("crm.customer360.fields.phone")}
-              value={contact.phone}
-              emptyText={t("crm.customer360.fields.notRegistered")}
-              onCopy={contact.phone ? () => copyToClipboard(contact.phone!, "phone") : undefined}
-              copied={copiedKey === "phone"}
-            />
+            <FieldItem label={t("crm.customer360.fields.phone")} value={contact.phone} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.secondaryPhone")} value={contact.secondaryPhone} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.preferredChannel")} value={contact.preferredChannel} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem
@@ -258,6 +219,7 @@ function FieldItem({
   value,
   emptyText,
   mono,
+  copyable = true,
   onCopy,
   copied,
 }: {
@@ -265,9 +227,27 @@ function FieldItem({
   value?: string | null;
   emptyText?: string;
   mono?: boolean;
+  copyable?: boolean;
   onCopy?: () => void;
   copied?: boolean;
 }) {
+  const [internalCopied, setInternalCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (onCopy) {
+      onCopy();
+      return;
+    }
+    if (value && typeof navigator !== "undefined" && navigator.clipboard) {
+      void navigator.clipboard.writeText(value);
+      setInternalCopied(true);
+      setTimeout(() => setInternalCopied(false), 2000);
+    }
+  };
+
+  const isCopied = copied ?? internalCopied;
+  const isCopyable = copyable && Boolean(value);
+
   return (
     <View style={styles.fieldRow}>
       <View style={styles.fieldLabelContainer}>
@@ -285,9 +265,9 @@ function FieldItem({
         >
           {value || emptyText || "—"}
         </Text>
-        {onCopy && value && (
-          <Pressable hitSlop={6} onPress={onCopy} style={styles.copyButton}>
-            {copied ? <Check size={13} color="#16a34a" /> : <Copy size={13} color="#94a3b8" />}
+        {isCopyable && (
+          <Pressable hitSlop={8} onPress={handleCopy} style={styles.copyButton}>
+            {isCopied ? <Check size={13} color="#16a34a" /> : <Copy size={13} color="#94a3b8" />}
           </Pressable>
         )}
       </View>

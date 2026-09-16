@@ -1,4 +1,4 @@
-import { Boxes, LayoutDashboard, Settings, Users } from "lucide-react";
+import { Boxes, FileSearch, LayoutDashboard, Settings, Users } from "lucide-react";
 import type { NavSection } from "@/app/nav-types";
 import { loopdevNavigationContract } from "../../packages/contracts/src/navigation";
 
@@ -31,6 +31,16 @@ export const loopdevNavigation: NavSection[] = [
           label: item.label,
           to: item.path,
         })),
+      },
+    ],
+  },
+  {
+    label: "Tools",
+    items: [
+      {
+        label: "Document Intelligence",
+        to: "/app/tools/document-intelligence",
+        icon: FileSearch,
       },
     ],
   },

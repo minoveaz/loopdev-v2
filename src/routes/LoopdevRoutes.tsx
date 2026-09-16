@@ -21,6 +21,8 @@ const PlatformWorkspace = lazy(() => import("@/loopdev/pages/platform/Workspace"
 const TaskTemplates = lazy(() => import("@/loopdev/pages/platform/TaskTemplates"));
 const ERPOverview = lazy(() => import("@/loopdev/pages/erp/Overview"));
 const ERPProductCatalog = lazy(() => import("@/loopdev/pages/erp/ProductCatalog"));
+const DocumentIntelligenceOverview = lazy(() => import("@/loopdev/pages/tools/document-intelligence/Overview"));
+const DocumentIntelligenceWorkspace = lazy(() => import("@/loopdev/pages/tools/document-intelligence/ExtractionWorkspace"));
 
 export const loopdevRouteElements = (
   <Fragment>
@@ -55,5 +57,7 @@ export const loopdevRouteElements = (
     <Route path="/app/erp/overview" element={<ERPOverview />} />
     <Route path="/app/erp/product-catalog/:catalogId" element={<ERPProductCatalog />} />
     <Route path="/app/erp/product-catalog" element={<ERPProductCatalog />} />
+    <Route path="/app/tools/document-intelligence" element={<DocumentIntelligenceOverview />} />
+    <Route path="/app/tools/document-intelligence/:extractionId" element={<DocumentIntelligenceWorkspace />} />
   </Fragment>
 );

@@ -60,6 +60,9 @@ import { localFilesAdapter } from "@/loopdev/domains/files";
 import { ConversationTimelineRail } from "@/loopdev/components/communications/ConversationTimelineRail";
 import { ConversationTimelinePanel } from "@/loopdev/components/communications/ConversationTimelinePanel";
 import type { ConversationContextView } from "@/loopdev/components/communications/ConversationContextTabs";
+import { DocumentExtractionDrawer } from "@/loopdev/components/document-intelligence/DocumentExtractionDrawer";
+import { DEMO_DOCUMENT_FIXTURES } from "@/loopdev/domains/document-intelligence/data/fixtures";
+import type { IdentityDocumentFields } from "@/loopdev/domains/document-intelligence";
 
 const channelIcons: Record<CommunicationChannel, ComponentType<ChannelIconProps>> = {
   whatsapp: WhatsAppIcon,
@@ -474,6 +477,83 @@ export default function Communications() {
     void detail.setDrafting(draft.body.trim() ? "reply" : null).catch(() => undefined);
   };
 
+  const [extractionDrawerOpen, setExtractionDrawerOpen] = useState(false);
+  const [extractionInitialFile, setExtractionInitialFile] = useState<any>(null);
+
+  const handleExtractDocument = (message: import("@/loopdev/domains/communications").CommunicationMessage) => {
+    const fixtureMatch = DEMO_DOCUMENT_FIXTURES[0];
+    const previewUrl = message.contentMetadata?.url || fixtureMatch.previewUrl;
+    setExtractionInitialFile({
+      name: message.contentMetadata?.name || "documento-adjunto.svg",
+      size: Number.parseInt(message.contentMetadata?.size ?? "45000", 10) || 45000,
+      mimeType: message.contentMetadata?.mimeType || "image/svg+xml",
+      previewUrl,
+    });
+    setExtractionDrawerOpen(true);
+  };
+
+  const handleApplyExtractedDocument = async (fields: IdentityDocumentFields) => {
+    if (!selectedSummary?.contact?.id) {
+      toast({ title: "Datos extraídos", description: "No hay un contacto seleccionado para actualizar." });
+      return;
+    }
+
+    try {
+      const contactId = selectedSummary.contact.id;
+      const c360 = await loopdevAdapter.crm.getCustomer360(contactId);
+      if (!c360) {
+        toast({ title: "Error", description: "No se encontró el registro del contacto.", variant: "destructive" });
+        return;
+      }
+
+      const docTypeMap: Record<string, string> = {
+        "spanish-dni": "DNI",
+        "spanish-nie": "NIE",
+        passport: "PASSPORT",
+      };
+
+      const patch: any = {
+        organizationId: selectedSummary.organizationId,
+      };
+
+      if (fields.givenNames) patch.firstName = fields.givenNames;
+      if (fields.firstSurname) patch.lastName = fields.firstSurname;
+      if (fields.secondSurname) patch.secondLastName = fields.secondSurname;
+      if (fields.documentNumber) patch.documentNumber = fields.documentNumber;
+      if (fields.birthDate) patch.birthDate = fields.birthDate;
+      if (fields.address) patch.addressLine1 = fields.address;
+      if (fields.nationality === "ESP") patch.country = "Spain";
+      if (fields.sex) {
+        const genderMap: Record<string, string> = { M: "male", F: "female" };
+        if (genderMap[fields.sex]) patch.gender = genderMap[fields.sex];
+      }
+      if (fields.documentType && docTypeMap[fields.documentType]) {
+        patch.documentType = docTypeMap[fields.documentType];
+      }
+
+      const result = await loopdevAdapter.crm.updateContact(contactId, patch, c360.contact.updatedAt);
+      if (result.status === "success") {
+        toast({
+          title: "Contacto actualizado",
+          description: `Los datos extraídos se aplicaron correctamente a ${result.contact.firstName} ${result.contact.lastName ?? ""}.`,
+        });
+        inbox.reload();
+      } else {
+        toast({
+          title: "No se pudo actualizar el contacto",
+          description: "message" in result ? result.message : "Error de validación",
+          variant: "destructive",
+        });
+      }
+    } catch (cause) {
+      toast({
+        title: "Error al actualizar contacto",
+        description: cause instanceof Error ? cause.message : "Ocurrió un error inesperado.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (!conversationId || !threadScrollRef.current) return;
     threadScrollRef.current.scrollTop = threadScrollPositions.current[conversationId] ?? 0;
@@ -701,6 +781,7 @@ export default function Communications() {
                                 onCopy={(selectedMessage) => navigator.clipboard.writeText(selectedMessage.body)}
                                 onReply={(selectedMessage) => updateComposerDraft({ body: `> ${selectedMessage.body}\n\n` })}
                                 onOpenOperations={() => openContextView("operations")}
+                                onExtractDocument={handleExtractDocument}
                                 onSaveToCustomer={async (selectedMessage) => {
                                   const metadata = selectedMessage.contentMetadata;
                                   if (!metadata?.name) {
@@ -805,6 +886,17 @@ export default function Communications() {
           )}
         </div>
       </section>
+
+      {selectedSummary && (
+        <DocumentExtractionDrawer
+          open={extractionDrawerOpen}
+          onOpenChange={setExtractionDrawerOpen}
+          sourceSuite="communications"
+          sourceReferenceId={selectedSummary.id}
+          initialFile={extractionInitialFile}
+          onApplyExtractedData={handleApplyExtractedDocument}
+        />
+      )}
     </div>
   );
 }

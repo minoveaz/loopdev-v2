@@ -1,8 +1,10 @@
-import { useEffect } from "react";
-import { Building2, Contact, MapPin, UserRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Building2, Contact, FileText, MapPin, UserRound } from "lucide-react";
 import { useForm, type Control, type Resolver } from "react-hook-form";
 import { contactFormSections, emptyContactFormValues, getContactSectionStats, validateContactForm, type ContactFormValues } from "../../../../../packages/contracts/src/contact-form";
 import type { CRMContact, CRMContactMutationResult } from "@/loopdev/domains/crm/adapter";
+import { DocumentExtractionDrawer } from "@/loopdev/components/document-intelligence/DocumentExtractionDrawer";
+import type { IdentityDocumentFields } from "@/loopdev/domains/document-intelligence";
 import {
   CityCombobox,
   ReferenceSelect,
@@ -191,6 +193,32 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
     form.setError("root.server", { message: `${prefix}${result.message}` });
   };
 
+  const [extractionDrawerOpen, setExtractionDrawerOpen] = useState(false);
+
+  const handleApplyExtractedDocument = (fields: IdentityDocumentFields) => {
+    if (fields.givenNames) form.setValue("firstName", fields.givenNames, { shouldDirty: true });
+    if (fields.firstSurname) form.setValue("lastName", fields.firstSurname, { shouldDirty: true });
+    if (fields.secondSurname) form.setValue("secondLastName", fields.secondSurname, { shouldDirty: true });
+    if (fields.documentNumber) form.setValue("documentNumber", fields.documentNumber, { shouldDirty: true });
+    if (fields.birthDate) form.setValue("birthDate", fields.birthDate, { shouldDirty: true });
+    if (fields.address) form.setValue("addressLine1", fields.address, { shouldDirty: true });
+    if (fields.nationality && fields.nationality === "ESP") form.setValue("country", "ES", { shouldDirty: true });
+    if (fields.sex) {
+      const genderMap: Record<string, string> = { M: "male", F: "female" };
+      if (genderMap[fields.sex]) form.setValue("gender", genderMap[fields.sex], { shouldDirty: true });
+    }
+    if (fields.documentType) {
+      const docTypeMap: Record<string, string> = {
+        "spanish-dni": "dni",
+        "spanish-nie": "nie",
+        passport: "passport",
+      };
+      if (docTypeMap[fields.documentType]) {
+        form.setValue("documentType", docTypeMap[fields.documentType], { shouldDirty: true });
+      }
+    }
+  };
+
   const iconByKey = { user: UserRound, contact: Contact, building: Building2, "map-pin": MapPin } as const;
   const renderField = (id: keyof ContactFormValues) => {
     const definition = contactFormSections.flatMap((section) => section.fields).find((item) => item.id === id)!;
@@ -207,6 +235,18 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(submit)} className="loopdev-form mt-6 flex flex-col gap-7">
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs shrink-0"
+            onClick={() => setExtractionDrawerOpen(true)}
+          >
+            <FileText className="h-3.5 w-3.5 text-primary" />
+            Escanear DNI / Pasaporte
+          </Button>
+        </div>
         {contactFormSections.map((section) => {
           const Icon = iconByKey[section.iconKey];
           const stats = sectionStats[section.id];
@@ -217,6 +257,13 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
         {formState.errors.root?.server && (() => { const message = formState.errors.root.server.message ?? ""; const conflict = message.startsWith("Conflict:"); const permission = message.startsWith("Permission denied:"); return <p role="alert" className={`rounded-md border px-3 py-2 text-sm ${conflict ? "border-amber-500/30 bg-amber-500/10 text-amber-700" : permission ? "border-slate-400/40 bg-slate-500/10 text-slate-700" : "border-destructive/30 bg-destructive-soft text-destructive"}`}>{message}</p>; })()}
         <div className="flex justify-end gap-2 border-t border-border pt-5"><Button type="button" variant="ghost" onClick={onCancel} disabled={formState.isSubmitting}>Cancel</Button><Button type="submit" disabled={formState.isSubmitting}>{formState.isSubmitting ? "Saving..." : contact ? "Save changes" : "Create contact"}</Button></div>
       </form>
+
+      <DocumentExtractionDrawer
+        open={extractionDrawerOpen}
+        onOpenChange={setExtractionDrawerOpen}
+        sourceSuite="crm"
+        onApplyExtractedData={handleApplyExtractedDocument}
+      />
     </Form>
   );
 }

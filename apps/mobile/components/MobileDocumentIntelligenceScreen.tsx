@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import {
+  Camera,
   ArrowLeft,
   Check,
   CheckCircle2,
@@ -40,14 +41,12 @@ import { MobileSearchBar } from "./ui/MobileSearchBar";
 import { MobileSegmentedControl } from "./ui/MobileSegmentedControl";
 import {
   localDocumentIntelligenceAdapter,
-  DEMO_DOCUMENT_FIXTURES,
   EXPORT_PROFILES,
   DEFAULT_EXPORT_PROFILE_ID,
   splitSurnames,
   buildSurnames,
   formatFieldsForProfile,
   selectFieldsForProfile,
-  type DocumentDemoFixture,
   type ExtractionRecord,
   type ExtractionDocumentFile,
   type IdentityDocumentFields,
@@ -99,7 +98,6 @@ export function MobileDocumentIntelligenceScreen({
   // Workspace Session State
   const [sessionStep, setSessionStep] = useState<SessionStep>("intake");
   const [selectedFile, setSelectedFile] = useState<ExtractionDocumentFile | null>(null);
-  const [selectedFixture, setSelectedFixture] = useState<DocumentDemoFixture | null>(null);
   const [currentExtraction, setCurrentExtraction] = useState<ExtractionRecord | null>(null);
   const [editableFields, setEditableFields] = useState<IdentityDocumentFields>({
     documentType: "spanish-dni",
@@ -141,8 +139,9 @@ export function MobileDocumentIntelligenceScreen({
   const [historyFilter, setHistoryFilter] = useState<string>("all");
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  // File Input Ref for Web
+  // File & Camera Input Refs for Web
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   // Load Extractions from Adapter
   const loadHistory = useCallback(async () => {
@@ -169,7 +168,6 @@ export function MobileDocumentIntelligenceScreen({
     const file = e.target?.files?.[0];
     if (file) {
       const previewUrl = URL.createObjectURL(file);
-      setSelectedFixture(null);
       setSelectedFile({
         name: file.name,
         size: file.size,
@@ -182,20 +180,6 @@ export function MobileDocumentIntelligenceScreen({
     }
   };
 
-  // Handle Demo Fixture Selection
-  const handleSelectFixture = (fixture: DocumentDemoFixture) => {
-    setSelectedFixture(fixture);
-    setSelectedFile({
-      name: fixture.record.files.front?.name || fixture.name,
-      size: fixture.record.files.front?.size || 45000,
-      mimeType: fixture.mimeType,
-      previewUrl: fixture.previewUrl,
-    });
-    setZoomLevel(1);
-    setRotation(0);
-    setSessionStep("preview");
-  };
-
   // Handle Clipboard Paste
   const handlePasteClipboard = async () => {
     if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard?.read) {
@@ -206,7 +190,6 @@ export function MobileDocumentIntelligenceScreen({
           if (imgType) {
             const blob = await item.getType(imgType);
             const previewUrl = URL.createObjectURL(blob);
-            setSelectedFixture(null);
             setSelectedFile({
               name: `captura-${Date.now()}.png`,
               size: blob.size,
@@ -248,7 +231,6 @@ export function MobileDocumentIntelligenceScreen({
         organizationId: "local-development-organization",
         sourceSuite: "standalone",
         frontFile: selectedFile,
-        fixtureId: selectedFixture?.id,
       });
 
       if (result.ok) {
@@ -334,9 +316,9 @@ export function MobileDocumentIntelligenceScreen({
   };
 
   // Reset to new upload
+  // Reset to new upload
   const handleResetSession = () => {
     setSelectedFile(null);
-    setSelectedFixture(null);
     setCurrentExtraction(null);
     setSessionStep("intake");
   };
@@ -375,15 +357,25 @@ export function MobileDocumentIntelligenceScreen({
 
   return (
     <View style={styles.container}>
-      {/* Hidden Web File Input */}
+      {/* Hidden Web File & Camera Inputs */}
       {Platform.OS === "web" && (
-        <input
-          ref={fileInputRef as any}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/svg+xml,application/pdf"
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
+        <>
+          <input
+            ref={fileInputRef as any}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml,application/pdf"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+          <input
+            ref={cameraInputRef as any}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+        </>
       )}
 
       {/* Top Bar / Back to Launchpad */}
@@ -472,28 +464,23 @@ export function MobileDocumentIntelligenceScreen({
                     <Text style={styles.primaryUploadBtnText}>Seleccionar Archivo</Text>
                   </Pressable>
 
-                  <Pressable onPress={handlePasteClipboard} style={styles.secondaryUploadBtn}>
-                    <Clipboard size={16} color={mobileTheme.colors.primary} />
-                    <Text style={styles.secondaryUploadBtnText}>Pegar Imagen</Text>
+                  <Pressable
+                    onPress={() => {
+                      if (Platform.OS === "web" && cameraInputRef.current) {
+                        cameraInputRef.current.click();
+                      }
+                    }}
+                    style={styles.secondaryUploadBtn}
+                  >
+                    <Camera size={16} color={mobileTheme.colors.primary} />
+                    <Text style={styles.secondaryUploadBtnText}>Hacer Foto</Text>
                   </Pressable>
                 </View>
 
-                {/* Fixture Shortcuts */}
-                <View style={styles.fixturesDivider}>
-                  <Text style={styles.fixturesLabel}>O PRUEBA CON MUESTRAS OFICIALES:</Text>
-                  <View style={styles.fixturesRow}>
-                    {DEMO_DOCUMENT_FIXTURES.map((fixture) => (
-                      <Pressable
-                        key={fixture.id}
-                        onPress={() => handleSelectFixture(fixture)}
-                        style={styles.fixturePill}
-                      >
-                        <Sparkles size={12} color={mobileTheme.colors.primary} />
-                        <Text style={styles.fixturePillText}>{fixture.name.split(" ")[0]} ({fixture.documentType === "passport" ? "Pasaporte" : "DNI"})</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
+                <Pressable onPress={handlePasteClipboard} style={styles.pasteClipboardBtn}>
+                  <Clipboard size={14} color={mobileTheme.colors.textMuted} />
+                  <Text style={styles.pasteClipboardBtnText}>O pegar imagen desde el portapapeles</Text>
+                </Pressable>
               </View>
 
               {/* Engine Metrics Highlights */}
@@ -1093,42 +1080,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
-  fixturesDivider: {
-    width: "100%",
-    borderTopWidth: 1,
-    borderTopColor: mobileTheme.colors.borderLight,
-    marginTop: 18,
-    paddingTop: 14,
-    alignItems: "center",
-  },
-  fixturesLabel: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1,
-    color: mobileTheme.colors.textMuted,
-    marginBottom: 8,
-  },
-  fixturesRow: {
+  pasteClipboardBtn: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
     justifyContent: "center",
     gap: 6,
-  },
-  fixturePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: mobileTheme.colors.primarySoft,
-    borderColor: mobileTheme.colors.primary,
-    borderWidth: 1,
-    paddingHorizontal: 10,
+    marginTop: 14,
     paddingVertical: 6,
-    borderRadius: 8,
   },
-  fixturePillText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: mobileTheme.colors.primary,
+  pasteClipboardBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: mobileTheme.colors.textMuted,
   },
   metricsRow: {
     flexDirection: "row",

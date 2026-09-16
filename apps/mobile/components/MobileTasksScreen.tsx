@@ -32,6 +32,7 @@ import {
   Trash2,
   User,
   UserCheck,
+  Users,
   X,
 } from "lucide-react-native";
 import {
@@ -86,6 +87,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
   const [rescheduleSheetTask, setRescheduleSheetTask] = useState<TaskRecord | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<TaskRecord | null>(null);
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
 
   // In-place edit state for detailTask
   const [detailTitle, setDetailTitle] = useState("");
@@ -681,16 +683,29 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     ].filter((g) => g.tasks.length > 0);
   }, [tasks, searchQuery]);
 
+  const hasActiveFilters = filterMode !== "all" || assigneeFilter !== "all" || tagFilter !== null;
+  const activeFilterCount =
+    (filterMode !== "all" ? 1 : 0) + (assigneeFilter !== "all" ? 1 : 0) + (tagFilter !== null ? 1 : 0);
+
+  const handleClearAllFilters = () => {
+    setFilterMode("all");
+    setAssigneeFilter("all");
+    setTagFilter(null);
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      {/* 1. Page Header (Rivera / LoopDev Standard) */}
+    <ScrollView
+      style={commonMobileStyles.screenContainer}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* 1. Global Page Header */}
       <MobilePageHeader
-        eyebrow="SALES CRM"
+        eyebrow="Sales CRM"
         title="Tareas"
-        subtitle={`${pendingCount} pendiente${pendingCount === 1 ? "" : "s"} de ${tasks.length} total`}
-        actionButton={{
+        subtitle={`${pendingCount} pendientes de ${tasks.length} total`}
+        primaryAction={{
           label: "Nueva tarea",
-          icon: <Plus size={15} color={mobileTheme.colors.textInverse} />,
           onPress: () => {
             setNewTitle("");
             setNewDesc("");
@@ -714,94 +729,57 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
         ]}
       />
 
-      {/* 3. Search Bar */}
+      {/* 3. Search Bar with Filter Button (Option 1) */}
       <MobileSearchBar
         value={searchQuery}
         onChangeText={setSearchQuery}
         placeholder="Buscar tareas, clientes o notas..."
+        onFilterPress={() => setFilterModalOpen(true)}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={handleClearAllFilters}
       />
 
-      {/* 4. VIEW 1: LIST VIEW */}
+      {/* Active Filter Badges (Only shown when filters are active) */}
+      {hasActiveFilters && (
+        <View style={styles.activeFilterChipsContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+            {filterMode !== "all" && (
+              <Pressable style={styles.activeFilterChip} onPress={() => setFilterMode("all")}>
+                <Text style={styles.activeFilterChipText}>
+                  {filterMode === "urgent"
+                    ? `🔥 Urgentes (${urgentCount})`
+                    : filterMode === "today"
+                    ? "📅 Para hoy"
+                    : `✅ Completadas (${completedCount})`}
+                </Text>
+                <X size={12} color={mobileTheme.colors.primary} />
+              </Pressable>
+            )}
+
+            {assigneeFilter !== "all" && (
+              <Pressable style={styles.activeFilterChip} onPress={() => setAssigneeFilter("all")}>
+                <Text style={styles.activeFilterChipText}>👤 Mis tareas</Text>
+                <X size={12} color={mobileTheme.colors.primary} />
+              </Pressable>
+            )}
+
+            {tagFilter && (
+              <Pressable style={styles.activeFilterChip} onPress={() => setTagFilter(null)}>
+                <Text style={styles.activeFilterChipText}>🏷️ {tagFilter}</Text>
+                <X size={12} color={mobileTheme.colors.primary} />
+              </Pressable>
+            )}
+
+            <Pressable onPress={handleClearAllFilters} style={styles.clearAllFiltersLink}>
+              <Text style={styles.clearAllFiltersText}>Limpiar todo</Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      )}
+
+      {/* 4. VIEW 1: LIST VIEW (100% Clean - No infinite horizontal franjas) */}
       {viewMode === "list" && (
         <>
-          {/* Unified Horizontal Filter Strip: Status, Assignee & Tags */}
-          <View style={styles.unifiedFilterSection}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.unifiedFilterScroll}
-            >
-              {[
-                { id: "all", label: `Todas (${tasks.length})`, icon: null },
-                { id: "urgent", label: `Urgentes (${urgentCount})`, icon: Flame },
-                { id: "today", label: "Para hoy", icon: Calendar },
-                { id: "completed", label: `Completadas (${completedCount})`, icon: CheckCircle2 },
-              ].map((pill) => {
-                const isActive = filterMode === pill.id;
-                const PillIcon = pill.icon;
-                return (
-                  <Pressable
-                    key={pill.id}
-                    onPress={() => setFilterMode(pill.id as FilterMode)}
-                    style={[styles.cleanFilterPill, isActive && styles.cleanFilterPillActive]}
-                  >
-                    {PillIcon && (
-                      <PillIcon
-                        size={12}
-                        color={
-                          isActive
-                            ? mobileTheme.colors.textInverse
-                            : pill.id === "urgent"
-                            ? mobileTheme.colors.danger
-                            : pill.id === "today"
-                            ? mobileTheme.colors.primary
-                            : mobileTheme.colors.success
-                        }
-                      />
-                    )}
-                    <Text style={[styles.cleanFilterPillText, isActive && styles.cleanFilterPillTextActive]}>
-                      {pill.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-
-              {/* "Mis Tareas" toggle pill */}
-              <Pressable
-                onPress={() => setAssigneeFilter((curr) => (curr === "mine" ? "all" : "mine"))}
-                style={[styles.cleanFilterPill, assigneeFilter === "mine" && styles.cleanFilterPillActive]}
-              >
-                <User
-                  size={12}
-                  color={assigneeFilter === "mine" ? mobileTheme.colors.textInverse : mobileTheme.colors.primary}
-                />
-                <Text style={[styles.cleanFilterPillText, assigneeFilter === "mine" && styles.cleanFilterPillTextActive]}>
-                  Mis tareas
-                </Text>
-              </Pressable>
-
-              {/* Separator */}
-              <View style={styles.filterDivider} />
-
-              {/* Tag Filters */}
-              {MOBILE_PRESET_TAGS.map((tag) => {
-                const isSelected = tagFilter === tag;
-                return (
-                  <Pressable
-                    key={tag}
-                    onPress={() => setTagFilter((curr) => (curr === tag ? null : tag))}
-                    style={[styles.cleanTagPill, isSelected && styles.cleanTagPillActive]}
-                  >
-                    <Tag size={11} color={isSelected ? mobileTheme.colors.textInverse : mobileTheme.colors.primary} />
-                    <Text style={[styles.cleanTagPillText, isSelected && styles.cleanTagPillTextActive]}>
-                      {tag}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-
           {/* Tasks List */}
           {filteredTasks.length === 0 ? (
             <View style={styles.emptyCard}>
@@ -1695,6 +1673,125 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       </MobileModalSheet>
 
       {/* ========================================================================= */}
+      {/* MODAL 6: Filter Tasks Sheet (Option 1)                                    */}
+      {/* ========================================================================= */}
+      <MobileModalSheet
+        visible={filterModalOpen}
+        onClose={() => setFilterModalOpen(false)}
+        title="Filtros de Tareas"
+      >
+        <View style={styles.filterModalContainer}>
+          {/* Section 1: Estado */}
+          <Text style={styles.filterSectionTitle}>ESTADO DE LA TAREA</Text>
+          <View style={styles.filterGrid}>
+            {[
+              { id: "all", label: `Todas (${tasks.length})`, icon: null },
+              { id: "urgent", label: `Urgentes (${urgentCount})`, icon: Flame },
+              { id: "today", label: "Para hoy", icon: Calendar },
+              { id: "completed", label: `Completadas (${completedCount})`, icon: CheckCircle2 },
+            ].map((item) => {
+              const selected = filterMode === item.id;
+              const Icon = item.icon;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => setFilterMode(item.id as FilterMode)}
+                  style={[styles.filterGridItem, selected && styles.filterGridItemSelected]}
+                >
+                  {Icon && (
+                    <Icon
+                      size={14}
+                      color={
+                        selected
+                          ? mobileTheme.colors.textInverse
+                          : item.id === "urgent"
+                          ? mobileTheme.colors.danger
+                          : item.id === "today"
+                          ? mobileTheme.colors.primary
+                          : mobileTheme.colors.success
+                      }
+                    />
+                  )}
+                  <Text style={[styles.filterGridItemText, selected && styles.filterGridItemTextSelected]}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Section 2: Responsable */}
+          <Text style={styles.filterSectionTitle}>ASIGNACIÓN / RESPONSABLE</Text>
+          <View style={styles.filterGrid}>
+            <Pressable
+              onPress={() => setAssigneeFilter("all")}
+              style={[styles.filterGridItem, assigneeFilter === "all" && styles.filterGridItemSelected]}
+            >
+              <Users
+                size={14}
+                color={assigneeFilter === "all" ? mobileTheme.colors.textInverse : mobileTheme.colors.textMuted}
+              />
+              <Text style={[styles.filterGridItemText, assigneeFilter === "all" && styles.filterGridItemTextSelected]}>
+                Todo el equipo
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setAssigneeFilter("mine")}
+              style={[styles.filterGridItem, assigneeFilter === "mine" && styles.filterGridItemSelected]}
+            >
+              <User
+                size={14}
+                color={assigneeFilter === "mine" ? mobileTheme.colors.textInverse : mobileTheme.colors.primary}
+              />
+              <Text style={[styles.filterGridItemText, assigneeFilter === "mine" && styles.filterGridItemTextSelected]}>
+                Solo mis tareas
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Section 3: Etiquetas */}
+          <Text style={styles.filterSectionTitle}>ETIQUETAS TEMÁTICAS</Text>
+          <View style={styles.tagsFilterWrap}>
+            {MOBILE_PRESET_TAGS.map((tag) => {
+              const selected = tagFilter === tag;
+              return (
+                <Pressable
+                  key={tag}
+                  onPress={() => setTagFilter((curr) => (curr === tag ? null : tag))}
+                  style={[styles.filterTagChip, selected && styles.filterTagChipSelected]}
+                >
+                  <Tag size={12} color={selected ? mobileTheme.colors.textInverse : mobileTheme.colors.primary} />
+                  <Text style={[styles.filterTagChipText, selected && styles.filterTagChipTextSelected]}>
+                    {tag}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Footer Actions */}
+          <View style={styles.filterFooterActions}>
+            <Pressable
+              onPress={handleClearAllFilters}
+              style={styles.filterClearButton}
+            >
+              <Text style={styles.filterClearButtonText}>Limpiar</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setFilterModalOpen(false)}
+              style={styles.filterApplyButton}
+            >
+              <Text style={styles.filterApplyButtonText}>
+                Ver {filteredTasks.length} {filteredTasks.length === 1 ? "tarea" : "tareas"}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </MobileModalSheet>
+
+      {/* ========================================================================= */}
       {/* FLOATING SNACKBAR / TOAST NOTIFICATION WITH UNDO                          */}
       {/* ========================================================================= */}
       {toast && (
@@ -1897,58 +1994,145 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 2,
   },
-  cleanFilterPill: {
+  // Active Filter Badges Indicator Row
+  activeFilterChipsContainer: {
+    marginBottom: 10,
+  },
+  activeFilterChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: mobileTheme.colors.surface,
+    backgroundColor: mobileTheme.colors.primarySoft,
+    borderColor: mobileTheme.colors.primary,
+    borderWidth: 1,
+    borderRadius: mobileTheme.radii.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  activeFilterChipText: {
+    color: mobileTheme.colors.primary,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  clearAllFiltersLink: {
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+  clearAllFiltersText: {
+    color: mobileTheme.colors.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
+
+  // Filter Modal Sheet Styles
+  filterModalContainer: {
+    paddingVertical: 6,
+    gap: 16,
+  },
+  filterSectionTitle: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: mobileTheme.colors.textSubtle,
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  filterGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  filterGridItem: {
+    flex: 1,
+    minWidth: "47%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    backgroundColor: mobileTheme.colors.surfaceMuted,
+    borderColor: mobileTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: mobileTheme.radii.md,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+  },
+  filterGridItemSelected: {
+    backgroundColor: mobileTheme.colors.primary,
+    borderColor: mobileTheme.colors.primary,
+  },
+  filterGridItemText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: mobileTheme.colors.textHeading,
+  },
+  filterGridItemTextSelected: {
+    color: mobileTheme.colors.textInverse,
+  },
+  tagsFilterWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  filterTagChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: mobileTheme.colors.surfaceMuted,
     borderColor: mobileTheme.colors.border,
     borderWidth: 1,
     borderRadius: mobileTheme.radii.pill,
     paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingVertical: 8,
   },
-  cleanFilterPillActive: {
+  filterTagChipSelected: {
     backgroundColor: mobileTheme.colors.primary,
     borderColor: mobileTheme.colors.primary,
   },
-  cleanFilterPillText: {
-    color: mobileTheme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  cleanFilterPillTextActive: {
-    color: mobileTheme.colors.textInverse,
-  },
-  filterDivider: {
-    width: 1,
-    height: 20,
-    backgroundColor: mobileTheme.colors.border,
-    marginHorizontal: 2,
-  },
-  cleanTagPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: mobileTheme.colors.surface,
-    borderColor: mobileTheme.colors.border,
-    borderWidth: 1,
-    borderRadius: mobileTheme.radii.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-  },
-  cleanTagPillActive: {
-    backgroundColor: mobileTheme.colors.primary,
-    borderColor: mobileTheme.colors.primary,
-  },
-  cleanTagPillText: {
+  filterTagChipText: {
     fontSize: 12,
     fontWeight: "700",
     color: mobileTheme.colors.primary,
   },
-  cleanTagPillTextActive: {
+  filterTagChipTextSelected: {
     color: mobileTheme.colors.textInverse,
   },
+  filterFooterActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 8,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: mobileTheme.colors.borderLight,
+  },
+  filterClearButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: mobileTheme.colors.surfaceMuted,
+    borderColor: mobileTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: mobileTheme.radii.md,
+    paddingVertical: 13,
+  },
+  filterClearButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: mobileTheme.colors.textMuted,
+  },
+  filterApplyButton: {
+    flex: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: mobileTheme.colors.primary,
+    borderRadius: mobileTheme.radii.md,
+    paddingVertical: 13,
+  },
+  filterApplyButtonText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: mobileTheme.colors.textInverse,
+  },
+
   modalTemplateChip: {
     flexDirection: "row",
     alignItems: "center",

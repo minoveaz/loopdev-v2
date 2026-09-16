@@ -1,8 +1,9 @@
-import { Archive, Building2, CalendarDays, CheckSquare, ChevronDown, Eye, FileText, Mail, MapPin, MessageCircle, MoreHorizontal, Pencil, Phone, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react-native";
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Archive, Building2, CalendarDays, CheckSquare, Eye, FileText, Mail, MapPin, MessageCircle, MoreHorizontal, Pencil, Phone, Search, ShieldCheck, SlidersHorizontal, Sparkles, User, Users, X } from "lucide-react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useMemo, useState } from "react";
-import { Picker } from "@react-native-picker/picker";
 import { MobileModalSheet } from "./MobileModal";
+import { MobileControlSheet } from "./ui/MobileControlSheet";
+import { mobileTheme } from "../theme/tokens";
 import { contactActions } from "../../../packages/contracts/src/contact-actions";
 import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
 export type MobileContactPreview = ContactRecord;
@@ -14,8 +15,11 @@ export function MobileContactsScreen({ contacts, onCreate, onView, onEdit, onArc
   const [sort, setSort] = useState<"updated" | "name">("updated");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [actionTarget, setActionTarget] = useState<MobileContactPreview | null>(null);
-  const hasActiveFilters = Boolean(query.trim()) || identity !== "all" || channel !== "all" || sort !== "updated";
+
+  const activeFilterCount = (identity !== "all" ? 1 : 0) + (channel !== "all" ? 1 : 0) + (sort !== "updated" ? 1 : 0);
+  const hasActiveFilters = Boolean(query.trim()) || activeFilterCount > 0;
   const clearFilters = () => { setQuery(""); setIdentity("all"); setChannel("all"); setSort("updated"); };
+
   const filteredContacts = useMemo(() => contacts
     .filter((contact) => {
       const haystack = [contact.firstName, contact.lastName, contact.email, contact.phone, contact.companyName, contact.jobTitle, contact.city, contact.country].join(" ").toLocaleLowerCase();
@@ -26,23 +30,161 @@ export function MobileContactsScreen({ contacts, onCreate, onView, onEdit, onArc
     .sort((left, right) => sort === "name"
       ? `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`)
       : (right.updatedAt ?? "").localeCompare(left.updatedAt ?? "")), [channel, contacts, identity, query, sort]);
+
   return <ScrollView contentContainerStyle={styles.content}><View style={styles.heading}><View><Text style={styles.eyebrow}>SALES CRM</Text><Text style={styles.title}>Contacts</Text><Text style={styles.subtitle}>{filteredContacts.length} of {contacts.length} relationship{contacts.length === 1 ? "" : "s"}</Text></View><View style={{ gap: 6 }}><Pressable accessibilityLabel="Create new contact" accessibilityRole="button" style={styles.button} onPress={onCreate}><Text style={styles.buttonText}>New contact</Text></Pressable><Pressable accessibilityRole="button" style={styles.reviewButton} onPress={onDuplicates}><Text style={styles.reviewButtonText}>Review duplicates</Text></Pressable></View></View>
-    <View style={styles.toolbar}><View style={styles.search}><Search size={17} color="#64748b" /><TextInput accessibilityLabel="Search contacts" value={query} onChangeText={setQuery} placeholder="Search contacts" placeholderTextColor="#94a3b8" style={styles.searchInput} /></View>{hasActiveFilters ? <Pressable accessibilityLabel="Clear contact filters" accessibilityRole="button" onPress={clearFilters} style={filterActionStyles.clearButton}><X size={17} color="#475569" /><Text style={filterActionStyles.clearText}>Clear</Text></Pressable> : null}<Pressable accessibilityLabel="Open contact filters" accessibilityRole="button" onPress={() => setFiltersOpen(true)} style={styles.filterButton}><SlidersHorizontal size={18} color="#475569" /></Pressable></View>
+    <View style={styles.toolbar}><View style={styles.search}><Search size={17} color="#64748b" /><TextInput accessibilityLabel="Search contacts" value={query} onChangeText={setQuery} placeholder="Search contacts" placeholderTextColor="#94a3b8" style={styles.searchInput} /></View>{hasActiveFilters ? <Pressable accessibilityLabel="Clear contact filters" accessibilityRole="button" onPress={clearFilters} style={filterActionStyles.clearButton}><X size={17} color="#475569" /><Text style={filterActionStyles.clearText}>Clear</Text></Pressable> : null}<Pressable accessibilityLabel="Open contact filters" accessibilityRole="button" onPress={() => setFiltersOpen(true)} style={[styles.filterButton, activeFilterCount > 0 && { backgroundColor: mobileTheme.colors.primarySoft, borderColor: mobileTheme.colors.primary }]}><SlidersHorizontal size={18} color={activeFilterCount > 0 ? mobileTheme.colors.primary : "#475569"} /></Pressable></View>
     {filteredContacts.map((contact, index) => <ContactCard key={contact.id} contact={contact} index={index + 1} onActions={() => setActionTarget(contact)} />)}
     {!filteredContacts.length && <Text style={styles.empty}>{contacts.length ? "No contacts match these filters." : "No contacts yet. Create the first one."}</Text>}
-    <FilterSheet visible={filtersOpen} identity={identity} channel={channel} sort={sort} onClose={() => setFiltersOpen(false)} onClear={clearFilters} onIdentityChange={setIdentity} onChannelChange={setChannel} onSortChange={setSort} />
+
+    {/* Universal HubSpot-Style Control Sheet for Contacts */}
+    <MobileControlSheet
+      visible={filtersOpen}
+      onClose={() => setFiltersOpen(false)}
+      title="Filtros de Contactos"
+      eyebrow="Sales CRM · Contacts Center"
+      activeFilterCount={activeFilterCount}
+      resultCount={filteredContacts.length}
+      onReset={clearFilters}
+      onApply={() => setFiltersOpen(false)}
+      presets={[
+        {
+          id: "verified",
+          label: "Verificados",
+          icon: ShieldCheck,
+          active: identity === "verified",
+          onSelect: () => setIdentity("verified"),
+        },
+        {
+          id: "pending_review",
+          label: "Por Revisar",
+          icon: User,
+          active: identity === "pending_identity_review",
+          onSelect: () => setIdentity("pending_identity_review"),
+        },
+        {
+          id: "whatsapp",
+          label: "WhatsApp",
+          icon: MessageCircle,
+          active: channel === "whatsapp",
+          onSelect: () => setChannel("whatsapp"),
+        },
+        {
+          id: "email",
+          label: "Email",
+          icon: Mail,
+          active: channel === "email",
+          onSelect: () => setChannel("email"),
+        },
+        {
+          id: "all",
+          label: "Todos",
+          icon: Users,
+          active: activeFilterCount === 0,
+          onSelect: clearFilters,
+        },
+      ]}
+    >
+      <View style={{ gap: 18 }}>
+        {/* Section 1: Estado de Identidad */}
+        <View style={{ gap: 8 }}>
+          <Text style={{ fontSize: 10, fontWeight: "800", color: "#64748b", letterSpacing: 1.1 }}>ESTADO DE IDENTIDAD</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {[
+              { id: "all", label: "Todas las identidades" },
+              { id: "verified", label: "Identidad Verificada" },
+              { id: "pending_identity_review", label: "Revisión Pendiente" },
+            ].map((item) => {
+              const selected = identity === item.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => setIdentity(item.id as any)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 9,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    backgroundColor: selected ? mobileTheme.colors.primary : "#f8fafc",
+                    borderColor: selected ? mobileTheme.colors.primary : "#e2e8f0",
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: selected ? "#ffffff" : "#1e293b" }}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Section 2: Canal Preferido */}
+        <View style={{ gap: 8 }}>
+          <Text style={{ fontSize: 10, fontWeight: "800", color: "#64748b", letterSpacing: 1.1 }}>CANAL PREFERIDO</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {[
+              { id: "all", label: "Todos los canales" },
+              { id: "whatsapp", label: "WhatsApp" },
+              { id: "email", label: "Email" },
+              { id: "phone", label: "Teléfono" },
+            ].map((item) => {
+              const selected = channel === item.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => setChannel(item.id as any)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 9,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    backgroundColor: selected ? mobileTheme.colors.primary : "#f8fafc",
+                    borderColor: selected ? mobileTheme.colors.primary : "#e2e8f0",
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: selected ? "#ffffff" : "#1e293b" }}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Section 3: Ordenación */}
+        <View style={{ gap: 8 }}>
+          <Text style={{ fontSize: 10, fontWeight: "800", color: "#64748b", letterSpacing: 1.1 }}>ORDENAR POR</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {[
+              { id: "updated", label: "Recientemente Actualizado" },
+              { id: "name", label: "Nombre (A-Z)" },
+            ].map((item) => {
+              const selected = sort === item.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => setSort(item.id as any)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 9,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    backgroundColor: selected ? mobileTheme.colors.primary : "#f8fafc",
+                    borderColor: selected ? mobileTheme.colors.primary : "#e2e8f0",
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: selected ? "#ffffff" : "#1e293b" }}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      </View>
+    </MobileControlSheet>
+
     <ContactActionsSheet contact={actionTarget} onClose={() => setActionTarget(null)} onView={() => { if (actionTarget && onView) onView(actionTarget); setActionTarget(null); }} onEdit={() => { if (actionTarget && onEdit) onEdit(actionTarget); setActionTarget(null); }} onArchive={() => { if (actionTarget && onArchive) onArchive(actionTarget); setActionTarget(null); }} />
   </ScrollView>;
-}
-
-function FilterSheet({ visible, identity, channel, sort, onClose, onClear, onIdentityChange, onChannelChange, onSortChange }: { visible: boolean; identity: "all" | "verified" | "pending_identity_review"; channel: "all" | "email" | "phone" | "whatsapp"; sort: "updated" | "name"; onClose: () => void; onClear: () => void; onIdentityChange: (value: "all" | "verified" | "pending_identity_review") => void; onChannelChange: (value: "all" | "email" | "phone" | "whatsapp") => void; onSortChange: (value: "updated" | "name") => void }) {
-  const [openField, setOpenField] = useState<string | null>(null);
-  return <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}><View style={styles.modalOverlay}><Pressable accessibilityLabel="Close contact filters" accessibilityRole="button" style={styles.modalBackdrop} onPress={onClose} /><View onStartShouldSetResponder={() => true} style={styles.filterSheet}><View style={styles.sheetHeader}><Text style={styles.sheetTitle}>Filter contacts</Text><Pressable accessibilityLabel="Close contact filters" onPress={onClose}><X size={22} color="#475569" /></Pressable></View><FilterSelect label="Identity" value={identity} onChange={onIdentityChange} options={[["All identities", "all"], ["Verified", "verified"], ["Pending review", "pending_identity_review"]]} open={openField === "identity"} onOpen={() => setOpenField("identity")} onClose={() => setOpenField(null)} /><FilterSelect label="Channel" value={channel} onChange={onChannelChange} options={[["All channels", "all"], ["Email", "email"], ["Phone", "phone"], ["WhatsApp", "whatsapp"]]} open={openField === "channel"} onOpen={() => setOpenField("channel")} onClose={() => setOpenField(null)} /><FilterSelect label="Sort by" value={sort} onChange={onSortChange} options={[["Recently updated", "updated"], ["Name", "name"]]} open={openField === "sort"} onOpen={() => setOpenField("sort")} onClose={() => setOpenField(null)} /><View style={filterActionStyles.actions}><Pressable accessibilityRole="button" onPress={onClear} style={filterActionStyles.clearAllButton}><Text style={filterActionStyles.clearAllText}>Clear all</Text></Pressable><Pressable style={filterActionStyles.applyButton} onPress={onClose}><Text style={filterActionStyles.applyText}>Apply filters</Text></Pressable></View></View></View></Modal>;
-}
-
-function FilterSelect<T extends string>({ label, value, onChange, options, open, onOpen, onClose }: { label: string; value: T; onChange: (value: T) => void; options: readonly [string, T][]; open: boolean; onOpen: () => void; onClose: () => void }) {
-  const selectedLabel = options.find(([, optionValue]) => optionValue === value)?.[0] ?? value;
-  return <View style={styles.filterControl}><Text style={styles.filterLabel}>{label}</Text>{Platform.OS === "web" ? <><Pressable accessibilityLabel={label} accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={open ? onClose : onOpen} style={webFilterStyles.picker}><Text style={webFilterStyles.pickerText}>{selectedLabel}</Text><ChevronDown size={17} color="#64748b" /></Pressable>{open ? <View style={webFilterStyles.options}>{options.map(([optionLabel, optionValue]) => <Pressable key={optionValue} accessibilityRole="menuitem" onPress={() => { onChange(optionValue); onClose(); }} style={[webFilterStyles.option, optionValue === value && webFilterStyles.selectedOption]}><Text style={[webFilterStyles.optionText, optionValue === value && webFilterStyles.selectedOptionText]}>{optionLabel}</Text></Pressable>)}</View> : null}</> : <View style={styles.pickerWrap}><Picker accessibilityLabel={label} selectedValue={value} onValueChange={onChange} style={styles.picker}>{options.map(([optionLabel, optionValue]) => <Picker.Item key={optionValue} label={optionLabel} value={optionValue} />)}</Picker></View>}</View>;
 }
 
 function ContactCard({ contact, index, onActions }: { contact: MobileContactPreview; index: number; onActions: () => void }) {

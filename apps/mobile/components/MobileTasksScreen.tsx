@@ -51,6 +51,7 @@ import { MobilePageHeader } from "./ui/MobilePageHeader";
 import { MobileSegmentedControl } from "./ui/MobileSegmentedControl";
 import { MobileSearchBar } from "./ui/MobileSearchBar";
 import { MobileModalSheet } from "./MobileModal";
+import { MobileControlSheet } from "./ui/MobileControlSheet";
 
 interface MobileTasksScreenProps {
   onBack?: () => void;
@@ -1673,16 +1674,58 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       </MobileModalSheet>
 
       {/* ========================================================================= */}
-      {/* MODAL 6: Filter Tasks Sheet (Option 1)                                    */}
+      {/* MODAL 6: Full-Height HubSpot-Style MobileControlSheet                    */}
       {/* ========================================================================= */}
-      <MobileModalSheet
+      <MobileControlSheet
         visible={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
-        title="Filtros de Tareas"
+        title="Filtros y Vistas CRM"
+        eyebrow="Sales CRM · Control Center"
+        activeFilterCount={activeFilterCount}
+        resultCount={filteredTasks.length}
+        onReset={handleClearAllFilters}
+        onApply={() => setFilterModalOpen(false)}
+        presets={[
+          {
+            id: "mine_urgent",
+            label: "Mis Urgentes",
+            icon: Flame,
+            active: assigneeFilter === "mine" && filterMode === "urgent",
+            onSelect: () => {
+              setAssigneeFilter("mine");
+              setFilterMode("urgent");
+            },
+          },
+          {
+            id: "due_today",
+            label: "Para Hoy / Atrasadas",
+            icon: Calendar,
+            active: filterMode === "today",
+            onSelect: () => {
+              setFilterMode("today");
+            },
+          },
+          {
+            id: "vip_deals",
+            label: "Cierres VIP",
+            icon: Sparkles,
+            active: tagFilter === "#VIP",
+            onSelect: () => {
+              setTagFilter("#VIP");
+            },
+          },
+          {
+            id: "all_team",
+            label: "Todo el Equipo",
+            icon: Users,
+            active: assigneeFilter === "all" && filterMode === "all" && tagFilter === null,
+            onSelect: handleClearAllFilters,
+          },
+        ]}
       >
-        <View style={styles.filterModalContainer}>
-          {/* Section 1: Estado */}
-          <Text style={styles.filterSectionTitle}>ESTADO DE LA TAREA</Text>
+        {/* Section 1: Estado */}
+        <View style={styles.sheetSectionBlock}>
+          <Text style={styles.sheetSectionHeader}>ESTADO DE LA TAREA</Text>
           <View style={styles.filterGrid}>
             {[
               { id: "all", label: `Todas (${tasks.length})`, icon: null },
@@ -1719,39 +1762,73 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
               );
             })}
           </View>
+        </View>
 
-          {/* Section 2: Responsable */}
-          <Text style={styles.filterSectionTitle}>ASIGNACIÓN / RESPONSABLE</Text>
-          <View style={styles.filterGrid}>
+        {/* Section 2: Responsable y Equipo */}
+        <View style={styles.sheetSectionBlock}>
+          <Text style={styles.sheetSectionHeader}>RESPONSABLE / AGENTE ASIGNADO</Text>
+          <View style={styles.assigneesGrid}>
             <Pressable
               onPress={() => setAssigneeFilter("all")}
-              style={[styles.filterGridItem, assigneeFilter === "all" && styles.filterGridItemSelected]}
+              style={[styles.assigneeTile, assigneeFilter === "all" && styles.assigneeTileSelected]}
             >
-              <Users
-                size={14}
-                color={assigneeFilter === "all" ? mobileTheme.colors.textInverse : mobileTheme.colors.textMuted}
-              />
-              <Text style={[styles.filterGridItemText, assigneeFilter === "all" && styles.filterGridItemTextSelected]}>
+              <Users size={14} color={assigneeFilter === "all" ? "#ffffff" : mobileTheme.colors.textMuted} />
+              <Text style={[styles.assigneeTileText, assigneeFilter === "all" && styles.assigneeTileTextSelected]}>
                 Todo el equipo
               </Text>
             </Pressable>
 
             <Pressable
               onPress={() => setAssigneeFilter("mine")}
-              style={[styles.filterGridItem, assigneeFilter === "mine" && styles.filterGridItemSelected]}
+              style={[styles.assigneeTile, assigneeFilter === "mine" && styles.assigneeTileSelected]}
             >
-              <User
-                size={14}
-                color={assigneeFilter === "mine" ? mobileTheme.colors.textInverse : mobileTheme.colors.primary}
-              />
-              <Text style={[styles.filterGridItemText, assigneeFilter === "mine" && styles.filterGridItemTextSelected]}>
-                Solo mis tareas
+              <User size={14} color={assigneeFilter === "mine" ? "#ffffff" : mobileTheme.colors.primary} />
+              <Text style={[styles.assigneeTileText, assigneeFilter === "mine" && styles.assigneeTileTextSelected]}>
+                👤 Solo mis tareas
               </Text>
             </Pressable>
-          </View>
 
-          {/* Section 3: Etiquetas */}
-          <Text style={styles.filterSectionTitle}>ETIQUETAS TEMÁTICAS</Text>
+            {AVAILABLE_ASSIGNABLE_USERS.map((user) => {
+              const isSelected = assigneeFilter === user.id;
+              return (
+                <Pressable
+                  key={user.id}
+                  onPress={() => setAssigneeFilter(isSelected ? "all" : user.id)}
+                  style={[styles.assigneeTile, isSelected && styles.assigneeTileSelected]}
+                >
+                  <View
+                    style={[
+                      styles.assigneeTileAvatar,
+                      isSelected && { backgroundColor: "rgba(255,255,255,0.25)" },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.assigneeTileAvatarText,
+                        isSelected && { color: "#ffffff" },
+                      ]}
+                    >
+                      {user.displayName.slice(0, 2).toUpperCase()}
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.assigneeTileText,
+                      isSelected && styles.assigneeTileTextSelected,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {user.displayName}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Section 3: Etiquetas Temáticas */}
+        <View style={styles.sheetSectionBlock}>
+          <Text style={styles.sheetSectionHeader}>ETIQUETAS TEMÁTICAS</Text>
           <View style={styles.tagsFilterWrap}>
             {MOBILE_PRESET_TAGS.map((tag) => {
               const selected = tagFilter === tag;
@@ -1769,27 +1846,8 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
               );
             })}
           </View>
-
-          {/* Footer Actions */}
-          <View style={styles.filterFooterActions}>
-            <Pressable
-              onPress={handleClearAllFilters}
-              style={styles.filterClearButton}
-            >
-              <Text style={styles.filterClearButtonText}>Limpiar</Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => setFilterModalOpen(false)}
-              style={styles.filterApplyButton}
-            >
-              <Text style={styles.filterApplyButtonText}>
-                Ver {filteredTasks.length} {filteredTasks.length === 1 ? "tarea" : "tareas"}
-              </Text>
-            </Pressable>
-          </View>
         </View>
-      </MobileModalSheet>
+      </MobileControlSheet>
 
       {/* ========================================================================= */}
       {/* FLOATING SNACKBAR / TOAST NOTIFICATION WITH UNDO                          */}
@@ -2025,17 +2083,16 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 
-  // Filter Modal Sheet Styles
-  filterModalContainer: {
-    paddingVertical: 6,
-    gap: 16,
+  // MobileControlSheet Section & Assignee Styles
+  sheetSectionBlock: {
+    gap: 8,
   },
-  filterSectionTitle: {
-    fontSize: 11,
+  sheetSectionHeader: {
+    fontSize: 10,
     fontWeight: "800",
     color: mobileTheme.colors.textSubtle,
-    letterSpacing: 1,
-    marginBottom: 8,
+    letterSpacing: 1.1,
+    marginBottom: 4,
   },
   filterGrid: {
     flexDirection: "row",
@@ -2067,6 +2124,47 @@ const styles = StyleSheet.create({
   },
   filterGridItemTextSelected: {
     color: mobileTheme.colors.textInverse,
+  },
+  assigneesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  assigneeTile: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    backgroundColor: mobileTheme.colors.surfaceMuted,
+    borderColor: mobileTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: mobileTheme.radii.md,
+    paddingVertical: 9,
+    paddingHorizontal: 11,
+  },
+  assigneeTileSelected: {
+    backgroundColor: mobileTheme.colors.primary,
+    borderColor: mobileTheme.colors.primary,
+  },
+  assigneeTileText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: mobileTheme.colors.textHeading,
+  },
+  assigneeTileTextSelected: {
+    color: "#ffffff",
+  },
+  assigneeTileAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: mobileTheme.colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  assigneeTileAvatarText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: mobileTheme.colors.primary,
   },
   tagsFilterWrap: {
     flexDirection: "row",

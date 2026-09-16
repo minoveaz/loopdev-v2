@@ -17,10 +17,13 @@ import {
   Plus,
   Settings2,
   Siren,
+  SlidersHorizontal,
   Sparkles,
   Tag,
   Trash2,
   User,
+  Users,
+  Flame,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
@@ -36,6 +39,7 @@ import {
   type DataTableAction,
   type DataTableColumn,
 } from "@/components/common";
+import { DesktopControlDrawer } from "@/components/common/DesktopControlDrawer";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -150,6 +154,23 @@ export default function CRMTasksPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<TaskTemplateRecord | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<TaskRecord | null>(null);
+  const [isControlDrawerOpen, setIsControlDrawerOpen] = useState(false);
+
+  const activeFilterCount =
+    statusFilter.length +
+    priorityFilter.length +
+    assigneeFilter.length +
+    tagFilter.length +
+    (viewTab !== "all" ? 1 : 0);
+
+  const handleClearAllFilters = () => {
+    setStatusFilter([]);
+    setPriorityFilter([]);
+    setAssigneeFilter([]);
+    setTagFilter([]);
+    setViewTab("all");
+    setSearch("");
+  };
 
   const availableTags = useMemo(() => {
     const set = new Set<string>(["#VIP", "#Renovación", "#Reclamo", "#Urgente", "#Seguimiento", "#Comercial"]);
@@ -575,6 +596,24 @@ export default function CRMTasksPage() {
                 Calendario
               </Button>
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsControlDrawerOpen(true)}
+              className={cn(
+                "h-9 text-xs font-semibold",
+                activeFilterCount > 0 && "border-primary bg-primary-soft text-primary font-bold"
+              )}
+            >
+              <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
+              Filtros Avanzados
+              {activeFilterCount > 0 && (
+                <span className="ml-1.5 px-1.5 py-0.2 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
 
             <Button variant="outline" asChild>
               <Link to="/app/sales-crm/task-templates">
@@ -1409,6 +1448,190 @@ export default function CRMTasksPage() {
         cancelLabel="Cancelar"
         onConfirm={handleDeleteTaskConfirm}
       />
+
+      {/* Advanced Control Center Drawer (HubSpot/Salesforce Style) */}
+      <DesktopControlDrawer
+        open={isControlDrawerOpen}
+        onClose={() => setIsControlDrawerOpen(false)}
+        title="Filtros y Vistas CRM"
+        eyebrow="Sales CRM · Control Center"
+        activeFilterCount={activeFilterCount}
+        resultCount={visibleTasks.length}
+        onReset={handleClearAllFilters}
+        onApply={() => setIsControlDrawerOpen(false)}
+        presets={[
+          {
+            id: "mine_urgent",
+            label: "Mis Urgentes",
+            icon: Flame,
+            active: assigneeFilter.includes("usr-current") && priorityFilter.includes("urgent"),
+            onSelect: () => {
+              setAssigneeFilter(["usr-current"]);
+              setPriorityFilter(["urgent"]);
+            },
+          },
+          {
+            id: "due_today",
+            label: "Para Hoy",
+            icon: CalendarDays,
+            active: viewTab === "today",
+            onSelect: () => {
+              setViewTab("today");
+            },
+          },
+          {
+            id: "vip_deals",
+            label: "Cierres VIP",
+            icon: Sparkles,
+            active: tagFilter.includes("#VIP"),
+            onSelect: () => {
+              setTagFilter(["#VIP"]);
+            },
+          },
+          {
+            id: "all_team",
+            label: "Todo el Equipo",
+            icon: Users,
+            active: activeFilterCount === 0,
+            onSelect: handleClearAllFilters,
+          },
+        ]}
+      >
+        {/* Section 1: Estado de la Tarea */}
+        <div className="space-y-2.5">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            Estado de la Tarea
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(statusLabel).map(([st, label]) => {
+              const isSelected = statusFilter.includes(st);
+              return (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() =>
+                    setStatusFilter((curr) =>
+                      curr.includes(st) ? curr.filter((x) => x !== st) : [...curr, st]
+                    )
+                  }
+                  className={cn(
+                    "flex items-center gap-2 p-2.5 rounded-lg border text-xs font-semibold transition-all text-left",
+                    isSelected
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card border-border hover:border-primary/40 text-foreground"
+                  )}
+                >
+                  <Checkbox checked={isSelected} className="pointer-events-none data-[state=checked]:bg-white data-[state=checked]:text-primary" />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Section 2: Prioridad */}
+        <div className="space-y-2.5 pt-2 border-t border-border">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            Prioridad
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {(["urgent", "high", "normal", "low"] as TaskPriority[]).map((p) => {
+              const isSelected = priorityFilter.includes(p);
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() =>
+                    setPriorityFilter((curr) =>
+                      curr.includes(p) ? curr.filter((x) => x !== p) : [...curr, p]
+                    )
+                  }
+                  className={cn(
+                    "flex items-center gap-2 p-2.5 rounded-lg border text-xs font-semibold transition-all text-left",
+                    isSelected
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card border-border hover:border-primary/40 text-foreground"
+                  )}
+                >
+                  <Checkbox checked={isSelected} className="pointer-events-none data-[state=checked]:bg-white data-[state=checked]:text-primary" />
+                  <span className="uppercase">{p}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Section 3: Responsables Asignados */}
+        <div className="space-y-2.5 pt-2 border-t border-border">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            Responsable Asignado
+          </label>
+          <div className="space-y-1.5">
+            {AVAILABLE_ASSIGNABLE_USERS.map((u) => {
+              const isSelected = assigneeFilter.includes(u.id);
+              return (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={() =>
+                    setAssigneeFilter((curr) =>
+                      curr.includes(u.id) ? curr.filter((x) => x !== u.id) : [...curr, u.id]
+                    )
+                  }
+                  className={cn(
+                    "w-full flex items-center justify-between p-2.5 rounded-lg border text-xs font-semibold transition-all",
+                    isSelected
+                      ? "bg-primary-soft text-primary border-primary font-bold"
+                      : "bg-card border-border hover:border-primary/30 text-foreground"
+                  )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Avatar className="w-6 h-6 text-[10px]">
+                      <AvatarFallback className="bg-primary-soft text-primary font-bold">
+                        {u.displayName.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{u.displayName}</span>
+                  </div>
+                  <Checkbox checked={isSelected} className="pointer-events-none" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Section 4: Etiquetas Temáticas */}
+        <div className="space-y-2.5 pt-2 border-t border-border">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            Etiquetas (#Tags)
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {availableTags.map((tag) => {
+              const isSelected = tagFilter.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() =>
+                    setTagFilter((curr) =>
+                      curr.includes(tag) ? curr.filter((x) => x !== tag) : [...curr, tag]
+                    )
+                  }
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
+                    isSelected
+                      ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                      : "bg-card border-border hover:border-primary/40 text-foreground"
+                  )}
+                >
+                  <Tag className="w-3 h-3" />
+                  <span>{tag}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </DesktopControlDrawer>
     </PageContainer>
   );
 }

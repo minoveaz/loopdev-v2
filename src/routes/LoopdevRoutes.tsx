@@ -16,6 +16,7 @@ const SalesCRMContactActivity = lazy(() => import("@/loopdev/pages/crm/ContactAc
 const SalesCRMOperations = lazy(() => import("@/loopdev/pages/crm/Operations"));
 const SalesCRMAutomations = lazy(() => import("@/loopdev/pages/crm/Automations"));
 const SalesCRMCommunications = lazy(() => import("@/loopdev/pages/crm/Communications"));
+const SalesCRMTasks = lazy(() => import("@/loopdev/pages/crm/Tasks"));
 const PlatformWorkspace = lazy(() => import("@/loopdev/pages/platform/Workspace"));
 const TaskTemplates = lazy(() => import("@/loopdev/pages/platform/TaskTemplates"));
 const ERPOverview = lazy(() => import("@/loopdev/pages/erp/Overview"));
@@ -43,7 +44,12 @@ export const loopdevRouteElements = (
     <Route path="/app/sales-crm/automations" element={<Navigate to="/app/settings/crm/automations" replace />} />
     <Route path="/app/sales-crm/communications" element={<SalesCRMCommunications />} />
     <Route path="/app/sales-crm/communications/:conversationId" element={<SalesCRMCommunications />} />
-    <Route path="/app/sales-crm/tasks" element={<PlatformWorkspace />} />
+    <Route path="/app/sales-crm/tasks" element={<SalesCRMTasks />} />
+    <Route path="/app/sales-crm/tasks/calendar" element={<SalesCRMTasks />} />
+    <Route path="/crm/tasks" element={<SalesCRMTasks />} />
+    <Route path="/crm/tasks/calendar" element={<SalesCRMTasks />} />
+    <Route path="/tasks" element={<SalesCRMTasks />} />
+    <Route path="/app/tasks" element={<SalesCRMTasks />} />
     <Route path="/app/sales-crm/task-templates" element={<TaskTemplates />} />
     <Route path="/app/erp" element={<Navigate to="/app/erp/overview" replace />} />
     <Route path="/app/erp/overview" element={<ERPOverview />} />

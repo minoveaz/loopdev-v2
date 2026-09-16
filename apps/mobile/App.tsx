@@ -198,7 +198,7 @@ export default function App() {
     const paths: Partial<Record<MobileTab, string>> = {
       launchpad: launchpadPath,
       conversations: "/app/conversations",
-      crm: "/app/sales-crm/overview",
+      crm: "/app/sales-crm/tasks",
       erp: "/app/erp/overview",
       more: morePath,
     };
@@ -225,7 +225,13 @@ export default function App() {
       }
       return <MobileCustomer360Screen view={customer360} notes={mobileNotes} notesLoading={mobileNotesLoading} onCreateNote={(draft) => createMobileNote(contact, draft)} onUpdateNote={(noteId, version, draft) => updateMobileNote(noteId, version, contact, draft)} onDeleteNote={(note) => deleteMobileNote(note, contact)} onBack={() => navigate(contactNavigationRoutes.list)} onEdit={() => { setEditingContact(contact); navigate(contactNavigationRoutes.edit.replace(":contactId", encodeURIComponent(contact.id))); }} onArchive={async (target) => { const result = await mobileContactAdapter.archiveContact(target.id, target.updatedAt); if (result.status === "success") { setContacts((current) => current.filter((item) => item.id !== target.id)); navigate(contactNavigationRoutes.list); } }} />;
     }
-    if (currentPath === "/app/sales-crm/tasks" || currentPath === "/app/tasks") {
+    if (
+      currentPath === "/app/sales-crm/tasks" ||
+      currentPath === "/app/sales-crm/tasks/calendar" ||
+      currentPath === "/app/tasks" ||
+      currentPath === "/tasks" ||
+      currentPath === "/crm/tasks"
+    ) {
       return (
         <MobileTasksScreen
           onBack={() => navigate("/app/sales-crm/overview")}
@@ -236,7 +242,7 @@ export default function App() {
       );
     }
     if (activeSuite) {
-      return <MobileWorkspaceScreen suite={activeSuite} onBack={() => navigate(launchpadPath)} />;
+      return <MobileWorkspaceScreen suite={activeSuite} onBack={() => navigate(launchpadPath)} onNavigate={(path) => navigate(path)} />;
     }
     if (currentPath !== launchpadPath) {
       const item = loopdevNavigationContract.groups.flatMap((group) => group.items).find((entry) => entry.path === currentPath);

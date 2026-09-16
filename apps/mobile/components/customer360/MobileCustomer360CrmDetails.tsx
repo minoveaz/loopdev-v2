@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   AlertTriangle,
   Building2,
@@ -62,8 +62,8 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
         </View>
       </View>
 
-      {/* Sub-tab strip in requested order: Identity, Address, Organization, Channels */}
-      <View style={styles.tabStrip}>
+      {/* Sub-tab strip (Horizontal scrollable, no text wrapping) */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabStrip}>
         <Pressable
           style={[styles.tabButton, activeSubTab === "identity" && styles.tabButtonActive]}
           onPress={() => setActiveSubTab("identity")}
@@ -103,18 +103,11 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
             {t("crm.customer360.subtabs.channels")}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
 
       {/* 1. Identity & Bio Section */}
       {activeSubTab === "identity" && (
         <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.iconCircle}>
-              <User size={15} color="#135bec" />
-            </View>
-            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.identityTitle")}</Text>
-          </View>
-
           <View style={styles.fieldsList}>
             <FieldItem label={t("crm.customer360.fields.firstName")} value={contact.firstName} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.lastName")} value={contact.lastName} emptyText={t("crm.customer360.fields.notRegistered")} />
@@ -135,13 +128,6 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
       {/* 2. Address Section */}
       {activeSubTab === "address" && (
         <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.iconCircle}>
-              <MapPin size={15} color="#135bec" />
-            </View>
-            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.addressTitle")}</Text>
-          </View>
-
           <View style={styles.fieldsList}>
             <FieldItem label={t("crm.customer360.fields.country")} value={contact.country} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.city")} value={contact.city} emptyText={t("crm.customer360.fields.notRegistered")} />
@@ -156,13 +142,6 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
       {/* 3. Organization & Role Section */}
       {activeSubTab === "organization" && (
         <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.iconCircle}>
-              <Building2 size={15} color="#135bec" />
-            </View>
-            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.orgTitle")}</Text>
-          </View>
-
           <View style={styles.fieldsList}>
             <FieldItem label={t("crm.customer360.fields.company")} value={contact.companyName} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.jobTitle")} value={contact.jobTitle} emptyText={t("crm.customer360.fields.notRegistered")} />
@@ -189,13 +168,6 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
       {/* 4. Contact Channels Section */}
       {activeSubTab === "channels" && (
         <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.iconCircle}>
-              <Phone size={15} color="#135bec" />
-            </View>
-            <Text style={styles.sectionTitle}>{t("crm.customer360.sections.channelsTitle")}</Text>
-          </View>
-
           <View style={styles.fieldsList}>
             <FieldItem label={t("crm.customer360.fields.email")} value={contact.email} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.secondaryEmail")} value={contact.secondaryEmail} emptyText={t("crm.customer360.fields.notRegistered")} />
@@ -279,27 +251,29 @@ const styles = StyleSheet.create({
   container: {
     gap: 12,
   },
+  tabScroll: {
+    marginBottom: 6,
+  },
   tabStrip: {
     flexDirection: "row",
-    gap: 6,
-    marginBottom: 2,
+    gap: 8,
+    paddingVertical: 2,
   },
   tabButton: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 5,
+    gap: 6,
     backgroundColor: "#f1f5f9",
     borderRadius: 10,
-    paddingVertical: 9,
-    paddingHorizontal: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
   },
   tabButtonActive: {
     backgroundColor: "#135bec",
   },
   tabButtonText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     color: "#64748b",
   },
@@ -347,28 +321,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e2e8f0",
     padding: 14,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingBottom: 10,
-    marginBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-  },
-  iconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#eff6ff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0f172a",
   },
   fieldsList: {
     gap: 8,

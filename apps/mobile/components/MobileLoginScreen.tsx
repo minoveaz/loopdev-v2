@@ -8,7 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Eye, EyeOff, Lock, Mail, ShieldAlert } from "lucide-react-native";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldAlert } from "lucide-react-native";
 import { mobileAuthAdapter } from "../adapters/auth";
 import { MobileLogoSpinner } from "./MobileLogoSpinner";
 
@@ -169,7 +169,10 @@ export function MobileLoginScreen({
           {loading ? (
             <ActivityIndicator color="#ffffff" size="small" />
           ) : (
-            <Text style={styles.submitText}>Sign in to LoopDev →</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Text style={styles.submitText}>Sign in to LoopDev</Text>
+              <ArrowRight size={16} color="#ffffff" />
+            </View>
           )}
         </Pressable>
       </View>

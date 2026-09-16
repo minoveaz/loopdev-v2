@@ -1,4 +1,4 @@
-import { Check, CreditCard, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react-native";
+import { Check, ChevronRight, CreditCard, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { MobileBottomSheet } from "./MobileBottomSheet";
@@ -114,7 +114,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
                     <Check color="#ffffff" size={14} strokeWidth={3} />
                   </View>
                 ) : (
-                  <Text style={styles.orgArrow}>→</Text>
+                  <ChevronRight color="#94a3b8" size={18} />
                 )}
               </Pressable>
             );

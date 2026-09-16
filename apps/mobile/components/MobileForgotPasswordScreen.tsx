@@ -8,7 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { ArrowLeft, CheckCircle2, Info, Mail, ShieldAlert } from "lucide-react-native";
+import { ArrowLeft, ArrowRight, CheckCircle2, Info, Mail, ShieldAlert } from "lucide-react-native";
 import { mobileAuthAdapter } from "../adapters/auth";
 
 type MobileForgotPasswordScreenProps = {
@@ -140,7 +140,10 @@ export function MobileForgotPasswordScreen({
               {loading ? (
                 <ActivityIndicator color="#ffffff" size="small" />
               ) : (
-                <Text style={styles.submitText}>Send reset link →</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={styles.submitText}>Send reset link</Text>
+                  <ArrowRight size={16} color="#ffffff" />
+                </View>
               )}
             </Pressable>
           </View>

@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 export function MobileAccountScreen() {
   return (
@@ -22,7 +23,15 @@ export function MobileAccountScreen() {
 }
 
 function AccountRow({ label, detail }: { label: string; detail: string }) {
-  return <Pressable accessibilityRole="button" style={styles.accountRow}><View style={styles.accountRowCopy}><Text style={styles.accountRowLabel}>{label}</Text><Text style={styles.accountRowDetail}>{detail}</Text></View><Text style={styles.accountRowArrow}>→</Text></Pressable>;
+  return (
+    <Pressable accessibilityRole="button" style={styles.accountRow}>
+      <View style={styles.accountRowCopy}>
+        <Text style={styles.accountRowLabel}>{label}</Text>
+        <Text style={styles.accountRowDetail}>{detail}</Text>
+      </View>
+      <ChevronRight size={18} color="#94a3b8" />
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({

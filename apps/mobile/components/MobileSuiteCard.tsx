@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SuiteIllustration } from "./SuiteIllustration";
 import type { LaunchpadIllustrationKey, LaunchpadSuiteStatus } from "../../../packages/contracts/src/launchpad";
@@ -25,8 +26,10 @@ export function MobileSuiteCard({ title, description, version, kind, status, onP
     >
       <View style={styles.cardInner}>
         <View style={styles.cardTopRow}>
-          <Text style={styles.version}>V{version}</Text>
-          <Text style={[styles.status, active && styles.activeStatus]}>{statusLabel}</Text>
+          <View style={[styles.statusBadge, active && styles.activeBadge, status === "lab" && styles.labBadge]}>
+            <Text style={[styles.statusBadgeText, active && styles.activeBadgeText, status === "lab" && styles.labBadgeText]}>{statusLabel}</Text>
+          </View>
+          <Text style={styles.version}>{version}</Text>
         </View>
         <View style={[styles.illustration, active && styles.activeIllustration]}>
           <SuiteIllustration kind={kind} />
@@ -40,7 +43,7 @@ export function MobileSuiteCard({ title, description, version, kind, status, onP
             <View style={[styles.statusDot, !active && styles.lockedDot]} />
             <Text style={styles.systemStatusText}>{systemStatus}</Text>
           </View>
-          {active && <Text style={styles.activeArrow}>→</Text>}
+          {active && <ChevronRight size={18} color="#135bec" />}
         </View>
       </View>
     </Pressable>

@@ -2,6 +2,7 @@ import {
   BriefcaseBusiness,
   ClipboardList,
   ContactRound,
+  CornerDownLeft,
   Handshake,
   MessageCircle,
   PackagePlus,
@@ -97,7 +98,7 @@ function ActionRow({ action, onPress }: { action: SharedContextualAction; onPres
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.action}>
       <View style={styles.icon}><Icon color="#135bec" size={19} strokeWidth={2.1} /></View>
       <View style={styles.copy}><Text style={styles.label}>{action.label}</Text><Text style={styles.description}>{action.description}</Text></View>
-      <Text style={styles.arrow}>↵</Text>
+      <CornerDownLeft color="#94a3b8" size={16} />
     </Pressable>
   );
 }

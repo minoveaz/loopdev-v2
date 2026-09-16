@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SuiteIllustration } from "./SuiteIllustration";
 import type { launchpadSuites } from "../../../packages/contracts/src/launchpad";
@@ -11,7 +12,8 @@ export function MobileWorkspaceScreen({ suite, onBack }: MobileWorkspaceScreenPr
   return (
     <ScrollView contentContainerStyle={styles.workspaceContent}>
       <Pressable accessibilityLabel="Back to Launchpad" accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-        <Text style={styles.backButtonText}>← Back to Launchpad</Text>
+        <ArrowLeft size={16} color="#135bec" />
+        <Text style={styles.backButtonText}>Back to Launchpad</Text>
       </Pressable>
         <View style={styles.workspaceEyebrow}><Text style={styles.workspaceEyebrowText}>ACTIVE WORK CONTEXT</Text></View>
         <Text style={styles.workspaceTitle}>{suite.title}</Text>
@@ -27,7 +29,7 @@ export function MobileWorkspaceScreen({ suite, onBack }: MobileWorkspaceScreenPr
 }
 
 const styles = StyleSheet.create({
-  backButton: { alignSelf: "flex-start", marginBottom: 28 },
+  backButton: { alignSelf: "flex-start", marginBottom: 28, flexDirection: "row", alignItems: "center", gap: 6 },
   backButtonText: { color: "#135bec", fontSize: 14, fontWeight: "700" },
   workspaceContent: { paddingBottom: 40, paddingHorizontal: 22, paddingTop: 38 },
   workspaceEyebrow: { alignSelf: "flex-start", backgroundColor: "#eff6ff", borderRadius: 6, marginBottom: 18, paddingHorizontal: 10, paddingVertical: 7 },

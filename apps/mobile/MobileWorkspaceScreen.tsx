@@ -1,4 +1,4 @@
-import { CheckSquare, ChevronRight, MessageCircle, TrendingUp, Users } from "lucide-react-native";
+import { ArrowLeft, CheckSquare, ChevronRight, MessageCircle, TrendingUp, Users } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SuiteIllustration } from "./SuiteIllustration";
 import type { launchpadSuites } from "../../../packages/contracts/src/launchpad";
@@ -23,15 +23,15 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
     },
     {
       id: "crm-contacts",
-      title: "Contactos (360)",
-      subtitle: "Ficha cliente, notas rápidas y enriquecidas",
+      title: "Contactos y Cuentas",
+      subtitle: "Gestión de directorio y relaciones",
       icon: Users,
       path: "/app/sales-crm/contacts",
-      badge: "Activo",
+      badge: "Full Parity",
     },
     {
       id: "crm-pipeline",
-      title: "Pipeline y Oportunidades",
+      title: "Pipeline Comercial",
       subtitle: "Gestión de deals y funnel comercial",
       icon: TrendingUp,
       path: "/app/sales-crm/pipeline",
@@ -48,7 +48,8 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
   return (
     <ScrollView contentContainerStyle={styles.workspaceContent}>
       <Pressable accessibilityLabel="Back to Launchpad" accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-        <Text style={styles.backButtonText}>← Back to Launchpad</Text>
+        <ArrowLeft size={16} color="#135bec" />
+        <Text style={styles.backButtonText}>Back to Launchpad</Text>
       </Pressable>
       <View style={styles.workspaceEyebrow}><Text style={styles.workspaceEyebrowText}>ACTIVE WORK CONTEXT</Text></View>
       <Text style={styles.workspaceTitle}>{suite.title}</Text>
@@ -99,7 +100,13 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
 }
 
 const styles = StyleSheet.create({
-  backButton: { alignSelf: "flex-start", marginBottom: 20 },
+  backButton: {
+    alignSelf: "flex-start",
+    marginBottom: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   backButtonText: { color: "#135bec", fontSize: 14, fontWeight: "700" },
   workspaceContent: { paddingBottom: 40, paddingHorizontal: 20, paddingTop: 28 },
   workspaceEyebrow: { alignSelf: "flex-start", backgroundColor: "#eff6ff", borderRadius: 6, marginBottom: 12, paddingHorizontal: 10, paddingVertical: 5 },

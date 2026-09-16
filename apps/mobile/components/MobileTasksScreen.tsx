@@ -746,12 +746,15 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
             {filterMode !== "all" && (
               <Pressable style={styles.activeFilterChip} onPress={() => setFilterMode("all")}>
+                {filterMode === "urgent" && <Flame size={13} color="#dc2626" />}
+                {filterMode === "today" && <Calendar size={13} color={mobileTheme.colors.primary} />}
+                {filterMode === "completed" && <CheckCircle2 size={13} color="#16a34a" />}
                 <Text style={styles.activeFilterChipText}>
                   {filterMode === "urgent"
-                    ? `🔥 Urgentes (${urgentCount})`
+                    ? `Urgentes (${urgentCount})`
                     : filterMode === "today"
-                    ? "📅 Para hoy"
-                    : `✅ Completadas (${completedCount})`}
+                    ? "Para hoy"
+                    : `Completadas (${completedCount})`}
                 </Text>
                 <X size={12} color={mobileTheme.colors.primary} />
               </Pressable>
@@ -759,14 +762,16 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
 
             {assigneeFilter !== "all" && (
               <Pressable style={styles.activeFilterChip} onPress={() => setAssigneeFilter("all")}>
-                <Text style={styles.activeFilterChipText}>👤 Mis tareas</Text>
+                <User size={13} color={mobileTheme.colors.primary} />
+                <Text style={styles.activeFilterChipText}>Mis tareas</Text>
                 <X size={12} color={mobileTheme.colors.primary} />
               </Pressable>
             )}
 
             {tagFilter && (
               <Pressable style={styles.activeFilterChip} onPress={() => setTagFilter(null)}>
-                <Text style={styles.activeFilterChipText}>🏷️ {tagFilter}</Text>
+                <Tag size={13} color={mobileTheme.colors.primary} />
+                <Text style={styles.activeFilterChipText}>{tagFilter}</Text>
                 <X size={12} color={mobileTheme.colors.primary} />
               </Pressable>
             )}
@@ -1784,7 +1789,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             >
               <User size={14} color={assigneeFilter === "mine" ? "#ffffff" : mobileTheme.colors.primary} />
               <Text style={[styles.assigneeTileText, assigneeFilter === "mine" && styles.assigneeTileTextSelected]}>
-                👤 Solo mis tareas
+                Solo mis tareas
               </Text>
             </Pressable>
 

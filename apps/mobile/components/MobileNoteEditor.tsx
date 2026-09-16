@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react-native";
+import { Check, ChevronDown, X } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { NoteMode, NoteRecord, NoteVisibility, TipTapDocument } from "../../../packages/contracts/src/notes";
+import { mobileTheme } from "../theme/tokens";
 import { MobileRichNoteEditor } from "./MobileRichNoteEditor";
 import { MobileModalSheet } from "./MobileModal";
 
@@ -56,7 +57,7 @@ export function MobileNoteEditor({ initialNote, relationLabel, onCancel, onSave 
   }
 
   return <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" nestedScrollEnabled={true}>
-    <View style={styles.header}><View><Text style={styles.eyebrow}>{initialNote ? "EDIT NOTE" : "NEW NOTE"}</Text><Text style={styles.title}>{mode === "rich" ? "New rich note" : "New quick note"}</Text><Text style={styles.relation}>Related to {relationLabel}</Text></View><Pressable accessibilityRole="button" onPress={onCancel}><Text style={styles.close}>×</Text></Pressable></View>
+    <View style={styles.header}><View><Text style={styles.eyebrow}>{initialNote ? "EDIT NOTE" : "NEW NOTE"}</Text><Text style={styles.title}>{mode === "rich" ? "New rich note" : "New quick note"}</Text><Text style={styles.relation}>Related to {relationLabel}</Text></View><Pressable accessibilityRole="button" onPress={onCancel}><X size={20} color="#64748b" /></Pressable></View>
     <View accessibilityRole="tablist" style={styles.modeSwitch}>
       {(["quick", "rich"] as NoteMode[]).map((option) => <Pressable key={option} accessibilityRole="tab" accessibilityState={{ selected: mode === option }} onPress={() => setMode(option)} style={[styles.modeButton, mode === option && styles.modeButtonSelected]}><Text style={[styles.modeText, mode === option && styles.modeTextSelected]}>{option === "quick" ? "Quick note" : "Rich note"}</Text></Pressable>)}
     </View>
@@ -67,7 +68,7 @@ export function MobileNoteEditor({ initialNote, relationLabel, onCancel, onSave 
     {error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
     <MobileModalSheet visible={visibilityOpen} onClose={() => setVisibilityOpen(false)} title="Note visibility">
       <Text style={visibilityStyles.sheetDescription}>Choose who can access this note.</Text>
-      {visibilityOptions.map((option) => <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected: option === visibility }} onPress={() => { setVisibility(option); setVisibilityOpen(false); }} style={[visibilityStyles.sheetOption, option === visibility && visibilityStyles.sheetOptionSelected]}><View><Text style={[visibilityStyles.optionText, option === visibility && visibilityStyles.selectedOptionText]}>{visibilityLabels[option]}</Text><Text style={visibilityStyles.optionDescription}>{option === "private" ? "Only you" : option === "team" ? "Members of your team" : "Everyone in the organization"}</Text></View>{option === visibility ? <Text style={visibilityStyles.check}>✓</Text> : null}</Pressable>)}
+      {visibilityOptions.map((option) => <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected: option === visibility }} onPress={() => { setVisibility(option); setVisibilityOpen(false); }} style={[visibilityStyles.sheetOption, option === visibility && visibilityStyles.sheetOptionSelected]}><View><Text style={[visibilityStyles.optionText, option === visibility && visibilityStyles.selectedOptionText]}>{visibilityLabels[option]}</Text><Text style={visibilityStyles.optionDescription}>{option === "private" ? "Only you" : option === "team" ? "Members of your team" : "Everyone in the organization"}</Text></View>{option === visibility ? <Check size={18} color={mobileTheme.colors.primary} /> : null}</Pressable>)}
     </MobileModalSheet>
   </ScrollView>;
 }

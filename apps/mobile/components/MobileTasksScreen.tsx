@@ -724,90 +724,76 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       {/* 4. VIEW 1: LIST VIEW */}
       {viewMode === "list" && (
         <>
-          {/* Quick 1-Tap Templates */}
-          <View style={styles.templateSection}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.templateScroll}>
-              {templates.map((tpl) => (
-                <Pressable
-                  key={tpl.id}
-                  style={styles.templateChip}
-                  onPress={() => openCreateWithTemplate(tpl)}
-                >
-                  <Sparkles size={13} color={mobileTheme.colors.primary} />
-                  <Text style={styles.templateChipText}>{tpl.name}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Filter Pills: Status, Assignee & Tags */}
-          <View style={styles.filterPillsRow}>
-            {[
-              { id: "all", label: `Todas (${tasks.length})`, icon: null },
-              { id: "urgent", label: `Urgentes (${urgentCount})`, icon: Flame },
-              { id: "today", label: "Para hoy", icon: Calendar },
-              { id: "completed", label: `Completadas (${completedCount})`, icon: CheckCircle2 },
-            ].map((pill) => {
-              const isActive = filterMode === pill.id;
-              const PillIcon = pill.icon;
-              return (
-                <Pressable
-                  key={pill.id}
-                  onPress={() => setFilterMode(pill.id as FilterMode)}
-                  style={[styles.filterPill, isActive && styles.filterPillActive]}
-                >
-                  {PillIcon && (
-                    <PillIcon
-                      size={12}
-                      color={
-                        isActive
-                          ? mobileTheme.colors.textInverse
-                          : pill.id === "urgent"
-                          ? mobileTheme.colors.danger
-                          : pill.id === "today"
-                          ? mobileTheme.colors.primary
-                          : mobileTheme.colors.success
-                      }
-                    />
-                  )}
-                  <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
-                    {pill.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-
-            {/* "Mis Tareas" toggle pill */}
-            <Pressable
-              onPress={() => setAssigneeFilter((curr) => (curr === "mine" ? "all" : "mine"))}
-              style={[styles.filterPill, assigneeFilter === "mine" && styles.filterPillActive]}
+          {/* Unified Horizontal Filter Strip: Status, Assignee & Tags */}
+          <View style={styles.unifiedFilterSection}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.unifiedFilterScroll}
             >
-              <User
-                size={12}
-                color={assigneeFilter === "mine" ? mobileTheme.colors.textInverse : mobileTheme.colors.primary}
-              />
-              <Text style={[styles.filterPillText, assigneeFilter === "mine" && styles.filterPillTextActive]}>
-                Mis tareas
-              </Text>
-            </Pressable>
-          </View>
+              {[
+                { id: "all", label: `Todas (${tasks.length})`, icon: null },
+                { id: "urgent", label: `Urgentes (${urgentCount})`, icon: Flame },
+                { id: "today", label: "Para hoy", icon: Calendar },
+                { id: "completed", label: `Completadas (${completedCount})`, icon: CheckCircle2 },
+              ].map((pill) => {
+                const isActive = filterMode === pill.id;
+                const PillIcon = pill.icon;
+                return (
+                  <Pressable
+                    key={pill.id}
+                    onPress={() => setFilterMode(pill.id as FilterMode)}
+                    style={[styles.cleanFilterPill, isActive && styles.cleanFilterPillActive]}
+                  >
+                    {PillIcon && (
+                      <PillIcon
+                        size={12}
+                        color={
+                          isActive
+                            ? mobileTheme.colors.textInverse
+                            : pill.id === "urgent"
+                            ? mobileTheme.colors.danger
+                            : pill.id === "today"
+                            ? mobileTheme.colors.primary
+                            : mobileTheme.colors.success
+                        }
+                      />
+                    )}
+                    <Text style={[styles.cleanFilterPillText, isActive && styles.cleanFilterPillTextActive]}>
+                      {pill.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
 
-          {/* Quick Tag Filter Scroll */}
-          <View style={{ marginBottom: 12 }}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+              {/* "Mis Tareas" toggle pill */}
+              <Pressable
+                onPress={() => setAssigneeFilter((curr) => (curr === "mine" ? "all" : "mine"))}
+                style={[styles.cleanFilterPill, assigneeFilter === "mine" && styles.cleanFilterPillActive]}
+              >
+                <User
+                  size={12}
+                  color={assigneeFilter === "mine" ? mobileTheme.colors.textInverse : mobileTheme.colors.primary}
+                />
+                <Text style={[styles.cleanFilterPillText, assigneeFilter === "mine" && styles.cleanFilterPillTextActive]}>
+                  Mis tareas
+                </Text>
+              </Pressable>
+
+              {/* Separator */}
+              <View style={styles.filterDivider} />
+
+              {/* Tag Filters */}
               {MOBILE_PRESET_TAGS.map((tag) => {
                 const isSelected = tagFilter === tag;
                 return (
                   <Pressable
                     key={tag}
                     onPress={() => setTagFilter((curr) => (curr === tag ? null : tag))}
-                    style={[
-                      styles.tagFilterChip,
-                      isSelected && styles.tagFilterChipActive,
-                    ]}
+                    style={[styles.cleanTagPill, isSelected && styles.cleanTagPillActive]}
                   >
                     <Tag size={11} color={isSelected ? mobileTheme.colors.textInverse : mobileTheme.colors.primary} />
-                    <Text style={[styles.tagFilterChipText, isSelected && styles.tagFilterChipTextActive]}>
+                    <Text style={[styles.cleanTagPillText, isSelected && styles.cleanTagPillTextActive]}>
                       {tag}
                     </Text>
                   </Pressable>
@@ -1597,6 +1583,24 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
         title="Crear Nueva Tarea"
       >
         <View style={styles.formContainer}>
+          {templates.length > 0 && (
+            <View style={{ marginBottom: 14 }}>
+              <Text style={styles.formLabel}>PLANTILLAS RÁPIDAS</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                {templates.map((tpl) => (
+                  <Pressable
+                    key={tpl.id}
+                    style={styles.modalTemplateChip}
+                    onPress={() => openCreateWithTemplate(tpl)}
+                  >
+                    <Sparkles size={12} color={mobileTheme.colors.primary} />
+                    <Text style={styles.modalTemplateChipText}>{tpl.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           <Text style={styles.formLabel}>TÍTULO DE LA TAREA *</Text>
           <TextInput
             style={styles.formInput}
@@ -1885,36 +1889,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     ...commonMobileStyles.scrollContent,
   },
-  templateSection: {
+  unifiedFilterSection: {
     marginBottom: 12,
   },
-  templateScroll: {
-    gap: 8,
-  },
-  templateChip: {
-    flexDirection: "row",
+  unifiedFilterScroll: {
+    gap: 6,
     alignItems: "center",
-    gap: 6,
-    backgroundColor: mobileTheme.colors.surface,
-    borderColor: mobileTheme.colors.border,
-    borderWidth: 1,
-    borderRadius: mobileTheme.radii.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    ...mobileTheme.shadows.card,
+    paddingVertical: 2,
   },
-  templateChipText: {
-    color: mobileTheme.colors.primary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  filterPillsRow: {
-    flexDirection: "row",
-    gap: 6,
-    marginBottom: 14,
-    flexWrap: "wrap",
-  },
-  filterPill: {
+  cleanFilterPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
@@ -1922,20 +1905,65 @@ const styles = StyleSheet.create({
     borderColor: mobileTheme.colors.border,
     borderWidth: 1,
     borderRadius: mobileTheme.radii.pill,
-    paddingHorizontal: 11,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
-  filterPillActive: {
+  cleanFilterPillActive: {
     backgroundColor: mobileTheme.colors.primary,
     borderColor: mobileTheme.colors.primary,
   },
-  filterPillText: {
+  cleanFilterPillText: {
     color: mobileTheme.colors.textMuted,
     fontSize: 12,
     fontWeight: "700",
   },
-  filterPillTextActive: {
+  cleanFilterPillTextActive: {
     color: mobileTheme.colors.textInverse,
+  },
+  filterDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: mobileTheme.colors.border,
+    marginHorizontal: 2,
+  },
+  cleanTagPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: mobileTheme.colors.surface,
+    borderColor: mobileTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: mobileTheme.radii.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  cleanTagPillActive: {
+    backgroundColor: mobileTheme.colors.primary,
+    borderColor: mobileTheme.colors.primary,
+  },
+  cleanTagPillText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: mobileTheme.colors.primary,
+  },
+  cleanTagPillTextActive: {
+    color: mobileTheme.colors.textInverse,
+  },
+  modalTemplateChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: mobileTheme.colors.surfaceMuted,
+    borderColor: mobileTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: mobileTheme.radii.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  modalTemplateChipText: {
+    color: mobileTheme.colors.primary,
+    fontSize: 12,
+    fontWeight: "700",
   },
   emptyCard: {
     backgroundColor: mobileTheme.colors.surface,

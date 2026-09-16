@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Check, CheckSquare, Clock, FileText, Lock, Paperclip, Plus, StickyNote, Trash2, Users } from "lucide-react-native";
 import type { TaskRecord } from "../../../../packages/contracts/src/tasks";
 import type { NoteRecord } from "../../../../packages/contracts/src/notes";
 import { MobileNoteEditor, type MobileNoteDraft } from "../MobileNoteEditor";
-import { MobileNotesList } from "../MobileNotesList";
+import { MobileNotesCard } from "../MobileNotesCard";
 import { useT } from "../../i18n";
 
 interface Props {
@@ -199,21 +199,61 @@ export function MobileCustomer360Work({
               }}
             />
           ) : (
-            <MobileNotesList
-              notes={notes}
-              loading={notesLoading}
-              onCreate={() => {
-                setSelectedNote(undefined);
-                setEditorOpen(true);
-              }}
-              onOpen={(note) => {
-                setSelectedNote(note);
-                setEditorOpen(true);
-              }}
-              onDelete={(note) => {
-                if (onDeleteNote) void onDeleteNote(note);
-              }}
-            />
+            <>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>{t("crm.customer360.work.notes")} ({notes.length})</Text>
+                <Pressable
+                  style={styles.addButton}
+                  onPress={() => {
+                    setSelectedNote(undefined);
+                    setEditorOpen(true);
+                  }}
+                >
+                  <Plus size={13} color="#135bec" />
+                  <Text style={styles.addButtonText}>{t("crm.customer360.work.newNote")}</Text>
+                </Pressable>
+              </View>
+
+              {notes.length === 0 ? (
+                <View style={styles.emptyBox}>
+                  <StickyNote size={28} color="#94a3b8" />
+                  <Text style={styles.emptyTitle}>{t("crm.customer360.work.noNotes")}</Text>
+                  <Text style={styles.emptySubtitle}>{t("crm.customer360.work.noNotesDesc")}</Text>
+                </View>
+              ) : (
+                <View style={styles.notesList}>
+                  {notes.map((note) => (
+                    <MobileNotesCard
+                      key={note.id}
+                      note={note}
+                      onOpen={() => {
+                        setSelectedNote(note);
+                        setEditorOpen(true);
+                      }}
+                      onActions={() => {
+                        Alert.alert("Note actions", undefined, [
+                          {
+                            text: "Edit note",
+                            onPress: () => {
+                              setSelectedNote(note);
+                              setEditorOpen(true);
+                            },
+                          },
+                          {
+                            text: "Delete note",
+                            style: "destructive",
+                            onPress: () => {
+                              if (onDeleteNote) void onDeleteNote(note);
+                            },
+                          },
+                          { text: "Cancel", style: "cancel" },
+                        ]);
+                      }}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
           )}
         </View>
       )}
@@ -438,5 +478,8 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 12,
     fontWeight: "700",
+  },
+  notesList: {
+    gap: 8,
   },
 });

@@ -211,10 +211,15 @@ export function MobileContactsScreen({
             const isVerified = contact.identityStatus === "verified";
 
             return (
-              <MobileCard key={contact.id} onPress={() => onView?.(contact)}>
+              <MobileCard key={contact.id}>
                 {/* Card Header with Avatar & Actions */}
                 <View style={styles.cardHeader}>
-                  <View style={styles.avatarRow}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ver perfil de ${fullName}`}
+                    onPress={() => onView?.(contact)}
+                    style={styles.avatarRow}
+                  >
                     <MobileAvatar name={fullName} size="md" />
                     <View style={styles.headerTextWrap}>
                       <Text style={styles.contactName} numberOfLines={1}>
@@ -222,7 +227,7 @@ export function MobileContactsScreen({
                       </Text>
                       <Text style={styles.contactRecord}>Contacto #{index + 1}</Text>
                     </View>
-                  </View>
+                  </Pressable>
 
                   <Pressable
                     hitSlop={8}

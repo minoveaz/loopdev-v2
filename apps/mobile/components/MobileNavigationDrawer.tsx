@@ -416,10 +416,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 44,
     position: "relative",
-    shadowColor: "#135bec",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
+    boxShadow: "0px 3px 5px rgba(19, 91, 236, 0.25)",
   },
   avatarOnlineDot: {
     width: 10,

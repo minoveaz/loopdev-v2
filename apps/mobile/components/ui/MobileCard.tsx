@@ -12,6 +12,7 @@ import { mobileTheme } from "../../theme/tokens";
 export interface MobileCardProps {
   children: React.ReactNode;
   onPress?: () => void;
+  accessibilityRole?: "button" | "none";
   style?: StyleProp<ViewStyle>;
   accentColor?: string;
   selected?: boolean;
@@ -20,6 +21,7 @@ export interface MobileCardProps {
 export function MobileCard({
   children,
   onPress,
+  accessibilityRole,
   style,
   accentColor,
   selected = false,
@@ -34,7 +36,7 @@ export function MobileCard({
   if (onPress) {
     return (
       <Pressable
-        accessibilityRole="button"
+        accessibilityRole={accessibilityRole}
         onPress={onPress}
         style={({ pressed }) => [
           containerStyle,

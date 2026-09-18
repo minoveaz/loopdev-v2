@@ -13,6 +13,7 @@ import type {
 import { validateContactMutationInput } from "../../../packages/contracts/src/contact-port";
 import { createLocalContactAdapter } from "../../../packages/contracts/src/contact-local-adapter";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./auth";
+import { mobileSupabaseClient } from "./supabase";
 
 const SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845";
@@ -79,27 +80,7 @@ function mapRowToContact(row: any): ContactRecord {
 
 async function canFetchRemote(): Promise<boolean> {
   const session = await mobileAuthAdapter.getSession();
-  const token = session?.accessToken;
-  if (!token) return false;
-  if (token.startsWith("demo-") || token.startsWith("mock-") || token.includes("local")) {
-    return false;
-  }
-  return token.split(".").length === 3;
-}
-
-async function getHeaders(): Promise<HeadersInit> {
-  const session = await mobileAuthAdapter.getSession();
-  const headers: Record<string, string> = {
-    apikey: SUPABASE_ANON_KEY,
-    "Content-Type": "application/json",
-    Prefer: "return=representation",
-  };
-  if (session?.accessToken) {
-    headers.Authorization = `Bearer ${session.accessToken}`;
-  } else {
-    headers.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
-  }
-  return headers;
+  return Boolean(session?.accessToken);
 }
 
 export function createMobileContactAdapter(): ContactPort {
@@ -108,32 +89,25 @@ export function createMobileContactAdapter(): ContactPort {
 
   return {
     async listContacts(params: ContactListParams): Promise<ContactPage> {
-      if (!(await canFetchRemote()) || !params.organizationId || !isUUID(params.organizationId)) {
+      if (!params.organizationId || !isUUID(params.organizationId)) {
         return localFallback.listContacts(params);
       }
 
       const activeOrgId = params.organizationId;
 
       try {
-        const queryParams = new URLSearchParams();
-        queryParams.set("organization_id", `eq.${activeOrgId}`);
-        queryParams.set("select", "*");
+        const { data: rows, error } = await mobileSupabaseClient
+          .from("crm_contacts")
+          .select("*")
+          .eq("organization_id", activeOrgId)
+          .order("created_at", { ascending: false });
 
-        const headers = await getHeaders();
-        const resp = await fetch(`${SUPABASE_URL}/rest/v1/crm_contacts?${queryParams.toString()}`, {
-          method: "GET",
-          headers,
-        });
-
-        if (!resp.ok) {
+        if (error) {
+          console.warn("Mobile listContacts error, using local fallback:", error.message);
           return localFallback.listContacts({ ...params, organizationId: fallbackOrgId });
         }
 
-        const rows = await resp.json();
-        let items: ContactRecord[] = Array.isArray(rows) && rows.length > 0 ? rows.map(mapRowToContact) : [];
-        if (items.length === 0) {
-          return localFallback.listContacts({ ...params, organizationId: fallbackOrgId });
-        }
+        let items: ContactRecord[] = Array.isArray(rows) ? rows.map(mapRowToContact) : [];
 
         if (params.query?.trim()) {
           const q = params.query.trim().toLowerCase();
@@ -166,27 +140,63 @@ export function createMobileContactAdapter(): ContactPort {
     },
 
     async getCustomer360(contactId: string): Promise<ContactCustomer360View | null> {
-      if (!(await canFetchRemote())) {
-        return localFallback.getCustomer360(contactId);
-      }
       try {
-        const headers = await getHeaders();
-        const resp = await fetch(`${SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}&select=*`, {
-          method: "GET",
-          headers,
-        });
+        const { data: rows, error } = await mobileSupabaseClient
+          .from("crm_contacts")
+          .select("*")
+          .eq("id", contactId);
 
-        if (!resp.ok) return localFallback.getCustomer360(contactId);
-        const rows = await resp.json();
-        if (!Array.isArray(rows) || rows.length === 0) return localFallback.getCustomer360(contactId);
+        if (error || !Array.isArray(rows) || rows.length === 0) {
+          return localFallback.getCustomer360(contactId);
+        }
 
         const contact = mapRowToContact(rows[0]);
+
+        const { data: leadsRows } = await mobileSupabaseClient
+          .from("crm_leads")
+          .select("*")
+          .eq("contact_id", contactId);
+
+        const { data: oppsRows } = await mobileSupabaseClient
+          .from("crm_opportunities")
+          .select("*")
+          .eq("contact_id", contactId);
+
         const state = { profile: "fresh", leads: "fresh", opportunities: "fresh", tasks: "fresh", notes: "fresh", timeline: "fresh" } as const;
 
         return {
           contact,
-          leads: [],
-          opportunities: [],
+          leads: (leadsRows || []).map((l: any) => ({
+            id: l.id,
+            organizationId: l.organization_id,
+            contactId: l.contact_id,
+            brandId: l.brand_id,
+            workspaceId: l.workspace_id,
+            stage: l.stage,
+            status: l.status,
+            source: l.source,
+            campaign: l.campaign,
+            interest: l.interest,
+            assignedToUserId: l.assigned_to_user_id,
+            createdAt: l.created_at,
+            updatedAt: l.updated_at,
+          })),
+          opportunities: (oppsRows || []).map((o: any) => ({
+            id: o.id,
+            organizationId: o.organization_id,
+            leadId: o.lead_id,
+            contactId: o.contact_id,
+            workspaceId: o.workspace_id,
+            name: o.name,
+            stage: o.stage,
+            amount: Number(o.amount) || 0,
+            currency: o.currency || "EUR",
+            probability: Number(o.probability) || 0,
+            expectedCloseAt: o.expected_close_at,
+            createdAt: o.created_at,
+            updatedAt: o.updated_at,
+            version: o.version || 1,
+          })),
           tasks: [],
           notes: [],
           timeline: [],
@@ -208,10 +218,8 @@ export function createMobileContactAdapter(): ContactPort {
       }
 
       try {
-        const orgId = input.organizationId;
-
         const payload: Record<string, any> = {
-          organization_id: orgId,
+          organization_id: input.organizationId,
           first_name: input.firstName.trim(),
           last_name: input.lastName?.trim() || null,
           second_last_name: input.secondLastName?.trim() || null,
@@ -238,19 +246,17 @@ export function createMobileContactAdapter(): ContactPort {
           identity_status: "verified",
         };
 
-        const headers = await getHeaders();
-        const resp = await fetch(`${SUPABASE_URL}/rest/v1/crm_contacts`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(payload),
-        });
+        const { data, error } = await mobileSupabaseClient
+          .from("crm_contacts")
+          .insert(payload)
+          .select();
 
-        if (!resp.ok) {
+        if (error || !Array.isArray(data) || data.length === 0) {
+          console.warn("Mobile createContact error, using local fallback:", error?.message);
           return localFallback.createContact(input);
         }
 
-        const rows = await resp.json();
-        return { status: "success", contact: mapRowToContact(rows[0] || payload) };
+        return { status: "success", contact: mapRowToContact(data[0] || payload) };
       } catch (err) {
         return localFallback.createContact(input);
       }
@@ -289,19 +295,17 @@ export function createMobileContactAdapter(): ContactPort {
         if (patch.birthDate !== undefined) payload.birth_date = patch.birthDate?.trim() || null;
         if (patch.gender !== undefined) payload.gender = patch.gender?.trim() || null;
 
-        const headers = await getHeaders();
-        const resp = await fetch(`${SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}`, {
-          method: "PATCH",
-          headers,
-          body: JSON.stringify(payload),
-        });
+        const { data, error } = await mobileSupabaseClient
+          .from("crm_contacts")
+          .update(payload)
+          .eq("id", contactId)
+          .select();
 
-        if (!resp.ok) {
+        if (error || !Array.isArray(data) || data.length === 0) {
           return localFallback.updateContact(contactId, patch, expectedUpdatedAt);
         }
 
-        const rows = await resp.json();
-        return { status: "success", contact: mapRowToContact(rows[0] || { id: contactId, ...payload }) };
+        return { status: "success", contact: mapRowToContact(data[0] || { id: contactId, ...payload }) };
       } catch (err) {
         return localFallback.updateContact(contactId, patch, expectedUpdatedAt);
       }
@@ -313,13 +317,12 @@ export function createMobileContactAdapter(): ContactPort {
       }
 
       try {
-        const headers = await getHeaders();
-        const resp = await fetch(`${SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}`, {
-          method: "DELETE",
-          headers,
-        });
+        const { error } = await mobileSupabaseClient
+          .from("crm_contacts")
+          .delete()
+          .eq("id", contactId);
 
-        if (!resp.ok) {
+        if (error) {
           return localFallback.archiveContact(contactId, expectedUpdatedAt);
         }
 

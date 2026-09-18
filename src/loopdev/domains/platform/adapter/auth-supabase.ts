@@ -62,8 +62,10 @@ export class SupabaseAuthAdapter implements AuthPort {
   constructor(config: SupabaseAuthAdapterConfig = {}) {
     this.storage = config.storage ?? new BrowserLocalStorageAdapter();
     const isTest = typeof process !== "undefined" && (process.env?.NODE_ENV === "test" || process.env?.VITEST);
-    const url = config.supabaseUrl || (!isTest && typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL ? import.meta.env.VITE_SUPABASE_URL : undefined);
-    const key = config.supabaseAnonKey || (!isTest && typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY ? import.meta.env.VITE_SUPABASE_ANON_KEY : undefined);
+    const envUrl = !isTest && typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL ? import.meta.env.VITE_SUPABASE_URL : undefined;
+    const envKey = !isTest && typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY ? import.meta.env.VITE_SUPABASE_ANON_KEY : undefined;
+    const url = config.supabaseUrl || envUrl || (!isTest ? DEFAULT_SUPABASE_URL : undefined);
+    const key = config.supabaseAnonKey || envKey || (!isTest ? DEFAULT_SUPABASE_ANON_KEY : undefined);
 
     if (config.supabaseClient) {
       this.client = config.supabaseClient;
@@ -97,6 +99,55 @@ export class SupabaseAuthAdapter implements AuthPort {
 
   public getClient(): SupabaseClient | null {
     return this.client;
+  }
+
+  public async getUserOrganizations(userId?: string): Promise<Array<{ id: string; name: string; slug: string; role: string }>> {
+    if (this.client) {
+      try {
+        if (userId) {
+          const { data: memberships, error } = await this.client
+            .from("organization_memberships")
+            .select("organization_id, role, organizations (id, name, slug)")
+            .eq("user_id", userId);
+
+          if (!error && Array.isArray(memberships) && memberships.length > 0) {
+            const orgs = memberships
+              .map((m: any) => {
+                const o = m.organizations;
+                if (!o) return null;
+                return {
+                  id: o.id || m.organization_id,
+                  name: o.name || "Organización",
+                  slug: o.slug || "org",
+                  role: m.role || "member",
+                };
+              })
+              .filter(Boolean) as Array<{ id: string; name: string; slug: string; role: string }>;
+            if (orgs.length > 0) return orgs;
+          }
+        }
+
+        const { data: allOrgs, error: orgsError } = await this.client
+          .from("organizations")
+          .select("id, name, slug");
+
+        if (!orgsError && Array.isArray(allOrgs) && allOrgs.length > 0) {
+          return allOrgs.map((o: any) => ({
+            id: o.id,
+            name: o.name || "Organización",
+            slug: o.slug || "org",
+            role: "owner",
+          }));
+        }
+      } catch {
+        // ignore and fallback
+      }
+    }
+
+    return [
+      { id: "80fce911-57c5-4a83-809f-78df6a3736f7", name: "LoopDev", slug: "loopdev", role: "admin" },
+      { id: "31bf9e13-7ba4-46e9-9b47-cccd0a0baa3e", name: "Estar Protegidos", slug: "estar-protegidos", role: "admin" },
+    ];
   }
 
   private mapSupabaseEvent(event: SupabaseAuthChangeEvent): AuthChangeEvent {

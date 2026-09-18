@@ -21,7 +21,7 @@ export function MobileLoginScreen({
   onLoginSuccess,
   onForgotPassword,
 }: MobileLoginScreenProps) {
-  const [email, setEmail] = useState("admin@rivera.app");
+  const [email, setEmail] = useState("admin@loop.dev");
   const [password, setPassword] = useState("loopdev");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -175,22 +175,6 @@ export function MobileLoginScreen({
             <Pressable
               style={[
                 styles.demoPill,
-                email === "admin@rivera.app" && styles.demoPillActive,
-              ]}
-              onPress={() => fillDemo("admin@rivera.app")}
-            >
-              <Text
-                style={[
-                  styles.demoPillText,
-                  email === "admin@rivera.app" && styles.demoPillTextActive,
-                ]}
-              >
-                admin@rivera.app (Super Admin)
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.demoPill,
                 email === "admin@loop.dev" && styles.demoPillActive,
               ]}
               onPress={() => fillDemo("admin@loop.dev")}
@@ -201,7 +185,23 @@ export function MobileLoginScreen({
                   email === "admin@loop.dev" && styles.demoPillTextActive,
                 ]}
               >
-                admin@loop.dev (Org Admin)
+                admin@loop.dev (Super Admin & Owner)
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.demoPill,
+                email === "admin@rivera.app" && styles.demoPillActive,
+              ]}
+              onPress={() => fillDemo("admin@rivera.app")}
+            >
+              <Text
+                style={[
+                  styles.demoPillText,
+                  email === "admin@rivera.app" && styles.demoPillTextActive,
+                ]}
+              >
+                admin@rivera.app (Demo Local)
               </Text>
             </Pressable>
           </View>

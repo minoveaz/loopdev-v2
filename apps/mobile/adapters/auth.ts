@@ -15,6 +15,7 @@ import type {
   Workspace,
   PlatformRole,
 } from "../../../packages/contracts/src/auth-port";
+import { mobileSupabaseClient } from "./supabase";
 
 const SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845";
@@ -89,50 +90,43 @@ function buildMobileSnapshot(): TenantContextSnapshot | null {
   };
 }
 
-async function fetchRemoteOrgs(token: string, userId: string): Promise<Organization[]> {
-  if (!token || token.startsWith("demo-") || token.startsWith("mock-") || token.includes("local")) {
-    return [
-      { id: "80fce911-57c5-4a83-809f-78df6a3736f7", name: "LoopDev", slug: "loopdev", status: "active", createdAt: new Date().toISOString() },
-      { id: "31bf9e13-7ba4-46e9-9b47-cccd0a0baa3e", name: "Estar Protegidos", slug: "estar-protegidos", status: "active", createdAt: new Date().toISOString() },
-    ];
-  }
-
-  const headers = {
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-
+async function fetchRemoteOrgs(userId?: string): Promise<Organization[]> {
   try {
-    const memResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/organization_memberships?select=organization_id,role,organizations(id,name,slug)&user_id=eq.${encodeURIComponent(userId)}`,
-      { headers },
-    );
-    if (memResp.ok) {
-      const data = await memResp.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map((item: any) => ({
-          id: item.organizations?.id ?? item.organization_id,
-          name: item.organizations?.name ?? "Organization",
-          slug: item.organizations?.slug ?? "org",
-          status: "active",
-          createdAt: new Date().toISOString(),
-        }));
+    if (userId) {
+      const { data: memberships, error } = await mobileSupabaseClient
+        .from("organization_memberships")
+        .select("organization_id, role, organizations(id, name, slug)")
+        .eq("user_id", userId);
+
+      if (!error && Array.isArray(memberships) && memberships.length > 0) {
+        return memberships
+          .map((item: any) => {
+            const org = item.organizations;
+            if (!org) return null;
+            return {
+              id: org.id || item.organization_id,
+              name: org.name || "Organization",
+              slug: org.slug || "org",
+              status: "active",
+              createdAt: new Date().toISOString(),
+            };
+          })
+          .filter(Boolean) as Organization[];
       }
     }
 
-    const orgResp = await fetch(`${SUPABASE_URL}/rest/v1/organizations?select=*`, { headers });
-    if (orgResp.ok) {
-      const orgs = await orgResp.json();
-      if (Array.isArray(orgs) && orgs.length > 0) {
-        return orgs.map((o: any) => ({
-          id: o.id,
-          name: o.name || "Default Org",
-          slug: o.slug || "org",
-          status: "active",
-          createdAt: o.created_at || new Date().toISOString(),
-        }));
-      }
+    const { data: orgs, error: orgsError } = await mobileSupabaseClient
+      .from("organizations")
+      .select("id, name, slug");
+
+    if (!orgsError && Array.isArray(orgs) && orgs.length > 0) {
+      return orgs.map((o: any) => ({
+        id: o.id,
+        name: o.name || "Organization",
+        slug: o.slug || "org",
+        status: "active",
+        createdAt: new Date().toISOString(),
+      }));
     }
   } catch (err) {
     console.warn("Mobile org fetch failed:", err);
@@ -148,13 +142,39 @@ export const mobileAuthAdapter: AuthPort = {
   async getSession(): Promise<AuthSession | null> {
     if (currentMobileSession) return currentMobileSession;
 
+    try {
+      const { data, error } = await mobileSupabaseClient.auth.getSession();
+      if (!error && data?.session) {
+        const user = data.session.user;
+        const orgs = await fetchRemoteOrgs(user.id);
+        currentOrganizations = orgs;
+        activeOrgId = currentOrganizations[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
+
+        currentMobileSession = {
+          accessToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+          expiresAt: (data.session.expires_at || 0) * 1000 || Date.now() + 3600 * 1000,
+          user: {
+            id: user.id,
+            email: user.email || "",
+            fullName: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Admin",
+            avatarUrl: user.user_metadata?.avatar_url || null,
+            isSuperAdmin: true,
+            createdAt: user.created_at || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        };
+        return currentMobileSession;
+      }
+    } catch {}
+
     const raw = await mobileStorage.getItem("auth_session");
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
         if (parsed.user && parsed.accessToken) {
           currentMobileSession = parsed;
-          currentOrganizations = await fetchRemoteOrgs(parsed.accessToken, parsed.user.id);
+          currentOrganizations = await fetchRemoteOrgs(parsed.user.id);
           activeOrgId = currentOrganizations[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
           return currentMobileSession;
         }
@@ -172,22 +192,17 @@ export const mobileAuthAdapter: AuthPort = {
 
   async signInWithPassword(credentials: SignInWithPasswordInput): Promise<AuthResult<AuthSession>> {
     try {
-      const resp = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-        method: "POST",
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+      const { data, error } = await mobileSupabaseClient.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
       });
 
-      if (!resp.ok) {
-        // Fallback for local demo accounts
+      if (error || !data.session) {
+        // Fallback for local demo accounts only if not admin@loop.dev or offline
         const isDemo =
           credentials.email.includes("@localhost") ||
           credentials.email.includes("@rivera.app") ||
-          credentials.email.includes("@loop.dev") ||
-          credentials.password === "loopdev";
+          (credentials.email.includes("@loop.dev") && credentials.password === "loopdev" && Boolean(error?.message?.includes("fetch")));
 
         if (isDemo) {
           const name = credentials.email.split("@")[0] || "Admin";
@@ -222,30 +237,28 @@ export const mobileAuthAdapter: AuthPort = {
           return { success: true, data: currentMobileSession };
         }
 
-        const err = await resp.json().catch(() => ({}));
         return {
           success: false,
           error: {
             code: "AUTH_INVALID_CREDENTIALS",
-            message: err.error_description || err.msg || err.message || "Invalid email or password",
+            message: error?.message || "Invalid email or password",
           },
         };
       }
 
-      const authData = await resp.json();
-      const user = authData.user;
-      const orgs = await fetchRemoteOrgs(authData.access_token, user.id);
+      const user = data.session.user;
+      const orgs = await fetchRemoteOrgs(user.id);
       currentOrganizations = orgs;
       activeOrgId = orgs[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
 
       currentMobileSession = {
-        accessToken: authData.access_token,
-        refreshToken: authData.refresh_token,
-        expiresAt: Date.now() + (authData.expires_in || 3600) * 1000,
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
+        expiresAt: (data.session.expires_at || 0) * 1000 || Date.now() + 3600 * 1000,
         user: {
           id: user.id,
-          email: user.email,
-          fullName: user.user_metadata?.full_name || user.user_metadata?.name || user.email.split("@")[0],
+          email: user.email || "",
+          fullName: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Admin",
           avatarUrl: user.user_metadata?.avatar_url || null,
           isSuperAdmin: true,
           createdAt: user.created_at || new Date().toISOString(),
@@ -254,21 +267,19 @@ export const mobileAuthAdapter: AuthPort = {
       };
 
       await mobileStorage.setItem("auth_session", JSON.stringify(currentMobileSession));
-
       for (const listener of authListeners) {
         listener("SIGNED_IN", currentMobileSession);
       }
       for (const listener of tenantListeners) {
         listener(buildMobileSnapshot());
       }
-
       return { success: true, data: currentMobileSession };
-    } catch (err) {
+    } catch (err: unknown) {
       return {
         success: false,
         error: {
-          code: "AUTH_NETWORK_ERROR",
-          message: err instanceof Error ? err.message : "Network error during login",
+          code: "AUTH_INVALID_CREDENTIALS",
+          message: err instanceof Error ? err.message : "Authentication error.",
         },
       };
     }
@@ -279,6 +290,9 @@ export const mobileAuthAdapter: AuthPort = {
   },
 
   async signOut(): Promise<AuthResult<void>> {
+    try {
+      await mobileSupabaseClient.auth.signOut();
+    } catch {}
     currentMobileSession = null;
     currentOrganizations = [];
     activeOrgId = "";

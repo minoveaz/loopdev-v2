@@ -63,10 +63,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
 
     // Initial check from adapter
-    defaultWebAuthAdapter.getSession().then((s) => {
+    defaultWebAuthAdapter.getSession().then(async (s) => {
       if (!isMounted) return;
       if (s) {
         setAuthSession(s);
+        const orgs = await defaultWebAuthAdapter.getUserOrganizations(s.user.id);
+        const activeOrgId = cachedSession?.activeOrganizationId && orgs.some((o) => o.id === cachedSession.activeOrganizationId)
+          ? cachedSession.activeOrganizationId
+          : orgs[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
+
         const legacy: LegacyCompatSession = {
           userId: s.user.id,
           email: s.user.email,
@@ -75,8 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           signedInAt: s.user.updatedAt,
           accessToken: s.accessToken,
           refreshToken: s.refreshToken,
-          organizations: DEFAULT_LOCAL_ORGS,
-          activeOrganizationId: cachedSession?.activeOrganizationId || DEFAULT_LOCAL_ORGS[0].id,
+          organizations: orgs,
+          activeOrganizationId: activeOrgId,
         };
         setCachedSession(legacy);
         storage.set(STORAGE_KEYS.session, legacy);
@@ -86,10 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isMounted) setIsLoading(false);
     });
 
-    const unsubscribe = defaultWebAuthAdapter.onAuthStateChange((_event, s) => {
+    const unsubscribe = defaultWebAuthAdapter.onAuthStateChange(async (_event, s) => {
       if (!isMounted) return;
       setAuthSession(s);
       if (s) {
+        const orgs = await defaultWebAuthAdapter.getUserOrganizations(s.user.id);
+        const activeOrgId = cachedSession?.activeOrganizationId && orgs.some((o) => o.id === cachedSession.activeOrganizationId)
+          ? cachedSession.activeOrganizationId
+          : orgs[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
+
         const legacy: LegacyCompatSession = {
           userId: s.user.id,
           email: s.user.email,
@@ -98,8 +108,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           signedInAt: s.user.updatedAt,
           accessToken: s.accessToken,
           refreshToken: s.refreshToken,
-          organizations: DEFAULT_LOCAL_ORGS,
-          activeOrganizationId: cachedSession?.activeOrganizationId || DEFAULT_LOCAL_ORGS[0].id,
+          organizations: orgs,
+          activeOrganizationId: activeOrgId,
         };
         setCachedSession(legacy);
         storage.set(STORAGE_KEYS.session, legacy);
@@ -162,6 +172,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (result.success) {
       const s = result.data;
       setAuthSession(s);
+      const orgs = await defaultWebAuthAdapter.getUserOrganizations(s.user.id);
+      const activeOrgId = orgs[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
       const legacy: LegacyCompatSession = {
         userId: s.user.id,
         email: s.user.email,
@@ -170,8 +182,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signedInAt: s.user.updatedAt,
         accessToken: s.accessToken,
         refreshToken: s.refreshToken,
-        organizations: DEFAULT_LOCAL_ORGS,
-        activeOrganizationId: DEFAULT_LOCAL_ORGS[0].id,
+        organizations: orgs,
+        activeOrganizationId: activeOrgId,
       };
       setCachedSession(legacy);
       storage.set(STORAGE_KEYS.session, legacy);

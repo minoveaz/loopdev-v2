@@ -22,6 +22,7 @@ import {
 import type { LucideIcon } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { loopdevNavigationContract } from "../../../packages/contracts/src/navigation";
+import { useMobileI18n } from "../i18n";
 
 type MobileNavigationDrawerProps = {
   visible: boolean;

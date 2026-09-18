@@ -426,7 +426,7 @@ export function MobileConversationScreen({
               }}
               style={({ pressed }) => [styles.actionCircleBtn, pressed && { opacity: 0.7 }]}
               accessibilityRole="button"
-              accessibilityLabel={lang === "es" ? "Ver Línea de Tiempo de la conversación" : "View conversation Timeline"}
+              accessibilityLabel={lang === "es" ? "Ver actividad de la conversación" : "View conversation activity"}
             >
               <Clock size={17} color="#334155" />
             </Pressable>
@@ -484,11 +484,11 @@ export function MobileConversationScreen({
             setContextSheetOpen(true);
           }}
           accessibilityRole="button"
-          accessibilityLabel={lang === "es" ? "Abrir línea de tiempo de conversación" : "Open conversation timeline"}
+          accessibilityLabel={lang === "es" ? "Abrir actividad de conversación" : "Open conversation activity"}
         >
           <View style={styles.timelineBarLeft}>
             <Clock size={13} color="#475569" />
-            <Text style={styles.timelineBarTitle}>{lang === "es" ? "Línea de tiempo de conversación" : "Conversation timeline"}</Text>
+            <Text style={styles.timelineBarTitle}>{lang === "es" ? "Actividad de conversación" : "Conversation activity"}</Text>
           </View>
           <View style={styles.timelineBarRight}>
             <Text style={styles.timelineBarCount}>

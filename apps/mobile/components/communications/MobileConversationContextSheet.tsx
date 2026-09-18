@@ -206,7 +206,7 @@ export function MobileConversationContextSheet({
                 activeTab === "timeline" && styles.tabButtonTextActive,
               ]}
             >
-              {lang === "es" ? "Línea de Tiempo" : "Timeline"}
+              {lang === "es" ? "Actividad" : "Activity"}
             </Text>
             {markers.length > 0 ? (
               <View style={styles.tabBadge}>

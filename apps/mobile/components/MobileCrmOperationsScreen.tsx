@@ -34,7 +34,7 @@ import type {
   CRMTag,
   CRMCustomFieldDefinition,
 } from "@/loopdev/domains/crm/operations/types";
-import { mobileContactAdapter } from "../adapters/contacts";
+import { mobileContactAdapter } from "../adapters/contact";
 import type { PotentialContactDuplicate } from "../../../packages/contracts/src/contact-port";
 
 interface MobileCrmOperationsScreenProps {

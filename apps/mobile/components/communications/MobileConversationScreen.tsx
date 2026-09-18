@@ -36,7 +36,7 @@ import {
   MobileEmptyState,
 } from "../ui";
 import { mobileTheme } from "../../theme/tokens";
-import { useT } from "../../i18n";
+import { useMobileI18n } from "../../i18n";
 import { useCommunicationConversation } from "../../hooks/useMobileCommunications";
 import {
   MobileConversationContextSheet,
@@ -65,7 +65,7 @@ export function MobileConversationScreen({
   onBack,
   onNavigateToContact,
 }: Props) {
-  const t = useT();
+  const { lang, t } = useMobileI18n();
   const {
     conversation,
     loading,
@@ -136,7 +136,7 @@ export function MobileConversationScreen({
   if (loading) {
     return (
       <MobilePageContainer>
-        <MobileLoadingState message="Cargando conversación..." />
+        <MobileLoadingState message={lang === "es" ? "Cargando conversación..." : "Loading conversation..."} />
       </MobilePageContainer>
     );
   }
@@ -145,14 +145,14 @@ export function MobileConversationScreen({
     return (
       <MobilePageContainer>
         <MobileBackLink
-          label={t("crm.communications.back", "Volver a mensajes")}
+          label={t("crm.communications.back", lang === "es" ? "Volver a mensajes" : "Back to messages")}
           onPress={onBack}
         />
         <MobileEmptyState
-          title="Conversación no encontrada"
-          description={error || "No pudimos cargar el hilo de mensajes."}
+          title={lang === "es" ? "Conversación no encontrada" : "Conversation not found"}
+          description={error || (lang === "es" ? "No pudimos cargar el hilo de mensajes." : "Could not load message thread.")}
           action={{
-            label: t("crm.communications.back", "Volver a mensajes"),
+            label: t("crm.communications.back", lang === "es" ? "Volver a mensajes" : "Back to messages"),
             onPress: onBack,
           }}
         />
@@ -161,7 +161,7 @@ export function MobileConversationScreen({
   }
 
   const { summary } = conversation;
-  const contactName = customerInfo?.name || summary.contact?.displayName || "Contacto";
+  const contactName = customerInfo?.name || summary.contact?.displayName || (lang === "es" ? "Contacto" : "Contact");
   const channelDisplay = summary.channel.toUpperCase();
 
   const handleSend = async () => {
@@ -232,7 +232,7 @@ export function MobileConversationScreen({
             <View style={styles.internalHeaderLeft}>
               <Lock size={12} color="#b45309" />
               <Text style={styles.internalAuthor}>
-                NOTA INTERNA · {item.authorName || "Equipo Comercial"}
+                {lang === "es" ? "NOTA INTERNA" : "INTERNAL NOTE"} · {item.authorName || (lang === "es" ? "Equipo Comercial" : "Sales Team")}
               </Text>
             </View>
             <Text style={styles.internalTime}>{timeStr}</Text>
@@ -373,7 +373,7 @@ export function MobileConversationScreen({
             onPress={onBack}
             style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
             accessibilityRole="button"
-            accessibilityLabel={t("crm.communications.back", "Volver a mensajes")}
+            accessibilityLabel={lang === "es" ? "Volver a mensajes" : "Back to messages"}
           >
             <ArrowLeft size={22} color="#0f172a" />
           </Pressable>
@@ -382,7 +382,7 @@ export function MobileConversationScreen({
             onPress={() => setContextSheetOpen(true)}
             style={styles.topContactInfo}
             accessibilityRole="button"
-            accessibilityLabel={`Ver ficha de ${contactName}`}
+            accessibilityLabel={lang === "es" ? `Ver ficha de ${contactName}` : `View profile of ${contactName}`}
           >
             <View style={styles.topAvatarWrap}>
               <MobileAvatar name={contactName} size="sm" />
@@ -400,7 +400,9 @@ export function MobileConversationScreen({
                 {contactName}
               </Text>
               <Text style={styles.topSubtitle} numberOfLines={1}>
-                {summary.channel === "whatsapp" ? "WhatsApp · En línea" : `${channelDisplay} · Conectado`}
+                {summary.channel === "whatsapp"
+                  ? (lang === "es" ? "WhatsApp · En línea" : "WhatsApp · Online")
+                  : `${channelDisplay} · ${lang === "es" ? "Conectado" : "Connected"}`}
               </Text>
             </View>
           </Pressable>
@@ -411,7 +413,7 @@ export function MobileConversationScreen({
                 onPress={handleCall}
                 style={({ pressed }) => [styles.callBtn, pressed && { opacity: 0.7 }]}
                 accessibilityRole="button"
-                accessibilityLabel="Llamar al contacto"
+                accessibilityLabel={lang === "es" ? "Llamar al contacto" : "Call contact"}
               >
                 <Phone size={17} color="#334155" />
               </Pressable>
@@ -424,7 +426,7 @@ export function MobileConversationScreen({
               }}
               style={({ pressed }) => [styles.actionCircleBtn, pressed && { opacity: 0.7 }]}
               accessibilityRole="button"
-              accessibilityLabel="Ver Línea de Tiempo de la conversación"
+              accessibilityLabel={lang === "es" ? "Ver Línea de Tiempo de la conversación" : "View conversation Timeline"}
             >
               <Clock size={17} color="#334155" />
             </Pressable>
@@ -436,7 +438,7 @@ export function MobileConversationScreen({
               }}
               style={({ pressed }) => [styles.actionCircleBtn, pressed && { opacity: 0.7 }]}
               accessibilityRole="button"
-              accessibilityLabel="Ver Ficha 360 del cliente"
+              accessibilityLabel={lang === "es" ? "Ver Ficha 360 del cliente" : "View 360 Customer Profile"}
             >
               <User size={17} color="#334155" />
             </Pressable>
@@ -448,7 +450,9 @@ export function MobileConversationScreen({
           <View style={styles.windowNotice}>
             <Clock size={11} color="#166534" />
             <Text style={styles.windowNoticeText}>
-              Ventana de respuesta 24h activa (restan 18h)
+              {lang === "es"
+                ? "Ventana de respuesta 24h activa (restan 18h)"
+                : "Active 24h reply window (18h remaining)"}
             </Text>
           </View>
         )}
@@ -480,15 +484,15 @@ export function MobileConversationScreen({
             setContextSheetOpen(true);
           }}
           accessibilityRole="button"
-          accessibilityLabel="Abrir línea de tiempo de conversación"
+          accessibilityLabel={lang === "es" ? "Abrir línea de tiempo de conversación" : "Open conversation timeline"}
         >
           <View style={styles.timelineBarLeft}>
             <Clock size={13} color="#475569" />
-            <Text style={styles.timelineBarTitle}>Línea de tiempo de conversación</Text>
+            <Text style={styles.timelineBarTitle}>{lang === "es" ? "Línea de tiempo de conversación" : "Conversation timeline"}</Text>
           </View>
           <View style={styles.timelineBarRight}>
             <Text style={styles.timelineBarCount}>
-              {markers.length} {markers.length === 1 ? "hito" : "hitos"}
+              {markers.length} {markers.length === 1 ? (lang === "es" ? "hito" : "milestone") : (lang === "es" ? "hitos" : "milestones")}
             </Text>
             <ChevronRight size={13} color={mobileTheme.colors.primary} />
           </View>
@@ -499,14 +503,14 @@ export function MobileConversationScreen({
           {/* Header Row: Customer reply Badge + Subtitle */}
           <View style={styles.composerHeaderRow}>
             <View style={styles.customerReplyBadge}>
-              <Text style={styles.customerReplyBadgeText}>Respuesta al cliente</Text>
+              <Text style={styles.customerReplyBadgeText}>{lang === "es" ? "Respuesta al cliente" : "Customer reply"}</Text>
             </View>
             <Text style={styles.composerAvailabilityText} numberOfLines={1}>
               {summary.channel === "whatsapp" && summary.windowExpiresAt
-                ? "Ventana WhatsApp activa · Entrega directa"
-                : `Respuestas enviadas directamente a ${contactName}`}
+                ? (lang === "es" ? "Ventana WhatsApp activa · Entrega directa" : "Active WhatsApp window · Direct delivery")
+                : (lang === "es" ? `Respuestas enviadas directamente a ${contactName}` : `Replies sent directly to ${contactName}`)}
             </Text>
-            <Text style={styles.composerQueuedText}>Directo</Text>
+            <Text style={styles.composerQueuedText}>{lang === "es" ? "Directo" : "Direct"}</Text>
           </View>
 
           {/* Catalog Item Attachment Dropdown Row */}
@@ -518,7 +522,7 @@ export function MobileConversationScreen({
             ]}
             onPress={() => setCatalogPickerOpen(true)}
             accessibilityRole="button"
-            accessibilityLabel="Adjuntar producto del catálogo"
+            accessibilityLabel={lang === "es" ? "Adjuntar producto del catálogo" : "Attach catalog product"}
           >
             <View style={styles.catalogSelectLeft}>
               <Package
@@ -534,7 +538,7 @@ export function MobileConversationScreen({
               >
                 {selectedCatalogItem
                   ? `${selectedCatalogItem.name} · ${selectedCatalogItem.key}`
-                  : "Adjuntar producto del catálogo (opcional)"}
+                  : (lang === "es" ? "Adjuntar producto del catálogo (opcional)" : "Attach catalog product (optional)")}
               </Text>
             </View>
 
@@ -547,7 +551,7 @@ export function MobileConversationScreen({
                 style={styles.catalogClearBtn}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Quitar producto adjunto"
+                accessibilityLabel={lang === "es" ? "Quitar producto adjunto" : "Remove attached product"}
               >
                 <X size={14} color="#64748b" />
               </Pressable>
@@ -562,8 +566,8 @@ export function MobileConversationScreen({
               style={styles.composerTextarea}
               placeholder={
                 summary.channel === "whatsapp"
-                  ? "Escribe una respuesta por WhatsApp..."
-                  : `Escribe una respuesta por ${channelDisplay}...`
+                  ? (lang === "es" ? "Escribe una respuesta por WhatsApp..." : "Write a WhatsApp reply...")
+                  : (lang === "es" ? `Escribe una respuesta por ${channelDisplay}...` : `Write a reply via ${channelDisplay}...`)
               }
               placeholderTextColor="#94a3b8"
               value={messageText}
@@ -582,7 +586,7 @@ export function MobileConversationScreen({
                 pressed && { opacity: 0.8 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Enviar respuesta al cliente"
+              accessibilityLabel={lang === "es" ? "Enviar respuesta al cliente" : "Send reply to customer"}
             >
               <Send size={18} color="#ffffff" />
             </Pressable>
@@ -590,7 +594,9 @@ export function MobileConversationScreen({
 
           {/* Footer helper note */}
           <Text style={styles.composerFooterNote}>
-            Canal directo con el cliente · Respuestas sincronizadas en tiempo real
+            {lang === "es"
+              ? "Canal directo con el cliente · Respuestas sincronizadas en tiempo real"
+              : "Direct customer channel · Real-time synced replies"}
           </Text>
         </View>
 

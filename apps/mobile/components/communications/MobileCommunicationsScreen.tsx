@@ -32,7 +32,7 @@ import {
   MobileEmptyState,
 } from "../ui";
 import { mobileTheme } from "../../theme/tokens";
-import { useT } from "../../i18n";
+import { useMobileI18n, type MobileLangCode } from "../../i18n";
 import { useCommunicationsInbox } from "../../hooks/useMobileCommunications";
 import type {
   CommunicationChannel,
@@ -57,24 +57,45 @@ const CHANNEL_COLORS: Record<CommunicationChannel, string> = {
   livechat: "#0284c7",
 };
 
-const CHANNEL_LABELS: Record<CommunicationChannel | "all", string> = {
-  all: "Todos los canales",
-  whatsapp: "WhatsApp",
-  email: "Correo",
-  instagram: "Instagram",
-  facebook_messenger: "Messenger",
-  sms: "SMS",
-  phone: "Teléfono",
-  livechat: "Chat en vivo",
+const CHANNEL_LABELS: Record<MobileLangCode, Record<CommunicationChannel | "all", string>> = {
+  es: {
+    all: "Todos los canales",
+    whatsapp: "WhatsApp",
+    email: "Correo",
+    instagram: "Instagram",
+    facebook_messenger: "Messenger",
+    sms: "SMS",
+    phone: "Teléfono",
+    livechat: "Chat en vivo",
+  },
+  en: {
+    all: "All channels",
+    whatsapp: "WhatsApp",
+    email: "Email",
+    instagram: "Instagram",
+    facebook_messenger: "Messenger",
+    sms: "SMS",
+    phone: "Phone",
+    livechat: "Live Chat",
+  },
 };
 
-const STATUS_OPTIONS: Array<{ id: ConversationStatus | "all"; label: string }> = [
-  { id: "all", label: "Todas" },
-  { id: "open", label: "Abiertas" },
-  { id: "pending", label: "Pendientes" },
-  { id: "snoozed", label: "Pausadas" },
-  { id: "closed", label: "Cerradas" },
-];
+const STATUS_OPTIONS: Record<MobileLangCode, Array<{ id: ConversationStatus | "all"; label: string }>> = {
+  es: [
+    { id: "all", label: "Todas" },
+    { id: "open", label: "Abiertas" },
+    { id: "pending", label: "Pendientes" },
+    { id: "snoozed", label: "Pausadas" },
+    { id: "closed", label: "Cerradas" },
+  ],
+  en: [
+    { id: "all", label: "All" },
+    { id: "open", label: "Open" },
+    { id: "pending", label: "Pending" },
+    { id: "snoozed", label: "Snoozed" },
+    { id: "closed", label: "Closed" },
+  ],
+};
 
 function ChannelIcon({ channel, size = 13 }: { channel: CommunicationChannel; size?: number }) {
   const color = CHANNEL_COLORS[channel] || mobileTheme.colors.primary;
@@ -97,25 +118,25 @@ function getInitials(name?: string): string {
     .toUpperCase();
 }
 
-function formatRelativeTime(dateStr?: string): string {
+function formatRelativeTime(dateStr?: string, lang: MobileLangCode = "es"): string {
   if (!dateStr) return "—";
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return "—";
   const now = Date.now();
   const diffMs = now - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "ahora";
+  if (diffMin < 1) return lang === "es" ? "ahora" : "now";
   if (diffMin < 60) return `${diffMin}m`;
   const diffHours = Math.floor(diffMin / 60);
   if (diffHours < 24) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return "ayer";
-  if (diffDays < 7) return `hace ${diffDays}d`;
-  if (diffDays < 14) return "la semana pasada";
-  if (diffDays < 30) return `hace ${Math.floor(diffDays / 7)} sem`;
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+  if (diffDays === 1) return lang === "es" ? "ayer" : "yesterday";
+  if (diffDays < 7) return lang === "es" ? `hace ${diffDays}d` : `${diffDays}d ago`;
+  if (diffDays < 14) return lang === "es" ? "la semana pasada" : "last week";
+  if (diffDays < 30) return lang === "es" ? `hace ${Math.floor(diffDays / 7)} sem` : `${Math.floor(diffDays / 7)}w ago`;
+  return date.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric" });
 }
 
 export function MobileCommunicationsScreen({
@@ -123,7 +144,7 @@ export function MobileCommunicationsScreen({
   onBack,
   onNavigateToContact,
 }: Props) {
-  const t = useT();
+  const { lang } = useMobileI18n();
 
   const [selectedChannel, setSelectedChannel] = useState<CommunicationChannel | "all">("all");
   const [selectedStatus, setSelectedStatus] = useState<ConversationStatus | "all">("all");
@@ -159,15 +180,15 @@ export function MobileCommunicationsScreen({
   } = useCommunicationsInbox(filters);
 
   const statusToneMap: Record<ConversationStatus, { bg: string; text: string; label: string }> = {
-    open: { bg: "#dcfce7", text: "#15803d", label: "Abierto" },
-    pending: { bg: "#fef3c7", text: "#b45309", label: "Pendiente" },
-    snoozed: { bg: "#eff6ff", text: "#1d4ed8", label: "Pausado" },
-    closed: { bg: "#f1f5f9", text: "#64748b", label: "Cerrado" },
+    open: { bg: "#dcfce7", text: "#15803d", label: lang === "es" ? "Abierto" : "Open" },
+    pending: { bg: "#fef3c7", text: "#b45309", label: lang === "es" ? "Pendiente" : "Pending" },
+    snoozed: { bg: "#eff6ff", text: "#1d4ed8", label: lang === "es" ? "Pausado" : "Snoozed" },
+    closed: { bg: "#f1f5f9", text: "#64748b", label: lang === "es" ? "Cerrado" : "Closed" },
   };
 
   const renderConversationItem = ({ item }: { item: ConversationSummary }) => {
     const hasUnread = item.unreadCount > 0;
-    const timeDisplay = formatRelativeTime(item.lastMessageAt);
+    const timeDisplay = formatRelativeTime(item.lastMessageAt, lang);
     const tone = statusToneMap[item.status] || statusToneMap.open;
 
     return (
@@ -182,7 +203,7 @@ export function MobileCommunicationsScreen({
             onSelectConversation(item.id);
           }}
           accessibilityRole="button"
-          accessibilityLabel={`Conversación con ${item.contact.displayName}`}
+          accessibilityLabel={lang === "es" ? `Conversación con ${item.contact.displayName}` : `Conversation with ${item.contact.displayName}`}
         >
           {/* Left: Circular Avatar with Initials */}
           <View style={[styles.avatarCircle, hasUnread ? styles.avatarUnread : styles.avatarNormal]}>
@@ -199,7 +220,7 @@ export function MobileCommunicationsScreen({
                 style={[styles.contactName, hasUnread && styles.contactNameBold]}
                 numberOfLines={1}
               >
-                {item.contact.displayName || "Contacto sin nombre"}
+                {item.contact.displayName || (lang === "es" ? "Contacto sin nombre" : "Unnamed contact")}
               </Text>
               <Text style={[styles.timeText, hasUnread && styles.timeTextUnread]}>
                 {timeDisplay}
@@ -211,15 +232,15 @@ export function MobileCommunicationsScreen({
               <ChannelIcon channel={item.channel} size={12} />
               <Text style={styles.channelSnippetLabel}>
                 {item.contact.identityStatus === "pending_identity_review"
-                  ? "Revisión identidad"
-                  : CHANNEL_LABELS[item.channel]}
+                  ? (lang === "es" ? "Revisión identidad" : "Identity review")
+                  : CHANNEL_LABELS[lang][item.channel]}
               </Text>
               <Text style={styles.bulletSeparator}>·</Text>
               <Text
                 style={[styles.snippetText, hasUnread && styles.snippetTextUnread]}
                 numberOfLines={1}
               >
-                {item.preview || "Sin mensajes aún"}
+                {item.preview || (lang === "es" ? "Sin mensajes aún" : "No messages yet")}
               </Text>
             </View>
 
@@ -243,7 +264,7 @@ export function MobileCommunicationsScreen({
                   </Text>
                 </View>
               ) : (
-                <Text style={styles.unassignedText}>Sin asignar</Text>
+                <Text style={styles.unassignedText}>{lang === "es" ? "Sin asignar" : "Unassigned"}</Text>
               )}
 
               {/* Collaboration Presence Dot */}
@@ -267,7 +288,11 @@ export function MobileCommunicationsScreen({
           style={({ pressed }) => [styles.starBtn, pressed && { opacity: 0.6 }]}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={item.starred ? "Quitar destacada" : "Destacar conversación"}
+          accessibilityLabel={
+            item.starred
+              ? (lang === "es" ? "Quitar destacada" : "Unstar conversation")
+              : (lang === "es" ? "Destacar conversación" : "Star conversation")
+          }
         >
           <Star
             size={16}
@@ -285,21 +310,23 @@ export function MobileCommunicationsScreen({
       <View style={styles.topSection}>
         {/* Eyebrow & Title */}
         <View style={styles.titleWrap}>
-          <Text style={styles.eyebrow}>CANALES</Text>
-          <Text style={styles.headerTitle}>Bandeja de Entrada</Text>
+          <Text style={styles.eyebrow}>{lang === "es" ? "CANALES" : "CHANNELS"}</Text>
+          <Text style={styles.headerTitle}>{lang === "es" ? "Bandeja de Entrada" : "Inbox"}</Text>
           <Text style={styles.headerSubtitle}>
-            Buzón omnicanal sincronizado en tiempo real
+            {lang === "es"
+              ? "Buzón omnicanal sincronizado en tiempo real"
+              : "Omnichannel inbox synced in real time"}
           </Text>
         </View>
 
         {/* Channel Selector Row: [Channel: All channels ⌵] + [↻] */}
         <View style={styles.channelFilterRow}>
-          <Text style={styles.channelFilterLabel}>Canal</Text>
+          <Text style={styles.channelFilterLabel}>{lang === "es" ? "Canal" : "Channel"}</Text>
           <Pressable
             style={({ pressed }) => [styles.channelDropdown, pressed && { opacity: 0.75 }]}
             onPress={() => setChannelPickerOpen(true)}
             accessibilityRole="button"
-            accessibilityLabel="Filtrar por canal"
+            accessibilityLabel={lang === "es" ? "Filtrar por canal" : "Filter by channel"}
           >
             <View style={styles.channelDropdownLeft}>
               {selectedChannel === "all" ? (
@@ -308,7 +335,7 @@ export function MobileCommunicationsScreen({
                 <ChannelIcon channel={selectedChannel} size={13} />
               )}
               <Text style={styles.channelDropdownText} numberOfLines={1}>
-                {CHANNEL_LABELS[selectedChannel]}
+                {CHANNEL_LABELS[lang][selectedChannel]}
               </Text>
               {selectedChannel !== "all" && <View style={styles.channelActiveDot} />}
             </View>
@@ -319,7 +346,7 @@ export function MobileCommunicationsScreen({
             style={({ pressed }) => [styles.refreshBtn, pressed && { opacity: 0.7 }]}
             onPress={reload}
             accessibilityRole="button"
-            accessibilityLabel="Actualizar bandeja"
+            accessibilityLabel={lang === "es" ? "Actualizar bandeja" : "Refresh inbox"}
           >
             <RefreshCw size={14} color="#475569" />
           </Pressable>
@@ -330,7 +357,11 @@ export function MobileCommunicationsScreen({
           <Search size={15} color="#94a3b8" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar por cliente, teléfono o mensaje..."
+            placeholder={
+              lang === "es"
+                ? "Buscar por cliente, teléfono o mensaje..."
+                : "Search by customer, phone or message..."
+            }
             placeholderTextColor="#94a3b8"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -341,7 +372,7 @@ export function MobileCommunicationsScreen({
               onPress={() => setSearchQuery("")}
               style={styles.searchClearBtn}
               accessibilityRole="button"
-              accessibilityLabel="Limpiar búsqueda"
+              accessibilityLabel={lang === "es" ? "Limpiar búsqueda" : "Clear search"}
             >
               <X size={14} color="#64748b" />
             </Pressable>
@@ -354,7 +385,7 @@ export function MobileCommunicationsScreen({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.statusFiltersScroll}
         >
-          {STATUS_OPTIONS.map((opt) => {
+          {STATUS_OPTIONS[lang].map((opt) => {
             const isActive = selectedStatus === opt.id;
             return (
               <Pressable
@@ -396,7 +427,7 @@ export function MobileCommunicationsScreen({
                 assigneeFilter === "mine" && styles.quickBtnTextActive,
               ]}
             >
-              Mías
+              {lang === "es" ? "Mías" : "Mine"}
             </Text>
           </Pressable>
 
@@ -415,7 +446,7 @@ export function MobileCommunicationsScreen({
                 assigneeFilter === "unassigned" && styles.quickBtnTextActive,
               ]}
             >
-              Sin asignar
+              {lang === "es" ? "Sin asignar" : "Unassigned"}
             </Text>
           </Pressable>
 
@@ -433,7 +464,7 @@ export function MobileCommunicationsScreen({
                 unreadOnly && styles.quickBtnTextActive,
               ]}
             >
-              No leídos
+              {lang === "es" ? "No leídos" : "Unread"}
             </Text>
           </Pressable>
 
@@ -456,7 +487,7 @@ export function MobileCommunicationsScreen({
                 starredOnly && styles.quickBtnStarredTextActive,
               ]}
             >
-              Destacadas
+              {lang === "es" ? "Destacadas" : "Starred"}
             </Text>
           </Pressable>
         </View>
@@ -465,11 +496,11 @@ export function MobileCommunicationsScreen({
       {/* Counter Strip: "4 conversaciones" ... "1 no leída" */}
       <View style={styles.counterStrip}>
         <Text style={styles.counterTotal}>
-          {total} conversación{total === 1 ? "" : "es"}
+          {total} {lang === "es" ? `conversación${total === 1 ? "" : "es"}` : `conversation${total === 1 ? "" : "s"}`}
         </Text>
         {unreadCount > 0 && (
           <Text style={styles.counterUnread}>
-            {unreadCount} no leída{unreadCount === 1 ? "" : "s"}
+            {unreadCount} {lang === "es" ? `no leída${unreadCount === 1 ? "" : "s"}` : "unread"}
           </Text>
         )}
       </View>
@@ -477,17 +508,17 @@ export function MobileCommunicationsScreen({
       {/* Loading / Error / Empty States */}
       {loading && (
         <View style={styles.stateContainer}>
-          <MobileLoadingState message="Cargando conversaciones..." />
+          <MobileLoadingState message={lang === "es" ? "Cargando conversaciones..." : "Loading conversations..."} />
         </View>
       )}
 
       {error && !loading && (
         <View style={styles.stateContainer}>
           <MobileEmptyState
-            title="Error al cargar conversaciones"
+            title={lang === "es" ? "Error al cargar conversaciones" : "Error loading conversations"}
             description={error}
             action={{
-              label: "Reintentar",
+              label: lang === "es" ? "Reintentar" : "Retry",
               onPress: reload,
             }}
           />
@@ -497,11 +528,15 @@ export function MobileCommunicationsScreen({
       {!loading && !error && conversations.length === 0 && (
         <View style={styles.stateContainer}>
           <MobileEmptyState
-            title="No se encontraron conversaciones"
+            title={lang === "es" ? "No se encontraron conversaciones" : "No conversations found"}
             description={
               searchQuery || selectedChannel !== "all" || selectedStatus !== "all" || unreadOnly || starredOnly
-                ? "Prueba cambiando o limpiando los filtros de búsqueda."
-                : "Las conversaciones autorizadas aparecerán aquí."
+                ? (lang === "es"
+                    ? "Prueba cambiando o limpiando los filtros de búsqueda."
+                    : "Try changing or clearing search filters.")
+                : (lang === "es"
+                    ? "Las conversaciones autorizadas aparecerán aquí."
+                    : "Authorized conversations will appear here.")
             }
           />
         </View>
@@ -531,12 +566,12 @@ export function MobileCommunicationsScreen({
         >
           <View style={styles.modalSheet} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filtrar por canal</Text>
+              <Text style={styles.modalTitle}>{lang === "es" ? "Filtrar por canal" : "Filter by channel"}</Text>
               <Pressable
                 onPress={() => setChannelPickerOpen(false)}
                 style={styles.modalCloseBtn}
                 accessibilityRole="button"
-                accessibilityLabel="Cerrar modal"
+                accessibilityLabel={lang === "es" ? "Cerrar modal" : "Close modal"}
               >
                 <X size={18} color="#64748b" />
               </Pressable>
@@ -553,7 +588,7 @@ export function MobileCommunicationsScreen({
               }}
             >
               <Inbox size={18} color="#64748b" />
-              <Text style={styles.modalOptionText}>Todos los canales</Text>
+              <Text style={styles.modalOptionText}>{lang === "es" ? "Todos los canales" : "All channels"}</Text>
               {selectedChannel === "all" && <Check size={16} color="#135bec" />}
             </Pressable>
 
@@ -575,10 +610,12 @@ export function MobileCommunicationsScreen({
                   <ChannelIcon channel={acc.channel} size={18} />
                   <View style={{ flex: 1, marginLeft: 8 }}>
                     <Text style={styles.modalOptionText}>
-                      {CHANNEL_LABELS[acc.channel]}
+                      {CHANNEL_LABELS[lang][acc.channel]}
                     </Text>
                     <Text style={styles.modalOptionSub}>
-                      {acc.state === "connected" ? "Conectado" : "Pendiente"}
+                      {acc.state === "connected"
+                        ? (lang === "es" ? "Conectado" : "Connected")
+                        : (lang === "es" ? "Pendiente" : "Pending")}
                     </Text>
                   </View>
                   {unread > 0 && (

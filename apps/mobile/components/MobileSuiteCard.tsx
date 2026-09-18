@@ -2,6 +2,7 @@ import { ChevronRight } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SuiteIllustration } from "./SuiteIllustration";
 import type { LaunchpadIllustrationKey, LaunchpadSuiteStatus } from "../../../packages/contracts/src/launchpad";
+import { useMobileI18n } from "../i18n";
 
 type MobileSuiteCardProps = {
   title: string;
@@ -13,9 +14,20 @@ type MobileSuiteCardProps = {
 };
 
 export function MobileSuiteCard({ title, description, version, kind, status, onPress }: MobileSuiteCardProps) {
+  const { lang } = useMobileI18n();
   const active = status === "ready";
-  const statusLabel = status === "lab" ? "LABORATORIO" : active ? "DISPONIBLE" : "{ BLOQUEADO }";
-  const systemStatus = active ? "SISTEMA_LISTO" : status === "lab" ? "ACCESO_LAB" : "REQUIERE_AUTH";
+  const statusLabel =
+    status === "lab"
+      ? (lang === "es" ? "LABORATORIO" : "LAB")
+      : active
+        ? (lang === "es" ? "DISPONIBLE" : "READY")
+        : (lang === "es" ? "{ BLOQUEADO }" : "{ LOCKED }");
+  const systemStatus =
+    active
+      ? (lang === "es" ? "SISTEMA_LISTO" : "SYSTEM_READY")
+      : status === "lab"
+        ? (lang === "es" ? "ACCESO_LAB" : "LAB_ACCESS")
+        : (lang === "es" ? "REQUIERE_AUTH" : "AUTH_REQUIRED");
   return (
     <Pressable
       accessibilityRole="button"

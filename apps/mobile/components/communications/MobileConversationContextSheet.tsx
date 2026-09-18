@@ -31,6 +31,7 @@ import { MobileCard } from "../ui/MobileCard";
 import { MobileAvatar } from "../ui/MobileAvatar";
 import { MobileStatusBadge, type MobileStatusTone } from "../ui/MobileStatusBadge";
 import { mobileTheme } from "../../theme/tokens";
+import { useMobileI18n } from "../../i18n";
 import type {
   CommunicationMessage,
   ConversationSummary,
@@ -96,6 +97,7 @@ export function MobileConversationContextSheet({
   onCloseConversation,
   onReopenConversation,
 }: Props) {
+  const { lang } = useMobileI18n();
   const [activeTab, setActiveTab] = useState<ConversationContextTab>(initialTab);
   const [timelineCategory, setTimelineCategory] = useState<TimelineCategory>("all");
   const [timelineSearch, setTimelineSearch] = useState("");
@@ -107,8 +109,8 @@ export function MobileConversationContextSheet({
     }
   }, [visible, initialTab]);
 
-  const contactName = customer?.name || summary.contact?.displayName || "Contacto Desconocido";
-  const contactMeta = customer?.email || customer?.phone || summary.contact?.phone || summary.contact?.email || "Sin canal directo";
+  const contactName = customer?.name || summary.contact?.displayName || (lang === "es" ? "Contacto Desconocido" : "Unknown Contact");
+  const contactMeta = customer?.email || customer?.phone || summary.contact?.phone || summary.contact?.email || (lang === "es" ? "Sin canal directo" : "No direct channel");
   const channelDisplay = summary.channel.toUpperCase();
   const isClosed = summary.status === "closed";
 
@@ -141,7 +143,7 @@ export function MobileConversationContextSheet({
     <MobileBottomSheet
       visible={visible}
       onClose={onClose}
-      title="Contexto de Conversación"
+      title={lang === "es" ? "Contexto de Conversación" : "Conversation Context"}
       height="90%"
       maxHeight="90%"
     >
@@ -164,7 +166,7 @@ export function MobileConversationContextSheet({
                 activeTab === "crm" && styles.tabButtonTextActive,
               ]}
             >
-              Ficha CRM
+              {lang === "es" ? "Ficha CRM" : "CRM Profile"}
             </Text>
           </Pressable>
 
@@ -184,7 +186,7 @@ export function MobileConversationContextSheet({
                 activeTab === "operations" && styles.tabButtonTextActive,
               ]}
             >
-              Operaciones
+              {lang === "es" ? "Operaciones" : "Operations"}
             </Text>
           </Pressable>
 
@@ -204,7 +206,7 @@ export function MobileConversationContextSheet({
                 activeTab === "timeline" && styles.tabButtonTextActive,
               ]}
             >
-              Línea de Tiempo
+              {lang === "es" ? "Línea de Tiempo" : "Timeline"}
             </Text>
             {markers.length > 0 ? (
               <View style={styles.tabBadge}>
@@ -248,7 +250,7 @@ export function MobileConversationContextSheet({
                   }}
                   accessibilityRole="button"
                 >
-                  <Text style={styles.view360Text}>Ver Ficha Completa 360</Text>
+                  <Text style={styles.view360Text}>{lang === "es" ? "Ver Ficha Completa 360" : "View Complete 360 Profile"}</Text>
                   <ExternalLink size={14} color={mobileTheme.colors.primary} />
                 </Pressable>
               ) : null}
@@ -257,13 +259,17 @@ export function MobileConversationContextSheet({
             {/* Commercial Context / Active Opportunity */}
             {Boolean(customer?.openOpportunityCount) && (
               <View style={styles.section}>
-                <Text style={styles.sectionHeading}>OPORTUNIDADES COMERCIALES ACTIVAS</Text>
+                <Text style={styles.sectionHeading}>{lang === "es" ? "OPORTUNIDADES COMERCIALES ACTIVAS" : "ACTIVE COMMERCIAL DEALS"}</Text>
                 <MobileCard style={styles.dealCard}>
                   <Text style={styles.dealName}>
-                    {customer?.openOpportunityCount} deal(s) comercial(es) abierto(s)
+                    {lang === "es"
+                      ? `${customer?.openOpportunityCount} deal(s) comercial(es) abierto(s)`
+                      : `${customer?.openOpportunityCount} open commercial deal(s)`}
                   </Text>
                   <Text style={styles.dealValue}>
-                    Total estimado: {customer?.openOpportunityValue ? `$${customer.openOpportunityValue.toLocaleString()}` : "En cualificación"}
+                    {lang === "es"
+                      ? `Total estimado: ${customer?.openOpportunityValue ? `$${customer.openOpportunityValue.toLocaleString()}` : "En cualificación"}`
+                      : `Estimated total: ${customer?.openOpportunityValue ? `$${customer.openOpportunityValue.toLocaleString()}` : "In qualification"}`}
                   </Text>
                 </MobileCard>
               </View>
@@ -275,7 +281,7 @@ export function MobileConversationContextSheet({
         {activeTab === "operations" && (
           <View style={styles.tabContent}>
             <View style={styles.section}>
-              <Text style={styles.sectionHeading}>ACCIONES DE FLUJO Y GESTIÓN</Text>
+              <Text style={styles.sectionHeading}>{lang === "es" ? "ACCIONES DE FLUJO Y GESTIÓN" : "WORKFLOW & MANAGEMENT ACTIONS"}</Text>
 
               {onScheduleTask ? (
                 <Pressable
@@ -289,7 +295,7 @@ export function MobileConversationContextSheet({
                   <View style={styles.actionIconWrap}>
                     <CheckCircle2 size={18} color={mobileTheme.colors.primary} />
                   </View>
-                  <Text style={styles.actionLabel}>Agendar Tarea de Seguimiento</Text>
+                  <Text style={styles.actionLabel}>{lang === "es" ? "Agendar Tarea de Seguimiento" : "Schedule Follow-up Task"}</Text>
                   <ChevronRight size={18} color={mobileTheme.colors.textSubtle} />
                 </Pressable>
               ) : null}
@@ -306,7 +312,7 @@ export function MobileConversationContextSheet({
                   <View style={styles.actionIconWrap}>
                     <Package size={18} color={mobileTheme.colors.primary} />
                   </View>
-                  <Text style={styles.actionLabel}>Insertar Producto del Catálogo ERP</Text>
+                  <Text style={styles.actionLabel}>{lang === "es" ? "Insertar Producto del Catálogo ERP" : "Insert ERP Catalog Product"}</Text>
                   <ChevronRight size={18} color={mobileTheme.colors.textSubtle} />
                 </Pressable>
               ) : null}
@@ -325,7 +331,7 @@ export function MobileConversationContextSheet({
                       <CheckCircle2 size={18} color={mobileTheme.colors.success} />
                     </View>
                     <Text style={[styles.actionLabel, { color: mobileTheme.colors.success }]}>
-                      Reabrir Conversación
+                      {lang === "es" ? "Reabrir Conversación" : "Reopen Conversation"}
                     </Text>
                   </Pressable>
                 ) : null
@@ -343,7 +349,7 @@ export function MobileConversationContextSheet({
                       <XCircle size={18} color={mobileTheme.colors.danger} />
                     </View>
                     <Text style={[styles.actionLabel, { color: mobileTheme.colors.danger }]}>
-                      Cerrar Ticket / Conversación
+                      {lang === "es" ? "Cerrar Ticket / Conversación" : "Close Ticket / Conversation"}
                     </Text>
                   </Pressable>
                 ) : null
@@ -375,7 +381,7 @@ export function MobileConversationContextSheet({
                     timelineCategory === "all" && styles.categoryChipTextActive,
                   ]}
                 >
-                  Todos ({categoryCounts.all})
+                  {lang === "es" ? `Todos (${categoryCounts.all})` : `All (${categoryCounts.all})`}
                 </Text>
               </Pressable>
 
@@ -393,7 +399,7 @@ export function MobileConversationContextSheet({
                     timelineCategory === "files" && styles.categoryChipTextActive,
                   ]}
                 >
-                  Archivos ({categoryCounts.files})
+                  {lang === "es" ? `Archivos (${categoryCounts.files})` : `Files (${categoryCounts.files})`}
                 </Text>
               </Pressable>
 
@@ -411,7 +417,7 @@ export function MobileConversationContextSheet({
                     timelineCategory === "media" && styles.categoryChipTextActive,
                   ]}
                 >
-                  Multimedia ({categoryCounts.media})
+                  {lang === "es" ? `Multimedia (${categoryCounts.media})` : `Media (${categoryCounts.media})`}
                 </Text>
               </Pressable>
 
@@ -429,7 +435,7 @@ export function MobileConversationContextSheet({
                     timelineCategory === "links-places" && styles.categoryChipTextActive,
                   ]}
                 >
-                  Enlaces y Lugares ({categoryCounts["links-places"]})
+                  {lang === "es" ? `Enlaces y Lugares (${categoryCounts["links-places"]})` : `Links & Places (${categoryCounts["links-places"]})`}
                 </Text>
               </Pressable>
             </ScrollView>
@@ -439,7 +445,7 @@ export function MobileConversationContextSheet({
               <Search size={16} color={mobileTheme.colors.textMuted} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Buscar hitos en la conversación..."
+                placeholder={lang === "es" ? "Buscar hitos en la conversación..." : "Search conversation milestones..."}
                 placeholderTextColor={mobileTheme.colors.textMuted}
                 value={timelineSearch}
                 onChangeText={setTimelineSearch}
@@ -460,11 +466,11 @@ export function MobileConversationContextSheet({
             {filteredMarkers.length === 0 ? (
               <View style={styles.emptyState}>
                 <Clock size={28} color={mobileTheme.colors.textSubtle} />
-                <Text style={styles.emptyStateTitle}>No se encontraron hitos</Text>
+                <Text style={styles.emptyStateTitle}>{lang === "es" ? "No se encontraron hitos" : "No milestones found"}</Text>
                 <Text style={styles.emptyStateSubtitle}>
                   {timelineSearch
-                    ? "Ningún hito coincide con tu búsqueda."
-                    : "No hay elementos registrados en esta categoría."}
+                    ? (lang === "es" ? "Ningún hito coincide con tu búsqueda." : "No milestone matches your search.")
+                    : (lang === "es" ? "No hay elementos registrados en esta categoría." : "No items recorded in this category.")}
                 </Text>
               </View>
             ) : (
@@ -502,7 +508,7 @@ export function MobileConversationContextSheet({
                             </View>
 
                             <View style={styles.milestoneJumpBtn}>
-                              <Text style={styles.milestoneJumpText}>Saltar</Text>
+                              <Text style={styles.milestoneJumpText}>{lang === "es" ? "Saltar" : "Jump"}</Text>
                               <ChevronRight
                                 size={14}
                                 color={mobileTheme.colors.primary}

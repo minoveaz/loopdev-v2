@@ -4,6 +4,7 @@ import { SuiteIllustration } from "./components/SuiteIllustration";
 import { MobileBackLink } from "./components/ui/MobileBackLink";
 import { mobileTheme } from "./theme/tokens";
 import type { launchpadSuites } from "../../packages/contracts/src/launchpad";
+import { useMobileI18n } from "./i18n";
 
 type MobileWorkspaceScreenProps = {
   suite: (typeof launchpadSuites)[number];
@@ -12,37 +13,38 @@ type MobileWorkspaceScreenProps = {
 };
 
 export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorkspaceScreenProps) {
+  const { lang } = useMobileI18n();
   const isCrm = suite.id === "sales-crm";
   const isDocIntelligence = suite.id === "document-intelligence";
 
   const crmShortcuts = [
     {
       id: "crm-tasks",
-      title: "Tareas y Calendario",
-      subtitle: "Vistas Lista, Kanban y Calendario Semanal/Mensual",
+      title: lang === "es" ? "Tareas y Calendario" : "Tasks & Calendar",
+      subtitle: lang === "es" ? "Vistas Lista, Kanban y Calendario Semanal/Mensual" : "List, Kanban and Weekly/Monthly Calendar views",
       icon: CheckSquare,
       path: "/app/sales-crm/tasks",
       badge: "Full Parity",
     },
     {
       id: "crm-contacts",
-      title: "Contactos y Cuentas",
-      subtitle: "Gestión de directorio y relaciones",
+      title: lang === "es" ? "Contactos y Cuentas" : "Contacts & Accounts",
+      subtitle: lang === "es" ? "Gestión de directorio y relaciones" : "Directory and relationship management",
       icon: Users,
       path: "/app/sales-crm/contacts",
       badge: "Full Parity",
     },
     {
       id: "crm-pipeline",
-      title: "Pipeline Comercial",
-      subtitle: "Gestión de deals y funnel comercial",
+      title: lang === "es" ? "Pipeline Comercial" : "Sales Pipeline",
+      subtitle: lang === "es" ? "Gestión de deals y funnel comercial" : "Deals and sales funnel management",
       icon: TrendingUp,
       path: "/app/sales-crm/pipeline",
     },
     {
       id: "crm-comms",
-      title: "Comunicaciones",
-      subtitle: "Mensajería, WhatsApp y correo sincronizado",
+      title: lang === "es" ? "Comunicaciones" : "Communications",
+      subtitle: lang === "es" ? "Mensajería, WhatsApp y correo sincronizado" : "Messaging, WhatsApp and synced email",
       icon: MessageCircle,
       path: "/app/sales-crm/communications",
     },
@@ -51,16 +53,16 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
   const docIntelligenceShortcuts = [
     {
       id: "doc-ocr",
-      title: "OCR y Extracción de Documentos",
-      subtitle: "Escaneo y lectura de DNI, NIE y Pasaportes",
+      title: lang === "es" ? "OCR y Extracción de Documentos" : "OCR & Document Extraction",
+      subtitle: lang === "es" ? "Escaneo y lectura de DNI, NIE y Pasaportes" : "Scanning and reading of ID, NIE and Passports",
       icon: Scan,
       path: "/app/tools/document-intelligence",
-      badge: "IA Vision",
+      badge: lang === "es" ? "IA Vision" : "Vision AI",
     },
     {
       id: "doc-overview",
-      title: "Visor y Extracciones",
-      subtitle: "Inspección de campos y tipificación documental",
+      title: lang === "es" ? "Visor y Extracciones" : "Viewer & Extractions",
+      subtitle: lang === "es" ? "Inspección de campos y tipificación documental" : "Field inspection and document classification",
       icon: FileSearch,
       path: "/app/tools/document-intelligence",
     },
@@ -68,14 +70,14 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
 
   return (
     <ScrollView contentContainerStyle={styles.workspaceContent}>
-      <MobileBackLink label="Volver al Inicio" onPress={onBack} />
-      <View style={styles.workspaceEyebrow}><Text style={styles.workspaceEyebrowText}>CONTEXTO DE TRABAJO ACTIVO</Text></View>
+      <MobileBackLink label={lang === "es" ? "Volver al Inicio" : "Back to Launchpad"} onPress={onBack} />
+      <View style={styles.workspaceEyebrow}><Text style={styles.workspaceEyebrowText}>{lang === "es" ? "CONTEXTO DE TRABAJO ACTIVO" : "ACTIVE WORK CONTEXT"}</Text></View>
       <Text style={styles.workspaceTitle}>{suite.title}</Text>
       <Text style={styles.workspaceDescription}>{suite.description}</Text>
 
       {isCrm && onNavigate && (
         <View style={styles.shortcutsSection}>
-          <Text style={styles.sectionHeading}>MÓDULOS DE TRABAJO</Text>
+          <Text style={styles.sectionHeading}>{lang === "es" ? "MÓDULOS DE TRABAJO" : "WORK MODULES"}</Text>
           <View style={styles.shortcutList}>
             {crmShortcuts.map((item) => {
               const Icon = item.icon;
@@ -109,7 +111,7 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
 
       {isDocIntelligence && onNavigate && (
         <View style={styles.shortcutsSection}>
-          <Text style={styles.sectionHeading}>HERRAMIENTAS DE EXTRACCIÓN</Text>
+          <Text style={styles.sectionHeading}>{lang === "es" ? "HERRAMIENTAS DE EXTRACCIÓN" : "EXTRACTION TOOLS"}</Text>
           <View style={styles.shortcutList}>
             {docIntelligenceShortcuts.map((item) => {
               const Icon = item.icon;
@@ -143,9 +145,9 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
 
       <View style={styles.workspaceHero}><SuiteIllustration kind={suite.illustration} /></View>
       <View style={styles.domainCard}>
-        <Text style={styles.domainCardLabel}>RUTA DEL DOMINIO</Text>
-        <Text style={styles.domainCardValue}>{suite.entryPath ?? "Espacio de trabajo pendiente"}</Text>
-        <Text style={styles.domainCardDescription}>Este espacio de trabajo está conectado al contexto central de LoopDev.</Text>
+        <Text style={styles.domainCardLabel}>{lang === "es" ? "RUTA DEL DOMINIO" : "DOMAIN ROUTE"}</Text>
+        <Text style={styles.domainCardValue}>{suite.entryPath ?? (lang === "es" ? "Espacio de trabajo pendiente" : "Pending workspace")}</Text>
+        <Text style={styles.domainCardDescription}>{lang === "es" ? "Este espacio de trabajo está conectado al contexto central de LoopDev." : "This workspace is connected to LoopDev core context."}</Text>
       </View>
     </ScrollView>
   );

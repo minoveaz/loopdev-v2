@@ -17,6 +17,8 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-nativ
 import type { ContextualActionContext, SharedContextualAction } from "../../../packages/contracts/src/navigation";
 import { getContextualActions } from "../../../packages/contracts/src/navigation";
 
+import { useMobileI18n } from "../i18n";
+
 type MobileCommandPaletteProps = {
   context: ContextualActionContext;
   visible: boolean;
@@ -35,22 +37,32 @@ const icons: Record<string, LucideIcon> = {
   product: PackagePlus,
 };
 
-const SPANISH_ACTION_TRANSLATIONS: Record<string, { label: string; description: string }> = {
-  "open-crm": { label: "Abrir CRM", description: "Continuar trabajando con clientes y pipeline." },
-  "open-erp": { label: "Abrir ERP", description: "Continuar trabajando con productos y operaciones." },
-  "new-contact": { label: "Nuevo contacto", description: "Crear una persona o empresa en CRM." },
-  "new-lead": { label: "Nuevo lead", description: "Añadir un cliente potencial al flujo de calificación." },
-  "new-opportunity": { label: "Nueva oportunidad", description: "Iniciar el seguimiento de una oportunidad comercial." },
-  "new-product": { label: "Nuevo producto", description: "Añadir un artículo al catálogo de productos." },
-  "new-order": { label: "Nuevo pedido", description: "Iniciar una nueva orden operativa." },
-  "new-conversation": { label: "Nueva conversación", description: "Iniciar un mensaje directo con un cliente o contacto." },
+const ACTION_TRANSLATIONS: Record<"es" | "en", Record<string, { label: string; description: string }>> = {
+  es: {
+    "open-crm": { label: "Abrir CRM", description: "Continuar trabajando con clientes y pipeline." },
+    "open-erp": { label: "Abrir ERP", description: "Continuar trabajando con productos y operaciones." },
+    "new-contact": { label: "Nuevo contacto", description: "Crear una persona o empresa en CRM." },
+    "new-lead": { label: "Nuevo lead", description: "Añadir un cliente potencial al flujo de calificación." },
+    "new-opportunity": { label: "Nueva oportunidad", description: "Iniciar el seguimiento de una oportunidad comercial." },
+    "new-product": { label: "Nuevo producto", description: "Añadir un artículo al catálogo de productos." },
+    "new-order": { label: "Nuevo pedido", description: "Iniciar una nueva orden operativa." },
+    "new-conversation": { label: "Nueva conversación", description: "Iniciar un mensaje directo con un cliente o contacto." },
+  },
+  en: {
+    "open-crm": { label: "Open CRM", description: "Continue work with customers and pipeline." },
+    "open-erp": { label: "Open ERP", description: "Continue work with products and operations." },
+    "new-contact": { label: "New contact", description: "Create a person or company in CRM." },
+    "new-lead": { label: "New lead", description: "Add a lead to the qualification flow." },
+    "new-opportunity": { label: "New opportunity", description: "Start tracking a revenue opportunity." },
+    "new-product": { label: "New product", description: "Add an item to the product catalog." },
+    "new-order": { label: "New order", description: "Start a new operational order." },
+    "new-conversation": { label: "New conversation", description: "Start a conversation with a teammate or contact." },
+  },
 };
 
-const CONTEXT_LABELS: Record<string, string> = {
-  launchpad: "INICIO",
-  crm: "CRM",
-  erp: "ERP",
-  conversations: "MENSAJES",
+const CONTEXT_LABELS: Record<"es" | "en", Record<string, string>> = {
+  es: { launchpad: "INICIO", crm: "CRM", erp: "ERP", conversations: "MENSAJES" },
+  en: { launchpad: "LAUNCHPAD", crm: "CRM", erp: "ERP", conversations: "MESSAGES" },
 };
 
 export function MobileCommandPalette({
@@ -59,17 +71,18 @@ export function MobileCommandPalette({
   onClose,
   onAction,
 }: MobileCommandPaletteProps) {
+  const { lang } = useMobileI18n();
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
   const actions = useMemo(
     () => getContextualActions(context)
       .map((item) => {
-        const trans = SPANISH_ACTION_TRANSLATIONS[item.id];
+        const trans = ACTION_TRANSLATIONS[lang]?.[item.id];
         return trans ? { ...item, label: trans.label, description: trans.description } : item;
       })
       .filter((item) => `${item.label} ${item.description}`.toLowerCase().includes(normalizedQuery))
       .slice(0, 5),
-    [context, normalizedQuery],
+    [context, lang, normalizedQuery],
   );
 
   function close() {
@@ -80,34 +93,48 @@ export function MobileCommandPalette({
   return (
     <Modal animationType="fade" onRequestClose={close} transparent visible={visible}>
       <View style={styles.overlay}>
-        <Pressable accessibilityLabel="Cerrar paleta de comandos" accessibilityRole="button" onPress={close} style={styles.backdrop} />
+        <Pressable
+          accessibilityLabel={lang === "es" ? "Cerrar paleta de comandos" : "Close command palette"}
+          accessibilityRole="button"
+          onPress={close}
+          style={styles.backdrop}
+        />
         <View style={styles.palette}>
           <View style={styles.header}>
             <View style={styles.heading}>
-              <Text style={styles.title}>Acción rápida</Text>
-              <Text style={styles.context}>{CONTEXT_LABELS[context] || context.toUpperCase()}</Text>
+              <Text style={styles.title}>{lang === "es" ? "Acción rápida" : "Quick action"}</Text>
+              <Text style={styles.context}>{CONTEXT_LABELS[lang]?.[context] || context.toUpperCase()}</Text>
             </View>
-            <Pressable accessibilityLabel="Cerrar paleta de comandos" accessibilityRole="button" onPress={close} style={styles.close}>
+            <Pressable
+              accessibilityLabel={lang === "es" ? "Cerrar paleta de comandos" : "Close command palette"}
+              accessibilityRole="button"
+              onPress={close}
+              style={styles.close}
+            >
               <X color="#64748b" size={18} />
             </Pressable>
           </View>
           <View style={styles.searchRow}>
             <Search color="#64748b" size={18} strokeWidth={2.2} />
             <TextInput
-              accessibilityLabel="Buscar acciones contextuales"
+              accessibilityLabel={lang === "es" ? "Buscar acciones contextuales" : "Search contextual actions"}
               onChangeText={setQuery}
-              placeholder="Buscar acciones..."
+              placeholder={lang === "es" ? "Buscar acciones..." : "Search actions..."}
               placeholderTextColor="#94a3b8"
               style={styles.input}
               value={query}
             />
           </View>
-          <Text style={styles.sectionLabel}>ACCIONES</Text>
+          <Text style={styles.sectionLabel}>{lang === "es" ? "ACCIONES" : "ACTIONS"}</Text>
           <View style={styles.actionList}>
             {actions.map((action) => <ActionRow key={action.id} action={action} onPress={() => onAction(action)} />)}
-            {actions.length === 0 && <Text style={styles.empty}>No se encontraron acciones.</Text>}
+            {actions.length === 0 && (
+              <Text style={styles.empty}>{lang === "es" ? "No se encontraron acciones." : "No actions found."}</Text>
+            )}
           </View>
-          <Text style={styles.hint}>Elige una acción para el contexto actual</Text>
+          <Text style={styles.hint}>
+            {lang === "es" ? "Elige una acción para el contexto actual" : "Choose an action for the current context"}
+          </Text>
         </View>
       </View>
     </Modal>

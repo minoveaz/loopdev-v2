@@ -11,6 +11,7 @@ import {
   Undo2,
 } from "lucide-react-native";
 import type { TipTapDocument } from "../../../packages/contracts/src/notes";
+import { useMobileI18n } from "../i18n";
 
 type Props = {
   initialContent: TipTapDocument;
@@ -19,13 +20,14 @@ type Props = {
 };
 
 export function MobileRichNoteEditor({ initialContent, disabled, onChange }: Props) {
+  const { lang } = useMobileI18n();
   const initialText = initialContent.content.flatMap((node) => node.content ?? []).map((node) => node.text ?? "").join(" ");
   const iconColor = "#475569";
   const iconSize = 15;
 
   return (
     <View style={styles.container}>
-      <View accessibilityLabel="Herramientas de formato de nota enriquecida" style={styles.toolbar}>
+      <View accessibilityLabel={lang === "es" ? "Herramientas de formato de nota enriquecida" : "Rich note formatting tools"} style={styles.toolbar}>
         <Heading2 size={iconSize} color={iconColor} />
         <Bold size={iconSize} color={iconColor} />
         <Italic size={iconSize} color={iconColor} />
@@ -49,7 +51,7 @@ export function MobileRichNoteEditor({ initialContent, disabled, onChange }: Pro
             },
           })
         }
-        placeholder="Escribe una nota enriquecida..."
+        placeholder={lang === "es" ? "Escribe una nota enriquecida..." : "Write a rich note..."}
         textAlignVertical="top"
         style={styles.editor}
       />

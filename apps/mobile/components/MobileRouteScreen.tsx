@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useMobileI18n } from "../i18n";
 
 type MobileRouteScreenProps = {
   label: string;
@@ -6,13 +7,18 @@ type MobileRouteScreenProps = {
 };
 
 export function MobileRouteScreen({ label, path }: MobileRouteScreenProps) {
+  const { lang } = useMobileI18n();
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.eyebrow}>ESPACIO DE TRABAJO LOOPDEV</Text>
+      <Text style={styles.eyebrow}>{lang === "es" ? "ESPACIO DE TRABAJO LOOPDEV" : "LOOPDEV WORKSPACE"}</Text>
       <Text style={styles.title}>{label}</Text>
-      <Text style={styles.description}>Esta ruta móvil está conectada al contrato de navegación central de LoopDev.</Text>
+      <Text style={styles.description}>
+        {lang === "es"
+          ? "Esta ruta móvil está conectada al contrato de navegación central de LoopDev."
+          : "This mobile route is connected to LoopDev core navigation contract."}
+      </Text>
       <View style={styles.card}>
-        <Text style={styles.cardLabel}>RUTA ACTUAL</Text>
+        <Text style={styles.cardLabel}>{lang === "es" ? "RUTA ACTUAL" : "CURRENT ROUTE"}</Text>
         <Text style={styles.path}>{path}</Text>
       </View>
     </ScrollView>

@@ -4,6 +4,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { getBottomNavigationItems, type BottomNavigationContext } from "../../../packages/contracts/src/navigation";
 import { BrandInfinityIcon } from "./BrandMark";
 
+import { useMobileI18n } from "../i18n";
+
 export type MobileTab = "launchpad" | "conversations" | "copilot" | "crm" | "erp" | "more";
 
 type MobileBottomNavProps = {
@@ -24,18 +26,29 @@ const icons: Record<string, BottomNavIcon> = {
   copilot: BrandInfinityIcon,
 };
 
-const SPANISH_BOTTOM_LABELS: Record<string, string> = {
-  launchpad: "Inicio",
-  conversations: "Mensajes",
-  copilot: "Copilot",
-  more: "Más",
-  crm: "CRM",
-  erp: "ERP",
+const BOTTOM_LABELS: Record<"es" | "en", Record<string, string>> = {
+  es: {
+    launchpad: "Inicio",
+    conversations: "Mensajes",
+    copilot: "Copilot",
+    more: "Más",
+    crm: "CRM",
+    erp: "ERP",
+  },
+  en: {
+    launchpad: "Launchpad",
+    conversations: "Messages",
+    copilot: "Copilot",
+    more: "More",
+    crm: "CRM",
+    erp: "ERP",
+  },
 };
 
 export function MobileBottomNav({ context, activeTab, onTabPress, onActionPress }: MobileBottomNavProps) {
+  const { lang } = useMobileI18n();
   const tabs: { label: string; tab: MobileTab; icon: BottomNavIcon }[] = getBottomNavigationItems().map((item) => ({
-    label: SPANISH_BOTTOM_LABELS[item.slot] || item.label,
+    label: BOTTOM_LABELS[lang]?.[item.slot] || item.label,
     tab: item.slot === "copilot" ? "copilot" : item.slot,
     icon: icons[item.iconKey],
   }));
@@ -63,7 +76,7 @@ export function MobileBottomNav({ context, activeTab, onTabPress, onActionPress 
         );
       })}
       <Pressable
-        accessibilityLabel="Abrir acciones contextuales"
+        accessibilityLabel={lang === "es" ? "Abrir acciones contextuales" : "Open contextual actions"}
         accessibilityRole="button"
         onPress={onActionPress}
         style={styles.actionButton}

@@ -1,10 +1,11 @@
-import { Check, ChevronRight, CreditCard, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react-native";
+import { Check, ChevronRight, CreditCard, Globe, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { MobileConfirmDialog } from "./MobileModal";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "../adapters/auth";
 import type { AuthSession, Organization, TenantContextSnapshot } from "../../../packages/contracts/src/auth-port";
+import { MOBILE_LANGUAGES, useMobileI18n, type MobileLangCode } from "../i18n";
 
 type MobileAccountSheetProps = {
   visible: boolean;
@@ -12,14 +13,8 @@ type MobileAccountSheetProps = {
   onSwitchOrg?: (orgName: string) => void;
 };
 
-const items = [
-  { label: "Perfil", icon: UserRound },
-  { label: "Configuración de cuenta", icon: Settings },
-  { label: "Seguridad", icon: ShieldCheck },
-  { label: "Facturación", icon: CreditCard },
-];
-
 export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAccountSheetProps) {
+  const { lang, setLang } = useMobileI18n();
   const [context, setContext] = useState<TenantContextSnapshot | null>(() =>
     mobileTenantContextAdapter.getTenantContext(),
   );
@@ -65,12 +60,19 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
   };
 
   const activeOrgId = context?.activeOrganizationId ?? orgs[0]?.id;
-  const userName = session?.user.fullName || session?.user.email?.split("@")[0] || "Usuario";
-  const userEmail = session?.user.email || "usuario@loopdev.com";
+  const userName = session?.user.fullName || session?.user.email?.split("@")[0] || (lang === "es" ? "Usuario" : "User");
+  const userEmail = session?.user.email || "user@loopdev.com";
   const initials = (session?.user.fullName ? session.user.fullName.split(" ").map((p: string) => p[0]).join("") : userName.slice(0, 2)).toUpperCase().slice(0, 2);
 
+  const menuItems = [
+    { label: lang === "es" ? "Perfil" : "Profile", icon: UserRound },
+    { label: lang === "es" ? "Configuración de cuenta" : "Account settings", icon: Settings },
+    { label: lang === "es" ? "Seguridad" : "Security", icon: ShieldCheck },
+    { label: lang === "es" ? "Facturación" : "Billing", icon: CreditCard },
+  ];
+
   return (
-    <MobileBottomSheet onClose={onClose} title="Cuenta" visible={visible}>
+    <MobileBottomSheet onClose={onClose} title={lang === "es" ? "Cuenta" : "Account"} visible={visible}>
       <View style={styles.profileHeader}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials || "AD"}</Text>
@@ -80,7 +82,9 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
             <Text style={styles.name}>{userName}</Text>
             {context?.isSuperAdmin && (
               <View style={styles.superBadge}>
-                <Text style={styles.superBadgeText}>SUPER ADMINISTRADOR</Text>
+                <Text style={styles.superBadgeText}>
+                  {lang === "es" ? "SUPER ADMINISTRADOR" : "SUPER ADMIN"}
+                </Text>
               </View>
             )}
           </View>
@@ -90,9 +94,44 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
 
       <View style={styles.separator} />
 
+      {/* Language Switcher Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          {lang === "es" ? "IDIOMA DE LA INTERFAZ" : "INTERFACE LANGUAGE"}
+        </Text>
+        <View style={styles.langList}>
+          {MOBILE_LANGUAGES.map((item) => {
+            const isSelected = item.code === lang;
+            return (
+              <Pressable
+                key={item.code}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
+                onPress={() => setLang(item.code)}
+                style={[styles.langCard, isSelected && styles.activeLangCard]}
+              >
+                <Text style={styles.langFlag}>{item.flag}</Text>
+                <Text style={[styles.langName, isSelected && styles.activeLangName]}>{item.label}</Text>
+                {isSelected ? (
+                  <View style={styles.activeCheck}>
+                    <Check color="#ffffff" size={14} strokeWidth={3} />
+                  </View>
+                ) : (
+                  <View style={styles.emptyCheck} />
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.separator} />
+
       {/* Organization Switcher inside Mobile Account Sheet */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>CAMBIAR ORGANIZACIÓN</Text>
+        <Text style={styles.sectionTitle}>
+          {lang === "es" ? "CAMBIAR ORGANIZACIÓN" : "SWITCH ORGANIZATION"}
+        </Text>
         <View style={styles.orgList}>
           {orgs.map((org) => {
             const isActive = org.id === activeOrgId;
@@ -107,7 +146,11 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
                 </View>
                 <View style={styles.orgInfo}>
                   <Text style={[styles.orgName, isActive && styles.activeOrgName]}>{org.name}</Text>
-                  <Text style={styles.orgDetail}>{isActive ? "Organización activa" : "Toca para cambiar"}</Text>
+                  <Text style={styles.orgDetail}>
+                    {isActive
+                      ? (lang === "es" ? "Organización activa" : "Active Organization")
+                      : (lang === "es" ? "Toca para cambiar" : "Tap to switch")}
+                  </Text>
                 </View>
                 {isActive ? (
                   <View style={styles.activeCheck}>
@@ -125,7 +168,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
       <View style={styles.separator} />
 
       <View style={styles.items}>
-        {items.map(({ label, icon: Icon }) => (
+        {menuItems.map(({ label, icon: Icon }) => (
           <Pressable key={label} onPress={onClose} style={styles.item}>
             <Icon color="#1f2937" size={22} strokeWidth={2} />
             <Text style={styles.itemLabel}>{label}</Text>
@@ -137,15 +180,19 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
 
       <Pressable onPress={() => setConfirmSignOut(true)} style={styles.item}>
         <LogOut color="#ef334e" size={22} strokeWidth={2} />
-        <Text style={styles.signOut}>Cerrar sesión</Text>
+        <Text style={styles.signOut}>{lang === "es" ? "Cerrar sesión" : "Sign out"}</Text>
       </Pressable>
 
       <MobileConfirmDialog
         visible={confirmSignOut}
-        title="¿Cerrar sesión en LoopDev?"
-        description="¿Estás seguro de que deseas finalizar tu sesión? Tu organización activa y contexto de trabajo se cerrarán."
-        cancelLabel="Cancelar"
-        confirmLabel="Cerrar sesión"
+        title={lang === "es" ? "¿Cerrar sesión en LoopDev?" : "Sign out of LoopDev?"}
+        description={
+          lang === "es"
+            ? "¿Estás seguro de que deseas finalizar tu sesión? Tu organización activa y contexto de trabajo se cerrarán."
+            : "Are you sure you want to end your session? Your active tenant and workspace context will be cleared."
+        }
+        cancelLabel={lang === "es" ? "Cancelar" : "Cancel"}
+        confirmLabel={lang === "es" ? "Cerrar sesión" : "Sign out"}
         destructive
         onCancel={() => setConfirmSignOut(false)}
         onConfirm={handleExecuteSignOut}
@@ -264,6 +311,47 @@ const styles = StyleSheet.create({
   orgArrow: {
     color: "#94a3b8",
     fontSize: 16,
+  },
+  langList: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  langCard: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
+    minHeight: 44,
+  },
+  activeLangCard: {
+    borderColor: "#135bec",
+    backgroundColor: "#eff6ff",
+  },
+  langFlag: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  langName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  activeLangName: {
+    color: "#135bec",
+    fontWeight: "700",
+  },
+  emptyCheck: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#cbd5e1",
   },
   items: { gap: 2 },
   item: {

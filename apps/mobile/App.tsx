@@ -43,7 +43,7 @@ import { MobileConversationScreen } from "./components/communications/MobileConv
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./adapters/auth";
 import type { AuthSession, TenantContextSnapshot } from "../../packages/contracts/src/auth-port";
 import type { MobileNoteDraft } from "./components/MobileNoteEditor";
-import { MobileI18nProvider } from "./i18n";
+import { MobileI18nProvider, useMobileI18n } from "./i18n";
 
 const launchpadPath = loopdevNavigationContract.launchpad.path;
 const morePath = getBottomNavigationItems().find((item) => item.slot === "more")!.path;
@@ -60,6 +60,7 @@ export default function App() {
 }
 
 function AppInner() {
+  const { lang } = useMobileI18n();
   const [currentPath, setCurrentPath] = useState(initialPath);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [actionsSheetOpen, setActionsSheetOpen] = useState(false);
@@ -248,7 +249,7 @@ function AppInner() {
       return <MobileCreateContactScreen editingContact={contact} onCancel={() => navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(editMatch.contactId)))} onUpdated={(updated) => { setContacts((current) => current.map((item) => item.id === updated.id ? updated : item)); void mobileContactAdapter.getCustomer360(updated.id).then(setCustomer360); navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(updated.id))); }} />;
     }
     const duplicateMatch = matchContactRoute(contactNavigationRoutes.duplicates, currentPath);
-    if (duplicateMatch) return <MobileDuplicateReviewScreen contact={duplicateContact ?? contacts.find((item) => item.id === duplicateMatch.contactId)} candidates={duplicateCandidates} onBack={() => navigate(contactNavigationRoutes.list)} onDismiss={(candidate) => Alert.alert("Confirmar descarte", "Esta acción quedará registrada en el historial de auditoría de revisión de duplicados.", [{ text: "Cancelar", style: "cancel" }, { text: "Descartar", onPress: () => { void mobileContactAdapter.dismissDuplicateReview(duplicateMatch.contactId, candidate.id, "DISMISS_DUPLICATE_REVIEW").then(() => mobileContactAdapter.findPotentialDuplicates(duplicateMatch.contactId).then(setDuplicateCandidates)); } }])} />;
+    if (duplicateMatch) return <MobileDuplicateReviewScreen contact={duplicateContact ?? contacts.find((item) => item.id === duplicateMatch.contactId)} candidates={duplicateCandidates} onBack={() => navigate(contactNavigationRoutes.list)} onDismiss={(candidate) => Alert.alert(lang === "es" ? "Confirmar descarte" : "Confirm dismissal", lang === "es" ? "Esta acción quedará registrada en el historial de auditoría de revisión de duplicados." : "This action will be recorded in the duplicate review audit trail.", [{ text: lang === "es" ? "Cancelar" : "Cancel", style: "cancel" }, { text: lang === "es" ? "Descartar" : "Dismiss", onPress: () => { void mobileContactAdapter.dismissDuplicateReview(duplicateMatch.contactId, candidate.id, "DISMISS_DUPLICATE_REVIEW").then(() => mobileContactAdapter.findPotentialDuplicates(duplicateMatch.contactId).then(setDuplicateCandidates)); } }])} />;
     const contactMatch = matchContactRoute(contactNavigationRoutes.detail, currentPath);
     if (contactMatch) {
       const contact = contacts.find((item) => item.id === contactMatch.contactId);
@@ -401,14 +402,25 @@ function AppInner() {
       const action = (["launchpad", "crm", "erp", "conversations"] as const)
         .flatMap((actionContextKey) => getContextualActions(actionContextKey))
         .find((entry) => entry.path === currentPath);
-      return <MobileRouteScreen label={item?.label ?? action?.label ?? "Espacio de trabajo"} path={currentPath} />;
+      return <MobileRouteScreen label={item?.label ?? action?.label ?? (lang === "es" ? "Espacio de trabajo" : "Workspace")} path={currentPath} />;
     }
 
     return (
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.eyebrow}><View style={styles.liveDot} /><Text style={styles.eyebrowText}>ESPACIO DE TRABAJO</Text></View>
-        <Text style={styles.title}>Bienvenido, <Text style={styles.titleAccent}>Admin</Text>{`\n`}selecciona tu contexto de trabajo.</Text>
-        <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>MÓDULOS DISPONIBLES</Text><Text style={styles.sectionCount}>{launchpadSuites.filter((suite) => suite.status === "ready").length} ACTIVOS</Text></View>
+        <View style={styles.eyebrow}><View style={styles.liveDot} /><Text style={styles.eyebrowText}>{lang === "es" ? "ESPACIO DE TRABAJO" : "WORKSPACE LAUNCHER"}</Text></View>
+        <Text style={styles.title}>
+          {lang === "es" ? (
+            <>Bienvenido, <Text style={styles.titleAccent}>Admin</Text>{`\n`}selecciona tu contexto de trabajo.</>
+          ) : (
+            <>Welcome, <Text style={styles.titleAccent}>Admin</Text>{`\n`}select your work context.</>
+          )}
+        </Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>{lang === "es" ? "MÓDULOS DISPONIBLES" : "AVAILABLE SUITES"}</Text>
+          <Text style={styles.sectionCount}>
+            {launchpadSuites.filter((suite) => suite.status === "ready").length} {lang === "es" ? "ACTIVOS" : "ACTIVE"}
+          </Text>
+        </View>
         {launchpadSuites.map((suite) => (
           <MobileSuiteCard
             key={suite.id}
@@ -433,8 +445,8 @@ function AppInner() {
       <MobileAppShell>
         <View style={styles.logoutTransitionContainer}>
           <MobileLogoSpinner size={72} />
-          <Text style={styles.transitionTitle}>Cerrando sesión en LoopDev</Text>
-          <Text style={styles.transitionSubtitle}>Limpiando sesión y contexto de trabajo en caché...</Text>
+          <Text style={styles.transitionTitle}>{lang === "es" ? "Cerrando sesión en LoopDev" : "Signing out of LoopDev"}</Text>
+          <Text style={styles.transitionSubtitle}>{lang === "es" ? "Limpiando sesión y contexto de trabajo en caché..." : "Clearing session and cached workspace context..."}</Text>
         </View>
       </MobileAppShell>
     );
@@ -445,8 +457,8 @@ function AppInner() {
       <MobileAppShell>
         <View style={styles.logoutTransitionContainer}>
           <MobileLogoSpinner size={72} />
-          <Text style={styles.transitionTitle}>Iniciando LoopDev Mobile</Text>
-          <Text style={styles.transitionSubtitle}>Configurando espacio de trabajo y permisos...</Text>
+          <Text style={styles.transitionTitle}>{lang === "es" ? "Iniciando LoopDev Mobile" : "Starting LoopDev Mobile"}</Text>
+          <Text style={styles.transitionSubtitle}>{lang === "es" ? "Configurando espacio de trabajo y permisos..." : "Setting up workspace and permissions..."}</Text>
         </View>
       </MobileAppShell>
     );
@@ -457,8 +469,8 @@ function AppInner() {
       <MobileAppShell>
         <View style={styles.logoutTransitionContainer}>
           <MobileLogoSpinner size={72} />
-          <Text style={styles.transitionTitle}>Cambiando a {switchingOrg.orgName}</Text>
-          <Text style={styles.transitionSubtitle}>Limpiando caché local y recargando inicio...</Text>
+          <Text style={styles.transitionTitle}>{lang === "es" ? `Cambiando a ${switchingOrg.orgName}` : `Switching to ${switchingOrg.orgName}`}</Text>
+          <Text style={styles.transitionSubtitle}>{lang === "es" ? "Limpiando caché local y recargando inicio..." : "Clearing local cache and reloading launchpad..."}</Text>
         </View>
       </MobileAppShell>
     );

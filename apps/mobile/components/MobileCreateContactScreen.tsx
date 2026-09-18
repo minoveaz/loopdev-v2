@@ -24,6 +24,7 @@ import { contactActions } from "../../../packages/contracts/src/contact-actions"
 import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
 import { mobileContactAdapter } from "../adapters/contact";
 import { mobileTheme } from "../theme/tokens";
+import { useMobileI18n } from "../i18n";
 
 export function MobileCreateContactScreen({
   onCancel,
@@ -36,6 +37,7 @@ export function MobileCreateContactScreen({
   editingContact?: ContactRecord | null;
   onUpdated?: (contact: ContactRecord) => void;
 }) {
+  const { lang } = useMobileI18n();
   const form = useMobileForm(
     editingContact
       ? {
@@ -175,8 +177,8 @@ export function MobileCreateContactScreen({
                     : definition.id === "preferredLanguage"
                       ? languages
                       : [
-                          { code: "email", label: "Correo electrónico" },
-                          { code: "phone", label: "Teléfono" },
+                          { code: "email", label: lang === "es" ? "Correo electrónico" : "Email" },
+                          { code: "phone", label: lang === "es" ? "Teléfono" : "Phone" },
                           { code: "whatsapp", label: "WhatsApp" },
                         ]
         }
@@ -214,16 +216,18 @@ export function MobileCreateContactScreen({
           <MobileButton
             variant="ghost"
             size="sm"
-            label="Cancelar"
+            label={lang === "es" ? "Cancelar" : "Cancel"}
             onPress={requestCancel}
           />
           <Text accessibilityRole="header" style={styles.headerTitle}>
-            {editingContact ? "Editar contacto" : "Crear contacto"}
+            {editingContact
+              ? (lang === "es" ? "Editar contacto" : "Edit contact")
+              : (lang === "es" ? "Crear contacto" : "Create contact")}
           </Text>
           <MobileButton
             variant="primary"
             size="sm"
-            label={saving ? "Guardando…" : "Guardar"}
+            label={saving ? (lang === "es" ? "Guardando…" : "Saving…") : (lang === "es" ? "Guardar" : "Save")}
             loading={saving}
             onPress={save}
           />
@@ -246,17 +250,17 @@ export function MobileCreateContactScreen({
           <MobileButton
             variant="outline"
             size="sm"
-            label="Atrás"
+            label={lang === "es" ? "Atrás" : "Back"}
             disabled={activeIndex === 0}
             onPress={() => setActiveSection(contactFormSections[activeIndex - 1].id)}
           />
           <Text style={styles.sectionCount}>
-            {activeIndex + 1} de {contactFormSections.length}
+            {activeIndex + 1} {lang === "es" ? "de" : "of"} {contactFormSections.length}
           </Text>
           <MobileButton
             variant="outline"
             size="sm"
-            label="Siguiente"
+            label={lang === "es" ? "Siguiente" : "Next"}
             disabled={activeIndex === contactFormSections.length - 1}
             onPress={() => setActiveSection(contactFormSections[activeIndex + 1].id)}
           />
@@ -265,10 +269,10 @@ export function MobileCreateContactScreen({
       <MobileConfirmDialog
         visible={discardOpen}
         variant="destructive"
-        title="¿Descartar cambios del contacto?"
-        description="Los datos no guardados del contacto se perderán."
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
+        title={lang === "es" ? "¿Descartar cambios del contacto?" : "Discard contact changes?"}
+        description={lang === "es" ? "Los datos no guardados del contacto se perderán." : "Unsaved contact changes will be lost."}
+        cancelLabel={lang === "es" ? "Seguir editando" : "Keep editing"}
+        confirmLabel={lang === "es" ? "Descartar" : "Discard"}
         onCancel={() => setDiscardOpen(false)}
         onConfirm={() => {
           setDiscardOpen(false);

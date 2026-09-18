@@ -2,6 +2,7 @@ import React from "react";
 import { MoreHorizontal } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { NoteRecord } from "../../../packages/contracts/src/notes";
+import { useMobileI18n, type MobileLangCode } from "../i18n";
 
 type Props = {
   note: NoteRecord;
@@ -9,22 +10,36 @@ type Props = {
   onActions: () => void;
 };
 
-const SPANISH_VISIBILITY: Record<string, string> = {
-  private: "Privada",
-  team: "Equipo",
-  organization: "Organización",
+const VISIBILITY_LABELS: Record<MobileLangCode, Record<string, string>> = {
+  es: {
+    private: "Privada",
+    team: "Equipo",
+    organization: "Organización",
+  },
+  en: {
+    private: "Private",
+    team: "Team",
+    organization: "Organization",
+  },
 };
 
 export function MobileNotesCard({ note, onOpen, onActions }: Props) {
+  const { lang } = useMobileI18n();
   return (
     <View style={styles.card}>
       <View style={styles.top}>
         <Pressable accessibilityRole="button" onPress={onOpen} style={styles.titleButton}>
           <Text style={styles.title} numberOfLines={1}>
-            {note.plainTextPreview.split("\n")[0].slice(0, 48) || "Nota"}
+            {note.plainTextPreview.split("\n")[0].slice(0, 48) || (lang === "es" ? "Nota" : "Note")}
           </Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Acciones de la nota" onPress={onActions} style={styles.action} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={lang === "es" ? "Acciones de la nota" : "Note actions"}
+          onPress={onActions}
+          style={styles.action}
+          hitSlop={8}
+        >
           <MoreHorizontal size={16} color="#64748b" />
         </Pressable>
       </View>
@@ -37,10 +52,10 @@ export function MobileNotesCard({ note, onOpen, onActions }: Props) {
 
       <View style={styles.chips}>
         <View style={styles.relationBadge}>
-          <Text style={styles.relationText}>{note.relations[0]?.label ?? "Relacionado"}</Text>
+          <Text style={styles.relationText}>{note.relations[0]?.label ?? (lang === "es" ? "Relacionado" : "Related")}</Text>
         </View>
         <View style={styles.visibilityBadge}>
-          <Text style={styles.visibilityText}>{SPANISH_VISIBILITY[note.visibility] || note.visibility}</Text>
+          <Text style={styles.visibilityText}>{VISIBILITY_LABELS[lang]?.[note.visibility] || note.visibility}</Text>
         </View>
       </View>
 
@@ -51,13 +66,13 @@ export function MobileNotesCard({ note, onOpen, onActions }: Props) {
           <Text style={styles.avatarText}>{(note.authorName ?? "U").slice(0, 1).toUpperCase()}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.author}>{note.authorName ?? "Tú"}</Text>
+          <Text style={styles.author}>{note.authorName ?? (lang === "es" ? "Tú" : "You")}</Text>
           <Text style={styles.updated}>
-            {note.mode === "rich" ? "Nota enriquecida" : "Nota rápida"} · {new Date(note.updatedAt).toLocaleDateString("es-ES")}
+            {note.mode === "rich" ? (lang === "es" ? "Nota enriquecida" : "Rich note") : (lang === "es" ? "Nota rápida" : "Quick note")} · {new Date(note.updatedAt).toLocaleDateString(lang === "es" ? "es-ES" : "en-US")}
           </Text>
         </View>
         <Pressable onPress={onOpen}>
-          <Text style={styles.open}>Ver</Text>
+          <Text style={styles.open}>{lang === "es" ? "Ver" : "View"}</Text>
         </Pressable>
       </View>
     </View>

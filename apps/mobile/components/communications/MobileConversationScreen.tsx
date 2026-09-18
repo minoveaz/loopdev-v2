@@ -86,6 +86,24 @@ export function MobileConversationScreen({
 
   const flatListRef = useRef<FlatList>(null);
 
+  const messages = conversation?.messages || [];
+  const markers = useMemo(() => buildConversationTimelineMarkers(messages), [messages]);
+
+  const handleJumpToMessage = (messageId: string) => {
+    const index = messages.findIndex((m) => m.id === messageId);
+    if (index >= 0) {
+      flatListRef.current?.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 0.4,
+      });
+      setHighlightedMessageId(messageId);
+      setTimeout(() => {
+        setHighlightedMessageId(null);
+      }, 2500);
+    }
+  };
+
   useEffect(() => {
     if (conversation?.summary.contact?.id) {
       void mobileContactAdapter.getCustomer360(conversation.summary.contact.id).then((c360) => {
@@ -142,26 +160,9 @@ export function MobileConversationScreen({
     );
   }
 
-  const { summary, messages } = conversation;
+  const { summary } = conversation;
   const contactName = customerInfo?.name || summary.contact?.displayName || "Contacto";
   const channelDisplay = summary.channel.toUpperCase();
-
-  const markers = useMemo(() => buildConversationTimelineMarkers(messages), [messages]);
-
-  const handleJumpToMessage = (messageId: string) => {
-    const index = messages.findIndex((m) => m.id === messageId);
-    if (index >= 0) {
-      flatListRef.current?.scrollToIndex({
-        index,
-        animated: true,
-        viewPosition: 0.4,
-      });
-      setHighlightedMessageId(messageId);
-      setTimeout(() => {
-        setHighlightedMessageId(null);
-      }, 2500);
-    }
-  };
 
   const handleSend = async () => {
     const text = messageText.trim();

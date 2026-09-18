@@ -76,6 +76,7 @@ export interface CreateContactInput {
   documentNumber?: string | null;
   birthDate?: string | null;
   gender?: string | null;
+  attributes?: Record<string, unknown>;
 }
 
 export type UpdateContactPatch = Partial<Omit<CreateContactInput, "organizationId">> & {

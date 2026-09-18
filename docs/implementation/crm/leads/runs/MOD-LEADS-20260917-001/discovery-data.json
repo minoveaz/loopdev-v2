@@ -1,0 +1,32 @@
+{
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md",
+    "docs/06-product/crm/leads/CRM_LEADS_UI_CONTRACT.md",
+    "docs/06-product/crm/leads/CRM_LEADS_UX_SPEC.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/leads/discovery.md",
+    "docs/implementation/crm/leads/platform-scope.md"
+  ],
+  "decisions": [
+    {
+      "id": "DISC-LEADS-001",
+      "status": "confirmed",
+      "summary": "Adopt dual-mode table/kanban switcher on desktop and 1-tap speed dial on mobile"
+    }
+  ],
+  "actions": [
+    "Executed discovery and benchmark against Attio, HubSpot, Folk, and Close",
+    "Defined platform scope for desktop web, mobile web, iOS and Android"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed (5 ledgers checked)"
+    }
+  ],
+  "requirements": ["LEADS-REQ-LIST", "LEADS-REQ-PREVIEW", "LEADS-REQ-SPEED-DIAL", "LEADS-REQ-QUALIFICATION", "LEADS-REQ-CONVERT"],
+  "evidence": ["docs/implementation/crm/leads/discovery.md"],
+  "next_handoff": "module-design"
+}

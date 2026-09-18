@@ -1,0 +1,29 @@
+{
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/implementation/crm/leads/architecture-design.md",
+    "docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/leads/architecture-design.md"
+  ],
+  "decisions": [
+    {
+      "id": "API-LEADS-001",
+      "status": "confirmed",
+      "summary": "CRMLead port interface and mutation operations"
+    }
+  ],
+  "actions": [
+    "Defined API contract types for listAllLeads, getLead, createLead, updateLead, and convertLeadToOpportunity"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed (5 ledgers checked)"
+    }
+  ],
+  "requirements": ["LEADS-REQ-LIST", "LEADS-REQ-QUALIFICATION", "LEADS-REQ-CONVERT"],
+  "evidence": ["docs/implementation/crm/leads/architecture-design.md"],
+  "next_handoff": "sync-design"
+}

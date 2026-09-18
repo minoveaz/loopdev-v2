@@ -91,6 +91,7 @@ export interface CreateTaskInput {
   suite?: PlatformSuiteKey;
   title: string;
   description?: string | null;
+  status?: TaskStatus;
   priority?: TaskPriority;
   assignedUserId?: string | null;
   assignedUser?: {

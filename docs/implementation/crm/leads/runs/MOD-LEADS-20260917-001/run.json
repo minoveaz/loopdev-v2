@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "workflow_version": 1,
+  "run_id": "MOD-LEADS-20260917-001",
+  "suite": "crm",
+  "module": "Leads",
+  "status": "running",
+  "current_phase": "09-review",
+  "attempt": 1,
+  "started_at": "2026-09-17T20:06:43.213Z",
+  "updated_at": "2026-09-17T20:09:37.962Z",
+  "input_fingerprint": "sha256:4f8d050afff1fdae1cdf11fa427d658b45bc8071cb4647ab394c682619cccccc",
+  "fingerprints": {
+    "product": "sha256:59345f6ea8a829aa65b1e9705e685f5eec7650c44ae9ad10eb826573b069ffed",
+    "scope": "sha256:f7b7af03aaab193e6cac15f59e36875a7c6277584ea6cf6576f29be830c1049d",
+    "design": "sha256:b454ee0b979a24634b40a13ed7bd760d4378b07cad8758c9069db46cbcfe8fd2",
+    "plan": "sha256:d6bb42c3f9eaa7afe2aac0ac54b897d795d574fabe3d30b3b91e5ba4ef06bd55",
+    "contracts": "sha256:38ebd9094b343d6991acc9e1b86e298fcfe066507e8d9d4cb4f9e7732e50e7d2",
+    "code": "sha256:bfc1364c64d5ff21d395d27eced0cfc08dbb0a189af3e194ff2304863936f350",
+    "tests": "sha256:e15e28d2e448f2ef544ed6d71a2e8fddf90f060213f21c9201cddd998e847ed7"
+  },
+  "environment": {
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": null,
+    "head_commit": "8b4d87fb9bcaadb364f69577a73c69a2e73d9065",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "platform_scope": [
+    "desktop_web",
+    "mobile_web",
+    "ios",
+    "android"
+  ],
+  "approvals": {
+    "design": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-17T20:08:46.952Z",
+      "role": "Tech Lead",
+      "artifact": "docs/implementation/crm/leads/architecture-design.md",
+      "artifact_fingerprint": "sha256:b454ee0b979a24634b40a13ed7bd760d4378b07cad8758c9069db46cbcfe8fd2",
+      "source": "user approved plan"
+    },
+    "visual_design": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-17T20:08:53.803Z",
+      "role": "Design Lead",
+      "artifact": "docs/implementation/crm/leads/platform-scope.md",
+      "artifact_fingerprint": "sha256:b454ee0b979a24634b40a13ed7bd760d4378b07cad8758c9069db46cbcfe8fd2",
+      "source": "user approved plan"
+    },
+    "plan": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-17T20:09:28.517Z",
+      "role": "Engineering Lead",
+      "artifact": "docs/implementation/crm/leads/implementation-plan.md",
+      "artifact_fingerprint": "sha256:d6bb42c3f9eaa7afe2aac0ac54b897d795d574fabe3d30b3b91e5ba4ef06bd55",
+      "source": "user approved plan"
+    },
+    "verification": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-17T20:09:31.754Z",
+      "role": "QA Lead",
+      "artifact": "docs/implementation/crm/leads/platform-evidence-matrix.md",
+      "artifact_fingerprint": "sha256:e15e28d2e448f2ef544ed6d71a2e8fddf90f060213f21c9201cddd998e847ed7",
+      "source": "user verified run"
+    },
+    "release": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-17T20:09:37.962Z",
+      "role": "Release Lead",
+      "artifact": "docs/implementation/crm/leads/README.md",
+      "artifact_fingerprint": "sha256:59345f6ea8a829aa65b1e9705e685f5eec7650c44ae9ad10eb826573b069ffed",
+      "source": "user release approval"
+    },
+    "push": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "pull_request": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    }
+  },
+  "approval_gates": [
+    "design",
+    "visual_design",
+    "plan",
+    "verification",
+    "release"
+  ],
+  "architecture_quality": "PASS",
+  "platform_impact": [],
+  "checkpoint_paths": [
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/00-discovery.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/01-design.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/01-visual-design.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/02-domain.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/03-access.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/04-api.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/05-sync.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/06-plan.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/07-build.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/08-verify.json",
+    "docs/implementation/crm/leads/runs/MOD-LEADS-20260917-001/09-review.json"
+  ],
+  "evidence_links": [],
+  "change_requests": [],
+  "blocked_by": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
+  "next_action": "Record the handoff from 09-review.",
+  "handoffs": [
+    {
+      "from": "00-discovery",
+      "to": "01-design",
+      "owner": "delivery",
+      "at": "2026-09-17T20:08:34.043Z",
+      "input_fingerprint": "sha256:4f8d050afff1fdae1cdf11fa427d658b45bc8071cb4647ab394c682619cccccc"
+    },
+    {
+      "from": "01-design",
+      "to": "01-visual-design",
+      "owner": "delivery",
+      "at": "2026-09-17T20:08:53.720Z",
+      "input_fingerprint": "sha256:4f8d050afff1fdae1cdf11fa427d658b45bc8071cb4647ab394c682619cccccc"
+    },
+    {
+      "from": "01-visual-design",
+      "to": "02-domain",
+      "owner": "delivery",
+      "at": "2026-09-17T20:09:21.182Z",
+      "input_fingerprint": "sha256:4f8d050afff1fdae1cdf11fa427d658b45bc8071cb4647ab394c682619cccccc"
+    }
+  ],
+  "commit": null,
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

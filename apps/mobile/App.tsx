@@ -31,6 +31,9 @@ import { MobileForgotPasswordScreen } from "./components/MobileForgotPasswordScr
 import { MobileLogoSpinner } from "./components/MobileLogoSpinner";
 import { MobileTasksScreen } from "./components/MobileTasksScreen";
 import { MobileDocumentIntelligenceScreen } from "./components/MobileDocumentIntelligenceScreen";
+import { MobileLeadsScreen } from "./components/MobileLeadsScreen";
+import { MobileLeadDetailScreen } from "./components/MobileLeadDetailScreen";
+import { MobileCreateLeadScreen } from "./components/MobileCreateLeadScreen";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./adapters/auth";
 import type { AuthSession, TenantContextSnapshot } from "../../packages/contracts/src/auth-port";
 import type { MobileNoteDraft } from "./components/MobileNoteEditor";
@@ -246,6 +249,39 @@ export default function App() {
       return (
         <MobileDocumentIntelligenceScreen
           onBack={() => navigate(launchpadPath)}
+          onNavigateToContact={(contactId) => {
+            navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
+          }}
+        />
+      );
+    }
+    if (currentPath === "/app/sales-crm/leads") {
+      return (
+        <MobileLeadsScreen
+          onViewLead={(lead) => navigate(`/app/sales-crm/leads/${lead.id}`)}
+          onCreateLead={() => navigate("/app/sales-crm/leads/new")}
+          onNavigateToContact={(contactId) => {
+            navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
+          }}
+        />
+      );
+    }
+    if (currentPath === "/app/sales-crm/leads/new") {
+      return (
+        <MobileCreateLeadScreen
+          onCancel={() => navigate("/app/sales-crm/leads")}
+          onCreated={(lead) => {
+            navigate(`/app/sales-crm/leads/${lead.id}`);
+          }}
+        />
+      );
+    }
+    if (currentPath.startsWith("/app/sales-crm/leads/")) {
+      const leadId = currentPath.replace("/app/sales-crm/leads/", "");
+      return (
+        <MobileLeadDetailScreen
+          leadId={leadId}
+          onBack={() => navigate("/app/sales-crm/leads")}
           onNavigateToContact={(contactId) => {
             navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
           }}

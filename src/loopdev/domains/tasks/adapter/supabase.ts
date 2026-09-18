@@ -24,10 +24,10 @@ export interface SupabaseTasksAdapterOptions {
 const isUUID = (str?: string | null): boolean =>
   typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
-function getStoredSession(): AuthSession | null {
+function getStoredSession(): any {
   if (typeof window === "undefined") return null;
   return (
-    storage.get<AuthSession | null>(STORAGE_KEYS.session, null) ||
+    storage.get<any>(STORAGE_KEYS.session, null) ||
     (() => {
       try {
         const raw = window.localStorage.getItem("loopdev:auth-session");

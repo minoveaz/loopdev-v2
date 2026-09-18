@@ -105,6 +105,7 @@ export interface CRMUpdateContactPatch {
   documentNumber?: string | null;
   birthDate?: string | null;
   gender?: string | null;
+  attributes?: Record<string, unknown>;
 }
 
 export type CRMContactMutationResult =

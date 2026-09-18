@@ -277,7 +277,7 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
   );
 
   const quickReschedule = useCallback(
-    async (taskId: string, dueAt: string | Date) => {
+    async (taskId: string, dueAt: string | Date, expectedVersion?: number) => {
       const dateStr = typeof dueAt === "string" ? dueAt : dueAt.toISOString();
       const updated = tasks.map((t) => {
         if (t.id !== taskId) return t;
@@ -285,7 +285,7 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
           ...t,
           dueAt: dateStr,
           updatedAt: new Date().toISOString(),
-          version: t.version + 1,
+          version: (expectedVersion ?? t.version) + 1,
         };
       });
       persistTasks(updated);
@@ -318,10 +318,49 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
     [persistTasks, tasks],
   );
 
+  const addChecklistItem = useCallback(
+    async (taskId: string, title: string) => {
+      const updated = tasks.map((t) => {
+        if (t.id !== taskId) return t;
+        const newItem = {
+          id: `chk-${Date.now()}`,
+          title: title.trim(),
+          completed: false,
+          completedAt: null,
+        };
+        return {
+          ...t,
+          checklist: [...(t.checklist || []), newItem],
+          updatedAt: new Date().toISOString(),
+          version: t.version + 1,
+        };
+      });
+      persistTasks(updated);
+    },
+    [persistTasks, tasks],
+  );
+
+  const deleteChecklistItem = useCallback(
+    async (taskId: string, itemId: string) => {
+      const updated = tasks.map((t) => {
+        if (t.id !== taskId) return t;
+        return {
+          ...t,
+          checklist: (t.checklist || []).filter((i) => i.id !== itemId),
+          updatedAt: new Date().toISOString(),
+          version: t.version + 1,
+        };
+      });
+      persistTasks(updated);
+    },
+    [persistTasks, tasks],
+  );
+
   const deleteTask = useCallback(
     async (taskId: string) => {
       const updated = tasks.filter((t) => t.id !== taskId);
       persistTasks(updated);
+      return true;
     },
     [persistTasks, tasks],
   );
@@ -336,6 +375,8 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
     reopenTask,
     quickReschedule,
     toggleChecklistItem,
+    addChecklistItem,
+    deleteChecklistItem,
     deleteTask,
     refresh: async () => {},
   };

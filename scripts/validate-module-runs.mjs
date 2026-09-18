@@ -191,6 +191,7 @@ function validateManifest(file) {
     if (!approval || !["pending", "approved", "rejected"].includes(approval.status)) addError(file, `approval "${gate}" has invalid status`);
     if (approval.status === "approved" && (!approval.approved_by || !approval.approved_at)) addError(file, `approved "${gate}" requires approved_by and approved_at`);
   }
+  const workspace = dirname(dirname(dirname(file)));
   if (manifest.schema_version === 1) {
     for (const field of ["workflow_version", "suite", "platform_scope", "fingerprints", "handoffs"]) {
       if (!(field in manifest)) addError(file, `schema v1 manifest is missing "${field}"`);
@@ -204,7 +205,6 @@ function validateManifest(file) {
     }
   }
 
-  const workspace = dirname(dirname(dirname(file)));
   for (const requiredFile of workflow.required_workspace_files) {
     if (!existsSync(join(workspace, requiredFile))) addError(file, `workspace is missing required file "${requiredFile}"`);
   }

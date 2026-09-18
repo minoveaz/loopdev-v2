@@ -93,15 +93,16 @@ async function getHeaders(): Promise<HeadersInit> {
 }
 
 export function createMobileContactAdapter(): ContactPort {
-  const fallbackOrgId = "80fce911-57c5-4a83-809f-78df6a3736f7";
+  const fallbackOrgId = "local-development-organization";
   const localFallback = createLocalContactAdapter({ organizationId: fallbackOrgId });
 
   return {
     async listContacts(params: ContactListParams): Promise<ContactPage> {
-      const activeOrgId =
-        params.organizationId && isUUID(params.organizationId)
-          ? params.organizationId
-          : mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || fallbackOrgId;
+      if (!params.organizationId || !isUUID(params.organizationId)) {
+        return localFallback.listContacts(params);
+      }
+
+      const activeOrgId = params.organizationId;
 
       try {
         const queryParams = new URLSearchParams();
@@ -189,11 +190,12 @@ export function createMobileContactAdapter(): ContactPort {
       const validation = validateContactMutationInput(input);
       if (validation) return validation;
 
+      if (!input.organizationId || !isUUID(input.organizationId)) {
+        return localFallback.createContact(input);
+      }
+
       try {
-        const orgId =
-          input.organizationId && isUUID(input.organizationId)
-            ? input.organizationId
-            : mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "80fce911-57c5-4a83-809f-78df6a3736f7";
+        const orgId = input.organizationId;
 
         const payload: Record<string, any> = {
           organization_id: orgId,
@@ -241,7 +243,11 @@ export function createMobileContactAdapter(): ContactPort {
       }
     },
 
-    async updateContact(contactId: string, patch: UpdateContactPatch, _expectedUpdatedAt: string): Promise<ContactMutationResult> {
+    async updateContact(contactId: string, patch: UpdateContactPatch, expectedUpdatedAt: string): Promise<ContactMutationResult> {
+      if (!patch.organizationId || !isUUID(patch.organizationId) || contactId.startsWith("c") || contactId.startsWith("local_")) {
+        return localFallback.updateContact(contactId, patch, expectedUpdatedAt);
+      }
+
       try {
         const payload: Record<string, any> = {
           updated_at: new Date().toISOString(),
@@ -278,17 +284,21 @@ export function createMobileContactAdapter(): ContactPort {
         });
 
         if (!resp.ok) {
-          return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
+          return localFallback.updateContact(contactId, patch, expectedUpdatedAt);
         }
 
         const rows = await resp.json();
         return { status: "success", contact: mapRowToContact(rows[0] || { id: contactId, ...payload }) };
       } catch (err) {
-        return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
+        return localFallback.updateContact(contactId, patch, expectedUpdatedAt);
       }
     },
 
-    async archiveContact(contactId: string, _expectedUpdatedAt: string): Promise<ContactMutationResult> {
+    async archiveContact(contactId: string, expectedUpdatedAt: string): Promise<ContactMutationResult> {
+      if (contactId.startsWith("c") || contactId.startsWith("local_") || !isUUID(contactId)) {
+        return localFallback.archiveContact(contactId, expectedUpdatedAt);
+      }
+
       try {
         const headers = await getHeaders();
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}`, {
@@ -297,7 +307,7 @@ export function createMobileContactAdapter(): ContactPort {
         });
 
         if (!resp.ok) {
-          return localFallback.archiveContact(contactId, _expectedUpdatedAt);
+          return localFallback.archiveContact(contactId, expectedUpdatedAt);
         }
 
         return {
@@ -336,7 +346,7 @@ export function createMobileContactAdapter(): ContactPort {
           },
         };
       } catch (err) {
-        return localFallback.archiveContact(contactId, _expectedUpdatedAt);
+        return localFallback.archiveContact(contactId, expectedUpdatedAt);
       }
     },
 

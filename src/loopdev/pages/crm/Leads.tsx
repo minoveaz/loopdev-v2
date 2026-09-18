@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
+import React, { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import {
-  AlertTriangle, CalendarClock,
-  MoreHorizontal, Plus, RefreshCw, SearchX, UserRound,
+  AlertTriangle, CalendarClock, Columns3, Flame, LayoutList,
+  MoreHorizontal, Plus, RefreshCw, SearchX, UserRound, Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,6 +10,8 @@ import {
 } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
 import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
+import { LeadKanbanBoard } from "@/loopdev/components/crm/LeadKanbanBoard";
+import { LeadQuickPreviewDrawer } from "@/loopdev/components/crm/LeadQuickPreviewDrawer";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -62,6 +64,8 @@ export default function SalesCRMLeads() {
   const { contacts } = useCrmContacts();
   const { opportunities, reload: reloadOpportunities } = useCrmPipeline();
   const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
+  const [previewLead, setPreviewLead] = useState<CRMLead | null>(null);
   const [statuses, setStatuses] = useState<CRMLeadStatusCode[]>([]);
   const [source, setSource] = useState<string[]>([]);
   const [owners, setOwners] = useState<string[]>([]);
@@ -112,9 +116,12 @@ export default function SalesCRMLeads() {
   }, [contactById, leads, noRecentActivity, opportunityCountByLeadOrContact, opportunityFilter, owners, search, source, statuses]);
   const allVisibleSelected = filtered.length > 0 && filtered.every((lead) => selectedIds.includes(lead.id));
   const hasFilters = Boolean(search || statuses.length || source.length || owners.length || opportunityFilter !== "all" || noRecentActivity);
-  const openLead = (leadId: string, trigger: HTMLElement) => {
-    leadRestoreFocusRef.current = trigger;
-    navigate(`/app/sales-crm/leads/${encodeURIComponent(leadId)}`);
+  const openLead = (leadId: string, trigger?: HTMLElement) => {
+    if (trigger) leadRestoreFocusRef.current = trigger;
+    const target = leads.find((l) => l.id === leadId);
+    if (target) {
+      setPreviewLead(target);
+    }
   };
 
   const selectView = (key: ViewKey) => {
@@ -235,6 +242,34 @@ export default function SalesCRMLeads() {
         >
           <CalendarClock className="mr-1.5 h-3.5 w-3.5" />No recent activity
         </Button>
+
+        {/* View Switcher: Table vs Kanban */}
+        <div className="ms-auto flex items-center rounded-lg border border-border bg-muted/40 p-0.5">
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+              viewMode === "table"
+                ? "bg-card text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <LayoutList className="h-3.5 w-3.5" />
+            Table
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("kanban")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+              viewMode === "kanban"
+                ? "bg-card text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Columns3 className="h-3.5 w-3.5" />
+            Kanban
+          </button>
+        </div>
       </div>
 
       {selectedIds.length > 0 && (
@@ -258,24 +293,57 @@ export default function SalesCRMLeads() {
           emptyDescription={hasFilters ? "Try changing the search or filters." : "Leads will appear here when they are added to your workspace."}
         >
           {!loading && !error && filtered.length ? (
-            <>
-              <div className="hidden overflow-x-auto lg:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-10"><Checkbox checked={allVisibleSelected ? true : selectedIds.length > 0 ? "indeterminate" : false} onCheckedChange={(checked) => selectAllVisible(checked === true)} aria-label="Select all visible leads" /></TableHead>
-                      <TableHead>Contact</TableHead><TableHead>Status</TableHead><TableHead>Source</TableHead>
-                      <TableHead>Interest / Product</TableHead><TableHead>Owner</TableHead><TableHead>Score</TableHead>
-                      <TableHead>Last activity</TableHead><TableHead>Next activity</TableHead><TableHead>Opportunity</TableHead><TableHead className="w-10"><span className="sr-only">Actions</span></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>{filtered.map((lead) => (
-                    <LeadTableRow
+            viewMode === "kanban" ? (
+              <div className="p-3">
+                <LeadKanbanBoard
+                  leads={filtered}
+                  contacts={contacts}
+                  onSelectLead={(lead) => setPreviewLead(lead)}
+                  onUpdateStatus={(lead, status) => void runUpdate(lead, { status })}
+                  onCreateLead={() => setCreateLeadOpen(true)}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="hidden overflow-x-auto lg:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10"><Checkbox checked={allVisibleSelected ? true : selectedIds.length > 0 ? "indeterminate" : false} onCheckedChange={(checked) => selectAllVisible(checked === true)} aria-label="Select all visible leads" /></TableHead>
+                        <TableHead>Contact</TableHead><TableHead>Status</TableHead><TableHead>Source</TableHead>
+                        <TableHead>Interest / Product</TableHead><TableHead>Owner</TableHead><TableHead>Score</TableHead>
+                        <TableHead>Last activity</TableHead><TableHead>Next activity</TableHead><TableHead>Opportunity</TableHead><TableHead className="w-10"><span className="sr-only">Actions</span></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>{filtered.map((lead) => (
+                      <LeadTableRow
+                        key={lead.id}
+                        lead={lead}
+                        contact={contactById.get(lead.contactId)}
+                        opportunityCount={opportunityCountByLeadOrContact.get(lead.id) ?? opportunityCountByLeadOrContact.get(`contact:${lead.contactId}`) ?? 0}
+                        selected={previewLead?.id === lead.id}
+                        checked={selectedIds.includes(lead.id)}
+                        onSelect={(checked) => toggleSelected(lead.id, checked)}
+                        onOpen={(trigger) => openLead(lead.id, trigger)}
+                        onStatus={(status) => void runUpdate(lead, { status })}
+                        onAssign={() => void runUpdate(lead, { assignedUserId: CURRENT_USER_ID, ownerName: CURRENT_USER_NAME })}
+                        onConvert={() => openConversion(lead)}
+                      />
+                    ))}</TableBody>
+                  </Table>
+                </div>
+                <div className="space-y-3 p-3 lg:hidden">
+                  <div className="flex items-center gap-2 border-b border-border px-1 pb-2 text-sm">
+                    <Checkbox checked={allVisibleSelected} onCheckedChange={(checked) => selectAllVisible(checked === true)} aria-label="Select all visible leads" />
+                    <span className="text-muted-foreground">Select all visible ({filtered.length})</span>
+                  </div>
+                  {filtered.map((lead) => (
+                    <LeadMobileCard
                       key={lead.id}
                       lead={lead}
                       contact={contactById.get(lead.contactId)}
                       opportunityCount={opportunityCountByLeadOrContact.get(lead.id) ?? opportunityCountByLeadOrContact.get(`contact:${lead.contactId}`) ?? 0}
-                      selected={false}
+                      selected={previewLead?.id === lead.id}
                       checked={selectedIds.includes(lead.id)}
                       onSelect={(checked) => toggleSelected(lead.id, checked)}
                       onOpen={(trigger) => openLead(lead.id, trigger)}
@@ -283,34 +351,28 @@ export default function SalesCRMLeads() {
                       onAssign={() => void runUpdate(lead, { assignedUserId: CURRENT_USER_ID, ownerName: CURRENT_USER_NAME })}
                       onConvert={() => openConversion(lead)}
                     />
-                  ))}</TableBody>
-                </Table>
-              </div>
-              <div className="space-y-3 p-3 lg:hidden">
-                <div className="flex items-center gap-2 border-b border-border px-1 pb-2 text-sm">
-                  <Checkbox checked={allVisibleSelected} onCheckedChange={(checked) => selectAllVisible(checked === true)} aria-label="Select all visible leads" />
-                  <span className="text-muted-foreground">Select all visible ({filtered.length})</span>
+                  ))}
                 </div>
-                {filtered.map((lead) => (
-                  <LeadMobileCard
-                    key={lead.id}
-                    lead={lead}
-                    contact={contactById.get(lead.contactId)}
-                    opportunityCount={opportunityCountByLeadOrContact.get(lead.id) ?? opportunityCountByLeadOrContact.get(`contact:${lead.contactId}`) ?? 0}
-                    selected={false}
-                    checked={selectedIds.includes(lead.id)}
-                    onSelect={(checked) => toggleSelected(lead.id, checked)}
-                    onOpen={(trigger) => openLead(lead.id, trigger)}
-                    onStatus={(status) => void runUpdate(lead, { status })}
-                    onAssign={() => void runUpdate(lead, { assignedUserId: CURRENT_USER_ID, ownerName: CURRENT_USER_NAME })}
-                    onConvert={() => openConversion(lead)}
-                  />
-                ))}
-              </div>
-            </>
+              </>
+            )
           ) : null}
         </DataCard>
       </div>
+
+      {/* Quick Preview Slide-over Drawer */}
+      <LeadQuickPreviewDrawer
+        open={Boolean(previewLead)}
+        lead={previewLead}
+        contact={previewLead ? contactById.get(previewLead.contactId) ?? null : null}
+        onClose={() => setPreviewLead(null)}
+        onUpdateStatus={(lead, status) => {
+          void runUpdate(lead, { status });
+          setPreviewLead((curr) => curr ? { ...curr, status } : null);
+        }}
+        onConvert={(lead) => {
+          openConversion(lead);
+        }}
+      />
       <AppDrawer
         open={Boolean(conversionLead)}
         onOpenChange={(open) => { if (!open) closeConversion(); }}
@@ -408,6 +470,10 @@ export default function SalesCRMLeads() {
 
 function LeadTableRow({ lead, contact, opportunityCount, selected, checked, onSelect, onOpen, onStatus, onAssign, onConvert }: LeadActionProps) {
   const name = contact ? contactName(contact) : "Unknown contact";
+  const score = lead.score ?? 50;
+  const isHot = score >= 75;
+  const isWarm = score >= 50 && score < 75;
+
   return (
     <TableRow
       className={`cursor-pointer ${selected ? "bg-primary/5" : ""}`}
@@ -427,7 +493,23 @@ function LeadTableRow({ lead, contact, opportunityCount, selected, checked, onSe
       <TableCell className="text-sm text-muted-foreground">{lead.source || "—"}</TableCell>
       <TableCell className="text-sm">{lead.interest || "—"}</TableCell>
       <TableCell className="text-sm">{lead.ownerName || "Unassigned"}</TableCell>
-      <TableCell className="text-sm font-medium">{lead.score ?? "—"}</TableCell>
+      <TableCell className="text-sm font-medium">
+        <div className="flex items-center gap-1.5">
+          {isHot ? (
+            <span className="inline-flex items-center gap-1 rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-xs font-bold text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-300">
+              <Flame className="h-3 w-3" />
+              {score}
+            </span>
+          ) : isWarm ? (
+            <span className="inline-flex items-center gap-1 rounded-md border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-xs font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300">
+              <Zap className="h-3 w-3" />
+              {score}
+            </span>
+          ) : (
+            <span className="text-muted-foreground">{lead.score ?? "—"}</span>
+          )}
+        </div>
+      </TableCell>
       <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{lead.lastActivityAt ? formatDate(lead.lastActivityAt) : <span className="text-warning">None</span>}</TableCell>
       <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{lead.nextActivityAt ? formatDate(lead.nextActivityAt) : "—"}</TableCell>
       <TableCell>{opportunityCount ? <StatusBadge tone="success">{opportunityCount} linked</StatusBadge> : lead.duplicateReviewId ? <StatusBadge tone="warning">Duplicate review</StatusBadge> : <span className="text-sm text-muted-foreground">—</span>}</TableCell>
@@ -438,6 +520,10 @@ function LeadTableRow({ lead, contact, opportunityCount, selected, checked, onSe
 
 function LeadMobileCard({ lead, contact, opportunityCount, selected, checked, onSelect, onOpen, onStatus, onAssign, onConvert }: LeadActionProps) {
   const name = contact ? contactName(contact) : "Unknown contact";
+  const score = lead.score ?? 50;
+  const isHot = score >= 75;
+  const isWarm = score >= 50 && score < 75;
+
   return (
     <article
       className={`surface-card-interactive p-4 ${selected ? "ring-1 ring-primary" : ""}`}
@@ -458,7 +544,22 @@ function LeadMobileCard({ lead, contact, opportunityCount, selected, checked, on
         </div>
         <LeadActions lead={lead} onStatus={onStatus} onAssign={onAssign} onConvert={onConvert} />
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2"><StatusBadge tone={STATUS_TONES[lead.status]}>{STATUS_LABELS[lead.status]}</StatusBadge><span className="rounded-full bg-card-muted px-2 py-1 text-[11px] text-muted-foreground">{lead.source || "Unknown source"}</span>{opportunityCount > 0 && <StatusBadge tone="success">{opportunityCount} opportunity</StatusBadge>}</div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <StatusBadge tone={STATUS_TONES[lead.status]}>{STATUS_LABELS[lead.status]}</StatusBadge>
+        {isHot ? (
+          <span className="inline-flex items-center gap-1 rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-xs font-bold text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-300">
+            <Flame className="h-3 w-3" />
+            Hot ({score})
+          </span>
+        ) : isWarm ? (
+          <span className="inline-flex items-center gap-1 rounded-md border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-xs font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300">
+            <Zap className="h-3 w-3" />
+            Warm ({score})
+          </span>
+        ) : null}
+        <span className="rounded-full bg-card-muted px-2 py-1 text-[11px] text-muted-foreground">{lead.source || "Unknown source"}</span>
+        {opportunityCount > 0 && <StatusBadge tone="success">{opportunityCount} opportunity</StatusBadge>}
+      </div>
       <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-xs">
         <div><dt className="text-muted-foreground">Interest</dt><dd className="truncate font-medium">{lead.interest || "—"}</dd></div>
         <div><dt className="text-muted-foreground">Owner</dt><dd className="truncate font-medium">{lead.ownerName || "Unassigned"}</dd></div>

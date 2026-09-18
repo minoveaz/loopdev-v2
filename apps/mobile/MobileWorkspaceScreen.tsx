@@ -1,5 +1,5 @@
 import { CheckSquare, ChevronRight, FileSearch, MessageCircle, Scan, TrendingUp, Users } from "lucide-react-native";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SuiteIllustration } from "./components/SuiteIllustration";
 import { MobileBackLink } from "./components/ui/MobileBackLink";
 import { mobileTheme } from "./theme/tokens";

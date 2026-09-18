@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -96,11 +97,18 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: mobileTheme.radii.sheet,
     borderTopRightRadius: mobileTheme.radii.sheet,
     paddingTop: 10,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    ...Platform.select({
+      web: {
+        boxShadow: "0 -2px 8px rgba(0, 0, 0, 0.1)",
+      },
+      default: {
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 8,
+      },
+    }),
   },
   handleWrap: {
     alignItems: "center",

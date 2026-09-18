@@ -2,26 +2,30 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import {
   ArrowLeft,
-  Building2,
-  Check,
   ChevronDown,
-  DollarSign,
   Sparkles,
   User,
-  X,
 } from "lucide-react-native";
 import { mobileCrmAdapter, type CRMLead } from "../adapters/crm";
 import { mobileContactAdapter } from "../adapters/contact";
 import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
 import { useT } from "../i18n";
+import {
+  MobilePageContainer,
+  MobileCard,
+  MobileButton,
+  MobileInput,
+  MobileTextArea,
+  MobileSelectSheet,
+  MobilePageTabs,
+} from "./ui";
+import { mobileTheme } from "../theme/tokens";
 
 interface Props {
   onCancel: () => void;
@@ -40,6 +44,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string>("");
   const [contactPickerOpen, setContactPickerOpen] = useState(false);
+  const [ownerPickerOpen, setOwnerPickerOpen] = useState(false);
 
   const [interest, setInterest] = useState("");
   const [source, setSource] = useState("Website");
@@ -57,12 +62,12 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
         limit: 100,
       })
       .then((res) => {
-      const list = res.items || [];
-      setContacts(list);
-      if (list.length > 0) {
-        setSelectedContactId(list[0].id);
-      }
-    });
+        const list = res.items || [];
+        setContacts(list);
+        if (list.length > 0) {
+          setSelectedContactId(list[0].id);
+        }
+      });
   }, []);
 
   const selectedContact = contacts.find((c) => c.id === selectedContactId);
@@ -103,271 +108,232 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
     }
   };
 
+  const contactOptions = contacts.map((c) => ({
+    id: c.id,
+    label: [c.firstName, c.lastName].filter(Boolean).join(" ") || "Sin nombre",
+    description: c.companyName || c.email || undefined,
+  }));
+
+  const ownerOptions = OWNERS.map((o) => ({
+    id: o.id,
+    label: o.name,
+    description: "Gestor Comercial",
+  }));
+
+  const sourceTabs = SOURCES.map((s) => ({
+    id: s,
+    label: s,
+  }));
+
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <MobilePageContainer>
+      {/* Top Header Bar */}
       <View style={styles.header}>
-        <Pressable hitSlop={8} onPress={onCancel} style={styles.backButton}>
-          <ArrowLeft size={18} color="#0f172a" />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Cancelar creación de lead"
+          onPress={onCancel}
+          style={styles.backButton}
+        >
+          <ArrowLeft size={18} color={mobileTheme.colors.primary} />
+          <Text style={styles.backButtonText}>Cancelar</Text>
         </Pressable>
         <Text style={styles.headerTitle}>{t("crm.leads.newLead")}</Text>
-        <Pressable
-          style={[styles.saveHeaderBtn, saving && { opacity: 0.6 }]}
-          disabled={saving}
+        <MobileButton
+          variant="primary"
+          size="sm"
+          label={t("common.save")}
+          loading={saving}
           onPress={handleSave}
-        >
-          <Check size={16} color="#ffffff" strokeWidth={2.5} />
-          <Text style={styles.saveHeaderBtnText}>{t("common.save")}</Text>
-        </Pressable>
+        />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Contact Selector Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeading}>{t("crm.leads.selectContact")}</Text>
-
-          <Pressable
-            style={styles.contactSelectorTrigger}
-            onPress={() => setContactPickerOpen(!contactPickerOpen)}
-          >
-            <View style={styles.contactSelectorRow}>
-              <View style={styles.contactAvatarSmall}>
-                <User size={14} color="#135bec" />
-              </View>
-              <View style={styles.contactSelectorCopy}>
-                <Text style={styles.contactSelectedName}>
-                  {selectedContact
-                    ? [selectedContact.firstName, selectedContact.lastName].filter(Boolean).join(" ")
-                    : t("crm.leads.pickContact")}
-                </Text>
-                {selectedContact?.companyName && (
-                  <Text style={styles.contactSelectedSub}>{selectedContact.companyName}</Text>
-                )}
-              </View>
-            </View>
-            <ChevronDown size={16} color="#64748b" />
-          </Pressable>
-
-          {/* Contact Picker List Dropdown */}
-          {contactPickerOpen && (
-            <View style={styles.contactPickerList}>
-              {contacts.map((c) => {
-                const name = [c.firstName, c.lastName].filter(Boolean).join(" ");
-                const active = c.id === selectedContactId;
-                return (
-                  <Pressable
-                    key={c.id}
-                    style={[styles.contactPickerItem, active && styles.contactPickerItemActive]}
-                    onPress={() => {
-                      setSelectedContactId(c.id);
-                      setContactPickerOpen(false);
-                    }}
-                  >
-                    <Text style={[styles.contactPickerItemText, active && styles.contactPickerItemTextActive]}>
-                      {name} {c.companyName ? `(${c.companyName})` : ""}
-                    </Text>
-                    {active && <Check size={14} color="#135bec" />}
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-        </View>
-
-        {/* Lead Scope & Interest Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeading}>{t("crm.leads.leadScope")}</Text>
-
-          <Text style={styles.inputLabel}>{t("crm.leads.interest")} *</Text>
-          <TextInput
-            style={styles.textInput}
-            value={interest}
-            onChangeText={setInterest}
-            placeholder="e.g. Enterprise Migration & AI Intelligence"
-          />
-
-          <Text style={styles.inputLabel}>{t("crm.leads.source")}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillRow}>
-            {SOURCES.map((s) => (
-              <Pressable
-                key={s}
-                style={[styles.optionPill, source === s && styles.optionPillActive]}
-                onPress={() => setSource(s)}
-              >
-                <Text style={[styles.optionPillText, source === s && styles.optionPillTextActive]}>
-                  {s}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-
-          <View style={styles.splitRow}>
-            <View style={{ flex: 2 }}>
-              <Text style={styles.inputLabel}>{t("crm.leads.estimatedValue")}</Text>
-              <TextInput
-                style={styles.textInput}
-                keyboardType="numeric"
-                value={estimatedValue}
-                onChangeText={setEstimatedValue}
-                placeholder="25000"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>{t("crm.leads.currency")}</Text>
-              <TextInput
-                style={styles.textInput}
-                value={currency}
-                onChangeText={setCurrency}
-                autoCapitalize="characters"
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Qualification BANT Notes Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeading}>{t("crm.leads.qualificationNotes")}</Text>
-
-          <Text style={styles.inputLabel}>{t("crm.leads.need")}</Text>
-          <TextInput
-            style={[styles.textInput, { height: 70, textAlignVertical: "top" }]}
-            multiline
-            value={need}
-            onChangeText={setNeed}
-            placeholder="Key business challenges, pain points, or project goals..."
-          />
-
-          <Text style={styles.inputLabel}>{t("crm.leads.timeline")}</Text>
-          <TextInput
-            style={styles.textInput}
-            value={timeline}
-            onChangeText={setTimeline}
-            placeholder="e.g. Immediate / 1–3 months"
-          />
-
-          <Text style={styles.inputLabel}>{t("crm.leads.assignedOwner")}</Text>
-          <View style={styles.ownerRow}>
-            {OWNERS.map((o) => (
-              <Pressable
-                key={o.id}
-                style={[styles.ownerPill, assignedOwner.id === o.id && styles.ownerPillActive]}
-                onPress={() => setAssignedOwner(o)}
-              >
-                <Text style={[styles.ownerPillText, assignedOwner.id === o.id && styles.ownerPillTextActive]}>
-                  {o.name}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
+      {/* Contact Selector Card */}
+      <MobileCard style={styles.card}>
+        <Text style={styles.cardHeading}>{t("crm.leads.selectContact")}</Text>
         <Pressable
-          style={[styles.submitButton, saving && { opacity: 0.6 }]}
-          disabled={saving}
-          onPress={handleSave}
+          accessibilityRole="button"
+          accessibilityLabel="Seleccionar contacto vinculado"
+          style={styles.selectorTrigger}
+          onPress={() => setContactPickerOpen(true)}
         >
-          <Sparkles size={16} color="#ffffff" />
-          <Text style={styles.submitButtonText}>{t("crm.leads.createLead")}</Text>
+          <View style={styles.selectorRow}>
+            <View style={styles.contactAvatarSmall}>
+              <User size={16} color={mobileTheme.colors.primary} />
+            </View>
+            <View style={styles.selectorCopy}>
+              <Text style={styles.selectedName}>
+                {selectedContact
+                  ? [selectedContact.firstName, selectedContact.lastName].filter(Boolean).join(" ")
+                  : t("crm.leads.pickContact")}
+              </Text>
+              {selectedContact?.companyName && (
+                <Text style={styles.selectedSub}>{selectedContact.companyName}</Text>
+              )}
+            </View>
+          </View>
+          <ChevronDown size={18} color="#64748b" />
         </Pressable>
-      </ScrollView>
-    </View>
+      </MobileCard>
+
+      {/* Lead Scope & Interest Card */}
+      <MobileCard style={styles.card}>
+        <Text style={styles.cardHeading}>{t("crm.leads.leadScope")}</Text>
+
+        <MobileInput
+          label={`${t("crm.leads.interest")} *`}
+          value={interest}
+          onChangeText={setInterest}
+          placeholder="p. ej. Migración Cloud empresarial & IA"
+        />
+
+        <Text style={styles.sectionLabel}>{t("crm.leads.source")}</Text>
+        <View style={styles.tabsWrapper}>
+          <MobilePageTabs
+            tabs={sourceTabs}
+            activeTab={source}
+            onTabChange={(id) => setSource(id)}
+          />
+        </View>
+
+        <View style={styles.splitRow}>
+          <View style={{ flex: 2 }}>
+            <MobileInput
+              label={t("crm.leads.estimatedValue")}
+              value={estimatedValue}
+              onChangeText={setEstimatedValue}
+              keyboardType="numeric"
+              placeholder="25000"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <MobileInput
+              label={t("crm.leads.currency")}
+              value={currency}
+              onChangeText={setCurrency}
+              autoCapitalize="characters"
+              placeholder="USD"
+            />
+          </View>
+        </View>
+      </MobileCard>
+
+      {/* Qualification BANT Notes Card */}
+      <MobileCard style={styles.card}>
+        <Text style={styles.cardHeading}>{t("crm.leads.qualificationNotes")}</Text>
+
+        <MobileTextArea
+          label={t("crm.leads.need")}
+          value={need}
+          onChangeText={setNeed}
+          placeholder="Desafíos comerciales clave, problemas a resolver u objetivos del proyecto..."
+          rows={3}
+        />
+
+        <MobileInput
+          label={t("crm.leads.timeline")}
+          value={timeline}
+          onChangeText={setTimeline}
+          placeholder="p. ej. Inmediato / 1–3 meses"
+        />
+
+        <Text style={styles.sectionLabel}>{t("crm.leads.assignedOwner")}</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Seleccionar gestor asignado"
+          style={styles.selectorTrigger}
+          onPress={() => setOwnerPickerOpen(true)}
+        >
+          <View style={styles.selectorRow}>
+            <View style={styles.contactAvatarSmall}>
+              <User size={16} color={mobileTheme.colors.primary} />
+            </View>
+            <View style={styles.selectorCopy}>
+              <Text style={styles.selectedName}>{assignedOwner.name}</Text>
+              <Text style={styles.selectedSub}>Gestor Comercial</Text>
+            </View>
+          </View>
+          <ChevronDown size={18} color="#64748b" />
+        </Pressable>
+      </MobileCard>
+
+      {/* Contact Select Sheet */}
+      <MobileSelectSheet
+        visible={contactPickerOpen}
+        onClose={() => setContactPickerOpen(false)}
+        title="Seleccionar Contacto"
+        options={contactOptions}
+        selectedId={selectedContactId}
+        onSelect={(id) => {
+          setSelectedContactId(id);
+          setContactPickerOpen(false);
+        }}
+      />
+
+      {/* Owner Select Sheet */}
+      <MobileSelectSheet
+        visible={ownerPickerOpen}
+        onClose={() => setOwnerPickerOpen(false)}
+        title="Asignar Propietario"
+        options={ownerOptions}
+        selectedId={assignedOwner.id}
+        onSelect={(id) => {
+          const found = OWNERS.find((o) => o.id === id);
+          if (found) setAssignedOwner(found);
+          setOwnerPickerOpen(false);
+        }}
+      />
+    </MobilePageContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8fafc",
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    backgroundColor: "#ffffff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
+    marginBottom: 16,
+    paddingTop: 8,
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#f1f5f9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#0f172a",
-  },
-  saveHeaderBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#135bec",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
+    minHeight: 44,
+    paddingVertical: 8,
   },
-  saveHeaderBtnText: {
-    color: "#ffffff",
-    fontSize: 13,
+  backButtonText: {
+    color: mobileTheme.colors.primary,
+    fontSize: 14,
     fontWeight: "700",
   },
-  scrollContent: {
-    padding: 16,
-    gap: 14,
-    paddingBottom: 40,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: mobileTheme.colors.textPrimary,
   },
   card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    padding: 14,
-    gap: 8,
+    padding: 16,
+    marginBottom: 14,
   },
   cardHeading: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: "800",
-    color: "#64748b",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 4,
+    color: mobileTheme.colors.textPrimary,
+    marginBottom: 12,
   },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#475569",
-    marginTop: 4,
-  },
-  textInput: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#e2e8f0",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    fontSize: 14,
-    color: "#0f172a",
-  },
-  contactSelectorTrigger: {
+  selectorTrigger: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#f8fafc",
+    backgroundColor: mobileTheme.colors.background,
+    borderColor: mobileTheme.colors.border,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: mobileTheme.radii.input,
+    padding: 12,
+    minHeight: 52,
   },
-  contactSelectorRow: {
+  selectorRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
@@ -377,121 +343,35 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#eff6ff",
+    backgroundColor: mobileTheme.colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
-  contactSelectorCopy: {
+  selectorCopy: {
     flex: 1,
   },
-  contactSelectedName: {
+  selectedName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#0f172a",
+    color: mobileTheme.colors.textPrimary,
   },
-  contactSelectedSub: {
-    fontSize: 11,
-    color: "#64748b",
-  },
-  contactPickerList: {
-    marginTop: 8,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 10,
-    maxHeight: 180,
-    overflow: "scroll",
-  },
-  contactPickerItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-  },
-  contactPickerItemActive: {
-    backgroundColor: "#eff6ff",
-  },
-  contactPickerItemText: {
-    fontSize: 13,
-    color: "#334155",
-    fontWeight: "500",
-  },
-  contactPickerItemTextActive: {
-    color: "#135bec",
-    fontWeight: "700",
-  },
-  pillRow: {
-    flexDirection: "row",
-    gap: 6,
-    paddingVertical: 2,
-  },
-  optionPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#f1f5f9",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  optionPillActive: {
-    backgroundColor: "#135bec",
-    borderColor: "#135bec",
-  },
-  optionPillText: {
+  selectedSub: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "#64748b",
+    color: mobileTheme.colors.textSecondary,
+    marginTop: 1,
   },
-  optionPillTextActive: {
-    color: "#ffffff",
-    fontWeight: "700",
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: mobileTheme.colors.textPrimary,
+    marginTop: 6,
+    marginBottom: 8,
+  },
+  tabsWrapper: {
+    marginBottom: 12,
   },
   splitRow: {
     flexDirection: "row",
-    gap: 10,
-  },
-  ownerRow: {
-    flexDirection: "row",
-    gap: 6,
-    flexWrap: "wrap",
-  },
-  ownerPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#f1f5f9",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  ownerPillActive: {
-    backgroundColor: "#135bec",
-    borderColor: "#135bec",
-  },
-  ownerPillText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#64748b",
-  },
-  ownerPillTextActive: {
-    color: "#ffffff",
-    fontWeight: "700",
-  },
-  submitButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#135bec",
-    borderRadius: 14,
-    paddingVertical: 14,
-    marginTop: 6,
-  },
-  submitButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "800",
+    gap: 12,
   },
 });

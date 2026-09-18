@@ -77,6 +77,16 @@ function mapRowToContact(row: any): ContactRecord {
   };
 }
 
+async function canFetchRemote(): Promise<boolean> {
+  const session = await mobileAuthAdapter.getSession();
+  const token = session?.accessToken;
+  if (!token) return false;
+  if (token.startsWith("demo-") || token.startsWith("mock-") || token.includes("local")) {
+    return false;
+  }
+  return token.split(".").length === 3;
+}
+
 async function getHeaders(): Promise<HeadersInit> {
   const session = await mobileAuthAdapter.getSession();
   const headers: Record<string, string> = {
@@ -98,7 +108,7 @@ export function createMobileContactAdapter(): ContactPort {
 
   return {
     async listContacts(params: ContactListParams): Promise<ContactPage> {
-      if (!params.organizationId || !isUUID(params.organizationId)) {
+      if (!(await canFetchRemote()) || !params.organizationId || !isUUID(params.organizationId)) {
         return localFallback.listContacts(params);
       }
 
@@ -156,6 +166,9 @@ export function createMobileContactAdapter(): ContactPort {
     },
 
     async getCustomer360(contactId: string): Promise<ContactCustomer360View | null> {
+      if (!(await canFetchRemote())) {
+        return localFallback.getCustomer360(contactId);
+      }
       try {
         const headers = await getHeaders();
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}&select=*`, {

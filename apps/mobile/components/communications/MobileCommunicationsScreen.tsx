@@ -171,101 +171,99 @@ export function MobileCommunicationsScreen({
     const tone = statusToneMap[item.status] || statusToneMap.open;
 
     return (
-      <Pressable
-        style={({ pressed }) => [
-          styles.itemRow,
-          hasUnread && styles.itemRowUnread,
-          pressed && styles.itemRowPressed,
-        ]}
-        onPress={() => {
-          if (hasUnread) void markRead(item.id);
-          onSelectConversation(item.id);
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={`Conversación con ${item.contact.displayName}`}
-      >
-        {/* Left: Circular Avatar with Initials */}
-        <View style={[styles.avatarCircle, hasUnread ? styles.avatarUnread : styles.avatarNormal]}>
-          <Text style={[styles.avatarInitials, hasUnread ? styles.avatarInitialsUnread : styles.avatarInitialsNormal]}>
-            {getInitials(item.contact.displayName)}
-          </Text>
-        </View>
-
-        {/* Center: Multi-line Details */}
-        <View style={styles.itemContent}>
-          {/* Row 1: Name + Relative Time */}
-          <View style={styles.nameTimeRow}>
-            <Text
-              style={[styles.contactName, hasUnread && styles.contactNameBold]}
-              numberOfLines={1}
-            >
-              {item.contact.displayName || "Contacto sin nombre"}
-            </Text>
-            <Text style={[styles.timeText, hasUnread && styles.timeTextUnread]}>
-              {timeDisplay}
+      <View style={[styles.itemRow, hasUnread && styles.itemRowUnread]}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.itemMainPressable,
+            pressed && styles.itemRowPressed,
+          ]}
+          onPress={() => {
+            if (hasUnread) void markRead(item.id);
+            onSelectConversation(item.id);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={`Conversación con ${item.contact.displayName}`}
+        >
+          {/* Left: Circular Avatar with Initials */}
+          <View style={[styles.avatarCircle, hasUnread ? styles.avatarUnread : styles.avatarNormal]}>
+            <Text style={[styles.avatarInitials, hasUnread ? styles.avatarInitialsUnread : styles.avatarInitialsNormal]}>
+              {getInitials(item.contact.displayName)}
             </Text>
           </View>
 
-          {/* Row 2: Channel icon + Channel label + Snippet */}
-          <View style={styles.snippetRow}>
-            <ChannelIcon channel={item.channel} size={12} />
-            <Text style={styles.channelSnippetLabel}>
-              {item.contact.identityStatus === "pending_identity_review"
-                ? "Revisión identidad"
-                : CHANNEL_LABELS[item.channel]}
-            </Text>
-            <Text style={styles.bulletSeparator}>·</Text>
-            <Text
-              style={[styles.snippetText, hasUnread && styles.snippetTextUnread]}
-              numberOfLines={1}
-            >
-              {item.preview || "Sin mensajes aún"}
-            </Text>
-          </View>
-
-          {/* Row 3: Status Badge + Assignee + Unread Count */}
-          <View style={styles.metaRow}>
-            <View style={[styles.statusPill, { backgroundColor: tone.bg }]}>
-              <Text style={[styles.statusPillText, { color: tone.text }]}>
-                {tone.label}
+          {/* Center: Multi-line Details */}
+          <View style={styles.itemContent}>
+            {/* Row 1: Name + Relative Time */}
+            <View style={styles.nameTimeRow}>
+              <Text
+                style={[styles.contactName, hasUnread && styles.contactNameBold]}
+                numberOfLines={1}
+              >
+                {item.contact.displayName || "Contacto sin nombre"}
+              </Text>
+              <Text style={[styles.timeText, hasUnread && styles.timeTextUnread]}>
+                {timeDisplay}
               </Text>
             </View>
 
-            {item.assignedToName ? (
-              <View style={styles.assigneeWrap}>
-                <View style={styles.assigneeAvatar}>
-                  <Text style={styles.assigneeAvatarText}>
-                    {getInitials(item.assignedToName)}
-                  </Text>
-                </View>
-                <Text style={styles.assigneeName} numberOfLines={1}>
-                  {item.assignedToName}
+            {/* Row 2: Channel icon + Channel label + Snippet */}
+            <View style={styles.snippetRow}>
+              <ChannelIcon channel={item.channel} size={12} />
+              <Text style={styles.channelSnippetLabel}>
+                {item.contact.identityStatus === "pending_identity_review"
+                  ? "Revisión identidad"
+                  : CHANNEL_LABELS[item.channel]}
+              </Text>
+              <Text style={styles.bulletSeparator}>·</Text>
+              <Text
+                style={[styles.snippetText, hasUnread && styles.snippetTextUnread]}
+                numberOfLines={1}
+              >
+                {item.preview || "Sin mensajes aún"}
+              </Text>
+            </View>
+
+            {/* Row 3: Status Badge + Assignee + Unread Count */}
+            <View style={styles.metaRow}>
+              <View style={[styles.statusPill, { backgroundColor: tone.bg }]}>
+                <Text style={[styles.statusPillText, { color: tone.text }]}>
+                  {tone.label}
                 </Text>
               </View>
-            ) : (
-              <Text style={styles.unassignedText}>Sin asignar</Text>
-            )}
 
-            {/* Collaboration Presence Dot */}
-            {item.collaboration?.presence?.some((p) => p.state !== "offline") && (
-              <View style={styles.presenceDot} />
-            )}
+              {item.assignedToName ? (
+                <View style={styles.assigneeWrap}>
+                  <View style={styles.assigneeAvatar}>
+                    <Text style={styles.assigneeAvatarText}>
+                      {getInitials(item.assignedToName)}
+                    </Text>
+                  </View>
+                  <Text style={styles.assigneeName} numberOfLines={1}>
+                    {item.assignedToName}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.unassignedText}>Sin asignar</Text>
+              )}
 
-            {/* Unread count badge */}
-            {hasUnread && (
-              <View style={styles.unreadPill}>
-                <Text style={styles.unreadPillText}>{item.unreadCount}</Text>
-              </View>
-            )}
+              {/* Collaboration Presence Dot */}
+              {item.collaboration?.presence?.some((p) => p.state !== "offline") && (
+                <View style={styles.presenceDot} />
+              )}
+
+              {/* Unread count badge */}
+              {hasUnread && (
+                <View style={styles.unreadPill}>
+                  <Text style={styles.unreadPillText}>{item.unreadCount}</Text>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
+        </Pressable>
 
-        {/* Right: Star Button */}
+        {/* Right: Star Button (Sibling, NOT nested inside button) */}
         <Pressable
-          onPress={(e) => {
-            e.stopPropagation();
-            void toggleStar(item.id);
-          }}
+          onPress={() => void toggleStar(item.id)}
           style={({ pressed }) => [styles.starBtn, pressed && { opacity: 0.6 }]}
           hitSlop={8}
           accessibilityRole="button"
@@ -277,7 +275,7 @@ export function MobileCommunicationsScreen({
             fill={item.starred ? "#eab308" : "none"}
           />
         </Pressable>
-      </Pressable>
+      </View>
     );
   };
 
@@ -797,13 +795,20 @@ const styles = StyleSheet.create({
   },
   itemRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: "#f1f5f9",
     backgroundColor: "#ffffff",
+    paddingRight: 8,
+  },
+  itemMainPressable: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingLeft: 16,
+    paddingRight: 4,
+    paddingVertical: 12,
+    gap: 12,
   },
   itemRowUnread: {
     backgroundColor: "#fcfdff",

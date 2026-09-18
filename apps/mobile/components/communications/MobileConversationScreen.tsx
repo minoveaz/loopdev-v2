@@ -17,6 +17,7 @@ import {
   Clock,
   FileText,
   Lock,
+  MessageSquare,
   Package,
   Phone,
   Play,
@@ -397,12 +398,11 @@ export function MobileConversationScreen({
 
             <Pressable
               onPress={() => setContextSheetOpen(true)}
-              style={({ pressed }) => [styles.ficha360Pill, pressed && { opacity: 0.8 }]}
+              style={({ pressed }) => [styles.actionCircleBtn, pressed && { opacity: 0.7 }]}
               accessibilityRole="button"
-              accessibilityLabel="Abrir Ficha 360"
+              accessibilityLabel="Ver Ficha 360 del cliente"
             >
-              <User size={12} color={mobileTheme.colors.primary} />
-              <Text style={styles.ficha360Text}>Ficha 360</Text>
+              <User size={17} color="#334155" />
             </Pressable>
           </View>
         </View>
@@ -463,13 +463,14 @@ export function MobileConversationScreen({
                 ]}
                 accessibilityRole="button"
               >
+                <MessageSquare size={12} color={composerMode === "reply" ? mobileTheme.colors.primary : "#64748b"} />
                 <Text
                   style={[
                     styles.modeTabText,
                     composerMode === "reply" && styles.modeTabTextActive,
                   ]}
                 >
-                  💬 Mensaje
+                  Mensaje
                 </Text>
               </Pressable>
               <Pressable
@@ -480,13 +481,14 @@ export function MobileConversationScreen({
                 ]}
                 accessibilityRole="button"
               >
+                <Lock size={12} color={composerMode === "internal" ? "#b45309" : "#64748b"} />
                 <Text
                   style={[
                     styles.modeTabText,
                     composerMode === "internal" && styles.modeTabTextInternalActive,
                   ]}
                 >
-                  🔒 Nota interna
+                  Nota interna
                 </Text>
               </Pressable>
             </View>
@@ -647,21 +649,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  ficha360Pill: {
-    flexDirection: "row",
+  actionCircleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#f1f5f9",
     alignItems: "center",
-    gap: 4,
-    height: 32,
-    paddingHorizontal: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: mobileTheme.colors.primary,
-    backgroundColor: "#eff6ff",
-  },
-  ficha360Text: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: mobileTheme.colors.primary,
+    justifyContent: "center",
   },
   windowNotice: {
     flexDirection: "row",

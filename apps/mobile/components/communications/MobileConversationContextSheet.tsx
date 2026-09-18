@@ -142,6 +142,8 @@ export function MobileConversationContextSheet({
       visible={visible}
       onClose={onClose}
       title="Contexto de Conversación"
+      height="90%"
+      maxHeight="90%"
     >
       <View style={styles.container}>
         {/* Context Navigation Tabs (CRM, Operations, Timeline) */}

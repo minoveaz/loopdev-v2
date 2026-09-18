@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   View,
+  type DimensionValue,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
@@ -20,8 +21,10 @@ export interface MobileBottomSheetProps {
   subtitle?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  maxHeight?: number;
+  maxHeight?: DimensionValue;
+  height?: DimensionValue;
   contentStyle?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function MobileBottomSheet({
@@ -32,13 +35,15 @@ export function MobileBottomSheet({
   children,
   footer,
   maxHeight = 520,
+  height,
   contentStyle,
+  style,
 }: MobileBottomSheetProps) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <Pressable style={styles.dismissArea} onPress={onClose} />
-        <View style={[styles.sheet, { maxHeight }]}>
+        <View style={[styles.sheet, { maxHeight, ...(height ? { height } : {}) }, style]}>
           {/* Drag Handle */}
           <View style={styles.handleWrap}>
             <View style={styles.handle} />
@@ -69,6 +74,7 @@ export function MobileBottomSheet({
 
           {/* Scrollable Content */}
           <ScrollView
+            style={styles.scrollFlex}
             contentContainerStyle={[styles.content, contentStyle]}
             keyboardShouldPersistTaps="handled"
           >
@@ -151,6 +157,9 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingVertical: 14,
+  },
+  scrollFlex: {
+    flex: 1,
   },
   footer: {
     paddingHorizontal: 20,

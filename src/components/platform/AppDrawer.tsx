@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-export type AppDrawerSize = "sm" | "md" | "lg";
+export type AppDrawerSize = "sm" | "md" | "lg" | "xl" | "2xl";
 export interface AppDrawerRenderControls {
   requestClose: () => void;
 }
@@ -55,6 +55,8 @@ const widthMap: Record<AppDrawerSize, string> = {
   sm: "sm:max-w-sm",
   md: "sm:max-w-xl",
   lg: "sm:max-w-2xl",
+  xl: "sm:max-w-3xl",
+  "2xl": "sm:max-w-4xl",
 };
 
 export function AppDrawer({

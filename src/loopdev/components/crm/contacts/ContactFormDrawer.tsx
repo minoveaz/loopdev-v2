@@ -51,6 +51,7 @@ export function ContactFormDrawer({
       title={editing ? contactActions.find((action) => action.id === "edit")?.label : "Create contact"}
       eyebrow="CRM / Contact"
       mode={editing ? "Editing" : "New"}
+      size="xl"
       layoutMode="expanded"
       responsive="auto"
       showDirtyState={dirty}

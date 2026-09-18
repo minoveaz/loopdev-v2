@@ -250,9 +250,40 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
         {contactFormSections.map((section) => {
           const Icon = iconByKey[section.iconKey];
           const stats = sectionStats[section.id];
-          return <FormSection key={section.id} id={`contact-form-${section.id}`} className="scroll-mt-14 loopdev-form-section" eyebrow={section.eyebrow} title={section.label} description={section.description} icon={<Icon className="h-4 w-4" />} completed={stats.completed} total={stats.total} errorCount={stats.errors} status={stats.status} mode="expanded" responsive="auto" meta={section.meta ? <span>{section.meta}</span> : undefined}>
-            <div className="grid gap-4 sm:grid-cols-2">{section.fields.map((field) => <div key={field.id} className={field.id === "addressLine1" || field.id === "addressLine2" ? "sm:col-span-2" : undefined}>{renderField(field.id)}</div>)}</div>
-          </FormSection>;
+          return (
+            <FormSection
+              key={section.id}
+              id={`contact-form-${section.id}`}
+              className="scroll-mt-14 loopdev-form-section"
+              eyebrow={section.eyebrow}
+              title={section.label}
+              description={section.description}
+              icon={<Icon className="h-4 w-4" />}
+              completed={stats.completed}
+              total={stats.total}
+              errorCount={stats.errors}
+              status={stats.status}
+              mode="expanded"
+              responsive="auto"
+              layout="stacked"
+              meta={section.meta ? <span>{section.meta}</span> : undefined}
+            >
+              <div className="grid w-full gap-4 sm:grid-cols-2">
+                {section.fields.map((field) => (
+                  <div
+                    key={field.id}
+                    className={
+                      field.id === "addressLine1" || field.id === "addressLine2"
+                        ? "sm:col-span-2"
+                        : undefined
+                    }
+                  >
+                    {renderField(field.id)}
+                  </div>
+                ))}
+              </div>
+            </FormSection>
+          );
         })}
         {formState.errors.root?.server && (() => { const message = formState.errors.root.server.message ?? ""; const conflict = message.startsWith("Conflict:"); const permission = message.startsWith("Permission denied:"); return <p role="alert" className={`rounded-md border px-3 py-2 text-sm ${conflict ? "border-amber-500/30 bg-amber-500/10 text-amber-700" : permission ? "border-slate-400/40 bg-slate-500/10 text-slate-700" : "border-destructive/30 bg-destructive-soft text-destructive"}`}>{message}</p>; })()}
         <div className="flex justify-end gap-2 border-t border-border pt-5"><Button type="button" variant="ghost" onClick={onCancel} disabled={formState.isSubmitting}>Cancel</Button><Button type="submit" disabled={formState.isSubmitting}>{formState.isSubmitting ? "Saving..." : contact ? "Save changes" : "Create contact"}</Button></div>

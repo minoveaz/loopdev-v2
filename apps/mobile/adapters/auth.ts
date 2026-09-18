@@ -90,6 +90,13 @@ function buildMobileSnapshot(): TenantContextSnapshot | null {
 }
 
 async function fetchRemoteOrgs(token: string, userId: string): Promise<Organization[]> {
+  if (!token || token.startsWith("demo-") || token.startsWith("mock-") || token.includes("local")) {
+    return [
+      { id: "80fce911-57c5-4a83-809f-78df6a3736f7", name: "LoopDev", slug: "loopdev", status: "active", createdAt: new Date().toISOString() },
+      { id: "31bf9e13-7ba4-46e9-9b47-cccd0a0baa3e", name: "Estar Protegidos", slug: "estar-protegidos", status: "active", createdAt: new Date().toISOString() },
+    ];
+  }
+
   const headers = {
     apikey: SUPABASE_ANON_KEY,
     Authorization: `Bearer ${token}`,

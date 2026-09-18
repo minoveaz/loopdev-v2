@@ -51,14 +51,6 @@ export { localPlatformAdapter } from "./local";
 export { localPlatformWorkAdapter, platformWorkAdapter } from "./local";
 export { createDesktopNotesPort } from "./notes-port";
 
-export class PlatformAdapterError extends Error {
-  constructor(
-    message: string,
-    public readonly code: "forbidden" | "invalid-scope",
-  ) {
-    super(message);
-    this.name = "PlatformAdapterError";
-  }
-}
+export { PlatformAdapterError } from "../types";
 
 export type { EntityRef, EntityScope, OrganizationContext, OrganizationId, PlatformPermission, PlatformPermissionSet, WorkspaceId };

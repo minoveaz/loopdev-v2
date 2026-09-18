@@ -20,7 +20,7 @@ import {
   RefreshCw,
   Users,
 } from "lucide-react-native";
-import { useCrmOperations } from "@/loopdev/domains/crm/hooks/use-crm-operations";
+import { useCrmOperations } from "../hooks/useMobileCrmOperations";
 import type {
   CRMEntityType,
   CRMFieldType,

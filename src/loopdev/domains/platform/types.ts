@@ -197,3 +197,14 @@ export function isScopeVisible(recordScope: EntityScope, requestedScope: EntityS
   if (recordScope.workspaceId == null) return true;
   return recordScope.workspaceId === requestedScope.workspaceId;
 }
+
+export class PlatformAdapterError extends Error {
+  constructor(
+    message: string,
+    public readonly code: "forbidden" | "invalid-scope",
+  ) {
+    super(message);
+    this.name = "PlatformAdapterError";
+  }
+}
+

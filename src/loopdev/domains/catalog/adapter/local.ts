@@ -26,7 +26,8 @@ import type {
   PriceEntry,
   ResolvedCatalogReference,
 } from "../types";
-import { CatalogAdapterError, type CatalogAdapter } from "./index";
+import { CatalogAdapterError } from "../types";
+import type { CatalogAdapter } from "./index";
 
 function scopeFor(params: CatalogScopeParams) {
   return { organizationId: params.organizationId, workspaceId: params.workspaceId ?? null };

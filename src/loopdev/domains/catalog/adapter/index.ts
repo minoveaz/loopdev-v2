@@ -56,14 +56,6 @@ deleteCatalogItem(id: string, params: CatalogScopeParams): Promise<void>;
 export const catalogAdapter: CatalogAdapter = localCatalogAdapter;
 export { localCatalogAdapter };
 
-export class CatalogAdapterError extends Error {
-  constructor(
-    message: string,
-    public readonly code: "forbidden" | "server-error",
-  ) {
-    super(message);
-    this.name = "CatalogAdapterError";
-  }
-}
+export { CatalogAdapterError } from "../types";
 
 export type { CatalogCreateInput, CatalogItemCreateInput, CatalogItem, CatalogListParams, CatalogReference, CatalogReferenceResolutionParams, CatalogScopeParams, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole, CatalogAvailability, CatalogEligibility, ResolvedCatalogReference, CatalogOfferCreateInput, CatalogVariantCreateInput, CatalogPriceBookCreateInput, CatalogPriceEntryCreateInput };

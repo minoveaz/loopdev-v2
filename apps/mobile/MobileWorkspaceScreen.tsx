@@ -2,6 +2,7 @@ import { CheckSquare, ChevronRight, FileSearch, MessageCircle, Scan, TrendingUp,
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SuiteIllustration } from "./components/SuiteIllustration";
 import { MobileBackLink } from "./components/ui/MobileBackLink";
+import { mobileTheme } from "./theme/tokens";
 import type { launchpadSuites } from "../../packages/contracts/src/launchpad";
 
 type MobileWorkspaceScreenProps = {
@@ -175,10 +176,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    ...mobileTheme.shadows.card,
   },
   shortcutIconWrap: {
     backgroundColor: "#eff6ff",

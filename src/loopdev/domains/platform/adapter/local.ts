@@ -1,4 +1,4 @@
-import { isScopeVisible } from "../types";
+import { isScopeVisible, PlatformAdapterError } from "../types";
 import type {
   EntityRef,
   EntityScope,
@@ -7,7 +7,7 @@ import type {
   PlatformPermission,
   PlatformPermissionSet,
 } from "../types";
-import { PlatformAdapterError, type PlatformAdapter } from "./index";
+import type { PlatformAdapter } from "./index";
 import { createLocalPlatformWorkAdapter } from "./work";
 import { localOrganizationEntitlementsAdapter } from "../entitlements";
 

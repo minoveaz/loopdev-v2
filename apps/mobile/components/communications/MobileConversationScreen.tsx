@@ -39,7 +39,7 @@ import {
 } from "../ui";
 import { mobileTheme } from "../../theme/tokens";
 import { useT } from "../../i18n";
-import { useCommunicationConversation } from "../../../../src/loopdev/domains/communications/hooks/use-communications";
+import { useCommunicationConversation } from "../../hooks/useMobileCommunications";
 import { MobileConversationContextSheet, type ConversationCustomerInfo } from "./MobileConversationContextSheet";
 import { MobileCatalogItemPickerSheet } from "./MobileCatalogItemPickerSheet";
 import { mobileContactAdapter } from "../../adapters/contact";

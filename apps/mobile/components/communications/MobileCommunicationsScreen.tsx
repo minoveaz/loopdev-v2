@@ -30,7 +30,7 @@ import {
 } from "../ui";
 import { mobileTheme } from "../../theme/tokens";
 import { useT } from "../../i18n";
-import { useCommunicationsInbox } from "../../../../src/loopdev/domains/communications/hooks/use-communications";
+import { useCommunicationsInbox } from "../../hooks/useMobileCommunications";
 import type { CommunicationChannel, ConversationStatus, ConversationSummary } from "../../../../src/loopdev/domains/communications";
 
 interface Props {

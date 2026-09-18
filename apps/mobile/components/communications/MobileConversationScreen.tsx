@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -15,6 +15,7 @@ import {
   Check,
   CheckCheck,
   ChevronDown,
+  ChevronRight,
   Clock,
   FileText,
   Lock,
@@ -37,7 +38,11 @@ import {
 import { mobileTheme } from "../../theme/tokens";
 import { useT } from "../../i18n";
 import { useCommunicationConversation } from "../../hooks/useMobileCommunications";
-import { MobileConversationContextSheet, type ConversationCustomerInfo } from "./MobileConversationContextSheet";
+import {
+  MobileConversationContextSheet,
+  type ConversationContextTab,
+  type ConversationCustomerInfo,
+} from "./MobileConversationContextSheet";
 import { MobileCatalogItemPickerSheet } from "./MobileCatalogItemPickerSheet";
 import { mobileContactAdapter } from "../../adapters/contact";
 import type { CatalogItem } from "../../adapters/catalog";
@@ -47,6 +52,7 @@ import {
   type CommunicationMessage,
   type ConversationStatus,
 } from "../../../../src/loopdev/domains/communications";
+import { buildConversationTimelineMarkers } from "../../domains/communicationsTimeline";
 
 interface Props {
   conversationId: string;
@@ -72,6 +78,8 @@ export function MobileConversationScreen({
   const [customerInfo, setCustomerInfo] = useState<ConversationCustomerInfo | null>(null);
   const [messageText, setMessageText] = useState("");
   const [contextSheetOpen, setContextSheetOpen] = useState(false);
+  const [contextSheetTab, setContextSheetTab] = useState<ConversationContextTab>("crm");
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [catalogPickerOpen, setCatalogPickerOpen] = useState(false);
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<CatalogItem | null>(null);
   const [sending, setSending] = useState(false);
@@ -110,10 +118,6 @@ export function MobileConversationScreen({
   if (loading) {
     return (
       <MobilePageContainer>
-        <MobileBackLink
-          label={t("crm.communications.back", "Volver a mensajes")}
-          onPress={onBack}
-        />
         <MobileLoadingState message="Cargando conversación..." />
       </MobilePageContainer>
     );
@@ -141,6 +145,23 @@ export function MobileConversationScreen({
   const { summary, messages } = conversation;
   const contactName = customerInfo?.name || summary.contact?.displayName || "Contacto";
   const channelDisplay = summary.channel.toUpperCase();
+
+  const markers = useMemo(() => buildConversationTimelineMarkers(messages), [messages]);
+
+  const handleJumpToMessage = (messageId: string) => {
+    const index = messages.findIndex((m) => m.id === messageId);
+    if (index >= 0) {
+      flatListRef.current?.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 0.4,
+      });
+      setHighlightedMessageId(messageId);
+      setTimeout(() => {
+        setHighlightedMessageId(null);
+      }, 2500);
+    }
+  };
 
   const handleSend = async () => {
     const text = messageText.trim();
@@ -220,6 +241,8 @@ export function MobileConversationScreen({
       );
     }
 
+    const isHighlighted = item.id === highlightedMessageId;
+
     return (
       <View
         style={[
@@ -231,6 +254,7 @@ export function MobileConversationScreen({
           style={[
             styles.bubble,
             isInbound ? styles.bubbleInbound : styles.bubbleOutbound,
+            isHighlighted && styles.bubbleHighlighted,
           ]}
         >
           {/* Audio Waveform Item */}
@@ -393,7 +417,22 @@ export function MobileConversationScreen({
             ) : null}
 
             <Pressable
-              onPress={() => setContextSheetOpen(true)}
+              onPress={() => {
+                setContextSheetTab("timeline");
+                setContextSheetOpen(true);
+              }}
+              style={({ pressed }) => [styles.actionCircleBtn, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Ver Línea de Tiempo de la conversación"
+            >
+              <Clock size={17} color="#334155" />
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setContextSheetTab("crm");
+                setContextSheetOpen(true);
+              }}
               style={({ pressed }) => [styles.actionCircleBtn, pressed && { opacity: 0.7 }]}
               accessibilityRole="button"
               accessibilityLabel="Ver Ficha 360 del cliente"
@@ -421,15 +460,38 @@ export function MobileConversationScreen({
           renderItem={renderMessageItem}
           contentContainerStyle={styles.messageListContent}
           showsVerticalScrollIndicator={false}
+          onScrollToIndexFailed={(info) => {
+            flatListRef.current?.scrollToOffset({
+              offset: Math.max(0, info.averageItemLength * info.index),
+              animated: true,
+            });
+          }}
         />
 
-        {/* Checkpoint Bar above composer */}
-        <View style={styles.timelineBar}>
-          <Text style={styles.timelineBarTitle}>Línea de tiempo de conversación</Text>
-          <Text style={styles.timelineBarCount}>
-            {messages.length} mensaje{messages.length === 1 ? "" : "s"}
-          </Text>
-        </View>
+        {/* Interactive Checkpoint Bar above composer */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.timelineBar,
+            pressed && { backgroundColor: "#f1f5f9" },
+          ]}
+          onPress={() => {
+            setContextSheetTab("timeline");
+            setContextSheetOpen(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir línea de tiempo de conversación"
+        >
+          <View style={styles.timelineBarLeft}>
+            <Clock size={13} color="#475569" />
+            <Text style={styles.timelineBarTitle}>Línea de tiempo de conversación</Text>
+          </View>
+          <View style={styles.timelineBarRight}>
+            <Text style={styles.timelineBarCount}>
+              {markers.length} {markers.length === 1 ? "hito" : "hitos"}
+            </Text>
+            <ChevronRight size={13} color={mobileTheme.colors.primary} />
+          </View>
+        </Pressable>
 
         {/* Dedicated Customer Reply Composer (Matching Mobile Web) */}
         <View style={styles.composerWrapper}>
@@ -531,12 +593,15 @@ export function MobileConversationScreen({
           </Text>
         </View>
 
-        {/* Customer Context & Operations Sheet */}
+        {/* Customer Context, Operations & Timeline Sheet */}
         <MobileConversationContextSheet
           visible={contextSheetOpen}
           onClose={() => setContextSheetOpen(false)}
           customer={customerInfo}
           summary={summary}
+          messages={messages}
+          initialTab={contextSheetTab}
+          onSelectMarker={handleJumpToMessage}
           onNavigateToContact={onNavigateToContact}
           onInsertCatalogItem={() => setCatalogPickerOpen(true)}
           onCloseConversation={() => handleStatusChange("closed")}
@@ -681,6 +746,11 @@ const styles = StyleSheet.create({
   bubbleOutbound: {
     backgroundColor: mobileTheme.colors.primary,
     borderTopRightRadius: 4,
+  },
+  bubbleHighlighted: {
+    borderColor: mobileTheme.colors.primary,
+    borderWidth: 2,
+    boxShadow: "0px 0px 8px rgba(19, 91, 236, 0.45)",
   },
   messageBody: {
     fontSize: 14,
@@ -851,18 +921,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 7,
+    paddingVertical: 8,
+    minHeight: 38,
     borderTopWidth: 1,
     borderTopColor: "#e2e8f0",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8fafc",
+  },
+  timelineBarLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  timelineBarRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   timelineBarTitle: {
-    fontSize: 11,
-    color: "#64748b",
-    fontWeight: "500",
+    fontSize: 12,
+    color: "#475569",
+    fontWeight: "600",
   },
   timelineBarCount: {
-    fontSize: 11,
+    fontSize: 12,
     color: mobileTheme.colors.primary,
     fontWeight: "700",
   },

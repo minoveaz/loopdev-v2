@@ -1,11 +1,200 @@
-import { ArrowLeft } from "lucide-react-native";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { ArrowLeft, Users, ShieldAlert } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { ContactRecord, PotentialContactDuplicate } from "../../../packages/contracts/src/contact-port";
+import {
+  MobilePageContainer,
+  MobilePageHeader,
+  MobileCard,
+  MobileButton,
+  MobileStatusBadge,
+  MobileEmptyState,
+  MobileLoadingState,
+} from "./ui";
+import { mobileTheme } from "../theme/tokens";
 
-export function MobileDuplicateReviewScreen({ contact, candidates, loading, error, onBack, onDismiss }: { contact?: ContactRecord; candidates: PotentialContactDuplicate[]; loading?: boolean; error?: string | null; onBack: () => void; onDismiss: (candidate: ContactRecord) => void }) {
-  if (loading) return <State title="Loading duplicate review" detail="Reading candidates from the shared CRM boundary." onBack={onBack} />;
-  if (error) return <State title="Unable to load duplicate review" detail={error} onBack={onBack} />;
-  return <ScrollView contentContainerStyle={styles.content}><Pressable onPress={onBack} style={styles.back}><ArrowLeft size={17} color="#135bec" /><Text style={styles.backText}>Back to contacts</Text></Pressable><Text style={styles.eyebrow}>CONTACT QUALITY</Text><Text style={styles.title}>Duplicate review</Text><Text style={styles.subtitle}>Candidates for {contact ? `${contact.firstName} ${contact.lastName ?? ""}` : "this contact"}. Merge is not allowed in this local workflow.</Text>{candidates.length ? candidates.map((candidate) => <View key={candidate.contact.id} style={styles.card}><Text style={styles.name}>{candidate.contact.firstName} {candidate.contact.lastName ?? ""}</Text><Text style={styles.meta}>{candidate.contact.email || candidate.contact.phone || "No contact channel"} · Score {candidate.score}</Text>{candidate.reasons.map((reason) => <Text key={reason} style={styles.reason}>• {reason}</Text>)}<View style={styles.actions}><Text style={styles.notAllowed}>Merge not allowed</Text><Pressable onPress={() => onDismiss(candidate.contact)} style={styles.dismiss}><Text style={styles.dismissText}>Dismiss review</Text></Pressable></View></View>) : <Text style={styles.empty}>No potential duplicates found.</Text>}</ScrollView>;
+interface MobileDuplicateReviewScreenProps {
+  contact?: ContactRecord;
+  candidates: PotentialContactDuplicate[];
+  loading?: boolean;
+  error?: string | null;
+  onBack: () => void;
+  onDismiss: (candidate: ContactRecord) => void;
 }
-function State({ title, detail, onBack }: { title: string; detail: string; onBack: () => void }) { return <View style={styles.content}><Pressable onPress={onBack} style={styles.back}><ArrowLeft size={17} color="#135bec" /><Text style={styles.backText}>Back</Text></Pressable><Text style={styles.title}>{title}</Text><Text style={styles.subtitle}>{detail}</Text></View>; }
-const styles = StyleSheet.create({ content: { padding: 20, paddingBottom: 40 }, back: { alignItems: "center", flexDirection: "row", gap: 7, marginBottom: 18 }, backText: { color: "#135bec", fontWeight: "800" }, eyebrow: { color: "#135bec", fontSize: 11, fontWeight: "800", letterSpacing: 1.5 }, title: { color: "#111827", fontSize: 28, fontWeight: "900", marginTop: 5 }, subtitle: { color: "#64748b", lineHeight: 19, marginBottom: 18, marginTop: 7 }, card: { backgroundColor: "#fff", borderColor: "#e2e8f0", borderRadius: 15, borderWidth: 1, marginBottom: 12, padding: 15 }, name: { color: "#1e293b", fontSize: 17, fontWeight: "800" }, meta: { color: "#64748b", marginTop: 4 }, reason: { color: "#475569", marginTop: 8 }, actions: { alignItems: "center", borderTopColor: "#f1f5f9", borderTopWidth: 1, flexDirection: "row", justifyContent: "space-between", marginTop: 13, paddingTop: 12 }, notAllowed: { color: "#b45309", fontSize: 12, fontWeight: "800" }, dismiss: { backgroundColor: "#e2e8f0", borderRadius: 8, padding: 9 }, dismissText: { color: "#334155", fontWeight: "800" }, empty: { color: "#64748b", paddingVertical: 30, textAlign: "center" } });
+
+export function MobileDuplicateReviewScreen({
+  contact,
+  candidates,
+  loading,
+  error,
+  onBack,
+  onDismiss,
+}: MobileDuplicateReviewScreenProps) {
+  if (loading) {
+    return (
+      <MobilePageContainer>
+        <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
+          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
+          <Text style={styles.backButtonText}>Volver a contactos</Text>
+        </Pressable>
+        <MobileLoadingState message="Buscando candidatos duplicados..." />
+      </MobilePageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <MobilePageContainer>
+        <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
+          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
+          <Text style={styles.backButtonText}>Volver a contactos</Text>
+        </Pressable>
+        <MobileEmptyState
+          icon={<ShieldAlert size={32} color={mobileTheme.colors.destructive} />}
+          title="Error al cargar duplicados"
+          description={error}
+          actionLabel="Volver a contactos"
+          onAction={onBack}
+        />
+      </MobilePageContainer>
+    );
+  }
+
+  const contactName = contact
+    ? [contact.firstName, contact.lastName].filter(Boolean).join(" ").trim()
+    : "este contacto";
+
+  return (
+    <MobilePageContainer>
+      <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
+        <ArrowLeft size={16} color={mobileTheme.colors.primary} />
+        <Text style={styles.backButtonText}>Volver a contactos</Text>
+      </Pressable>
+
+      <MobilePageHeader
+        eyebrow="CALIDAD DE CONTACTOS"
+        title="Revisión de Duplicados"
+        subtitle={`Candidatos con similitud detectada para ${contactName}.`}
+      />
+
+      {candidates.length > 0 ? (
+        <View style={styles.list}>
+          {candidates.map((candidate) => {
+            const candidateName = [candidate.contact.firstName, candidate.contact.lastName]
+              .filter(Boolean)
+              .join(" ")
+              .trim() || "Contacto sin nombre";
+            const channelInfo =
+              candidate.contact.email || candidate.contact.phone || "Sin canal de contacto";
+
+            return (
+              <MobileCard key={candidate.contact.id} style={styles.candidateCard}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.titleWrap}>
+                    <Text style={styles.candidateName}>{candidateName}</Text>
+                    <Text style={styles.candidateMeta}>{channelInfo}</Text>
+                  </View>
+                  <MobileStatusBadge
+                    tone={candidate.score >= 80 ? "destructive" : "warning"}
+                    label={`Score ${candidate.score}%`}
+                    dot
+                  />
+                </View>
+
+                <View style={styles.reasonsList}>
+                  {candidate.reasons.map((reason, idx) => (
+                    <Text key={idx} style={styles.reasonItem}>
+                      • {reason}
+                    </Text>
+                  ))}
+                </View>
+
+                <View style={styles.cardFooter}>
+                  <Text style={styles.mergeNote}>Fusión bloqueada en este entorno</Text>
+                  <MobileButton
+                    variant="outline"
+                    size="sm"
+                    label="Descartar revisión"
+                    onPress={() => onDismiss(candidate.contact)}
+                  />
+                </View>
+              </MobileCard>
+            );
+          })}
+        </View>
+      ) : (
+        <MobileEmptyState
+          icon={<Users size={32} color={mobileTheme.colors.primary} />}
+          title="Sin duplicados potenciales"
+          description="No se han detectado conflictos ni coincidencias para este registro."
+          actionLabel="Volver a contactos"
+          onAction={onBack}
+        />
+      )}
+    </MobilePageContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 10,
+    minHeight: 44,
+  },
+  backButtonText: {
+    color: mobileTheme.colors.primary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  list: {
+    gap: 12,
+    marginTop: 8,
+  },
+  candidateCard: {
+    padding: 16,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 10,
+  },
+  titleWrap: {
+    flex: 1,
+    marginRight: 8,
+  },
+  candidateName: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: mobileTheme.colors.textPrimary,
+  },
+  candidateMeta: {
+    fontSize: 13,
+    color: mobileTheme.colors.textSecondary,
+    marginTop: 2,
+  },
+  reasonsList: {
+    marginVertical: 8,
+    gap: 4,
+  },
+  reasonItem: {
+    fontSize: 13,
+    color: mobileTheme.colors.textSecondary,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: mobileTheme.colors.borderLight,
+  },
+  mergeNote: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: mobileTheme.colors.warning,
+  },
+});

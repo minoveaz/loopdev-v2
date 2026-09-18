@@ -3,6 +3,7 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-nativ
 import { BriefcaseBusiness, Calendar, Plus, TrendingUp, UserCheck, Users, X } from "lucide-react-native";
 import type { CRMLead, CRMOpportunity } from "../../adapters/crm";
 import { useT } from "../../i18n";
+import { MobilePageTabs } from "../ui";
 
 interface Props {
   leads: CRMLead[];
@@ -74,28 +75,15 @@ export function MobileCustomer360Sales({
 
   return (
     <View style={styles.container}>
-      {/* Sales Sub-tab Selector */}
-      <View style={styles.tabStrip}>
-        <Pressable
-          style={[styles.tabButton, activeSection === "leads" && styles.tabButtonActive]}
-          onPress={() => setActiveSection("leads")}
-        >
-          <Users size={14} color={activeSection === "leads" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSection === "leads" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.sales.leads")} ({leads.length})
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.tabButton, activeSection === "opportunities" && styles.tabButtonActive]}
-          onPress={() => setActiveSection("opportunities")}
-        >
-          <TrendingUp size={14} color={activeSection === "opportunities" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSection === "opportunities" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.sales.opportunities")} ({opportunities.length})
-          </Text>
-        </Pressable>
-      </View>
+      {/* Canonical Sales Sub-tabs (strictly NO pills, 2.5px active indicator, badge counts) */}
+      <MobilePageTabs
+        tabs={[
+          { id: "leads", label: t("crm.customer360.sales.leads"), count: leads.length },
+          { id: "opportunities", label: t("crm.customer360.sales.opportunities"), count: opportunities.length },
+        ]}
+        activeTab={activeSection}
+        onTabChange={(id) => setActiveSection(id as "leads" | "opportunities")}
+      />
 
       {/* Leads Content */}
       {activeSection === "leads" && (

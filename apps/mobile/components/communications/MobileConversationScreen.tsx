@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  ChevronDown,
   Clock,
   FileText,
   Lock,
@@ -70,7 +71,6 @@ export function MobileConversationScreen({
 
   const [customerInfo, setCustomerInfo] = useState<ConversationCustomerInfo | null>(null);
   const [messageText, setMessageText] = useState("");
-  const [composerMode, setComposerMode] = useState<"reply" | "internal">("reply");
   const [contextSheetOpen, setContextSheetOpen] = useState(false);
   const [catalogPickerOpen, setCatalogPickerOpen] = useState(false);
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<CatalogItem | null>(null);
@@ -148,24 +148,20 @@ export function MobileConversationScreen({
 
     setSending(true);
     try {
-      if (composerMode === "internal") {
-        await addInternalNote(text);
+      if (selectedCatalogItem) {
+        await sendReply(text || `Te comparto información sobre ${selectedCatalogItem.name}`, undefined, {
+          contentType: "catalog_item",
+          contentMetadata: {
+            catalogItemId: selectedCatalogItem.id,
+            catalogItemKey: selectedCatalogItem.key,
+            catalogItemType: "Servicio Cloud ERP",
+            catalogPrice: "$1,200",
+            catalogCurrency: "USD",
+          },
+        });
+        setSelectedCatalogItem(null);
       } else {
-        if (selectedCatalogItem) {
-          await sendReply(text || `Te comparto información sobre ${selectedCatalogItem.name}`, undefined, {
-            contentType: "catalog_item",
-            contentMetadata: {
-              catalogItemId: selectedCatalogItem.id,
-              catalogItemKey: selectedCatalogItem.key,
-              catalogItemType: "Servicio Cloud ERP",
-              catalogPrice: "$1,200",
-              catalogCurrency: "USD",
-            },
-          });
-          setSelectedCatalogItem(null);
-        } else {
-          await sendReply(text);
-        }
+        await sendReply(text);
       }
       setMessageText("");
     } catch {
@@ -427,130 +423,112 @@ export function MobileConversationScreen({
           showsVerticalScrollIndicator={false}
         />
 
-        {/* 4. Selected Catalog Item Attachment Preview */}
-        {selectedCatalogItem && (
-          <View style={styles.selectedCatalogPreview}>
-            <View style={styles.selectedCatalogIcon}>
-              <Package size={15} color={mobileTheme.colors.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.selectedCatalogTitle} numberOfLines={1}>
-                {selectedCatalogItem.name}
-              </Text>
-              <Text style={styles.selectedCatalogSub}>Adjunto para enviar al cliente</Text>
-            </View>
-            <Pressable
-              onPress={() => setSelectedCatalogItem(null)}
-              style={styles.removeCatalogBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Quitar adjunto"
-            >
-              <X size={16} color="#64748b" />
-            </Pressable>
-          </View>
-        )}
+        {/* Checkpoint Bar above composer */}
+        <View style={styles.timelineBar}>
+          <Text style={styles.timelineBarTitle}>Línea de tiempo de conversación</Text>
+          <Text style={styles.timelineBarCount}>
+            {messages.length} mensaje{messages.length === 1 ? "" : "s"}
+          </Text>
+        </View>
 
-        {/* 5. Sticky Chat Composer */}
+        {/* Dedicated Customer Reply Composer (Matching Mobile Web) */}
         <View style={styles.composerWrapper}>
-          {/* Mode Switcher: Reply vs Internal Note & Catalog Shortcut */}
-          <View style={styles.composerModeRow}>
-            <View style={styles.modeTabsWrap}>
-              <Pressable
-                onPress={() => setComposerMode("reply")}
-                style={[
-                  styles.modeTab,
-                  composerMode === "reply" && styles.modeTabActive,
-                ]}
-                accessibilityRole="button"
-              >
-                <MessageSquare size={12} color={composerMode === "reply" ? mobileTheme.colors.primary : "#64748b"} />
-                <Text
-                  style={[
-                    styles.modeTabText,
-                    composerMode === "reply" && styles.modeTabTextActive,
-                  ]}
-                >
-                  Mensaje
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setComposerMode("internal")}
-                style={[
-                  styles.modeTab,
-                  composerMode === "internal" && styles.modeTabInternalActive,
-                ]}
-                accessibilityRole="button"
-              >
-                <Lock size={12} color={composerMode === "internal" ? "#b45309" : "#64748b"} />
-                <Text
-                  style={[
-                    styles.modeTabText,
-                    composerMode === "internal" && styles.modeTabTextInternalActive,
-                  ]}
-                >
-                  Nota interna
-                </Text>
-              </Pressable>
+          {/* Header Row: Customer reply Badge + Subtitle */}
+          <View style={styles.composerHeaderRow}>
+            <View style={styles.customerReplyBadge}>
+              <Text style={styles.customerReplyBadgeText}>Respuesta al cliente</Text>
             </View>
-
-            {composerMode === "reply" && (
-              <Pressable
-                onPress={() => setCatalogPickerOpen(true)}
-                style={({ pressed }) => [styles.catalogShortcutBtn, pressed && { opacity: 0.7 }]}
-                accessibilityRole="button"
-                accessibilityLabel="Ver catálogo ERP"
-              >
-                <Package size={12} color={mobileTheme.colors.primary} />
-                <Text style={styles.catalogShortcutText}>Catálogo ERP</Text>
-              </Pressable>
-            )}
+            <Text style={styles.composerAvailabilityText} numberOfLines={1}>
+              {summary.channel === "whatsapp" && summary.windowExpiresAt
+                ? "Ventana WhatsApp activa · Entrega directa"
+                : `Respuestas enviadas directamente a ${contactName}`}
+            </Text>
+            <Text style={styles.composerQueuedText}>Directo</Text>
           </View>
 
-          {/* Composer Input Row */}
-          <View style={styles.composerInputRow}>
-            {composerMode === "reply" && (
-              <Pressable
-                onPress={() => setCatalogPickerOpen(true)}
-                style={({ pressed }) => [styles.attachBtn, pressed && { opacity: 0.7 }]}
-                accessibilityRole="button"
-                accessibilityLabel="Adjuntar producto del catálogo"
+          {/* Catalog Item Attachment Dropdown Row */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.catalogSelectRow,
+              selectedCatalogItem && styles.catalogSelectRowActive,
+              pressed && { opacity: 0.8 },
+            ]}
+            onPress={() => setCatalogPickerOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Adjuntar producto del catálogo"
+          >
+            <View style={styles.catalogSelectLeft}>
+              <Package
+                size={14}
+                color={selectedCatalogItem ? mobileTheme.colors.primary : "#64748b"}
+              />
+              <Text
+                style={[
+                  styles.catalogSelectText,
+                  selectedCatalogItem && styles.catalogSelectTextActive,
+                ]}
+                numberOfLines={1}
               >
-                <Plus size={20} color="#475569" />
-              </Pressable>
-            )}
+                {selectedCatalogItem
+                  ? `${selectedCatalogItem.name} · ${selectedCatalogItem.key}`
+                  : "Adjuntar producto del catálogo (opcional)"}
+              </Text>
+            </View>
 
+            {selectedCatalogItem ? (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  setSelectedCatalogItem(null);
+                }}
+                style={styles.catalogClearBtn}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Quitar producto adjunto"
+              >
+                <X size={14} color="#64748b" />
+              </Pressable>
+            ) : (
+              <ChevronDown size={14} color="#64748b" />
+            )}
+          </Pressable>
+
+          {/* Textarea & Send Button Row */}
+          <View style={styles.textareaRow}>
             <TextInput
-              style={[
-                styles.composerInput,
-                composerMode === "internal" && styles.composerInputInternal,
-              ]}
+              style={styles.composerTextarea}
               placeholder={
-                composerMode === "internal"
-                  ? "Escribe una nota interna para el equipo..."
-                  : "Escribe una respuesta..."
+                summary.channel === "whatsapp"
+                  ? "Escribe una respuesta por WhatsApp..."
+                  : `Escribe una respuesta por ${channelDisplay}...`
               }
               placeholderTextColor="#94a3b8"
               value={messageText}
               onChangeText={setMessageText}
               multiline
-              maxLength={1000}
+              textAlignVertical="top"
+              maxLength={1500}
             />
 
             <Pressable
               onPress={handleSend}
               disabled={sending || (!messageText.trim() && !selectedCatalogItem)}
               style={({ pressed }) => [
-                styles.sendBtn,
-                composerMode === "internal" && styles.sendBtnInternal,
-                (!messageText.trim() && !selectedCatalogItem) && styles.sendBtnDisabled,
+                styles.squareSendBtn,
+                (!messageText.trim() && !selectedCatalogItem) && styles.squareSendBtnDisabled,
                 pressed && { opacity: 0.8 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Enviar mensaje"
+              accessibilityLabel="Enviar respuesta al cliente"
             >
               <Send size={18} color="#ffffff" />
             </Pressable>
           </View>
+
+          {/* Footer helper note */}
+          <Text style={styles.composerFooterNote}>
+            Canal directo con el cliente · Respuestas sincronizadas en tiempo real
+          </Text>
         </View>
 
         {/* Customer Context & Operations Sheet */}
@@ -868,132 +846,126 @@ const styles = StyleSheet.create({
     color: mobileTheme.colors.primary,
     marginTop: 6,
   },
-  selectedCatalogPreview: {
+  timelineBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: "#eff6ff",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 7,
     borderTopWidth: 1,
-    borderTopColor: "#bfdbfe",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderTopColor: "#e2e8f0",
+    backgroundColor: "#ffffff",
   },
-  selectedCatalogIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: "#dbeafe",
-    alignItems: "center",
-    justifyContent: "center",
+  timelineBarTitle: {
+    fontSize: 11,
+    color: "#64748b",
+    fontWeight: "500",
   },
-  selectedCatalogTitle: {
-    fontSize: 12,
+  timelineBarCount: {
+    fontSize: 11,
+    color: mobileTheme.colors.primary,
     fontWeight: "700",
-    color: "#1e40af",
-  },
-  selectedCatalogSub: {
-    fontSize: 10,
-    color: "#3b82f6",
-  },
-  removeCatalogBtn: {
-    padding: 4,
   },
   composerWrapper: {
     backgroundColor: "#ffffff",
     borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-    paddingHorizontal: 10,
-    paddingTop: 8,
-    paddingBottom: Platform.OS === "ios" ? 20 : 10,
+    borderTopColor: "#f1f5f9",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === "ios" ? 28 : 14,
     gap: 8,
   },
-  composerModeRow: {
+  composerHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: 8,
   },
-  modeTabsWrap: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  modeTab: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-  },
-  modeTabActive: {
+  customerReplyBadge: {
     backgroundColor: "#eff6ff",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
-  modeTabInternalActive: {
-    backgroundColor: "#fef3c7",
+  customerReplyBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: mobileTheme.colors.primary,
   },
-  modeTabText: {
+  composerAvailabilityText: {
+    fontSize: 11,
+    color: "#64748b",
+    flex: 1,
+  },
+  composerQueuedText: {
     fontSize: 11,
     fontWeight: "600",
     color: "#64748b",
   },
-  modeTabTextActive: {
-    color: mobileTheme.colors.primary,
-    fontWeight: "700",
-  },
-  modeTabTextInternalActive: {
-    color: "#b45309",
-    fontWeight: "700",
-  },
-  catalogShortcutBtn: {
+  catalogSelectRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
+    justifyContent: "space-between",
+    height: 34,
+    paddingHorizontal: 10,
     borderRadius: 6,
-    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    backgroundColor: "#f8fafc",
   },
-  catalogShortcutText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: mobileTheme.colors.primary,
+  catalogSelectRowActive: {
+    borderColor: "#93c5fd",
+    backgroundColor: "#eff6ff",
   },
-  composerInputRow: {
+  catalogSelectLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-  },
-  attachBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#f1f5f9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  composerInput: {
+    gap: 6,
     flex: 1,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: "#0f172a",
-    maxHeight: 90,
   },
-  composerInputInternal: {
-    backgroundColor: "#fffdf5",
+  catalogSelectText: {
+    fontSize: 12,
+    color: "#64748b",
+  },
+  catalogSelectTextActive: {
+    color: mobileTheme.colors.primary,
+    fontWeight: "700",
+  },
+  catalogClearBtn: {
+    padding: 2,
+  },
+  textareaRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 10,
+  },
+  composerTextarea: {
+    flex: 1,
+    minHeight: 70,
+    maxHeight: 120,
+    backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "#fde68a",
+    borderColor: "#e2e8f0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#0f172a",
   },
-  sendBtn: {
+  squareSendBtn: {
     width: 42,
     height: 42,
-    borderRadius: 21,
+    borderRadius: 8,
     backgroundColor: mobileTheme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 1,
   },
-  sendBtnInternal: {
-    backgroundColor: "#d97706",
-  },
-  sendBtnDisabled: {
+  squareSendBtnDisabled: {
     opacity: 0.45,
+  },
+  composerFooterNote: {
+    fontSize: 10,
+    color: "#94a3b8",
   },
 });

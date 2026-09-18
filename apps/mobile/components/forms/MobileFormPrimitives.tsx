@@ -130,19 +130,6 @@ function formatDateLabel(value: Date, lang: string = "es") {
   return value.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { day: "numeric", month: "long", year: "numeric" });
 }
 
-function parseDate(value: string) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return new Date(1990, 0, 1);
-  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-}
-
-function formatDate(value: Date) {
-  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
-}
-
-function formatDateLabel(value: Date) {
-  return value.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
-}
 
 const styles = StyleSheet.create({
   tabs: { borderBottomColor: "#e2e8f0", borderBottomWidth: 1, gap: 4, minWidth: "100%" }, tab: { borderBottomColor: "transparent", borderBottomWidth: 3, paddingHorizontal: 14, paddingVertical: 13 }, activeTab: { borderBottomColor: "#135bec" }, completeTab: { borderBottomColor: "#2563eb" }, tabText: { color: "#64748b", fontSize: 13, fontWeight: "700" }, activeTabText: { color: "#135bec" }, completeTabText: { color: "#2563eb" },

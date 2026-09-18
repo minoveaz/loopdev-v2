@@ -118,7 +118,7 @@ function getInitials(name?: string): string {
     .toUpperCase();
 }
 
-function formatRelativeTime(dateStr?: string, lang: MobileLangCode = "es"): string {
+function formatRelativeTime(dateStr?: string | null, lang: MobileLangCode = "es"): string {
   if (!dateStr) return "—";
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return "—";

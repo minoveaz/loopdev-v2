@@ -36,34 +36,6 @@ type DrawerItem = {
   path: string;
 };
 
-type SuiteTheme = {
-  bg: string;
-  color: string;
-  badgeBg: string;
-  badgeText: string;
-};
-
-const suiteThemes: Record<string, SuiteTheme> = {
-  crm: {
-    bg: "#eff6ff",
-    color: "#135bec",
-    badgeBg: "#dbeafe",
-    badgeText: "#1d4ed8",
-  },
-  erp: {
-    bg: "#f5f3ff",
-    color: "#7c3aed",
-    badgeBg: "#ede9fe",
-    badgeText: "#6d28d9",
-  },
-  tools: {
-    bg: "#ecfdf5",
-    color: "#059669",
-    badgeBg: "#d1fae5",
-    badgeText: "#047857",
-  },
-  settings: {
-    bg: "#f1f5f9",
 const groupIcons: Record<string, LucideIcon> = {
   crm: Users,
   erp: Boxes,

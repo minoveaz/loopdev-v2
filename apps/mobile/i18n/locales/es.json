@@ -348,6 +348,41 @@
       "title": "Pipeline",
       "back": "Volver al pipeline"
     },
+    "communications": {
+      "title": "Comunicaciones",
+      "subtitle": "Buzón omnicanal en tiempo real",
+      "back": "Volver a mensajes",
+      "newChat": "Nuevo",
+      "searchPlaceholder": "Buscar por cliente, teléfono o mensaje...",
+      "emptyTitle": "No se encontraron conversaciones",
+      "emptySubtitle": "Los mensajes entrantes de WhatsApp, Email y redes aparecerán aquí.",
+      "tabs": {
+        "all": "Todas",
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "instagram": "Instagram",
+        "sms": "SMS"
+      },
+      "composer": {
+        "placeholder": "Escribe una respuesta...",
+        "send": "Enviar",
+        "internalNote": "Nota interna de equipo",
+        "reply": "Respuesta al cliente",
+        "attachProduct": "Insertar producto del catálogo ERP",
+        "attachFile": "Adjuntar documento",
+        "windowNotice": "Ventana de conversación activa (restan {{hours}}h)",
+        "windowExpired": "Ventana de 24h expirada. Utiliza una plantilla aprobada."
+      },
+      "contextSheet": {
+        "title": "Ficha de Cliente y Operaciones",
+        "activeDeal": "Oportunidad Comercial Activa",
+        "viewDeal": "Ver Deal →",
+        "scheduleTask": "Agendar tarea de seguimiento",
+        "insertProduct": "Insertar producto del catálogo ERP",
+        "closeConversation": "Cerrar conversación / ticket",
+        "reopenConversation": "Reabrir conversación"
+      }
+    },
     "customer360": {
       "tabs": {
         "contactInfo": "Información de contacto",

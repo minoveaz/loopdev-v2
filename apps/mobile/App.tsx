@@ -38,6 +38,8 @@ import MobilePipelineScreen from "./components/MobilePipelineScreen";
 import { MobileOpportunityDetailScreen } from "./components/MobileOpportunityDetailScreen";
 import { MobileCrmOperationsScreen } from "./components/MobileCrmOperationsScreen";
 import { MobileProductCatalogScreen } from "./components/MobileProductCatalogScreen";
+import { MobileCommunicationsScreen } from "./components/communications/MobileCommunicationsScreen";
+import { MobileConversationScreen } from "./components/communications/MobileConversationScreen";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./adapters/auth";
 import type { AuthSession, TenantContextSnapshot } from "../../packages/contracts/src/auth-port";
 import type { MobileNoteDraft } from "./components/MobileNoteEditor";
@@ -339,6 +341,33 @@ export default function App() {
         <MobileProductCatalogScreen
           catalogId={catalogId}
           onBack={() => navigate(launchpadPath)}
+        />
+      );
+    }
+    if (
+      currentPath === "/app/sales-crm/communications" ||
+      currentPath === "/crm/communications" ||
+      currentPath === "/communications"
+    ) {
+      return (
+        <MobileCommunicationsScreen
+          onSelectConversation={(id) => navigate(`/app/sales-crm/communications/${id}`)}
+          onBack={() => navigate("/app/sales-crm/overview")}
+          onNavigateToContact={(contactId) => {
+            navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
+          }}
+        />
+      );
+    }
+    if (currentPath.startsWith("/app/sales-crm/communications/")) {
+      const convId = currentPath.replace("/app/sales-crm/communications/", "");
+      return (
+        <MobileConversationScreen
+          conversationId={convId}
+          onBack={() => navigate("/app/sales-crm/communications")}
+          onNavigateToContact={(contactId) => {
+            navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
+          }}
         />
       );
     }

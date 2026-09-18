@@ -348,6 +348,41 @@
       "title": "Pipeline",
       "back": "Back to pipeline"
     },
+    "communications": {
+      "title": "Communications",
+      "subtitle": "Real-time omnichannel inbox",
+      "back": "Back to messages",
+      "newChat": "New",
+      "searchPlaceholder": "Search by contact, phone or message...",
+      "emptyTitle": "No conversations found",
+      "emptySubtitle": "Incoming WhatsApp, Email and social messages will appear here.",
+      "tabs": {
+        "all": "All",
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "instagram": "Instagram",
+        "sms": "SMS"
+      },
+      "composer": {
+        "placeholder": "Type a message...",
+        "send": "Send",
+        "internalNote": "Internal Team Note",
+        "reply": "Customer Reply",
+        "attachProduct": "Insert ERP Catalog Item",
+        "attachFile": "Attach Document",
+        "windowNotice": "Active messaging window ({{hours}}h remaining)",
+        "windowExpired": "24h messaging window expired. Use an approved template."
+      },
+      "contextSheet": {
+        "title": "Customer Info & CRM Actions",
+        "activeDeal": "Active Commercial Opportunity",
+        "viewDeal": "View Deal →",
+        "scheduleTask": "Schedule Follow-up Task",
+        "insertProduct": "Insert ERP Catalog Item",
+        "closeConversation": "Close Conversation",
+        "reopenConversation": "Reopen Conversation"
+      }
+    },
     "customer360": {
       "tabs": {
         "contactInfo": "Contact Information",

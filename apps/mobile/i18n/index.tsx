@@ -44,11 +44,7 @@ interface MobileI18nContextValue {
 const MobileI18nContext = createContext<MobileI18nContextValue | undefined>(undefined);
 
 function detectInitialLang(): MobileLangCode {
-  if (typeof navigator !== "undefined" && navigator.language) {
-    const code = navigator.language.slice(0, 2).toLowerCase();
-    if (code === "es") return "es";
-  }
-  return "en";
+  return "es";
 }
 
 export function MobileI18nProvider({
@@ -64,8 +60,8 @@ export function MobileI18nProvider({
     (key: string, varsOrFallback?: Record<string, string | number> | string, fallback?: string) => {
       const fallbackText = typeof varsOrFallback === "string" ? varsOrFallback : fallback;
       const vars = typeof varsOrFallback === "object" ? varsOrFallback : undefined;
-      const currentDict = DICTIONARIES[lang] || DICTIONARIES.en;
-      const fallbackDict = DICTIONARIES.en;
+      const currentDict = DICTIONARIES[lang] || DICTIONARIES.es;
+      const fallbackDict = DICTIONARIES.es;
       const raw = getValue(currentDict, key) ?? getValue(fallbackDict, key) ?? fallbackText ?? key;
       return format(raw, vars);
     },
@@ -90,11 +86,11 @@ export function useMobileI18n(): MobileI18nContextValue {
     const defaultT: TranslateFn = (key, varsOrFallback, fallback) => {
       const fallbackText = typeof varsOrFallback === "string" ? varsOrFallback : fallback;
       const vars = typeof varsOrFallback === "object" ? varsOrFallback : undefined;
-      const raw = getValue(DICTIONARIES.en, key) ?? fallbackText ?? key;
+      const raw = getValue(DICTIONARIES.es, key) ?? getValue(DICTIONARIES.en, key) ?? fallbackText ?? key;
       return format(raw, vars);
     };
     return {
-      lang: "en",
+      lang: "es",
       setLang: () => {},
       t: defaultT,
     };

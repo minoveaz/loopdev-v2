@@ -9,16 +9,22 @@ type Props = {
   onActions: () => void;
 };
 
+const SPANISH_VISIBILITY: Record<string, string> = {
+  private: "Privada",
+  team: "Equipo",
+  organization: "Organización",
+};
+
 export function MobileNotesCard({ note, onOpen, onActions }: Props) {
   return (
     <View style={styles.card}>
       <View style={styles.top}>
         <Pressable accessibilityRole="button" onPress={onOpen} style={styles.titleButton}>
           <Text style={styles.title} numberOfLines={1}>
-            {note.plainTextPreview.split("\n")[0].slice(0, 48) || "Note"}
+            {note.plainTextPreview.split("\n")[0].slice(0, 48) || "Nota"}
           </Text>
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Note actions" onPress={onActions} style={styles.action} hitSlop={8}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Acciones de la nota" onPress={onActions} style={styles.action} hitSlop={8}>
           <MoreHorizontal size={16} color="#64748b" />
         </Pressable>
       </View>
@@ -31,10 +37,10 @@ export function MobileNotesCard({ note, onOpen, onActions }: Props) {
 
       <View style={styles.chips}>
         <View style={styles.relationBadge}>
-          <Text style={styles.relationText}>{note.relations[0]?.label ?? "Related"}</Text>
+          <Text style={styles.relationText}>{note.relations[0]?.label ?? "Relacionado"}</Text>
         </View>
         <View style={styles.visibilityBadge}>
-          <Text style={styles.visibilityText}>{note.visibility}</Text>
+          <Text style={styles.visibilityText}>{SPANISH_VISIBILITY[note.visibility] || note.visibility}</Text>
         </View>
       </View>
 
@@ -45,9 +51,9 @@ export function MobileNotesCard({ note, onOpen, onActions }: Props) {
           <Text style={styles.avatarText}>{(note.authorName ?? "U").slice(0, 1).toUpperCase()}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.author}>{note.authorName ?? "You"}</Text>
+          <Text style={styles.author}>{note.authorName ?? "Tú"}</Text>
           <Text style={styles.updated}>
-            {note.mode === "rich" ? "Rich note" : "Quick note"} · {new Date(note.updatedAt).toLocaleDateString()}
+            {note.mode === "rich" ? "Nota enriquecida" : "Nota rápida"} · {new Date(note.updatedAt).toLocaleDateString("es-ES")}
           </Text>
         </View>
         <Pressable onPress={onOpen}>

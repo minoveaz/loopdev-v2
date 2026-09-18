@@ -14,8 +14,8 @@ type MobileSuiteCardProps = {
 
 export function MobileSuiteCard({ title, description, version, kind, status, onPress }: MobileSuiteCardProps) {
   const active = status === "ready";
-  const statusLabel = status === "lab" ? "LAB" : active ? "READY" : "{ LOCKED }";
-  const systemStatus = active ? "SYSTEM_READY" : status === "lab" ? "LAB_ACCESS" : "AUTH_REQUIRED";
+  const statusLabel = status === "lab" ? "LABORATORIO" : active ? "DISPONIBLE" : "{ BLOQUEADO }";
+  const systemStatus = active ? "SISTEMA_LISTO" : status === "lab" ? "ACCESO_LAB" : "REQUIERE_AUTH";
   return (
     <Pressable
       accessibilityRole="button"

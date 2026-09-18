@@ -22,7 +22,7 @@ export function MobileHeader({
     <View style={styles.topBar}>
       <View style={styles.leadingGroup}>
         <Pressable
-          accessibilityLabel="Open navigation"
+          accessibilityLabel="Abrir navegación"
           accessibilityRole="button"
           onPress={onMenuPress}
           style={styles.topBarButton}
@@ -31,7 +31,7 @@ export function MobileHeader({
         </Pressable>
         {leading}
         <Pressable
-          accessibilityLabel="Go to Launchpad"
+          accessibilityLabel="Ir al Inicio"
           accessibilityRole="button"
           disabled={!onLogoPress}
           onPress={onLogoPress}
@@ -43,17 +43,17 @@ export function MobileHeader({
         {showActions && (
           <>
             <Pressable
-              accessibilityLabel="Search"
+              accessibilityLabel="Buscar"
               accessibilityRole="button"
-              onPress={() => Alert.alert("Search", "Global search will be available here.")}
+              onPress={() => Alert.alert("Búsqueda", "La búsqueda global estará disponible aquí.")}
               style={styles.topBarButton}
             >
               <Search color="#64748b" size={18} strokeWidth={2.2} />
             </Pressable>
             <Pressable
-              accessibilityLabel="Notifications"
+              accessibilityLabel="Notificaciones"
               accessibilityRole="button"
-              onPress={() => Alert.alert("Notifications", "You are all caught up.")}
+              onPress={() => Alert.alert("Notificaciones", "No tienes notificaciones pendientes.")}
               style={styles.topBarButton}
             >
               <Bell color="#64748b" size={18} strokeWidth={2.2} />
@@ -61,7 +61,7 @@ export function MobileHeader({
           </>
         )}
         <Pressable
-          accessibilityLabel="Account menu"
+          accessibilityLabel="Menú de cuenta"
           accessibilityRole="button"
           onPress={onAccountPress}
           style={styles.avatar}

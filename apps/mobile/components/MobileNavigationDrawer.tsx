@@ -83,6 +83,23 @@ const sections = loopdevNavigationContract.groups.map((group) => ({
   theme: suiteThemes[group.id] || suiteThemes.settings,
 }));
 
+const SPANISH_DRAWER_LABELS: Record<string, string> = {
+  CRM: "CRM",
+  ERP: "ERP",
+  Tools: "Herramientas",
+  Settings: "Configuración",
+  Launchpad: "Inicio",
+  Overview: "Resumen General",
+  Contacts: "Contactos",
+  Leads: "Leads",
+  Pipeline: "Pipeline",
+  Opportunities: "Oportunidades",
+  Tasks: "Tareas",
+  Communications: "Comunicaciones",
+  "Product Catalog": "Catálogo de Productos",
+  "Document Intelligence": "Inteligencia Documental",
+};
+
 export function MobileNavigationDrawer({
   visible,
   onClose,
@@ -101,32 +118,43 @@ export function MobileNavigationDrawer({
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (!visible) return;
-    translateX.setValue(-500);
-    backdropOpacity.setValue(0);
-    Animated.parallel([
-      Animated.timing(translateX, {
-        duration: 220,
-        toValue: 0,
-        useNativeDriver: false,
-      }),
-      Animated.timing(backdropOpacity, {
-        duration: 180,
-        toValue: 1,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [backdropOpacity, translateX, visible]);
+    if (visible) {
+      Animated.parallel([
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+          bounciness: 0,
+          speed: 16,
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(translateX, {
+          toValue: -500,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible]);
 
-  const activeSuiteName = activePath?.startsWith("/app/sales-crm")
-    ? "CRM Suite"
-    : activePath?.startsWith("/app/erp")
-      ? "ERP Operations"
-      : activePath?.startsWith("/app/tools")
-        ? "Tools & AI"
-        : activePath?.startsWith("/app/settings")
-          ? "Settings"
-          : "Launchpad Workspace";
+  const activeSuiteName = (() => {
+    if (activePath?.startsWith("/app/sales-crm")) return "Ventas y CRM";
+    if (activePath?.startsWith("/app/erp")) return "ERP";
+    if (activePath?.startsWith("/app/tools")) return "Herramientas";
+    if (activePath?.startsWith("/app/settings")) return "Configuración";
+    return "Inicio";
+  })();
 
   const isLaunchpadActive = activePath === loopdevNavigationContract.launchpad.path || !activePath || activePath === "/";
 
@@ -171,7 +199,7 @@ export function MobileNavigationDrawer({
                 isSectionActive && styles.sectionLabelActive,
               ]}
             >
-              {section.label}
+              {SPANISH_DRAWER_LABELS[section.label] || section.label}
             </Text>
           </View>
           <SectionIcon color="#94a3b8" size={16} strokeWidth={2.2} />
@@ -211,7 +239,7 @@ export function MobileNavigationDrawer({
                       ]}
                       numberOfLines={1}
                     >
-                      {item.label}
+                      {SPANISH_DRAWER_LABELS[item.label] || item.label}
                     </Text>
                   </Pressable>
                 );
@@ -250,14 +278,14 @@ export function MobileNavigationDrawer({
                   <View style={styles.nameBadgeRow}>
                     <Text style={styles.profileName}>Admin</Text>
                     <View style={styles.rolePill}>
-                      <Text style={styles.rolePillText}>Owner</Text>
+                      <Text style={styles.rolePillText}>Propietario</Text>
                     </View>
                   </View>
                   <Text style={styles.profileEmail} numberOfLines={1}>admin@loopdev.app</Text>
                 </View>
               </View>
               <Pressable
-                accessibilityLabel="Close navigation"
+                accessibilityLabel="Cerrar navegación"
                 accessibilityRole="button"
                 onPress={onClose}
                 style={styles.closeButton}
@@ -272,7 +300,7 @@ export function MobileNavigationDrawer({
               <View style={styles.contextHeader}>
                 <View style={styles.contextTag}>
                   <View style={styles.contextLiveDot} />
-                  <Text style={styles.contextLabel}>WORKSPACE</Text>
+                  <Text style={styles.contextLabel}>ESPACIO DE TRABAJO</Text>
                 </View>
                 <Text style={styles.contextSub}>LoopDev Cloud</Text>
               </View>
@@ -282,14 +310,14 @@ export function MobileNavigationDrawer({
                 </View>
                 <View style={styles.contextTitleWrap}>
                   <Text style={styles.contextName}>{activeSuiteName}</Text>
-                  <Text style={styles.contextHint}>Active Work Context</Text>
+                  <Text style={styles.contextHint}>Contexto de trabajo activo</Text>
                 </View>
                 <ChevronRight size={16} color="#94a3b8" />
               </View>
             </View>
 
             {/* Category: MAIN */}
-            <Text style={styles.categoryTitle}>MAIN</Text>
+            <Text style={styles.categoryTitle}>PRINCIPAL</Text>
 
             {/* Launchpad Item */}
             <Pressable
@@ -322,21 +350,21 @@ export function MobileNavigationDrawer({
                   isLaunchpadActive && styles.navPillLabelActive,
                 ]}
               >
-                {loopdevNavigationContract.launchpad.label}
+                {SPANISH_DRAWER_LABELS[loopdevNavigationContract.launchpad.label] || loopdevNavigationContract.launchpad.label}
               </Text>
               {isLaunchpadActive && <View style={styles.activeIndicator} />}
             </Pressable>
 
             {/* Category: SUITES */}
-            <Text style={[styles.categoryTitle, { marginTop: 16 }]}>SUITES</Text>
+            <Text style={[styles.categoryTitle, { marginTop: 16 }]}>MÓDULOS</Text>
             {suiteSections.map(renderSection)}
 
             {/* Category: TOOLS */}
-            <Text style={[styles.categoryTitle, { marginTop: 16 }]}>TOOLS</Text>
+            <Text style={[styles.categoryTitle, { marginTop: 16 }]}>HERRAMIENTAS</Text>
             {toolSections.map(renderSection)}
 
             {/* Category: SETTINGS */}
-            <Text style={[styles.categoryTitle, { marginTop: 16 }]}>SETTINGS</Text>
+            <Text style={[styles.categoryTitle, { marginTop: 16 }]}>CONFIGURACIÓN</Text>
             {settingSections.map(renderSection)}
           </ScrollView>
 
@@ -350,7 +378,7 @@ export function MobileNavigationDrawer({
         </Animated.View>
         <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
           <Pressable
-            accessibilityLabel="Close navigation"
+            accessibilityLabel="Cerrar navegación"
             accessibilityRole="button"
             onPress={onClose}
             style={StyleSheet.absoluteFill}

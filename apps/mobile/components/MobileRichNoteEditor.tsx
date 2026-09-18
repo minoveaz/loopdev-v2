@@ -25,7 +25,7 @@ export function MobileRichNoteEditor({ initialContent, disabled, onChange }: Pro
 
   return (
     <View style={styles.container}>
-      <View accessibilityLabel="Rich note formatting tools" style={styles.toolbar}>
+      <View accessibilityLabel="Herramientas de formato de nota enriquecida" style={styles.toolbar}>
         <Heading2 size={iconSize} color={iconColor} />
         <Bold size={iconSize} color={iconColor} />
         <Italic size={iconSize} color={iconColor} />
@@ -49,7 +49,7 @@ export function MobileRichNoteEditor({ initialContent, disabled, onChange }: Pro
             },
           })
         }
-        placeholder="Write a rich note..."
+        placeholder="Escribe una nota enriquecida..."
         textAlignVertical="top"
         style={styles.editor}
       />

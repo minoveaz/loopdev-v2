@@ -35,6 +35,24 @@ const icons: Record<string, LucideIcon> = {
   product: PackagePlus,
 };
 
+const SPANISH_ACTION_TRANSLATIONS: Record<string, { label: string; description: string }> = {
+  "open-crm": { label: "Abrir CRM", description: "Continuar trabajando con clientes y pipeline." },
+  "open-erp": { label: "Abrir ERP", description: "Continuar trabajando con productos y operaciones." },
+  "new-contact": { label: "Nuevo contacto", description: "Crear una persona o empresa en CRM." },
+  "new-lead": { label: "Nuevo lead", description: "Añadir un cliente potencial al flujo de calificación." },
+  "new-opportunity": { label: "Nueva oportunidad", description: "Iniciar el seguimiento de una oportunidad comercial." },
+  "new-product": { label: "Nuevo producto", description: "Añadir un artículo al catálogo de productos." },
+  "new-order": { label: "Nuevo pedido", description: "Iniciar una nueva orden operativa." },
+  "new-conversation": { label: "Nueva conversación", description: "Iniciar un mensaje directo con un cliente o contacto." },
+};
+
+const CONTEXT_LABELS: Record<string, string> = {
+  launchpad: "INICIO",
+  crm: "CRM",
+  erp: "ERP",
+  conversations: "MENSAJES",
+};
+
 export function MobileCommandPalette({
   context,
   visible,
@@ -45,6 +63,10 @@ export function MobileCommandPalette({
   const normalizedQuery = query.trim().toLowerCase();
   const actions = useMemo(
     () => getContextualActions(context)
+      .map((item) => {
+        const trans = SPANISH_ACTION_TRANSLATIONS[item.id];
+        return trans ? { ...item, label: trans.label, description: trans.description } : item;
+      })
       .filter((item) => `${item.label} ${item.description}`.toLowerCase().includes(normalizedQuery))
       .slice(0, 5),
     [context, normalizedQuery],
@@ -58,34 +80,34 @@ export function MobileCommandPalette({
   return (
     <Modal animationType="fade" onRequestClose={close} transparent visible={visible}>
       <View style={styles.overlay}>
-        <Pressable accessibilityLabel="Close command palette" accessibilityRole="button" onPress={close} style={styles.backdrop} />
+        <Pressable accessibilityLabel="Cerrar paleta de comandos" accessibilityRole="button" onPress={close} style={styles.backdrop} />
         <View style={styles.palette}>
           <View style={styles.header}>
             <View style={styles.heading}>
-              <Text style={styles.title}>Quick action</Text>
-              <Text style={styles.context}>{context === "launchpad" ? "LAUNCHPAD" : context.toUpperCase()}</Text>
+              <Text style={styles.title}>Acción rápida</Text>
+              <Text style={styles.context}>{CONTEXT_LABELS[context] || context.toUpperCase()}</Text>
             </View>
-            <Pressable accessibilityLabel="Close command palette" accessibilityRole="button" onPress={close} style={styles.close}>
+            <Pressable accessibilityLabel="Cerrar paleta de comandos" accessibilityRole="button" onPress={close} style={styles.close}>
               <X color="#64748b" size={18} />
             </Pressable>
           </View>
           <View style={styles.searchRow}>
             <Search color="#64748b" size={18} strokeWidth={2.2} />
             <TextInput
-              accessibilityLabel="Search contextual actions"
+              accessibilityLabel="Buscar acciones contextuales"
               onChangeText={setQuery}
-              placeholder="Search actions..."
+              placeholder="Buscar acciones..."
               placeholderTextColor="#94a3b8"
               style={styles.input}
               value={query}
             />
           </View>
-          <Text style={styles.sectionLabel}>ACTIONS</Text>
+          <Text style={styles.sectionLabel}>ACCIONES</Text>
           <View style={styles.actionList}>
             {actions.map((action) => <ActionRow key={action.id} action={action} onPress={() => onAction(action)} />)}
-            {actions.length === 0 && <Text style={styles.empty}>No actions found.</Text>}
+            {actions.length === 0 && <Text style={styles.empty}>No se encontraron acciones.</Text>}
           </View>
-          <Text style={styles.hint}>Choose an action for the current context</Text>
+          <Text style={styles.hint}>Elige una acción para el contexto actual</Text>
         </View>
       </View>
     </Modal>

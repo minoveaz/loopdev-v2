@@ -24,9 +24,18 @@ const icons: Record<string, BottomNavIcon> = {
   copilot: BrandInfinityIcon,
 };
 
+const SPANISH_BOTTOM_LABELS: Record<string, string> = {
+  launchpad: "Inicio",
+  conversations: "Mensajes",
+  copilot: "Copilot",
+  more: "Más",
+  crm: "CRM",
+  erp: "ERP",
+};
+
 export function MobileBottomNav({ context, activeTab, onTabPress, onActionPress }: MobileBottomNavProps) {
   const tabs: { label: string; tab: MobileTab; icon: BottomNavIcon }[] = getBottomNavigationItems().map((item) => ({
-    label: item.label,
+    label: SPANISH_BOTTOM_LABELS[item.slot] || item.label,
     tab: item.slot === "copilot" ? "copilot" : item.slot,
     icon: icons[item.iconKey],
   }));
@@ -54,7 +63,7 @@ export function MobileBottomNav({ context, activeTab, onTabPress, onActionPress 
         );
       })}
       <Pressable
-        accessibilityLabel="Open contextual actions"
+        accessibilityLabel="Abrir acciones contextuales"
         accessibilityRole="button"
         onPress={onActionPress}
         style={styles.actionButton}

@@ -5,11 +5,11 @@ import { MobileNotesCard } from "./MobileNotesCard";
 type Props = { notes: NoteRecord[]; loading?: boolean; forbidden?: boolean; onCreate: () => void; onOpen: (note: NoteRecord) => void; onDelete: (note: NoteRecord) => void };
 
 export function MobileNotesList({ notes, loading, forbidden, onCreate, onOpen, onDelete }: Props) {
-  if (loading) return <Text style={styles.state}>Loading notes...</Text>;
-  if (forbidden) return <Text style={styles.state}>Notes are not available in this scope.</Text>;
+  if (loading) return <Text style={styles.state}>Cargando notas...</Text>;
+  if (forbidden) return <Text style={styles.state}>Las notas no están disponibles en este alcance.</Text>;
   return <View>
-    <View style={styles.header}><View><Text style={styles.title}>Notes</Text><Text style={styles.subtitle}>Related notes for this contact</Text></View><Pressable accessibilityRole="button" onPress={onCreate} style={styles.create}><Text style={styles.createText}>+ New note</Text></Pressable></View>
-    {notes.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>No notes yet</Text><Text style={styles.state}>Create the first note for this contact.</Text><Pressable accessibilityRole="button" onPress={onCreate} style={styles.emptyAction}><Text style={styles.createText}>Create note</Text></Pressable></View> : notes.map((note) => <MobileNotesCard key={note.id} note={note} onOpen={() => onOpen(note)} onActions={() => Alert.alert("Note actions", undefined, [{ text: "Edit note", onPress: () => onOpen(note) }, { text: "Copy link" }, { text: "Delete note", style: "destructive", onPress: () => onDelete(note) }, { text: "Cancel", style: "cancel" }])} />)}
+    <View style={styles.header}><View><Text style={styles.title}>Notas</Text><Text style={styles.subtitle}>Notas relacionadas con este contacto</Text></View><Pressable accessibilityRole="button" onPress={onCreate} style={styles.create}><Text style={styles.createText}>+ Nueva nota</Text></Pressable></View>
+    {notes.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>Sin notas aún</Text><Text style={styles.state}>Crea la primera nota para este contacto.</Text><Pressable accessibilityRole="button" onPress={onCreate} style={styles.emptyAction}><Text style={styles.createText}>Crear nota</Text></Pressable></View> : notes.map((note) => <MobileNotesCard key={note.id} note={note} onOpen={() => onOpen(note)} onActions={() => Alert.alert("Acciones de la nota", undefined, [{ text: "Editar nota", onPress: () => onOpen(note) }, { text: "Copiar enlace" }, { text: "Eliminar nota", style: "destructive", onPress: () => onDelete(note) }, { text: "Cancelar", style: "cancel" }])} />)}
   </View>;
 }
 

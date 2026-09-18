@@ -13,10 +13,10 @@ type MobileAccountSheetProps = {
 };
 
 const items = [
-  { label: "Profile", icon: UserRound },
-  { label: "Account settings", icon: Settings },
-  { label: "Security", icon: ShieldCheck },
-  { label: "Billing", icon: CreditCard },
+  { label: "Perfil", icon: UserRound },
+  { label: "Configuración de cuenta", icon: Settings },
+  { label: "Seguridad", icon: ShieldCheck },
+  { label: "Facturación", icon: CreditCard },
 ];
 
 export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAccountSheetProps) {
@@ -65,12 +65,12 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
   };
 
   const activeOrgId = context?.activeOrganizationId ?? orgs[0]?.id;
-  const userName = session?.user.fullName || session?.user.email?.split("@")[0] || "User";
-  const userEmail = session?.user.email || "user@loopdev.com";
+  const userName = session?.user.fullName || session?.user.email?.split("@")[0] || "Usuario";
+  const userEmail = session?.user.email || "usuario@loopdev.com";
   const initials = (session?.user.fullName ? session.user.fullName.split(" ").map((p: string) => p[0]).join("") : userName.slice(0, 2)).toUpperCase().slice(0, 2);
 
   return (
-    <MobileBottomSheet onClose={onClose} title="Account" visible={visible}>
+    <MobileBottomSheet onClose={onClose} title="Cuenta" visible={visible}>
       <View style={styles.profileHeader}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials || "AD"}</Text>
@@ -80,7 +80,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
             <Text style={styles.name}>{userName}</Text>
             {context?.isSuperAdmin && (
               <View style={styles.superBadge}>
-                <Text style={styles.superBadgeText}>SUPER ADMIN</Text>
+                <Text style={styles.superBadgeText}>SUPER ADMINISTRADOR</Text>
               </View>
             )}
           </View>
@@ -92,7 +92,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
 
       {/* Organization Switcher inside Mobile Account Sheet */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SWITCH ORGANIZATION</Text>
+        <Text style={styles.sectionTitle}>CAMBIAR ORGANIZACIÓN</Text>
         <View style={styles.orgList}>
           {orgs.map((org) => {
             const isActive = org.id === activeOrgId;
@@ -107,7 +107,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
                 </View>
                 <View style={styles.orgInfo}>
                   <Text style={[styles.orgName, isActive && styles.activeOrgName]}>{org.name}</Text>
-                  <Text style={styles.orgDetail}>{isActive ? "Active Organization" : "Tap to switch"}</Text>
+                  <Text style={styles.orgDetail}>{isActive ? "Organización activa" : "Toca para cambiar"}</Text>
                 </View>
                 {isActive ? (
                   <View style={styles.activeCheck}>
@@ -137,15 +137,15 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
 
       <Pressable onPress={() => setConfirmSignOut(true)} style={styles.item}>
         <LogOut color="#ef334e" size={22} strokeWidth={2} />
-        <Text style={styles.signOut}>Sign out</Text>
+        <Text style={styles.signOut}>Cerrar sesión</Text>
       </Pressable>
 
       <MobileConfirmDialog
         visible={confirmSignOut}
-        title="Sign out of LoopDev?"
-        description="Are you sure you want to end your session? Your active tenant and workspace context will be cleared."
-        cancelLabel="Cancel"
-        confirmLabel="Sign out"
+        title="¿Cerrar sesión en LoopDev?"
+        description="¿Estás seguro de que deseas finalizar tu sesión? Tu organización activa y contexto de trabajo se cerrarán."
+        cancelLabel="Cancelar"
+        confirmLabel="Cerrar sesión"
         destructive
         onCancel={() => setConfirmSignOut(false)}
         onConfirm={handleExecuteSignOut}

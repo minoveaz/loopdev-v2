@@ -22,7 +22,7 @@ type Props = {
 };
 
 const visibilityOptions: NoteVisibility[] = ["private", "team", "organization"];
-const visibilityLabels: Record<NoteVisibility, string> = { private: "Private", team: "Team", organization: "Organization" };
+const visibilityLabels: Record<NoteVisibility, string> = { private: "Privada", team: "Equipo", organization: "Organización" };
 
 export function MobileNoteEditor({ initialNote, relationLabel, onCancel, onSave }: Props) {
   const [mode, setMode] = useState<NoteMode>(initialNote?.mode ?? "quick");
@@ -36,7 +36,7 @@ export function MobileNoteEditor({ initialNote, relationLabel, onCancel, onSave 
 
   async function save() {
     if (!body.trim()) {
-      setError("Add some content before saving.");
+      setError("Agrega contenido antes de guardar.");
       return;
     }
     setSaving(true);
@@ -50,25 +50,25 @@ export function MobileNoteEditor({ initialNote, relationLabel, onCancel, onSave 
         content: mode === "rich" ? richContent : { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: body.trim() }] }] },
       });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to save note.");
+      setError(cause instanceof Error ? cause.message : "No se pudo guardar la nota.");
     } finally {
       setSaving(false);
     }
   }
 
   return <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" nestedScrollEnabled={true}>
-    <View style={styles.header}><View><Text style={styles.eyebrow}>{initialNote ? "EDIT NOTE" : "NEW NOTE"}</Text><Text style={styles.title}>{mode === "rich" ? "New rich note" : "New quick note"}</Text><Text style={styles.relation}>Related to {relationLabel}</Text></View><Pressable accessibilityRole="button" onPress={onCancel}><X size={20} color="#64748b" /></Pressable></View>
+    <View style={styles.header}><View><Text style={styles.eyebrow}>{initialNote ? "EDITAR NOTA" : "NUEVA NOTA"}</Text><Text style={styles.title}>{mode === "rich" ? "Nueva nota enriquecida" : "Nueva nota rápida"}</Text><Text style={styles.relation}>Relacionado con {relationLabel}</Text></View><Pressable accessibilityRole="button" onPress={onCancel}><X size={20} color="#64748b" /></Pressable></View>
     <View accessibilityRole="tablist" style={styles.modeSwitch}>
-      {(["quick", "rich"] as NoteMode[]).map((option) => <Pressable key={option} accessibilityRole="tab" accessibilityState={{ selected: mode === option }} onPress={() => setMode(option)} style={[styles.modeButton, mode === option && styles.modeButtonSelected]}><Text style={[styles.modeText, mode === option && styles.modeTextSelected]}>{option === "quick" ? "Quick note" : "Rich note"}</Text></Pressable>)}
+      {(["quick", "rich"] as NoteMode[]).map((option) => <Pressable key={option} accessibilityRole="tab" accessibilityState={{ selected: mode === option }} onPress={() => setMode(option)} style={[styles.modeButton, mode === option && styles.modeButtonSelected]}><Text style={[styles.modeText, mode === option && styles.modeTextSelected]}>{option === "quick" ? "Nota rápida" : "Nota enriquecida"}</Text></Pressable>)}
     </View>
-    <Text style={styles.label}>Title (optional)</Text><TextInput value={title} onChangeText={setTitle} placeholder="Give this note a useful title" style={styles.input} />
-    <Text style={styles.label}>Content</Text>{mode === "rich" ? <MobileRichNoteEditor key={initialNote?.id ?? "new-note"} initialContent={richContent} onChange={({ content, plainTextPreview }) => { setRichContent(content); setBody(plainTextPreview); }} /> : <TextInput multiline value={body} onChangeText={setBody} placeholder="Write a quick note..." textAlignVertical="top" style={styles.editor} />}
-    <View style={visibilityStyles.field}><Text style={styles.label}>Visibility</Text><Pressable accessibilityLabel="Visibility" accessibilityRole="button" accessibilityState={{ expanded: visibilityOpen }} onPress={() => setVisibilityOpen(true)} style={visibilityStyles.trigger}><Text style={visibilityStyles.value}>{visibilityLabels[visibility]}</Text><ChevronDown size={16} color="#64748b" /></Pressable></View>
-    <View style={styles.footer}><Pressable onPress={onCancel} style={styles.cancel}><Text style={styles.cancelText}>Cancel</Text></Pressable><Pressable disabled={saving} onPress={() => void save()} style={styles.save}><Text style={styles.saveText}>{saving ? "Saving..." : "Save note"}</Text></Pressable></View>
+    <Text style={styles.label}>Título (opcional)</Text><TextInput value={title} onChangeText={setTitle} placeholder="Asigna un título útil a esta nota" style={styles.input} />
+    <Text style={styles.label}>Contenido</Text>{mode === "rich" ? <MobileRichNoteEditor key={initialNote?.id ?? "new-note"} initialContent={richContent} onChange={({ content, plainTextPreview }) => { setRichContent(content); setBody(plainTextPreview); }} /> : <TextInput multiline value={body} onChangeText={setBody} placeholder="Escribe una nota rápida..." textAlignVertical="top" style={styles.editor} />}
+    <View style={visibilityStyles.field}><Text style={styles.label}>Visibilidad</Text><Pressable accessibilityLabel="Visibilidad" accessibilityRole="button" accessibilityState={{ expanded: visibilityOpen }} onPress={() => setVisibilityOpen(true)} style={visibilityStyles.trigger}><Text style={visibilityStyles.value}>{visibilityLabels[visibility]}</Text><ChevronDown size={16} color="#64748b" /></Pressable></View>
+    <View style={styles.footer}><Pressable onPress={onCancel} style={styles.cancel}><Text style={styles.cancelText}>Cancelar</Text></Pressable><Pressable disabled={saving} onPress={() => void save()} style={styles.save}><Text style={styles.saveText}>{saving ? "Guardando..." : "Guardar nota"}</Text></Pressable></View>
     {error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
-    <MobileModalSheet visible={visibilityOpen} onClose={() => setVisibilityOpen(false)} title="Note visibility">
-      <Text style={visibilityStyles.sheetDescription}>Choose who can access this note.</Text>
-      {visibilityOptions.map((option) => <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected: option === visibility }} onPress={() => { setVisibility(option); setVisibilityOpen(false); }} style={[visibilityStyles.sheetOption, option === visibility && visibilityStyles.sheetOptionSelected]}><View><Text style={[visibilityStyles.optionText, option === visibility && visibilityStyles.selectedOptionText]}>{visibilityLabels[option]}</Text><Text style={visibilityStyles.optionDescription}>{option === "private" ? "Only you" : option === "team" ? "Members of your team" : "Everyone in the organization"}</Text></View>{option === visibility ? <Check size={18} color={mobileTheme.colors.primary} /> : null}</Pressable>)}
+    <MobileModalSheet visible={visibilityOpen} onClose={() => setVisibilityOpen(false)} title="Visibilidad de la nota">
+      <Text style={visibilityStyles.sheetDescription}>Elige quién puede acceder a esta nota.</Text>
+      {visibilityOptions.map((option) => <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected: option === visibility }} onPress={() => { setVisibility(option); setVisibilityOpen(false); }} style={[visibilityStyles.sheetOption, option === visibility && visibilityStyles.sheetOptionSelected]}><View><Text style={[visibilityStyles.optionText, option === visibility && visibilityStyles.selectedOptionText]}>{visibilityLabels[option]}</Text><Text style={visibilityStyles.optionDescription}>{option === "private" ? "Solo tú" : option === "team" ? "Miembros de tu equipo" : "Todos en la organización"}</Text></View>{option === visibility ? <Check size={18} color={mobileTheme.colors.primary} /> : null}</Pressable>)}
     </MobileModalSheet>
   </ScrollView>;
 }

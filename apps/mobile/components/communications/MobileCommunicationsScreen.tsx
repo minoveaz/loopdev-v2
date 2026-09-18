@@ -60,12 +60,12 @@ const CHANNEL_COLORS: Record<CommunicationChannel, string> = {
 const CHANNEL_LABELS: Record<CommunicationChannel | "all", string> = {
   all: "Todos los canales",
   whatsapp: "WhatsApp",
-  email: "Email",
+  email: "Correo",
   instagram: "Instagram",
   facebook_messenger: "Messenger",
   sms: "SMS",
   phone: "Teléfono",
-  livechat: "Live Chat",
+  livechat: "Chat en vivo",
 };
 
 const STATUS_OPTIONS: Array<{ id: ConversationStatus | "all"; label: string }> = [
@@ -160,7 +160,7 @@ export function MobileCommunicationsScreen({
 
   const statusToneMap: Record<ConversationStatus, { bg: string; text: string; label: string }> = {
     open: { bg: "#dcfce7", text: "#15803d", label: "Abierto" },
-    pending: { bg: "#fef3c7", text: "#b45309", label: "SLA 30m" },
+    pending: { bg: "#fef3c7", text: "#b45309", label: "Pendiente" },
     snoozed: { bg: "#eff6ff", text: "#1d4ed8", label: "Pausado" },
     closed: { bg: "#f1f5f9", text: "#64748b", label: "Cerrado" },
   };
@@ -285,8 +285,8 @@ export function MobileCommunicationsScreen({
       <View style={styles.topSection}>
         {/* Eyebrow & Title */}
         <View style={styles.titleWrap}>
-          <Text style={styles.eyebrow}>CHANNELS</Text>
-          <Text style={styles.headerTitle}>Operational inbox</Text>
+          <Text style={styles.eyebrow}>CANALES</Text>
+          <Text style={styles.headerTitle}>Bandeja de Entrada</Text>
           <Text style={styles.headerSubtitle}>
             Buzón omnicanal sincronizado en tiempo real
           </Text>

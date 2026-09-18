@@ -3,19 +3,19 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 export function MobileAccountScreen() {
   return (
       <ScrollView contentContainerStyle={styles.accountContent}>
-        <Text style={styles.accountEyebrow}>MORE</Text>
-        <Text style={styles.accountTitle}>Workspace & account</Text>
-        <Text style={styles.accountDescription}>Manage your LoopDev experience, resources, and preferences.</Text>
+        <Text style={styles.accountEyebrow}>MÁS</Text>
+        <Text style={styles.accountTitle}>Espacio de trabajo y cuenta</Text>
+        <Text style={styles.accountDescription}>Gestiona tu experiencia en LoopDev, recursos y preferencias.</Text>
         <View style={styles.accountCard}>
-          <AccountRow label="Profile" detail="Your personal information and account" />
-          <AccountRow label="Preferences" detail="Language, theme, and appearance" />
-          <AccountRow label="Documentation" detail="Product guides and platform reference" />
-          <AccountRow label="Changelog" detail="What is new in LoopDev" />
-          <AccountRow label="Support" detail="Get help from the LoopDev team" />
+          <AccountRow label="Perfil" detail="Tu información personal y datos de cuenta" />
+          <AccountRow label="Preferencias" detail="Idioma, tema y apariencia" />
+          <AccountRow label="Documentación" detail="Guías de productos y referencia de la plataforma" />
+          <AccountRow label="Novedades" detail="Nuevas funcionalidades y cambios en LoopDev" />
+          <AccountRow label="Soporte" detail="Obtén ayuda del equipo de LoopDev" />
         </View>
         <View style={styles.systemCard}>
-          <View style={styles.systemCardHeader}><View style={styles.systemNormalDot} /><Text style={styles.systemNormalText}>ALL SYSTEMS NORMAL</Text></View>
-          <Text style={styles.systemCardDetail}>LoopDev services are operating normally.</Text>
+          <View style={styles.systemCardHeader}><View style={styles.systemNormalDot} /><Text style={styles.systemNormalText}>TODOS LOS SISTEMAS OPERATIVOS</Text></View>
+          <Text style={styles.systemCardDetail}>Los servicios de LoopDev están operando con normalidad.</Text>
         </View>
         <View style={styles.aboutCard}><Text style={styles.aboutName}>Loopdev</Text><Text style={styles.aboutVersion}>v0.0.1 · © 2026 LoopDev</Text></View>
       </ScrollView>

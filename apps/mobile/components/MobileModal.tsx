@@ -25,7 +25,7 @@ export function MobileModalSheet({
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
       <View style={styles.overlay}>
-        <Pressable accessibilityLabel="Close modal" accessibilityRole="button" onPress={onClose} style={styles.backdrop} />
+        <Pressable accessibilityLabel="Cerrar modal" accessibilityRole="button" onPress={onClose} style={styles.backdrop} />
         <View onStartShouldSetResponder={() => true} style={[styles.sheet, fullHeight && styles.fullHeight]}>
           <View style={styles.handle} />
           {header ?? (title ? <Text accessibilityRole="header" style={styles.title}>{title}</Text> : null)}
@@ -49,7 +49,7 @@ export function MobileModalSheet({
   );
 }
 
-export function MobileConfirmDialog({ visible, title, description, cancelLabel = "Cancel", confirmLabel = "Confirm", destructive = false, onCancel, onConfirm }: {
+export function MobileConfirmDialog({ visible, title, description, cancelLabel = "Cancelar", confirmLabel = "Confirmar", destructive = false, onCancel, onConfirm }: {
   visible: boolean;
   title: string;
   description: string;

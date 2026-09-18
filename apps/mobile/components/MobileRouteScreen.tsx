@@ -8,11 +8,11 @@ type MobileRouteScreenProps = {
 export function MobileRouteScreen({ label, path }: MobileRouteScreenProps) {
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.eyebrow}>LOOPDEV WORKSPACE</Text>
+      <Text style={styles.eyebrow}>ESPACIO DE TRABAJO LOOPDEV</Text>
       <Text style={styles.title}>{label}</Text>
-      <Text style={styles.description}>This mobile route is connected to the shared LoopDev navigation contract.</Text>
+      <Text style={styles.description}>Esta ruta móvil está conectada al contrato de navegación central de LoopDev.</Text>
       <View style={styles.card}>
-        <Text style={styles.cardLabel}>CURRENT ROUTE</Text>
+        <Text style={styles.cardLabel}>RUTA ACTUAL</Text>
         <Text style={styles.path}>{path}</Text>
       </View>
     </ScrollView>

@@ -68,8 +68,8 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
 
   return (
     <ScrollView contentContainerStyle={styles.workspaceContent}>
-      <MobileBackLink label="Back to Launchpad" onPress={onBack} />
-      <View style={styles.workspaceEyebrow}><Text style={styles.workspaceEyebrowText}>ACTIVE WORK CONTEXT</Text></View>
+      <MobileBackLink label="Volver al Inicio" onPress={onBack} />
+      <View style={styles.workspaceEyebrow}><Text style={styles.workspaceEyebrowText}>CONTEXTO DE TRABAJO ACTIVO</Text></View>
       <Text style={styles.workspaceTitle}>{suite.title}</Text>
       <Text style={styles.workspaceDescription}>{suite.description}</Text>
 
@@ -143,9 +143,9 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
 
       <View style={styles.workspaceHero}><SuiteIllustration kind={suite.illustration} /></View>
       <View style={styles.domainCard}>
-        <Text style={styles.domainCardLabel}>DOMAIN ROUTE</Text>
-        <Text style={styles.domainCardValue}>{suite.entryPath ?? "Workspace pending"}</Text>
-        <Text style={styles.domainCardDescription}>This workspace is connected to the shared LoopDev suite context.</Text>
+        <Text style={styles.domainCardLabel}>RUTA DEL DOMINIO</Text>
+        <Text style={styles.domainCardValue}>{suite.entryPath ?? "Espacio de trabajo pendiente"}</Text>
+        <Text style={styles.domainCardDescription}>Este espacio de trabajo está conectado al contexto central de LoopDev.</Text>
       </View>
     </ScrollView>
   );

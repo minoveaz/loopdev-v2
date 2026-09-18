@@ -175,8 +175,8 @@ export function MobileCreateContactScreen({
                     : definition.id === "preferredLanguage"
                       ? languages
                       : [
-                          { code: "email", label: "Email" },
-                          { code: "phone", label: "Phone" },
+                          { code: "email", label: "Correo electrónico" },
+                          { code: "phone", label: "Teléfono" },
                           { code: "whatsapp", label: "WhatsApp" },
                         ]
         }
@@ -214,16 +214,16 @@ export function MobileCreateContactScreen({
           <MobileButton
             variant="ghost"
             size="sm"
-            label="Cancel"
+            label="Cancelar"
             onPress={requestCancel}
           />
           <Text accessibilityRole="header" style={styles.headerTitle}>
-            {editingContact ? contactActions[1].label : "Create contact"}
+            {editingContact ? "Editar contacto" : "Crear contacto"}
           </Text>
           <MobileButton
             variant="primary"
             size="sm"
-            label={saving ? "Saving…" : "Save"}
+            label={saving ? "Guardando…" : "Guardar"}
             loading={saving}
             onPress={save}
           />
@@ -246,17 +246,17 @@ export function MobileCreateContactScreen({
           <MobileButton
             variant="outline"
             size="sm"
-            label="Back"
+            label="Atrás"
             disabled={activeIndex === 0}
             onPress={() => setActiveSection(contactFormSections[activeIndex - 1].id)}
           />
           <Text style={styles.sectionCount}>
-            {activeIndex + 1} of {contactFormSections.length}
+            {activeIndex + 1} de {contactFormSections.length}
           </Text>
           <MobileButton
             variant="outline"
             size="sm"
-            label="Next"
+            label="Siguiente"
             disabled={activeIndex === contactFormSections.length - 1}
             onPress={() => setActiveSection(contactFormSections[activeIndex + 1].id)}
           />
@@ -265,10 +265,10 @@ export function MobileCreateContactScreen({
       <MobileConfirmDialog
         visible={discardOpen}
         variant="destructive"
-        title="Discard contact changes?"
-        description="Your unsaved contact details will be lost."
-        cancelLabel="Keep editing"
-        confirmLabel="Discard"
+        title="¿Descartar cambios del contacto?"
+        description="Los datos no guardados del contacto se perderán."
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
         onCancel={() => setDiscardOpen(false)}
         onConfirm={() => {
           setDiscardOpen(false);

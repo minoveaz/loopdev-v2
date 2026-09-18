@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react-native";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { ContactCustomer360View } from "../../../packages/contracts/src/contact-port";
 import type { NoteRecord } from "../../../packages/contracts/src/notes";
 import type { TaskRecord } from "../../../packages/contracts/src/tasks";
 import type { CRMActivity, CRMLead, CRMOpportunity } from "../adapters/crm";
 import { mobileTasksAdapter } from "../adapters/tasks";
 import { useT } from "../i18n";
+import {
+  MobilePageContainer,
+  MobilePageTabs,
+  MobileLoadingState,
+  MobileEmptyState,
+  MobileConfirmDialog,
+} from "./ui";
+import { mobileTheme } from "../theme/tokens";
 import { MobileCustomer360ProfileHeader } from "./customer360/MobileCustomer360ProfileHeader";
 import { MobileCustomer360CrmDetails } from "./customer360/MobileCustomer360CrmDetails";
 import { MobileCustomer360Sales } from "./customer360/MobileCustomer360Sales";
@@ -51,6 +59,8 @@ export function MobileCustomer360Screen({
   const [leads, setLeads] = useState<CRMLead[]>([]);
   const [opportunities, setOpportunities] = useState<CRMOpportunity[]>([]);
   const [timeline, setTimeline] = useState<CRMActivity[]>([]);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
     if (view) {
@@ -160,33 +170,43 @@ export function MobileCustomer360Screen({
     setOpportunities((curr) => [newOpp, ...curr]);
   };
 
+  const handleExecuteArchive = async () => {
+    if (!view || !onArchive) return;
+    setArchiving(true);
+    try {
+      await onArchive(view.contact);
+      setArchiveConfirmOpen(false);
+    } finally {
+      setArchiving(false);
+    }
+  };
+
   if (loading) {
     return (
-      <View style={styles.stateContainer}>
+      <MobilePageContainer>
         <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={16} color="#135bec" />
+          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
           <Text style={styles.backButtonText}>{t("crm.contacts.back")}</Text>
         </Pressable>
-        <View style={styles.stateCenter}>
-          <Text style={styles.stateTitle}>{t("common.loading")}</Text>
-          <Text style={styles.stateSubtitle}>{t("crm.contacts.title")}</Text>
-        </View>
-      </View>
+        <MobileLoadingState message={t("common.loading")} />
+      </MobilePageContainer>
     );
   }
 
   if (error || !view) {
     return (
-      <View style={styles.stateContainer}>
+      <MobilePageContainer>
         <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={16} color="#135bec" />
+          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
           <Text style={styles.backButtonText}>{t("crm.contacts.back")}</Text>
         </Pressable>
-        <View style={styles.stateCenter}>
-          <Text style={styles.stateTitle}>{t("crm.contacts.noContacts")}</Text>
-          <Text style={styles.stateSubtitle}>{error || t("crm.contacts.noContacts")}</Text>
-        </View>
-      </View>
+        <MobileEmptyState
+          title={t("crm.contacts.noContacts")}
+          description={error || t("crm.contacts.noContacts")}
+          actionLabel={t("crm.contacts.back")}
+          onAction={onBack}
+        />
+      </MobilePageContainer>
     );
   }
 
@@ -209,199 +229,114 @@ export function MobileCustomer360Screen({
   ];
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <MobilePageContainer>
       {/* Back to Contacts Navigation */}
       <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-        <ArrowLeft size={16} color="#135bec" />
+        <ArrowLeft size={16} color={mobileTheme.colors.primary} />
         <Text style={styles.backButtonText}>{t("crm.contacts.back")}</Text>
       </Pressable>
 
-      {/* Top Profile Header Card */}
+      {/* Top Profile Header Card with Avatar, Badge, SpeedDialBar, and Action buttons */}
       <MobileCustomer360ProfileHeader
         contact={contact}
         onEdit={onEdit}
-        onArchive={() => onArchive?.(contact)}
+        onArchive={onArchive ? () => setArchiveConfirmOpen(true) : undefined}
       />
 
-      {/* Horizontal Scrollable Tab Bar with Active Underline */}
-      <View style={styles.tabBarContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabBarContent}
-        >
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <Pressable
-                key={tab.id}
-                onPress={() => setActiveTab(tab.id)}
-                style={[styles.tabItem, isActive && styles.tabItemActive]}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: isActive }}
-              >
-                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                  {tab.label}
-                </Text>
-                {tab.count !== undefined && (
-                  <View style={[styles.tabBadge, isActive && styles.tabBadgeActive]}>
-                    <Text style={[styles.tabBadgeText, isActive && styles.tabBadgeTextActive]}>
-                      {tab.count}
-                    </Text>
-                  </View>
-                )}
-                {isActive && <View style={styles.activeIndicator} />}
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+      {/* Canonical Horizontal Page Tabs (No pills, 2.5px active indicator, badge counts) */}
+      <View style={styles.tabContainer}>
+        <MobilePageTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as TabId)}
+        />
       </View>
 
       {/* Active Tab Workspace */}
-      {activeTab === "contact" && <MobileCustomer360CrmDetails contact={contact} />}
+      <View style={styles.tabContent}>
+        {activeTab === "contact" && <MobileCustomer360CrmDetails contact={contact} />}
 
-      {activeTab === "sales" && (
-        <MobileCustomer360Sales
-          leads={leads}
-          opportunities={opportunities}
-          contactId={contact.id}
-          contactName={fullName}
-          onCreateLead={handleCreateLead}
-          onCreateOpportunity={handleCreateOpp}
-        />
-      )}
+        {activeTab === "sales" && (
+          <MobileCustomer360Sales
+            leads={leads}
+            opportunities={opportunities}
+            contactId={contact.id}
+            contactName={fullName}
+            onCreateLead={handleCreateLead}
+            onCreateOpportunity={handleCreateOpp}
+          />
+        )}
 
-      {activeTab === "work" && (
-        <MobileCustomer360Work
-          tasks={contactTasks}
-          notes={notes}
-          contactId={contact.id}
-          contactName={fullName}
-          notesLoading={notesLoading}
-          onToggleTask={handleToggleTask}
-          onCreateTask={handleCreateContactTask}
-          onCreateNote={onCreateNote}
-          onUpdateNote={onUpdateNote}
-          onDeleteNote={onDeleteNote}
-        />
-      )}
+        {activeTab === "work" && (
+          <MobileCustomer360Work
+            tasks={contactTasks}
+            notes={notes}
+            contactId={contact.id}
+            contactName={fullName}
+            notesLoading={notesLoading}
+            onToggleTask={handleToggleTask}
+            onCreateTask={handleCreateContactTask}
+            onCreateNote={onCreateNote}
+            onUpdateNote={onUpdateNote}
+            onDeleteNote={onDeleteNote}
+          />
+        )}
 
-      {activeTab === "documents" && (
-        <MobileCustomer360Documents
-          contactId={contact.id}
-          contactName={fullName}
-        />
-      )}
+        {activeTab === "documents" && (
+          <MobileCustomer360Documents
+            contactId={contact.id}
+            contactName={fullName}
+          />
+        )}
 
-      {activeTab === "products" && (
-        <MobileCustomer360Products
-          contactId={contact.id}
-        />
-      )}
+        {activeTab === "products" && (
+          <MobileCustomer360Products
+            contactId={contact.id}
+          />
+        )}
 
-      {activeTab === "activity" && (
-        <MobileCustomer360Timeline
-          timeline={timeline}
-          contactId={contact.id}
-        />
-      )}
-    </ScrollView>
+        {activeTab === "activity" && (
+          <MobileCustomer360Timeline
+            timeline={timeline}
+            contactId={contact.id}
+          />
+        )}
+      </View>
+
+      {/* Confirmation Dialog for Archiving */}
+      <MobileConfirmDialog
+        visible={archiveConfirmOpen}
+        variant="destructive"
+        title="¿Archivar contacto?"
+        description={`¿Estás seguro de archivar a ${fullName}? Quedará registrado en la auditoría del sistema.`}
+        confirmLabel="Archivar"
+        cancelLabel="Cancelar"
+        loading={archiving}
+        onConfirm={handleExecuteArchive}
+        onCancel={() => setArchiveConfirmOpen(false)}
+      />
+    </MobilePageContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    paddingBottom: 40,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-  },
   backButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginBottom: 12,
+    paddingVertical: 10,
+    minHeight: 44,
   },
   backButtonText: {
-    color: "#135bec",
-    fontSize: 13,
+    color: mobileTheme.colors.primary,
+    fontSize: 14,
     fontWeight: "700",
   },
-  tabBarContainer: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    marginBottom: 14,
-    overflow: "hidden",
+  tabContainer: {
+    marginTop: 4,
+    marginBottom: 12,
   },
-  tabBarContent: {
-    flexDirection: "row",
-    paddingHorizontal: 8,
-    alignItems: "center",
-  },
-  tabItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    position: "relative",
-    gap: 6,
-  },
-  tabItemActive: {},
-  tabLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#64748b",
-  },
-  tabLabelActive: {
-    color: "#135bec",
-    fontWeight: "700",
-  },
-  tabBadge: {
-    backgroundColor: "#f1f5f9",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  tabBadgeActive: {
-    backgroundColor: "#eff6ff",
-  },
-  tabBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#64748b",
-  },
-  tabBadgeTextActive: {
-    color: "#135bec",
-  },
-  activeIndicator: {
-    position: "absolute",
-    bottom: 0,
-    left: 14,
-    right: 14,
-    height: 3,
-    backgroundColor: "#135bec",
-    borderRadius: 3,
-  },
-  stateContainer: {
-    flex: 1,
-    padding: 20,
-  },
-  stateCenter: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-  },
-  stateTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#0f172a",
-    marginBottom: 6,
-  },
-  stateSubtitle: {
-    fontSize: 13,
-    color: "#64748b",
-    textAlign: "center",
+  tabContent: {
+    paddingBottom: 24,
   },
 });

@@ -1,15 +1,24 @@
 import React from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { Search, SlidersHorizontal, X } from "lucide-react-native";
 import { mobileTheme } from "../../theme/tokens";
 
-interface MobileSearchBarProps {
+export interface MobileSearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
   onFilterPress?: () => void;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
+  containerStyle?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function MobileSearchBar({
@@ -19,9 +28,11 @@ export function MobileSearchBar({
   onFilterPress,
   hasActiveFilters = false,
   onClearFilters,
+  containerStyle,
+  style,
 }: MobileSearchBarProps) {
   return (
-    <View style={styles.toolbar}>
+    <View style={[styles.toolbar, containerStyle, style]}>
       <View style={styles.searchBox}>
         <Search size={17} color={mobileTheme.colors.textMuted} />
         <TextInput
@@ -76,6 +87,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginTop: 12,
     marginBottom: 14,
   },
   searchBox: {

@@ -16,6 +16,7 @@ export interface MobileMetricItemProps {
   valueColor?: string;
   style?: StyleProp<ViewStyle>;
   valueStyle?: StyleProp<TextStyle>;
+  icon?: any;
 }
 
 export function MobileMetricItem({
@@ -25,10 +26,18 @@ export function MobileMetricItem({
   valueColor = mobileTheme.colors.textHeading,
   style,
   valueStyle,
+  icon: Icon,
 }: MobileMetricItemProps) {
   return (
     <View style={[styles.item, style]}>
-      <Text style={styles.label}>{label}</Text>
+      <View style={styles.labelRow}>
+        {Icon ? (
+          <View style={styles.iconWrap}>
+            <Icon size={12} color={mobileTheme.colors.textMuted} />
+          </View>
+        ) : null}
+        <Text style={styles.label}>{label}</Text>
+      </View>
       {typeof value === "string" || typeof value === "number" ? (
         <Text
           style={[styles.value, { color: valueColor }, valueStyle]}
@@ -44,8 +53,20 @@ export function MobileMetricItem({
   );
 }
 
+export interface MobileMetricDef {
+  id?: string;
+  label: string;
+  value: React.ReactNode;
+  hint?: string;
+  subtext?: string;
+  status?: "info" | "success" | "warning" | "destructive" | "neutral";
+  valueColor?: string;
+  icon?: any;
+}
+
 export interface MobileMetricGridProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  metrics?: MobileMetricDef[];
   columns?: 2 | 3;
   bordered?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -53,10 +74,19 @@ export interface MobileMetricGridProps {
 
 export function MobileMetricGrid({
   children,
+  metrics,
   columns = 2,
   bordered = true,
   style,
 }: MobileMetricGridProps) {
+  const statusColorMap = {
+    info: mobileTheme.colors.primary,
+    success: "#15803d",
+    warning: "#ca8a04",
+    destructive: "#dc2626",
+    neutral: mobileTheme.colors.textHeading,
+  };
+
   return (
     <View
       style={[
@@ -66,7 +96,21 @@ export function MobileMetricGrid({
         style,
       ]}
     >
-      {children}
+      {metrics
+        ? metrics.map((m, idx) => (
+            <MobileMetricItem
+              key={m.id || idx}
+              label={m.label}
+              value={m.value}
+              hint={m.subtext || m.hint}
+              valueColor={
+                m.valueColor ||
+                (m.status ? statusColorMap[m.status] : mobileTheme.colors.textHeading)
+              }
+              icon={m.icon}
+            />
+          ))
+        : children}
     </View>
   );
 }
@@ -91,24 +135,33 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: "45%",
   },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 3,
+  },
+  iconWrap: {
+    marginRight: 2,
+  },
   label: {
     fontSize: 10,
     fontWeight: "800",
     color: mobileTheme.colors.textMuted,
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    marginBottom: 3,
   },
   value: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: -0.3,
   },
   customValueWrap: {
     marginTop: 2,
   },
   hint: {
     fontSize: 11,
-    color: mobileTheme.colors.textSubtle,
+    color: mobileTheme.colors.textMuted,
     marginTop: 2,
   },
 });

@@ -1,6 +1,6 @@
 import React from "react";
-import { ArrowLeft, Users, ShieldAlert } from "lucide-react-native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Users, ShieldAlert } from "lucide-react-native";
+import { StyleSheet, Text, View } from "react-native";
 import type { ContactRecord, PotentialContactDuplicate } from "../../../packages/contracts/src/contact-port";
 import {
   MobilePageContainer,
@@ -10,8 +10,10 @@ import {
   MobileStatusBadge,
   MobileEmptyState,
   MobileLoadingState,
+  MobileBackLink,
 } from "./ui";
 import { mobileTheme } from "../theme/tokens";
+import { useT } from "../i18n";
 
 interface MobileDuplicateReviewScreenProps {
   contact?: ContactRecord;
@@ -30,13 +32,12 @@ export function MobileDuplicateReviewScreen({
   onBack,
   onDismiss,
 }: MobileDuplicateReviewScreenProps) {
+  const t = useT();
+
   if (loading) {
     return (
       <MobilePageContainer>
-        <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
-          <Text style={styles.backButtonText}>Volver a contactos</Text>
-        </Pressable>
+        <MobileBackLink label={t("crm.contacts.back", "Volver a contactos")} onPress={onBack} />
         <MobileLoadingState message="Buscando candidatos duplicados..." />
       </MobilePageContainer>
     );
@@ -45,15 +46,12 @@ export function MobileDuplicateReviewScreen({
   if (error) {
     return (
       <MobilePageContainer>
-        <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
-          <Text style={styles.backButtonText}>Volver a contactos</Text>
-        </Pressable>
+        <MobileBackLink label={t("crm.contacts.back", "Volver a contactos")} onPress={onBack} />
         <MobileEmptyState
           icon={<ShieldAlert size={32} color={mobileTheme.colors.destructive} />}
           title="Error al cargar duplicados"
           description={error}
-          actionLabel="Volver a contactos"
+          actionLabel={t("crm.contacts.back", "Volver a contactos")}
           onAction={onBack}
         />
       </MobilePageContainer>
@@ -66,10 +64,7 @@ export function MobileDuplicateReviewScreen({
 
   return (
     <MobilePageContainer>
-      <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-        <ArrowLeft size={16} color={mobileTheme.colors.primary} />
-        <Text style={styles.backButtonText}>Volver a contactos</Text>
-      </Pressable>
+      <MobileBackLink label={t("crm.contacts.back", "Volver a contactos")} onPress={onBack} />
 
       <MobilePageHeader
         eyebrow="CALIDAD DE CONTACTOS"
@@ -136,18 +131,6 @@ export function MobileDuplicateReviewScreen({
 }
 
 const styles = StyleSheet.create({
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: 10,
-    minHeight: 44,
-  },
-  backButtonText: {
-    color: mobileTheme.colors.primary,
-    fontSize: 14,
-    fontWeight: "700",
-  },
   list: {
     gap: 12,
     marginTop: 8,

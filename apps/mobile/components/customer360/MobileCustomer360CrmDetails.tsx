@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
   AlertTriangle,
   Building2,
@@ -12,6 +12,10 @@ import {
 } from "lucide-react-native";
 import type { ContactRecord } from "../../../../packages/contracts/src/contact-port";
 import { useT } from "../../i18n";
+import {
+  MobilePageTabs,
+  MobileCard,
+} from "../ui";
 
 interface Props {
   contact: ContactRecord;
@@ -21,13 +25,20 @@ type CrmSubTab = "identity" | "address" | "organization" | "channels";
 
 export function MobileCustomer360CrmDetails({ contact }: Props) {
   const t = useT();
-  const [activeSubTab, setActiveSubTab] = useState<CrmSubTab>("identity");
+  const [activeSubTab, setActiveSubTab] = useState<string>("identity");
 
   const missingFields = [
     !contact.email && "email",
     !contact.phone && "phone",
     !contact.country && "country",
   ].filter((f): f is string => Boolean(f));
+
+  const crmTabs = [
+    { id: "identity", label: t("crm.customer360.subtabs.identity") },
+    { id: "address", label: t("crm.customer360.subtabs.address") },
+    { id: "organization", label: t("crm.customer360.subtabs.organization") },
+    { id: "channels", label: t("crm.customer360.subtabs.channels") },
+  ];
 
   return (
     <View style={styles.container}>
@@ -62,52 +73,16 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
         </View>
       </View>
 
-      {/* Sub-tab strip (Horizontal scrollable, no text wrapping) */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabStrip}>
-        <Pressable
-          style={[styles.tabButton, activeSubTab === "identity" && styles.tabButtonActive]}
-          onPress={() => setActiveSubTab("identity")}
-        >
-          <User size={13} color={activeSubTab === "identity" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSubTab === "identity" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.subtabs.identity")}
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.tabButton, activeSubTab === "address" && styles.tabButtonActive]}
-          onPress={() => setActiveSubTab("address")}
-        >
-          <MapPin size={13} color={activeSubTab === "address" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSubTab === "address" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.subtabs.address")}
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.tabButton, activeSubTab === "organization" && styles.tabButtonActive]}
-          onPress={() => setActiveSubTab("organization")}
-        >
-          <Building2 size={13} color={activeSubTab === "organization" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSubTab === "organization" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.subtabs.organization")}
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.tabButton, activeSubTab === "channels" && styles.tabButtonActive]}
-          onPress={() => setActiveSubTab("channels")}
-        >
-          <Phone size={13} color={activeSubTab === "channels" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSubTab === "channels" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.subtabs.channels")}
-          </Text>
-        </Pressable>
-      </ScrollView>
+      {/* Sub-tab strip (Canonical MobilePageTabs, STRICTLY NO PILLS) */}
+      <MobilePageTabs
+        tabs={crmTabs}
+        activeTab={activeSubTab}
+        onTabChange={setActiveSubTab}
+      />
 
       {/* 1. Identity & Bio Section */}
       {activeSubTab === "identity" && (
-        <View style={styles.sectionCard}>
+        <MobileCard style={styles.sectionCard}>
           <View style={styles.fieldsList}>
             <FieldItem label={t("crm.customer360.fields.firstName")} value={contact.firstName} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.lastName")} value={contact.lastName} emptyText={t("crm.customer360.fields.notRegistered")} />
@@ -121,66 +96,51 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
               emptyText={t("crm.customer360.fields.notRegistered")}
             />
             <FieldItem label={t("crm.customer360.fields.gender")} value={contact.gender} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.nationality")} value={contact.nationality} emptyText={t("crm.customer360.fields.notRegistered")} />
           </View>
-        </View>
+        </MobileCard>
       )}
 
-      {/* 2. Address Section */}
+      {/* 2. Address & Location Section */}
       {activeSubTab === "address" && (
-        <View style={styles.sectionCard}>
+        <MobileCard style={styles.sectionCard}>
           <View style={styles.fieldsList}>
-            <FieldItem label={t("crm.customer360.fields.country")} value={contact.country} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.city")} value={contact.city} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.state")} value={contact.stateProvince} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.postalCode")} value={contact.postalCode} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.addressLine1")} value={contact.addressLine1} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.address")} value={contact.addressLine1} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.addressLine2")} value={contact.addressLine2} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.city")} value={contact.city} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.state")} value={contact.state} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.postalCode")} value={contact.postalCode} mono emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.country")} value={contact.country} emptyText={t("crm.customer360.fields.notRegistered")} />
           </View>
-        </View>
+        </MobileCard>
       )}
 
-      {/* 3. Organization & Role Section */}
+      {/* 3. Organization & Work Section */}
       {activeSubTab === "organization" && (
-        <View style={styles.sectionCard}>
+        <MobileCard style={styles.sectionCard}>
           <View style={styles.fieldsList}>
-            <FieldItem label={t("crm.customer360.fields.company")} value={contact.companyName} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.company")} value={contact.organizationName} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.taxId")} value={contact.taxId} mono emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.jobTitle")} value={contact.jobTitle} emptyText={t("crm.customer360.fields.notRegistered")} />
             <FieldItem label={t("crm.customer360.fields.department")} value={contact.department} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.identityStatus")} value={contact.identityStatus?.replace("_", " ")} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.contactId")} value={contact.id} mono emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem
-              label={t("crm.customer360.fields.createdAt")}
-              value={new Date(contact.createdAt).toLocaleDateString()}
-              emptyText={t("crm.customer360.fields.notRegistered")}
-            />
-            <FieldItem
-              label={t("crm.customer360.fields.updatedAt")}
-              value={new Date(contact.updatedAt).toLocaleDateString()}
-              emptyText={t("crm.customer360.fields.notRegistered")}
-            />
-            {Object.entries(contact.attributes || {}).map(([key, val]) => (
-              <FieldItem key={key} label={`Custom · ${key}`} value={typeof val === "object" ? JSON.stringify(val) : String(val)} emptyText={t("crm.customer360.fields.notRegistered")} />
-            ))}
+            <FieldItem label={t("crm.customer360.fields.lifecycleStage")} value={contact.lifecycleStage} emptyText={t("crm.customer360.fields.notRegistered")} />
+            <FieldItem label={t("crm.customer360.fields.leadSource")} value={contact.leadSource} emptyText={t("crm.customer360.fields.notRegistered")} />
           </View>
-        </View>
+        </MobileCard>
       )}
 
-      {/* 4. Contact Channels Section */}
+      {/* 4. Communication Channels & Social */}
       {activeSubTab === "channels" && (
-        <View style={styles.sectionCard}>
+        <MobileCard style={styles.sectionCard}>
           <View style={styles.fieldsList}>
-            <FieldItem label={t("crm.customer360.fields.email")} value={contact.email} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.secondaryEmail")} value={contact.secondaryEmail} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.phone")} value={contact.phone} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.secondaryPhone")} value={contact.secondaryPhone} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem label={t("crm.customer360.fields.preferredChannel")} value={contact.preferredChannel} emptyText={t("crm.customer360.fields.notRegistered")} />
-            <FieldItem
-              label={t("crm.customer360.fields.preferredLanguage")}
-              value={contact.preferredLanguage}
-              emptyText={t("crm.customer360.fields.notRegistered")}
-            />
+            <FieldItem label={t("crm.customer360.fields.email")} value={contact.email} emptyText={t("crm.customer360.fields.notRegistered")} copyable />
+            <FieldItem label={t("crm.customer360.fields.secondaryEmail")} value={contact.secondaryEmail} emptyText={t("crm.customer360.fields.notRegistered")} copyable />
+            <FieldItem label={t("crm.customer360.fields.phone")} value={contact.phone} emptyText={t("crm.customer360.fields.notRegistered")} copyable />
+            <FieldItem label={t("crm.customer360.fields.mobilePhone")} value={contact.mobilePhone} emptyText={t("crm.customer360.fields.notRegistered")} copyable />
+            <FieldItem label={t("crm.customer360.fields.website")} value={contact.website} emptyText={t("crm.customer360.fields.notRegistered")} copyable />
+            <FieldItem label={t("crm.customer360.fields.linkedinUrl")} value={contact.linkedinUrl} emptyText={t("crm.customer360.fields.notRegistered")} copyable />
           </View>
-        </View>
+        </MobileCard>
       )}
     </View>
   );
@@ -189,57 +149,51 @@ export function MobileCustomer360CrmDetails({ contact }: Props) {
 function FieldItem({
   label,
   value,
-  emptyText,
   mono,
-  copyable = true,
-  onCopy,
-  copied,
+  emptyText = "Not registered",
+  copyable,
 }: {
   label: string;
   value?: string | null;
-  emptyText?: string;
   mono?: boolean;
+  emptyText?: string;
   copyable?: boolean;
-  onCopy?: () => void;
-  copied?: boolean;
 }) {
-  const [internalCopied, setInternalCopied] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    if (onCopy) {
-      onCopy();
-      return;
-    }
-    if (value && typeof navigator !== "undefined" && navigator.clipboard) {
-      void navigator.clipboard.writeText(value);
-      setInternalCopied(true);
-      setTimeout(() => setInternalCopied(false), 2000);
-    }
+    if (!value) return;
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const isCopied = copied ?? internalCopied;
-  const isCopyable = copyable && Boolean(value);
+  const hasValue = Boolean(value && value.trim());
 
   return (
     <View style={styles.fieldRow}>
-      <View style={styles.fieldLabelContainer}>
+      <View style={styles.fieldLabelCol}>
         <Text style={styles.fieldLabel}>{label}</Text>
       </View>
-      <View style={styles.fieldValueContainer}>
+      <View style={styles.fieldValueCol}>
         <Text
           style={[
             styles.fieldValue,
-            !value && styles.fieldValueEmpty,
+            !hasValue && styles.fieldValueEmpty,
             mono && styles.fieldValueMono,
           ]}
           numberOfLines={2}
-          selectable
         >
-          {value || emptyText || "—"}
+          {hasValue ? value : emptyText}
         </Text>
-        {isCopyable && (
-          <Pressable hitSlop={8} onPress={handleCopy} style={styles.copyButton}>
-            {isCopied ? <Check size={13} color="#16a34a" /> : <Copy size={13} color="#94a3b8" />}
+        {copyable && hasValue && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Copiar ${label}`}
+            onPress={handleCopy}
+            hitSlop={8}
+            style={styles.copyBtn}
+          >
+            {copied ? <Check size={14} color="#16a34a" /> : <Copy size={14} color="#94a3b8" />}
           </Pressable>
         )}
       </View>
@@ -249,100 +203,70 @@ function FieldItem({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 12,
-  },
-  tabScroll: {
-    marginBottom: 6,
-  },
-  tabStrip: {
-    flexDirection: "row",
-    gap: 8,
-    paddingVertical: 2,
-  },
-  tabButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  tabButtonActive: {
-    backgroundColor: "#135bec",
-  },
-  tabButtonText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#64748b",
-  },
-  tabButtonTextActive: {
-    color: "#ffffff",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 24,
   },
   completenessBanner: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  incompleteBanner: {
+    backgroundColor: "#fffbeb",
+    borderColor: "#fde68a",
   },
   completeBanner: {
     backgroundColor: "#f0fdf4",
     borderColor: "#bbf7d0",
   },
-  incompleteBanner: {
-    backgroundColor: "#fffbeb",
-    borderColor: "#fef3c7",
-  },
   bannerCopy: {
+    marginLeft: 10,
     flex: 1,
   },
   bannerTitle: {
     fontSize: 13,
     fontWeight: "700",
   },
-  completeTitle: {
-    color: "#15803d",
-  },
   incompleteTitle: {
-    color: "#b45309",
+    color: "#92400e",
+  },
+  completeTitle: {
+    color: "#166534",
   },
   bannerSubtitle: {
     fontSize: 11,
-    color: "#92400e",
+    color: "#b45309",
     marginTop: 2,
   },
   sectionCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    marginTop: 12,
     padding: 14,
   },
   fieldsList: {
-    gap: 8,
+    gap: 12,
   },
   fieldRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
-    paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "#f8fafc",
+    borderBottomColor: "#f1f5f9",
+    paddingBottom: 8,
   },
-  fieldLabelContainer: {
-    width: "42%",
+  fieldLabelCol: {
+    width: "40%",
   },
   fieldLabel: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 13,
     color: "#64748b",
+    fontWeight: "500",
   },
-  fieldValueContainer: {
-    width: "58%",
+  fieldValueCol: {
+    width: "60%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
@@ -361,10 +285,11 @@ const styles = StyleSheet.create({
   },
   fieldValueMono: {
     fontFamily: "monospace",
-    fontSize: 12,
-    color: "#334155",
   },
-  copyButton: {
-    padding: 2,
+  copyBtn: {
+    minWidth: 32,
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

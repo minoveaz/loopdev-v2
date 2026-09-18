@@ -259,6 +259,8 @@
   "crm": {
     "leads": {
       "title": "Leads",
+      "back": "Back to leads",
+      "backToLeads": "Back to leads",
       "newLead": "New Lead",
       "kpiTotal": "Total Leads",
       "kpiQualified": "Qualified",
@@ -341,6 +343,10 @@
       "pendingReview": "Pending Review",
       "registeredOn": "Registered: {{date}}",
       "updatedOn": "Updated: {{date}}"
+    },
+    "pipeline": {
+      "title": "Pipeline",
+      "back": "Back to pipeline"
     },
     "customer360": {
       "tabs": {

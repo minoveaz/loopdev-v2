@@ -43,6 +43,7 @@ import {
   MobileBottomSheet,
   MobileInput,
   MobileTextArea,
+  MobileBackLink,
   MobileEmptyState,
   MobileLoadingState,
   MobileConfirmDialog,
@@ -204,10 +205,7 @@ export function MobileLeadDetailScreen({
   if (loading || !lead) {
     return (
       <MobilePageContainer>
-        <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
-          <Text style={styles.backButtonText}>Volver a leads</Text>
-        </Pressable>
+        <MobileBackLink label={t("crm.leads.back", "Volver a leads")} onPress={onBack} />
         <MobileLoadingState message="Cargando ficha de lead..." />
       </MobilePageContainer>
     );
@@ -236,27 +234,9 @@ export function MobileLeadDetailScreen({
 
   return (
     <MobilePageContainer>
-      {/* Top Header Row */}
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Volver a lista de leads"
-          onPress={onBack}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={18} color={mobileTheme.colors.primary} />
-          <Text style={styles.backButtonText}>Leads</Text>
-        </Pressable>
-
-        <View style={styles.headerTitleWrap}>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {contactDisplayName}
-          </Text>
-          <Text style={styles.headerSubtitle} numberOfLines={1}>
-            {lead.interest || "Lead Comercial"}
-          </Text>
-        </View>
-
+      {/* Top Header Row with Canonical Back Link and Edit Action */}
+      <View style={styles.topBackRow}>
+        <MobileBackLink label={t("crm.leads.back", "Volver a leads")} onPress={onBack} />
         <MobileButton
           variant="outline"
           size="sm"
@@ -628,6 +608,12 @@ export function MobileLeadDetailScreen({
 }
 
 const styles = StyleSheet.create({
+  topBackRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",

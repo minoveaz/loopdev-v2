@@ -24,6 +24,7 @@ import {
   MobileTextArea,
   MobileSelectSheet,
   MobilePageTabs,
+  MobileBackLink,
 } from "./ui";
 import { mobileTheme } from "../theme/tokens";
 
@@ -127,18 +128,9 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
 
   return (
     <MobilePageContainer>
-      {/* Top Header Bar */}
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Cancelar creación de lead"
-          onPress={onCancel}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={18} color={mobileTheme.colors.primary} />
-          <Text style={styles.backButtonText}>Cancelar</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>{t("crm.leads.newLead")}</Text>
+      {/* Top Header Bar with Canonical Back Link */}
+      <View style={styles.topBackRow}>
+        <MobileBackLink label={t("crm.leads.back", "Volver a leads")} onPress={onCancel} />
         <MobileButton
           variant="primary"
           size="sm"
@@ -147,6 +139,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
           onPress={handleSave}
         />
       </View>
+      <Text style={styles.headerTitle}>{t("crm.leads.newLead")}</Text>
 
       {/* Contact Selector Card */}
       <MobileCard style={styles.card}>
@@ -288,29 +281,17 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
 }
 
 const styles = StyleSheet.create({
-  header: {
+  topBackRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
-    paddingTop: 8,
-  },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    minHeight: 44,
-    paddingVertical: 8,
-  },
-  backButtonText: {
-    color: mobileTheme.colors.primary,
-    fontSize: 14,
-    fontWeight: "700",
+    marginBottom: 8,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "800",
     color: mobileTheme.colors.textPrimary,
+    marginBottom: 16,
   },
   card: {
     padding: 16,

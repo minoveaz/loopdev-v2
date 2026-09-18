@@ -21,38 +21,63 @@ export type MobileButtonVariant =
 export type MobileButtonSize = "sm" | "md" | "lg";
 
 export interface MobileButtonProps {
-  label: string;
+  label?: string;
+  children?: React.ReactNode;
   onPress: () => void;
   variant?: MobileButtonVariant;
   size?: MobileButtonSize;
   disabled?: boolean;
   loading?: boolean;
+  icon?: any;
   iconLeft?: React.ReactNode;
   iconRight?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
   fullWidth?: boolean;
+  minHeight?: number;
 }
 
 export function MobileButton({
   label,
+  children,
   onPress,
   variant = "primary",
   size = "md",
   disabled = false,
   loading = false,
+  icon,
   iconLeft,
   iconRight,
   style,
   labelStyle,
   fullWidth = false,
+  minHeight,
 }: MobileButtonProps) {
   const isDisabled = disabled || loading;
+
+  const displayLabel = label || (typeof children === "string" ? children : "");
+  const effectiveIconLeft =
+    iconLeft ??
+    (icon
+      ? React.isValidElement(icon)
+        ? icon
+        : React.createElement(icon, {
+            size: size === "sm" ? 14 : size === "lg" ? 18 : 16,
+            color:
+              variant === "outline" || variant === "ghost"
+                ? mobileTheme.colors.primary
+                : variant === "destructive"
+                ? "#dc2626"
+                : variant === "secondary"
+                ? "#334155"
+                : "#ffffff",
+          })
+      : null);
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={displayLabel || "Acción"}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
       onPress={onPress}
@@ -61,6 +86,7 @@ export function MobileButton({
         styles[variant],
         styles[size],
         fullWidth && styles.fullWidth,
+        minHeight ? { minHeight } : null,
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
         style,
@@ -77,17 +103,21 @@ export function MobileButton({
         />
       ) : (
         <View style={styles.contentRow}>
-          {iconLeft ? <View style={styles.iconLeft}>{iconLeft}</View> : null}
-          <Text
-            style={[
-              styles.label,
-              styles[`${variant}Label` as keyof typeof styles],
-              styles[`${size}Label` as keyof typeof styles],
-              labelStyle,
-            ]}
-          >
-            {label}
-          </Text>
+          {effectiveIconLeft ? <View style={styles.iconLeft}>{effectiveIconLeft}</View> : null}
+          {displayLabel ? (
+            <Text
+              style={[
+                styles.label,
+                styles[`${variant}Label` as keyof typeof styles],
+                styles[`${size}Label` as keyof typeof styles],
+                labelStyle,
+              ]}
+            >
+              {displayLabel}
+            </Text>
+          ) : typeof children !== "string" ? (
+            children
+          ) : null}
           {iconRight ? <View style={styles.iconRight}>{iconRight}</View> : null}
         </View>
       )}
@@ -100,13 +130,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: mobileTheme.radii.md,
+    borderRadius: mobileTheme.radii.sm,
+    paddingHorizontal: 16,
+    minHeight: 44, // Rivera minimum touch target standard
   },
   contentRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
   },
   fullWidth: {
     width: "100%",
@@ -116,87 +147,82 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
-    transform: [{ scale: 0.99 }],
+  },
+  iconLeft: {
+    marginRight: 6,
+  },
+  iconRight: {
+    marginLeft: 6,
   },
 
   // Variants
   primary: {
     backgroundColor: mobileTheme.colors.primary,
   },
-  primaryLabel: {
-    color: "#ffffff",
-    fontWeight: "700",
-  },
-
-  outline: {
-    backgroundColor: "transparent",
+  secondary: {
+    backgroundColor: mobileTheme.colors.surfaceMuted,
     borderWidth: 1,
     borderColor: mobileTheme.colors.border,
   },
-  outlineLabel: {
-    color: mobileTheme.colors.textHeading,
-    fontWeight: "600",
+  outline: {
+    backgroundColor: "transparent",
+    borderWidth: 1.5,
+    borderColor: mobileTheme.colors.primary,
   },
-
   ghost: {
     backgroundColor: "transparent",
   },
-  ghostLabel: {
-    color: mobileTheme.colors.primary,
-    fontWeight: "600",
-  },
-
   destructive: {
-    backgroundColor: mobileTheme.colors.danger,
-  },
-  destructiveLabel: {
-    color: "#ffffff",
-    fontWeight: "700",
-  },
-
-  secondary: {
-    backgroundColor: mobileTheme.colors.surfaceMuted,
-  },
-  secondaryLabel: {
-    color: mobileTheme.colors.textHeading,
-    fontWeight: "600",
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
   },
 
   // Sizes
   sm: {
-    paddingHorizontal: 10,
     paddingVertical: 6,
+    paddingHorizontal: 10,
     minHeight: 36,
   },
+  md: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    minHeight: 44,
+  },
+  lg: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    minHeight: 52,
+  },
+
+  // Labels
+  label: {
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  primaryLabel: {
+    color: "#ffffff",
+  },
+  secondaryLabel: {
+    color: mobileTheme.colors.textHeading,
+  },
+  outlineLabel: {
+    color: mobileTheme.colors.primary,
+  },
+  ghostLabel: {
+    color: mobileTheme.colors.primary,
+  },
+  destructiveLabel: {
+    color: "#dc2626",
+  },
+
   smLabel: {
     fontSize: 12,
   },
-
-  md: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    minHeight: 44,
-  },
   mdLabel: {
-    fontSize: 13,
-  },
-
-  lg: {
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    minHeight: 50,
+    fontSize: 14,
   },
   lgLabel: {
-    fontSize: 15,
-  },
-
-  label: {
-    textAlign: "center",
-  },
-  iconLeft: {
-    marginRight: 2,
-  },
-  iconRight: {
-    marginLeft: 2,
+    fontSize: 16,
   },
 });

@@ -1,7 +1,8 @@
-import { ArrowLeft, CheckSquare, ChevronRight, FileSearch, MessageCircle, Scan, TrendingUp, Users } from "lucide-react-native";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SuiteIllustration } from "./SuiteIllustration";
-import type { launchpadSuites } from "../../../packages/contracts/src/launchpad";
+import { CheckSquare, ChevronRight, FileSearch, MessageCircle, Scan, TrendingUp, Users } from "lucide-react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { SuiteIllustration } from "./components/SuiteIllustration";
+import { MobileBackLink } from "./components/ui/MobileBackLink";
+import type { launchpadSuites } from "../../packages/contracts/src/launchpad";
 
 type MobileWorkspaceScreenProps = {
   suite: (typeof launchpadSuites)[number];
@@ -66,10 +67,7 @@ export function MobileWorkspaceScreen({ suite, onBack, onNavigate }: MobileWorks
 
   return (
     <ScrollView contentContainerStyle={styles.workspaceContent}>
-      <Pressable accessibilityLabel="Back to Launchpad" accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-        <ArrowLeft size={16} color="#135bec" />
-        <Text style={styles.backButtonText}>Back to Launchpad</Text>
-      </Pressable>
+      <MobileBackLink label="Back to Launchpad" onPress={onBack} />
       <View style={styles.workspaceEyebrow}><Text style={styles.workspaceEyebrowText}>ACTIVE WORK CONTEXT</Text></View>
       <Text style={styles.workspaceTitle}>{suite.title}</Text>
       <Text style={styles.workspaceDescription}>{suite.description}</Text>

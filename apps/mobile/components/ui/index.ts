@@ -14,6 +14,7 @@ export * from "./MobileCard";
 export * from "./MobilePageTabs";
 export * from "./MobileStepper";
 export * from "./MobileSearchBar";
+export * from "./MobileBackLink";
 export * from "./MobileSegmentedControl";
 
 // Feedback, Metrics & Status

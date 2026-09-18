@@ -29,10 +29,16 @@ function format(template: string, vars?: Record<string, string | number>): strin
   return template.replace(/\{\{(\w+)\}\}/g, (_, k) => String(vars[k] ?? `{{${k}}}`));
 }
 
+export type TranslateFn = (
+  key: string,
+  varsOrFallback?: Record<string, string | number> | string,
+  fallback?: string,
+) => string;
+
 interface MobileI18nContextValue {
   lang: MobileLangCode;
   setLang: (lang: MobileLangCode) => void;
-  t: (key: string, vars?: Record<string, string | number>) => string;
+  t: TranslateFn;
 }
 
 const MobileI18nContext = createContext<MobileI18nContextValue | undefined>(undefined);
@@ -54,11 +60,13 @@ export function MobileI18nProvider({
 }) {
   const [lang, setLang] = useState<MobileLangCode>(() => initialLang || detectInitialLang());
 
-  const t = useCallback(
-    (key: string, vars?: Record<string, string | number>) => {
+  const t: TranslateFn = useCallback(
+    (key: string, varsOrFallback?: Record<string, string | number> | string, fallback?: string) => {
+      const fallbackText = typeof varsOrFallback === "string" ? varsOrFallback : fallback;
+      const vars = typeof varsOrFallback === "object" ? varsOrFallback : undefined;
       const currentDict = DICTIONARIES[lang] || DICTIONARIES.en;
       const fallbackDict = DICTIONARIES.en;
-      const raw = getValue(currentDict, key) ?? getValue(fallbackDict, key) ?? key;
+      const raw = getValue(currentDict, key) ?? getValue(fallbackDict, key) ?? fallbackText ?? key;
       return format(raw, vars);
     },
     [lang],
@@ -79,8 +87,10 @@ export function MobileI18nProvider({
 export function useMobileI18n(): MobileI18nContextValue {
   const ctx = useContext(MobileI18nContext);
   if (!ctx) {
-    const defaultT = (key: string, vars?: Record<string, string | number>) => {
-      const raw = getValue(DICTIONARIES.en, key) ?? key;
+    const defaultT: TranslateFn = (key, varsOrFallback, fallback) => {
+      const fallbackText = typeof varsOrFallback === "string" ? varsOrFallback : fallback;
+      const vars = typeof varsOrFallback === "object" ? varsOrFallback : undefined;
+      const raw = getValue(DICTIONARIES.en, key) ?? fallbackText ?? key;
       return format(raw, vars);
     };
     return {

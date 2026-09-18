@@ -1,11 +1,18 @@
 import React, { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { Check, CheckSquare, Clock, FileText, Lock, Paperclip, Plus, StickyNote, Trash2, Users } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Check, CheckSquare, Clock, Plus, StickyNote, Trash2 } from "lucide-react-native";
 import type { TaskRecord } from "../../../../packages/contracts/src/tasks";
 import type { NoteRecord } from "../../../../packages/contracts/src/notes";
 import { MobileNoteEditor, type MobileNoteDraft } from "../MobileNoteEditor";
 import { MobileNotesCard } from "../MobileNotesCard";
 import { useT } from "../../i18n";
+import {
+  MobilePageTabs,
+  MobileCard,
+  MobileButton,
+  MobileStatusBadge,
+  MobileEmptyState,
+} from "../ui";
 
 interface Props {
   tasks: TaskRecord[];
@@ -33,7 +40,7 @@ export function MobileCustomer360Work({
   onDeleteNote,
 }: Props) {
   const t = useT();
-  const [activeSubTab, setActiveSubTab] = useState<"tasks" | "notes">("tasks");
+  const [activeSubTab, setActiveSubTab] = useState<string>("tasks");
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState<"normal" | "high" | "low">("normal");
@@ -50,126 +57,135 @@ export function MobileCustomer360Work({
     setCreateTaskOpen(false);
   };
 
+  const workTabs = [
+    { id: "tasks", label: "Tareas", count: openTasksCount },
+    { id: "notes", label: "Notas", count: notes.length },
+  ];
+
+  const priorityTabs = [
+    { id: "normal", label: "Normal" },
+    { id: "high", label: "Alta" },
+    { id: "low", label: "Baja" },
+  ];
+
   return (
     <View style={styles.container}>
-      {/* Sub-tab strip */}
-      <View style={styles.tabStrip}>
-        <Pressable
-          style={[styles.tabButton, activeSubTab === "tasks" && styles.tabButtonActive]}
-          onPress={() => setActiveSubTab("tasks")}
-        >
-          <CheckSquare size={14} color={activeSubTab === "tasks" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSubTab === "tasks" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.work.tasks")} ({openTasksCount})
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.tabButton, activeSubTab === "notes" && styles.tabButtonActive]}
-          onPress={() => setActiveSubTab("notes")}
-        >
-          <StickyNote size={14} color={activeSubTab === "notes" ? "#ffffff" : "#64748b"} />
-          <Text style={[styles.tabButtonText, activeSubTab === "notes" && styles.tabButtonTextActive]}>
-            {t("crm.customer360.work.notes")} ({notes.length})
-          </Text>
-        </Pressable>
-      </View>
+      {/* Sub-tab strip (Canonical MobilePageTabs, STRICTLY NO PILLS) */}
+      <MobilePageTabs
+        tabs={workTabs}
+        activeTab={activeSubTab}
+        onTabChange={setActiveSubTab}
+      />
 
       {/* Tasks Section */}
       {activeSubTab === "tasks" && (
-        <View style={styles.contentCard}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{t("crm.customer360.work.tasks")} ({openTasksCount})</Text>
-            <Pressable style={styles.addButton} onPress={() => setCreateTaskOpen(true)}>
-              <Plus size={13} color="#135bec" />
-              <Text style={styles.addButtonText}>{t("crm.customer360.work.newTask")}</Text>
-            </Pressable>
+        <View style={styles.tabContent}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Tareas Pendientes ({openTasksCount})</Text>
+            <MobileButton
+              variant="primary"
+              size="sm"
+              icon={Plus}
+              onPress={() => setCreateTaskOpen(true)}
+              minHeight={36}
+            >
+              Nueva Tarea
+            </MobileButton>
           </View>
 
           {createTaskOpen && (
-            <View style={styles.inlineCreateBox}>
-              <Text style={styles.inlineLabel}>Task title</Text>
+            <MobileCard style={styles.inlineCreateCard}>
+              <Text style={styles.inlineLabel}>TÍTULO DE LA TAREA *</Text>
               <TextInput
                 style={styles.inlineInput}
-                placeholder="Follow-up with customer..."
+                placeholder="Seguimiento con cliente..."
                 placeholderTextColor="#94a3b8"
                 value={newTaskTitle}
                 onChangeText={setNewTaskTitle}
               />
-              <View style={styles.priorityRow}>
-                <Text style={styles.priorityLabel}>Priority:</Text>
-                {(["low", "normal", "high"] as const).map((p) => (
-                  <Pressable
-                    key={p}
-                    style={[styles.priorityPill, newTaskPriority === p && styles.priorityPillActive]}
-                    onPress={() => setNewTaskPriority(p)}
-                  >
-                    <Text
-                      style={[styles.priorityPillText, newTaskPriority === p && styles.priorityPillTextActive]}
-                    >
-                      {p.toUpperCase()}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+
+              <Text style={styles.inlineLabel}>PRIORIDAD</Text>
+              <MobilePageTabs
+                tabs={priorityTabs}
+                activeTab={newTaskPriority}
+                onTabChange={(p) => setNewTaskPriority(p as any)}
+              />
+
               <View style={styles.inlineActionRow}>
-                <Pressable style={styles.inlineCancel} onPress={() => setCreateTaskOpen(false)}>
-                  <Text style={styles.inlineCancelText}>{t("common.cancel")}</Text>
-                </Pressable>
-                <Pressable style={styles.inlineSubmit} onPress={handleSaveTask}>
-                  <Text style={styles.inlineSubmitText}>{t("common.save")}</Text>
-                </Pressable>
+                <MobileButton
+                  variant="ghost"
+                  size="sm"
+                  onPress={() => setCreateTaskOpen(false)}
+                  minHeight={44}
+                >
+                  Cancelar
+                </MobileButton>
+                <MobileButton
+                  variant="primary"
+                  size="sm"
+                  onPress={handleSaveTask}
+                  minHeight={44}
+                >
+                  Guardar Tarea
+                </MobileButton>
               </View>
-            </View>
+            </MobileCard>
           )}
 
           {tasks.length === 0 ? (
-            <View style={styles.emptyBox}>
-              <CheckSquare size={28} color="#94a3b8" />
-              <Text style={styles.emptyTitle}>{t("crm.customer360.work.noTasks")}</Text>
-              <Text style={styles.emptySubtitle}>{t("crm.customer360.work.noTasksDesc")}</Text>
-            </View>
+            <MobileEmptyState
+              title="Sin tareas registradas"
+              description="Crea la primera tarea para este contacto."
+            />
           ) : (
-            <View style={styles.taskList}>
+            <View style={styles.tasksList}>
               {tasks.map((task) => {
-                const isDone = task.status === "completed";
-                const isHigh = task.priority === "high";
-                const isLow = task.priority === "low";
+                const isCompleted = task.status === "completed";
+                const isOverdue = task.dueAt && new Date(task.dueAt).getTime() < Date.now();
                 return (
-                  <View key={task.id} style={styles.taskRow}>
-                    <Pressable hitSlop={8} style={styles.checkboxTarget} onPress={() => onToggleTask(task)}>
-                      <View style={[styles.checkboxBox, isDone && styles.checkboxBoxDone]}>
-                        {isDone && <Check size={12} color="#ffffff" strokeWidth={3} />}
+                  <MobileCard key={task.id} style={styles.taskCard}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Marcar tarea ${task.title}`}
+                      style={styles.taskCheckboxRow}
+                      onPress={() => onToggleTask(task)}
+                    >
+                      <View style={[styles.taskCheckbox, isCompleted && styles.taskCheckboxCompleted]}>
+                        {isCompleted && <Check size={14} color="#ffffff" />}
+                      </View>
+                      <View style={styles.taskInfo}>
+                        <Text
+                          style={[styles.taskTitle, isCompleted && styles.taskTitleCompleted]}
+                          numberOfLines={2}
+                        >
+                          {task.title}
+                        </Text>
+                        <View style={styles.taskMetaRow}>
+                          <MobileStatusBadge
+                            status={
+                              task.priority === "high"
+                                ? "destructive"
+                                : task.priority === "low"
+                                ? "neutral"
+                                : "info"
+                            }
+                            label={task.priority.toUpperCase()}
+                            size="sm"
+                          />
+                          {task.dueAt && (
+                            <View style={styles.dueDateBadge}>
+                              <Clock size={11} color={isOverdue ? "#dc2626" : "#64748b"} />
+                              <Text
+                                style={[styles.dueDateText, isOverdue && { color: "#dc2626", fontWeight: "700" }]}
+                              >
+                                {new Date(task.dueAt).toLocaleDateString()}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
                       </View>
                     </Pressable>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
-                        {task.title}
-                      </Text>
-                      <View style={styles.taskMetaRow}>
-                        <View
-                          style={[
-                            styles.priorityTag,
-                            isHigh ? styles.priorityHigh : isLow ? styles.priorityLow : styles.priorityNormal,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.priorityTagText,
-                              isHigh ? styles.priorityTextHigh : isLow ? styles.priorityTextLow : styles.priorityTextNormal,
-                            ]}
-                          >
-                            {task.priority.toUpperCase()}
-                          </Text>
-                        </View>
-                        {task.dueAt && (
-                          <Text style={styles.taskDueText}>
-                            Vence: {new Date(task.dueAt).toLocaleDateString()}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                  </View>
+                  </MobileCard>
                 );
               })}
             </View>
@@ -179,81 +195,70 @@ export function MobileCustomer360Work({
 
       {/* Notes Section */}
       {activeSubTab === "notes" && (
-        <View style={styles.contentCard}>
-          {editorOpen && onCreateNote ? (
+        <View style={styles.tabContent}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Notas del Cliente ({notes.length})</Text>
+            {onCreateNote && (
+              <MobileButton
+                variant="primary"
+                size="sm"
+                icon={Plus}
+                onPress={() => {
+                  setSelectedNote(undefined);
+                  setEditorOpen(true);
+                }}
+                minHeight={36}
+              >
+                Nueva Nota
+              </MobileButton>
+            )}
+          </View>
+
+          {notes.length === 0 ? (
+            <MobileEmptyState
+              title="Sin notas registradas"
+              description="Añade notas internas o resúmenes de llamadas."
+            />
+          ) : (
+            <View style={styles.notesList}>
+              {notes.map((note) => (
+                <MobileNotesCard
+                  key={note.id}
+                  note={note}
+                  onPress={() => {
+                    setSelectedNote(note);
+                    setEditorOpen(true);
+                  }}
+                  onDelete={onDeleteNote ? () => onDeleteNote(note) : undefined}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Note Editor Modal */}
+          {editorOpen && (
             <MobileNoteEditor
-              initialNote={selectedNote}
-              relationLabel={contactName}
-              onCancel={() => {
+              visible={editorOpen}
+              onClose={() => {
                 setEditorOpen(false);
                 setSelectedNote(undefined);
               }}
+              note={selectedNote}
               onSave={async (draft) => {
                 if (selectedNote && onUpdateNote) {
                   await onUpdateNote(selectedNote.id, selectedNote.version, draft);
-                } else {
+                } else if (onCreateNote) {
                   await onCreateNote(draft);
                 }
                 setEditorOpen(false);
                 setSelectedNote(undefined);
               }}
+              initialEntity={{
+                type: "contact",
+                id: contactId,
+                name: contactName,
+              }}
             />
-          ) : (
-            <>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{t("crm.customer360.work.notes")} ({notes.length})</Text>
-                <Pressable
-                  style={styles.addButton}
-                  onPress={() => {
-                    setSelectedNote(undefined);
-                    setEditorOpen(true);
-                  }}
-                >
-                  <Plus size={13} color="#135bec" />
-                  <Text style={styles.addButtonText}>{t("crm.customer360.work.newNote")}</Text>
-                </Pressable>
-              </View>
-
-              {notes.length === 0 ? (
-                <View style={styles.emptyBox}>
-                  <StickyNote size={28} color="#94a3b8" />
-                  <Text style={styles.emptyTitle}>{t("crm.customer360.work.noNotes")}</Text>
-                  <Text style={styles.emptySubtitle}>{t("crm.customer360.work.noNotesDesc")}</Text>
-                </View>
-              ) : (
-                <View style={styles.notesList}>
-                  {notes.map((note) => (
-                    <MobileNotesCard
-                      key={note.id}
-                      note={note}
-                      onOpen={() => {
-                        setSelectedNote(note);
-                        setEditorOpen(true);
-                      }}
-                      onActions={() => {
-                        Alert.alert("Note actions", undefined, [
-                          {
-                            text: "Edit note",
-                            onPress: () => {
-                              setSelectedNote(note);
-                              setEditorOpen(true);
-                            },
-                          },
-                          {
-                            text: "Delete note",
-                            style: "destructive",
-                            onPress: () => {
-                              if (onDeleteNote) void onDeleteNote(note);
-                            },
-                          },
-                          { text: "Cancel", style: "cancel" },
-                        ]);
-                      }}
-                    />
-                  ))}
-                </View>
-              )}
-            </>
           )}
         </View>
       )}
@@ -263,221 +268,105 @@ export function MobileCustomer360Work({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 24,
   },
-  tabStrip: {
+  tabContent: {
+    marginTop: 12,
+  },
+  sectionHeaderRow: {
     flexDirection: "row",
-    gap: 8,
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
-  tabButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 10,
-    paddingVertical: 10,
-  },
-  tabButtonActive: {
-    backgroundColor: "#135bec",
-  },
-  tabButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#64748b",
-  },
-  tabButtonTextActive: {
-    color: "#ffffff",
-  },
-  contentCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    padding: 16,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 14,
-  },
-  cardTitle: {
-    fontSize: 15,
+  sectionTitle: {
+    fontSize: 16,
     fontWeight: "800",
     color: "#0f172a",
   },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#eff6ff",
-    borderColor: "#bfdbfe",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  addButtonText: {
-    color: "#135bec",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  emptyBox: {
-    alignItems: "center",
-    paddingVertical: 32,
-    gap: 6,
-  },
-  emptyTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  emptySubtitle: {
-    fontSize: 12,
-    color: "#64748b",
-    textAlign: "center",
-  },
-  taskList: {
-    gap: 8,
-  },
-  taskRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 8,
-    borderBottomColor: "#f1f5f9",
-    borderBottomWidth: 1,
-  },
-  checkboxTarget: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxBox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    borderColor: "#94a3b8",
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxBoxDone: {
-    backgroundColor: "#10b981",
-    borderColor: "#10b981",
-  },
-  taskTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1e293b",
-  },
-  taskTitleDone: {
-    color: "#94a3b8",
-    textDecorationLine: "line-through",
-  },
-  taskMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 4,
-  },
-  priorityTag: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  priorityHigh: { backgroundColor: "#fef2f2" },
-  priorityNormal: { backgroundColor: "#eff6ff" },
-  priorityLow: { backgroundColor: "#f1f5f9" },
-  priorityTagText: { fontSize: 9, fontWeight: "800" },
-  priorityTextHigh: { color: "#dc2626" },
-  priorityTextNormal: { color: "#2563eb" },
-  priorityTextLow: { color: "#64748b" },
-  taskDueText: {
-    fontSize: 11,
-    color: "#64748b",
-  },
-  inlineCreateBox: {
+  inlineCreateCard: {
+    padding: 14,
     marginBottom: 14,
     backgroundColor: "#f8fafc",
-    borderRadius: 12,
-    padding: 12,
-    borderColor: "#cbd5e1",
-    borderWidth: 1,
   },
   inlineLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#334155",
-    marginBottom: 4,
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#475569",
+    letterSpacing: 0.8,
+    marginBottom: 6,
+    marginTop: 6,
   },
   inlineInput: {
-    backgroundColor: "#ffffff",
-    borderColor: "#cbd5e1",
     borderWidth: 1,
+    borderColor: "#cbd5e1",
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 13,
+    paddingHorizontal: 12,
+    minHeight: 44,
+    fontSize: 14,
     color: "#0f172a",
-  },
-  priorityRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 8,
-  },
-  priorityLabel: {
-    fontSize: 11,
-    color: "#64748b",
-    fontWeight: "600",
-  },
-  priorityPill: {
-    backgroundColor: "#e2e8f0",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  priorityPillActive: {
-    backgroundColor: "#135bec",
-  },
-  priorityPillText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#64748b",
-  },
-  priorityPillTextActive: {
-    color: "#ffffff",
+    backgroundColor: "#ffffff",
   },
   inlineActionRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
     gap: 8,
-    marginTop: 10,
+    marginTop: 14,
   },
-  inlineCancel: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  tasksList: {
+    gap: 8,
   },
-  inlineCancelText: {
-    fontSize: 12,
-    color: "#64748b",
-    fontWeight: "600",
+  taskCard: {
+    padding: 12,
   },
-  inlineSubmit: {
-    backgroundColor: "#135bec",
+  taskCheckboxRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    minHeight: 44,
+  },
+  taskCheckbox: {
+    width: 24,
+    height: 24,
     borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderWidth: 2,
+    borderColor: "#cbd5e1",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    marginTop: 2,
   },
-  inlineSubmitText: {
-    color: "#ffffff",
-    fontSize: 12,
+  taskCheckboxCompleted: {
+    borderColor: "#16a34a",
+    backgroundColor: "#16a34a",
+  },
+  taskInfo: {
+    flex: 1,
+  },
+  taskTitle: {
+    fontSize: 14,
     fontWeight: "700",
+    color: "#0f172a",
+    marginBottom: 4,
+  },
+  taskTitleCompleted: {
+    textDecorationLine: "line-through",
+    color: "#94a3b8",
+  },
+  taskMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  dueDateBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  dueDateText: {
+    fontSize: 11,
+    color: "#64748b",
   },
   notesList: {
     gap: 8,

@@ -48,7 +48,7 @@ import {
 import { DEFAULT_TASK_TEMPLATES, mobileTasksAdapter } from "../adapters/tasks";
 import { mobileTheme, commonMobileStyles } from "../theme/tokens";
 import { MobilePageHeader } from "./ui/MobilePageHeader";
-import { MobileSegmentedControl } from "./ui/MobileSegmentedControl";
+import { MobilePageTabs } from "./ui/MobilePageTabs";
 import { MobileSearchBar } from "./ui/MobileSearchBar";
 import { MobileModalSheet } from "./MobileModal";
 import { MobileControlSheet } from "./ui/MobileControlSheet";
@@ -719,14 +719,14 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
         }}
       />
 
-      {/* 2. View Mode Switcher (Standardized Segmented Control) */}
-      <MobileSegmentedControl
-        selected={viewMode}
-        onChange={setViewMode}
-        options={[
-          { id: "list", label: "Lista", icon: List },
-          { id: "kanban", label: "Kanban", icon: Columns3 },
-          { id: "calendar", label: "Calendario", icon: CalendarDays },
+      {/* 2. View Mode Switcher (Canonical MobilePageTabs, NO PILLS) */}
+      <MobilePageTabs
+        activeTab={viewMode}
+        onTabChange={(tab) => setViewMode(tab as ViewMode)}
+        tabs={[
+          { id: "list", label: "Lista", count: tasks.length },
+          { id: "kanban", label: "Kanban" },
+          { id: "calendar", label: "Calendario" },
         ]}
       />
 
@@ -811,10 +811,10 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       {/* 5. VIEW 2: KANBAN VIEW */}
       {viewMode === "kanban" && (
         <View>
-          <MobileSegmentedControl
-            selected={kanbanCol}
-            onChange={setKanbanCol}
-            options={[
+          <MobilePageTabs
+            activeTab={kanbanCol}
+            onTabChange={(tab) => setKanbanCol(tab as KanbanCol)}
+            tabs={[
               { id: "pending", label: "Pendientes", count: pendingCount },
               { id: "urgent", label: "Urgentes", count: urgentCount },
               { id: "completed", label: "Listas", count: completedCount },
@@ -843,14 +843,14 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       {/* 6. VIEW 3: CALENDAR VIEW (SEMANA / MES / FLUJO) */}
       {viewMode === "calendar" && (
         <View>
-          {/* Sub-view Switcher: Semana | Mes | Flujo */}
-          <MobileSegmentedControl
-            selected={calendarSubView}
-            onChange={setCalendarSubView}
-            options={[
-              { id: "week", label: "Semana", icon: Columns3 },
-              { id: "month", label: "Mes", icon: CalendarDays },
-              { id: "stream", label: "Flujo", icon: List },
+          {/* Sub-view Switcher: Semana | Mes | Flujo (Canonical MobilePageTabs, NO PILLS) */}
+          <MobilePageTabs
+            activeTab={calendarSubView}
+            onTabChange={(tab) => setCalendarSubView(tab as CalendarSubView)}
+            tabs={[
+              { id: "week", label: "Semana" },
+              { id: "month", label: "Mes" },
+              { id: "stream", label: "Flujo" },
             ]}
           />
 
@@ -2407,20 +2407,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 16,
     marginBottom: 12,
+    paddingHorizontal: 2,
   },
   calendarNavControls: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
   },
   calendarNavButton: {
     backgroundColor: mobileTheme.colors.surface,
     borderColor: mobileTheme.colors.borderSubtle,
     borderWidth: 1,
     borderRadius: mobileTheme.radii.md,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
   },
   calendarTodayText: {
     color: mobileTheme.colors.textMain,
@@ -2432,8 +2436,8 @@ const styles = StyleSheet.create({
     borderColor: mobileTheme.colors.borderSubtle,
     borderWidth: 1,
     borderRadius: mobileTheme.radii.md,
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },

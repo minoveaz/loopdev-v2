@@ -1,8 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Alert, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Camera, File, FileText, Image as ImageIcon, Plus, Trash2, Upload, X } from "lucide-react-native";
+import React, { useEffect, useRef, useState, useMemo } from "react";
+import { Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Camera, File, FileText, Image as ImageIcon, Trash2, Upload, X } from "lucide-react-native";
 import { mobileFilesAdapter as localFilesAdapter, type FileCategory, type FileRecord } from "../../adapters/files";
 import { useT } from "../../i18n";
+import {
+  MobilePageTabs,
+  MobileCard,
+  MobileButton,
+  MobileConfirmDialog,
+  MobileEmptyState,
+} from "../ui";
 
 interface Props {
   contactId: string;
@@ -10,13 +17,13 @@ interface Props {
 }
 
 const categories: Array<{ id: FileCategory | "all"; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "identity", label: "Identity" },
-  { id: "contracts", label: "Contracts" },
-  { id: "proposals", label: "Proposals" },
-  { id: "billing", label: "Billing" },
-  { id: "communications", label: "Communications" },
-  { id: "other", label: "Other" },
+  { id: "all", label: "Todos" },
+  { id: "identity", label: "Identidad" },
+  { id: "contracts", label: "Contratos" },
+  { id: "proposals", label: "Propuestas" },
+  { id: "billing", label: "Facturación" },
+  { id: "communications", label: "Comunicaciones" },
+  { id: "other", label: "Otros" },
 ];
 
 function formatBytes(bytes: number) {
@@ -28,10 +35,11 @@ function formatBytes(bytes: number) {
 export function MobileCustomer360Documents({ contactId, contactName }: Props) {
   const t = useT();
   const [files, setFiles] = useState<FileRecord[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<FileCategory | "all">("all");
+  const [, setLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
   const [uploadCategory, setUploadCategory] = useState<FileCategory>("identity");
+  const [fileToDelete, setFileToDelete] = useState<FileRecord | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
@@ -75,31 +83,34 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
     await loadFiles();
   };
 
-  const handleDeleteFile = async (file: FileRecord) => {
-    if (Platform.OS === "web") {
-      const confirmed = window.confirm(`Delete file "${file.name}"?`);
-      if (confirmed) {
-        await localFilesAdapter.deleteFile(file.id);
-        await loadFiles();
-      }
-    } else {
-      Alert.alert(t("common.delete"), `Delete "${file.name}"?`, [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.delete"),
-          style: "destructive",
-          onPress: async () => {
-            await localFilesAdapter.deleteFile(file.id);
-            await loadFiles();
-          },
-        },
-      ]);
+  const handleConfirmDelete = async () => {
+    if (!fileToDelete) return;
+    try {
+      await localFilesAdapter.deleteFile(fileToDelete.id);
+      setFileToDelete(null);
+      await loadFiles();
+    } catch {
+      // noop
     }
   };
 
   const filteredFiles = files.filter(
     (f) => f.status !== "deleted" && (selectedCategory === "all" || f.category === selectedCategory),
   );
+
+  const tabs = useMemo(() => {
+    return categories.map((c) => {
+      const count =
+        c.id === "all"
+          ? files.filter((f) => f.status !== "deleted").length
+          : files.filter((f) => f.status !== "deleted" && f.category === c.id).length;
+      return {
+        id: c.id,
+        label: c.label,
+        count,
+      };
+    });
+  }, [files]);
 
   return (
     <View style={styles.container}>
@@ -126,83 +137,73 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
 
       {/* Header */}
       <View style={styles.cardHeader}>
-        <View>
-          <Text style={styles.cardTitle}>{t("crm.customer360.documents.title")} ({files.length})</Text>
-          <Text style={styles.cardSubtitle}>{t("crm.customer360.documents.subtitle")}</Text>
-        </View>
+        <Text style={styles.cardTitle}>Documentos del Contacto ({files.length})</Text>
+        <Text style={styles.cardSubtitle}>Expediente digital, identificaciones y contratos adjuntos.</Text>
       </View>
 
-      {/* Modern Dropzone with In-Dropzone Action Buttons */}
-      <View style={styles.dropzoneCard}>
+      {/* Modern Dropzone Card */}
+      <MobileCard style={styles.dropzoneCard}>
         <View style={styles.dropzoneIconCircle}>
-          <Upload size={22} color="#135bec" />
+          <Upload size={20} color="#135bec" />
         </View>
-        <Text style={styles.dropzoneTitle}>{t("crm.customer360.documents.dropzoneTitle")}</Text>
-        <Text style={styles.dropzoneDesc}>{t("crm.customer360.documents.dropzoneDesc")}</Text>
+        <Text style={styles.dropzoneTitle}>Subir Documentos al Expediente</Text>
+        <Text style={styles.dropzoneDesc}>Soporta PDF, imágenes PNG/JPG y comprobantes</Text>
 
         <View style={styles.dropzoneActionsRow}>
-          <Pressable
-            style={styles.dropzoneUploadBtn}
+          <MobileButton
+            variant="secondary"
+            size="sm"
+            icon={Upload}
             onPress={() => {
               if (Platform.OS === "web" && fileInputRef.current) {
                 fileInputRef.current.click();
               }
             }}
+            minHeight={44}
           >
-            <Upload size={14} color="#135bec" />
-            <Text style={styles.dropzoneUploadBtnText}>{t("crm.customer360.documents.upload")}</Text>
-          </Pressable>
+            Examinar
+          </MobileButton>
 
-          <Pressable
-            style={styles.dropzoneCameraBtn}
+          <MobileButton
+            variant="primary"
+            size="sm"
+            icon={Camera}
             onPress={() => {
               if (Platform.OS === "web" && cameraInputRef.current) {
                 cameraInputRef.current.click();
               }
             }}
+            minHeight={44}
           >
-            <Camera size={14} color="#ffffff" />
-            <Text style={styles.dropzoneCameraBtnText}>{t("crm.customer360.documents.takePhoto")}</Text>
-          </Pressable>
+            Hacer Foto
+          </MobileButton>
         </View>
-      </View>
+      </MobileCard>
 
-      {/* Category Filter Pills */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-        <View style={styles.categoryPillsRow}>
-          {categories.map((cat) => {
-            const isActive = cat.id === selectedCategory;
-            return (
-              <Pressable
-                key={cat.id}
-                style={[styles.catPill, isActive && styles.catPillActive]}
-                onPress={() => setSelectedCategory(cat.id)}
-              >
-                <Text style={[styles.catPillText, isActive && styles.catPillTextActive]}>
-                  {cat.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
+      {/* Category Filter Tabs (Canonical MobilePageTabs, STRICTLY NO PILLS) */}
+      <MobilePageTabs
+        tabs={tabs}
+        activeTab={selectedCategory}
+        onTabChange={setSelectedCategory}
+      />
 
       {/* Documents List */}
       <View style={styles.documentsContainer}>
         {filteredFiles.length === 0 ? (
-          <View style={styles.emptyBox}>
-            <FileText size={24} color="#94a3b8" />
-            <Text style={styles.emptyTitle}>{t("crm.customer360.documents.noDocuments")}</Text>
-            <Text style={styles.emptySubtitle}>{t("crm.customer360.documents.noDocumentsDesc")}</Text>
-          </View>
+          <MobileEmptyState
+            title="Sin documentos en esta categoría"
+            description="Utiliza el botón superior para subir o capturar el primer archivo."
+          />
         ) : (
           <View style={styles.filesList}>
             {filteredFiles.map((item) => {
               const isImage = item.mediaType.startsWith("image/");
               const isPdf = item.mediaType === "application/pdf";
               return (
-                <View key={item.id} style={styles.fileCard}>
+                <MobileCard key={item.id} style={styles.fileCard}>
                   <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Abrir documento ${item.name}`}
                     style={styles.fileLeft}
                     onPress={() => setPreviewFile(item)}
                   >
@@ -223,9 +224,7 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
                         <View style={styles.catBadge}>
                           <Text style={styles.catBadgeText}>{item.category}</Text>
                         </View>
-                        <Text style={styles.fileSizeText}>
-                          {formatBytes(item.size)}
-                        </Text>
+                        <Text style={styles.fileSizeText}>{formatBytes(item.size)}</Text>
                         <Text style={styles.fileDateText}>
                           {new Date(item.createdAt).toLocaleDateString()}
                         </Text>
@@ -234,13 +233,15 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
                   </Pressable>
 
                   <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Eliminar ${item.name}`}
                     hitSlop={8}
                     style={styles.deleteButton}
-                    onPress={() => handleDeleteFile(item)}
+                    onPress={() => setFileToDelete(item)}
                   >
-                    <Trash2 size={15} color="#ef4444" />
+                    <Trash2 size={16} color="#ef4444" />
                   </Pressable>
-                </View>
+                </MobileCard>
               );
             })}
           </View>
@@ -248,193 +249,116 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
       </View>
 
       {/* Preview Modal */}
-      <Modal visible={Boolean(previewFile)} animationType="fade" transparent onRequestClose={() => setPreviewFile(null)}>
+      <Modal
+        visible={Boolean(previewFile)}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setPreviewFile(null)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.previewModalCard}>
             <View style={styles.previewModalHeader}>
               <Text style={styles.previewModalTitle} numberOfLines={1}>
                 {previewFile?.name}
               </Text>
-              <Pressable onPress={() => setPreviewFile(null)}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Cerrar vista previa"
+                onPress={() => setPreviewFile(null)}
+                style={styles.closeBtn}
+              >
                 <X size={18} color="#64748b" />
               </Pressable>
             </View>
+
             <View style={styles.previewModalBody}>
-              <View style={styles.previewDetailsBox}>
-                <Text style={styles.previewDetailRow}>
-                  <Text style={styles.previewDetailLabel}>Categoría: </Text>
-                  {previewFile?.category}
-                </Text>
-                <Text style={styles.previewDetailRow}>
-                  <Text style={styles.previewDetailLabel}>Tipo MIME: </Text>
-                  {previewFile?.mediaType}
-                </Text>
-                <Text style={styles.previewDetailRow}>
-                  <Text style={styles.previewDetailLabel}>Tamaño: </Text>
-                  {previewFile ? formatBytes(previewFile.size) : "—"}
-                </Text>
-                <Text style={styles.previewDetailRow}>
-                  <Text style={styles.previewDetailLabel}>Fecha de Carga: </Text>
-                  {previewFile ? new Date(previewFile.createdAt).toLocaleString() : "—"}
-                </Text>
-                <Text style={styles.previewDetailRow}>
-                  <Text style={styles.previewDetailLabel}>ID de Archivo: </Text>
-                  {previewFile?.id}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.previewModalFooter}>
-              <Pressable style={styles.previewModalClose} onPress={() => setPreviewFile(null)}>
-                <Text style={styles.previewModalCloseText}>Cerrar</Text>
-              </Pressable>
+              {previewFile?.mediaType.startsWith("image/") ? (
+                <Image
+                  source={{ uri: previewFile.uri || previewFile.name }}
+                  style={styles.previewImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={styles.previewDocPlaceholder}>
+                  <FileText size={48} color="#64748b" />
+                  <Text style={styles.previewDocText}>Vista previa de documento</Text>
+                  <Text style={styles.previewDocSub}>{previewFile?.mediaType}</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
       </Modal>
+
+      {/* Confirm Delete Dialog */}
+      <MobileConfirmDialog
+        visible={Boolean(fileToDelete)}
+        title="Eliminar Documento"
+        message={`¿Estás seguro de que deseas eliminar "${fileToDelete?.name}"? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setFileToDelete(null)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 24,
   },
   cardHeader: {
     marginBottom: 12,
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "800",
     color: "#0f172a",
+    marginBottom: 2,
   },
   cardSubtitle: {
     fontSize: 12,
     color: "#64748b",
-    marginTop: 2,
   },
   dropzoneCard: {
-    backgroundColor: "#f8fafc",
-    borderWidth: 1.5,
-    borderColor: "#bfdbfe",
-    borderStyle: "dashed",
-    borderRadius: 14,
-    padding: 20,
     alignItems: "center",
-    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: "#bfdbfe",
+    backgroundColor: "#eff6ff",
+    marginBottom: 12,
   },
   dropzoneIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#eff6ff",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#dbeafe",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
   },
   dropzoneTitle: {
     fontSize: 14,
-    fontWeight: "800",
-    color: "#0f172a",
-    textAlign: "center",
+    fontWeight: "700",
+    color: "#1e40af",
+    marginBottom: 2,
   },
   dropzoneDesc: {
-    fontSize: 11,
-    color: "#64748b",
-    textAlign: "center",
-    marginTop: 4,
-    marginBottom: 14,
-    maxWidth: 280,
+    fontSize: 12,
+    color: "#3b82f6",
+    marginBottom: 12,
   },
   dropzoneActionsRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    width: "100%",
-  },
-  dropzoneUploadBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: "#ffffff",
-    borderColor: "#bfdbfe",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    flex: 1,
-    maxWidth: 160,
-  },
-  dropzoneUploadBtnText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#135bec",
-  },
-  dropzoneCameraBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: "#135bec",
-    borderColor: "#135bec",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    flex: 1,
-    maxWidth: 160,
-  },
-  dropzoneCameraBtnText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  categoryScroll: {
-    marginBottom: 12,
-  },
-  categoryPillsRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  catPill: {
-    backgroundColor: "#f1f5f9",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  catPillActive: {
-    backgroundColor: "#135bec",
-  },
-  catPillText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#64748b",
-  },
-  catPillTextActive: {
-    color: "#ffffff",
+    gap: 10,
   },
   documentsContainer: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    padding: 14,
-  },
-  emptyBox: {
-    alignItems: "center",
-    paddingVertical: 32,
-    gap: 6,
-  },
-  emptyTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  emptySubtitle: {
-    fontSize: 12,
-    color: "#64748b",
-    textAlign: "center",
+    marginTop: 12,
   },
   filesList: {
     gap: 8,
@@ -443,31 +367,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#f8fafc",
-    borderColor: "#e2e8f0",
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 10,
+    padding: 12,
   },
   fileLeft: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginRight: 8,
+    flex: 1,
+    minHeight: 44,
   },
   fileIconBox: {
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    backgroundColor: "#f1f5f9",
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 10,
   },
   fileName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
     color: "#0f172a",
   },
@@ -478,84 +396,89 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   catBadge: {
-    backgroundColor: "#e2e8f0",
+    backgroundColor: "#f1f5f9",
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 1,
     borderRadius: 4,
   },
   catBadgeText: {
     fontSize: 10,
-    fontWeight: "700",
     color: "#475569",
+    fontWeight: "600",
     textTransform: "capitalize",
   },
   fileSizeText: {
     fontSize: 11,
-    color: "#64748b",
+    color: "#94a3b8",
   },
   fileDateText: {
     fontSize: 11,
     color: "#94a3b8",
   },
   deleteButton: {
-    padding: 6,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(15, 23, 42, 0.6)",
     justifyContent: "center",
-    padding: 18,
+    alignItems: "center",
+    padding: 16,
   },
   previewModalCard: {
+    width: "100%",
+    maxHeight: "80%",
     backgroundColor: "#ffffff",
     borderRadius: 16,
-    padding: 16,
+    overflow: "hidden",
   },
   previewModalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
   },
   previewModalTitle: {
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 14,
+    fontWeight: "700",
     color: "#0f172a",
     flex: 1,
-    marginRight: 10,
+  },
+  closeBtn: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
   previewModalBody: {
-    marginBottom: 14,
-  },
-  previewDetailsBox: {
+    height: 350,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#f8fafc",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    padding: 12,
-    gap: 8,
   },
-  previewDetailRow: {
-    fontSize: 13,
-    color: "#334155",
+  previewImage: {
+    width: "100%",
+    height: "100%",
   },
-  previewDetailLabel: {
+  previewDocPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewDocText: {
+    fontSize: 14,
     fontWeight: "700",
-    color: "#64748b",
+    color: "#475569",
+    marginTop: 10,
   },
-  previewModalFooter: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  previewModalClose: {
-    backgroundColor: "#135bec",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  previewModalCloseText: {
-    color: "#ffffff",
-    fontSize: 13,
-    fontWeight: "700",
+  previewDocSub: {
+    fontSize: 12,
+    color: "#94a3b8",
+    marginTop: 2,
   },
 });

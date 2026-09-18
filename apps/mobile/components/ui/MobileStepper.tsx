@@ -12,8 +12,11 @@ import { Check } from "lucide-react-native";
 import { mobileTheme } from "../../theme/tokens";
 
 export interface MobileStepItem<T extends string = string> {
-  key: T;
-  label: string;
+  key?: T;
+  id?: T;
+  label?: string;
+  title?: string;
+  subtitle?: string;
   stepNumber?: number;
   color?: string;
   isTerminalWon?: boolean;
@@ -22,8 +25,10 @@ export interface MobileStepItem<T extends string = string> {
 
 export interface MobileStepperProps<T extends string = string> {
   steps: MobileStepItem<T>[];
-  currentStep: T;
+  currentStep?: T;
+  currentStepIndex?: number;
   onStepSelect?: (stepKey: T) => void;
+  onStepPress?: (stepIndex: number) => void;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -37,10 +42,17 @@ export interface MobileStepperProps<T extends string = string> {
 export function MobileStepper<T extends string = string>({
   steps,
   currentStep,
+  currentStepIndex,
   onStepSelect,
+  onStepPress,
   style,
 }: MobileStepperProps<T>) {
-  const currentIndex = steps.findIndex((s) => s.key === currentStep);
+  const currentIndex =
+    currentStepIndex !== undefined
+      ? currentStepIndex
+      : currentStep
+      ? steps.findIndex((s) => (s.key ?? s.id) === currentStep)
+      : -1;
 
   return (
     <View style={[styles.container, style]}>
@@ -50,17 +62,26 @@ export function MobileStepper<T extends string = string>({
         contentContainerStyle={styles.scroll}
       >
         {steps.map((step, index) => {
-          const isCurrent = step.key === currentStep;
+          const stepKey = step.key ?? step.id ?? String(index);
+          const stepLabel = step.label ?? step.title ?? "";
+          const isCurrent = currentIndex === index;
           const isPassed = currentIndex >= 0 && currentIndex > index;
-          const isInteractive = Boolean(onStepSelect);
+          const isInteractive = Boolean(onStepSelect || onStepPress);
 
           return (
             <Pressable
-              key={step.key}
+              key={stepKey}
               accessibilityRole="button"
-              accessibilityLabel={`Etapa ${step.label}, ${isCurrent ? "actual" : isPassed ? "completada" : "pendiente"}`}
+              accessibilityLabel={`Etapa ${stepLabel}, ${isCurrent ? "actual" : isPassed ? "completada" : "pendiente"}`}
               disabled={!isInteractive}
-              onPress={() => onStepSelect?.(step.key)}
+              onPress={() => {
+                if (onStepSelect && (step.key || step.id)) {
+                  onStepSelect((step.key || step.id) as T);
+                }
+                if (onStepPress) {
+                  onStepPress(index);
+                }
+              }}
               style={[
                 styles.stepSegment,
                 isCurrent && styles.stepSegmentCurrent,
@@ -96,7 +117,7 @@ export function MobileStepper<T extends string = string>({
                   isPassed && styles.stepLabelPassed,
                 ]}
               >
-                {step.label}
+                {stepLabel}
               </Text>
             </Pressable>
           );
@@ -123,9 +144,9 @@ const styles = StyleSheet.create({
   stepSegment: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
     paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderRadius: mobileTheme.radii.sm,
     borderBottomWidth: 2.5,
     borderBottomColor: "transparent",
@@ -139,9 +160,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
   },
   badge: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: mobileTheme.colors.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
@@ -153,7 +174,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#dcfce7",
   },
   badgeNumber: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "700",
     color: mobileTheme.colors.textMuted,
   },
@@ -161,7 +182,7 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   stepLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     color: mobileTheme.colors.textMuted,
   },

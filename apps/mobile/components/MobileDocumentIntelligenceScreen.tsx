@@ -38,7 +38,8 @@ import {
 import { mobileTheme } from "../theme/tokens";
 import { MobilePageHeader } from "./ui/MobilePageHeader";
 import { MobileSearchBar } from "./ui/MobileSearchBar";
-import { MobileSegmentedControl } from "./ui/MobileSegmentedControl";
+import { MobilePageTabs } from "./ui/MobilePageTabs";
+import { MobileBackLink } from "./ui/MobileBackLink";
 import {
   localDocumentIntelligenceAdapter,
   EXPORT_PROFILES,
@@ -379,39 +380,7 @@ export function MobileDocumentIntelligenceScreen({
       )}
 
       {/* Top Bar / Back to Launchpad */}
-      <View style={styles.topNavRow}>
-        <Pressable
-          accessibilityLabel="Volver al Launchpad"
-          accessibilityRole="button"
-          onPress={onBack}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
-          <Text style={styles.backButtonText}>Launchpad</Text>
-        </Pressable>
-
-        <View style={styles.tabToggleWrap}>
-          <Pressable
-            onPress={() => setActiveTab("workspace")}
-            style={[styles.tabToggleBtn, activeTab === "workspace" && styles.tabToggleBtnActive]}
-          >
-            <Scan size={13} color={activeTab === "workspace" ? mobileTheme.colors.primary : mobileTheme.colors.textMuted} />
-            <Text style={[styles.tabToggleText, activeTab === "workspace" && styles.tabToggleTextActive]}>
-              Extractor
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => setActiveTab("history")}
-            style={[styles.tabToggleBtn, activeTab === "history" && styles.tabToggleBtnActive]}
-          >
-            <Layers size={13} color={activeTab === "history" ? mobileTheme.colors.primary : mobileTheme.colors.textMuted} />
-            <Text style={[styles.tabToggleText, activeTab === "history" && styles.tabToggleTextActive]}>
-              Historial ({extractionsList.length})
-            </Text>
-          </Pressable>
-        </View>
-      </View>
+      <MobileBackLink label="Launchpad" onPress={onBack} />
 
       {/* Main Screen Header */}
       <MobilePageHeader
@@ -431,6 +400,16 @@ export function MobileDocumentIntelligenceScreen({
               }
             : undefined
         }
+      />
+
+      {/* Canonical Navigation Tabs (Strictly NO pills) */}
+      <MobilePageTabs
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab as ScreenTab)}
+        tabs={[
+          { id: "workspace", label: "Extractor" },
+          { id: "history", label: "Historial", count: extractionsList.length },
+        ]}
       />
 
       {/* ========================================================================= */}
@@ -655,15 +634,15 @@ export function MobileDocumentIntelligenceScreen({
                 </View>
               </View>
 
-              {/* Mode Toggle: Document / Fields */}
+              {/* Mode Toggle: Document / Fields (Canonical MobilePageTabs, NO PILLS) */}
               <View style={styles.subViewToggleRow}>
-                <MobileSegmentedControl
-                  options={[
-                    { id: "fields", label: "Campos Extraídos", icon: FileSpreadsheet },
-                    { id: "document", label: "Ver Documento", icon: Eye },
+                <MobilePageTabs
+                  tabs={[
+                    { id: "fields", label: "Campos Extraídos" },
+                    { id: "document", label: "Ver Documento" },
                   ]}
-                  selected={viewMode}
-                  onChange={(id) => setViewMode(id as any)}
+                  activeTab={viewMode}
+                  onTabChange={(id) => setViewMode(id as any)}
                 />
               </View>
 
@@ -858,16 +837,16 @@ export function MobileDocumentIntelligenceScreen({
             />
           </View>
 
-          {/* Type Filter */}
+          {/* Type Filter (Canonical MobilePageTabs, NO PILLS) */}
           <View style={{ marginBottom: 14 }}>
-            <MobileSegmentedControl
-              options={[
+            <MobilePageTabs
+              tabs={[
                 { id: "all", label: "Todos" },
                 { id: "dni", label: "DNI / NIE" },
                 { id: "passport", label: "Pasaportes" },
               ]}
-              selected={historyFilter}
-              onChange={setHistoryFilter}
+              activeTab={historyFilter}
+              onTabChange={setHistoryFilter}
             />
           </View>
 

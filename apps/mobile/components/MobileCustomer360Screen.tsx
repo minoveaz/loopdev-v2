@@ -13,6 +13,7 @@ import {
   MobileLoadingState,
   MobileEmptyState,
   MobileConfirmDialog,
+  MobileBackLink,
 } from "./ui";
 import { mobileTheme } from "../theme/tokens";
 import { MobileCustomer360ProfileHeader } from "./customer360/MobileCustomer360ProfileHeader";
@@ -184,10 +185,7 @@ export function MobileCustomer360Screen({
   if (loading) {
     return (
       <MobilePageContainer>
-        <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
-          <Text style={styles.backButtonText}>{t("crm.contacts.back")}</Text>
-        </Pressable>
+        <MobileBackLink label={t("crm.contacts.back")} onPress={onBack} />
         <MobileLoadingState message={t("common.loading")} />
       </MobilePageContainer>
     );
@@ -196,10 +194,7 @@ export function MobileCustomer360Screen({
   if (error || !view) {
     return (
       <MobilePageContainer>
-        <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={16} color={mobileTheme.colors.primary} />
-          <Text style={styles.backButtonText}>{t("crm.contacts.back")}</Text>
-        </Pressable>
+        <MobileBackLink label={t("crm.contacts.back")} onPress={onBack} />
         <MobileEmptyState
           title={t("crm.contacts.noContacts")}
           description={error || t("crm.contacts.noContacts")}
@@ -231,10 +226,7 @@ export function MobileCustomer360Screen({
   return (
     <MobilePageContainer>
       {/* Back to Contacts Navigation */}
-      <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-        <ArrowLeft size={16} color={mobileTheme.colors.primary} />
-        <Text style={styles.backButtonText}>{t("crm.contacts.back")}</Text>
-      </Pressable>
+      <MobileBackLink label={t("crm.contacts.back")} onPress={onBack} />
 
       {/* Top Profile Header Card with Avatar, Badge, SpeedDialBar, and Action buttons */}
       <MobileCustomer360ProfileHeader

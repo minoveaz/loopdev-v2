@@ -36,6 +36,8 @@ import { MobileLeadDetailScreen } from "./components/MobileLeadDetailScreen";
 import { MobileCreateLeadScreen } from "./components/MobileCreateLeadScreen";
 import MobilePipelineScreen from "./components/MobilePipelineScreen";
 import { MobileOpportunityDetailScreen } from "./components/MobileOpportunityDetailScreen";
+import { MobileCrmOperationsScreen } from "./components/MobileCrmOperationsScreen";
+import { MobileProductCatalogScreen } from "./components/MobileProductCatalogScreen";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./adapters/auth";
 import type { AuthSession, TenantContextSnapshot } from "../../packages/contracts/src/auth-port";
 import type { MobileNoteDraft } from "./components/MobileNoteEditor";
@@ -307,6 +309,36 @@ export default function App() {
           onNavigateToContact={(contactId) => {
             navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
           }}
+        />
+      );
+    }
+    if (
+      currentPath === "/app/sales-crm/operations" ||
+      currentPath === "/app/settings/crm/operations" ||
+      currentPath === "/app/settings/data/operations"
+    ) {
+      return (
+        <MobileCrmOperationsScreen
+          onBack={() => navigate("/app/sales-crm/overview")}
+          onNavigateToContact={(contactId) => {
+            navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
+          }}
+        />
+      );
+    }
+    if (
+      currentPath === "/app/erp/product-catalog" ||
+      currentPath === "/app/erp" ||
+      currentPath === "/app/erp/overview" ||
+      currentPath.startsWith("/app/erp/product-catalog/")
+    ) {
+      const catalogId = currentPath.startsWith("/app/erp/product-catalog/")
+        ? currentPath.replace("/app/erp/product-catalog/", "")
+        : undefined;
+      return (
+        <MobileProductCatalogScreen
+          catalogId={catalogId}
+          onBack={() => navigate(launchpadPath)}
         />
       );
     }

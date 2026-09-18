@@ -11,6 +11,11 @@ interface MobilePageHeaderProps {
     icon?: React.ReactNode;
     onPress: () => void;
   };
+  primaryAction?: {
+    label: string;
+    icon?: React.ReactNode;
+    onPress: () => void;
+  };
 }
 
 export function MobilePageHeader({
@@ -18,7 +23,9 @@ export function MobilePageHeader({
   title,
   subtitle,
   actionButton,
+  primaryAction,
 }: MobilePageHeaderProps) {
+  const action = actionButton ?? primaryAction;
   return (
     <View style={styles.heading}>
       <View style={styles.textColumn}>
@@ -31,14 +38,14 @@ export function MobilePageHeader({
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
-      {actionButton ? (
+      {action ? (
         <Pressable
           accessibilityRole="button"
-          onPress={actionButton.onPress}
+          onPress={action.onPress}
           style={styles.button}
         >
-          {actionButton.icon}
-          <Text style={styles.buttonText}>{actionButton.label}</Text>
+          {action.icon}
+          <Text style={styles.buttonText}>{action.label}</Text>
         </Pressable>
       ) : null}
     </View>

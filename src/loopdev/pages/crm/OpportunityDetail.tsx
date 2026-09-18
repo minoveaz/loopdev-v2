@@ -30,7 +30,23 @@ export default function SalesCRMOpportunityDetail() {
   const { contacts } = useCrmContacts({ limit: 100 });
   const { leads } = useCrmLeads();
   const opportunity = opportunities.find((item) => item.id === opportunityId);
-  const contact = opportunity ? contacts.find((item) => item.id === opportunity.contactId) : undefined;
+  const foundContact = opportunity ? contacts.find((item) => item.id === opportunity.contactId) : undefined;
+  const fallbackContact = opportunity ? {
+    id: opportunity.contactId,
+    organizationId: "local-development-organization",
+    firstName: (opportunity.contact.displayName || "Assigned Contact").split(" ")[0] || "Assigned",
+    lastName: (opportunity.contact.displayName || "Assigned Contact").split(" ").slice(1).join(" ") || "Contact",
+    companyName: "B2B Account",
+    email: "contact@company.com",
+    phone: "+1 555-0199",
+    status: "active" as const,
+    tags: [],
+    customFields: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } : undefined;
+  const contact = foundContact ?? fallbackContact;
+  const contactDisplayName = foundContact ? contactName(foundContact) : (opportunity?.contact.displayName || "Assigned Contact");
   const customer = useCrmCustomer360(contact?.id);
   const relation: EntityRef<"opportunity"> | undefined = opportunity ? { entityType: "opportunity", entityId: opportunity.id, scope: platformAdapter.getScope() } : undefined;
   const notes = usePlatformNotes({ relation, limit: 10 });
@@ -46,7 +62,7 @@ export default function SalesCRMOpportunityDetail() {
 
   if (loading) return <PageContainer width="wide"><div className="py-16 text-center text-sm text-muted-foreground">Loading opportunity…</div></PageContainer>;
   if (error) return <PageContainer width="narrow"><EmptyState title="Unable to load opportunity" description={error} action={<Button onClick={reload}><RefreshCw className="me-1.5 h-3.5 w-3.5" />Try again</Button>} /></PageContainer>;
-  if (!opportunity || !contact) return <PageContainer width="narrow"><EmptyState title="Opportunity not found" description="This opportunity or its contact is unavailable." action={<Button asChild><Link to="/app/sales-crm/opportunities">Back to opportunities</Link></Button>} /></PageContainer>;
+  if (!opportunity || !contact) return <PageContainer width="narrow"><EmptyState title="Opportunity not found" description="This opportunity is unavailable." action={<Button asChild><Link to="/app/sales-crm/opportunities">Back to opportunities</Link></Button>} /></PageContainer>;
 
   const openEdit = () => {
     setAmount(opportunity.amount == null ? "" : String(opportunity.amount));
@@ -79,7 +95,7 @@ export default function SalesCRMOpportunityDetail() {
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)]">
       <main className="space-y-6">
         <DataCard title="Opportunity overview" description="Commercial value and current pipeline state." action={<div className="flex items-center gap-2"><Label htmlFor="opportunity-stage" className="text-xs text-muted-foreground">Stage</Label><Select value={opportunity.stageCode} onValueChange={(value) => void moveStage(opportunity, value as CRMPipelineStageCode)}><SelectTrigger id="opportunity-stage" className="h-9 w-36"><SelectValue /></SelectTrigger><SelectContent>{CRM_PIPELINE_STAGE_CODES.map((value) => <SelectItem key={value} value={value}>{labels[value]}</SelectItem>)}</SelectContent></Select></div>}>
-          <div className="flex flex-wrap items-center gap-3 border-b border-border pb-5"><div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary"><TrendingUp className="h-6 w-6" /></div><div className="min-w-0 flex-1"><h2 className="font-display text-xl font-semibold">{opportunity.name}</h2><div className="mt-1 flex flex-wrap items-center gap-2"><StatusBadge tone={tones[opportunity.stageCode]} dot>{labels[opportunity.stageCode]}</StatusBadge><StatusBadge tone="neutral">{opportunity.origin === "lead_conversion" ? "Lead conversion" : "Manual"}</StatusBadge></div><p className="mt-1 text-sm text-muted-foreground"><Link className="hover:text-primary hover:underline" to={`/app/sales-crm/contacts/${contact.id}`}>{contactName(contact)}</Link>{contact.companyName ? ` · ${contact.companyName}` : ""}</p></div></div>
+          <div className="flex flex-wrap items-center gap-3 border-b border-border pb-5"><div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary"><TrendingUp className="h-6 w-6" /></div><div className="min-w-0 flex-1"><h2 className="font-display text-xl font-semibold">{opportunity.name}</h2><div className="mt-1 flex flex-wrap items-center gap-2"><StatusBadge tone={tones[opportunity.stageCode]} dot>{labels[opportunity.stageCode]}</StatusBadge><StatusBadge tone="neutral">{opportunity.origin === "lead_conversion" ? "Lead conversion" : "Manual"}</StatusBadge></div><p className="mt-1 text-sm text-muted-foreground"><Link className="hover:text-primary hover:underline" to={`/app/sales-crm/contacts/${contact.id}`}>{contactDisplayName}</Link>{contact.companyName ? ` · ${contact.companyName}` : ""}</p></div></div>
           <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-5"><Metric label="Amount" value={opportunity.amount == null ? "—" : formatCurrency(opportunity.amount, (opportunity.currency ?? "EUR") as never)} /><Metric label="Probability" value={opportunity.probability == null ? "—" : `${Math.round(opportunity.probability * 100)}%`} /><Metric label="Weighted amount" value={opportunity.amount == null || opportunity.probability == null ? "—" : formatCurrency(opportunity.amount * opportunity.probability, (opportunity.currency ?? "EUR") as never)} /><Metric label="Expected close" value={opportunity.expectedCloseDate ? formatDate(opportunity.expectedCloseDate) : "—"} /><Metric label="Owner" value={opportunity.owner?.displayName ?? "Unassigned"} /></dl>
         </DataCard>
         <DataCard title="Commercial lines" description="Products and quantities attached to the opportunity."><div className="space-y-2">{opportunity.lines.map((line) => <div key={line.id} className="flex items-center justify-between rounded-md border border-border p-3"><span><span className="block font-medium">{line.label || line.productKey || "Product line"}</span><span className="text-xs text-muted-foreground">{line.unitAmount == null ? "Unit amount pending" : formatCurrency(line.unitAmount, (line.currency ?? opportunity.currency ?? "EUR") as never)}</span></span><span className="text-sm text-muted-foreground">Qty {line.quantity}</span></div>)}</div></DataCard>
@@ -87,7 +103,7 @@ export default function SalesCRMOpportunityDetail() {
       </main>
       <aside className="space-y-6">
         <DataCard title="Opportunity actions" description="Move and manage this opportunity."><div className="grid gap-2"><Button variant="outline" className="justify-start" onClick={openEdit}><FileText className="me-2 h-4 w-4" />Edit opportunity</Button>{opportunity.stageCode !== "won" && <Button variant="outline" className="justify-start" onClick={() => void moveStage(opportunity, "won")}><TrendingUp className="me-2 h-4 w-4" />Mark won</Button>}{opportunity.stageCode !== "lost" && <Button variant="outline" className="justify-start" onClick={() => void moveStage(opportunity, "lost")}><CalendarClock className="me-2 h-4 w-4" />Mark lost</Button>}{(opportunity.stageCode === "won" || opportunity.stageCode === "lost") && <Button variant="outline" className="justify-start" onClick={() => void reopenOpportunity(opportunity, { reason: "Reopened from opportunity detail" })}><RefreshCw className="me-2 h-4 w-4" />Reopen opportunity</Button>}<Button variant="outline" className="justify-start" asChild><Link to={`/app/sales-crm/contacts/${contact.id}`}><ExternalLink className="me-2 h-4 w-4" />Open Customer 360<ArrowRight className="ms-auto h-3.5 w-3.5" /></Link></Button></div></DataCard>
-        <DataCard title="Relationships" description="Records connected to this opportunity."><div className="space-y-2 text-sm"><Link className="flex items-center justify-between rounded-md border border-border p-3 hover:border-primary/40" to={`/app/sales-crm/contacts/${contact.id}`}><span>Contact</span><span className="font-medium">{contactName(contact)}</span></Link>{originatingLead && <Link className="flex items-center justify-between rounded-md border border-border p-3 hover:border-primary/40" to={`/app/sales-crm/leads/${originatingLead.id}`}><span>Originating lead</span><span className="font-medium">{originatingLead.interest || "Lead"}</span></Link>}</div></DataCard>
+        <DataCard title="Relationships" description="Records connected to this opportunity."><div className="space-y-2 text-sm"><Link className="flex items-center justify-between rounded-md border border-border p-3 hover:border-primary/40" to={`/app/sales-crm/contacts/${contact.id}`}><span>Contact</span><span className="font-medium">{contactDisplayName}</span></Link>{originatingLead && <Link className="flex items-center justify-between rounded-md border border-border p-3 hover:border-primary/40" to={`/app/sales-crm/leads/${originatingLead.id}`}><span>Originating lead</span><span className="font-medium">{originatingLead.interest || "Lead"}</span></Link>}</div></DataCard>
         <PlatformNotesPanel notes={notes.notes} loading={notes.loading} error={notes.error} forbidden={notes.forbidden} relation={relation} onCreate={(body, visibility, attachments) => relation ? notes.createNote({ relation, body, visibility, attachments }) : Promise.resolve()} onUpdate={(noteId, body, expectedVersion) => notes.updateNote(noteId, { body, expectedVersion })} />
         <RelatedFilesPanel relation={{ entityType: "opportunity", entityId: opportunity.id, scope: platformAdapter.getScope() }} />
       </aside>

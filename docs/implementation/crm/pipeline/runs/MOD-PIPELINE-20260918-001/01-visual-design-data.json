@@ -1,0 +1,37 @@
+{
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/implementation/crm/pipeline/architecture-design.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/visual-design.md"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-VIS-001",
+      "status": "confirmed",
+      "summary": "Slate tokens and mobile/desktop layout defined"
+    }
+  ],
+  "actions": [
+    "Defined wireframes and visual tokens"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed"
+    }
+  ],
+  "requirements": [
+    "PIPELINE-REQ-BOARD",
+    "PIPELINE-REQ-CARD",
+    "PIPELINE-REQ-MUTATION",
+    "PIPELINE-REQ-REOPEN",
+    "PIPELINE-REQ-SPEED-DIAL",
+    "PIPELINE-REQ-DETAIL"
+  ],
+  "evidence": [
+    "docs/implementation/crm/pipeline/visual-design.md"
+  ],
+  "next_handoff": "domain-model"
+}

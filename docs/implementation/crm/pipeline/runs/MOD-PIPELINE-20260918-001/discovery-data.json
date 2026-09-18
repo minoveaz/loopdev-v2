@@ -1,0 +1,41 @@
+{
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_UX_SPEC.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_COMPONENT_AUDIT.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/discovery.md",
+    "docs/implementation/crm/pipeline/platform-scope.md"
+  ],
+  "decisions": [
+    {
+      "id": "DISC-PIPELINE-001",
+      "status": "confirmed",
+      "summary": "Adopt 6-stage funnel with terminal won/lost protection, weighted pipeline forecasting, and 100% desktop/mobile parity"
+    }
+  ],
+  "actions": [
+    "Executed discovery and benchmark against Pipedrive, HubSpot, Salesforce, and Linear",
+    "Defined platform scope for desktop web, mobile web, iOS and Android"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed"
+    }
+  ],
+  "requirements": [
+    "PIPELINE-REQ-BOARD",
+    "PIPELINE-REQ-CARD",
+    "PIPELINE-REQ-MUTATION",
+    "PIPELINE-REQ-REOPEN",
+    "PIPELINE-REQ-DETAIL",
+    "PIPELINE-REQ-SPEED-DIAL"
+  ],
+  "evidence": [
+    "docs/implementation/crm/pipeline/discovery.md"
+  ],
+  "next_handoff": "module-design"
+}

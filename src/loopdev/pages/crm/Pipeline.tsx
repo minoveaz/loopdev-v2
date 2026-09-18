@@ -1,6 +1,7 @@
 import { useMemo, useState, type DragEvent, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  AlertTriangle, CalendarClock, MoreHorizontal, MoveRight, RefreshCw, SearchX,
+  AlertTriangle, CalendarClock, ExternalLink, MoreHorizontal, MoveRight, RefreshCw, SearchX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -261,18 +262,33 @@ function OpportunityCard({
   onMove: (stageCode: CRMPipelineStageCode) => void;
   onReopen: () => void;
 }) {
+  const navigate = useNavigate();
+
+  const handleCardClick = (event: React.MouseEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement;
+    if (target.closest("button") || target.closest("a") || target.closest("[role='menuitem']")) {
+      return;
+    }
+    navigate(`/app/sales-crm/opportunities/${opportunity.id}`);
+  };
+
   return (
     <article
       draggable={!moving}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className={`group cursor-grab surface-card-compact p-3 shadow-soft transition-smooth hover:-translate-y-0.5 surface-card-hover active:cursor-grabbing ${dragging || moving ? "opacity-50" : ""}`}
+      onClick={handleCardClick}
+      className={`group cursor-pointer surface-card-compact p-3 shadow-soft transition-smooth hover:-translate-y-0.5 surface-card-hover active:cursor-grabbing ${dragging || moving ? "opacity-50" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-foreground" title={opportunity.name}>
+        <div className="min-w-0 flex-1">
+          <Link
+            to={`/app/sales-crm/opportunities/${opportunity.id}`}
+            className="block truncate text-sm font-semibold text-foreground transition-colors hover:text-primary hover:underline"
+            title={opportunity.name}
+          >
             {opportunity.name}
-          </h3>
+          </Link>
           <p className="mt-0.5 truncate text-xs text-muted-foreground" title={opportunity.contact.displayName}>
             {opportunity.contact.displayName}
           </p>
@@ -287,7 +303,13 @@ function OpportunityCard({
               <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuItem asChild>
+              <Link to={`/app/sales-crm/opportunities/${opportunity.id}`} className="flex items-center">
+                <ExternalLink className="mr-2 h-3.5 w-3.5" /> Open full opportunity page
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Move to</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {(opportunity.stageCode === "won" || opportunity.stageCode === "lost") && (

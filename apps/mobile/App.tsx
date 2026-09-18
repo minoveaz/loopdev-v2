@@ -34,6 +34,8 @@ import { MobileDocumentIntelligenceScreen } from "./components/MobileDocumentInt
 import { MobileLeadsScreen } from "./components/MobileLeadsScreen";
 import { MobileLeadDetailScreen } from "./components/MobileLeadDetailScreen";
 import { MobileCreateLeadScreen } from "./components/MobileCreateLeadScreen";
+import MobilePipelineScreen from "./components/MobilePipelineScreen";
+import { MobileOpportunityDetailScreen } from "./components/MobileOpportunityDetailScreen";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./adapters/auth";
 import type { AuthSession, TenantContextSnapshot } from "../../packages/contracts/src/auth-port";
 import type { MobileNoteDraft } from "./components/MobileNoteEditor";
@@ -282,6 +284,26 @@ export default function App() {
         <MobileLeadDetailScreen
           leadId={leadId}
           onBack={() => navigate("/app/sales-crm/leads")}
+          onNavigateToContact={(contactId) => {
+            navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
+          }}
+        />
+      );
+    }
+    if (currentPath === "/app/sales-crm/pipeline" || currentPath === "/app/sales-crm/opportunities") {
+      return (
+        <MobilePipelineScreen
+          onBack={() => navigate("/app/sales-crm/overview")}
+          onNavigate={(path) => navigate(path)}
+        />
+      );
+    }
+    if (currentPath.startsWith("/app/sales-crm/opportunities/")) {
+      const oppId = currentPath.replace("/app/sales-crm/opportunities/", "");
+      return (
+        <MobileOpportunityDetailScreen
+          opportunityId={oppId}
+          onBack={() => navigate("/app/sales-crm/pipeline")}
           onNavigateToContact={(contactId) => {
             navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)));
           }}

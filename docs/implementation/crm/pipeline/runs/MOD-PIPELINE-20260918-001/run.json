@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "workflow_version": 1,
+  "run_id": "MOD-PIPELINE-20260918-001",
+  "suite": "crm",
+  "module": "pipeline",
+  "status": "running",
+  "current_phase": "09-review",
+  "attempt": 1,
+  "started_at": "2026-09-18T10:56:14.387Z",
+  "updated_at": "2026-09-18T11:04:42.826Z",
+  "input_fingerprint": "sha256:d201502834db08c94771c2e0edc1b12a27c711988be6219b0fbf3b4f57b39049",
+  "fingerprints": {
+    "product": "sha256:52d473102c37648f681ed588cb46d053e208d67d220f65b958984a8a0f42c787",
+    "scope": "sha256:da0bcc4313dad590be5c1f4266fb749093a79cb33ae59623801dc51968de3dcb",
+    "design": "sha256:556e0e6182d011be69b6ca653501024485753586a6304dd58417cb970e228994",
+    "plan": "sha256:583c80ee1dcfde5e92a0f6561fe3acbd828f2c1404f14f79b78b60724c778a81",
+    "contracts": "sha256:e6deec5c7e039c784f30d79d32eff7eeac5f551ac07b6f9f1d4971fe5e7ad38e",
+    "code": "sha256:1ebd41343c3a9d5854bfec2f172d8529d07e33c521a1d98efbd2825db566d749",
+    "tests": "sha256:e15e28d2e448f2ef544ed6d71a2e8fddf90f060213f21c9201cddd998e847ed7"
+  },
+  "environment": {
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": null,
+    "head_commit": "915881383077b4294eeb18428568c6f5a22eb7f0",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "platform_scope": [
+    "desktop_web",
+    "mobile_web",
+    "ios",
+    "android"
+  ],
+  "approvals": {
+    "design": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-18T11:01:12.627Z",
+      "role": "Tech Lead",
+      "artifact": "docs/implementation/crm/pipeline/architecture-design.md",
+      "artifact_fingerprint": "sha256:d201502834db08c94771c2e0edc1b12a27c711988be6219b0fbf3b4f57b39049",
+      "source": "user approved implementation plan"
+    },
+    "visual_design": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-18T11:01:12.716Z",
+      "role": "Design Lead",
+      "artifact": "docs/implementation/crm/pipeline/visual-design.md",
+      "artifact_fingerprint": "sha256:d201502834db08c94771c2e0edc1b12a27c711988be6219b0fbf3b4f57b39049",
+      "source": "user approved visual plan"
+    },
+    "plan": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-18T11:01:13.015Z",
+      "role": "Engineering Lead",
+      "artifact": "docs/implementation/crm/pipeline/implementation-plan.md",
+      "artifact_fingerprint": "sha256:d201502834db08c94771c2e0edc1b12a27c711988be6219b0fbf3b4f57b39049",
+      "source": "user approved implementation plan"
+    },
+    "verification": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-18T11:04:42.745Z",
+      "role": "QA Lead",
+      "artifact": "docs/implementation/crm/pipeline/platform-evidence-matrix.md",
+      "artifact_fingerprint": "sha256:d201502834db08c94771c2e0edc1b12a27c711988be6219b0fbf3b4f57b39049",
+      "source": "user verified test run"
+    },
+    "release": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-18T11:04:42.825Z",
+      "role": "Release Lead",
+      "artifact": "docs/implementation/crm/pipeline/README.md",
+      "artifact_fingerprint": "sha256:d201502834db08c94771c2e0edc1b12a27c711988be6219b0fbf3b4f57b39049",
+      "source": "user release approval"
+    },
+    "push": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "pull_request": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    }
+  },
+  "approval_gates": [
+    "design",
+    "visual_design",
+    "plan",
+    "verification",
+    "release"
+  ],
+  "architecture_quality": "PASS",
+  "platform_impact": [],
+  "checkpoint_paths": [
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/00-discovery.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/01-design.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/01-visual-design.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/02-domain.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/03-access.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/04-api.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/05-sync.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/06-plan.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/07-build.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/08-verify.json",
+    "docs/implementation/crm/pipeline/runs/MOD-PIPELINE-20260918-001/09-review.json"
+  ],
+  "evidence_links": [],
+  "change_requests": [],
+  "blocked_by": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
+  "next_action": "Record the handoff from 09-review.",
+  "handoffs": [],
+  "commit": null,
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

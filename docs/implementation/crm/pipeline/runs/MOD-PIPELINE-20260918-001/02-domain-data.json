@@ -1,0 +1,36 @@
+{
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/implementation/crm/pipeline/visual-design.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/domain-model.md"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-DOM-001",
+      "status": "confirmed",
+      "summary": "Stage codes and opportunity model verified"
+    }
+  ],
+  "actions": [
+    "Documented domain invariants and state machine"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed"
+    }
+  ],
+  "requirements": [
+    "PIPELINE-REQ-BOARD",
+    "PIPELINE-REQ-MUTATION",
+    "PIPELINE-REQ-REOPEN",
+    "PIPELINE-REQ-SPEED-DIAL",
+    "PIPELINE-REQ-DETAIL"
+  ],
+  "evidence": [
+    "docs/implementation/crm/pipeline/domain-model.md"
+  ],
+  "next_handoff": "access-design"
+}

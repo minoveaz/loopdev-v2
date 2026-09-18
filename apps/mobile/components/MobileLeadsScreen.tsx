@@ -233,7 +233,7 @@ export function MobileLeadsScreen({
           )}
         </View>
 
-        {/* Status Filter Strip */}
+        {/* Status Filter Tabs */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -242,20 +242,26 @@ export function MobileLeadsScreen({
           {(["all", "new", "contacted", "qualified", "stalled", "converted"] as FilterStatus[]).map(
             (status) => {
               const active = activeFilter === status;
+              const count = status === "all" ? leads.length : leads.filter((l) => l.status === status).length;
               return (
                 <Pressable
                   key={status}
-                  style={[styles.filterPill, active && styles.filterPillActive]}
+                  style={[styles.filterTab, active && styles.filterTabActive]}
                   onPress={() => setActiveFilter(status)}
                 >
                   <Text
                     style={[
-                      styles.filterPillText,
-                      active && styles.filterPillTextActive,
+                      styles.filterTabText,
+                      active && styles.filterTabTextActive,
                     ]}
                   >
                     {t(`crm.leads.statusFilter.${status}`)}
                   </Text>
+                  <View style={[styles.filterTabBadge, active && styles.filterTabBadgeActive]}>
+                    <Text style={[styles.filterTabBadgeText, active && styles.filterTabBadgeTextActive]}>
+                      {count}
+                    </Text>
+                  </View>
                 </Pressable>
               );
             }
@@ -557,29 +563,48 @@ const styles = StyleSheet.create({
   },
   filterStrip: {
     flexDirection: "row",
-    gap: 8,
-    paddingVertical: 2,
+    gap: 16,
+    paddingVertical: 4,
+    paddingBottom: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
   },
-  filterPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+  filterTab: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingBottom: 8,
+    borderBottomWidth: 2.5,
+    borderBottomColor: "transparent",
   },
-  filterPillActive: {
-    backgroundColor: "#0f172a",
-    borderColor: "#0f172a",
+  filterTabActive: {
+    borderBottomColor: "#135bec",
   },
-  filterPillText: {
-    fontSize: 12,
+  filterTabText: {
+    fontSize: 13,
     fontWeight: "600",
-    color: "#475569",
+    color: "#64748b",
   },
-  filterPillTextActive: {
-    color: "#ffffff",
+  filterTabTextActive: {
+    color: "#0f172a",
+    fontWeight: "800",
+  },
+  filterTabBadge: {
+    backgroundColor: "#f1f5f9",
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  filterTabBadgeActive: {
+    backgroundColor: "#eff6ff",
+  },
+  filterTabBadgeText: {
+    fontSize: 11,
     fontWeight: "700",
+    color: "#64748b",
+  },
+  filterTabBadgeTextActive: {
+    color: "#1d4ed8",
   },
   leadsList: {
     gap: 12,

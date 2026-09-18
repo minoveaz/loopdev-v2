@@ -32,7 +32,9 @@ export interface CRMOpportunity {
   origin: "manual" | "lead_conversion";
   ownerName: string;
   ownerId: string;
+  probability?: number;
   expectedCloseAt: string | null;
+  lossReason?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -72,6 +74,155 @@ const LOCAL_OPPORTUNITIES_KEY = "loopdev_mobile_opportunities";
 function getStorage() {
   if (typeof window !== "undefined" && window.localStorage) return window.localStorage;
   return null;
+}
+
+const initialSeedOpportunities: CRMOpportunity[] = [
+  {
+    id: "crm_opp_1",
+    organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+    name: "Enterprise Workspace Expansion",
+    contactId: "crm_cust_1",
+    leadId: "crm_lead_1",
+    catalogItemId: "catalog_item_enterprise_plan",
+    productKey: "enterprise-plan",
+    amount: 48000,
+    currency: "USD",
+    stageKey: "proposal",
+    probability: 0.65,
+    origin: "manual",
+    ownerName: "Maya Chen",
+    ownerId: "owner-maya",
+    expectedCloseAt: new Date(Date.now() + 28 * 86400000).toISOString(),
+    lossReason: null,
+    createdAt: new Date(Date.now() - 24 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+  },
+  {
+    id: "crm_opp_2",
+    organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+    name: "Annual Plan Logistics Renewal",
+    contactId: "crm_cust_2",
+    leadId: null,
+    catalogItemId: null,
+    productKey: null,
+    amount: 28000,
+    currency: "USD",
+    stageKey: "qualified",
+    probability: 0.4,
+    origin: "manual",
+    ownerName: "Jon Bell",
+    ownerId: "owner-jon",
+    expectedCloseAt: new Date(Date.now() + 45 * 86400000).toISOString(),
+    lossReason: null,
+    createdAt: new Date(Date.now() - 18 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+  {
+    id: "crm_opp_3",
+    organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+    name: "AI Vision & Legal OCR Package",
+    contactId: "crm_cust_3",
+    leadId: "crm_lead_3",
+    catalogItemId: null,
+    productKey: null,
+    amount: 62000,
+    currency: "USD",
+    stageKey: "prospecting",
+    probability: 0.15,
+    origin: "manual",
+    ownerName: "Maya Chen",
+    ownerId: "owner-maya",
+    expectedCloseAt: new Date(Date.now() + 60 * 86400000).toISOString(),
+    lossReason: null,
+    createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 6 * 86400000).toISOString(),
+  },
+  {
+    id: "crm_opp_4",
+    organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+    name: "Regional Omnichannel Communications",
+    contactId: "crm_cust_4",
+    leadId: null,
+    catalogItemId: null,
+    productKey: null,
+    amount: 27500,
+    currency: "USD",
+    stageKey: "negotiation",
+    probability: 0.8,
+    origin: "manual",
+    ownerName: "Lee Okafor",
+    ownerId: "owner-lee",
+    expectedCloseAt: new Date(Date.now() + 14 * 86400000).toISOString(),
+    lossReason: null,
+    createdAt: new Date(Date.now() - 32 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: "crm_opp_5",
+    organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+    name: "Cloud Financial Analytics Integration",
+    contactId: "crm_cust_5",
+    leadId: "crm_lead_5",
+    catalogItemId: null,
+    productKey: null,
+    amount: 80000,
+    currency: "USD",
+    stageKey: "won",
+    probability: 1.0,
+    origin: "lead_conversion",
+    ownerName: "Maya Chen",
+    ownerId: "owner-maya",
+    expectedCloseAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+    lossReason: null,
+    createdAt: new Date(Date.now() - 55 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: "crm_opp_6",
+    organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+    name: "Legacy Ingestion Pipeline",
+    contactId: "crm_cust_1",
+    leadId: null,
+    catalogItemId: null,
+    productKey: null,
+    amount: 15000,
+    currency: "USD",
+    stageKey: "lost",
+    probability: 0.0,
+    origin: "manual",
+    ownerName: "Lee Okafor",
+    ownerId: "owner-lee",
+    expectedCloseAt: new Date(Date.now() - 12 * 86400000).toISOString(),
+    lossReason: "Project budget postponed to next fiscal year",
+    createdAt: new Date(Date.now() - 70 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 12 * 86400000).toISOString(),
+  },
+];
+
+function loadStoredOpportunities(): CRMOpportunity[] {
+  const storage = getStorage();
+  if (!storage) return initialSeedOpportunities;
+  try {
+    const raw = storage.getItem(LOCAL_OPPORTUNITIES_KEY);
+    if (!raw) {
+      storage.setItem(LOCAL_OPPORTUNITIES_KEY, JSON.stringify(initialSeedOpportunities));
+      return initialSeedOpportunities;
+    }
+    const parsed = JSON.parse(raw);
+    return parsed.length > 0 ? parsed : initialSeedOpportunities;
+  } catch {
+    return initialSeedOpportunities;
+  }
+}
+
+function saveStoredOpportunities(opps: CRMOpportunity[]) {
+  const storage = getStorage();
+  if (!storage) return;
+  try {
+    storage.setItem(LOCAL_OPPORTUNITIES_KEY, JSON.stringify(opps));
+  } catch {
+    // noop
+  }
 }
 
 const initialSeedLeads: CRMLead[] = [
@@ -307,16 +458,96 @@ export const mobileCrmAdapter = {
     return { lead: updatedLead, opportunity };
   },
 
+  async listAllOpportunities(): Promise<CRMOpportunity[]> {
+    return loadStoredOpportunities();
+  },
+
+  async getOpportunity(id: string): Promise<CRMOpportunity | null> {
+    const opps = loadStoredOpportunities();
+    return opps.find((o) => o.id === id) || null;
+  },
+
   async listOpportunities(contactId: string): Promise<CRMOpportunity[]> {
-    const storage = getStorage();
-    if (!storage) return [];
-    try {
-      const raw = storage.getItem(LOCAL_OPPORTUNITIES_KEY);
-      const items: CRMOpportunity[] = raw ? JSON.parse(raw) : [];
-      return items.filter((o) => o.contactId === contactId);
-    } catch {
-      return [];
+    const opps = loadStoredOpportunities();
+    return opps.filter((o) => o.contactId === contactId);
+  },
+
+  async createOpportunity(input: Omit<CRMOpportunity, "id" | "createdAt" | "updatedAt">): Promise<CRMOpportunity> {
+    const now = new Date().toISOString();
+    const opportunity: CRMOpportunity = {
+      id: `crm_opp_${Date.now()}`,
+      ...input,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const opps = loadStoredOpportunities();
+    opps.unshift(opportunity);
+    saveStoredOpportunities(opps);
+    return opportunity;
+  },
+
+  async moveOpportunityStage(id: string, stageKey: CRMOpportunity["stageKey"], lossReason?: string): Promise<CRMOpportunity> {
+    const opps = loadStoredOpportunities();
+    const index = opps.findIndex((o) => o.id === id);
+    if (index === -1) {
+      throw new Error(`Opportunity ${id} not found`);
     }
+    const current = opps[index];
+    const isTerminal = current.stageKey === "won" || current.stageKey === "lost";
+    if (isTerminal && stageKey !== current.stageKey) {
+      throw new Error(`Terminal opportunity in stage "${current.stageKey}" cannot be moved directly. Use reopenOpportunity instead.`);
+    }
+
+    const updated: CRMOpportunity = {
+      ...current,
+      stageKey,
+      lossReason: stageKey === "lost" ? lossReason || current.lossReason : null,
+      probability: stageKey === "won" ? 1.0 : stageKey === "lost" ? 0.0 : stageKey === "negotiation" ? 0.8 : stageKey === "proposal" ? 0.65 : stageKey === "qualified" ? 0.4 : 0.15,
+      updatedAt: new Date().toISOString(),
+    };
+    opps[index] = updated;
+    saveStoredOpportunities(opps);
+    return updated;
+  },
+
+  async reopenOpportunity(id: string, reason: string): Promise<CRMOpportunity> {
+    if (!reason || !reason.trim()) {
+      throw new Error("A non-empty reason is required to reopen a closed opportunity.");
+    }
+    const opps = loadStoredOpportunities();
+    const index = opps.findIndex((o) => o.id === id);
+    if (index === -1) {
+      throw new Error(`Opportunity ${id} not found`);
+    }
+    const current = opps[index];
+    const targetStage: CRMOpportunity["stageKey"] = current.stageKey === "won" ? "proposal" : "prospecting";
+
+    const updated: CRMOpportunity = {
+      ...current,
+      stageKey: targetStage,
+      probability: targetStage === "proposal" ? 0.65 : 0.15,
+      lossReason: null,
+      updatedAt: new Date().toISOString(),
+    };
+    opps[index] = updated;
+    saveStoredOpportunities(opps);
+    return updated;
+  },
+
+  async updateOpportunity(id: string, input: Partial<CRMOpportunity>): Promise<CRMOpportunity> {
+    const opps = loadStoredOpportunities();
+    const index = opps.findIndex((o) => o.id === id);
+    if (index === -1) {
+      throw new Error(`Opportunity ${id} not found`);
+    }
+    const updated: CRMOpportunity = {
+      ...opps[index],
+      ...input,
+      updatedAt: new Date().toISOString(),
+    };
+    opps[index] = updated;
+    saveStoredOpportunities(opps);
+    return updated;
   },
 
   async listCustomerProducts(contactId: string): Promise<CRMCustomerProduct[]> {

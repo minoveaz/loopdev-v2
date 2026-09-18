@@ -188,12 +188,25 @@ export default function App() {
     () => launchpadSuites.find((suite) => suite.entryPath && currentPath.startsWith(suite.entryPath)),
     [currentPath],
   );
+  const isConversationDetail =
+    currentPath.startsWith("/app/sales-crm/communications/") ||
+    currentPath.startsWith("/communications/");
+  const isCommunications =
+    currentPath === "/app/sales-crm/communications" ||
+    currentPath === "/crm/communications" ||
+    currentPath === "/communications";
+
   const context = currentPath.startsWith("/app/sales-crm")
     ? "crm"
     : currentPath.startsWith("/app/erp")
       ? "erp"
       : "launchpad";
-  const activeTab: MobileTab = currentPath === morePath ? "more" : context;
+  const activeTab: MobileTab =
+    currentPath === morePath
+      ? "more"
+      : isCommunications
+        ? "conversations"
+        : context;
   const actionContext = currentPath.startsWith("/app/conversations") ? "conversations" : context;
 
   function navigate(path: string) {
@@ -466,18 +479,22 @@ export default function App() {
 
   return (
     <MobileAppShell>
-      <MobileHeader
-        onAccountPress={() => setAccountSheetOpen(true)}
-        onLogoPress={() => navigate(launchpadPath)}
-        onMenuPress={() => setNavigationOpen(true)}
-      />
+      {!isConversationDetail && (
+        <MobileHeader
+          onAccountPress={() => setAccountSheetOpen(true)}
+          onLogoPress={() => navigate(launchpadPath)}
+          onMenuPress={() => setNavigationOpen(true)}
+        />
+      )}
       <View style={styles.main}>{renderContent()}</View>
-      <MobileBottomNav
-        context={context}
-        activeTab={activeTab}
-        onActionPress={() => setActionsSheetOpen(true)}
-        onTabPress={handleTabPress}
-      />
+      {!isConversationDetail && (
+        <MobileBottomNav
+          context={context}
+          activeTab={activeTab}
+          onActionPress={() => setActionsSheetOpen(true)}
+          onTabPress={handleTabPress}
+        />
+      )}
       <MobileAccountSheet
         onClose={() => setAccountSheetOpen(false)}
         onSwitchOrg={(orgName) => {

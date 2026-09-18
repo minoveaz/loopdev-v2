@@ -74,27 +74,27 @@ export function MobileCommunicationsScreen({
       {
         id: "all",
         label: t("crm.communications.tabs.all", "Todas"),
-        count: conversations.length,
+        count: conversations.length > 0 ? conversations.length : undefined,
       },
       {
         id: "whatsapp",
         label: "WhatsApp",
-        count: conversations.filter((c) => c.channel === "whatsapp").length,
+        count: conversations.filter((c) => c.channel === "whatsapp").length || undefined,
       },
       {
         id: "email",
         label: "Email",
-        count: conversations.filter((c) => c.channel === "email").length,
+        count: conversations.filter((c) => c.channel === "email").length || undefined,
       },
       {
         id: "instagram",
         label: "Instagram",
-        count: conversations.filter((c) => c.channel === "instagram").length,
+        count: conversations.filter((c) => c.channel === "instagram").length || undefined,
       },
       {
         id: "sms",
         label: "SMS",
-        count: conversations.filter((c) => c.channel === "sms").length,
+        count: conversations.filter((c) => c.channel === "sms").length || undefined,
       },
     ];
   }, [conversations, t]);
@@ -166,46 +166,45 @@ export function MobileCommunicationsScreen({
         accessibilityLabel={`Conversación con ${item.contact.displayName}`}
       >
         <MobileCard style={[styles.card, hasUnread && styles.cardUnread]}>
-          {hasUnread && <View style={styles.unreadStripe} />}
-
           {/* Avatar with Channel Overlay Badge */}
           <View style={styles.avatarWrapper}>
-            <MobileAvatar name={item.contact.displayName || "Cliente"} size="lg" />
+            <MobileAvatar name={item.contact.displayName || "Cliente"} size="md" />
             {renderChannelBadge(item.channel)}
           </View>
 
           {/* Conversation Text Body */}
           <View style={styles.contentCol}>
+            {/* Row 1: Name with unread dot + Time */}
             <View style={styles.titleRow}>
-              <Text style={[styles.contactName, hasUnread && styles.contactNameBold]} numberOfLines={1}>
-                {item.contact.displayName || "Contacto Desconocido"}
-              </Text>
+              <View style={styles.nameWithDot}>
+                {hasUnread && <View style={styles.unreadDot} />}
+                <Text style={[styles.contactName, hasUnread && styles.contactNameBold]} numberOfLines={1}>
+                  {item.contact.displayName || "Contacto Desconocido"}
+                </Text>
+              </View>
               <Text style={[styles.timestamp, hasUnread && styles.timestampUnread]}>
                 {timeStr}
               </Text>
             </View>
 
-            <Text style={styles.contactSubtitle} numberOfLines={1}>
-              {item.contact.phone || item.contact.email || "Lead Omnicanal"}
+            {/* Row 2: Last Message Snippet */}
+            <Text
+              style={[styles.snippetText, hasUnread && styles.snippetTextUnread]}
+              numberOfLines={1}
+            >
+              {item.preview || "Sin mensajes recientes"}
             </Text>
 
-            {/* Last Message Snippet */}
-            <View style={styles.snippetRow}>
-              <Text
-                style={[styles.snippetText, hasUnread && styles.snippetTextUnread]}
-                numberOfLines={1}
-              >
-                {item.preview || "Sin mensajes recientes"}
-              </Text>
-            </View>
-
-            {/* Bottom Row: Status Tag & Unread Count Badge */}
+            {/* Row 3: Meta & Status & Unread Count Badge */}
             <View style={styles.bottomMetaRow}>
-              <MobileStatusBadge
-                tone={statusTone[item.status] || "neutral"}
-              >
-                {statusLabel[item.status] || item.status}
-              </MobileStatusBadge>
+              <View style={styles.metaLeftGroup}>
+                <MobileStatusBadge tone={statusTone[item.status] || "neutral"}>
+                  {statusLabel[item.status] || item.status}
+                </MobileStatusBadge>
+                <Text style={styles.contactSubtitle} numberOfLines={1}>
+                  {item.contact.phone || item.contact.email || "Omnicanal"}
+                </Text>
+              </View>
 
               {hasUnread && (
                 <View style={styles.unreadCountBadge}>
@@ -304,8 +303,8 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   listContent: {
-    paddingBottom: 24,
-    gap: 10,
+    paddingBottom: 110,
+    gap: 8,
     marginTop: 6,
   },
   cardPressable: {
@@ -315,24 +314,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 12,
     gap: 12,
-    position: "relative",
-    overflow: "hidden",
+    alignItems: "center",
   },
   cardUnread: {
-    backgroundColor: "#ffffff",
-    borderColor: "#bfdbfe",
+    backgroundColor: "#f8faff",
+    borderColor: "#93c5fd",
+    borderWidth: 1.5,
   },
-  unreadStripe: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
+  nameWithDot: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+    paddingRight: 8,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: mobileTheme.colors.primary,
   },
   avatarWrapper: {
     position: "relative",
-    alignSelf: "flex-start",
+    alignSelf: "center",
   },
   channelBadge: {
     position: "absolute",
@@ -348,6 +352,7 @@ const styles = StyleSheet.create({
   },
   contentCol: {
     flex: 1,
+    gap: 2,
   },
   titleRow: {
     flexDirection: "row",
@@ -358,8 +363,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: mobileTheme.colors.textMain,
-    flex: 1,
-    paddingRight: 8,
   },
   contactNameBold: {
     fontWeight: "800",
@@ -372,20 +375,10 @@ const styles = StyleSheet.create({
     color: mobileTheme.colors.primary,
     fontWeight: "700",
   },
-  contactSubtitle: {
-    fontSize: 11,
-    color: mobileTheme.colors.textMuted,
-    marginTop: 2,
-  },
-  snippetRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
   snippetText: {
     fontSize: 12,
     color: mobileTheme.colors.textMuted,
-    flex: 1,
+    lineHeight: 16,
   },
   snippetTextUnread: {
     color: mobileTheme.colors.textMain,
@@ -395,7 +388,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 8,
+    marginTop: 4,
+  },
+  metaLeftGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+  },
+  contactSubtitle: {
+    fontSize: 11,
+    color: mobileTheme.colors.textMuted,
   },
   unreadCountBadge: {
     backgroundColor: mobileTheme.colors.primary,

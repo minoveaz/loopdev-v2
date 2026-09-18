@@ -5,35 +5,30 @@ import {
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import {
+  ArrowLeft,
   Check,
   CheckCheck,
   Clock,
-  ExternalLink,
   FileText,
-  Image as ImageIcon,
-  MessageSquare,
+  Lock,
   Package,
   Phone,
   Play,
   Plus,
   Send,
   User,
-  Volume2,
+  X,
 } from "lucide-react-native";
 import {
   MobilePageContainer,
-  MobileCard,
-  MobileButton,
   MobileBackLink,
   MobileAvatar,
-  MobileStatusBadge,
   MobileLoadingState,
   MobileEmptyState,
 } from "../ui";
@@ -215,9 +210,12 @@ export function MobileConversationScreen({
       return (
         <View style={styles.internalBubble}>
           <View style={styles.internalHeader}>
-            <Text style={styles.internalAuthor}>
-              NOTA INTERNA · {item.authorName || "Equipo Comercial"}
-            </Text>
+            <View style={styles.internalHeaderLeft}>
+              <Lock size={12} color="#b45309" />
+              <Text style={styles.internalAuthor}>
+                NOTA INTERNA · {item.authorName || "Equipo Comercial"}
+              </Text>
+            </View>
             <Text style={styles.internalTime}>{timeStr}</Text>
           </View>
           <Text style={styles.internalBody}>{item.body}</Text>
@@ -346,34 +344,46 @@ export function MobileConversationScreen({
       style={styles.keyboardContainer}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <MobilePageContainer scrollable={false} style={styles.pageContainer}>
-        {/* Top Header Row with MobileBackLink & Ficha 360 Action */}
-        <View style={styles.topHeaderRow}>
-          <MobileBackLink
-            label={t("crm.communications.back", "Volver a mensajes")}
+      <View style={styles.pageContainer}>
+        {/* 1. Integrated Native Top App Bar (Single compact 56px header) */}
+        <View style={styles.topAppBar}>
+          <Pressable
             onPress={onBack}
-          />
-          <MobileButton
-            variant="outline"
-            size="sm"
-            label="Ficha 360"
-            icon={<User size={13} color={mobileTheme.colors.primary} />}
-            onPress={() => setContextSheetOpen(true)}
-          />
-        </View>
+            style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t("crm.communications.back", "Volver a mensajes")}
+          >
+            <ArrowLeft size={22} color="#0f172a" />
+          </Pressable>
 
-        {/* Contact Status Card */}
-        <MobileCard style={styles.contactBar}>
-          <View style={styles.contactBarRow}>
-            <MobileAvatar name={contactName} size="md" />
-            <View style={styles.contactBarCopy}>
-              <Text style={styles.contactBarName} numberOfLines={1}>
+          <Pressable
+            onPress={() => setContextSheetOpen(true)}
+            style={styles.topContactInfo}
+            accessibilityRole="button"
+            accessibilityLabel={`Ver ficha de ${contactName}`}
+          >
+            <View style={styles.topAvatarWrap}>
+              <MobileAvatar name={contactName} size="sm" />
+              <View
+                style={[
+                  styles.channelStatusDot,
+                  summary.channel === "whatsapp" && { backgroundColor: "#22c55e" },
+                  summary.channel === "email" && { backgroundColor: "#135bec" },
+                ]}
+              />
+            </View>
+
+            <View style={styles.topTitleCol}>
+              <Text style={styles.topContactName} numberOfLines={1}>
                 {contactName}
               </Text>
-              <Text style={styles.contactBarStatus} numberOfLines={1}>
-                ● {channelDisplay} Conectado · {customerInfo?.phone || summary.contact?.phone || summary.contact?.email || "Online"}
+              <Text style={styles.topSubtitle} numberOfLines={1}>
+                {summary.channel === "whatsapp" ? "WhatsApp · En línea" : `${channelDisplay} · Conectado`}
               </Text>
             </View>
+          </Pressable>
+
+          <View style={styles.topActions}>
             {summary.contact?.phone ? (
               <Pressable
                 onPress={handleCall}
@@ -381,23 +391,33 @@ export function MobileConversationScreen({
                 accessibilityRole="button"
                 accessibilityLabel="Llamar al contacto"
               >
-                <Phone size={18} color="#334155" />
+                <Phone size={17} color="#334155" />
               </Pressable>
             ) : null}
-          </View>
-        </MobileCard>
 
-        {/* Active WhatsApp 24h Window Notice */}
+            <Pressable
+              onPress={() => setContextSheetOpen(true)}
+              style={({ pressed }) => [styles.ficha360Pill, pressed && { opacity: 0.8 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir Ficha 360"
+            >
+              <User size={12} color={mobileTheme.colors.primary} />
+              <Text style={styles.ficha360Text}>Ficha 360</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* 2. Active WhatsApp 24h Window Notice (Slim banner) */}
         {summary.channel === "whatsapp" && summary.windowExpiresAt && (
           <View style={styles.windowNotice}>
-            <Clock size={12} color="#166534" />
+            <Clock size={11} color="#166534" />
             <Text style={styles.windowNoticeText}>
-              Ventana de conversación activa (restan 18h)
+              Ventana de respuesta 24h activa (restan 18h)
             </Text>
           </View>
         )}
 
-        {/* Scrollable Message List */}
+        {/* 3. Messages Feed */}
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -407,61 +427,81 @@ export function MobileConversationScreen({
           showsVerticalScrollIndicator={false}
         />
 
-        {/* Selected Catalog Item Attachment Preview */}
+        {/* 4. Selected Catalog Item Attachment Preview */}
         {selectedCatalogItem && (
           <View style={styles.selectedCatalogPreview}>
-            <Package size={16} color={mobileTheme.colors.primary} />
-            <Text style={styles.selectedCatalogText} numberOfLines={1}>
-              Adjunto: {selectedCatalogItem.name}
-            </Text>
+            <View style={styles.selectedCatalogIcon}>
+              <Package size={15} color={mobileTheme.colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.selectedCatalogTitle} numberOfLines={1}>
+                {selectedCatalogItem.name}
+              </Text>
+              <Text style={styles.selectedCatalogSub}>Adjunto para enviar al cliente</Text>
+            </View>
             <Pressable
               onPress={() => setSelectedCatalogItem(null)}
+              style={styles.removeCatalogBtn}
               accessibilityRole="button"
               accessibilityLabel="Quitar adjunto"
             >
-              <Text style={styles.removeCatalogText}>✕</Text>
+              <X size={16} color="#64748b" />
             </Pressable>
           </View>
         )}
 
-        {/* Sticky Chat Composer */}
+        {/* 5. Sticky Chat Composer */}
         <View style={styles.composerWrapper}>
-          {/* Mode Switcher: Reply vs Internal Note */}
+          {/* Mode Switcher: Reply vs Internal Note & Catalog Shortcut */}
           <View style={styles.composerModeRow}>
-            <Pressable
-              onPress={() => setComposerMode("reply")}
-              style={[
-                styles.modeTab,
-                composerMode === "reply" && styles.modeTabActive,
-              ]}
-              accessibilityRole="button"
-            >
-              <Text
+            <View style={styles.modeTabsWrap}>
+              <Pressable
+                onPress={() => setComposerMode("reply")}
                 style={[
-                  styles.modeTabText,
-                  composerMode === "reply" && styles.modeTabTextActive,
+                  styles.modeTab,
+                  composerMode === "reply" && styles.modeTabActive,
                 ]}
+                accessibilityRole="button"
               >
-                Respuesta al cliente
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setComposerMode("internal")}
-              style={[
-                styles.modeTab,
-                composerMode === "internal" && styles.modeTabInternalActive,
-              ]}
-              accessibilityRole="button"
-            >
-              <Text
+                <Text
+                  style={[
+                    styles.modeTabText,
+                    composerMode === "reply" && styles.modeTabTextActive,
+                  ]}
+                >
+                  💬 Mensaje
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setComposerMode("internal")}
                 style={[
-                  styles.modeTabText,
-                  composerMode === "internal" && styles.modeTabTextInternalActive,
+                  styles.modeTab,
+                  composerMode === "internal" && styles.modeTabInternalActive,
                 ]}
+                accessibilityRole="button"
               >
-                Nota interna
-              </Text>
-            </Pressable>
+                <Text
+                  style={[
+                    styles.modeTabText,
+                    composerMode === "internal" && styles.modeTabTextInternalActive,
+                  ]}
+                >
+                  🔒 Nota interna
+                </Text>
+              </Pressable>
+            </View>
+
+            {composerMode === "reply" && (
+              <Pressable
+                onPress={() => setCatalogPickerOpen(true)}
+                style={({ pressed }) => [styles.catalogShortcutBtn, pressed && { opacity: 0.7 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Ver catálogo ERP"
+              >
+                <Package size={12} color={mobileTheme.colors.primary} />
+                <Text style={styles.catalogShortcutText}>Catálogo ERP</Text>
+              </Pressable>
+            )}
           </View>
 
           {/* Composer Input Row */}
@@ -529,7 +569,7 @@ export function MobileConversationScreen({
           onClose={() => setCatalogPickerOpen(false)}
           onSelect={(item) => setSelectedCatalogItem(item)}
         />
-      </MobilePageContainer>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -537,39 +577,67 @@ export function MobileConversationScreen({
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
+    backgroundColor: "#f8fafc",
   },
   pageContainer: {
     flex: 1,
-    paddingBottom: 0,
+    backgroundColor: "#f8fafc",
   },
-  topHeaderRow: {
+  topAppBar: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    gap: 8,
   },
-  contactBar: {
-    padding: 12,
-    marginBottom: 8,
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  contactBarRow: {
+  topContactInfo: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 8,
   },
-  contactBarCopy: {
+  topAvatarWrap: {
+    position: "relative",
+  },
+  channelStatusDot: {
+    position: "absolute",
+    right: -1,
+    bottom: -1,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    borderWidth: 1.5,
+    borderColor: "#ffffff",
+    backgroundColor: "#16a34a",
+  },
+  topTitleCol: {
     flex: 1,
   },
-  contactBarName: {
+  topContactName: {
     fontSize: 14,
-    fontWeight: "800",
-    color: mobileTheme.colors.textMain,
+    fontWeight: "700",
+    color: "#0f172a",
   },
-  contactBarStatus: {
+  topSubtitle: {
     fontSize: 11,
-    fontWeight: "600",
     color: "#16a34a",
-    marginTop: 2,
+    fontWeight: "600",
+    marginTop: 1,
+  },
+  topActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   callBtn: {
     width: 36,
@@ -579,17 +647,32 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  ficha360Pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    height: 32,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: mobileTheme.colors.primary,
+    backgroundColor: "#eff6ff",
+  },
+  ficha360Text: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: mobileTheme.colors.primary,
+  },
   windowNotice: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 6,
     backgroundColor: "#f0fdf4",
-    borderColor: "#bbf7d0",
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#bbf7d0",
+    paddingVertical: 5,
+    paddingHorizontal: 12,
   },
   windowNoticeText: {
     fontSize: 11,
@@ -597,7 +680,8 @@ const styles = StyleSheet.create({
     color: "#166534",
   },
   messageListContent: {
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     gap: 10,
   },
   messageRow: {
@@ -611,18 +695,20 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   bubble: {
-    maxWidth: "80%",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    maxWidth: "82%",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
   bubbleInbound: {
     backgroundColor: "#ffffff",
+    borderTopLeftRadius: 4,
     borderWidth: 1,
     borderColor: "#e2e8f0",
   },
   bubbleOutbound: {
     backgroundColor: mobileTheme.colors.primary,
+    borderTopRightRadius: 4,
   },
   messageBody: {
     fontSize: 14,
@@ -638,7 +724,7 @@ const styles = StyleSheet.create({
     color: "#94a3b8",
   },
   textOutboundSec: {
-    color: "#93c5fd",
+    color: "#bfdbfe",
   },
   messageFooter: {
     flexDirection: "row",
@@ -655,17 +741,23 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   internalBubble: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: "#fffdf5",
     borderWidth: 1,
-    borderColor: "#fef3c7",
-    borderRadius: 10,
+    borderColor: "#fde68a",
+    borderRadius: 12,
     padding: 12,
     marginVertical: 4,
   },
   internalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
+  },
+  internalHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   internalAuthor: {
     fontSize: 10,
@@ -751,6 +843,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginBottom: 6,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   catalogHeader: {
     flexDirection: "row",
@@ -785,35 +879,48 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     backgroundColor: "#eff6ff",
-    borderWidth: 1,
-    borderColor: "#bfdbfe",
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 6,
+    borderTopWidth: 1,
+    borderTopColor: "#bfdbfe",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  selectedCatalogText: {
-    flex: 1,
+  selectedCatalogIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: "#dbeafe",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  selectedCatalogTitle: {
     fontSize: 12,
     fontWeight: "700",
-    color: mobileTheme.colors.primary,
+    color: "#1e40af",
   },
-  removeCatalogText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#64748b",
-    paddingHorizontal: 4,
+  selectedCatalogSub: {
+    fontSize: 10,
+    color: "#3b82f6",
+  },
+  removeCatalogBtn: {
+    padding: 4,
   },
   composerWrapper: {
     backgroundColor: "#ffffff",
     borderTopWidth: 1,
     borderTopColor: "#e2e8f0",
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === "ios" ? 20 : 10,
     gap: 8,
   },
   composerModeRow: {
     flexDirection: "row",
-    gap: 8,
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  modeTabsWrap: {
+    flexDirection: "row",
+    gap: 6,
   },
   modeTab: {
     paddingVertical: 4,
@@ -839,6 +946,20 @@ const styles = StyleSheet.create({
     color: "#b45309",
     fontWeight: "700",
   },
+  catalogShortcutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    backgroundColor: "#f1f5f9",
+  },
+  catalogShortcutText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: mobileTheme.colors.primary,
+  },
   composerInputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -854,9 +975,7 @@ const styles = StyleSheet.create({
   },
   composerInput: {
     flex: 1,
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
+    backgroundColor: "#f1f5f9",
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -866,12 +985,13 @@ const styles = StyleSheet.create({
   },
   composerInputInternal: {
     backgroundColor: "#fffdf5",
+    borderWidth: 1,
     borderColor: "#fde68a",
   },
   sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: mobileTheme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
@@ -880,6 +1000,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#d97706",
   },
   sendBtnDisabled: {
-    opacity: 0.5,
+    opacity: 0.45,
   },
 });

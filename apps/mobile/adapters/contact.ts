@@ -218,32 +218,17 @@ export function createMobileContactAdapter(): ContactPort {
       }
 
       try {
+        const fullLastName = [input.lastName?.trim(), input.secondLastName?.trim()]
+          .filter(Boolean)
+          .join(" ") || null;
+
         const payload: Record<string, any> = {
           organization_id: input.organizationId,
           first_name: input.firstName.trim(),
-          last_name: input.lastName?.trim() || null,
-          second_last_name: input.secondLastName?.trim() || null,
-          preferred_name: input.preferredName?.trim() || null,
+          last_name: fullLastName,
           email: input.email?.trim() || null,
-          secondary_email: input.secondaryEmail?.trim() || null,
           phone: input.phone?.trim() || null,
-          secondary_phone: input.secondaryPhone?.trim() || null,
-          preferred_channel: input.preferredChannel ?? "email",
-          preferred_language: input.preferredLanguage?.trim() || "es",
           company_name: input.companyName?.trim() || null,
-          job_title: input.jobTitle?.trim() || null,
-          department: input.department?.trim() || null,
-          address_line1: input.addressLine1?.trim() || null,
-          address_line2: input.addressLine2?.trim() || null,
-          city: input.city?.trim() || null,
-          state_province: input.stateProvince?.trim() || null,
-          postal_code: input.postalCode?.trim() || null,
-          country: input.country?.trim() || null,
-          document_type: input.documentType?.trim() || null,
-          document_number: input.documentNumber?.trim() || null,
-          birth_date: input.birthDate?.trim() || null,
-          gender: input.gender?.trim() || null,
-          identity_status: "verified",
         };
 
         const { data, error } = await mobileSupabaseClient
@@ -272,28 +257,16 @@ export function createMobileContactAdapter(): ContactPort {
           updated_at: new Date().toISOString(),
         };
         if (patch.firstName !== undefined) payload.first_name = patch.firstName.trim();
-        if (patch.lastName !== undefined) payload.last_name = patch.lastName?.trim() || null;
-        if (patch.secondLastName !== undefined) payload.second_last_name = patch.secondLastName?.trim() || null;
-        if (patch.preferredName !== undefined) payload.preferred_name = patch.preferredName?.trim() || null;
+        if (patch.lastName !== undefined || patch.secondLastName !== undefined) {
+          const parts = [
+            patch.lastName !== undefined ? patch.lastName?.trim() : undefined,
+            patch.secondLastName !== undefined ? patch.secondLastName?.trim() : undefined,
+          ].filter((p): p is string => Boolean(p));
+          payload.last_name = parts.length > 0 ? parts.join(" ") : null;
+        }
         if (patch.email !== undefined) payload.email = patch.email?.trim() || null;
-        if (patch.secondaryEmail !== undefined) payload.secondary_email = patch.secondaryEmail?.trim() || null;
         if (patch.phone !== undefined) payload.phone = patch.phone?.trim() || null;
-        if (patch.secondaryPhone !== undefined) payload.secondary_phone = patch.secondaryPhone?.trim() || null;
-        if (patch.preferredChannel !== undefined) payload.preferred_channel = patch.preferredChannel;
-        if (patch.preferredLanguage !== undefined) payload.preferred_language = patch.preferredLanguage?.trim() || null;
         if (patch.companyName !== undefined) payload.company_name = patch.companyName?.trim() || null;
-        if (patch.jobTitle !== undefined) payload.job_title = patch.jobTitle?.trim() || null;
-        if (patch.department !== undefined) payload.department = patch.department?.trim() || null;
-        if (patch.addressLine1 !== undefined) payload.address_line1 = patch.addressLine1?.trim() || null;
-        if (patch.addressLine2 !== undefined) payload.address_line2 = patch.addressLine2?.trim() || null;
-        if (patch.city !== undefined) payload.city = patch.city?.trim() || null;
-        if (patch.stateProvince !== undefined) payload.state_province = patch.stateProvince?.trim() || null;
-        if (patch.postalCode !== undefined) payload.postal_code = patch.postalCode?.trim() || null;
-        if (patch.country !== undefined) payload.country = patch.country?.trim() || null;
-        if (patch.documentType !== undefined) payload.document_type = patch.documentType?.trim() || null;
-        if (patch.documentNumber !== undefined) payload.document_number = patch.documentNumber?.trim() || null;
-        if (patch.birthDate !== undefined) payload.birth_date = patch.birthDate?.trim() || null;
-        if (patch.gender !== undefined) payload.gender = patch.gender?.trim() || null;
 
         const { data, error } = await mobileSupabaseClient
           .from("crm_contacts")

@@ -85,8 +85,23 @@ export interface LoopdevAdapter {
   referenceData: ReferenceDataAdapter;
 }
 
-// The adapter boundary is global to Loopdev; CRM is the first connected domain.
-export const loopdevAdapter: LoopdevAdapter = localLoopdevAdapter;
+// The adapter boundary is global to Loopdev; CRM connects contacts to desktopContactAdapter (Supabase with local fallback)
+export const loopdevAdapter: LoopdevAdapter = {
+  ...localLoopdevAdapter,
+  crm: {
+    ...localLoopdevAdapter.crm,
+    listContacts: (params) => desktopContactAdapter.listContacts(params),
+    createContact: (input) => desktopContactAdapter.createContact(input),
+    updateContact: (contactId, patch, expectedUpdatedAt) =>
+      desktopContactAdapter.updateContact(contactId, patch, expectedUpdatedAt),
+    archiveContact: (contactId, expectedUpdatedAt) =>
+      desktopContactAdapter.archiveContact(contactId, expectedUpdatedAt),
+    getCustomer360: (contactId) => localLoopdevAdapter.crm.getCustomer360(contactId),
+    findPotentialDuplicates: (contactId) => desktopContactAdapter.findPotentialDuplicates(contactId),
+    dismissDuplicateReview: (contactId, candidateId, confirmation) =>
+      desktopContactAdapter.dismissDuplicateReview(contactId, candidateId, confirmation),
+  },
+};
 export const contactPort: ContactPort = desktopContactAdapter;
 export { desktopContactAdapter } from "./contact";
 export type { ContactPort } from "../../../../../packages/contracts/src/contact-port";

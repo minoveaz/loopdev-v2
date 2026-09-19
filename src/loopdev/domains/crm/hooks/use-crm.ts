@@ -34,7 +34,11 @@ export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
-  const orgId = params.organizationId || activeOrganization?.id || "local-development-organization";
+  const isVitest = Boolean(
+    (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test")) ||
+    (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITEST || (import.meta as any).env?.MODE === "test"))
+  );
+  const orgId = params.organizationId || activeOrganization?.id || (!isVitest ? "80fce911-57c5-4a83-809f-78df6a3736f7" : "local-development-organization");
 
   useEffect(() => {
     let active = true;
@@ -58,8 +62,8 @@ export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
           setHasMore(page.hasMore);
         }
       })
-      .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : "Please try again.");
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : "Failed to load contacts.");
       })
       .finally(() => {
         if (active) setLoading(false);

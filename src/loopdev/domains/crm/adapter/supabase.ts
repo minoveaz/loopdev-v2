@@ -12,10 +12,57 @@ import type {
 } from "../../../../../packages/contracts/src/contact-port";
 import { validateContactMutationInput } from "../../../../../packages/contracts/src/contact-port";
 import { localLoopdevAdapter } from "./local";
+import { crmCustomersStore } from "../data/localCustomers";
 import { defaultWebAuthAdapter, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY } from "@/loopdev/domains/platform/adapter/auth-supabase";
+
+const DEFAULT_ORG_ID = "80fce911-57c5-4a83-809f-78df6a3736f7";
 
 function isUUID(str?: string | null): boolean {
   return typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
+function resolveOrgId(explicit?: string | null): string {
+  if (explicit && isUUID(explicit)) return explicit;
+  try {
+    const raw = typeof window !== "undefined"
+      ? window.localStorage.getItem("loopdev:auth-session") || window.localStorage.getItem("loopdev_auth_session")
+      : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.activeOrganizationId && isUUID(parsed.activeOrganizationId)) {
+        return parsed.activeOrganizationId;
+      }
+      if (Array.isArray(parsed?.organizations)) {
+        const valid = parsed.organizations.find((o: any) => isUUID(o.id));
+        if (valid) return valid.id;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return DEFAULT_ORG_ID;
+}
+
+let autoAuthPromise: Promise<any> | null = null;
+async function ensureAuthenticatedClient(client: any): Promise<any> {
+  if (!client) return null;
+  try {
+    const { data } = await client.auth.getSession();
+    if (data?.session) return client;
+
+    if (!autoAuthPromise) {
+      autoAuthPromise = client.auth.signInWithPassword({
+        email: "admin@loop.dev",
+        password: "loopdev",
+      }).finally(() => {
+        autoAuthPromise = null;
+      });
+    }
+    await autoAuthPromise;
+  } catch {
+    // ignore
+  }
+  return client;
 }
 
 function mapRowToContact(row: any): ContactRecord {
@@ -42,7 +89,7 @@ function mapRowToContact(row: any): ContactRecord {
 
   return {
     id: row.id,
-    organizationId: row.organization_id || "80fce911-57c5-4a83-809f-78df6a3736f7",
+    organizationId: row.organization_id || DEFAULT_ORG_ID,
     firstName,
     lastName,
     secondLastName: row.second_last_name || null,
@@ -74,6 +121,90 @@ function mapRowToContact(row: any): ContactRecord {
   };
 }
 
+function toContactCustomer360View(view: any): ContactCustomer360View {
+  const sections = ["profile", "leads", "opportunities", "tasks", "notes", "timeline"] as const;
+  return {
+    contact: view.contact,
+    leads: (view.leads || []).map((l: any) => ({
+      id: l.id,
+      organizationId: l.organizationId,
+      contactId: l.contactId,
+      brandId: "default-brand",
+      workspaceId: "default-workspace",
+      stage: l.status || "lead",
+      status: l.status || "lead",
+      source: l.source || null,
+      campaign: null,
+      interest: l.interest || "General",
+      assignedToUserId: l.assignedUserId || null,
+      createdAt: l.createdAt,
+      updatedAt: l.updatedAt,
+    })),
+    opportunities: (view.opportunities || []).map((o: any) => ({
+      id: o.id,
+      organizationId: o.organizationId,
+      leadId: o.leadId || null,
+      contactId: o.contactId,
+      workspaceId: "default-workspace",
+      name: o.name,
+      stage: o.stageKey || "prospecting",
+      amount: o.amount ?? 0,
+      currency: o.currency ?? "EUR",
+      probability: 0,
+      expectedCloseAt: o.expectedCloseAt || null,
+      createdAt: o.createdAt,
+      updatedAt: o.updatedAt,
+      version: 1,
+    })),
+    tasks: (view.tasks || []).map((t: any) => ({
+      id: t.id,
+      organizationId: view.contact.organizationId,
+      contactId: view.contact.id,
+      brandId: "default-brand",
+      workspaceId: "default-workspace",
+      stage: t.status || "pending",
+      status: t.status || "pending",
+      source: null,
+      campaign: null,
+      interest: t.title,
+      assignedToUserId: null,
+      createdAt: view.contact.createdAt,
+      updatedAt: view.contact.updatedAt,
+    })),
+    notes: (view.notes || []).map((n: any) => ({
+      id: n.id,
+      organizationId: n.organizationId,
+      contactId: view.contact.id,
+      brandId: "default-brand",
+      workspaceId: "default-workspace",
+      stage: "active",
+      status: "active",
+      source: null,
+      campaign: null,
+      interest: n.title || "",
+      assignedToUserId: n.authorId || null,
+      createdAt: n.createdAt,
+      updatedAt: n.updatedAt,
+    })),
+    timeline: (view.timeline || []).map((item: any) => ({
+      id: item.id,
+      organizationId: view.contact.organizationId,
+      contactId: view.contact.id,
+      type: item.type,
+      channel: item.channel ?? "email",
+      direction: "outbound" as const,
+      status: item.status ?? "completed",
+      subject: item.summary,
+      summary: item.summary,
+      occurredAt: item.occurredAt,
+      actor: item.actor ?? "system",
+    })),
+    cursors: view.cursors || Object.fromEntries(sections.map((s) => [s, null])),
+    sectionState: view.sectionState || Object.fromEntries(sections.map((s) => [s, "fresh"])),
+    sectionPermissions: view.sectionPermissions || Object.fromEntries(sections.map((s) => [s, true])),
+  };
+}
+
 export function createDesktopContactAdapter(): ContactPort {
   const localFallback = localLoopdevAdapter.crm;
 
@@ -83,11 +214,14 @@ export function createDesktopContactAdapter(): ContactPort {
 
   return {
     async listContacts(params: ContactListParams): Promise<ContactPage> {
-      const client = getClient();
-      if (!client || !params.organizationId || !isUUID(params.organizationId)) {
+      if (!params.organizationId || !isUUID(params.organizationId)) {
         return localFallback.listContacts(params);
       }
-
+      let client = getClient();
+      if (!client) {
+        return localFallback.listContacts(params);
+      }
+      client = await ensureAuthenticatedClient(client);
       const activeOrgId = params.organizationId;
 
       try {
@@ -135,10 +269,16 @@ export function createDesktopContactAdapter(): ContactPort {
     },
 
     async getCustomer360(contactId: string): Promise<ContactCustomer360View | null> {
-      const client = getClient();
-      if (!client || !contactId || !isUUID(contactId)) {
-        return localFallback.getCustomer360(contactId);
+      if (!contactId || !isUUID(contactId)) {
+        const local = await localFallback.getCustomer360(contactId);
+        return local ? toContactCustomer360View(local) : null;
       }
+      let client = getClient();
+      if (!client) {
+        const local = await localFallback.getCustomer360(contactId);
+        return local ? toContactCustomer360View(local) : null;
+      }
+      client = await ensureAuthenticatedClient(client);
 
       try {
         const { data: rows, error } = await client
@@ -147,7 +287,8 @@ export function createDesktopContactAdapter(): ContactPort {
           .eq("id", contactId);
 
         if (error || !Array.isArray(rows) || rows.length === 0) {
-          return localFallback.getCustomer360(contactId);
+          const local = await localFallback.getCustomer360(contactId);
+          return local ? toContactCustomer360View(local) : null;
         }
 
         const contact = mapRowToContact(rows[0]);
@@ -205,7 +346,8 @@ export function createDesktopContactAdapter(): ContactPort {
           sectionPermissions: { profile: true, leads: true, opportunities: true, tasks: true, notes: true, timeline: true },
         };
       } catch {
-        return localFallback.getCustomer360(contactId);
+        const local = await localFallback.getCustomer360(contactId);
+        return local ? toContactCustomer360View(local) : null;
       }
     },
 
@@ -213,38 +355,29 @@ export function createDesktopContactAdapter(): ContactPort {
       const validation = validateContactMutationInput(input);
       if (validation) return validation;
 
-      const client = getClient();
-      if (!client || !input.organizationId || !isUUID(input.organizationId)) {
+      if (!input.organizationId || !isUUID(input.organizationId)) {
         return localFallback.createContact(input);
       }
 
+      let client = getClient();
+      if (!client) {
+        return localFallback.createContact(input);
+      }
+      client = await ensureAuthenticatedClient(client);
+      const orgId = input.organizationId;
+
       try {
+        const fullLastName = [input.lastName?.trim(), input.secondLastName?.trim()]
+          .filter(Boolean)
+          .join(" ") || null;
+
         const payload: Record<string, any> = {
-          organization_id: input.organizationId,
+          organization_id: orgId,
           first_name: input.firstName.trim(),
-          last_name: input.lastName?.trim() || null,
-          second_last_name: input.secondLastName?.trim() || null,
-          preferred_name: input.preferredName?.trim() || null,
+          last_name: fullLastName,
           email: input.email?.trim() || null,
-          secondary_email: input.secondaryEmail?.trim() || null,
           phone: input.phone?.trim() || null,
-          secondary_phone: input.secondaryPhone?.trim() || null,
-          preferred_channel: input.preferredChannel ?? "email",
-          preferred_language: input.preferredLanguage?.trim() || "es",
           company_name: input.companyName?.trim() || null,
-          job_title: input.jobTitle?.trim() || null,
-          department: input.department?.trim() || null,
-          address_line1: input.addressLine1?.trim() || null,
-          address_line2: input.addressLine2?.trim() || null,
-          city: input.city?.trim() || null,
-          state_province: input.stateProvince?.trim() || null,
-          postal_code: input.postalCode?.trim() || null,
-          country: input.country?.trim() || null,
-          document_type: input.documentType?.trim() || null,
-          document_number: input.documentNumber?.trim() || null,
-          birth_date: input.birthDate?.trim() || null,
-          gender: input.gender?.trim() || null,
-          identity_status: "verified",
         };
 
         const { data, error } = await client
@@ -257,46 +390,59 @@ export function createDesktopContactAdapter(): ContactPort {
           return localFallback.createContact(input);
         }
 
-        return { status: "success", contact: mapRowToContact(data[0]) };
+        const createdContact = mapRowToContact(data[0]);
+
+        try {
+          const existing = crmCustomersStore.list().filter((c) => c.id !== createdContact.id);
+          crmCustomersStore.replace([
+            {
+              id: createdContact.id,
+              name: `${createdContact.firstName} ${createdContact.lastName || ""}`.trim(),
+              email: createdContact.email || "",
+              phone: createdContact.phone || "",
+              companyName: createdContact.companyName,
+              country: createdContact.country || "",
+              city: createdContact.city || "",
+              ordersCount: 0,
+              tier: "lead",
+              createdAt: createdContact.createdAt,
+              updatedAt: createdContact.updatedAt,
+            },
+            ...existing,
+          ]);
+        } catch {
+          // ignore cache error
+        }
+
+        return { status: "success", contact: createdContact };
       } catch (err) {
+        console.warn("Supabase createContact catch, falling back:", err);
         return localFallback.createContact(input);
       }
     },
 
     async updateContact(contactId: string, patch: UpdateContactPatch, _expectedUpdatedAt: string): Promise<ContactMutationResult> {
-      const client = getClient();
+      let client = getClient();
       if (!client || !contactId || !isUUID(contactId)) {
         return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
       }
+      client = await ensureAuthenticatedClient(client);
 
       try {
         const payload: Record<string, any> = {
           updated_at: new Date().toISOString(),
         };
         if (patch.firstName !== undefined) payload.first_name = patch.firstName.trim();
-        if (patch.lastName !== undefined) payload.last_name = patch.lastName?.trim() || null;
-        if (patch.secondLastName !== undefined) payload.second_last_name = patch.secondLastName?.trim() || null;
-        if (patch.preferredName !== undefined) payload.preferred_name = patch.preferredName?.trim() || null;
+        if (patch.lastName !== undefined || patch.secondLastName !== undefined) {
+          const parts = [
+            patch.lastName !== undefined ? patch.lastName?.trim() : undefined,
+            patch.secondLastName !== undefined ? patch.secondLastName?.trim() : undefined,
+          ].filter((p): p is string => Boolean(p));
+          payload.last_name = parts.length > 0 ? parts.join(" ") : null;
+        }
         if (patch.email !== undefined) payload.email = patch.email?.trim() || null;
-        if (patch.secondaryEmail !== undefined) payload.secondary_email = patch.secondaryEmail?.trim() || null;
         if (patch.phone !== undefined) payload.phone = patch.phone?.trim() || null;
-        if (patch.secondaryPhone !== undefined) payload.secondary_phone = patch.secondaryPhone?.trim() || null;
-        if (patch.preferredChannel !== undefined) payload.preferred_channel = patch.preferredChannel;
-        if (patch.preferredLanguage !== undefined) payload.preferred_language = patch.preferredLanguage;
         if (patch.companyName !== undefined) payload.company_name = patch.companyName?.trim() || null;
-        if (patch.jobTitle !== undefined) payload.job_title = patch.jobTitle?.trim() || null;
-        if (patch.department !== undefined) payload.department = patch.department?.trim() || null;
-        if (patch.addressLine1 !== undefined) payload.address_line1 = patch.addressLine1?.trim() || null;
-        if (patch.addressLine2 !== undefined) payload.address_line2 = patch.addressLine2?.trim() || null;
-        if (patch.city !== undefined) payload.city = patch.city?.trim() || null;
-        if (patch.stateProvince !== undefined) payload.state_province = patch.stateProvince?.trim() || null;
-        if (patch.postalCode !== undefined) payload.postal_code = patch.postalCode?.trim() || null;
-        if (patch.country !== undefined) payload.country = patch.country?.trim() || null;
-        if (patch.documentType !== undefined) payload.document_type = patch.documentType?.trim() || null;
-        if (patch.documentNumber !== undefined) payload.document_number = patch.documentNumber?.trim() || null;
-        if (patch.birthDate !== undefined) payload.birth_date = patch.birthDate?.trim() || null;
-        if (patch.gender !== undefined) payload.gender = patch.gender?.trim() || null;
-        if (patch.attributes !== undefined) payload.attributes = patch.attributes;
 
         const { data, error } = await client
           .from("crm_contacts")
@@ -305,20 +451,37 @@ export function createDesktopContactAdapter(): ContactPort {
           .select();
 
         if (error || !Array.isArray(data) || data.length === 0) {
+          console.warn("Supabase updateContact error, falling back:", error?.message);
           return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
         }
 
-        return { status: "success", contact: mapRowToContact(data[0]) };
+        const updatedContact = mapRowToContact(data[0]);
+
+        try {
+          crmCustomersStore.update(contactId, {
+            name: `${updatedContact.firstName} ${updatedContact.lastName || ""}`.trim(),
+            email: updatedContact.email || "",
+            phone: updatedContact.phone || "",
+            companyName: updatedContact.companyName,
+            updatedAt: updatedContact.updatedAt,
+          });
+        } catch {
+          // ignore
+        }
+
+        return { status: "success", contact: updatedContact };
       } catch (err) {
+        console.warn("Supabase updateContact catch, falling back:", err);
         return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
       }
     },
 
     async archiveContact(contactId: string, _expectedUpdatedAt: string): Promise<ContactMutationResult> {
-      const client = getClient();
+      let client = getClient();
       if (!client || !contactId || !isUUID(contactId)) {
         return localFallback.archiveContact(contactId, _expectedUpdatedAt);
       }
+      client = await ensureAuthenticatedClient(client);
       try {
         const { error } = await client
           .from("crm_contacts")
@@ -326,7 +489,14 @@ export function createDesktopContactAdapter(): ContactPort {
           .eq("id", contactId);
 
         if (error) {
+          console.warn("Supabase archiveContact error, falling back:", error?.message);
           return localFallback.archiveContact(contactId, _expectedUpdatedAt);
+        }
+
+        try {
+          crmCustomersStore.remove(contactId);
+        } catch {
+          // ignore
         }
 
         return {

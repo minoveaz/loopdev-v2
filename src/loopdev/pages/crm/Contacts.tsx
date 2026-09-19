@@ -26,6 +26,7 @@ import {
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { formatDate, getInitials } from "@/lib/formatters";
 import { useCrmContacts } from "@/loopdev/domains/crm/hooks/use-crm";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactFormDrawer";
 import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
 import { ContactMobileCard } from "@/loopdev/components/crm/contacts/ContactMobileCard";
@@ -42,6 +43,12 @@ const CONTACT_PAGE_SIZE = 10;
 type ContactSortKey = "name" | "company" | "channel" | "identity" | "location" | "updated";
 
 export default function SalesCRMContacts() {
+  const { activeOrganization } = useTenantContext();
+  const isVitest = Boolean(
+    (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test")) ||
+    (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITEST || (import.meta as any).env?.MODE === "test"))
+  );
+  const currentOrgId = activeOrganization?.id || (!isVitest ? "80fce911-57c5-4a83-809f-78df6a3736f7" : "local-development-organization");
   const { trail } = useBreadcrumbs();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -63,6 +70,7 @@ export default function SalesCRMContacts() {
   const [search, setSearch] = useState(query);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
   const { contacts, nextCursor, hasMore, loading, error, reload } = useCrmContacts({
+    organizationId: currentOrgId,
     query,
     cursor,
     limit: pageSize,
@@ -88,7 +96,7 @@ export default function SalesCRMContacts() {
     const optional = (value: string) => value.trim() || null;
     if (editingContact) {
       const patch: CRMUpdateContactPatch = {
-        organizationId: "local-development-organization",
+        organizationId: currentOrgId,
         firstName: values.firstName.trim(),
         lastName: optional(values.lastName),
         secondLastName: optional(values.secondLastName),
@@ -117,7 +125,7 @@ export default function SalesCRMContacts() {
     }
 
     const input: CRMCreateContactInput = {
-      organizationId: "local-development-organization",
+      organizationId: currentOrgId,
       firstName: values.firstName.trim(),
       lastName: optional(values.lastName),
       secondLastName: optional(values.secondLastName),

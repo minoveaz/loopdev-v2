@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
 import { EmptyState, NoteEditorDrawer, PageContainer, PageHeader, type NoteEditorValue } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { useCrmCustomer360 } from "@/loopdev/domains/crm/hooks/use-crm";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { contactName, loopdevAdapter, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import type { GlobalNoteRecord } from "@/loopdev/domains/notes";
@@ -14,6 +15,8 @@ import { Customer360DetailTabs } from "@/loopdev/components/customer360/Customer
 import { Customer360TimelineCard } from "@/loopdev/components/customer360/Customer360ActivityCards";
 
 export default function SalesCRMCustomer360() {
+  const { activeOrganization } = useTenantContext();
+  const currentOrgId = activeOrganization?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
   const { contactId } = useParams<{ contactId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -128,7 +131,7 @@ export default function SalesCRMCustomer360() {
   const submitContact = async (values: ContactFormValues) => {
     const optional = (value: string) => value.trim() || null;
     const patch: CRMUpdateContactPatch = {
-      organizationId: "local-development-organization",
+      organizationId: currentOrgId,
       firstName: values.firstName.trim(),
       lastName: optional(values.lastName),
       secondLastName: optional(values.secondLastName),

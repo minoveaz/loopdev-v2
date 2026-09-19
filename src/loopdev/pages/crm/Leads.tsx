@@ -23,6 +23,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import {
   CRM_LEAD_STATUS_CODES, contactName, type CRMLead, type CRMLeadStatusCode,
 } from "@/loopdev/domains/crm/adapter";
@@ -55,6 +56,7 @@ const SAVED_VIEWS: Array<{ key: ViewKey; label: string; statuses?: CRMLeadStatus
 ];
 
 export default function SalesCRMLeads() {
+  const { activeOrganization } = useTenantContext();
   const { trail } = useBreadcrumbs();
   const navigate = useNavigate();
   const {
@@ -170,7 +172,7 @@ export default function SalesCRMLeads() {
   const submitConversion = async () => {
     if (!conversionLead) return;
     const result = await createOpportunityFromLead(conversionLead.id, {
-      organizationId: "local-development-organization",
+      organizationId: conversionLead.organizationId || activeOrganization?.id || "local-development-organization",
       productKey,
       name: opportunityName || productKey,
       amount: amount ? Number(amount) : null,

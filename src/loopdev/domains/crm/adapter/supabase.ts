@@ -229,12 +229,10 @@ export function createDesktopContactAdapter(): ContactPort {
           .from("crm_contacts")
           .select("*")
           .eq("organization_id", activeOrgId)
+          .is("archived_at", null)
           .order("created_at", { ascending: false });
 
-        if (error) {
-          console.warn("Supabase listContacts error, falling back to local:", error.message);
-          return localFallback.listContacts(params);
-        }
+        if (error) throw error;
 
         let items: ContactRecord[] = Array.isArray(rows) ? rows.map(mapRowToContact) : [];
 
@@ -295,8 +293,7 @@ export function createDesktopContactAdapter(): ContactPort {
           hasMore: nextOffset < items.length,
         };
       } catch (err) {
-        console.warn("Supabase listContacts catch, falling back:", err);
-        return localFallback.listContacts(params);
+        throw err;
       }
     },
 
@@ -334,6 +331,12 @@ export function createDesktopContactAdapter(): ContactPort {
           .from("crm_opportunities")
           .select("*")
           .eq("contact_id", contactId);
+        const leadIds = (leadsRows || []).map((lead: any) => lead.id);
+        const [{ data: tasksRows }, { data: notesRows }, { data: activitiesRows }] = await Promise.all([
+          leadIds.length ? client.from("crm_tasks").select("*").in("lead_id", leadIds) : Promise.resolve({ data: [] }),
+          client.from("crm_notes").select("*").eq("contact_id", contactId),
+          leadIds.length ? client.from("crm_activities").select("*").in("lead_id", leadIds).order("occurred_at", { ascending: false }) : Promise.resolve({ data: [] }),
+        ]);
 
         const state = { profile: "fresh", leads: "fresh", opportunities: "fresh", tasks: "fresh", notes: "fresh", timeline: "fresh" } as const;
 
@@ -370,9 +373,9 @@ export function createDesktopContactAdapter(): ContactPort {
             updatedAt: o.updated_at,
             version: o.version || 1,
           })),
-          tasks: [],
-          notes: [],
-          timeline: [],
+          tasks: (tasksRows || []).map((task: any) => ({ id: task.id, name: task.title, summary: task.description || task.title, occurredAt: task.due_at || task.created_at })),
+          notes: (notesRows || []).map((note: any) => ({ id: note.id, summary: typeof note.body === "string" ? note.body : "", occurredAt: note.created_at })),
+          timeline: (activitiesRows || []).map((activity: any) => ({ id: activity.id, summary: activity.summary, occurredAt: activity.occurred_at })),
           cursors: { profile: null, leads: null, opportunities: null, tasks: null, notes: null, timeline: null },
           sectionState: state,
           sectionPermissions: { profile: true, leads: true, opportunities: true, tasks: true, notes: true, timeline: true },
@@ -393,23 +396,38 @@ export function createDesktopContactAdapter(): ContactPort {
 
       let client = getClient();
       if (!client) {
-        return localFallback.createContact(input);
+        return { status: "server-error", message: "Supabase is not configured." };
       }
       client = await ensureAuthenticatedClient(client);
       const orgId = input.organizationId;
 
       try {
-        const fullLastName = [input.lastName?.trim(), input.secondLastName?.trim()]
-          .filter(Boolean)
-          .join(" ") || null;
-
         const payload: Record<string, any> = {
           organization_id: orgId,
           first_name: input.firstName.trim(),
-          last_name: fullLastName,
+          last_name: input.lastName?.trim() || null,
+          second_last_name: input.secondLastName?.trim() || null,
+          preferred_name: input.preferredName?.trim() || null,
           email: input.email?.trim() || null,
+          secondary_email: input.secondaryEmail?.trim() || null,
           phone: input.phone?.trim() || null,
+          secondary_phone: input.secondaryPhone?.trim() || null,
+          preferred_channel: input.preferredChannel || null,
+          preferred_language: input.preferredLanguage?.trim() || null,
           company_name: input.companyName?.trim() || null,
+          job_title: input.jobTitle?.trim() || null,
+          department: input.department?.trim() || null,
+          address_line1: input.addressLine1?.trim() || null,
+          address_line2: input.addressLine2?.trim() || null,
+          city: input.city?.trim() || null,
+          state_province: input.stateProvince?.trim() || null,
+          postal_code: input.postalCode?.trim() || null,
+          country: input.country?.trim() || null,
+          document_type: input.documentType?.trim() || null,
+          document_number: input.documentNumber?.trim() || null,
+          birth_date: input.birthDate?.trim() || null,
+          gender: input.gender?.trim() || null,
+          attributes: input.attributes || {},
         };
 
         const { data, error } = await client
@@ -417,10 +435,7 @@ export function createDesktopContactAdapter(): ContactPort {
           .insert(payload)
           .select();
 
-        if (error || !Array.isArray(data) || data.length === 0) {
-          console.warn("Supabase createContact error, falling back:", error?.message);
-          return localFallback.createContact(input);
-        }
+        if (error || !Array.isArray(data) || data.length === 0) return { status: "server-error", message: error?.message ?? "The contact could not be created." };
 
         const createdContact = mapRowToContact(data[0]);
 
@@ -448,8 +463,7 @@ export function createDesktopContactAdapter(): ContactPort {
 
         return { status: "success", contact: createdContact };
       } catch (err) {
-        console.warn("Supabase createContact catch, falling back:", err);
-        return localFallback.createContact(input);
+        return { status: "server-error", message: err instanceof Error ? err.message : "The contact could not be created." };
       }
     },
 
@@ -461,6 +475,10 @@ export function createDesktopContactAdapter(): ContactPort {
       client = await ensureAuthenticatedClient(client);
 
       try {
+        const { data: current, error: readError } = await client.from("crm_contacts").select("*").eq("id", contactId).eq("organization_id", patch.organizationId).single();
+        if (readError || !current) return { status: "server-error", message: "The contact could not be found." };
+        const currentContact = mapRowToContact(current);
+        if (currentContact.updatedAt !== _expectedUpdatedAt) return { status: "conflict", message: "The contact changed before it could be updated.", contact: currentContact };
         const payload: Record<string, any> = {
           updated_at: new Date().toISOString(),
         };
@@ -493,12 +511,11 @@ export function createDesktopContactAdapter(): ContactPort {
           .from("crm_contacts")
           .update(payload)
           .eq("id", contactId)
+          .eq("organization_id", patch.organizationId)
+          .eq("updated_at", _expectedUpdatedAt)
           .select();
 
-        if (error || !Array.isArray(data) || data.length === 0) {
-          console.warn("Supabase updateContact error, falling back:", error?.message);
-          return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
-        }
+        if (error || !Array.isArray(data) || data.length === 0) return { status: "server-error", message: error?.message ?? "The contact could not be updated." };
 
         const updatedContact = mapRowToContact(data[0]);
 
@@ -516,8 +533,7 @@ export function createDesktopContactAdapter(): ContactPort {
 
         return { status: "success", contact: updatedContact };
       } catch (err) {
-        console.warn("Supabase updateContact catch, falling back:", err);
-        return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
+        return { status: "server-error", message: err instanceof Error ? err.message : "The contact could not be updated." };
       }
     },
 
@@ -528,15 +544,8 @@ export function createDesktopContactAdapter(): ContactPort {
       }
       client = await ensureAuthenticatedClient(client);
       try {
-        const { error } = await client
-          .from("crm_contacts")
-          .delete()
-          .eq("id", contactId);
-
-        if (error) {
-          console.warn("Supabase archiveContact error, falling back:", error?.message);
-          return localFallback.archiveContact(contactId, _expectedUpdatedAt);
-        }
+        const { data, error } = await client.from("crm_contacts").update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", contactId).eq("updated_at", _expectedUpdatedAt).select().single();
+        if (error || !data) return { status: "server-error", message: error?.message ?? "The contact could not be archived." };
 
         try {
           crmCustomersStore.remove(contactId);
@@ -544,52 +553,45 @@ export function createDesktopContactAdapter(): ContactPort {
           // ignore
         }
 
-        return {
-          status: "success",
-          contact: {
-            id: contactId,
-            organizationId: "",
-            firstName: "Archived",
-            lastName: null,
-            secondLastName: null,
-            preferredName: null,
-            email: null,
-            secondaryEmail: null,
-            phone: null,
-            secondaryPhone: null,
-            preferredChannel: "email",
-            preferredLanguage: "es",
-            documentType: null,
-            documentNumber: null,
-            birthDate: null,
-            gender: null,
-            addressLine1: null,
-            addressLine2: null,
-            city: "",
-            stateProvince: null,
-            postalCode: null,
-            country: "",
-            companyName: null,
-            jobTitle: null,
-            department: null,
-            attributes: {},
-            identityStatus: "verified",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            archivedAt: new Date().toISOString(),
-          },
-        };
+        return { status: "success", contact: mapRowToContact(data) };
       } catch (err) {
-        return localFallback.archiveContact(contactId, _expectedUpdatedAt);
+        return { status: "server-error", message: err instanceof Error ? err.message : "The contact could not be archived." };
       }
     },
 
     async findPotentialDuplicates(contactId: string): Promise<PotentialContactDuplicate[]> {
-      return localFallback.findPotentialDuplicates(contactId);
+      if (!isUUID(contactId)) return localFallback.findPotentialDuplicates(contactId);
+      const client = getClient();
+      if (!client) throw new Error("Supabase is not configured.");
+      const { data: source, error: sourceError } = await client.from("crm_contacts").select("*").eq("id", contactId).single();
+      if (sourceError || !source) return [];
+      const { data: rows, error } = await client.from("crm_contacts").select("*").eq("organization_id", source.organization_id).is("archived_at", null).neq("id", contactId);
+      if (error) throw error;
+      const { data: dismissed } = await client.from("crm_contact_duplicate_reviews").select("candidate_id").eq("organization_id", source.organization_id).eq("contact_id", contactId);
+      const dismissedIds = new Set((dismissed ?? []).map((item: any) => item.candidate_id));
+      const sourceContact = mapRowToContact(source);
+      return (rows ?? []).map((row: any): PotentialContactDuplicate | null => {
+        if (dismissedIds.has(row.id)) return null;
+        const candidate = mapRowToContact(row);
+        const reasons: string[] = [];
+        if (sourceContact.email && candidate.email && sourceContact.email.toLowerCase() === candidate.email.toLowerCase()) reasons.push("same-email");
+        if (sourceContact.phone && candidate.phone && sourceContact.phone === candidate.phone) reasons.push("same-phone");
+        if (sourceContact.companyName && candidate.companyName && sourceContact.companyName.toLowerCase() === candidate.companyName.toLowerCase()) reasons.push("same-company");
+        if (!reasons.length) return null;
+        return { contact: candidate, score: Math.min(1, reasons.length / 3), reasons };
+      }).filter((item): item is PotentialContactDuplicate => Boolean(item));
     },
 
     async dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<DuplicateReviewResult> {
-      return localFallback.dismissDuplicateReview(contactId, candidateId, confirmation);
+      if (!isUUID(contactId) || !isUUID(candidateId)) return localFallback.dismissDuplicateReview(contactId, candidateId, confirmation);
+      if (confirmation !== "DISMISS_DUPLICATE_REVIEW") return { status: "server-error", message: "Audit confirmation is required." };
+      const client = getClient();
+      if (!client) return { status: "server-error", message: "Supabase is not configured." };
+      const { data: contact } = await client.from("crm_contacts").select("organization_id").eq("id", contactId).single();
+      if (!contact) return { status: "not-found", message: "The contact could not be found." };
+      const { data, error } = await client.from("crm_contact_duplicate_reviews").insert({ organization_id: contact.organization_id, contact_id: contactId, candidate_id: candidateId, confirmation }).select().single();
+      if (error || !data) return { status: "server-error", message: error?.message ?? "The duplicate review could not be dismissed." };
+      return { status: "success", reviewId: data.id, dismissedAt: data.dismissed_at };
     },
 
     async bulkArchiveContacts(contactIds: string[]): Promise<{ successCount: number; failureCount: number }> {
@@ -613,7 +615,7 @@ export function createDesktopContactAdapter(): ContactPort {
       if (uuidIds.length > 0) {
         const { error } = await client
           .from("crm_contacts")
-          .delete()
+          .update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() })
           .in("id", uuidIds);
 
         if (error) {

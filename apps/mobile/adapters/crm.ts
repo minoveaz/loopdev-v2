@@ -1,4 +1,5 @@
 import { mobileSupabaseClient } from "./supabase";
+import { mobileTenantContextAdapter } from "./auth";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isUuid = (value: string | null | undefined): value is string => typeof value === "string" && UUID_PATTERN.test(value);
@@ -10,6 +11,13 @@ const mapSupabaseOpportunity = (row: any): CRMOpportunity => ({
   origin: row.origin === "conversion" ? "lead_conversion" : "manual", ownerName: row.owner_name ?? "", ownerId: row.assigned_to_user_id ?? "",
   probability: row.probability == null ? undefined : Number(row.probability) / 100, expectedCloseAt: row.expected_close_at ?? null,
   lossReason: row.loss_reason ?? null, createdAt: row.created_at, updatedAt: row.updated_at,
+});
+const mapSupabaseLead = (row: any): CRMLead => ({
+  id: row.id, organizationId: row.organization_id, contactId: row.contact_id,
+  interest: row.interest ?? "", source: row.source ?? "manual", score: null,
+  status: ({ nuevo: "new", active: "new", contactado: "contacted", cualificado: "qualified", estancado: "stalled", inactivo: "inactive", convertido: "converted" } as Record<string, CRMLead["status"]>)[row.status] ?? "new",
+  ownerName: "", assignedUserId: row.assigned_to_user_id ?? "", createdAt: row.created_at, updatedAt: row.updated_at,
+  lastActivityAt: null, nextActivityAt: null,
 });
 
 export interface CRMLead {
@@ -364,20 +372,37 @@ function saveStoredLeads(leads: CRMLead[]) {
 
 export const mobileCrmAdapter = {
   async listAllLeads(): Promise<CRMLead[]> {
+    const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
+    if (isUuid(organizationId)) {
+      const { data, error } = await mobileSupabaseClient.from("crm_leads").select("*").eq("organization_id", organizationId).order("updated_at", { ascending: false });
+      assertSupabase(error, "list leads"); return (data ?? []).map(mapSupabaseLead);
+    }
     return loadStoredLeads();
   },
 
   async getLead(id: string): Promise<CRMLead | null> {
+    if (isUuid(id)) {
+      const { data, error } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", id).single();
+      if (error?.code === "PGRST116") return null; assertSupabase(error, "get lead"); return data ? mapSupabaseLead(data) : null;
+    }
     const leads = loadStoredLeads();
     return leads.find((l) => l.id === id) || null;
   },
 
   async listLeads(contactId: string): Promise<CRMLead[]> {
+    if (isUuid(contactId)) {
+      const { data, error } = await mobileSupabaseClient.from("crm_leads").select("*").eq("contact_id", contactId).order("updated_at", { ascending: false });
+      assertSupabase(error, "list contact leads"); return (data ?? []).map(mapSupabaseLead);
+    }
     const leads = loadStoredLeads();
     return leads.filter((l) => l.contactId === contactId);
   },
 
   async createLead(input: Omit<CRMLead, "id" | "createdAt" | "updatedAt">): Promise<CRMLead> {
+    if (isUuid(input.organizationId)) {
+      const { data, error } = await mobileSupabaseClient.from("crm_leads").insert({ organization_id: input.organizationId, contact_id: input.contactId, interest: input.interest, source: input.source || "manual", status: "nuevo", stage: "lead", assigned_to_user_id: isUuid(input.assignedUserId) ? input.assignedUserId : null }).select().single();
+      assertSupabase(error, "create lead"); if (!data) throw new Error("CRM create lead returned no data"); return mapSupabaseLead(data);
+    }
     const now = new Date().toISOString();
     const lead: CRMLead = {
       id: `crm_lead_${Date.now()}`,
@@ -393,6 +418,16 @@ export const mobileCrmAdapter = {
   },
 
   async updateLead(id: string, input: Partial<CRMLead>): Promise<CRMLead> {
+    if (isUuid(id)) {
+      const statusMap: Record<string, { status: string; stage: string }> = { new: { status: "nuevo", stage: "lead" }, contacted: { status: "contactado", stage: "contacted" }, qualified: { status: "cualificado", stage: "proposal" }, stalled: { status: "estancado", stage: "lead" }, inactive: { status: "inactivo", stage: "discarded" }, converted: { status: "convertido", stage: "won" } };
+      const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      if (input.interest !== undefined) payload.interest = input.interest;
+      if (input.source !== undefined) payload.source = input.source;
+      if (input.assignedUserId !== undefined) payload.assigned_to_user_id = isUuid(input.assignedUserId) ? input.assignedUserId : null;
+      if (input.status) Object.assign(payload, statusMap[input.status]);
+      const { data, error } = await mobileSupabaseClient.from("crm_leads").update(payload).eq("id", id).select().single();
+      assertSupabase(error, "update lead"); if (!data) throw new Error("CRM update lead returned no data"); return mapSupabaseLead(data);
+    }
     const leads = loadStoredLeads();
     const index = leads.findIndex((l) => l.id === id);
     if (index === -1) {
@@ -419,6 +454,20 @@ export const mobileCrmAdapter = {
       expectedCloseAt?: string | null;
     }
   ): Promise<{ lead: CRMLead; opportunity: CRMOpportunity }> {
+    if (isUuid(leadId)) {
+      const { data: leadRow, error: leadError } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", leadId).single();
+      assertSupabase(leadError, "get lead for conversion"); if (!leadRow) throw new Error("Lead not found");
+      const productKey = (leadRow.interest || "converted-lead").toLowerCase().replace(/\s+/g, "-");
+      const { data: existing } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("organization_id", leadRow.organization_id).eq("lead_id", leadId).eq("origin", "lead_conversion").eq("product_key", productKey).maybeSingle();
+      let opportunityRow = existing;
+      if (!opportunityRow) {
+        const { data, error } = await mobileSupabaseClient.from("crm_opportunities").insert({ organization_id: leadRow.organization_id, contact_id: leadRow.contact_id, lead_id: leadId, product_key: productKey, name: opportunityData.name || `Opportunity · ${leadRow.interest}`, stage_key: opportunityData.stageKey || "qualified", stage: opportunityData.stageKey || "qualified", origin: "lead_conversion", amount: opportunityData.amount ?? null, currency: opportunityData.currency || "EUR", expected_close_at: opportunityData.expectedCloseAt ?? null, version: 1 }).select().single();
+        assertSupabase(error, "convert lead"); opportunityRow = data;
+      }
+      const { data: updatedLead, error: updateError } = await mobileSupabaseClient.from("crm_leads").update({ status: "convertido", stage: "won", updated_at: new Date().toISOString() }).eq("id", leadId).select().single();
+      assertSupabase(updateError, "mark lead converted"); if (!opportunityRow || !updatedLead) throw new Error("Lead conversion returned no data");
+      return { lead: mapSupabaseLead(updatedLead), opportunity: mapSupabaseOpportunity(opportunityRow) };
+    }
     const leads = loadStoredLeads();
     const leadIndex = leads.findIndex((l) => l.id === leadId);
     if (leadIndex === -1) {

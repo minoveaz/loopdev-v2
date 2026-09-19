@@ -93,6 +93,7 @@ export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
 }
 
 export function useCrmLeads() {
+  const { activeOrganization } = useTenantContext();
   const [leads, setLeads] = useState<CRMLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -141,7 +142,7 @@ export function useCrmLeads() {
     setCreation({ status: "pending" });
     let result: Awaited<ReturnType<typeof loopdevAdapter.crm.createLead>>;
     try {
-      result = await loopdevAdapter.crm.createLead({ ...input, organizationId: LOCAL_ORGANIZATION_ID });
+      result = await loopdevAdapter.crm.createLead({ ...input, organizationId: activeOrganization?.id || LOCAL_ORGANIZATION_ID });
     } catch (cause: unknown) {
       result = { status: "server-error", message: cause instanceof Error ? cause.message : "Please try again." };
     }
@@ -157,7 +158,7 @@ export function useCrmLeads() {
   const updateLead = async (lead: CRMLead, input: Omit<CRMUpdateLeadInput, "organizationId" | "expectedUpdatedAt">) => {
     const result = await loopdevAdapter.crm.updateLead(lead.id, {
       ...input,
-      organizationId: LOCAL_ORGANIZATION_ID,
+      organizationId: lead.organizationId || activeOrganization?.id || LOCAL_ORGANIZATION_ID,
       expectedUpdatedAt: lead.updatedAt,
     });
     if (result.status === "success") {

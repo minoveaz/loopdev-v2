@@ -3,14 +3,20 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { StatusBadge } from "@/components/common";
 import { useT } from "@/i18n";
 import type { CRMContact } from "@/loopdev/domains/crm/adapter";
-import { useLanguages } from "@/loopdev/domains/reference-data";
+import { useCities, useCountries, useLanguages, useSubdivisions } from "@/loopdev/domains/reference-data";
 import { formatDate } from "@/lib/formatters";
 import { Customer360Field, formatCustomerAttribute } from "./Customer360Field";
 
 export function Customer360CrmDetailsTab({ contact }: { contact: CRMContact }) {
   const t = useT();
   const { items: languages } = useLanguages(contact.organizationId);
+  const { items: countries } = useCountries(contact.organizationId);
+  const { items: subdivisions } = useSubdivisions(contact.country, contact.organizationId);
+  const { items: cities } = useCities(contact.country, contact.stateProvince, "", contact.organizationId);
   const preferredLanguage = languages.find((language) => language.code === contact.preferredLanguage)?.label ?? contact.preferredLanguage;
+  const countryLabel = countries.find((country) => country.code === contact.country)?.label ?? contact.country;
+  const subdivisionLabel = subdivisions.find((subdivision) => subdivision.code === contact.stateProvince)?.label ?? contact.stateProvince;
+  const cityLabel = cities.find((city) => city.code === contact.city)?.label ?? contact.city;
   const missingFields = [
     !contact.email && "email",
     !contact.phone && "phone",
@@ -32,7 +38,7 @@ export function Customer360CrmDetailsTab({ contact }: { contact: CRMContact }) {
           <TabsTrigger value="channels" className="shrink-0">{t("crm.customer360.subtabs.channels")}</TabsTrigger>
         </TabsList>
         <TabsContent value="identity"><dl className="grid gap-4 pt-5 sm:grid-cols-2"><Customer360Field label={t("crm.customer360.fields.firstName")} value={contact.firstName} /><Customer360Field label={t("crm.customer360.fields.lastName")} value={contact.lastName} /><Customer360Field label={t("crm.customer360.fields.secondLastName")} value={contact.secondLastName} /><Customer360Field label={t("crm.customer360.fields.preferredName")} value={contact.preferredName} /><Customer360Field label={t("crm.customer360.fields.docType")} value={contact.documentType} /><Customer360Field label={t("crm.customer360.fields.docNumber")} value={contact.documentNumber} mono /><Customer360Field label={t("crm.customer360.fields.birthDate")} value={contact.birthDate ? formatDate(contact.birthDate) : null} /><Customer360Field label={t("crm.customer360.fields.gender")} value={contact.gender} /></dl></TabsContent>
-        <TabsContent value="address"><dl className="grid gap-4 pt-5 sm:grid-cols-2"><Customer360Field label={t("crm.customer360.fields.country")} value={contact.country} /><Customer360Field label={t("crm.customer360.fields.city")} value={contact.city} /><Customer360Field label={t("crm.customer360.fields.state")} value={contact.stateProvince} /><Customer360Field label={t("crm.customer360.fields.postalCode")} value={contact.postalCode} /><Customer360Field label={t("crm.customer360.fields.addressLine1")} value={contact.addressLine1} /><Customer360Field label={t("crm.customer360.fields.addressLine2")} value={contact.addressLine2} /></dl></TabsContent>
+        <TabsContent value="address"><dl className="grid gap-4 pt-5 sm:grid-cols-2"><Customer360Field label={t("crm.customer360.fields.country")} value={countryLabel} /><Customer360Field label={t("crm.customer360.fields.city")} value={cityLabel} /><Customer360Field label={t("crm.customer360.fields.state")} value={subdivisionLabel} /><Customer360Field label={t("crm.customer360.fields.postalCode")} value={contact.postalCode} /><Customer360Field label={t("crm.customer360.fields.addressLine1")} value={contact.addressLine1} /><Customer360Field label={t("crm.customer360.fields.addressLine2")} value={contact.addressLine2} /></dl></TabsContent>
         <TabsContent value="organization"><dl className="grid gap-4 pt-5 sm:grid-cols-2"><Customer360Field label={t("crm.customer360.fields.company")} value={contact.companyName} /><Customer360Field label={t("crm.customer360.fields.jobTitle")} value={contact.jobTitle} /><Customer360Field label={t("crm.customer360.fields.department")} value={contact.department} /><Customer360Field label={t("crm.customer360.fields.identityStatus")} value={contact.identityStatus?.replace("_", " ")} copyable={false} /><Customer360Field label={t("crm.customer360.fields.contactId")} value={contact.id} mono /><Customer360Field label={t("crm.customer360.fields.createdAt")} value={formatDate(contact.createdAt)} copyable={false} /><Customer360Field label={t("crm.customer360.fields.updatedAt")} value={formatDate(contact.updatedAt)} copyable={false} />{Object.entries(contact.attributes || {}).map(([key, value]) => <Customer360Field key={key} label={`Custom · ${key}`} value={formatCustomerAttribute(value)} />)}</dl></TabsContent>
         <TabsContent value="channels"><dl className="grid gap-4 pt-5 sm:grid-cols-2"><Customer360Field label={t("crm.customer360.fields.email")} value={contact.email} /><Customer360Field label={t("crm.customer360.fields.secondaryEmail")} value={contact.secondaryEmail} /><Customer360Field label={t("crm.customer360.fields.phone")} value={contact.phone} /><Customer360Field label={t("crm.customer360.fields.secondaryPhone")} value={contact.secondaryPhone} /><Customer360Field label={t("crm.customer360.fields.preferredChannel")} value={contact.preferredChannel} copyable={false} /><Customer360Field label={t("crm.customer360.fields.preferredLanguage")} value={preferredLanguage ?? null} copyable={false} /></dl></TabsContent>
       </Tabs>

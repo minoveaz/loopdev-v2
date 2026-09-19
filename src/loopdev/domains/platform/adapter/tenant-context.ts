@@ -20,7 +20,7 @@ const REAL_PLATFORM_ORGANIZATIONS: Organization[] = [
     createdAt: "2026-09-14T10:00:00.000Z",
   },
   {
-    id: "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+    id: "31bf9e13-7ba4-46e9-9b47-cccd0a0baa3e",
     slug: "estar-protegidos",
     name: "Estar Protegidos",
     logoUrl: null,
@@ -228,12 +228,28 @@ export class TenantContextAdapter implements TenantContextPort {
       };
     }
 
-    // DEC-AUTH-003: If user is Super Admin / Owner global, return ALL platform organizations.
-    if (session.user.isSuperAdmin) {
-      return { success: true, data: REAL_PLATFORM_ORGANIZATIONS };
+    const remoteOrganizationLoader = this.authPort as AuthPort & {
+      getUserOrganizations?: (userId?: string) => Promise<Array<{ id: string; name: string; slug: string; role: string }>>;
+    };
+    if (remoteOrganizationLoader.getUserOrganizations) {
+      const remoteOrganizations = await remoteOrganizationLoader.getUserOrganizations(session.user.id);
+      if (remoteOrganizations.length > 0) {
+        return {
+          success: true,
+          data: remoteOrganizations.map((organization) => ({
+            id: organization.id,
+            slug: organization.slug,
+            name: organization.name,
+            logoUrl: null,
+            status: "active",
+            createdAt: new Date().toISOString(),
+          })),
+        };
+      }
     }
 
-    // Standard user gets their assigned organizations
+    // Local fallback for development/test auth adapters.
+    if (session.user.isSuperAdmin) return { success: true, data: REAL_PLATFORM_ORGANIZATIONS };
     const userOrgs = REAL_PLATFORM_ORGANIZATIONS.slice(0, 1);
     return { success: true, data: userOrgs };
   }

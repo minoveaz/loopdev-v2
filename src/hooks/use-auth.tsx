@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     storage.get<LegacyCompatSession | null>(STORAGE_KEYS.session, null),
   );
   const [authSession, setAuthSession] = useState<SharedAuthSession | null>(null);
+  const [remoteOrganizations, setRemoteOrganizations] = useState<LegacyCompatSession["organizations"]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     // If we have cached session, not blocking initial render
     const stored = storage.get<LegacyCompatSession | null>(STORAGE_KEYS.session, null);
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (s) {
         setAuthSession(s);
         const orgs = await defaultWebAuthAdapter.getUserOrganizations(s.user.id);
+        setRemoteOrganizations(orgs);
         const activeOrgId = cachedSession?.activeOrganizationId && orgs.some((o) => o.id === cachedSession.activeOrganizationId)
           ? cachedSession.activeOrganizationId
           : orgs[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
@@ -96,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthSession(s);
       if (s) {
         const orgs = await defaultWebAuthAdapter.getUserOrganizations(s.user.id);
+        setRemoteOrganizations(orgs);
         const activeOrgId = cachedSession?.activeOrganizationId && orgs.some((o) => o.id === cachedSession.activeOrganizationId)
           ? cachedSession.activeOrganizationId
           : orgs[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
@@ -136,12 +139,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signedInAt: authSession.user.updatedAt,
         accessToken: authSession.accessToken,
         refreshToken: authSession.refreshToken,
-        organizations: cachedSession?.organizations || DEFAULT_LOCAL_ORGS,
-        activeOrganizationId: cachedSession?.activeOrganizationId || DEFAULT_LOCAL_ORGS[0].id,
+        organizations: remoteOrganizations.length ? remoteOrganizations : (cachedSession?.organizations || DEFAULT_LOCAL_ORGS),
+        activeOrganizationId: cachedSession?.activeOrganizationId && (remoteOrganizations.length ? remoteOrganizations : (cachedSession?.organizations || DEFAULT_LOCAL_ORGS)).some((organization) => organization.id === cachedSession.activeOrganizationId)
+          ? cachedSession.activeOrganizationId
+          : (remoteOrganizations[0]?.id || DEFAULT_LOCAL_ORGS[0].id),
       };
     }
     return cachedSession;
-  }, [authSession, cachedSession]);
+  }, [authSession, cachedSession, remoteOrganizations]);
 
   const organizations = useMemo(() => {
     return legacySession?.organizations && legacySession.organizations.length > 0
@@ -173,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const s = result.data;
       setAuthSession(s);
       const orgs = await defaultWebAuthAdapter.getUserOrganizations(s.user.id);
+      setRemoteOrganizations(orgs);
       const activeOrgId = orgs[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
       const legacy: LegacyCompatSession = {
         userId: s.user.id,

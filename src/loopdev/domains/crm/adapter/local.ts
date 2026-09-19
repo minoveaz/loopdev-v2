@@ -395,6 +395,22 @@ export const localLoopdevAdapter = {
       return { status: "success", contact: toContact(archived) };
     },
 
+    async bulkArchiveContacts(contactIds: string[]): Promise<{ successCount: number; failureCount: number }> {
+      let successCount = 0;
+      let failureCount = 0;
+      const now = new Date().toISOString();
+      for (const id of contactIds) {
+        const current = crmCustomersStore.get(id);
+        if (current) {
+          crmCustomersStore.update(id, { archivedAt: now });
+          successCount++;
+        } else {
+          failureCount++;
+        }
+      }
+      return { successCount, failureCount };
+    },
+
     async findPotentialDuplicates(contactId: string): Promise<CRMPotentialDuplicate[]> {
       const source = crmCustomersStore.get(contactId);
       if (!source) return [];

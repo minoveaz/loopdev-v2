@@ -1,6 +1,7 @@
 import { Building2, Calendar, Mail, MapPin, MoreHorizontal, Pencil, Phone, Archive, Eye } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/common";
 import {
   DropdownMenu,
@@ -16,6 +17,8 @@ import { contactActions } from "../../../../../packages/contracts/src/contact-ac
 interface ContactMobileCardProps {
   contact: CRMContact;
   index: number;
+  selected?: boolean;
+  onToggleSelect?: () => void;
   onOpen: () => void;
   onEdit: () => void;
   onArchive: () => void;
@@ -24,6 +27,8 @@ interface ContactMobileCardProps {
 export function ContactMobileCard({
   contact,
   index,
+  selected = false,
+  onToggleSelect,
   onOpen,
   onEdit,
   onArchive,
@@ -32,7 +37,7 @@ export function ContactMobileCard({
 
   return (
     <article
-      className="surface-card-interactive p-4"
+      className={`surface-card-interactive p-4 transition-colors ${selected ? "border-primary/40 bg-primary-soft/20" : ""}`}
       onClick={onOpen}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -45,6 +50,15 @@ export function ContactMobileCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
+          {onToggleSelect && (
+            <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+              <Checkbox
+                checked={selected}
+                onCheckedChange={() => onToggleSelect()}
+                aria-label={`Select ${name}`}
+              />
+            </div>
+          )}
           <Avatar className="h-11 w-11 shrink-0 border border-border">
             <AvatarFallback className="bg-primary-soft text-xs font-semibold text-primary">
               {getInitials(name)}

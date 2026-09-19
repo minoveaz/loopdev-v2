@@ -74,6 +74,7 @@ export interface LoopdevCrmAdapter {
   dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<CRMDuplicateReviewResult>;
   listCustomerProducts(contactId: string): Promise<CRMCustomerProduct[]>;
   createCustomerProduct(input: CRMCreateCustomerProductInput): Promise<CRMCustomerProduct>;
+  bulkArchiveContacts?(contactIds: string[]): Promise<{ successCount: number; failureCount: number }>;
 }
 
 export interface LoopdevAdapter {
@@ -100,6 +101,7 @@ export const loopdevAdapter: LoopdevAdapter = {
     findPotentialDuplicates: (contactId) => desktopContactAdapter.findPotentialDuplicates(contactId),
     dismissDuplicateReview: (contactId, candidateId, confirmation) =>
       desktopContactAdapter.dismissDuplicateReview(contactId, candidateId, confirmation),
+    bulkArchiveContacts: (contactIds) => desktopContactAdapter.bulkArchiveContacts(contactIds),
   },
 };
 export const contactPort: ContactPort = desktopContactAdapter;

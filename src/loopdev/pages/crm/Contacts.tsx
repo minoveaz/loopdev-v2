@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Archive, AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote } from "lucide-react";
+import { Archive, AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote, Trash2 } from "lucide-react";
 import { contactActions } from "../../../../packages/contracts/src/contact-actions";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { loopdevAdapter, contactName, type CRMContact, type CRMCreateContactInput, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
@@ -14,6 +14,7 @@ import {
 } from "@/components/common";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
@@ -58,6 +59,9 @@ export default function SalesCRMContacts() {
   const [archiveTarget, setArchiveTarget] = useState<CRMContact | null>(null);
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [duplicateTarget, setDuplicateTarget] = useState<CRMContact | null>(null);
+  const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const query = searchParams.get("q") ?? "";
   const cursor = searchParams.get("cursor");
@@ -79,6 +83,60 @@ export default function SalesCRMContacts() {
     sortBy,
     sortDirection,
   });
+
+  useEffect(() => {
+    setSelectedContactIds(new Set());
+  }, [query, cursor, pageSize, sortBy, sortDirection]);
+
+  const allOnPageSelected = contacts.length > 0 && contacts.every((c) => selectedContactIds.has(c.id));
+  const someOnPageSelected = contacts.some((c) => selectedContactIds.has(c.id));
+
+  const toggleSelectAll = () => {
+    if (allOnPageSelected) {
+      setSelectedContactIds(new Set());
+    } else {
+      const next = new Set(selectedContactIds);
+      contacts.forEach((c) => next.add(c.id));
+      setSelectedContactIds(next);
+    }
+  };
+
+  const toggleSelectContact = (id: string) => {
+    const next = new Set(selectedContactIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedContactIds(next);
+  };
+
+  const clearSelection = () => {
+    setSelectedContactIds(new Set());
+  };
+
+  const executeBulkDelete = async () => {
+    setBulkActionLoading(true);
+    setActionError(null);
+    try {
+      const ids = Array.from(selectedContactIds);
+      if (loopdevAdapter.crm.bulkArchiveContacts) {
+        await loopdevAdapter.crm.bulkArchiveContacts(ids);
+      } else {
+        for (const id of ids) {
+          const contact = contacts.find((c) => c.id === id);
+          await loopdevAdapter.crm.archiveContact(id, contact?.updatedAt || "");
+        }
+      }
+      clearSelection();
+      setBulkConfirmOpen(false);
+      reload();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to delete selected contacts.");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
 
   const openCreate = () => {
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -306,6 +364,35 @@ export default function SalesCRMContacts() {
         </div>
       )}
 
+      {selectedContactIds.size > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary-soft/30 px-4 py-2.5 text-sm animate-in fade-in slide-in-from-top-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-foreground">
+              {selectedContactIds.size} {selectedContactIds.size === 1 ? "contact selected" : "contacts selected"}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-muted-foreground hover:text-foreground"
+              onClick={clearSelection}
+            >
+              Clear
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => setBulkConfirmOpen(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete / Archive selected ({selectedContactIds.size})
+            </Button>
+          </div>
+        </div>
+      )}
+
       <DataCard
         flush
         loading={loading}
@@ -328,6 +415,8 @@ export default function SalesCRMContacts() {
               key={customer.id}
               contact={customer}
               index={pageOffset + index + 1}
+              selected={selectedContactIds.has(customer.id)}
+              onToggleSelect={() => toggleSelectContact(customer.id)}
               onOpen={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
               onEdit={() => openEdit(customer)}
               onArchive={() => setArchiveTarget(customer)}
@@ -338,7 +427,14 @@ export default function SalesCRMContacts() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12 text-end">#</TableHead>
+              <TableHead className="w-10 px-3">
+                <Checkbox
+                  checked={allOnPageSelected ? true : someOnPageSelected ? "indeterminate" : false}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all contacts on current page"
+                />
+              </TableHead>
+              <TableHead className="w-10 text-end">#</TableHead>
               <SortableHead label="Contact" icon={sortIcon(sortBy, "name", sortDirection)} onClick={() => toggleSort("name")} />
               <SortableHead label="Company / role" icon={sortIcon(sortBy, "company", sortDirection)} onClick={() => toggleSort("company")} />
               <SortableHead label="Channel" icon={sortIcon(sortBy, "channel", sortDirection)} onClick={() => toggleSort("channel")} />
@@ -349,20 +445,29 @@ export default function SalesCRMContacts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {contacts.map((customer, index) => (
-              <TableRow
-                key={customer.id}
-                className="cursor-pointer"
-                tabIndex={0}
-                onClick={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    navigate(`/app/sales-crm/contacts/${customer.id}`);
-                  }
-                }}
-              >
-                <TableCell className="text-end text-xs tabular-nums text-muted-foreground">{pageOffset + index + 1}</TableCell>
+            {contacts.map((customer, index) => {
+              const isSelected = selectedContactIds.has(customer.id);
+              return (
+                <TableRow
+                  key={customer.id}
+                  className={`cursor-pointer ${isSelected ? "bg-primary-soft/20" : ""}`}
+                  tabIndex={0}
+                  onClick={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      navigate(`/app/sales-crm/contacts/${customer.id}`);
+                    }
+                  }}
+                >
+                  <TableCell className="w-10 px-3" onClick={(event) => event.stopPropagation()}>
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelectContact(customer.id)}
+                      aria-label={`Select ${contactName(customer)}`}
+                    />
+                  </TableCell>
+                  <TableCell className="text-end text-xs tabular-nums text-muted-foreground">{pageOffset + index + 1}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8 border border-border">
@@ -433,7 +538,8 @@ export default function SalesCRMContacts() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            );
+          })}
           </TableBody>
         </Table>
         </div>
@@ -489,6 +595,16 @@ export default function SalesCRMContacts() {
         onConfirm={async () => {
           if (archiveTarget) await archiveContact(archiveTarget);
         }}
+      />
+      <ConfirmDialog
+        open={bulkConfirmOpen}
+        onOpenChange={(open) => { if (!open && !bulkActionLoading) setBulkConfirmOpen(false); }}
+        title={`Delete or archive ${selectedContactIds.size} ${selectedContactIds.size === 1 ? "contact" : "contacts"}?`}
+        description={`The selected ${selectedContactIds.size} contact(s) will be permanently deleted or archived from your CRM workspace.`}
+        confirmLabel="Delete selected"
+        tone="destructive"
+        loading={bulkActionLoading}
+        onConfirm={executeBulkDelete}
       />
     </PageContainer>
   );

@@ -122,6 +122,39 @@ export function createMobileContactAdapter(): ContactPort {
           });
         }
 
+        if (params.identityStatus?.length) {
+          items = items.filter((c) => params.identityStatus!.includes(c.identityStatus));
+        }
+        if (params.preferredChannel?.length) {
+          items = items.filter((c) => c.preferredChannel && params.preferredChannel!.includes(c.preferredChannel));
+        }
+
+        const sortBy = params.sortBy ?? "updated";
+        const sortDirection = params.sortDirection ?? "desc";
+        items.sort((left, right) => {
+          const value = (c: ContactRecord) => {
+            switch (sortBy) {
+              case "name":
+                return `${c.firstName} ${c.lastName ?? ""}`.trim().toLowerCase();
+              case "company":
+                return `${c.companyName ?? ""} ${c.jobTitle ?? ""}`.trim().toLowerCase();
+              case "channel":
+                return (c.preferredChannel ?? "").toLowerCase();
+              case "identity":
+                return (c.identityStatus ?? "").toLowerCase();
+              case "location":
+                return `${c.city ?? ""} ${c.stateProvince ?? ""} ${c.country ?? ""}`.trim().toLowerCase();
+              case "updated":
+              default:
+                return c.updatedAt || c.createdAt || "";
+            }
+          };
+          const leftVal = value(left);
+          const rightVal = value(right);
+          const result = leftVal.localeCompare(rightVal, undefined, { numeric: true });
+          return sortDirection === "asc" ? result : -result;
+        });
+
         const limit = params.limit || 100;
         const offset = params.cursor ? parseInt(params.cursor, 10) : 0;
         const safeOffset = Number.isFinite(offset) && offset >= 0 ? offset : 0;

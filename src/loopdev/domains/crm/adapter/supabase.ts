@@ -250,6 +250,38 @@ export function createDesktopContactAdapter(): ContactPort {
             );
           });
         }
+        if (params.identityStatus?.length) {
+          items = items.filter((c) => params.identityStatus!.includes(c.identityStatus));
+        }
+        if (params.preferredChannel?.length) {
+          items = items.filter((c) => c.preferredChannel && params.preferredChannel!.includes(c.preferredChannel));
+        }
+
+        const sortBy = params.sortBy ?? "updated";
+        const sortDirection = params.sortDirection ?? "desc";
+        items.sort((left, right) => {
+          const value = (c: ContactRecord) => {
+            switch (sortBy) {
+              case "name":
+                return `${c.firstName} ${c.lastName ?? ""}`.trim().toLowerCase();
+              case "company":
+                return `${c.companyName ?? ""} ${c.jobTitle ?? ""}`.trim().toLowerCase();
+              case "channel":
+                return (c.preferredChannel ?? "").toLowerCase();
+              case "identity":
+                return (c.identityStatus ?? "").toLowerCase();
+              case "location":
+                return `${c.city ?? ""} ${c.stateProvince ?? ""} ${c.country ?? ""}`.trim().toLowerCase();
+              case "updated":
+              default:
+                return c.updatedAt || c.createdAt || "";
+            }
+          };
+          const leftVal = value(left);
+          const rightVal = value(right);
+          const result = leftVal.localeCompare(rightVal, undefined, { numeric: true });
+          return sortDirection === "asc" ? result : -result;
+        });
 
         const limit = params.limit || 100;
         const offset = params.cursor ? parseInt(params.cursor, 10) : 0;
@@ -545,6 +577,60 @@ export function createDesktopContactAdapter(): ContactPort {
 
     async dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<DuplicateReviewResult> {
       return localFallback.dismissDuplicateReview(contactId, candidateId, confirmation);
+    },
+
+    async bulkArchiveContacts(contactIds: string[]): Promise<{ successCount: number; failureCount: number }> {
+      let client = getClient();
+      if (!client) {
+        let success = 0;
+        for (const id of contactIds) {
+          const res = await localFallback.archiveContact(id, "");
+          if (res.status === "success") success++;
+        }
+        return { successCount: success, failureCount: contactIds.length - success };
+      }
+      client = await ensureAuthenticatedClient(client);
+
+      const uuidIds = contactIds.filter(isUUID);
+      const localIds = contactIds.filter((id) => !isUUID(id));
+
+      let successCount = 0;
+      let failureCount = 0;
+
+      if (uuidIds.length > 0) {
+        const { error } = await client
+          .from("crm_contacts")
+          .delete()
+          .in("id", uuidIds);
+
+        if (error) {
+          console.warn("Supabase bulkArchiveContacts error:", error.message);
+          failureCount += uuidIds.length;
+        } else {
+          successCount += uuidIds.length;
+          for (const id of uuidIds) {
+            try {
+              crmCustomersStore.remove(id);
+            } catch {
+              // ignore
+            }
+          }
+        }
+      }
+
+      if (localIds.length > 0) {
+        for (const id of localIds) {
+          try {
+            const res = await localFallback.archiveContact(id, "");
+            if (res.status === "success") successCount++;
+            else failureCount++;
+          } catch {
+            failureCount++;
+          }
+        }
+      }
+
+      return { successCount, failureCount };
     },
   };
 }

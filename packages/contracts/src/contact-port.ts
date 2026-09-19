@@ -129,6 +129,7 @@ export interface ContactPort {
   createContact(input: CreateContactInput): Promise<ContactMutationResult>;
   updateContact(contactId: string, patch: UpdateContactPatch, expectedUpdatedAt: string): Promise<ContactMutationResult>;
   archiveContact(contactId: string, expectedUpdatedAt: string): Promise<ContactMutationResult>;
+  bulkArchiveContacts?(contactIds: string[]): Promise<{ successCount: number; failureCount: number }>;
   getCustomer360(contactId: string): Promise<ContactCustomer360View | null>;
   findPotentialDuplicates(contactId: string): Promise<PotentialContactDuplicate[]>;
   dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<DuplicateReviewResult>;

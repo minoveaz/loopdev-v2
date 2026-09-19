@@ -101,4 +101,31 @@ describe("Contacts adapter contract", () => {
     const stale = await localLoopdevAdapter.crm.archiveContact(created.contact.id, "stale-updated-at");
     expect(stale).toMatchObject({ status: "conflict", contact: { id: created.contact.id } });
   });
+
+  it("bulk archives multiple contacts successfully", async () => {
+    const c1 = await localLoopdevAdapter.crm.createContact({
+      organizationId: "local-development-organization",
+      firstName: "Bulk1",
+      email: "bulk1@example.com",
+    });
+    const c2 = await localLoopdevAdapter.crm.createContact({
+      organizationId: "local-development-organization",
+      firstName: "Bulk2",
+      email: "bulk2@example.com",
+    });
+    expect(c1.status).toBe("success");
+    expect(c2.status).toBe("success");
+    if (c1.status !== "success" || c2.status !== "success") return;
+
+    const result = await localLoopdevAdapter.crm.bulkArchiveContacts([c1.contact.id, c2.contact.id]);
+    expect(result).toEqual({ successCount: 2, failureCount: 0 });
+
+    const page = await localLoopdevAdapter.crm.listContacts({
+      organizationId: "local-development-organization",
+      limit: 50,
+    });
+    const ids = page.items.map((item) => item.id);
+    expect(ids).not.toContain(c1.contact.id);
+    expect(ids).not.toContain(c2.contact.id);
+  });
 });

@@ -1,5 +1,6 @@
 import { localLoopdevAdapter } from "./local";
 import { desktopContactAdapter } from "./contact";
+import { supabaseCrmAdapter } from "./supabase-crm";
 import type { ContactPort } from "../../../../../packages/contracts/src/contact-port";
 import type { ReferenceDataAdapter } from "@/loopdev/domains/reference-data";
 import type { CatalogAdapter } from "@/loopdev/domains/catalog";
@@ -102,6 +103,16 @@ export const loopdevAdapter: LoopdevAdapter = {
     dismissDuplicateReview: (contactId, candidateId, confirmation) =>
       desktopContactAdapter.dismissDuplicateReview(contactId, candidateId, confirmation),
     bulkArchiveContacts: (contactIds) => desktopContactAdapter.bulkArchiveContacts(contactIds),
+    listLeads: () => supabaseCrmAdapter.listLeads(),
+    createLead: (input) => supabaseCrmAdapter.createLead(input),
+    updateLead: (leadId, input) => supabaseCrmAdapter.updateLead(leadId, input),
+    listOpportunities: (params) => supabaseCrmAdapter.listOpportunities(params),
+    createOpportunity: (input) => supabaseCrmAdapter.createOpportunity(input),
+    updateOpportunity: (opportunityId, input) => supabaseCrmAdapter.updateOpportunity(opportunityId, input),
+    moveOpportunityStage: (opportunityId, input) => supabaseCrmAdapter.moveOpportunityStage(opportunityId, input),
+    reopenOpportunity: (opportunityId, input) => supabaseCrmAdapter.reopenOpportunity(opportunityId, input),
+    createOpportunityFromLead: (leadId, input) => supabaseCrmAdapter.createOpportunityFromLead(leadId, input),
+    listOpportunityStageHistory: (opportunityId) => supabaseCrmAdapter.listOpportunityStageHistory(opportunityId),
   },
 };
 export const contactPort: ContactPort = desktopContactAdapter;

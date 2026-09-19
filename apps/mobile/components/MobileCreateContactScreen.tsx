@@ -23,6 +23,7 @@ import { OrganizationTab } from "./contact-tabs/OrganizationTab";
 import { contactActions } from "../../../packages/contracts/src/contact-actions";
 import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
 import { mobileContactAdapter } from "../adapters/contact";
+import { mobileTenantContextAdapter } from "../adapters/auth";
 import { mobileTheme } from "../theme/tokens";
 import { useMobileI18n } from "../i18n";
 
@@ -57,7 +58,9 @@ export function MobileCreateContactScreen({
         }
       : {}
   );
-  const organizationId = "local-development-organization";
+  const organizationId =
+    mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId ||
+    "80fce911-57c5-4a83-809f-78df6a373f7";
   const countries = useReferenceOptions(() => mobileReferenceDataAdapter.listCountries(), [organizationId]);
   const subdivisions = useReferenceOptions(
     () => (form.values.country ? mobileReferenceDataAdapter.listSubdivisions(form.values.country) : Promise.resolve([])),

@@ -509,26 +509,16 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
 
   // Kanban tasks filtered by column
   const kanbanTasks = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    const list = tasks.filter((t) => {
-      if (!q) return true;
-      return (
-        t.title.toLowerCase().includes(q) ||
-        (t.description && t.description.toLowerCase().includes(q)) ||
-        (t.relation?.label && t.relation.label.toLowerCase().includes(q))
-      );
-    });
-
     if (kanbanCol === "completed") {
-      return list.filter((t) => t.status === "completed");
+      return filteredTasks.filter((t) => t.status === "completed");
     }
     if (kanbanCol === "urgent") {
-      return list.filter(
+      return filteredTasks.filter(
         (t) => (t.priority === "urgent" || t.priority === "high") && t.status !== "completed",
       );
     }
-    return list.filter((t) => t.status !== "completed");
-  }, [tasks, searchQuery, kanbanCol]);
+    return filteredTasks.filter((t) => t.status !== "completed");
+  }, [filteredTasks, kanbanCol]);
 
   // Calendar dates
   const calendarDays = useMemo(() => {
@@ -543,7 +533,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
       const iso = d.toISOString().slice(0, 10);
-      const dayTasks = tasks.filter((t) => t.dueAt && t.dueAt.slice(0, 10) === iso);
+      const dayTasks = filteredTasks.filter((t) => t.dueAt && t.dueAt.slice(0, 10) === iso);
       days.push({
         date: d,
         iso,
@@ -555,24 +545,16 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       });
     }
     return days;
-  }, [calendarWeekOffset, tasks]);
+  }, [calendarWeekOffset, filteredTasks]);
 
   const calendarDateTasks = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    return tasks.filter((t) => {
+    return filteredTasks.filter((t) => {
       if (!t.dueAt) return false;
       const matchDate = t.dueAt.slice(0, 10) === selectedCalendarDate;
       if (!matchDate) return false;
-      if (q) {
-        return (
-          t.title.toLowerCase().includes(q) ||
-          (t.description && t.description.toLowerCase().includes(q)) ||
-          (t.relation?.label && t.relation.label.toLowerCase().includes(q))
-        );
-      }
       return true;
     });
-  }, [tasks, selectedCalendarDate, searchQuery]);
+  }, [filteredTasks, selectedCalendarDate]);
 
   const calendarMonthLabel = useMemo(() => {
     if (calendarDays.length === 0) return "";
@@ -599,7 +581,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       d.setDate(start.getDate() + i);
       const iso = d.toISOString().slice(0, 10);
       const isCurrentMonth = d.getMonth() === monthCursor.getMonth();
-      const dayTasks = tasks.filter((t) => t.dueAt && t.dueAt.slice(0, 10) === iso);
+      const dayTasks = filteredTasks.filter((t) => t.dueAt && t.dueAt.slice(0, 10) === iso);
       days.push({
         date: d,
         iso,
@@ -611,7 +593,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       });
     }
     return days;
-  }, [monthCursor, tasks]);
+  }, [monthCursor, filteredTasks]);
 
   const streamGroups = useMemo(() => {
     const overdue: TaskRecord[] = [];
@@ -639,17 +621,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     const endNextWeek = new Date(endThisWeek);
     endNextWeek.setDate(endThisWeek.getDate() + 7);
 
-    const q = searchQuery.toLowerCase().trim();
-    const searchFiltered = tasks.filter((t) => {
-      if (!q) return true;
-      return (
-        t.title.toLowerCase().includes(q) ||
-        (t.description && t.description.toLowerCase().includes(q)) ||
-        (t.relation?.label && t.relation.label.toLowerCase().includes(q))
-      );
-    });
-
-    searchFiltered.forEach((task) => {
+    filteredTasks.forEach((task) => {
       if (!task.dueAt) {
         noDate.push(task);
         return;
@@ -683,7 +655,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       { id: "later", title: "Más Adelante", tone: "neutral" as const, tasks: later },
       { id: "noDate", title: "Sin Fecha Asignada", tone: "neutral" as const, tasks: noDate },
     ].filter((g) => g.tasks.length > 0);
-  }, [tasks, searchQuery]);
+  }, [filteredTasks]);
 
   const hasActiveFilters = filterMode !== "all" || assigneeFilter !== "all" || tagFilter !== null;
   const activeFilterCount =

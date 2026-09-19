@@ -465,16 +465,29 @@ export function createDesktopContactAdapter(): ContactPort {
           updated_at: new Date().toISOString(),
         };
         if (patch.firstName !== undefined) payload.first_name = patch.firstName.trim();
-        if (patch.lastName !== undefined || patch.secondLastName !== undefined) {
-          const parts = [
-            patch.lastName !== undefined ? patch.lastName?.trim() : undefined,
-            patch.secondLastName !== undefined ? patch.secondLastName?.trim() : undefined,
-          ].filter((p): p is string => Boolean(p));
-          payload.last_name = parts.length > 0 ? parts.join(" ") : null;
-        }
+        if (patch.lastName !== undefined) payload.last_name = patch.lastName?.trim() || null;
+        if (patch.secondLastName !== undefined) payload.second_last_name = patch.secondLastName?.trim() || null;
+        if (patch.preferredName !== undefined) payload.preferred_name = patch.preferredName?.trim() || null;
         if (patch.email !== undefined) payload.email = patch.email?.trim() || null;
+        if (patch.secondaryEmail !== undefined) payload.secondary_email = patch.secondaryEmail?.trim() || null;
         if (patch.phone !== undefined) payload.phone = patch.phone?.trim() || null;
+        if (patch.secondaryPhone !== undefined) payload.secondary_phone = patch.secondaryPhone?.trim() || null;
+        if (patch.preferredChannel !== undefined) payload.preferred_channel = patch.preferredChannel;
+        if (patch.preferredLanguage !== undefined) payload.preferred_language = patch.preferredLanguage?.trim() || null;
         if (patch.companyName !== undefined) payload.company_name = patch.companyName?.trim() || null;
+        if (patch.jobTitle !== undefined) payload.job_title = patch.jobTitle?.trim() || null;
+        if (patch.department !== undefined) payload.department = patch.department?.trim() || null;
+        if (patch.addressLine1 !== undefined) payload.address_line1 = patch.addressLine1?.trim() || null;
+        if (patch.addressLine2 !== undefined) payload.address_line2 = patch.addressLine2?.trim() || null;
+        if (patch.city !== undefined) payload.city = patch.city?.trim() || null;
+        if (patch.stateProvince !== undefined) payload.state_province = patch.stateProvince?.trim() || null;
+        if (patch.postalCode !== undefined) payload.postal_code = patch.postalCode?.trim() || null;
+        if (patch.country !== undefined) payload.country = patch.country?.trim() || null;
+        if (patch.documentType !== undefined) payload.document_type = patch.documentType?.trim() || null;
+        if (patch.documentNumber !== undefined) payload.document_number = patch.documentNumber?.trim() || null;
+        if (patch.birthDate !== undefined) payload.birth_date = patch.birthDate?.trim() || null;
+        if (patch.gender !== undefined) payload.gender = patch.gender?.trim() || null;
+        if (patch.attributes !== undefined) payload.attributes = patch.attributes;
 
         const { data, error } = await client
           .from("crm_contacts")

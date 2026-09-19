@@ -1,3 +1,17 @@
+import { mobileSupabaseClient } from "./supabase";
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (value: string | null | undefined): value is string => typeof value === "string" && UUID_PATTERN.test(value);
+const assertSupabase = (error: any, operation: string) => { if (error) throw new Error(`CRM ${operation} failed: ${error.message}`); };
+const mapSupabaseOpportunity = (row: any): CRMOpportunity => ({
+  id: row.id, organizationId: row.organization_id, contactId: row.contact_id, leadId: row.lead_id ?? null,
+  catalogItemId: row.catalog_item_id ?? null, productKey: row.product_key ?? null, name: row.name,
+  amount: row.amount ?? null, currency: row.currency ?? "EUR", stageKey: row.stage_key ?? row.stage,
+  origin: row.origin === "conversion" ? "lead_conversion" : "manual", ownerName: row.owner_name ?? "", ownerId: row.assigned_to_user_id ?? "",
+  probability: row.probability == null ? undefined : Number(row.probability) / 100, expectedCloseAt: row.expected_close_at ?? null,
+  lossReason: row.loss_reason ?? null, createdAt: row.created_at, updatedAt: row.updated_at,
+});
+
 export interface CRMLead {
   id: string;
   organizationId: string;
@@ -459,6 +473,11 @@ export const mobileCrmAdapter = {
   },
 
   async listAllOpportunities(): Promise<CRMOpportunity[]> {
+    const organizationId = loadStoredOpportunities()[0]?.organizationId;
+    if (isUuid(organizationId)) {
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("organization_id", organizationId).order("updated_at", { ascending: false });
+      assertSupabase(error, "list opportunities"); return (data ?? []).map(mapSupabaseOpportunity);
+    }
     return loadStoredOpportunities();
   },
 
@@ -468,11 +487,19 @@ export const mobileCrmAdapter = {
   },
 
   async listOpportunities(contactId: string): Promise<CRMOpportunity[]> {
+    if (isUuid(contactId)) {
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("contact_id", contactId).order("updated_at", { ascending: false });
+      assertSupabase(error, "list opportunities"); return (data ?? []).map(mapSupabaseOpportunity);
+    }
     const opps = loadStoredOpportunities();
     return opps.filter((o) => o.contactId === contactId);
   },
 
   async createOpportunity(input: Omit<CRMOpportunity, "id" | "createdAt" | "updatedAt">): Promise<CRMOpportunity> {
+    if (isUuid(input.organizationId) && isUuid(input.contactId) && (!input.leadId || isUuid(input.leadId))) {
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").insert({ organization_id: input.organizationId, contact_id: input.contactId, lead_id: input.leadId ?? null, product_key: input.productKey, name: input.name, stage_key: input.stageKey, stage: input.stageKey, amount: input.amount, currency: input.currency, expected_close_at: input.expectedCloseAt, assigned_to_user_id: isUuid(input.ownerId) ? input.ownerId : null, version: 1 }).select().single();
+      assertSupabase(error, "create opportunity"); if (!data) throw new Error("CRM create opportunity returned no data"); return mapSupabaseOpportunity(data);
+    }
     const now = new Date().toISOString();
     const opportunity: CRMOpportunity = {
       id: `crm_opp_${Date.now()}`,
@@ -487,6 +514,14 @@ export const mobileCrmAdapter = {
   },
 
   async moveOpportunityStage(id: string, stageKey: CRMOpportunity["stageKey"], lossReason?: string): Promise<CRMOpportunity> {
+    if (isUuid(id)) {
+      const { data: current, error: readError } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("id", id).single();
+      assertSupabase(readError, "read opportunity"); if (!current) throw new Error(`Opportunity ${id} not found`);
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").update({ stage_key: stageKey, stage: stageKey, loss_reason: lossReason ?? null, version: Number(current.version ?? 1) + 1, updated_at: new Date().toISOString() }).eq("id", id).eq("updated_at", current.updated_at).select().single();
+      assertSupabase(error, "move opportunity"); if (!data) throw new Error("CRM move opportunity returned no data");
+      const { error: historyError } = await mobileSupabaseClient.from("crm_opportunity_stage_history").insert({ organization_id: current.organization_id, opportunity_id: id, from_stage_key: current.stage_key, to_stage_key: stageKey, origin: "board", reason: lossReason ?? null, opportunity_version: data.version });
+      assertSupabase(historyError, "record opportunity stage history"); return mapSupabaseOpportunity(data);
+    }
     const opps = loadStoredOpportunities();
     const index = opps.findIndex((o) => o.id === id);
     if (index === -1) {
@@ -510,9 +545,21 @@ export const mobileCrmAdapter = {
     return updated;
   },
 
-  async reopenOpportunity(id: string, reason: string): Promise<CRMOpportunity> {
+  async reopenOpportunity(id: string, reason: string, expectedUpdatedAt?: string): Promise<CRMOpportunity> {
     if (!reason || !reason.trim()) {
       throw new Error("A non-empty reason is required to reopen a closed opportunity.");
+    }
+    if (isUuid(id)) {
+      const { data: current, error: readError } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("id", id).single();
+      assertSupabase(readError, "read opportunity"); if (!current) throw new Error(`Opportunity ${id} not found`);
+      if (current.stage_key !== "won" && current.stage_key !== "lost") throw new Error("Only won or lost opportunities can be reopened.");
+      const expected = expectedUpdatedAt ?? current.updated_at;
+      if (current.updated_at !== expected) throw new Error("The opportunity changed before it could be reopened.");
+      const targetStage = current.stage_key === "won" ? "proposal" : "prospecting";
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").update({ stage_key: targetStage, stage: targetStage, loss_reason: null, version: Number(current.version ?? 1) + 1, updated_at: new Date().toISOString() }).eq("id", id).eq("organization_id", current.organization_id).eq("updated_at", expected).select().single();
+      assertSupabase(error, "reopen opportunity"); if (!data) throw new Error("CRM reopen opportunity returned no data");
+      const { error: historyError } = await mobileSupabaseClient.from("crm_opportunity_stage_history").insert({ organization_id: current.organization_id, opportunity_id: id, from_stage_key: current.stage_key, to_stage_key: targetStage, origin: "reopen", reason: reason.trim(), opportunity_version: data.version });
+      assertSupabase(historyError, "record opportunity stage history"); return mapSupabaseOpportunity(data);
     }
     const opps = loadStoredOpportunities();
     const index = opps.findIndex((o) => o.id === id);
@@ -535,6 +582,12 @@ export const mobileCrmAdapter = {
   },
 
   async updateOpportunity(id: string, input: Partial<CRMOpportunity>): Promise<CRMOpportunity> {
+    if (isUuid(id) && isUuid(input.organizationId)) {
+      const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      if (input.name !== undefined) payload.name = input.name; if (input.amount !== undefined) payload.amount = input.amount; if (input.currency !== undefined) payload.currency = input.currency; if (input.expectedCloseAt !== undefined) payload.expected_close_at = input.expectedCloseAt; if (input.ownerId !== undefined) payload.assigned_to_user_id = isUuid(input.ownerId) ? input.ownerId : null;
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").update(payload).eq("id", id).eq("organization_id", input.organizationId).select().single();
+      assertSupabase(error, "update opportunity"); if (!data) throw new Error("CRM update opportunity returned no data"); return mapSupabaseOpportunity(data);
+    }
     const opps = loadStoredOpportunities();
     const index = opps.findIndex((o) => o.id === id);
     if (index === -1) {

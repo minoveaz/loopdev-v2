@@ -4,19 +4,30 @@ import { mobileTenantContextAdapter } from "./auth";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isUuid = (value: string | null | undefined): value is string => typeof value === "string" && UUID_PATTERN.test(value);
 const assertSupabase = (error: any, operation: string) => { if (error) throw new Error(`CRM ${operation} failed: ${error.message}`); };
+const normalizeLeadSource = (value: string | null | undefined) => {
+  const normalized = (value ?? "manual").trim().toLowerCase();
+  const aliases: Record<string, string> = {
+    website: "website", referral: "referral", partner: "partner", social: "social",
+    event: "campaign", direct: "manual", manual: "manual", email: "email", whatsapp: "whatsapp",
+  };
+  return aliases[normalized] ?? "other";
+};
 const mapSupabaseOpportunity = (row: any): CRMOpportunity => ({
   id: row.id, organizationId: row.organization_id, contactId: row.contact_id, leadId: row.lead_id ?? null,
   catalogItemId: row.catalog_item_id ?? null, productKey: row.product_key ?? null, name: row.name,
   amount: row.amount ?? null, currency: row.currency ?? "EUR", stageKey: row.stage_key ?? row.stage,
-  origin: row.origin === "conversion" ? "lead_conversion" : "manual", ownerName: row.owner_name ?? "", ownerId: row.assigned_to_user_id ?? "",
+  origin: row.origin === "conversion" || row.origin === "lead_conversion" ? "lead_conversion" : "manual", ownerName: row.owner_name ?? "", ownerId: row.assigned_to_user_id ?? "",
   probability: row.probability == null ? undefined : Number(row.probability) / 100, expectedCloseAt: row.expected_close_at ?? null,
   lossReason: row.loss_reason ?? null, createdAt: row.created_at, updatedAt: row.updated_at,
 });
 const mapSupabaseLead = (row: any): CRMLead => ({
   id: row.id, organizationId: row.organization_id, contactId: row.contact_id,
-  interest: row.interest ?? "", source: row.source ?? "manual", score: null,
+  interest: row.interest ?? "", source: row.source ?? "manual",
   status: ({ nuevo: "new", active: "new", contactado: "contacted", cualificado: "qualified", estancado: "stalled", inactivo: "inactive", convertido: "converted" } as Record<string, CRMLead["status"]>)[row.status] ?? "new",
-  ownerName: "", assignedUserId: row.assigned_to_user_id ?? "", createdAt: row.created_at, updatedAt: row.updated_at,
+  ownerName: "", assignedUserId: row.assigned_to_user_id ?? "", score: row.lead_score ?? null,
+  estimatedValue: row.estimated_budget ?? null, estimatedCurrency: row.estimated_currency ?? null,
+  qualificationNeed: row.qualification_need ?? null, qualificationTimeline: row.purchase_timeline ?? null,
+  createdAt: row.created_at, updatedAt: row.updated_at,
   lastActivityAt: null, nextActivityAt: null,
 });
 
@@ -400,7 +411,7 @@ export const mobileCrmAdapter = {
 
   async createLead(input: Omit<CRMLead, "id" | "createdAt" | "updatedAt">): Promise<CRMLead> {
     if (isUuid(input.organizationId)) {
-      const { data, error } = await mobileSupabaseClient.from("crm_leads").insert({ organization_id: input.organizationId, contact_id: input.contactId, interest: input.interest, source: input.source || "manual", status: "nuevo", stage: "lead", assigned_to_user_id: isUuid(input.assignedUserId) ? input.assignedUserId : null }).select().single();
+      const { data, error } = await mobileSupabaseClient.from("crm_leads").insert({ organization_id: input.organizationId, contact_id: input.contactId, interest: input.interest, source: normalizeLeadSource(input.source), status: "nuevo", stage: "lead", assigned_to_user_id: isUuid(input.assignedUserId) ? input.assignedUserId : null, estimated_budget: input.estimatedValue ?? null, lead_score: input.score ?? null, purchase_timeline: input.qualificationTimeline ?? null }).select().single();
       assertSupabase(error, "create lead"); if (!data) throw new Error("CRM create lead returned no data"); return mapSupabaseLead(data);
     }
     const now = new Date().toISOString();
@@ -422,8 +433,11 @@ export const mobileCrmAdapter = {
       const statusMap: Record<string, { status: string; stage: string }> = { new: { status: "nuevo", stage: "lead" }, contacted: { status: "contactado", stage: "contacted" }, qualified: { status: "cualificado", stage: "proposal" }, stalled: { status: "estancado", stage: "lead" }, inactive: { status: "inactivo", stage: "discarded" }, converted: { status: "convertido", stage: "won" } };
       const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (input.interest !== undefined) payload.interest = input.interest;
-      if (input.source !== undefined) payload.source = input.source;
+      if (input.source !== undefined) payload.source = normalizeLeadSource(input.source);
       if (input.assignedUserId !== undefined) payload.assigned_to_user_id = isUuid(input.assignedUserId) ? input.assignedUserId : null;
+      if (input.estimatedValue !== undefined) payload.estimated_budget = input.estimatedValue;
+      if (input.score !== undefined) payload.lead_score = input.score;
+      if (input.qualificationTimeline !== undefined) payload.purchase_timeline = input.qualificationTimeline;
       if (input.status) Object.assign(payload, statusMap[input.status]);
       const { data, error } = await mobileSupabaseClient.from("crm_leads").update(payload).eq("id", id).select().single();
       assertSupabase(error, "update lead"); if (!data) throw new Error("CRM update lead returned no data"); return mapSupabaseLead(data);

@@ -29,6 +29,7 @@ import {
   MobileLoadingState,
 } from "./ui";
 import { mobileTheme } from "../theme/tokens";
+import { mobileTenantContextAdapter } from "../adapters/auth";
 
 interface Props {
   onBack?: () => void;
@@ -50,6 +51,7 @@ export function MobileLeadsScreen({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterStatus>("all");
+  const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "80fce911-57c5-4a83-809f-78df6a3736f7";
 
   const loadData = async () => {
     setLoading(true);
@@ -57,7 +59,7 @@ export function MobileLeadsScreen({
       const [leadsList, contactsPage] = await Promise.all([
         mobileCrmAdapter.listAllLeads(),
         mobileContactAdapter.listContacts({
-          organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+          organizationId,
           limit: 100,
         }),
       ]);
@@ -72,7 +74,7 @@ export function MobileLeadsScreen({
 
   useEffect(() => {
     void loadData();
-  }, []);
+  }, [organizationId]);
 
   const contactMap = useMemo(() => {
     const map = new Map<string, ContactRecord>();

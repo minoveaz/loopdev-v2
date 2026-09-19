@@ -9,6 +9,7 @@ const countries: ReferenceOption[] = [
   { code: "BR", label: "Brazil" },
   { code: "DE", label: "Germany" },
   { code: "IN", label: "India" },
+  { code: "CO", label: "Colombia" },
 ];
 const subdivisions: Record<string, ReferenceOption[]> = {
   US: [{ code: "US-NY", label: "New York" }, { code: "US-CA", label: "California" }],
@@ -25,7 +26,10 @@ const cities: Record<string, ReferenceOption[]> = {
   BR: [{ code: "SAO", label: "Sao Paulo" }],
   DE: [{ code: "BER", label: "Berlin" }],
   IN: [{ code: "BOM", label: "Mumbai" }],
+  CO: [{ code: "CO-BOG", label: "Bogota" }],
 };
+
+subdivisions.CO = [{ code: "CO-DC", label: "Bogota D.C." }];
 
 export const mobileReferenceDataAdapter = {
   async listCountries(): Promise<ReferenceOption[]> {

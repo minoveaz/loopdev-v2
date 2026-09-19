@@ -43,6 +43,12 @@ function isUuid(value: string | null | undefined): value is string {
   return typeof value === "string" && UUID_PATTERN.test(value);
 }
 
+function normalizeLeadSource(value: string | null | undefined): string {
+  const normalized = (value ?? "manual").trim().toLowerCase();
+  const aliases: Record<string, string> = { website: "website", referral: "referral", partner: "partner", social: "social", event: "campaign", direct: "manual", manual: "manual", email: "email", whatsapp: "whatsapp" };
+  return aliases[normalized] ?? "other";
+}
+
 function mapLead(row: any): CRMLead {
   return {
     id: row.id,
@@ -53,11 +59,11 @@ function mapLead(row: any): CRMLead {
     source: row.source ?? null,
     assignedUserId: row.assigned_to_user_id ?? null,
     ownerName: null,
-    score: null,
-    estimatedValue: null,
+    score: row.lead_score ?? null,
+    estimatedValue: row.estimated_budget ?? null,
     estimatedCurrency: null,
-    qualificationNeed: null,
-    qualificationTimeline: null,
+    qualificationNeed: row.qualification_need ?? null,
+    qualificationTimeline: row.purchase_timeline ?? null,
     lastActivityAt: null,
     nextActivityAt: null,
     duplicateReviewId: null,
@@ -98,7 +104,9 @@ function activeOrganizationId(): string | null {
   try {
     const raw = typeof window !== "undefined" ? window.localStorage.getItem("loopdev:auth-session") : null;
     const parsed = raw ? JSON.parse(raw) : null;
-    return isUuid(parsed?.activeOrganizationId) ? parsed.activeOrganizationId : null;
+    if (isUuid(parsed?.activeOrganizationId)) return parsed.activeOrganizationId;
+    const tenantOrganizationId = typeof window !== "undefined" ? window.localStorage.getItem("loopdev.active_org_id") : null;
+    return isUuid(tenantOrganizationId) ? tenantOrganizationId : null;
   } catch {
     return null;
   }
@@ -111,14 +119,14 @@ export function createSupabaseCrmAdapter() {
     async listLeads(): Promise<CRMLead[]> {
       if (!activeOrganizationId()) return local.listLeads();
       const client = getClient();
-      if (!client) return local.listLeads();
+      if (!client) throw new Error("Supabase is not configured for the active organization.");
       try {
-        const { data, error } = await client.from("crm_leads").select("*").order("created_at", { ascending: false });
+        const { data, error } = await client.from("crm_leads").select("*").eq("organization_id", activeOrganizationId()).order("created_at", { ascending: false });
         if (error) throw error;
         return (data ?? []).map(mapLead);
       } catch (error) {
         console.warn("Supabase listLeads failed:", error);
-        return local.listLeads();
+        throw error;
       }
     },
 
@@ -136,10 +144,13 @@ export function createSupabaseCrmAdapter() {
         organization_id: input.organizationId,
         contact_id: input.contactId,
         interest: input.interest.trim(),
-        source: input.source?.trim() || "manual",
+        source: normalizeLeadSource(input.source),
         status: status.status,
         stage: status.stage,
         assigned_to_user_id: input.assignedUserId ?? null,
+        estimated_budget: input.estimatedValue ?? null,
+        lead_score: input.score ?? null,
+        purchase_timeline: input.qualificationTimeline ?? null,
       }).select().single();
       if (error || !data) return { status: "server-error", message: error?.message ?? "The lead could not be created." };
       return { status: "success", lead: mapLead(data) };
@@ -151,8 +162,11 @@ export function createSupabaseCrmAdapter() {
       if (!client) return { status: "server-error", message: "Supabase is not configured." };
       const payload: Record<string, unknown> = {};
       if (input.interest !== undefined) payload.interest = input.interest?.trim() || null;
-      if (input.source !== undefined) payload.source = input.source?.trim() || "manual";
+      if (input.source !== undefined) payload.source = normalizeLeadSource(input.source);
       if (input.assignedUserId !== undefined) payload.assigned_to_user_id = input.assignedUserId;
+      if (input.estimatedValue !== undefined) payload.estimated_budget = input.estimatedValue;
+      if (input.qualificationNeed !== undefined) payload.qualification_need = input.qualificationNeed;
+      if (input.qualificationTimeline !== undefined) payload.purchase_timeline = input.qualificationTimeline;
       if (input.status !== undefined) {
         if (!CRM_LEAD_STATUS_CODES.includes(input.status)) return { status: "validation-error", message: "The selected lead status is not available." };
         const next = statusToDatabase[input.status];
@@ -185,7 +199,8 @@ export function createSupabaseCrmAdapter() {
       if (fallbackForOrganization(input.organizationId)) return local.createOpportunity(input);
       const client = getClient(); if (!client) return { status: "server-error", message: "Supabase is not configured." };
       const conversionInput = input as CRMCreateOpportunityFromLeadInput;
-      const { data, error } = await client.from("crm_opportunities").insert({ organization_id: input.organizationId, contact_id: input.contactId, lead_id: input.leadId ?? null, catalog_item_id: input.catalogItemId ?? null, offer_id: input.offerId ?? null, variant_id: input.variantId ?? null, product_key: input.productKey ?? input.name.trim().toLowerCase().replace(/\s+/g, "-"), name: input.name.trim(), stage_key: "prospecting", stage: "prospecting", amount: input.amount ?? null, currency: input.currency ?? "EUR", expected_close_at: input.expectedCloseDate ?? null, assigned_to_user_id: input.ownerId ?? null, version: 1, origin: input.leadId ? "conversion" : "manual", idempotency_key: conversionInput.idempotencyKey ?? null }).select().single();
+      const initialStage = input.leadId ? "qualified" : "prospecting";
+      const { data, error } = await client.from("crm_opportunities").insert({ organization_id: input.organizationId, contact_id: input.contactId, lead_id: input.leadId ?? null, catalog_item_id: input.catalogItemId ?? null, offer_id: input.offerId ?? null, variant_id: input.variantId ?? null, product_key: input.productKey ?? input.name.trim().toLowerCase().replace(/\s+/g, "-"), name: input.name.trim(), stage_key: initialStage, stage: initialStage, amount: input.amount ?? null, currency: input.currency ?? "EUR", expected_close_at: input.expectedCloseDate ?? null, assigned_to_user_id: input.ownerId ?? null, version: 1, origin: input.leadId ? "lead_conversion" : "manual", idempotency_key: conversionInput.idempotencyKey ?? null }).select().single();
       if (error || !data) return opportunityError(error); return { status: "success", opportunity: mapOpportunity(data) };
     },
 
@@ -236,11 +251,11 @@ export function createSupabaseCrmAdapter() {
       if (error || !lead) return opportunityError(error);
       const productKey = (input.productKey ?? input.name ?? lead.interest ?? "opportunity").trim().toLowerCase().replace(/\s+/g, "-");
       const idempotencyKey = input.idempotencyKey?.trim() || null;
-      const { data: existing, error: existingError } = await client.from("crm_opportunities").select("*").eq("organization_id", input.organizationId).eq("lead_id", leadId).eq("origin", "conversion").eq("product_key", productKey).maybeSingle();
+      const { data: existing, error: existingError } = await client.from("crm_opportunities").select("*").eq("organization_id", input.organizationId).eq("lead_id", leadId).eq("origin", "lead_conversion").eq("product_key", productKey).maybeSingle();
       if (existingError) return opportunityError(existingError);
       if (existing) return { status: "success", opportunity: mapOpportunity(existing) };
       if (idempotencyKey) {
-        const { data: keyMatch, error: keyError } = await client.from("crm_opportunities").select("*").eq("organization_id", input.organizationId).eq("origin", "conversion").eq("idempotency_key", idempotencyKey).maybeSingle();
+        const { data: keyMatch, error: keyError } = await client.from("crm_opportunities").select("*").eq("organization_id", input.organizationId).eq("origin", "lead_conversion").eq("idempotency_key", idempotencyKey).maybeSingle();
         if (keyError) return opportunityError(keyError);
         if (keyMatch) return { status: "conflict", message: "The idempotency key was already used for a different lead conversion.", opportunity: mapOpportunity(keyMatch) };
       }

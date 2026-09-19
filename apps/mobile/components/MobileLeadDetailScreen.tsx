@@ -112,7 +112,7 @@ export function MobileLeadDetailScreen({
         if (item.contactId) {
           try {
             const found = await mobileContactAdapter.getCustomer360(item.contactId);
-            if (found?.summary) setContact(found.summary);
+            if (found?.contact) setContact(found.contact);
           } catch {
             // fallback
           }

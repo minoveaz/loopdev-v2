@@ -27,6 +27,7 @@ import {
   MobileBackLink,
 } from "./ui";
 import { mobileTheme } from "../theme/tokens";
+import { mobileTenantContextAdapter } from "../adapters/auth";
 
 interface Props {
   onCancel: () => void;
@@ -55,11 +56,12 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
   const [timeline, setTimeline] = useState("1–3 months");
   const [assignedOwner, setAssignedOwner] = useState(OWNERS[0]);
   const [saving, setSaving] = useState(false);
+  const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "80fce911-57c5-4a83-809f-78df6a3736f7";
 
   useEffect(() => {
     void mobileContactAdapter
       .listContacts({
-        organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+        organizationId,
         limit: 100,
       })
       .then((res) => {
@@ -69,7 +71,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
           setSelectedContactId(list[0].id);
         }
       });
-  }, []);
+  }, [organizationId]);
 
   const selectedContact = contacts.find((c) => c.id === selectedContactId);
 
@@ -86,7 +88,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
     setSaving(true);
     try {
       const created = await mobileCrmAdapter.createLead({
-        organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+        organizationId,
         contactId: selectedContactId,
         interest: interest.trim(),
         source,

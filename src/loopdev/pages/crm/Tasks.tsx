@@ -15,10 +15,6 @@ import {
   ListChecks,
   MoreHorizontal,
   Plus,
-  Settings2,
-  Siren,
-  SlidersHorizontal,
-  Sparkles,
   Tag,
   Trash2,
   User,
@@ -33,13 +29,11 @@ import {
   PageContainer,
   PageHeader,
   SearchInput,
-  StatCard,
   StatusBadge,
   ConfirmDialog,
   type DataTableAction,
   type DataTableColumn,
 } from "@/components/common";
-import { DesktopControlDrawer } from "@/components/common/DesktopControlDrawer";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -113,10 +107,10 @@ function startOfWeek(date: Date) {
   return result;
 }
 
-const KANBAN_COLS: { key: TaskStatus; label: string; tone: "neutral" | "info" | "success" }[] = [
-  { key: "open", label: "Pendientes", tone: "neutral" },
-  { key: "in_progress", label: "En Progreso", tone: "info" },
-  { key: "completed", label: "Completadas", tone: "success" },
+const KANBAN_COLS: { key: TaskStatus; labelKey: "open" | "inProgress" | "completed"; tone: "neutral" | "info" | "success" }[] = [
+  { key: "open", labelKey: "open", tone: "neutral" },
+  { key: "in_progress", labelKey: "inProgress", tone: "info" },
+  { key: "completed", labelKey: "completed", tone: "success" },
 ];
 
 export default function CRMTasksPage() {
@@ -147,7 +141,6 @@ export default function CRMTasksPage() {
   const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
   const [tagFilter, setTagFilter] = useState<string[]>([]);
-  const [viewTab, setViewTab] = useState<"all" | "urgent" | "today" | "completed">("all");
 
   const [calendarSubView, setCalendarSubView] = useState<"month" | "week" | "stream">("month");
   const [cursor, setCursor] = useState(() => new Date());
@@ -159,27 +152,11 @@ export default function CRMTasksPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<TaskTemplateRecord | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<TaskRecord | null>(null);
-  const [isControlDrawerOpen, setIsControlDrawerOpen] = useState(false);
+  const [tasksToDelete, setTasksToDelete] = useState<TaskRecord[]>([]);
 
   useEffect(() => {
     if (contactIdFromRoute) setIsCreateModalOpen(true);
   }, [contactIdFromRoute]);
-
-  const activeFilterCount =
-    statusFilter.length +
-    priorityFilter.length +
-    assigneeFilter.length +
-    tagFilter.length +
-    (viewTab !== "all" ? 1 : 0);
-
-  const handleClearAllFilters = () => {
-    setStatusFilter([]);
-    setPriorityFilter([]);
-    setAssigneeFilter([]);
-    setTagFilter([]);
-    setViewTab("all");
-    setSearch("");
-  };
 
   const availableTags = useMemo(() => {
     const set = new Set<string>(["#VIP", "#Renovación", "#Reclamo", "#Urgente", "#Seguimiento", "#Comercial"]);
@@ -225,22 +202,19 @@ export default function CRMTasksPage() {
     }
   };
 
+  const handleBulkDeleteConfirm = async () => {
+    const targets = [...tasksToDelete];
+    setTasksToDelete([]);
+    await Promise.all(targets.map((task) => deleteTask(task.id)));
+    toast.success(t("crm.tasks.deletedSelected", { count: targets.length }));
+  };
+
   const statusLabels = useMemo<Record<TaskStatus, string>>(() => ({
     open: t("crm.tasks.status.open"),
     in_progress: t("crm.tasks.status.inProgress"),
     completed: t("crm.tasks.status.completed"),
     cancelled: t("crm.tasks.status.cancelled"),
   }), [t]);
-
-  const stats = useMemo(() => {
-    return {
-      total: tasks.length,
-      open: tasks.filter((t) => t.status !== "completed" && t.status !== "cancelled").length,
-      overdue: tasks.filter(isOverdue).length,
-      urgent: tasks.filter((t) => (t.priority === "urgent" || isOverdue(t)) && t.status !== "completed").length,
-      completed: tasks.filter((t) => t.status === "completed").length,
-    };
-  }, [tasks]);
 
   const visibleTasks = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -254,17 +228,9 @@ export default function CRMTasksPage() {
       if (assigneeFilter.length && (!task.assignedUserId || !assigneeFilter.includes(task.assignedUserId))) return false;
       if (tagFilter.length && (!task.tags || !tagFilter.some((t) => task.tags?.includes(t)))) return false;
 
-      if (viewTab === "completed") return task.status === "completed";
-      if (viewTab === "urgent") return (task.priority === "urgent" || isOverdue(task)) && task.status !== "completed";
-      if (viewTab === "today") {
-        if (!task.dueAt || task.status === "completed") return false;
-        const d = new Date(task.dueAt);
-        const today = new Date();
-        return d.toDateString() === today.toDateString();
-      }
-      return true; // "all"
+      return true;
     });
-  }, [tasks, search, statusFilter, priorityFilter, assigneeFilter, tagFilter, viewTab]);
+  }, [tasks, search, statusFilter, priorityFilter, assigneeFilter, tagFilter]);
 
   // Calendar calculations (Month & Week)
   const calendarDays = useMemo(() => {
@@ -411,79 +377,49 @@ export default function CRMTasksPage() {
   const columns: DataTableColumn<TaskRecord>[] = useMemo(
     () => [
       {
-        key: "status",
-        header: "",
+        key: "title",
+        header: t("crm.tasks.columns.task"),
+        sortable: true,
         cell: (task) => {
           const isDone = task.status === "completed";
           return (
-            <div
-              className="flex items-center justify-center p-1 cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isDone) {
-                  void reopenTask(task.id, task.version);
-                } else {
-                  void completeTask(task.id, task.version);
-                }
-              }}
-            >
-              <Checkbox checked={isDone} className="data-[state=checked]:bg-emerald-600 border-muted-foreground/50" />
+            <div className="min-w-[240px]">
+              <p className={cn("font-medium text-sm", isDone && "text-muted-foreground line-through")}>
+                {task.title}
+              </p>
             </div>
           );
         },
       },
       {
-        key: "title",
-        header: "Task",
-        sortable: true,
+        key: "relation",
+        header: t("crm.tasks.columns.relatedRecord"),
+        hideOnMobile: true,
+        cell: (task) => task.relation?.label ? (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+            <User className="h-3 w-3" />
+            {task.relation.label}
+          </span>
+        ) : <span className="text-xs text-muted-foreground">—</span>,
+      },
+      {
+        key: "progress",
+        header: t("crm.tasks.columns.subtasks"),
+        hideOnMobile: true,
         cell: (task) => {
-          const isDone = task.status === "completed";
-          const totalChecklist = task.checklist?.length || 0;
-          const completedChecklist = task.checklist?.filter((c) => c.completed).length || 0;
-          return (
-            <div className="min-w-[240px] space-y-1">
-              <p className={cn("font-medium text-sm", isDone && "text-muted-foreground line-through")}>
-                {task.title}
-              </p>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                {task.relation?.label && (
-                  <span className="font-semibold text-primary flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    {task.relation.label}
-                  </span>
-                )}
-                {totalChecklist > 0 && (
-                  <span className="text-emerald-600 font-medium flex items-center gap-1">
-                    <CheckSquare className="h-3 w-3" />
-                    {completedChecklist}/{totalChecklist} sub-tareas
-                  </span>
-                )}
-                {task.reminders && task.reminders.length > 0 && (
-                  <span className="text-amber-600 font-medium flex items-center gap-1">
-                    <Bell className="h-3 w-3" />
-                    {task.reminders.length}
-                  </span>
-                )}
-              </div>
-              {task.tags && task.tags.length > 0 && (
-                <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                  {task.tags.map((tg) => (
-                    <span
-                      key={tg}
-                      className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-primary-soft text-primary border border-primary/20"
-                    >
-                      {tg}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
+          const total = task.checklist?.length || 0;
+          const completed = task.checklist?.filter((item) => item.completed).length || 0;
+          return total > 0 ? (
+            <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-emerald-600">
+              <CheckSquare className="h-3 w-3" />
+              {completed}/{total}
+            </span>
+          ) : <span className="text-xs text-muted-foreground">—</span>;
         },
       },
       {
         key: "priority",
-        header: "Priority",
+        header: t("crm.tasks.columns.priority"),
         sortable: true,
         cell: (task) => (
           <StatusBadge tone={priorityTone[task.priority]} dot>
@@ -493,7 +429,7 @@ export default function CRMTasksPage() {
       },
       {
         key: "assignedUser",
-        header: "Assignee",
+        header: t("crm.tasks.columns.assignee"),
         cell: (task) => (
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
@@ -507,7 +443,7 @@ export default function CRMTasksPage() {
       },
       {
         key: "dueAt",
-        header: "Due date",
+        header: t("crm.tasks.columns.dueDate"),
         sortable: true,
         cell: (task) => {
           const overdue = isOverdue(task);
@@ -524,6 +460,16 @@ export default function CRMTasksPage() {
             </span>
           );
         },
+      },
+      {
+        key: "tags",
+        header: t("crm.tasks.columns.tags"),
+        hideOnMobile: true,
+        cell: (task) => task.tags?.length ? (
+          <div className="flex max-w-[180px] flex-wrap gap-1">
+            {task.tags.map((tag) => <span key={tag} className="rounded-md border border-primary/20 bg-primary-soft px-1.5 py-0.5 text-[10px] font-semibold text-primary">{tag}</span>)}
+          </div>
+        ) : <span className="text-xs text-muted-foreground">—</span>,
       },
     ],
     [completeTask, reopenTask],
@@ -569,16 +515,11 @@ export default function CRMTasksPage() {
     [handleCompleteWithToast, handleReopenWithToast, quickReschedule],
   );
 
-  const handleOpenTemplate = (tpl: TaskTemplateRecord) => {
-    setActiveTemplate(tpl);
-    setIsCreateModalOpen(true);
-  };
-
   return (
     <PageContainer width="wide">
       <PageHeader
         title={t("crm.tasks.title")}
-        description="Follow-up work, pipeline tasks, and contact commitments across Sales CRM."
+        description={t("crm.tasks.description")}
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Tasks" }]}
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -591,7 +532,7 @@ export default function CRMTasksPage() {
                 className={cn("h-8 px-2.5 text-xs font-semibold", viewMode === "table" && "bg-primary-soft text-primary")}
               >
                 <List className="mr-1.5 h-3.5 w-3.5" />
-                Lista
+                {t("crm.tasks.list")}
               </Button>
               <Button
                 variant={viewMode === "kanban" ? "secondary" : "ghost"}
@@ -614,103 +555,73 @@ export default function CRMTasksPage() {
             </div>
 
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsControlDrawerOpen(true)}
-              className={cn(
-                "h-9 text-xs font-semibold",
-                activeFilterCount > 0 && "border-primary bg-primary-soft text-primary font-bold"
-              )}
-            >
-              <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
-              Filtros Avanzados
-              {activeFilterCount > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.2 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
-
-            <Button variant="outline" asChild>
-              <Link to="/app/sales-crm/task-templates">
-                <Settings2 className="mr-1.5 h-3.5 w-3.5" />
-                Templates
-              </Link>
-            </Button>
-            <Button
               onClick={() => {
                 setActiveTemplate(null);
                 setIsCreateModalOpen(true);
               }}
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
-              New task
+              {t("crm.tasks.newTask")}
             </Button>
           </div>
         }
       />
 
-      {/* Rivera Metrics Grid */}
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <StatCard label="Total tasks" value={String(stats.total)} icon={ListChecks} accent="primary" compact />
-        <StatCard label="Open tasks" value={String(stats.open)} icon={Circle} accent="info" compact />
-        <StatCard label={t("crm.tasks.overdue")} value={String(stats.overdue)} icon={CalendarDays} accent="gold" compact />
-        <StatCard label={t("crm.tasks.urgentOverdue")} value={String(stats.urgent)} icon={Siren} accent="accent" compact />
-      </div>
-
-      {/* 1-Tap Quick Templates Bar */}
-      {templates.length > 0 && (
-        <div className="mt-6 flex flex-wrap items-center gap-2 p-3 bg-card-muted/50 rounded-xl border border-border">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            1-Tap Quick Templates:
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            {templates.map((tpl) => (
-              <button
-                key={tpl.id}
-                type="button"
-                onClick={() => handleOpenTemplate(tpl)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-card border border-border hover:border-primary/40 hover:bg-primary-soft/40 transition-colors shadow-xs"
-              >
-                <span>{tpl.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Filter Tabs (All, Urgent, Today, Completed) */}
-      <div className="mt-6 flex max-w-full items-center gap-1 overflow-x-auto border-b border-border">
-        {[
-          { id: "all", label: "All tasks" },
-          { id: "urgent", label: t("crm.tasks.urgentOverdue") },
-          { id: "today", label: t("crm.tasks.dueToday") },
-          { id: "completed", label: t("crm.tasks.completed") },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setViewTab(tab.id as any)}
-            className={cn(
-              "border-b-2 px-3.5 py-2.5 text-sm font-semibold transition-colors",
-              viewTab === tab.id
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
       {/* VIEW 1: TABLE VIEW */}
       {viewMode === "table" && (
-        <DataCard className="mt-4" flush>
+        <>
+          <div className="flex flex-wrap items-center gap-2" aria-label="Task table filters">
+            <SearchInput
+              value={search}
+              onValueChange={setSearch}
+              placeholder={t("crm.tasks.searchPlaceholder")}
+              size="sm"
+              containerClassName="w-full sm:w-64"
+            />
+            <FilterDropdown
+              label={t("crm.tasks.filters.status")}
+              multiple
+              value={statusFilter}
+              onChange={setStatusFilter}
+              size="sm"
+              options={Object.entries(statusLabel).map(([value, label]) => ({ value, label }))}
+            />
+            <FilterDropdown
+              label={t("crm.tasks.filters.priority")}
+              multiple
+              value={priorityFilter}
+              onChange={setPriorityFilter}
+              size="sm"
+              options={( ["low", "normal", "high", "urgent"] as TaskPriority[]).map((value) => ({ value, label: value.toUpperCase() }))}
+            />
+            <FilterDropdown
+              label={t("crm.tasks.filters.assignee")}
+              multiple
+              value={assigneeFilter}
+              onChange={setAssigneeFilter}
+              size="sm"
+              options={AVAILABLE_ASSIGNABLE_USERS.map((user) => ({ value: user.id, label: user.displayName }))}
+            />
+            <FilterDropdown
+              label={t("crm.tasks.filters.tags")}
+              multiple
+              value={tagFilter}
+              onChange={setTagFilter}
+              size="sm"
+              options={availableTags.map((tag) => ({ value: tag, label: tag }))}
+            />
+          </div>
+          <DataCard className="mt-4" flush>
           <DataTable
             data={visibleTasks}
             columns={columns}
             rowActions={rowActions}
+            bulkActions={[{
+              label: t("crm.tasks.deleteSelectedAction"),
+              icon: Trash2,
+              destructive: true,
+              onClick: (targets) => setTasksToDelete(targets),
+            }]}
             onRowClick={(task) => {
               setSelectedTask(task);
               setIsDetailOpen(true);
@@ -719,56 +630,11 @@ export default function CRMTasksPage() {
             emptyIcon={ListChecks}
             emptyTitle="No tasks match your filters"
             emptyDescription="Try clearing filters or create a new follow-up task."
-            toolbar={
-              <div className="flex flex-wrap items-center gap-2">
-                <SearchInput
-                  value={search}
-                  onValueChange={setSearch}
-                  placeholder="Search tasks, descriptions, contacts..."
-                  size="sm"
-                  containerClassName="w-full sm:w-64"
-                />
-                <FilterDropdown
-                  label="Status"
-                  multiple
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                  size="sm"
-                  options={Object.entries(statusLabel).map(([value, label]) => ({ value, label }))}
-                />
-                <FilterDropdown
-                  label="Priority"
-                  multiple
-                  value={priorityFilter}
-                  onChange={setPriorityFilter}
-                  size="sm"
-                  options={(["low", "normal", "high", "urgent"] as TaskPriority[]).map((value) => ({
-                    value,
-                    label: value.toUpperCase(),
-                  }))}
-                />
-                <FilterDropdown
-                  label="Assignee"
-                  multiple
-                  value={assigneeFilter}
-                  onChange={setAssigneeFilter}
-                  size="sm"
-                  options={AVAILABLE_ASSIGNABLE_USERS.map((u) => ({ value: u.id, label: u.displayName }))}
-                />
-                <FilterDropdown
-                  label="Etiquetas"
-                  multiple
-                  value={tagFilter}
-                  onChange={setTagFilter}
-                  size="sm"
-                  options={availableTags.map((t) => ({ value: t, label: t }))}
-                />
-              </div>
-            }
             initialSort={{ key: "dueAt", dir: "asc" }}
             initialPageSize={10}
           />
-        </DataCard>
+          </DataCard>
+        </>
       )}
 
       {/* VIEW 2: KANBAN VIEW */}
@@ -803,7 +669,7 @@ export default function CRMTasksPage() {
                 options={AVAILABLE_ASSIGNABLE_USERS.map((u) => ({ value: u.id, label: u.displayName }))}
               />
               <FilterDropdown
-                label="Etiquetas"
+                label={t("crm.tasks.filters.tags")}
                 multiple
                 value={tagFilter}
                 onChange={setTagFilter}
@@ -827,14 +693,14 @@ export default function CRMTasksPage() {
                   onDragOver={(e) => onDragOverCol(e, col.key)}
                   onDrop={(e) => onDropCol(e, col.key)}
                   className={cn(
-                    "flex flex-col rounded-2xl bg-card-muted/60 border border-border p-4 transition-colors",
+                    "flex flex-col rounded-xl bg-card-muted/60 border border-border p-4 transition-colors",
                     isOver && "border-primary bg-primary-soft/30",
                   )}
                 >
                   {/* Column Header */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-display text-sm font-bold text-foreground">{col.label}</span>
+                      <span className="font-display text-sm font-bold text-foreground">{t(`crm.tasks.status.${col.labelKey}`)}</span>
                       <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-card border border-border text-[11px] font-bold text-muted-foreground">
                         {colTasks.length}
                       </span>
@@ -1282,7 +1148,7 @@ export default function CRMTasksPage() {
           {calendarSubView === "stream" && (
             <div className="p-5 sm:p-6 space-y-6">
               {streamGroups.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-border rounded-2xl">
+                <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-border rounded-xl">
                   <CalendarDays className="h-10 w-10 text-muted-foreground mb-3 opacity-40" />
                   <h3 className="text-sm font-semibold text-foreground">No hay tareas programadas</h3>
                   <p className="text-xs text-muted-foreground mt-1 max-w-sm">
@@ -1470,189 +1336,17 @@ export default function CRMTasksPage() {
         onConfirm={handleDeleteTaskConfirm}
       />
 
-      {/* Advanced Control Center Drawer (HubSpot/Salesforce Style) */}
-      <DesktopControlDrawer
-        open={isControlDrawerOpen}
-        onClose={() => setIsControlDrawerOpen(false)}
-        title="Filtros y Vistas CRM"
-        eyebrow="Sales CRM · Control Center"
-        activeFilterCount={activeFilterCount}
-        resultCount={visibleTasks.length}
-        onReset={handleClearAllFilters}
-        onApply={() => setIsControlDrawerOpen(false)}
-        presets={[
-          {
-            id: "mine_urgent",
-            label: "Mis Urgentes",
-            icon: Flame,
-            active: assigneeFilter.includes("usr-current") && priorityFilter.includes("urgent"),
-            onSelect: () => {
-              setAssigneeFilter(["usr-current"]);
-              setPriorityFilter(["urgent"]);
-            },
-          },
-          {
-            id: "due_today",
-            label: "Para Hoy",
-            icon: CalendarDays,
-            active: viewTab === "today",
-            onSelect: () => {
-              setViewTab("today");
-            },
-          },
-          {
-            id: "vip_deals",
-            label: "Cierres VIP",
-            icon: Sparkles,
-            active: tagFilter.includes("#VIP"),
-            onSelect: () => {
-              setTagFilter(["#VIP"]);
-            },
-          },
-          {
-            id: "all_team",
-            label: "Todo el Equipo",
-            icon: Users,
-            active: activeFilterCount === 0,
-            onSelect: handleClearAllFilters,
-          },
-        ]}
-      >
-        {/* Section 1: Estado de la Tarea */}
-        <div className="space-y-2.5">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Estado de la Tarea
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(statusLabel).map(([st, label]) => {
-              const isSelected = statusFilter.includes(st);
-              return (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() =>
-                    setStatusFilter((curr) =>
-                      curr.includes(st) ? curr.filter((x) => x !== st) : [...curr, st]
-                    )
-                  }
-                  className={cn(
-                    "flex items-center gap-2 p-2.5 rounded-lg border text-xs font-semibold transition-all text-left",
-                    isSelected
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card border-border hover:border-primary/40 text-foreground"
-                  )}
-                >
-                  <Checkbox checked={isSelected} className="pointer-events-none data-[state=checked]:bg-white data-[state=checked]:text-primary" />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <ConfirmDialog
+        open={tasksToDelete.length > 0}
+        onOpenChange={(open) => { if (!open) setTasksToDelete([]); }}
+        tone="destructive"
+        title={t("crm.tasks.deleteSelectedTitle")}
+        description={t("crm.tasks.deleteSelectedDescription", { count: tasksToDelete.length })}
+        confirmLabel={t("crm.tasks.deleteSelectedAction")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => void handleBulkDeleteConfirm()}
+      />
 
-        {/* Section 2: Prioridad */}
-        <div className="space-y-2.5 pt-2 border-t border-border">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Prioridad
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {(["urgent", "high", "normal", "low"] as TaskPriority[]).map((p) => {
-              const isSelected = priorityFilter.includes(p);
-              return (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() =>
-                    setPriorityFilter((curr) =>
-                      curr.includes(p) ? curr.filter((x) => x !== p) : [...curr, p]
-                    )
-                  }
-                  className={cn(
-                    "flex items-center gap-2 p-2.5 rounded-lg border text-xs font-semibold transition-all text-left",
-                    isSelected
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card border-border hover:border-primary/40 text-foreground"
-                  )}
-                >
-                  <Checkbox checked={isSelected} className="pointer-events-none data-[state=checked]:bg-white data-[state=checked]:text-primary" />
-                  <span className="uppercase">{p}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Section 3: Responsables Asignados */}
-        <div className="space-y-2.5 pt-2 border-t border-border">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Responsable Asignado
-          </label>
-          <div className="space-y-1.5">
-            {AVAILABLE_ASSIGNABLE_USERS.map((u) => {
-              const isSelected = assigneeFilter.includes(u.id);
-              return (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() =>
-                    setAssigneeFilter((curr) =>
-                      curr.includes(u.id) ? curr.filter((x) => x !== u.id) : [...curr, u.id]
-                    )
-                  }
-                  className={cn(
-                    "w-full flex items-center justify-between p-2.5 rounded-lg border text-xs font-semibold transition-all",
-                    isSelected
-                      ? "bg-primary-soft text-primary border-primary font-bold"
-                      : "bg-card border-border hover:border-primary/30 text-foreground"
-                  )}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Avatar className="w-6 h-6 text-[10px]">
-                      <AvatarFallback className="bg-primary-soft text-primary font-bold">
-                        {u.displayName.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>{u.displayName}</span>
-                  </div>
-                  <Checkbox checked={isSelected} className="pointer-events-none" />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Section 4: Etiquetas Temáticas */}
-        <div className="space-y-2.5 pt-2 border-t border-border">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Etiquetas (#Tags)
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {availableTags.map((tag) => {
-              const isSelected = tagFilter.includes(tag);
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() =>
-                    setTagFilter((curr) =>
-                      curr.includes(tag) ? curr.filter((x) => x !== tag) : [...curr, tag]
-                    )
-                  }
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
-                    isSelected
-                      ? "bg-primary text-primary-foreground border-primary shadow-xs"
-                      : "bg-card border-border hover:border-primary/40 text-foreground"
-                  )}
-                >
-                  <Tag className="w-3 h-3" />
-                  <span>{tag}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </DesktopControlDrawer>
     </PageContainer>
   );
 }

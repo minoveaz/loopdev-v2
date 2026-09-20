@@ -214,12 +214,28 @@ export function createSupabaseCrmAdapter() {
     async listOpportunities(params: CRMOpportunityListParams) {
       if (fallbackForOrganization(params.organizationId)) return local.listOpportunities(params);
       const client = getClient(); if (!client) throw new Error("Supabase is not configured.");
-      let query = client.from("crm_opportunities").select("*").eq("organization_id", params.organizationId);
+      let query = client.from("crm_opportunities").select("*").eq("organization_id", params.organizationId).is("archived_at", null);
       if (params.stageCodes?.length) query = query.in("stage_key", params.stageCodes);
       if (params.ownerIds?.length) query = query.in("assigned_to_user_id", params.ownerIds);
       if (params.productKeys?.length) query = query.in("product_key", params.productKeys);
       const { data, error } = await query.order(params.sortBy === "name" ? "name" : "updated_at", { ascending: params.sortDirection === "asc" });
       if (error) throw error; return (data ?? []).map(mapOpportunity);
+    },
+
+    async bulkArchiveOpportunities(opportunityIds: string[], organizationId: string) {
+      if (fallbackForOrganization(organizationId)) return local.bulkArchiveOpportunities?.(opportunityIds, organizationId) ?? { successCount: 0, failureCount: opportunityIds.length };
+      const client = getClient(); if (!client) return { successCount: 0, failureCount: opportunityIds.length };
+      const ids = opportunityIds.filter(isUuid);
+      if (!ids.length) return { successCount: 0, failureCount: opportunityIds.length };
+      const { data, error } = await client
+        .from("crm_opportunities")
+        .update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .in("id", ids)
+        .eq("organization_id", organizationId)
+        .is("archived_at", null)
+        .select("id");
+      const successCount = error ? 0 : (data ?? []).length;
+      return { successCount, failureCount: opportunityIds.length - successCount };
     },
 
     async createOpportunity(input: CRMCreateOpportunityInput): Promise<CRMOpportunityMutationResult> {

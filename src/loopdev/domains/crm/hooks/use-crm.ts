@@ -345,6 +345,13 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     return result;
   };
 
+  const bulkArchiveOpportunities = async (targets: CRMPipelineOpportunity[]) => {
+    if (!loopdevAdapter.crm.bulkArchiveOpportunities) return { successCount: 0, failureCount: targets.length };
+    const result = await loopdevAdapter.crm.bulkArchiveOpportunities(targets.map((opportunity) => opportunity.id), LOCAL_ORGANIZATION_ID);
+    if (result.successCount > 0) setOpportunities((current) => current.filter((opportunity) => !targets.some((target) => target.id === opportunity.id)));
+    return result;
+  };
+
   const reopenOpportunity = async (
     opportunity: CRMPipelineOpportunity,
     input: Omit<CRMReopenOpportunityInput, "organizationId" | "expectedUpdatedAt">,
@@ -376,6 +383,7 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     moveStage,
     updateOpportunity,
     createOpportunity,
+    bulkArchiveOpportunities,
     reopenOpportunity,
     reload: () => setReloadToken((token) => token + 1),
   };

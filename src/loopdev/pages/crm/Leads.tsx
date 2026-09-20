@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import {
-  AlertTriangle, CalendarClock, Columns3, Flame, LayoutList,
+  AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CalendarClock, Columns3, Flame, LayoutList,
   MoreHorizontal, Plus, RefreshCw, SearchX, UserRound, Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
-  ConfirmDialog, DataCard, EmptyState, FilterDropdown, PageContainer, PageHeader,
+  BulkSelectionBar, ConfirmDialog, DataCard, EmptyState, FilterDropdown, PageContainer, PageHeader,
   FormSectionHeader, SearchInput, StatusBadge, useFormLifecycle,
 } from "@/components/common";
 import { AppDrawer } from "@/components/platform";
@@ -44,6 +44,7 @@ const sevenDaysAgo = () => Date.now() - 7 * 86400000;
 
 type OpportunityFilter = "all" | "with" | "without";
 type ViewKey = "all" | "mine" | "new" | "working" | "qualified" | "converted" | "inactive";
+type LeadSortKey = "contact" | "status" | "source" | "interest" | "owner" | "score" | "lastActivity" | "nextActivity" | "opportunity";
 
 const SAVED_VIEWS: Array<{ key: ViewKey; label: string; statuses?: CRMLeadStatusCode[]; owner?: string }> = [
   { key: "all", label: "All leads" },
@@ -76,6 +77,8 @@ export default function SalesCRMLeads() {
   const [viewKey, setViewKey] = useState<ViewKey>("all");
   const leadRestoreFocusRef = useRef<HTMLElement | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [sortKey, setSortKey] = useState<LeadSortKey>("lastActivity");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const contactById = useMemo(() => new Map(contacts.map((contact) => [contact.id, contact])), [contacts]);
   const opportunityCountByLeadOrContact = useMemo(() => {
@@ -100,7 +103,7 @@ export default function SalesCRMLeads() {
   );
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return leads.filter((lead) => {
+    const matching = leads.filter((lead) => {
       const contact = contactById.get(lead.contactId);
       const opportunityCount = opportunityCountByLeadOrContact.get(lead.id)
         ?? opportunityCountByLeadOrContact.get(`contact:${lead.contactId}`) ?? 0;
@@ -115,7 +118,57 @@ export default function SalesCRMLeads() {
         && matchesOpportunity
         && (!noRecentActivity || stale);
     });
-  }, [contactById, leads, noRecentActivity, opportunityCountByLeadOrContact, opportunityFilter, owners, search, source, statuses]);
+    return [...matching].sort((left, right) => {
+      const leftContact = contactById.get(left.contactId);
+      const rightContact = contactById.get(right.contactId);
+      const leftOpportunity = opportunityCountByLeadOrContact.get(left.id) ?? opportunityCountByLeadOrContact.get(`contact:${left.contactId}`) ?? 0;
+      const rightOpportunity = opportunityCountByLeadOrContact.get(right.id) ?? opportunityCountByLeadOrContact.get(`contact:${right.contactId}`) ?? 0;
+      const values: Record<LeadSortKey, string | number> = {
+        contact: leftContact ? contactName(leftContact) : "",
+        status: left.status,
+        source: left.source ?? "",
+        interest: left.interest ?? "",
+        owner: left.ownerName ?? "",
+        score: left.score ?? 0,
+        lastActivity: left.lastActivityAt ?? "",
+        nextActivity: left.nextActivityAt ?? "",
+        opportunity: leftOpportunity,
+      };
+      const rightValues: Record<LeadSortKey, string | number> = {
+        contact: rightContact ? contactName(rightContact) : "",
+        status: right.status,
+        source: right.source ?? "",
+        interest: right.interest ?? "",
+        owner: right.ownerName ?? "",
+        score: right.score ?? 0,
+        lastActivity: right.lastActivityAt ?? "",
+        nextActivity: right.nextActivityAt ?? "",
+        opportunity: rightOpportunity,
+      };
+      const comparison = typeof values[sortKey] === "number"
+        ? Number(values[sortKey]) - Number(rightValues[sortKey])
+        : String(values[sortKey]).localeCompare(String(rightValues[sortKey]), undefined, { numeric: true });
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [contactById, leads, noRecentActivity, opportunityCountByLeadOrContact, opportunityFilter, owners, search, sortDirection, sortKey, source, statuses]);
+
+  const toggleSort = (nextKey: LeadSortKey) => {
+    if (sortKey === nextKey) setSortDirection((current) => current === "asc" ? "desc" : "asc");
+    else {
+      setSortKey(nextKey);
+      setSortDirection("asc");
+    }
+  };
+
+  const sortHeader = (label: string, key: LeadSortKey) => {
+    const active = sortKey === key;
+    return (
+      <button type="button" className="inline-flex items-center gap-1.5 rounded-md hover:text-foreground" onClick={() => toggleSort(key)} aria-sort={active ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}>
+        {label}
+        {!active ? <ArrowUpDown className="h-3 w-3 opacity-50" /> : sortDirection === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />}
+      </button>
+    );
+  };
   const allVisibleSelected = filtered.length > 0 && filtered.every((lead) => selectedIds.includes(lead.id));
   const hasFilters = Boolean(search || statuses.length || source.length || owners.length || opportunityFilter !== "all" || noRecentActivity);
   const openLead = (leadId: string, trigger?: HTMLElement) => {
@@ -280,15 +333,17 @@ export default function SalesCRMLeads() {
         </div>
       </div>
 
-      {selectedIds.length > 0 && (
-        <div role="region" aria-label="Bulk lead actions" className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary-soft/30 px-3 py-2">
-          <span className="text-sm font-medium" aria-live="polite">{selectedIds.length} selected</span>
-          <Button size="sm" variant="outline" onClick={() => void bulkUpdate({ status: "contacted" })}>Mark contacted</Button>
-          <Button size="sm" variant="outline" onClick={() => void bulkUpdate({ assignedUserId: CURRENT_USER_ID, ownerName: CURRENT_USER_NAME })}>Assign to Maya Chen</Button>
-          <Button size="sm" variant="outline" onClick={() => void bulkArchive()}>Archive selected</Button>
-          <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>Clear selection</Button>
-        </div>
-      )}
+      <BulkSelectionBar
+        selectedCount={selectedIds.length}
+        entityLabel="leads"
+        ariaLabel="Bulk lead actions"
+        onClear={() => setSelectedIds([])}
+        actions={[
+          { label: "Mark contacted", onClick: () => void bulkUpdate({ status: "contacted" }) },
+          { label: "Assign to Maya Chen", onClick: () => void bulkUpdate({ assignedUserId: CURRENT_USER_ID, ownerName: CURRENT_USER_NAME }) },
+          { label: "Archive selected", destructive: true, onClick: () => void bulkArchive() },
+        ]}
+      />
       {actionMessage && <div role="status" className="rounded-md border border-border bg-card-muted px-3 py-2 text-sm">{actionMessage}</div>}
 
       <div className="min-w-0">
@@ -319,9 +374,9 @@ export default function SalesCRMLeads() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-10"><Checkbox checked={allVisibleSelected ? true : selectedIds.length > 0 ? "indeterminate" : false} onCheckedChange={(checked) => selectAllVisible(checked === true)} aria-label="Select all visible leads" /></TableHead>
-                        <TableHead>Contact</TableHead><TableHead>Status</TableHead><TableHead>Source</TableHead>
-                        <TableHead>Interest / Product</TableHead><TableHead>Owner</TableHead><TableHead>Score</TableHead>
-                        <TableHead>Last activity</TableHead><TableHead>Next activity</TableHead><TableHead>Opportunity</TableHead><TableHead className="w-10"><span className="sr-only">Actions</span></TableHead>
+                        <TableHead>{sortHeader("Contact", "contact")}</TableHead><TableHead>{sortHeader("Status", "status")}</TableHead><TableHead>{sortHeader("Source", "source")}</TableHead>
+                        <TableHead>{sortHeader("Interest / Product", "interest")}</TableHead><TableHead>{sortHeader("Owner", "owner")}</TableHead><TableHead>{sortHeader("Score", "score")}</TableHead>
+                        <TableHead>{sortHeader("Last activity", "lastActivity")}</TableHead><TableHead>{sortHeader("Next activity", "nextActivity")}</TableHead><TableHead>{sortHeader("Opportunity", "opportunity")}</TableHead><TableHead className="w-10"><span className="sr-only">Actions</span></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>{filtered.map((lead) => (

@@ -18,6 +18,8 @@ export interface TaskChecklistItem {
   id: string;
   title: string;
   completed: boolean;
+  assigneeId?: string | null;
+  assignee?: AssignableUser | null;
   completedAt?: string | null;
 }
 

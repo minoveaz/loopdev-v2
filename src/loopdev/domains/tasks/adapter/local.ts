@@ -268,6 +268,8 @@ export class LocalTasksAdapter implements TasksPort {
         id: c.id || `chk-${Date.now()}-${idx}`,
         title: c.title,
         completed: !!c.completed,
+        assigneeId: c.assigneeId || null,
+        assignee: c.assignee || null,
       })),
       mentions: input.mentions || [],
       reminders: input.reminders || [],

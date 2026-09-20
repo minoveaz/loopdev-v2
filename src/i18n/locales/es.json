@@ -534,6 +534,42 @@
       "registeredOn": "Alta: {{date}}",
       "updatedOn": "Actualizado: {{date}}"
     },
+    "tasks": {
+      "title": "Tareas de CRM",
+      "description": "Gestiona seguimientos, tareas del pipeline y compromisos con contactos en Sales CRM.",
+      "total": "Total de tareas",
+      "open": "Tareas abiertas",
+      "all": "Todas las tareas",
+      "list": "Lista",
+      "kanban": "Kanban",
+      "calendar": "Calendario",
+      "advancedFilters": "Filtros avanzados",
+      "templates": "Plantillas",
+      "newTask": "Nueva tarea",
+      "quickTemplates": "Plantillas rápidas",
+      "searchPlaceholder": "Buscar tareas, descripciones y contactos...",
+      "filters": { "status": "Estado", "priority": "Prioridad", "assignee": "Asignado", "tags": "Etiquetas" },
+      "columns": { "task": "Tarea", "relatedRecord": "Registro relacionado", "subtasks": "Subtareas", "priority": "Prioridad", "assignee": "Asignado", "dueDate": "Fecha límite", "tags": "Etiquetas" },
+      "overdue": "Vencidas",
+      "urgentOverdue": "Urgentes y vencidas",
+      "dueToday": "Vencen hoy",
+      "completed": "Completadas",
+      "deleteSelectedAction": "Eliminar seleccionadas",
+      "deleteSelectedTitle": "¿Eliminar tareas seleccionadas?",
+      "deleteSelectedDescription": "Se eliminarán permanentemente {{count}} tarea(s) seleccionada(s).",
+      "deletedSelected": "{{count}} tarea(s) eliminada(s)",
+      "status": { "open": "Abierta", "inProgress": "En progreso", "completed": "Completada", "cancelled": "Cancelada" }
+      ,"unassigned": "Sin asignar",
+      "priority": { "urgent": "Urgente", "high": "Alta", "normal": "Normal", "low": "Baja" },
+      "detail": { "title": "Título de la tarea", "titlePlaceholder": "Título de la tarea...", "priority": "Prioridad", "completed": "COMPLETADA", "overdue": "VENCIDA", "pending": "PENDIENTE", "assignee": "Responsable", "reassign": "Reasignar", "tags": "Etiquetas y categorías", "add": "Añadir", "noTags": "Sin etiquetas asignadas.", "reminders": "Recordatorios programados", "remind15": "15 min antes del vencimiento", "remindHour": "1 hora antes", "remindHourDue": "1 hora antes del vencimiento", "remindDay": "1 día antes", "remindDayDue": "1 día antes del vencimiento", "noReminders": "Sin recordatorios activos.", "quickReschedule": "Reprogramación rápida", "description": "Descripción o notas", "descriptionPlaceholder": "Añade detalles o notas para esta tarea...", "subtasks": "Subtareas y checklist ({{completed}}/{{total}})", "deleteSubtask": "Eliminar subtarea", "addSubtaskPlaceholder": "Añadir subtarea o elemento de checklist...", "markComplete": "Marcar como completada", "taskCompleted": "Tarea completada", "deleteTask": "Eliminar tarea definitivamente" },
+      "form": {
+        "newTitle": "Nueva tarea", "eyebrow": "CRM / Tareas", "description": "Crea una tarea con subtareas, fecha límite y registro relacionado.",
+        "saving": "Guardando...", "create": "Crear tarea", "quickTemplates": "Plantillas rápidas", "clearTemplate": "Limpiar plantilla",
+        "title": "Título de la tarea", "titlePlaceholder": "p. ej. Seguimiento de cotización...", "relatedRecord": "Registro relacionado", "relatedPlaceholder": "p. ej. Carlos Gómez · Seguros Bolívar",
+        "noDueDate": "Sin fecha", "noFixedDate": "Sin fecha fija", "today": "Hoy", "tomorrow": "Mañana (+1 día)", "inTwoDays": "En 2 días", "inThreeDays": "En 3 días", "inOneWeek": "En 1 semana",
+        "descriptionLabel": "Descripción / notas adicionales", "descriptionPlaceholder": "Detalles de las acciones acordadas y requisitos previos...", "subtasks": "Subtareas y checklist ({{count}})", "completed": "completadas", "subtaskPlaceholder": "Escribe un paso y pulsa Enter...", "add": "Añadir"
+      }
+    },
     "customer360": {
       "tabs": {
         "contactInfo": "Información de contacto",
@@ -711,16 +747,6 @@
         "noActivity": "Sin actividad registrada",
         "noActivityDesc": "Las llamadas, reuniones, correos y notas aparecerán aquí."
       },
-      "tasks": {
-        "title": "Tareas de CRM",
-        "kanban": "Kanban",
-        "calendar": "Calendario",
-        "overdue": "Vencidas",
-        "urgentOverdue": "Urgentes y vencidas",
-        "dueToday": "Vencen hoy",
-        "completed": "Completadas",
-        "status": { "open": "Abierta", "inProgress": "En progreso", "completed": "Completada", "cancelled": "Cancelada" }
-      },
       "operations": {
         "title": "Operaciones de CRM",
         "description": "Búsqueda reutilizable, vistas del espacio de trabajo, gobierno y operaciones de datos locales."
@@ -733,6 +759,28 @@
         "loadConversationError": "No se pudo cargar la conversación",
         "conversationUnavailable": "Conversación no disponible",
         "conversationUnavailableDescription": "Es posible que esta conversación ya no esté en la vista seleccionada."
+      },
+      "tasks": {
+        "title": "Tareas de CRM",
+        "all": "Todas las tareas",
+        "list": "Lista",
+        "kanban": "Kanban",
+        "calendar": "Calendario",
+        "advancedFilters": "Filtros avanzados",
+        "templates": "Plantillas",
+        "newTask": "Nueva tarea",
+        "quickTemplates": "Plantillas rápidas",
+        "searchPlaceholder": "Buscar tareas, descripciones y contactos...",
+        "filters": { "status": "Estado", "priority": "Prioridad", "assignee": "Asignado", "tags": "Etiquetas" },
+        "overdue": "Vencidas",
+        "urgentOverdue": "Urgentes y vencidas",
+        "dueToday": "Vencen hoy",
+        "completed": "Completadas",
+        "deleteSelectedAction": "Eliminar seleccionadas",
+        "deleteSelectedTitle": "¿Eliminar tareas seleccionadas?",
+        "deleteSelectedDescription": "Se eliminarán permanentemente {{count}} tarea(s) seleccionada(s).",
+        "deletedSelected": "{{count}} tarea(s) eliminada(s)",
+        "status": { "open": "Abierta", "inProgress": "En progreso", "completed": "Completada", "cancelled": "Cancelada" }
       }
     }
   },

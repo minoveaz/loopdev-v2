@@ -5,7 +5,9 @@ import type {
   TaskEntityRef,
   TaskPriority,
   TaskTemplateRecord,
+  TaskChecklistItem,
 } from "@/loopdev/domains/tasks";
+import { AVAILABLE_ASSIGNABLE_USERS } from "@/loopdev/domains/tasks";
 import { AppDrawer } from "@/components/platform";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,11 +23,12 @@ import {
 import { Sparkles, Plus, Trash2, Calendar, CheckSquare, Clock, User, Check } from "lucide-react";
 import { StatusBadge } from "@/components/common";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 interface QuickTaskModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (input: CreateTaskInput) => Promise<any>;
+  onSubmit: (input: CreateTaskInput) => Promise<unknown>;
   templates?: TaskTemplateRecord[];
   initialRelation?: TaskEntityRef;
   initialSuite?: PlatformSuiteKey;
@@ -41,12 +44,13 @@ export function QuickTaskModal({
   initialSuite = "crm",
   initialTemplate,
 }: QuickTaskModalProps) {
+  const t = useT();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("normal");
   const [suite, setSuite] = useState<PlatformSuiteKey>(initialSuite);
   const [dueDays, setDueDays] = useState<number | null>(1);
-  const [checklist, setChecklist] = useState<Array<{ id: string; title: string; completed: boolean }>>([]);
+  const [checklist, setChecklist] = useState<TaskChecklistItem[]>([]);
   const [newStep, setNewStep] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +85,8 @@ export function QuickTaskModal({
           id: `step-${idx}`,
           title: c,
           completed: false,
+          assigneeId: null,
+          assignee: null,
         })),
       );
     }
@@ -89,7 +95,7 @@ export function QuickTaskModal({
 
   const handleAddStep = () => {
     if (!newStep.trim()) return;
-    setChecklist((prev) => [...prev, { id: `step-${Date.now()}`, title: newStep.trim(), completed: false }]);
+    setChecklist((prev) => [...prev, { id: `step-${Date.now()}`, title: newStep.trim(), completed: false, assigneeId: null, assignee: null }]);
     setNewStep("");
     dirtyRef.current = true;
   };
@@ -149,13 +155,13 @@ export function QuickTaskModal({
       onOpenChange={(o) => {
         if (!o) onClose();
       }}
-      title={title.trim() ? title : "Nueva Tarea"}
-      eyebrow="CRM / TAREAS"
+      title={title.trim() ? title : t("crm.tasks.form.newTitle")}
+      eyebrow={t("crm.tasks.form.eyebrow")}
       mode="New"
       size="md"
       layoutMode="standard"
       responsive="auto"
-      description="Crea una tarea comercial con subtareas, vencimiento y cliente vinculado."
+      description={t("crm.tasks.form.description")}
       dirty={() => dirtyRef.current}
       footer={
         <div className="flex w-full items-center justify-end gap-2.5">
@@ -164,7 +170,7 @@ export function QuickTaskModal({
             variant="outline"
             onClick={onClose}
           >
-            Cancelar
+            {t("common.cancel")}
           </Button>
           <Button
             type="button"
@@ -172,7 +178,7 @@ export function QuickTaskModal({
             disabled={isSubmitting || !title.trim()}
             className="min-w-[120px]"
           >
-            {isSubmitting ? "Guardando..." : "Crear Tarea"}
+            {isSubmitting ? t("crm.tasks.form.saving") : t("crm.tasks.form.create")}
           </Button>
         </div>
       }
@@ -184,7 +190,7 @@ export function QuickTaskModal({
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
-                Plantillas Rápidas (1-Tap)
+                {t("crm.tasks.form.quickTemplates")}
               </span>
               {selectedTemplateId && (
                 <button
@@ -197,7 +203,7 @@ export function QuickTaskModal({
                   }}
                   className="text-xs text-muted-foreground hover:text-foreground font-medium underline"
                 >
-                  Limpiar plantilla
+                  {t("crm.tasks.form.clearTemplate")}
                 </button>
               )}
             </div>
@@ -245,7 +251,7 @@ export function QuickTaskModal({
           {/* Title */}
           <div className="space-y-1.5">
             <Label htmlFor="task-title" className="text-xs font-semibold">
-              Título de la Tarea <span className="text-destructive">*</span>
+              {t("crm.tasks.form.title")} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="task-title"
@@ -254,7 +260,7 @@ export function QuickTaskModal({
                 setTitle(e.target.value);
                 dirtyRef.current = true;
               }}
-              placeholder="Ej: Llamada de seguimiento de cotización..."
+              placeholder={t("crm.tasks.form.titlePlaceholder")}
               autoFocus
             />
           </div>
@@ -262,7 +268,7 @@ export function QuickTaskModal({
           {/* Related Contact */}
           <div className="space-y-1.5">
             <Label htmlFor="task-relation" className="text-xs font-semibold">
-              Contacto / Cuenta Vinculada
+              {t("crm.tasks.form.relatedRecord")}
             </Label>
             <Input
               id="task-relation"
@@ -271,14 +277,14 @@ export function QuickTaskModal({
                 setRelatedRecordName(e.target.value);
                 dirtyRef.current = true;
               }}
-              placeholder="Ej: Carlos Gómez · Seguros Bolivar"
+              placeholder={t("crm.tasks.form.relatedPlaceholder")}
             />
           </div>
 
           {/* Priority & Due Date Row */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Prioridad</Label>
+              <Label className="text-xs font-semibold">{t("crm.tasks.columns.priority")}</Label>
               <Select
                 value={priority}
                 onValueChange={(val: TaskPriority) => {
@@ -293,25 +299,25 @@ export function QuickTaskModal({
                   <SelectItem value="urgent">
                     <span className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-rose-500" />
-                      Urgente
+                      {t("crm.tasks.priority.urgent")}
                     </span>
                   </SelectItem>
                   <SelectItem value="high">
                     <span className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-amber-500" />
-                      Alta
+                      {t("crm.tasks.priority.high")}
                     </span>
                   </SelectItem>
                   <SelectItem value="normal">
                     <span className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-blue-500" />
-                      Normal
+                      {t("crm.tasks.priority.normal")}
                     </span>
                   </SelectItem>
                   <SelectItem value="low">
                     <span className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-slate-400" />
-                      Baja
+                      {t("crm.tasks.priority.low")}
                     </span>
                   </SelectItem>
                 </SelectContent>
@@ -319,7 +325,7 @@ export function QuickTaskModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Vencimiento</Label>
+              <Label className="text-xs font-semibold">{t("crm.tasks.columns.dueDate")}</Label>
               <Select
                 value={dueDays !== null ? String(dueDays) : "none"}
                 onValueChange={(val) => {
@@ -328,15 +334,15 @@ export function QuickTaskModal({
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sin fecha" />
+                  <SelectValue placeholder={t("crm.tasks.form.noDueDate")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Sin fecha fija</SelectItem>
-                  <SelectItem value="0">Hoy</SelectItem>
-                  <SelectItem value="1">Mañana (+1 día)</SelectItem>
-                  <SelectItem value="2">En 2 días</SelectItem>
-                  <SelectItem value="3">En 3 días</SelectItem>
-                  <SelectItem value="7">En 1 semana</SelectItem>
+                  <SelectItem value="none">{t("crm.tasks.form.noFixedDate")}</SelectItem>
+                  <SelectItem value="0">{t("crm.tasks.form.today")}</SelectItem>
+                  <SelectItem value="1">{t("crm.tasks.form.tomorrow")}</SelectItem>
+                  <SelectItem value="2">{t("crm.tasks.form.inTwoDays")}</SelectItem>
+                  <SelectItem value="3">{t("crm.tasks.form.inThreeDays")}</SelectItem>
+                  <SelectItem value="7">{t("crm.tasks.form.inOneWeek")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -345,7 +351,7 @@ export function QuickTaskModal({
           {/* Description */}
           <div className="space-y-1.5">
             <Label htmlFor="task-desc" className="text-xs font-semibold">
-              Descripción / Notas adicionales
+              {t("crm.tasks.form.descriptionLabel")}
             </Label>
             <Textarea
               id="task-desc"
@@ -354,7 +360,7 @@ export function QuickTaskModal({
                 setDescription(e.target.value);
                 dirtyRef.current = true;
               }}
-              placeholder="Detalles sobre las acciones acordadas, requisitos previos..."
+              placeholder={t("crm.tasks.form.descriptionPlaceholder")}
               rows={3}
             />
           </div>
@@ -364,11 +370,11 @@ export function QuickTaskModal({
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold flex items-center gap-1.5">
                 <CheckSquare className="w-3.5 h-3.5 text-primary" />
-                Sub-tareas & Checklist ({checklist.length})
+                {t("crm.tasks.form.subtasks", { count: checklist.length })}
               </Label>
               {checklist.length > 0 && (
                 <span className="text-[11px] text-muted-foreground font-medium">
-                  {checklist.filter((c) => c.completed).length} de {checklist.length} listas
+                  {checklist.filter((c) => c.completed).length} / {checklist.length} {t("crm.tasks.form.completed")}
                 </span>
               )}
             </div>
@@ -383,7 +389,7 @@ export function QuickTaskModal({
                     handleAddStep();
                   }
                 }}
-                placeholder="Escribe un paso (ej: Adjuntar anexo PDF) y presiona Enter..."
+                placeholder={t("crm.tasks.form.subtaskPlaceholder")}
               />
               <Button
                 type="button"
@@ -392,7 +398,7 @@ export function QuickTaskModal({
                 className="shrink-0"
               >
                 <Plus className="w-4 h-4 mr-1" />
-                Agregar
+                {t("crm.tasks.form.add")}
               </Button>
             </div>
 
@@ -401,18 +407,28 @@ export function QuickTaskModal({
                 {checklist.map((step) => (
                   <div
                     key={step.id}
-                    className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-card border border-border shadow-xs text-xs"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-2.5 text-xs shadow-xs"
                   >
-                    <span className="font-medium text-foreground truncate flex items-center gap-2">
-                      <span className="text-muted-foreground">▫️</span>
+                    <span className="flex min-w-[180px] flex-1 items-center gap-2 font-medium text-foreground">
+                      <CheckSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       {step.title}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveStep(step.id)}
-                      className="text-muted-foreground hover:text-destructive p-1 rounded-md transition-colors"
+                    <Select
+                      value={step.assigneeId || "unassigned"}
+                      onValueChange={(value) => setChecklist((current) => current.map((item) => {
+                        if (item.id !== step.id) return item;
+                        const assignee = AVAILABLE_ASSIGNABLE_USERS.find((user) => user.id === value) || null;
+                        return { ...item, assigneeId: assignee?.id || null, assignee };
+                      }))}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <SelectTrigger className="h-8 w-40 text-[11px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">{t("crm.tasks.unassigned")}</SelectItem>
+                        {AVAILABLE_ASSIGNABLE_USERS.map((user) => <SelectItem key={user.id} value={user.id}>{user.displayName}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <button type="button" onClick={() => handleRemoveStep(step.id)} className="rounded-md p-1 text-muted-foreground transition-colors hover:text-destructive">
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}

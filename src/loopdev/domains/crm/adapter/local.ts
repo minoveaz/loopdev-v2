@@ -562,6 +562,20 @@ export const localLoopdevAdapter = {
         .map(toPipelineOpportunity);
     },
 
+    async bulkArchiveOpportunities(opportunityIds: string[], requestedOrganizationId: string) {
+      if (requestedOrganizationId !== organizationId) return { successCount: 0, failureCount: opportunityIds.length };
+      const now = new Date().toISOString();
+      let successCount = 0;
+      opportunityIds.forEach((opportunityId) => {
+        const current = localCrmOpportunitiesStore.get(opportunityId);
+        if (current && current.organizationId === requestedOrganizationId && !current.archivedAt) {
+          localCrmOpportunitiesStore.update(opportunityId, { archivedAt: now });
+          successCount += 1;
+        }
+      });
+      return { successCount, failureCount: opportunityIds.length - successCount };
+    },
+
     async moveOpportunityStage(
       opportunityId: string,
       input: CRMMoveOpportunityStageInput | CRMPipelineStageCode,

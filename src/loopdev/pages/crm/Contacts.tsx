@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { loopdevAdapter, contactName, type CRMContact, type CRMCreateContactInput, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import {
   DataCard,
+  BulkSelectionBar,
   FilterDropdown,
   PageContainer,
   PageHeader,
@@ -384,34 +385,12 @@ export default function SalesCRMContacts() {
         </div>
       )}
 
-      {selectedContactIds.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary-soft/30 px-4 py-2.5 text-sm animate-in fade-in slide-in-from-top-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-foreground">
-              {selectedContactIds.size} {selectedContactIds.size === 1 ? "contact selected" : "contacts selected"}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs text-muted-foreground hover:text-foreground"
-              onClick={clearSelection}
-            >
-              Clear
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-8 gap-1.5 text-xs"
-              onClick={() => setBulkConfirmOpen(true)}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Delete / Archive selected ({selectedContactIds.size})
-            </Button>
-          </div>
-        </div>
-      )}
+      <BulkSelectionBar
+        selectedCount={selectedContactIds.size}
+        entityLabel="contacts"
+        onClear={clearSelection}
+        actions={[{ label: "Archive selected", icon: Trash2, destructive: true, onClick: () => setBulkConfirmOpen(true) }]}
+      />
 
       <DataCard
         flush

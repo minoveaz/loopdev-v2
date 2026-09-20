@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { ExternalLink, Plus, RefreshCw, SearchX } from "lucide-react";
+import { ExternalLink, Plus, RefreshCw, SearchX, Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppDrawer } from "@/components/platform";
 import { CRMRecordPicker, type CRMRecordPickerItem } from "@/loopdev/components/crm/CRMRecordPicker";
 import { RelatedFilesPanel } from "@/loopdev/components/files";
-import { ConfirmDialog, DataCard, FilterDropdown, FormSectionHeader, PageContainer, PageHeader, SearchInput, StatusBadge, useFormLifecycle } from "@/components/common";
+import { ConfirmDialog, DataCard, DataTable, FilterDropdown, FormSectionHeader, PageContainer, PageHeader, SearchInput, StatusBadge, useFormLifecycle, type DataTableAction, type DataTableColumn } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { Currency } from "@/types";
@@ -60,7 +59,7 @@ export default function SalesCRMOpportunities() {
   const [reopenTarget, setReopenTarget] = useState<CRMPipelineOpportunity | null>(null);
   const [reopenReason, setReopenReason] = useState("");
   const [reopenDiscardOpen, setReopenDiscardOpen] = useState(false);
-  const { opportunities, loading, error, forbidden, mutation, reload, updateOpportunity, moveStage, createOpportunity, reopenOpportunity } = useCrmPipeline({
+  const { opportunities, loading, error, forbidden, mutation, reload, updateOpportunity, moveStage, createOpportunity, reopenOpportunity, bulkArchiveOpportunities } = useCrmPipeline({
     query, stageCodes, origins, sortBy, sortDirection: "desc",
   });
   const ownerOptions = useMemo(() => [...new Map(
@@ -68,6 +67,26 @@ export default function SalesCRMOpportunities() {
   )].map(([value, label]) => ({ value, label })), [opportunities]);
   const [ownerIds, setOwnerIds] = useState<string[]>([]);
   const filtered = ownerIds.length ? opportunities.filter((item) => item.owner && ownerIds.includes(item.owner.id)) : opportunities;
+
+  const columns: DataTableColumn<CRMPipelineOpportunity>[] = useMemo(() => [
+    {
+      key: "name",
+      header: t("crm.opportunities.opportunity"),
+      sortable: true,
+      cell: (item) => <><div className="font-medium">{item.name}</div><div className="text-xs text-muted-foreground">{item.productKey ?? t("crm.opportunities.noProduct")}</div></>,
+    },
+    { key: "contact", header: t("crm.opportunities.contact"), sortable: true, sortAccessor: (item) => item.contact.displayName, cell: (item) => item.contact.displayName },
+    { key: "stageCode", header: t("crm.opportunities.stage"), sortable: true, cell: (item) => <StatusBadge tone={stageTone[item.stageCode]}>{t(`crm.opportunities.stages.${item.stageCode}`)}</StatusBadge> },
+    { key: "amount", header: t("crm.opportunities.amount"), sortable: true, cell: (item) => item.amount === null ? "—" : formatCurrency(item.amount, (item.currency ?? "EUR") as Currency) },
+    { key: "owner", header: t("crm.opportunities.owner"), sortable: true, sortAccessor: (item) => item.owner?.displayName ?? "", cell: (item) => item.owner?.displayName ?? t("crm.opportunities.unassigned") },
+    { key: "expectedCloseDate", header: t("crm.opportunities.expectedClose"), sortable: true, cell: (item) => item.expectedCloseDate ? formatDate(item.expectedCloseDate) : "—" },
+  ], [t]);
+
+  const rowActions: DataTableAction<CRMPipelineOpportunity>[] = useMemo(() => [{
+    label: t("crm.opportunities.view"),
+    icon: ExternalLink,
+    onClick: (item) => navigate(`/app/sales-crm/opportunities/${item.id}`),
+  }], [navigate, t]);
 
   useEffect(() => {
     void loopdevAdapter.catalog.listCatalogItems({ organizationId: "local-development-organization", status: ["active"] })
@@ -163,13 +182,16 @@ export default function SalesCRMOpportunities() {
         empty={!loading && !error && !forbidden && filtered.length === 0}
         emptyIcon={SearchX} emptyTitle={t("crm.opportunities.noFound")} emptyDescription={t("crm.opportunities.tryFilters")}
       >
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader><TableRow><TableHead>{t("crm.opportunities.opportunity")}</TableHead><TableHead>{t("crm.opportunities.contact")}</TableHead><TableHead>{t("crm.opportunities.stage")}</TableHead><TableHead>{t("crm.opportunities.owner")}</TableHead><TableHead>{t("crm.opportunities.amount")}</TableHead><TableHead>{t("crm.opportunities.expectedClose")}</TableHead><TableHead /></TableRow></TableHeader>
-            <TableBody>{filtered.map((item) => <TableRow key={item.id} className="cursor-pointer" onClick={() => navigate(`/app/sales-crm/opportunities/${item.id}`)}><TableCell><div className="font-medium">{item.name}</div><div className="text-xs text-muted-foreground">{item.productKey ?? t("crm.opportunities.noProduct")}</div></TableCell><TableCell>{item.contact.displayName}</TableCell><TableCell><StatusBadge tone={stageTone[item.stageCode]}>{stageLabel(item.stageCode)}</StatusBadge></TableCell><TableCell>{item.owner?.displayName ?? t("crm.opportunities.unassigned")}</TableCell><TableCell>{item.amount === null ? "—" : formatCurrency(item.amount, (item.currency ?? "EUR") as Currency)}</TableCell><TableCell>{item.expectedCloseDate ? formatDate(item.expectedCloseDate) : "—"}</TableCell><TableCell><Button variant="ghost" size="sm" onClick={(event) => { event.stopPropagation(); navigate(`/app/sales-crm/opportunities/${item.id}`); }}>{t("crm.opportunities.view")}</Button></TableCell></TableRow>)}</TableBody>
-          </Table>
-        </div>
-        <div className="grid gap-3 p-3 md:hidden">{filtered.map((item) => <button key={item.id} type="button" className="surface-card-compact p-4 text-left" onClick={() => navigate(`/app/sales-crm/opportunities/${item.id}`)}><div className="flex items-start justify-between gap-2"><span className="font-semibold">{item.name}</span><StatusBadge tone={stageTone[item.stageCode]}>{stageLabel(item.stageCode)}</StatusBadge></div><p className="mt-1 text-sm text-muted-foreground">{item.contact.displayName}</p><div className="mt-3 flex justify-between text-xs text-muted-foreground"><span>{item.amount === null ? t("crm.opportunities.noAmount") : formatCurrency(item.amount, (item.currency ?? "EUR") as Currency)}</span><span>{item.expectedCloseDate ? formatDate(item.expectedCloseDate) : t("crm.opportunities.noCloseDate")}</span></div></button>)}</div>
+        <DataTable
+          data={filtered}
+          columns={columns}
+          rowActions={rowActions}
+          bulkActions={[{ label: "Archive selected", icon: Trash2, destructive: true, onClick: (targets) => { void bulkArchiveOpportunities(targets); } }]}
+          onRowClick={(item) => navigate(`/app/sales-crm/opportunities/${item.id}`)}
+          initialPageSize={10}
+          pageSizes={[10, 25, 50]}
+          emptyIcon={SearchX}
+        />
       </DataCard>
       {mutation.status !== "idle" && mutation.status !== "pending" && <div role={mutation.status === "success" ? "status" : "alert"} className="text-sm text-muted-foreground">{mutation.status === "success" ? t("crm.opportunities.updated") : mutation.message}</div>}
       <AppDrawer open={drawerOpen} onOpenChange={closeDetails} title={selected?.name ?? t("crm.opportunities.opportunity")} description={selected ? `${selected.contact.displayName} · ${stageLabel(selected.stageCode)}` : undefined} restoreFocusRef={restoreFocusRef} size="md" layoutMode="expanded" responsive="auto" dirty={() => detailsLifecycle.dirtyRef.current} confirmOnClose onDiscard={() => detailsLifecycle.markClean()} footer={selected ? <div className="flex w-full justify-between gap-2"><div className="flex gap-2"><Button variant="outline" onClick={() => navigate(`/app/sales-crm/contacts/${selected.contactId}`)}><ExternalLink className="mr-1.5 h-4 w-4" />Contact</Button>{selected.leadId && <Button variant="outline" onClick={() => navigate(`/app/sales-crm/leads?lead=${selected.leadId}`)}><ExternalLink className="mr-1.5 h-4 w-4" />Lead</Button>}</div><Button onClick={() => closeDetails(false)}>Done</Button></div> : undefined}>

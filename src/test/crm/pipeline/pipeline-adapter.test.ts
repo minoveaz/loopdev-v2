@@ -32,6 +32,17 @@ describe("Pipeline adapter contract", () => {
       .rejects.toMatchObject({ code: "forbidden" });
   });
 
+  it("archives selected opportunities and removes them from active results", async () => {
+    const opportunities = await localLoopdevAdapter.crm.listOpportunities({ organizationId });
+    const selected = opportunities.slice(0, 2);
+    const result = await localLoopdevAdapter.crm.bulkArchiveOpportunities?.(selected.map((item) => item.id), organizationId);
+
+    expect(result).toEqual({ successCount: 2, failureCount: 0 });
+    const activeIds = (await localLoopdevAdapter.crm.listOpportunities({ organizationId })).map((item) => item.id);
+    expect(activeIds).not.toContain(selected[0].id);
+    expect(activeIds).not.toContain(selected[1].id);
+  });
+
   it("moves a stage and returns a conflict for stale expectedUpdatedAt", async () => {
     const [opportunity] = await localLoopdevAdapter.crm.listOpportunities({ organizationId });
     const moved = await localLoopdevAdapter.crm.moveOpportunityStage(opportunity.id, {

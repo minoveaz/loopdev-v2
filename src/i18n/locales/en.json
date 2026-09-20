@@ -534,6 +534,42 @@
       "registeredOn": "Registered: {{date}}",
       "updatedOn": "Updated: {{date}}"
     },
+    "tasks": {
+      "title": "CRM Tasks",
+      "description": "Follow-up work, pipeline tasks, and contact commitments across Sales CRM.",
+      "total": "Total tasks",
+      "open": "Open tasks",
+      "all": "All tasks",
+      "list": "List",
+      "kanban": "Kanban",
+      "calendar": "Calendar",
+      "advancedFilters": "Advanced filters",
+      "templates": "Templates",
+      "newTask": "New task",
+      "quickTemplates": "Quick templates",
+      "searchPlaceholder": "Search tasks, descriptions, contacts...",
+      "filters": { "status": "Status", "priority": "Priority", "assignee": "Assignee", "tags": "Tags" },
+      "columns": { "task": "Task", "relatedRecord": "Related record", "subtasks": "Subtasks", "priority": "Priority", "assignee": "Assignee", "dueDate": "Due date", "tags": "Tags" },
+      "overdue": "Overdue",
+      "urgentOverdue": "Urgent & overdue",
+      "dueToday": "Due today",
+      "completed": "Completed",
+      "deleteSelectedAction": "Delete selected",
+      "deleteSelectedTitle": "Delete selected tasks?",
+      "deleteSelectedDescription": "{{count}} selected task(s) will be permanently deleted.",
+      "deletedSelected": "{{count}} task(s) deleted",
+      "status": { "open": "Open", "inProgress": "In progress", "completed": "Completed", "cancelled": "Cancelled" }
+      ,"unassigned": "Unassigned",
+      "priority": { "urgent": "Urgent", "high": "High", "normal": "Normal", "low": "Low" },
+        "detail": { "title": "Task title", "titlePlaceholder": "Task title...", "priority": "Priority", "completed": "COMPLETED", "overdue": "OVERDUE", "pending": "PENDING", "assignee": "Assignee", "reassign": "Reassign", "noAssignee": "No assignee", "assignedAgent": "Team member assigned", "clickToAssign": "Click Reassign to assign", "tags": "Tags & categories", "add": "Add", "noTags": "No tags assigned.", "deleteTag": "Delete tag", "tagPlaceholder": "e.g. #VIP or #Renewal", "reminders": "Scheduled reminders", "remind15": "15 min before due", "remindHour": "1 hour before", "remindHourDue": "1 hour before due", "remindDay": "1 day before", "remindDayDue": "1 day before due", "noReminders": "No active reminders.", "deleteReminder": "Delete reminder", "quickReschedule": "Quick reschedule", "tomorrow": "Tomorrow", "inThreeDays": "In 3 days", "nextMonday": "Next Monday", "description": "Description or notes", "descriptionPlaceholder": "Add details or notes for this task...", "subtasks": "Subtasks & checklist ({{completed}}/{{total}})", "deleteSubtask": "Delete subtask", "addSubtaskPlaceholder": "Add a subtask or checklist item...", "markComplete": "Mark as complete", "taskCompleted": "Task completed", "deleteTask": "Delete task permanently" },
+      "form": {
+        "newTitle": "New task", "eyebrow": "CRM / Tasks", "description": "Create a task with subtasks, due date, and a related record.",
+        "saving": "Saving...", "create": "Create task", "quickTemplates": "Quick templates", "clearTemplate": "Clear template",
+        "title": "Task title", "titlePlaceholder": "e.g. Follow up on quotation...", "relatedRecord": "Related record", "relatedPlaceholder": "e.g. Carlos Gomez · Bolivar Insurance",
+        "noDueDate": "No date", "noFixedDate": "No fixed date", "today": "Today", "tomorrow": "Tomorrow (+1 day)", "inTwoDays": "In 2 days", "inThreeDays": "In 3 days", "inOneWeek": "In 1 week",
+        "descriptionLabel": "Description / additional notes", "descriptionPlaceholder": "Details about agreed actions and prerequisites...", "subtasks": "Subtasks & checklist ({{count}})", "completed": "completed", "subtaskPlaceholder": "Type a step and press Enter...", "add": "Add"
+      }
+    },
     "customer360": {
       "tabs": {
         "contactInfo": "Contact Information",
@@ -711,16 +747,6 @@
         "noActivity": "No recent activity",
         "noActivityDesc": "Calls, meetings, emails, and notes will appear here."
       },
-      "tasks": {
-        "title": "CRM Tasks",
-        "kanban": "Kanban",
-        "calendar": "Calendar",
-        "overdue": "Overdue",
-        "urgentOverdue": "Urgent & overdue",
-        "dueToday": "Due today",
-        "completed": "Completed",
-        "status": { "open": "Open", "inProgress": "In progress", "completed": "Completed", "cancelled": "Cancelled" }
-      },
       "operations": {
         "title": "CRM operations",
         "description": "Reusable search, workspace views, governance, and local data operations."
@@ -733,6 +759,28 @@
         "loadConversationError": "Unable to load conversation",
         "conversationUnavailable": "Conversation unavailable",
         "conversationUnavailableDescription": "This conversation may no longer be in the selected view."
+      },
+      "tasks": {
+        "title": "CRM Tasks",
+        "all": "All tasks",
+        "list": "List",
+        "kanban": "Kanban",
+        "calendar": "Calendar",
+        "advancedFilters": "Advanced filters",
+        "templates": "Templates",
+        "newTask": "New task",
+        "quickTemplates": "Quick templates",
+        "searchPlaceholder": "Search tasks, descriptions, contacts...",
+        "filters": { "status": "Status", "priority": "Priority", "assignee": "Assignee", "tags": "Tags" },
+        "overdue": "Overdue",
+        "urgentOverdue": "Urgent & overdue",
+        "dueToday": "Due today",
+        "completed": "Completed",
+        "deleteSelectedAction": "Delete selected",
+        "deleteSelectedTitle": "Delete selected tasks?",
+        "deleteSelectedDescription": "{{count}} selected task(s) will be permanently deleted.",
+        "deletedSelected": "{{count}} task(s) deleted",
+        "status": { "open": "Open", "inProgress": "In progress", "completed": "Completed", "cancelled": "Cancelled" }
       }
     }
   },

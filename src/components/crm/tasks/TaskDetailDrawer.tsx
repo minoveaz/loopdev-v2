@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Clock,
   CheckCircle2,
@@ -36,18 +37,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useT } from "@/i18n";
 
 interface TaskDetailDrawerProps {
   task: TaskRecord | null;
   open: boolean;
   onClose: () => void;
-  onComplete: (taskId: string) => Promise<any>;
-  onReschedule: (taskId: string, newDueAt: string) => Promise<any>;
-  onToggleChecklist: (taskId: string, itemId: string, completed: boolean) => Promise<any>;
-  onAddChecklistItem?: (taskId: string, title: string) => Promise<any>;
-  onDeleteChecklistItem?: (taskId: string, itemId: string) => Promise<any>;
+  onComplete: (taskId: string) => Promise<unknown>;
+  onReschedule: (taskId: string, newDueAt: string) => Promise<unknown>;
+  onToggleChecklist: (taskId: string, itemId: string, completed: boolean) => Promise<unknown>;
+  onAddChecklistItem?: (taskId: string, title: string) => Promise<unknown>;
+  onDeleteChecklistItem?: (taskId: string, itemId: string) => Promise<unknown>;
   onDeleteTask?: (taskId: string) => void;
-  onUpdateTask?: (taskId: string, patch: UpdateTaskPatch) => Promise<any>;
+  onUpdateTask?: (taskId: string, patch: UpdateTaskPatch) => Promise<unknown>;
 }
 
 const PRESET_TAGS = ["#VIP", "#Renovación", "#Reclamo", "#Urgente", "#Seguimiento", "#Comercial", "#Onboarding"];
@@ -64,6 +66,7 @@ export function TaskDetailDrawer({
   onDeleteTask,
   onUpdateTask,
 }: TaskDetailDrawerProps) {
+  const t = useT();
   // Local edit states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -234,6 +237,15 @@ export function TaskDetailDrawer({
     });
   };
 
+  const handleSubtaskAssigneeChange = async (itemId: string, assigneeId: string) => {
+    if (!onUpdateTask) return;
+    const assignee = AVAILABLE_ASSIGNABLE_USERS.find((user) => user.id === assigneeId) || null;
+    const checklist = (task.checklist || []).map((item) => item.id === itemId
+      ? { ...item, assigneeId: assignee?.id || null, assignee }
+      : item);
+    await onUpdateTask(task.id, { checklist });
+  };
+
   return (
     <DetailDrawer
       open={open}
@@ -253,7 +265,7 @@ export function TaskDetailDrawer({
         {/* Editable Title */}
         <div className="space-y-1.5">
           <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-            Título de la tarea
+            {t("crm.tasks.detail.title")}
           </label>
           <Input
             value={title}
@@ -264,7 +276,7 @@ export function TaskDetailDrawer({
                 e.currentTarget.blur();
               }
             }}
-            placeholder="Título de la tarea..."
+              placeholder={t("crm.tasks.detail.titlePlaceholder")}
             className="font-semibold text-base h-10 bg-card border-border focus-visible:ring-primary shadow-xs"
           />
         </div>
@@ -274,7 +286,7 @@ export function TaskDetailDrawer({
           {/* Priority Selector Dropdown */}
           <div className="space-y-1.5">
             <span className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider block">
-              Prioridad
+              {t("crm.tasks.detail.priority")}
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -338,7 +350,7 @@ export function TaskDetailDrawer({
                 tone={task.status === "completed" ? "success" : isOverdue ? "destructive" : "neutral"}
                 className="w-full justify-center text-xs font-bold py-1.5"
               >
-                {task.status === "completed" ? "COMPLETADA" : isOverdue ? "VENCIDA" : "PENDIENTE"}
+                {task.status === "completed" ? t("crm.tasks.detail.completed") : isOverdue ? t("crm.tasks.detail.overdue") : t("crm.tasks.detail.pending")}
               </StatusBadge>
             </div>
           </div>
@@ -349,12 +361,12 @@ export function TaskDetailDrawer({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold text-foreground">Responsable Asignado</span>
+              <span className="text-xs font-semibold text-foreground">{t("crm.tasks.detail.assignee")}</span>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-7 text-xs font-semibold text-primary hover:text-primary">
-                  Reasignar <ChevronDown className="w-3 h-3 ml-1" />
+                  {t("crm.tasks.detail.reassign")} <ChevronDown className="w-3 h-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -363,7 +375,7 @@ export function TaskDetailDrawer({
                   className="text-xs cursor-pointer text-muted-foreground"
                 >
                   <User className="w-3.5 h-3.5 mr-2" />
-                  Sin asignar
+                  {t("crm.tasks.unassigned")}
                 </DropdownMenuItem>
                 {AVAILABLE_ASSIGNABLE_USERS.map((user) => (
                   <DropdownMenuItem
@@ -383,13 +395,13 @@ export function TaskDetailDrawer({
           </div>
 
           <div className="flex items-center gap-3 pt-1">
-            <UserAvatar name={task.assignedUser?.displayName || "Sin asignar"} size="sm" />
+            <UserAvatar name={task.assignedUser?.displayName || t("crm.tasks.unassigned")} size="sm" />
             <div>
               <div className="text-sm font-semibold text-foreground">
-                {task.assignedUser?.displayName || "Sin responsable asignado"}
+                {task.assignedUser?.displayName || t("crm.tasks.detail.noAssignee")}
               </div>
               <div className="text-xs text-muted-foreground">
-                {task.assignedUserId ? "Agente del equipo asignado" : "Haz clic en Reasignar para asignar"}
+                {task.assignedUserId ? t("crm.tasks.detail.assignedAgent") : t("crm.tasks.detail.clickToAssign")}
               </div>
             </div>
           </div>
@@ -400,7 +412,7 @@ export function TaskDetailDrawer({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Tag className="w-4 h-4 text-indigo-500" />
-              <span>Etiquetas & Categorías</span>
+              <span>{t("crm.tasks.detail.tags")}</span>
             </div>
             <Button
               size="sm"
@@ -409,30 +421,30 @@ export function TaskDetailDrawer({
               className="h-7 text-xs text-primary font-semibold flex items-center gap-1"
             >
               <Plus className="w-3.5 h-3.5" />
-              Añadir
+              {t("crm.tasks.detail.add")}
             </Button>
           </div>
 
           {/* Active Tags Chips */}
           <div className="flex flex-wrap gap-2">
-            {(task.tags || []).map((t) => (
+              {(task.tags || []).map((tag) => (
               <span
-                key={t}
+                  key={tag}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary-soft text-primary border border-primary/20 shadow-2xs"
               >
-                {t}
+                  {tag}
                 <button
                   type="button"
-                  onClick={() => handleDeleteTag(t)}
+                    onClick={() => handleDeleteTag(tag)}
                   className="hover:text-rose-600 transition-colors"
-                  title="Eliminar etiqueta"
+                  title={t("crm.tasks.detail.deleteTag")}
                 >
                   <X className="w-3 h-3" />
                 </button>
               </span>
             ))}
             {(!task.tags || task.tags.length === 0) && !showTagInput && (
-              <span className="text-xs text-muted-foreground italic">Sin etiquetas asignadas.</span>
+              <span className="text-xs text-muted-foreground italic">{t("crm.tasks.detail.noTags")}</span>
             )}
           </div>
 
@@ -443,7 +455,7 @@ export function TaskDetailDrawer({
                 <Input
                   value={newTagInput}
                   onChange={(e) => setNewTagInput(e.target.value)}
-                  placeholder="Ej: #VIP o #Renovación"
+                  placeholder={t("crm.tasks.detail.tagPlaceholder")}
                   className="h-8 text-xs bg-background"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -485,7 +497,7 @@ export function TaskDetailDrawer({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Bell className="w-4 h-4 text-amber-500" />
-              <span>Recordatorios Programados</span>
+              <span>{t("crm.tasks.detail.reminders")}</span>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -500,21 +512,21 @@ export function TaskDetailDrawer({
                   className="text-xs cursor-pointer"
                 >
                   <Clock className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-                  15 min antes del vencimiento
+                  {t("crm.tasks.detail.remind15")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleAddReminderPreset(60, "1 hora antes")}
+                  onClick={() => handleAddReminderPreset(60, t("crm.tasks.detail.remindHour"))}
                   className="text-xs cursor-pointer"
                 >
                   <Clock className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-                  1 hora antes del vencimiento
+                  {t("crm.tasks.detail.remindHourDue")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleAddReminderPreset(1440, "1 día antes")}
+                  onClick={() => handleAddReminderPreset(1440, t("crm.tasks.detail.remindDay"))}
                   className="text-xs cursor-pointer"
                 >
                   <Calendar className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-                  1 día antes del vencimiento
+                  {t("crm.tasks.detail.remindDayDue")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -540,14 +552,14 @@ export function TaskDetailDrawer({
                   type="button"
                   onClick={() => handleDeleteReminder(idx)}
                   className="text-muted-foreground hover:text-rose-600 transition-colors"
-                  title="Eliminar recordatorio"
+                  title={t("crm.tasks.detail.deleteReminder")}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}
             {(!task.reminders || task.reminders.length === 0) && (
-              <span className="text-xs text-muted-foreground italic block">Sin recordatorios activos.</span>
+                  <span className="text-xs text-muted-foreground italic block">{t("crm.tasks.detail.noReminders")}</span>
             )}
           </div>
         </div>
@@ -557,7 +569,7 @@ export function TaskDetailDrawer({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Clock className="w-4 h-4 text-emerald-600" />
-              <span>Reprogramación Rápida</span>
+              <span>{t("crm.tasks.detail.quickReschedule")}</span>
             </div>
             {task.dueAt && (
               <span className="text-xs text-muted-foreground font-medium">
@@ -582,7 +594,7 @@ export function TaskDetailDrawer({
               className="text-xs h-8 flex items-center gap-1.5 font-medium"
             >
               <Sun className="h-3.5 w-3.5 text-muted-foreground" />
-              Mañana
+              {t("crm.tasks.detail.tomorrow")}
             </Button>
             <Button
               size="sm"
@@ -591,7 +603,7 @@ export function TaskDetailDrawer({
               className="text-xs h-8 flex items-center gap-1.5 font-medium"
             >
               <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-              En 3 días
+              {t("crm.tasks.detail.inThreeDays")}
             </Button>
             <Button
               size="sm"
@@ -600,19 +612,19 @@ export function TaskDetailDrawer({
               className="text-xs h-8 flex items-center gap-1.5 font-medium"
             >
               <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-              Próximo Lunes
+              {t("crm.tasks.detail.nextMonday")}
             </Button>
           </div>
         </div>
 
         {/* Description */}
         <div className="space-y-1.5">
-          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Descripción o Notas</div>
+          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{t("crm.tasks.detail.description")}</div>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             onBlur={handleDescriptionBlur}
-            placeholder="Añade detalles o notas adicionales para esta tarea..."
+            placeholder={t("crm.tasks.detail.descriptionPlaceholder")}
             rows={3}
             className="text-sm bg-card border-border leading-relaxed shadow-xs resize-none"
           />
@@ -622,7 +634,7 @@ export function TaskDetailDrawer({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-              Sub-tareas & Checklist ({completedChecklist}/{totalChecklist})
+              {t("crm.tasks.detail.subtasks", { completed: completedChecklist, total: totalChecklist })}
             </span>
             <span className="text-xs text-emerald-600 font-semibold">{Math.round(progressPercent)}%</span>
           </div>
@@ -657,6 +669,18 @@ export function TaskDetailDrawer({
                     {item.title}
                   </span>
                 </div>
+                {onUpdateTask && (
+                  <Select
+                    value={item.assigneeId || "unassigned"}
+                    onValueChange={(value) => void handleSubtaskAssigneeChange(item.id, value)}
+                  >
+                    <SelectTrigger className="h-8 w-36 text-[11px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">{t("crm.tasks.unassigned")}</SelectItem>
+                      {AVAILABLE_ASSIGNABLE_USERS.map((user) => <SelectItem key={user.id} value={user.id}>{user.displayName}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
                 {onDeleteChecklistItem && (
                   <Button
                     type="button"
@@ -664,7 +688,7 @@ export function TaskDetailDrawer({
                     size="icon"
                     onClick={() => handleDeleteSubtask(item.id, item.title)}
                     className="opacity-0 group-hover:opacity-100 hover:text-rose-600 hover:bg-rose-50 h-7 w-7 transition-opacity"
-                    title="Eliminar subtarea"
+                    title={t("crm.tasks.detail.deleteSubtask")}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
@@ -679,7 +703,7 @@ export function TaskDetailDrawer({
               <Input
                 value={newSubtask}
                 onChange={(e) => setNewSubtask(e.target.value)}
-                placeholder="Añadir subtarea o elemento de checklist..."
+                placeholder={t("crm.tasks.detail.addSubtaskPlaceholder")}
                 className="h-9 text-xs"
                 disabled={isAddingSubtask}
               />
@@ -691,7 +715,7 @@ export function TaskDetailDrawer({
                 className="h-9 text-xs flex items-center gap-1 shrink-0 font-medium"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Añadir
+                {t("crm.tasks.detail.add")}
               </Button>
             </form>
           )}
@@ -722,12 +746,12 @@ export function TaskDetailDrawer({
               className="flex-1 font-semibold flex items-center justify-center gap-2 h-11"
             >
               <CheckCircle2 className="w-4 h-4" />
-              Marcar como Completada
+              {t("crm.tasks.detail.markComplete")}
             </Button>
           ) : (
             <div className="flex-1 py-2.5 px-4 text-center rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold flex items-center justify-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
-              Tarea Completada
+              {t("crm.tasks.detail.taskCompleted")}
             </div>
           )}
 
@@ -737,7 +761,7 @@ export function TaskDetailDrawer({
               size="icon"
               onClick={() => onDeleteTask(task.id)}
               className="h-11 w-11 shrink-0 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200"
-              title="Eliminar tarea definitivamente"
+              title={t("crm.tasks.detail.deleteTask")}
             >
               <Trash2 className="w-4 h-4" />
             </Button>

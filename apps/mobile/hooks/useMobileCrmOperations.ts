@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { localCrmOperationsAdapter } from "../../../src/loopdev/domains/crm/operations/adapter/local";
 import {
   CRM_LOCAL_CONTEXT,
   type CRMCustomFieldDefinition,
@@ -12,7 +11,8 @@ import {
   type CRMSearchResult,
   type CRMSavedView,
   type CRMTag,
-} from "../../../src/loopdev/domains/crm/operations/types";
+} from "../domains/crm-operations";
+import { mobileCrmOperationsAdapter } from "../domains/crm-operations";
 
 export function useCrmOperations(entityType: CRMEntityType = "contact", context: CRMOperationsContext = CRM_LOCAL_CONTEXT) {
   const [savedViews, setSavedViews] = useState<CRMSavedView[]>([]);
@@ -30,9 +30,9 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
     setLoading(true);
     setError(null);
     void Promise.all([
-      localCrmOperationsAdapter.listSavedViews(context, entityType),
-      localCrmOperationsAdapter.listTags(context),
-      localCrmOperationsAdapter.listCustomFieldDefinitions(context, entityType),
+      mobileCrmOperationsAdapter.listSavedViews(context, entityType),
+      mobileCrmOperationsAdapter.listTags(context),
+      mobileCrmOperationsAdapter.listCustomFieldDefinitions(context, entityType),
     ])
       .then(([views, nextTags, fields]) => {
         if (!active) return;
@@ -53,7 +53,7 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
 
   const search = useCallback(
     async (query: string, filters: CRMFilter[] = [], entityTypes?: CRMEntityType[]) => {
-      const next = await localCrmOperationsAdapter.search({ ...context, query, filters, entityTypes });
+      const next = await mobileCrmOperationsAdapter.search({ ...context, query, filters, entityTypes });
       setResults(next);
       return next;
     },
@@ -62,7 +62,7 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
 
   const createSavedView = useCallback(
     async (input: Pick<CRMSavedView, "name" | "entityType" | "filters" | "columns" | "visibility">) => {
-      const view = await localCrmOperationsAdapter.createSavedView(context, input);
+      const view = await mobileCrmOperationsAdapter.createSavedView(context, input);
       setSavedViews((current) => [...current, view]);
       return view;
     },
@@ -71,7 +71,7 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
 
   const deleteSavedView = useCallback(
     async (id: string) => {
-      const deleted = await localCrmOperationsAdapter.deleteSavedView(context, id);
+      const deleted = await mobileCrmOperationsAdapter.deleteSavedView(context, id);
       if (deleted) setSavedViews((current) => current.filter((view) => view.id !== id));
       return deleted;
     },
@@ -80,7 +80,7 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
 
   const createTag = useCallback(
     async (input: Pick<CRMTag, "name" | "color" | "visibility">) => {
-      const tag = await localCrmOperationsAdapter.createTag(context, input);
+      const tag = await mobileCrmOperationsAdapter.createTag(context, input);
       setTags((current) => [...current, tag]);
       return tag;
     },
@@ -89,7 +89,7 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
 
   const updateTag = useCallback(
     async (id: string, patch: Partial<Pick<CRMTag, "name" | "color" | "visibility">>) => {
-      const tag = await localCrmOperationsAdapter.updateTag(context, id, patch);
+      const tag = await mobileCrmOperationsAdapter.updateTag(context, id, patch);
       if (tag) setTags((current) => current.map((item) => (item.id === tag.id ? tag : item)));
       return tag;
     },
@@ -98,7 +98,7 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
 
   const bulkUpdateEntityTags = useCallback(
     (entityIds: string[], tagId: string, operation: "add" | "remove") =>
-      localCrmOperationsAdapter.bulkUpdateEntityTags({ ...context, entityType, entityIds, tagId, operation }),
+      mobileCrmOperationsAdapter.bulkUpdateEntityTags({ ...context, entityType, entityIds, tagId, operation }),
     [context, entityType],
   );
 
@@ -109,7 +109,7 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
         "entityType" | "key" | "label" | "type" | "required" | "visibility" | "options"
       >,
     ) => {
-      const field = await localCrmOperationsAdapter.createCustomFieldDefinition(context, input);
+      const field = await mobileCrmOperationsAdapter.createCustomFieldDefinition(context, input);
       setCustomFields((current) => [...current, field]);
       return field;
     },
@@ -121,7 +121,7 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
       id: string,
       patch: Partial<Pick<CRMCustomFieldDefinition, "label" | "required" | "visibility" | "options" | "active">>,
     ) => {
-      const field = await localCrmOperationsAdapter.updateCustomFieldDefinition(context, id, patch);
+      const field = await mobileCrmOperationsAdapter.updateCustomFieldDefinition(context, id, patch);
       if (field) setCustomFields((current) => current.map((item) => (item.id === field.id ? field : item)));
       return field;
     },
@@ -130,24 +130,24 @@ export function useCrmOperations(entityType: CRMEntityType = "contact", context:
 
   const setCustomFieldValue = useCallback(
     (input: Pick<CRMCustomFieldValue, "entityId" | "definitionId" | "value">) =>
-      localCrmOperationsAdapter.setCustomFieldValue({ ...context, entityType, ...input }),
+      mobileCrmOperationsAdapter.setCustomFieldValue({ ...context, entityType, ...input }),
     [context, entityType],
   );
 
   const listCustomFieldValues = useCallback(
-    (entityId: string) => localCrmOperationsAdapter.listCustomFieldValues(context, entityType, entityId),
+    (entityId: string) => mobileCrmOperationsAdapter.listCustomFieldValues(context, entityType, entityId),
     [context, entityType],
   );
 
   const importContacts = useCallback(
     (csv: string, mode: "validate" | "commit" = "commit") =>
-      localCrmOperationsAdapter.importContacts({ ...context, csv, mode, deduplicateBy: "email_or_phone" }),
+      mobileCrmOperationsAdapter.importContacts({ ...context, csv, mode, deduplicateBy: "email_or_phone" }),
     [context],
   );
 
   const exportCsv = useCallback(
     (input: Omit<CRMExportInput, keyof CRMOperationsContext>) =>
-      localCrmOperationsAdapter.exportCsv({ ...context, ...input }),
+      mobileCrmOperationsAdapter.exportCsv({ ...context, ...input }),
     [context],
   );
 

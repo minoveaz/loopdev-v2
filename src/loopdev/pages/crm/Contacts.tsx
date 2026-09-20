@@ -48,7 +48,7 @@ export default function SalesCRMContacts() {
   const { activeOrganization } = useTenantContext();
   const isVitest = Boolean(
     (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test")) ||
-    (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITEST || (import.meta as any).env?.MODE === "test"))
+    (typeof import.meta !== "undefined" && import.meta.env?.MODE === "test")
   );
   const currentOrgId = activeOrganization?.id || (!isVitest ? "80fce911-57c5-4a83-809f-78df6a3736f7" : "local-development-organization");
   const { trail } = useBreadcrumbs();
@@ -541,11 +541,11 @@ export default function SalesCRMContacts() {
                         <Pencil className="mr-2 h-3.5 w-3.5" />
                         {contactActions.find((action) => action.id === "edit")?.label}
                       </DropdownMenuItem>
-                      <DropdownMenuItem disabled>
+                      <DropdownMenuItem onClick={(event) => { event.stopPropagation(); navigate(`/app/sales-crm/contacts/${customer.id}?action=note`); }}>
                         <StickyNote className="mr-2 h-3.5 w-3.5" />
                         {contactActions.find((action) => action.id === "add-note")?.label}
                       </DropdownMenuItem>
-                      <DropdownMenuItem disabled>
+                      <DropdownMenuItem onClick={(event) => { event.stopPropagation(); navigate(`/app/sales-crm/contacts/${customer.id}?action=task&contactName=${encodeURIComponent(contactName(customer))}`); }}>
                         <CheckSquare className="mr-2 h-3.5 w-3.5" />
                         {contactActions.find((action) => action.id === "create-task")?.label}
                       </DropdownMenuItem>

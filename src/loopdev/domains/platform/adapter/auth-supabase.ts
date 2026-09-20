@@ -10,6 +10,7 @@ import type {
   PasswordResetResult,
   AuthChangeEvent,
   PlatformAuthStorage,
+  Workspace,
 } from "@contracts/auth-port";
 
 export class BrowserLocalStorageAdapter implements PlatformAuthStorage {
@@ -127,27 +128,39 @@ export class SupabaseAuthAdapter implements AuthPort {
           }
         }
 
-        const { data: allOrgs, error: orgsError } = await this.client
-          .from("organizations")
-          .select("id, name, slug");
-
-        if (!orgsError && Array.isArray(allOrgs) && allOrgs.length > 0) {
-          return allOrgs.map((o: any) => ({
-            id: o.id,
-            name: o.name || "Organización",
-            slug: o.slug || "org",
-            role: "owner",
-          }));
-        }
       } catch {
-        // ignore and fallback
+        return [];
       }
+
+      return [];
     }
 
     return [
       { id: "80fce911-57c5-4a83-809f-78df6a3736f7", name: "LoopDev", slug: "loopdev", role: "admin" },
       { id: "31bf9e13-7ba4-46e9-9b47-cccd0a0baa3e", name: "Estar Protegidos", slug: "estar-protegidos", role: "admin" },
     ];
+  }
+
+  public async getUserWorkspaces(userId: string, organizationId: string): Promise<Workspace[]> {
+    if (!this.client) return [];
+
+    const { data, error } = await this.client
+      .from("workspaces")
+      .select("id, organization_id, slug, name, is_default, created_at")
+      .eq("organization_id", organizationId)
+      .order("is_default", { ascending: false })
+      .order("name");
+
+    if (error || !Array.isArray(data)) return [];
+
+    return data.map((workspace) => ({
+      id: workspace.id,
+      organizationId: workspace.organization_id,
+      slug: workspace.slug,
+      name: workspace.name,
+      isDefault: Boolean(workspace.is_default),
+      createdAt: workspace.created_at,
+    }));
   }
 
   private mapSupabaseEvent(event: SupabaseAuthChangeEvent): AuthChangeEvent {

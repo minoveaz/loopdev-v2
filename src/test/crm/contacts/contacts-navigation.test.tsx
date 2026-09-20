@@ -1,11 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import SalesCRMContacts from "@/loopdev/pages/crm/Contacts";
+import { contactActions } from "../../../../packages/contracts/src/contact-actions";
+
+const contactActionRoutes = [
+  [contactActions.find((action) => action.id === "add-note")!.label, "action=note"],
+  [contactActions.find((action) => action.id === "create-task")!.label, "action=task"],
+] as const;
 
 function LocationProbe() {
   const location = useLocation();
-  return <output data-testid="location">{location.pathname}</output>;
+  return (
+    <>
+      <output data-testid="location">{location.pathname}</output>
+      <output data-testid="location-search">{location.search}</output>
+    </>
+  );
 }
 
 describe("Contacts navigation", () => {
@@ -60,5 +71,23 @@ describe("Contacts navigation", () => {
     });
     expect(await screen.findAllByText(firstName)).not.toHaveLength(0);
     expect(await screen.findAllByText(email)).not.toHaveLength(0);
+  });
+
+  it.each(contactActionRoutes)("routes the %s action from a contact row", async (action, query) => {
+    render(
+      <MemoryRouter initialEntries={["/app/sales-crm/contacts"]}>
+        <SalesCRMContacts />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    const row = await screen.findByRole("row", { name: /Aria Blackwood/i });
+    const actionButton = within(row).getByRole("button", { name: /Actions for/i });
+    fireEvent.pointerDown(actionButton);
+    fireEvent.click(actionButton);
+    fireEvent.click(await screen.findByRole("menuitem", { name: action }));
+
+    expect(screen.getByTestId("location")).toHaveTextContent("/app/sales-crm/contacts/crm_cust_1");
+    expect(screen.getByTestId("location-search")).toHaveTextContent(`?${query}`);
   });
 });

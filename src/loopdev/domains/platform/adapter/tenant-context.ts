@@ -285,6 +285,14 @@ export class TenantContextAdapter implements TenantContextPort {
   }
 
   async listWorkspaces(organizationId: string): Promise<AuthResult<Workspace[]>> {
+    const session = await this.authPort.getSession();
+    const remoteWorkspaceLoader = this.authPort as AuthPort & {
+      getUserWorkspaces?: (userId: string, targetOrganizationId: string) => Promise<Workspace[]>;
+    };
+    if (session && remoteWorkspaceLoader.getUserWorkspaces) {
+      return { success: true, data: await remoteWorkspaceLoader.getUserWorkspaces(session.user.id, organizationId) };
+    }
+
     const wsList = PLATFORM_WORKSPACES[organizationId] ?? [];
     return { success: true, data: wsList };
   }
@@ -300,11 +308,18 @@ export class TenantContextAdapter implements TenantContextPort {
       };
     }
 
-    await this.buildAndSetSnapshot(
-      this.currentContext.organization,
-      this.currentContext.isSuperAdmin,
-      workspaceId
-    );
+    const workspaces = await this.listWorkspaces(this.currentContext.organization.id);
+    if (!workspaces.success || (workspaceId && !workspaces.data.some((workspace) => workspace.id === workspaceId))) {
+      return {
+        success: false,
+        error: {
+          code: "TENANT_ACCESS_DENIED",
+          message: "Workspace was not found or access is denied.",
+        },
+      };
+    }
+
+    await this.buildAndSetSnapshot(this.currentContext.organization, this.currentContext.isSuperAdmin, workspaceId);
 
     return { success: true, data: this.currentContext };
   }

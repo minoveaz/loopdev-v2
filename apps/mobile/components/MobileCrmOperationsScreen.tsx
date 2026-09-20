@@ -25,7 +25,7 @@ import type {
   CRMEntityType,
   CRMFieldType,
   CRMVisibility,
-} from "@/loopdev/domains/crm/operations/types";
+} from "../domains/crm-operations";
 import { mobileContactAdapter } from "../adapters/contact";
 import type { PotentialContactDuplicate } from "../../../packages/contracts/src/contact-port";
 import {

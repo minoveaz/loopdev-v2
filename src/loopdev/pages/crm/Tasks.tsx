@@ -1,4 +1,4 @@
-import { useMemo, useState, type DragEvent } from "react";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
 import {
   AlertCircle,
   Bell,
@@ -61,6 +61,7 @@ import {
   type TaskRecord,
   type TaskStatus,
   type TaskTemplateRecord,
+  type TaskEntityRef,
 } from "@/loopdev/domains/tasks";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
@@ -122,6 +123,8 @@ export default function CRMTasksPage() {
   const t = useT();
   const { trail } = useBreadcrumbs();
   const [searchParams] = useSearchParams();
+  const contactIdFromRoute = searchParams.get("contactId");
+  const contactNameFromRoute = searchParams.get("contactName");
 
   const {
     tasks,
@@ -157,6 +160,10 @@ export default function CRMTasksPage() {
   const [activeTemplate, setActiveTemplate] = useState<TaskTemplateRecord | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<TaskRecord | null>(null);
   const [isControlDrawerOpen, setIsControlDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (contactIdFromRoute) setIsCreateModalOpen(true);
+  }, [contactIdFromRoute]);
 
   const activeFilterCount =
     statusFilter.length +
@@ -1436,6 +1443,11 @@ export default function CRMTasksPage() {
         }}
         onSubmit={createTask}
         templates={templates}
+        initialRelation={contactIdFromRoute ? {
+          entityType: "contact",
+          entityId: contactIdFromRoute,
+          label: contactNameFromRoute || contactIdFromRoute,
+        } satisfies TaskEntityRef : undefined}
         initialSuite="crm"
         initialTemplate={activeTemplate}
       />

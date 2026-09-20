@@ -18,12 +18,12 @@ import {
   Tag,
   Globe,
 } from "lucide-react-native";
-import { localCatalogAdapter } from "@/loopdev/domains/catalog/adapter";
-import { LOCAL_CATALOG_ORGANIZATION_ID } from "@/loopdev/domains/catalog/data/localCatalog";
-import type {
-  CatalogItem,
-  OrganizationCatalog,
-} from "@/loopdev/domains/catalog";
+import {
+  LOCAL_CATALOG_ORGANIZATION_ID,
+  mobileCatalogAdapter,
+  type CatalogItem,
+  type OrganizationCatalog,
+} from "../domains/catalog";
 import {
   MobilePageContainer,
   MobilePageHeader,
@@ -85,7 +85,7 @@ export function MobileProductCatalogScreen({
   const loadCatalogs = async () => {
     try {
       setLoading(true);
-      const loaded = await localCatalogAdapter.listCatalogs({
+      const loaded = await mobileCatalogAdapter.listCatalogs({
         organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
       });
       setCatalogs(loaded);
@@ -106,7 +106,7 @@ export function MobileProductCatalogScreen({
     if (!selectedCatalog) return;
     try {
       setItemsLoading(true);
-      const loaded = await localCatalogAdapter.listCatalogItems({
+      const loaded = await mobileCatalogAdapter.listCatalogItems({
         organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
         catalogId: selectedCatalog.id,
         includeArchived: true,
@@ -166,7 +166,7 @@ export function MobileProductCatalogScreen({
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-+|-+$/g, "");
 
-      await localCatalogAdapter.createCatalogItem({
+      await mobileCatalogAdapter.createCatalogItem({
         organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
         catalogId: selectedCatalog.id,
         name: newName.trim(),
@@ -193,7 +193,7 @@ export function MobileProductCatalogScreen({
   const handleArchiveConfirm = async () => {
     if (!archiveTargetItem) return;
     try {
-      await localCatalogAdapter.archiveCatalogItem({
+      await mobileCatalogAdapter.archiveCatalogItem({
         organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
         catalogId: archiveTargetItem.catalogId,
         itemId: archiveTargetItem.id,

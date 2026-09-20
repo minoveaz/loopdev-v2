@@ -53,7 +53,7 @@ import {
   type IdentityDocumentFields,
   type ExportProfileId,
   type ExportProfileField,
-} from "../../../src/loopdev/domains/document-intelligence";
+} from "../domains/document-intelligence";
 
 interface MobileDocumentIntelligenceScreenProps {
   onBack: () => void;

@@ -145,5 +145,6 @@ export function useI18n() {
 
 /** Convenience hook for components that only need `t`. */
 export function useT() {
-  return useI18n().t;
+  const ctx = useContext(I18nContext);
+  return ctx?.t ?? ((key: string) => key);
 }

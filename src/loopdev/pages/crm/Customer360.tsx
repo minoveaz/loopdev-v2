@@ -43,6 +43,13 @@ export default function SalesCRMCustomer360() {
     if (view) setCustomerNotes(view.notes);
   }, [view]);
 
+  useEffect(() => {
+    if (view && searchParams.get("action") === "note") {
+      setSelectedNote(null);
+      setNoteEditorOpen(true);
+    }
+  }, [searchParams, view]);
+
   if (loading) {
     return <PageContainer width="narrow"><div className="py-16 text-center text-sm text-muted-foreground">Loading contact...</div></PageContainer>;
   }

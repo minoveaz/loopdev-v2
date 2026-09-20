@@ -57,19 +57,23 @@ create index if not exists crm_section_field_configs_org_idx
 
 alter table public.crm_section_field_configs enable row level security;
 
+drop policy if exists crm_section_field_configs_read on public.crm_section_field_configs;
 create policy crm_section_field_configs_read on public.crm_section_field_configs
   for select to authenticated
   using (public.has_organization_permission(organization_id, 'crm.read'));
 
+drop policy if exists crm_section_field_configs_insert on public.crm_section_field_configs;
 create policy crm_section_field_configs_insert on public.crm_section_field_configs
   for insert to authenticated
   with check (public.has_organization_permission(organization_id, 'crm.manage'));
 
+drop policy if exists crm_section_field_configs_update on public.crm_section_field_configs;
 create policy crm_section_field_configs_update on public.crm_section_field_configs
   for update to authenticated
   using (public.has_organization_permission(organization_id, 'crm.manage'))
   with check (public.has_organization_permission(organization_id, 'crm.manage'));
 
+drop policy if exists crm_section_field_configs_delete on public.crm_section_field_configs;
 create policy crm_section_field_configs_delete on public.crm_section_field_configs
   for delete to authenticated
   using (public.has_organization_permission(organization_id, 'crm.manage'));

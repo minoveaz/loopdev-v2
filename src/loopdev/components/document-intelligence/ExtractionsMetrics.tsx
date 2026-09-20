@@ -18,30 +18,30 @@ export function ExtractionsMetrics({ metrics }: ExtractionsMetricsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        label={t("crm.customer360.documentIntelligence.totalProcessed")}
+        label={t("documentIntelligenceOverview.totalProcessed")}
         value={String(total)}
-        hint={t("crm.customer360.documentIntelligence.documentsOnPlatform")}
+        hint={t("documentIntelligenceOverview.documentsOnPlatform")}
         icon={FileSearch}
         accent="primary"
       />
       <StatCard
-        label={t("crm.customer360.documentIntelligence.completed")}
+        label={t("documentIntelligenceOverview.completed")}
         value={String(completed)}
-        hint={t("crm.customer360.documentIntelligence.reviewedApproved")}
+        hint={t("documentIntelligenceOverview.reviewedApproved")}
         icon={CheckCircle2}
         accent="info"
       />
       <StatCard
-        label={t("crm.customer360.documentIntelligence.averageAccuracy")}
+        label={t("documentIntelligenceOverview.averageAccuracy")}
         value={`${avgConfidence}%`}
-        hint={t("crm.customer360.documentIntelligence.extractionConfidence")}
+        hint={t("documentIntelligenceOverview.extractionConfidence")}
         icon={Zap}
         accent="gold"
       />
       <StatCard
-        label={t("crm.customer360.documentIntelligence.accumulatedCost")}
+        label={t("documentIntelligenceOverview.accumulatedCost")}
         value={cost}
-        hint={t("crm.customer360.documentIntelligence.inferenceTokens")}
+        hint={t("documentIntelligenceOverview.inferenceTokens")}
         icon={Clock}
         accent="primary"
       />

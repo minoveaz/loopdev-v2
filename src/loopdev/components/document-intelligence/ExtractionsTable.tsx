@@ -32,21 +32,21 @@ const statusToneMap: Record<ExtractionRecord["status"], "success" | "warning" | 
 export function ExtractionsTable({ extractions, loading, onDelete }: ExtractionsTableProps) {
   const t = useT();
   const statusLabelMap: Record<ExtractionRecord["status"], string> = {
-    completed: t("crm.customer360.documentIntelligence.completedStatus"),
-    review: t("crm.customer360.documentIntelligence.reviewStatus"),
-    draft: t("crm.customer360.documentIntelligence.draftStatus"),
-    processing: t("crm.customer360.documentIntelligence.processingStatus"),
-    rejected: t("crm.customer360.documentIntelligence.rejectedStatus"),
-    failed: t("crm.customer360.documentIntelligence.failedStatus"),
+    completed: t("documentIntelligenceOverview.completedStatus"),
+    review: t("documentIntelligenceOverview.reviewStatus"),
+    draft: t("documentIntelligenceOverview.draftStatus"),
+    processing: t("documentIntelligenceOverview.processingStatus"),
+    rejected: t("documentIntelligenceOverview.rejectedStatus"),
+    failed: t("documentIntelligenceOverview.failedStatus"),
   };
   const suiteLabels: Record<ExtractionRecord["sourceSuite"], string> = {
-    standalone: `${t("crm.customer360.documentIntelligence.tools")} / Standalone`, crm: "CRM", communications: "Communications", files: "Files Platform",
+    standalone: `${t("documentIntelligenceOverview.tools")} / Standalone`, crm: "CRM", communications: "Communications", files: "Files Platform",
   };
   if (!loading && extractions.length === 0) {
     return (
       <EmptyState
-        title={t("crm.customer360.documentIntelligence.noExtractions")}
-        description={t("crm.customer360.documentIntelligence.noExtractionsDescription")}
+        title={t("documentIntelligenceOverview.noExtractions")}
+        description={t("documentIntelligenceOverview.noExtractionsDescription")}
         icon={FileText}
       />
     );
@@ -57,13 +57,13 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>{t("crm.customer360.documentIntelligence.documentTitle")}</TableHead>
-            <TableHead>{t("crm.customer360.documentIntelligence.detectedType")}</TableHead>
-            <TableHead>{t("crm.customer360.documentIntelligence.origin")}</TableHead>
-            <TableHead>{t("crm.customer360.documentIntelligence.confidence")}</TableHead>
-            <TableHead>{t("crm.customer360.documentIntelligence.date")}</TableHead>
-            <TableHead>{t("crm.customer360.documentIntelligence.status")}</TableHead>
-            <TableHead className="text-right">{t("crm.customer360.documentIntelligence.actions")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.documentTitle")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.detectedType")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.origin")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.confidence")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.date")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.status")}</TableHead>
+            <TableHead className="text-right">{t("documentIntelligenceOverview.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -119,7 +119,7 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        title={t("crm.customer360.documentIntelligence.deleteRecord")}
+                        title={t("documentIntelligenceOverview.deleteRecord")}
                         onClick={() => onDelete(extraction.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -132,7 +132,7 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
                       asChild
                     >
                       <Link to={`/app/tools/document-intelligence/${extraction.id}`}>
-                        {t("crm.customer360.documentIntelligence.open")}
+                        {t("documentIntelligenceOverview.open")}
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </Button>

@@ -105,7 +105,8 @@ export function useCrmLeads() {
     let active = true;
     setLoading(true);
     setError(null);
-    void loopdevAdapter.crm.listLeads()
+    const organizationId = activeOrganization?.id || LOCAL_ORGANIZATION_ID;
+    void loopdevAdapter.crm.listLeads(organizationId)
       .then((items) => {
         if (active) setLeads(items);
       })
@@ -116,7 +117,7 @@ export function useCrmLeads() {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [reloadToken]);
+  }, [activeOrganization?.id, reloadToken]);
 
   const createOpportunityFromLead = async (
     leadId: string,

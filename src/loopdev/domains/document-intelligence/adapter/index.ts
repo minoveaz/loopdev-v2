@@ -21,3 +21,4 @@ export interface DocumentIntelligenceAdapter {
 
 export * from "./types";
 export { localDocumentIntelligenceAdapter } from "./local";
+export { supabaseDocumentIntelligenceAdapter } from "./supabase";

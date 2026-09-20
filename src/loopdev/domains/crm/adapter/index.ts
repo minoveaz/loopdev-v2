@@ -48,7 +48,7 @@ export interface LoopdevCrmAdapter {
     expectedUpdatedAt: string,
   ): Promise<CRMContactMutationResult>;
   archiveContact(contactId: string, expectedUpdatedAt: string): Promise<CRMContactMutationResult>;
-  listLeads(): Promise<CRMLead[]>;
+  listLeads(organizationId?: string): Promise<CRMLead[]>;
   createLead(input: CRMCreateLeadInput): Promise<CRMLeadMutationResult>;
   updateLead(leadId: string, input: CRMUpdateLeadInput): Promise<CRMLeadMutationResult>;
   archiveLead(leadId: string, organizationId: string, expectedUpdatedAt?: string): Promise<CRMLeadMutationResult>;
@@ -106,7 +106,7 @@ export const loopdevAdapter: LoopdevAdapter = {
     dismissDuplicateReview: (contactId, candidateId, confirmation) =>
       desktopContactAdapter.dismissDuplicateReview(contactId, candidateId, confirmation),
     bulkArchiveContacts: (contactIds) => desktopContactAdapter.bulkArchiveContacts?.(contactIds) ?? Promise.resolve({ successCount: 0, failureCount: contactIds.length }),
-    listLeads: () => supabaseCrmAdapter.listLeads(),
+    listLeads: (organizationId) => supabaseCrmAdapter.listLeads(organizationId),
     createLead: (input) => supabaseCrmAdapter.createLead(input),
     updateLead: (leadId, input) => supabaseCrmAdapter.updateLead(leadId, input),
     archiveLead: (leadId, organizationId, expectedUpdatedAt) => supabaseCrmAdapter.archiveLead(leadId, organizationId, expectedUpdatedAt),

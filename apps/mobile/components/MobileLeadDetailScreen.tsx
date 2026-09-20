@@ -134,7 +134,7 @@ export function MobileLeadDetailScreen({
   const handleStageChange = async (nextStage: CRMLead["status"]) => {
     if (!lead) return;
     try {
-      const updated = await mobileCrmAdapter.updateLead(lead.id, { status: nextStage });
+      const updated = await mobileCrmAdapter.updateLead(lead.id, { status: nextStage, updatedAt: lead.updatedAt });
       setLead(updated);
     } catch {
       Alert.alert(t("common.error"), t("crm.leads.updateError"));
@@ -165,6 +165,7 @@ export function MobileLeadDetailScreen({
     if (!lead) return;
     try {
       const updated = await mobileCrmAdapter.updateLead(lead.id, {
+        updatedAt: lead.updatedAt,
         interest: editInterest.trim() || lead.interest,
         qualificationNeed: editNeed.trim() || null,
         qualificationTimeline: editTimeline.trim() || null,

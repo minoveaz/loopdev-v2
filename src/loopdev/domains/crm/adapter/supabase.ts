@@ -315,28 +315,39 @@ export function createDesktopContactAdapter(): ContactPort {
           .select("*")
           .eq("id", contactId);
 
-        if (error || !Array.isArray(rows) || rows.length === 0) {
-          const local = await localFallback.getCustomer360(contactId);
-          return local ? toContactCustomer360View(local) : null;
-        }
+        if (error || !Array.isArray(rows) || rows.length === 0) return null;
 
         const contact = mapRowToContact(rows[0]);
 
-        const { data: leadsRows } = await client
+        const { data: leadsRows, error: leadsError } = await client
           .from("crm_leads")
           .select("*")
-          .eq("contact_id", contactId);
+          .eq("contact_id", contactId)
+          .eq("organization_id", contact.organizationId)
+          .is("archived_at", null);
+        if (leadsError) throw leadsError;
 
-        const { data: oppsRows } = await client
+        const { data: oppsRows, error: opportunitiesError } = await client
           .from("crm_opportunities")
           .select("*")
-          .eq("contact_id", contactId);
+          .eq("contact_id", contactId)
+          .eq("organization_id", contact.organizationId)
+          .is("archived_at", null);
+        if (opportunitiesError) throw opportunitiesError;
         const leadIds = (leadsRows || []).map((lead: any) => lead.id);
-        const [{ data: tasksRows }, { data: notesRows }, { data: activitiesRows }] = await Promise.all([
-          leadIds.length ? client.from("crm_tasks").select("*").in("lead_id", leadIds) : Promise.resolve({ data: [] }),
-          client.from("crm_notes").select("*").eq("contact_id", contactId),
-          leadIds.length ? client.from("crm_activities").select("*").in("lead_id", leadIds).order("occurred_at", { ascending: false }) : Promise.resolve({ data: [] }),
+        const opportunityIds = (oppsRows || []).map((opportunity: any) => opportunity.id);
+        const [{ data: tasksRows, error: tasksError }, { data: notesRows, error: notesError }, { data: activitiesRows, error: activitiesError }] = await Promise.all([
+          client.from("crm_tasks").select("*").eq("organization_id", contact.organizationId).or(`relation_id.eq.${contactId}${leadIds.length ? `,lead_id.in.(${leadIds.join(",")})` : ""}`),
+          client.from("crm_notes").select("*").eq("contact_id", contactId).eq("organization_id", contact.organizationId),
+          client.from("platform_timeline_events").select("*").eq("organization_id", contact.organizationId).order("occurred_at", { ascending: false }),
         ]);
+        if (tasksError) throw tasksError;
+        if (notesError) throw notesError;
+        if (activitiesError) throw activitiesError;
+        const relatedIds = new Set([contactId, ...leadIds, ...opportunityIds]);
+        const relatedActivities = (activitiesRows || []).filter((activity: any) =>
+          !activity.relation_id || relatedIds.has(activity.relation_id),
+        );
 
         const state = { profile: "fresh", leads: "fresh", opportunities: "fresh", tasks: "fresh", notes: "fresh", timeline: "fresh" } as const;
 
@@ -375,14 +386,13 @@ export function createDesktopContactAdapter(): ContactPort {
           })),
           tasks: (tasksRows || []).map((task: any) => ({ id: task.id, name: task.title, summary: task.description || task.title, occurredAt: task.due_at || task.created_at })),
           notes: (notesRows || []).map((note: any) => ({ id: note.id, summary: typeof note.body === "string" ? note.body : "", occurredAt: note.created_at })),
-          timeline: (activitiesRows || []).map((activity: any) => ({ id: activity.id, summary: activity.summary, occurredAt: activity.occurred_at })),
+          timeline: relatedActivities.map((activity: any) => ({ id: activity.id, sourceType: activity.source_type ?? activity.type, sourceId: activity.source_id ?? activity.id, type: activity.type, summary: activity.summary, occurredAt: activity.occurred_at, actor: activity.actor_id ?? undefined, source: activity.source_type ?? "CRM", channel: activity.metadata?.channel, status: activity.metadata?.status, outcome: activity.metadata?.outcome, details: activity.metadata?.details })),
           cursors: { profile: null, leads: null, opportunities: null, tasks: null, notes: null, timeline: null },
           sectionState: state,
           sectionPermissions: { profile: true, leads: true, opportunities: true, tasks: true, notes: true, timeline: true },
         };
-      } catch {
-        const local = await localFallback.getCustomer360(contactId);
-        return local ? toContactCustomer360View(local) : null;
+      } catch (error) {
+        throw error;
       }
     },
 

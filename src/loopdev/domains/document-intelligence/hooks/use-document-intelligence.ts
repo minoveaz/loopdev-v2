@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { localDocumentIntelligenceAdapter } from "../adapter/local";
+import { supabaseDocumentIntelligenceAdapter } from "../adapter/supabase";
 import type {
   ExtractionRecord,
   ExtractionListParams,
   ExtractionMetrics,
 } from "../adapter/types";
 
-const DEFAULT_ORGANIZATION_ID = "local-development-organization";
+const DEFAULT_ORGANIZATION_ID = "80fce911-57c5-4a83-809f-78df6a3736f7";
 const DEFAULT_LIMIT = 10;
 
 export function useDocumentIntelligence(params: Partial<Omit<ExtractionListParams, "organizationId">> = {}) {
@@ -40,9 +41,10 @@ export function useDocumentIntelligence(params: Partial<Omit<ExtractionListParam
       sortDirection: params.sortDirection,
     };
 
+    const adapter = /^[0-9a-f-]{36}$/i.test(DEFAULT_ORGANIZATION_ID) ? supabaseDocumentIntelligenceAdapter : localDocumentIntelligenceAdapter;
     Promise.all([
-      localDocumentIntelligenceAdapter.listExtractions(requestParams),
-      localDocumentIntelligenceAdapter.getMetrics(DEFAULT_ORGANIZATION_ID),
+      adapter.listExtractions(requestParams),
+      adapter.getMetrics(DEFAULT_ORGANIZATION_ID),
     ])
       .then(([page, currentMetrics]) => {
         if (active) {
@@ -79,7 +81,8 @@ export function useDocumentIntelligence(params: Partial<Omit<ExtractionListParam
 
   const deleteExtraction = useCallback(
     async (id: string) => {
-      await localDocumentIntelligenceAdapter.deleteExtraction(id);
+      const adapter = /^[0-9a-f-]{36}$/i.test(DEFAULT_ORGANIZATION_ID) ? supabaseDocumentIntelligenceAdapter : localDocumentIntelligenceAdapter;
+      await adapter.deleteExtraction(id);
       reload();
     },
     [reload],

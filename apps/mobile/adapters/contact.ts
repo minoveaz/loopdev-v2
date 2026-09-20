@@ -191,11 +191,14 @@ export function createMobileContactAdapter(): ContactPort {
           .select("*")
           .eq("contact_id", contactId);
         const leadIds = (leadsRows || []).map((lead: any) => lead.id);
+        const opportunityIds = (oppsRows || []).map((opportunity: any) => opportunity.id);
         const [{ data: tasksRows }, { data: notesRows }, { data: activitiesRows }] = await Promise.all([
           leadIds.length ? mobileSupabaseClient.from("crm_tasks").select("*").in("lead_id", leadIds) : Promise.resolve({ data: [] }),
           mobileSupabaseClient.from("crm_notes").select("*").eq("contact_id", contactId),
-          leadIds.length ? mobileSupabaseClient.from("crm_activities").select("*").in("lead_id", leadIds).order("occurred_at", { ascending: false }) : Promise.resolve({ data: [] }),
+          mobileSupabaseClient.from("crm_activities").select("*").eq("organization_id", contact.organizationId).order("occurred_at", { ascending: false }),
         ]);
+        const relatedIds = new Set([contactId, ...leadIds, ...opportunityIds]);
+        const relatedActivities = (activitiesRows || []).filter((activity: any) => !activity.source_id || relatedIds.has(activity.source_id) || leadIds.includes(activity.lead_id));
 
         const state = { profile: "fresh", leads: "fresh", opportunities: "fresh", tasks: "fresh", notes: "fresh", timeline: "fresh" } as const;
 
@@ -234,7 +237,7 @@ export function createMobileContactAdapter(): ContactPort {
           })),
           tasks: (tasksRows || []).map((task: any) => ({ id: task.id, name: task.title, summary: task.description || task.title, occurredAt: task.due_at || task.created_at })),
           notes: (notesRows || []).map((note: any) => ({ id: note.id, summary: typeof note.body === "string" ? note.body : "", occurredAt: note.created_at })),
-          timeline: (activitiesRows || []).map((activity: any) => ({ id: activity.id, summary: activity.summary, occurredAt: activity.occurred_at })),
+          timeline: relatedActivities.map((activity: any) => ({ id: activity.id, summary: activity.summary, occurredAt: activity.occurred_at })),
           cursors: { profile: null, leads: null, opportunities: null, tasks: null, notes: null, timeline: null },
           sectionState: state,
           sectionPermissions: { profile: true, leads: true, opportunities: true, tasks: true, notes: true, timeline: true },

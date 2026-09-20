@@ -125,7 +125,7 @@ export function MobileOpportunityDetailScreen({
     }
 
     try {
-      const updated = await mobileCrmAdapter.moveOpportunityStage(opportunity.id, targetKey);
+      const updated = await mobileCrmAdapter.moveOpportunityStage(opportunity.id, targetKey, undefined, opportunity.updatedAt);
       setOpportunity(updated);
     } catch (err: any) {
       Alert.alert(t("crm.common.error"), err?.message || t("crm.pipeline.errors.stageUpdate"));

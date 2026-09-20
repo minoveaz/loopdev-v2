@@ -10,6 +10,7 @@ import type {
 import type { PlatformAdapter } from "./index";
 import { createLocalPlatformWorkAdapter } from "./work";
 import { localOrganizationEntitlementsAdapter } from "../entitlements";
+import { createSupabaseTimelineAdapter } from "./supabase-timeline";
 
 export const LOCAL_ORGANIZATION_ID = "local-development-organization";
 export const LOCAL_WORKSPACE_ID = "local-workspace";
@@ -22,7 +23,6 @@ const localContext: OrganizationContext = {
   userId: "local-development-user",
   membershipStatus: "active",
 };
-
 const localPermissionSet: PlatformPermissionSet = {
   organizationId: LOCAL_ORGANIZATION_ID,
   permissions: [
@@ -63,6 +63,7 @@ const localWorkDependencies = {
 };
 
 export const localPlatformWorkAdapter = createLocalPlatformWorkAdapter(localWorkDependencies);
+export const platformWorkAdapter = createSupabaseTimelineAdapter(localPlatformWorkAdapter);
 
 export const localPlatformAdapter: PlatformAdapter = {
   entitlements: localOrganizationEntitlementsAdapter,
@@ -99,7 +100,6 @@ export const localPlatformAdapter: PlatformAdapter = {
     return hasLocalPermission("organization.read", scope) && isScopeVisible(ref.scope, scope);
   },
 
-  work: localPlatformWorkAdapter,
+  work: platformWorkAdapter,
 };
 
-export const platformWorkAdapter = localPlatformWorkAdapter;

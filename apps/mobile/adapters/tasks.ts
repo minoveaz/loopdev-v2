@@ -10,6 +10,7 @@ import type {
   UpdateTaskPatch,
 } from "../../../packages/contracts/src/tasks";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./auth";
+import { mobileSupabaseClient } from "./supabase";
 
 const SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845";
@@ -461,4 +462,122 @@ export const localMobileTasksAdapter: TasksPort = {
   },
 };
 
-export const mobileTasksAdapter: TasksPort = localMobileTasksAdapter;
+function mapRemoteTask(row: Record<string, any>): TaskRecord {
+  return {
+    id: row.id,
+    organizationId: row.organization_id,
+    workspaceId: row.workspace_id ?? null,
+    suite: row.suite ?? "crm",
+    title: row.title,
+    description: row.description ?? null,
+    status: row.status === "pending" ? "open" : row.status,
+    priority: row.priority === "medium" ? "normal" : row.priority,
+    ownerId: row.owner_id ?? null,
+    assignedUserId: row.assigned_user_id ?? null,
+    assignedUser: row.assigned_user ?? null,
+    dueAt: row.due_at ?? null,
+    completedAt: row.completed_at ?? null,
+    relation: row.relation_type ? { entityType: row.relation_type, entityId: row.relation_id, label: row.relation_label } : null,
+    templateId: row.template_id ?? null,
+    checklist: row.checklist ?? [],
+    mentions: row.mentions ?? [],
+    reminders: row.reminders ?? [],
+    tags: row.tags ?? [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    version: row.version ?? 1,
+  };
+}
+
+function activeOrganizationId(input?: string): string {
+  return input || mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "80fce911-57c5-4a83-809f-78df6a3736f7";
+}
+
+async function remoteTaskMutation(
+  taskId: string,
+  patch: Record<string, unknown>,
+  expectedVersion?: number,
+): Promise<TaskMutationResult> {
+  const current = await mobileSupabaseClient.from("crm_tasks").select("*").eq("id", taskId).maybeSingle();
+  if (current.error) return { status: "server-error", message: current.error.message };
+  if (!current.data) return { status: "server-error", message: "Task not found." };
+  const version = Number(current.data.version ?? 1);
+  if (expectedVersion !== undefined && version !== expectedVersion) {
+    return { status: "conflict", message: "Task was updated by another user.", task: mapRemoteTask(current.data) };
+  }
+  const result = await mobileSupabaseClient.from("crm_tasks")
+    .update({ ...patch, version: version + 1, updated_at: new Date().toISOString() })
+    .eq("id", taskId).eq("organization_id", current.data.organization_id).eq("version", version)
+    .select().single();
+  if (result.error || !result.data) return { status: "server-error", message: result.error?.message ?? "Task update failed." };
+  return { status: "success", task: mapRemoteTask(result.data) };
+}
+
+export const mobileTasksAdapter: TasksPort = {
+  async listTasks(params) {
+    let query = mobileSupabaseClient.from("crm_tasks").select("*").eq("organization_id", activeOrganizationId(params.organizationId));
+    if (params.suite) query = query.eq("suite", params.suite);
+    if (params.relation) query = query.eq("relation_type", params.relation.entityType).eq("relation_id", params.relation.entityId);
+    if (params.assignedUserId) query = query.eq("assigned_user_id", params.assignedUserId);
+    if (params.status?.length) query = query.in("status", params.status.map((status) => status === "open" ? "open" : status));
+    if (params.priority?.length) query = query.in("priority", params.priority.map((priority) => priority === "normal" ? "normal" : priority));
+    if (params.query?.trim()) query = query.ilike("title", `%${params.query.trim()}%`);
+    const { data, error } = await query.order(params.sortBy === "created_at" ? "created_at" : "due_at", { ascending: params.sortDirection !== "desc", nullsFirst: false });
+    if (error) return { items: [], nextCursor: null, hasMore: false, total: 0 };
+    const items = (data ?? []).map(mapRemoteTask);
+    return { items, nextCursor: null, hasMore: false, total: items.length };
+  },
+  async getTask(taskId) {
+    const { data, error } = await mobileSupabaseClient.from("crm_tasks").select("*").eq("id", taskId).maybeSingle();
+    if (error || !data) return null;
+    return mapRemoteTask(data);
+  },
+  async createTask(input) {
+    if (!input.title.trim()) return { status: "validation-error", message: "Task title is required." };
+    const row = {
+      organization_id: activeOrganizationId(input.organizationId), workspace_id: input.workspaceId ?? null,
+      suite: input.suite ?? "crm", title: input.title.trim(), description: input.description ?? null,
+      status: input.status ?? "open", priority: input.priority ?? "normal", assigned_user_id: input.assignedUserId ?? null,
+      assigned_user: input.assignedUser ?? null, due_at: input.dueAt ?? null,
+      relation_type: input.relation?.entityType ?? null, relation_id: input.relation?.entityId ?? null, relation_label: input.relation?.label ?? null,
+      template_id: input.templateId ?? null, checklist: input.checklist ?? [], mentions: input.mentions ?? [], reminders: input.reminders ?? [], tags: input.tags ?? [], version: 1,
+    };
+    const { data, error } = await mobileSupabaseClient.from("crm_tasks").insert(row).select().single();
+    if (error || !data) return { status: "server-error", message: error?.message ?? "Task creation failed." };
+    return { status: "success", task: mapRemoteTask(data) };
+  },
+  async updateTask(taskId, patch, expectedVersion) {
+    const updates: Record<string, unknown> = {};
+    Object.entries(patch).forEach(([key, value]) => {
+      const column = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+      updates[column] = value;
+    });
+    return remoteTaskMutation(taskId, updates, expectedVersion);
+  },
+  async completeTask(taskId, expectedVersion) { return remoteTaskMutation(taskId, { status: "completed", completed_at: new Date().toISOString() }, expectedVersion); },
+  async reopenTask(taskId, expectedVersion) { return remoteTaskMutation(taskId, { status: "open", completed_at: null }, expectedVersion); },
+  async quickReschedule(taskId, newDueAt, expectedVersion) { return remoteTaskMutation(taskId, { due_at: newDueAt }, expectedVersion); },
+  async toggleChecklistItem(taskId, itemId, completed) {
+    const task = await mobileTasksAdapter.getTask(taskId);
+    if (!task) return { status: "server-error", message: "Task not found." };
+    return remoteTaskMutation(taskId, { checklist: (task.checklist ?? []).map((item) => item.id === itemId ? { ...item, completed, completedAt: completed ? new Date().toISOString() : null } : item) }, task.version);
+  },
+  async addChecklistItem(taskId, title) {
+    const task = await mobileTasksAdapter.getTask(taskId);
+    if (!task) return { status: "server-error", message: "Task not found." };
+    const item = { id: `chk-${Date.now()}`, title: title.trim(), completed: false, assigneeId: null, assignee: null };
+    return remoteTaskMutation(taskId, { checklist: [...(task.checklist ?? []), item] }, task.version);
+  },
+  async deleteChecklistItem(taskId, itemId) {
+    const task = await mobileTasksAdapter.getTask(taskId);
+    if (!task) return { status: "server-error", message: "Task not found." };
+    return remoteTaskMutation(taskId, { checklist: (task.checklist ?? []).filter((item) => item.id !== itemId) }, task.version);
+  },
+  async deleteTask(taskId) {
+    const { error } = await mobileSupabaseClient.from("crm_tasks").delete().eq("id", taskId);
+    return error ? { success: false, error: error.message } : { success: true };
+  },
+  async listTemplates(organizationId, suite) {
+    return DEFAULT_TASK_TEMPLATES.filter((template) => template.organizationId === organizationId && (!suite || template.suite === suite));
+  },
+};

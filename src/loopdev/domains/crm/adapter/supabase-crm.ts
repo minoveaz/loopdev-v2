@@ -117,12 +117,13 @@ export function createSupabaseCrmAdapter() {
   const local = localLoopdevAdapter.crm;
 
   return {
-    async listLeads(): Promise<CRMLead[]> {
-      if (!activeOrganizationId()) return local.listLeads();
+    async listLeads(requestedOrganizationId?: string): Promise<CRMLead[]> {
+      const organizationId = requestedOrganizationId || activeOrganizationId();
+      if (!organizationId) return local.listLeads();
       const client = getClient();
       if (!client) throw new Error("Supabase is not configured for the active organization.");
       try {
-        const { data, error } = await client.from("crm_leads").select("*").eq("organization_id", activeOrganizationId()).is("archived_at", null).order("created_at", { ascending: false });
+        const { data, error } = await client.from("crm_leads").select("*").eq("organization_id", organizationId).is("archived_at", null).order("created_at", { ascending: false });
         if (error) throw error;
         return (data ?? []).map(mapLead);
       } catch (error) {

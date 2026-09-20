@@ -28,7 +28,7 @@ const mapSupabaseLead = (row: any): CRMLead => ({
   estimatedValue: row.estimated_budget ?? null, estimatedCurrency: row.estimated_currency ?? null,
   qualificationNeed: row.qualification_need ?? null, qualificationTimeline: row.purchase_timeline ?? null,
   createdAt: row.created_at, updatedAt: row.updated_at,
-  lastActivityAt: null, nextActivityAt: null,
+  lastActivityAt: null, nextActivityAt: null, archivedAt: row.archived_at ?? null,
 });
 
 export interface CRMLead {
@@ -49,6 +49,7 @@ export interface CRMLead {
   updatedAt: string;
   lastActivityAt: string | null;
   nextActivityAt: string | null;
+  archivedAt?: string | null;
 }
 
 export interface CRMOpportunity {
@@ -385,7 +386,7 @@ export const mobileCrmAdapter = {
   async listAllLeads(): Promise<CRMLead[]> {
     const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
     if (isUuid(organizationId)) {
-      const { data, error } = await mobileSupabaseClient.from("crm_leads").select("*").eq("organization_id", organizationId).order("updated_at", { ascending: false });
+      const { data, error } = await mobileSupabaseClient.from("crm_leads").select("*").eq("organization_id", organizationId).is("archived_at", null).order("updated_at", { ascending: false });
       assertSupabase(error, "list leads"); return (data ?? []).map(mapSupabaseLead);
     }
     return loadStoredLeads();
@@ -393,7 +394,8 @@ export const mobileCrmAdapter = {
 
   async getLead(id: string): Promise<CRMLead | null> {
     if (isUuid(id)) {
-      const { data, error } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", id).single();
+      const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
+      const { data, error } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", id).eq("organization_id", organizationId).is("archived_at", null).single();
       if (error?.code === "PGRST116") return null; assertSupabase(error, "get lead"); return data ? mapSupabaseLead(data) : null;
     }
     const leads = loadStoredLeads();
@@ -402,7 +404,7 @@ export const mobileCrmAdapter = {
 
   async listLeads(contactId: string): Promise<CRMLead[]> {
     if (isUuid(contactId)) {
-      const { data, error } = await mobileSupabaseClient.from("crm_leads").select("*").eq("contact_id", contactId).order("updated_at", { ascending: false });
+      const { data, error } = await mobileSupabaseClient.from("crm_leads").select("*").eq("contact_id", contactId).is("archived_at", null).order("updated_at", { ascending: false });
       assertSupabase(error, "list contact leads"); return (data ?? []).map(mapSupabaseLead);
     }
     const leads = loadStoredLeads();
@@ -439,7 +441,10 @@ export const mobileCrmAdapter = {
       if (input.score !== undefined) payload.lead_score = input.score;
       if (input.qualificationTimeline !== undefined) payload.purchase_timeline = input.qualificationTimeline;
       if (input.status) Object.assign(payload, statusMap[input.status]);
-      const { data, error } = await mobileSupabaseClient.from("crm_leads").update(payload).eq("id", id).select().single();
+      const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
+      let updateQuery = mobileSupabaseClient.from("crm_leads").update(payload).eq("id", id).eq("organization_id", organizationId);
+      if (input.updatedAt) updateQuery = updateQuery.eq("updated_at", input.updatedAt);
+      const { data, error } = await updateQuery.select().single();
       assertSupabase(error, "update lead"); if (!data) throw new Error("CRM update lead returned no data"); return mapSupabaseLead(data);
     }
     const leads = loadStoredLeads();
@@ -460,11 +465,23 @@ export const mobileCrmAdapter = {
 
   async archiveLead(id: string, expectedUpdatedAt?: string): Promise<CRMLead> {
     if (!isUuid(id)) throw new Error("Lead archiving requires a Supabase lead.");
-    const { data: current, error: readError } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", id).single();
+    const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
+    const { data: current, error: readError } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", id).eq("organization_id", organizationId).single();
     assertSupabase(readError, "read lead before archive"); if (!current) throw new Error("Lead not found");
     if (expectedUpdatedAt && current.updated_at !== expectedUpdatedAt) throw new Error("The lead changed before it could be archived.");
-    const { data, error } = await mobileSupabaseClient.from("crm_leads").update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id).eq("updated_at", expectedUpdatedAt ?? current.updated_at).select().single();
+    const { data, error } = await mobileSupabaseClient.from("crm_leads").update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id).eq("organization_id", organizationId).eq("updated_at", expectedUpdatedAt ?? current.updated_at).select().single();
     assertSupabase(error, "archive lead"); if (!data) throw new Error("CRM archive lead returned no data"); return mapSupabaseLead(data);
+  },
+
+  async bulkArchiveLeads(ids: string[], organizationId?: string): Promise<{ successCount: number; failureCount: number }> {
+    const validIds = ids.filter(isUuid);
+    const orgId = organizationId || mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
+    if (!validIds.length || !isUuid(orgId)) return { successCount: 0, failureCount: ids.length };
+    const { data, error } = await mobileSupabaseClient.from("crm_leads")
+      .update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .in("id", validIds).eq("organization_id", orgId).is("archived_at", null).select("id");
+    const successCount = error ? 0 : (data ?? []).length;
+    return { successCount, failureCount: ids.length - successCount };
   },
 
   async convertLeadToOpportunity(
@@ -478,8 +495,9 @@ export const mobileCrmAdapter = {
     }
   ): Promise<{ lead: CRMLead; opportunity: CRMOpportunity }> {
     if (isUuid(leadId)) {
-      const { data: leadRow, error: leadError } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", leadId).single();
+      const { data: leadRow, error: leadError } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", leadId).eq("organization_id", mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId).single();
       assertSupabase(leadError, "get lead for conversion"); if (!leadRow) throw new Error("Lead not found");
+      if (!["cualificado", "qualified"].includes(leadRow.status) && leadRow.stage !== "proposal") throw new Error("Only qualified leads can be converted.");
       const productKey = (leadRow.interest || "converted-lead").toLowerCase().replace(/\s+/g, "-");
       const { data: existing } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("organization_id", leadRow.organization_id).eq("lead_id", leadId).eq("origin", "lead_conversion").eq("product_key", productKey).maybeSingle();
       let opportunityRow = existing;
@@ -487,7 +505,7 @@ export const mobileCrmAdapter = {
         const { data, error } = await mobileSupabaseClient.from("crm_opportunities").insert({ organization_id: leadRow.organization_id, contact_id: leadRow.contact_id, lead_id: leadId, product_key: productKey, name: opportunityData.name || `Opportunity · ${leadRow.interest}`, stage_key: opportunityData.stageKey || "qualified", stage: opportunityData.stageKey || "qualified", origin: "lead_conversion", amount: opportunityData.amount ?? null, currency: opportunityData.currency || "EUR", expected_close_at: opportunityData.expectedCloseAt ?? null, version: 1 }).select().single();
         assertSupabase(error, "convert lead"); opportunityRow = data;
       }
-      const { data: updatedLead, error: updateError } = await mobileSupabaseClient.from("crm_leads").update({ status: "convertido", stage: "won", updated_at: new Date().toISOString() }).eq("id", leadId).select().single();
+      const { data: updatedLead, error: updateError } = await mobileSupabaseClient.from("crm_leads").update({ status: "convertido", stage: "won", updated_at: new Date().toISOString() }).eq("id", leadId).eq("organization_id", leadRow.organization_id).select().single();
       assertSupabase(updateError, "mark lead converted"); if (!opportunityRow || !updatedLead) throw new Error("Lead conversion returned no data");
       return { lead: mapSupabaseLead(updatedLead), opportunity: mapSupabaseOpportunity(opportunityRow) };
     }
@@ -545,22 +563,28 @@ export const mobileCrmAdapter = {
   },
 
   async listAllOpportunities(): Promise<CRMOpportunity[]> {
-    const organizationId = loadStoredOpportunities()[0]?.organizationId;
+    const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
     if (isUuid(organizationId)) {
-      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("organization_id", organizationId).order("updated_at", { ascending: false });
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("organization_id", organizationId).is("archived_at", null).order("updated_at", { ascending: false });
       assertSupabase(error, "list opportunities"); return (data ?? []).map(mapSupabaseOpportunity);
     }
     return loadStoredOpportunities();
   },
 
   async getOpportunity(id: string): Promise<CRMOpportunity | null> {
+    if (isUuid(id)) {
+      const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("id", id).eq("organization_id", organizationId).is("archived_at", null).maybeSingle();
+      assertSupabase(error, "get opportunity");
+      return data ? mapSupabaseOpportunity(data) : null;
+    }
     const opps = loadStoredOpportunities();
     return opps.find((o) => o.id === id) || null;
   },
 
   async listOpportunities(contactId: string): Promise<CRMOpportunity[]> {
     if (isUuid(contactId)) {
-      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("contact_id", contactId).order("updated_at", { ascending: false });
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("contact_id", contactId).is("archived_at", null).order("updated_at", { ascending: false });
       assertSupabase(error, "list opportunities"); return (data ?? []).map(mapSupabaseOpportunity);
     }
     const opps = loadStoredOpportunities();
@@ -585,11 +609,13 @@ export const mobileCrmAdapter = {
     return opportunity;
   },
 
-  async moveOpportunityStage(id: string, stageKey: CRMOpportunity["stageKey"], lossReason?: string): Promise<CRMOpportunity> {
+  async moveOpportunityStage(id: string, stageKey: CRMOpportunity["stageKey"], lossReason?: string, expectedUpdatedAt?: string): Promise<CRMOpportunity> {
     if (isUuid(id)) {
-      const { data: current, error: readError } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("id", id).single();
+      const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
+      const { data: current, error: readError } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("id", id).eq("organization_id", organizationId).single();
       assertSupabase(readError, "read opportunity"); if (!current) throw new Error(`Opportunity ${id} not found`);
-      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").update({ stage_key: stageKey, stage: stageKey, loss_reason: lossReason ?? null, version: Number(current.version ?? 1) + 1, updated_at: new Date().toISOString() }).eq("id", id).eq("updated_at", current.updated_at).select().single();
+      const expected = expectedUpdatedAt || current.updated_at;
+      const { data, error } = await mobileSupabaseClient.from("crm_opportunities").update({ stage_key: stageKey, stage: stageKey, loss_reason: lossReason ?? null, version: Number(current.version ?? 1) + 1, updated_at: new Date().toISOString() }).eq("id", id).eq("organization_id", organizationId).eq("updated_at", expected).select().single();
       assertSupabase(error, "move opportunity"); if (!data) throw new Error("CRM move opportunity returned no data");
       const { error: historyError } = await mobileSupabaseClient.from("crm_opportunity_stage_history").insert({ organization_id: current.organization_id, opportunity_id: id, from_stage_key: current.stage_key, to_stage_key: stageKey, origin: "board", reason: lossReason ?? null, opportunity_version: data.version });
       assertSupabase(historyError, "record opportunity stage history"); return mapSupabaseOpportunity(data);

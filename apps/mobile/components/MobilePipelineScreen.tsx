@@ -23,6 +23,7 @@ import {
 } from "lucide-react-native";
 import { mobileCrmAdapter, type CRMOpportunity } from "../adapters/crm";
 import { mobileContactAdapter } from "../adapters/contact";
+import { mobileTenantContextAdapter } from "../adapters/auth";
 import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
 import { pipelineStages, type PipelineStageId } from "../../../packages/contracts/src/pipeline-capability";
 import {
@@ -85,7 +86,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
       const [oppList, contactsPage] = await Promise.all([
         mobileCrmAdapter.listAllOpportunities(),
         mobileContactAdapter.listContacts({
-          organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+          organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "local-development-organization",
           limit: 100,
         }),
       ]);
@@ -184,7 +185,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
     }
 
     try {
-      await mobileCrmAdapter.moveOpportunityStage(stageModalOpportunity.id, targetStage);
+      await mobileCrmAdapter.moveOpportunityStage(stageModalOpportunity.id, targetStage, undefined, stageModalOpportunity.updatedAt);
       setStageModalOpportunity(null);
       await loadData();
     } catch (err: any) {
@@ -223,7 +224,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
     try {
       const selectedContact = contactsMap.get(newContactId);
       await mobileCrmAdapter.createOpportunity({
-        organizationId: selectedContact?.organizationId || "80fce911-57c5-4a83-809f-78df6a3736f7",
+        organizationId: selectedContact?.organizationId || mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "local-development-organization",
         contactId: newContactId,
         leadId: null,
         catalogItemId: null,

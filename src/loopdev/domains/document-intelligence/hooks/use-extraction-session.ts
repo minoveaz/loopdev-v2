@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { localDocumentIntelligenceAdapter } from "../adapter/local";
+import { supabaseDocumentIntelligenceAdapter } from "../adapter/supabase";
 import { DEMO_DOCUMENT_FIXTURES, type DocumentDemoFixture } from "../data/fixtures";
 import type {
   ExtractionRecord,
@@ -43,6 +44,7 @@ export function useExtractionSession({
   initialFile = null,
   onApplyExtractedData,
 }: UseExtractionSessionOptions) {
+  const adapter = supabaseDocumentIntelligenceAdapter;
   const [step, setStep] = useState<ExtractionSessionStep>("intake");
   const [currentRecord, setCurrentRecord] = useState<ExtractionRecord | null>(null);
   const [frontFile, setFrontFile] = useState<File | ExtractionDocumentFile | null>(initialFile);
@@ -58,7 +60,7 @@ export function useExtractionSession({
     let active = true;
     setLoading(true);
 
-    localDocumentIntelligenceAdapter
+    adapter
       .getExtraction(extractionId)
       .then((record) => {
         if (!active) return;
@@ -83,7 +85,7 @@ export function useExtractionSession({
     return () => {
       active = false;
     };
-  }, [extractionId, initialFile]);
+  }, [adapter, extractionId, initialFile]);
 
   // Selección o subida de archivo
   const selectFile = useCallback((file: File | ExtractionDocumentFile) => {
@@ -129,8 +131,8 @@ export function useExtractionSession({
     await new Promise((res) => setTimeout(res, 3000));
 
     try {
-      const result = await localDocumentIntelligenceAdapter.startExtraction({
-        organizationId: "local-development-organization",
+      const result = await adapter.startExtraction({
+        organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
         sourceSuite,
         frontFile,
         fixtureId: selectedFixture?.id,
@@ -148,7 +150,7 @@ export function useExtractionSession({
       setError(err instanceof Error ? err.message : "Error al procesar el documento.");
       setStep("preview");
     }
-  }, [frontFile, sourceSuite, selectedFixture]);
+  }, [adapter, frontFile, sourceSuite, selectedFixture]);
 
   // Confirmar extracción y finalizar
   const confirmExtraction = useCallback(
@@ -157,7 +159,7 @@ export function useExtractionSession({
       setActionLoading(true);
 
       try {
-        const result = await localDocumentIntelligenceAdapter.confirmExtraction({
+        const result = await adapter.confirmExtraction({
           extractionId: currentRecord.id,
           fields: editedFields,
         });
@@ -176,7 +178,7 @@ export function useExtractionSession({
         setActionLoading(false);
       }
     },
-    [currentRecord, onApplyExtractedData],
+    [adapter, currentRecord, onApplyExtractedData],
   );
 
   // Reiniciar a nueva subida

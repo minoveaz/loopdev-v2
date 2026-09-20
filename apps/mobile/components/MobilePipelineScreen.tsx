@@ -41,6 +41,7 @@ import {
   MobileBottomSheet,
   MobileProgressBar,
 } from "./ui";
+import { useT } from "../i18n";
 
 interface MobilePipelineScreenProps {
   onBack: () => void;
@@ -56,16 +57,9 @@ const STAGE_COLORS: Record<PipelineStageId, { bg: string; text: string; border: 
   lost: { bg: "#fef2f2", text: "#b91c1c", border: "#fecaca" },
 };
 
-const STAGE_LABELS: Record<PipelineStageId, string> = {
-  prospecting: "Prospección",
-  qualified: "Cualificado",
-  proposal: "Propuesta",
-  negotiation: "Negociación",
-  won: "Ganada",
-  lost: "Perdida",
-};
-
 export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipelineScreenProps) {
+  const t = useT();
+  const stageLabel = (stage: PipelineStageId) => t(`crm.pipeline.stages.${stage}`);
   const [opportunities, setOpportunities] = useState<CRMOpportunity[]>([]);
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -194,14 +188,14 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
       setStageModalOpportunity(null);
       await loadData();
     } catch (err: any) {
-      Alert.alert("Error", err?.message || "No se pudo actualizar la etapa");
+      Alert.alert(t("crm.common.error"), err?.message || t("crm.pipeline.errors.stageUpdate"));
     }
   };
 
   // Reopen handler
   const handleReopenSubmit = async () => {
     if (!reopenModalOpportunity || !reopenReason.trim()) {
-      Alert.alert("Motivo requerido", "Debes ingresar una justificación para reabrir este deal cerrado.");
+      Alert.alert(t("crm.pipeline.errors.reasonRequired"), t("crm.pipeline.errors.reopenReason"));
       return;
     }
 
@@ -211,18 +205,18 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
       setReopenReason("");
       await loadData();
     } catch (err: any) {
-      Alert.alert("Error al reabrir", err?.message || "No se pudo reabrir la oportunidad");
+      Alert.alert(t("crm.pipeline.errors.reopen"), err?.message || t("crm.pipeline.errors.reopenFailed"));
     }
   };
 
   // Create Opportunity handler
   const handleCreateSubmit = async () => {
     if (!newDealName.trim()) {
-      Alert.alert("Campo requerido", "Por favor ingresa un nombre para la oportunidad.");
+      Alert.alert(t("crm.pipeline.errors.required"), t("crm.pipeline.errors.dealName"));
       return;
     }
     if (!newContactId) {
-      Alert.alert("Contacto requerido", "Selecciona un contacto asignado.");
+      Alert.alert(t("crm.pipeline.errors.contactRequired"), t("crm.pipeline.errors.contactSelect"));
       return;
     }
 
@@ -260,13 +254,13 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
       setNewAmount("25000");
       await loadData();
     } catch (err: any) {
-      Alert.alert("Error al crear", err?.message || "No se pudo crear la oportunidad");
+      Alert.alert(t("crm.pipeline.errors.create"), err?.message || t("crm.pipeline.errors.createFailed"));
     }
   };
 
   const openPhone = (phone?: string) => {
     if (!phone) {
-      Alert.alert("Sin teléfono", "Este contacto no tiene número registrado.");
+      Alert.alert(t("crm.pipeline.errors.noPhone"), t("crm.pipeline.errors.noPhoneDescription"));
       return;
     }
     Linking.openURL(`tel:${phone}`);
@@ -274,7 +268,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
 
   const openWhatsApp = (phone?: string) => {
     if (!phone) {
-      Alert.alert("Sin teléfono", "Este contacto no tiene número registrado.");
+      Alert.alert(t("crm.pipeline.errors.noPhone"), t("crm.pipeline.errors.noPhoneDescription"));
       return;
     }
     const cleanNumber = phone.replace(/[^\d+]/g, "");
@@ -283,7 +277,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
 
   const openEmail = (email?: string) => {
     if (!email) {
-      Alert.alert("Sin email", "Este contacto no tiene correo registrado.");
+      Alert.alert(t("crm.pipeline.errors.noEmail"), t("crm.pipeline.errors.noEmailDescription"));
       return;
     }
     Linking.openURL(`mailto:${email}`);
@@ -298,14 +292,14 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
   const tabs = useMemo(() => {
     const allTab = {
       id: "all",
-      label: "Todos",
+      label: t("common.all"),
       count: opportunities.length,
     };
     const stageTabsList = pipelineStages.map((stage) => {
       const count = opportunities.filter((o) => o.stageKey === stage.id).length;
       return {
         id: stage.id,
-        label: STAGE_LABELS[stage.id] || stage.label,
+        label: stageLabel(stage.id) || stage.label,
         count,
       };
     });
@@ -316,8 +310,8 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
     <MobilePageContainer>
       {/* Canonical Header */}
       <MobilePageHeader
-        title="Pipeline Comercial"
-        subtitle="VENTAS B2B"
+        title={t("crm.pipeline.title")}
+        subtitle={t("crm.pipeline.subtitle")}
         onBack={onBack}
         rightAction={
           <MobileButton
@@ -327,7 +321,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
             onPress={() => setCreateSheetOpen(true)}
             minHeight={36}
           >
-            Nuevo
+            {t("crm.pipeline.new")}
           </MobileButton>
         }
       />
@@ -340,33 +334,33 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
             metrics={[
               {
                 id: "pipeline_val",
-                label: "Pipeline Activo",
+                label: t("crm.pipeline.metrics.active"),
                 value: `$${(kpis.totalPipelineValue / 1000).toFixed(0)}k`,
-                subtext: "USD nominal",
+                subtext: t("crm.pipeline.metrics.nominal"),
                 status: "info",
                 icon: DollarSign,
               },
               {
                 id: "forecast",
-                label: "Forecast Ponderado",
+                label: t("crm.pipeline.metrics.forecast"),
                 value: `$${(kpis.weightedForecast / 1000).toFixed(0)}k`,
-                subtext: "Cierre est.",
+                subtext: t("crm.pipeline.metrics.estimatedClose"),
                 status: "success",
                 icon: Sparkles,
               },
               {
                 id: "open_deals",
-                label: "Deals Abiertos",
+                label: t("crm.pipeline.metrics.openDeals"),
                 value: String(kpis.openCount),
-                subtext: "Negociando",
+                subtext: t("crm.pipeline.metrics.negotiating"),
                 status: "warning",
                 icon: TrendingUp,
               },
               {
                 id: "win_rate",
-                label: "Win Rate",
+                label: t("crm.pipeline.metrics.winRate"),
                 value: `${kpis.winRate}%`,
-                subtext: "Tasa de cierre",
+                subtext: t("crm.pipeline.metrics.closeRate"),
                 status: "neutral",
                 icon: Filter,
               },
@@ -379,7 +373,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
           <MobileSearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Buscar por deal, contacto, empresa..."
+            placeholder={t("crm.pipeline.searchPlaceholder")}
             onClear={() => setSearchQuery("")}
           />
         </View>
@@ -394,16 +388,16 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
         {/* Opportunities List */}
         <View style={styles.listContainer}>
           {loading ? (
-            <MobileLoadingState message="Cargando pipeline comercial..." />
+            <MobileLoadingState message={t("crm.pipeline.loading")} />
           ) : filteredOpportunities.length === 0 ? (
             <MobileEmptyState
-              title="No se encontraron deals"
+              title={t("crm.pipeline.empty.title")}
               description={
                 searchQuery
-                  ? "Intenta con otros términos de búsqueda."
-                  : "No hay oportunidades en esta etapa comercial."
+                  ? t("crm.pipeline.empty.searchDescription")
+                  : t("crm.pipeline.empty.description")
               }
-              actionLabel={searchQuery ? "Limpiar filtro" : "Crear Oportunidad"}
+              actionLabel={searchQuery ? t("crm.pipeline.clearFilter") : t("crm.pipeline.create")}
               onAction={() => {
                 if (searchQuery) setSearchQuery("");
                 else setCreateSheetOpen(true);
@@ -414,8 +408,8 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
               const contact = contactsMap.get(opp.contactId);
               const contactFullName = contact
                 ? `${contact.givenName} ${contact.familyName}`
-                : "Contacto sin asignar";
-              const orgName = contact?.organizationName || "Empresa B2B";
+                : t("crm.pipeline.unassignedContact");
+              const orgName = contact?.organizationName || t("crm.pipeline.defaultCompany");
               const isTerminal = opp.stageKey === "won" || opp.stageKey === "lost";
               const probPct =
                 opp.probability !== undefined
@@ -431,7 +425,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                   {/* Pressable Deal Main Area (Targets >= 44px) */}
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Ver detalle de deal ${opp.name}`}
+                    accessibilityLabel={t("crm.pipeline.viewDeal", { name: opp.name })}
                     onPress={() => onNavigate?.(`/app/sales-crm/opportunities/${opp.id}`)}
                     style={({ pressed }) => [styles.cardPressableArea, { opacity: pressed ? 0.85 : 1 }]}
                   >
@@ -454,7 +448,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                             ? "warning"
                             : "info"
                         }
-                        label={STAGE_LABELS[opp.stageKey] || opp.stageKey}
+                        label={stageLabel(opp.stageKey) || opp.stageKey}
                         size="sm"
                       />
                     </View>
@@ -462,14 +456,14 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                     {/* Financial amount & probability bar */}
                     <View style={styles.dealAmountRow}>
                       <View>
-                        <Text style={styles.amountLabel}>IMPORTE DEAL</Text>
+                        <Text style={styles.amountLabel}>{t("crm.pipeline.amount")}</Text>
                         <Text style={styles.amountValue}>
                           {formatCurrency(opp.amount, opp.currency)}
                         </Text>
                       </View>
                       <View style={styles.probBox}>
                         <View style={styles.probTextRow}>
-                          <Text style={styles.probLabel}>Probabilidad</Text>
+                          <Text style={styles.probLabel}>{t("crm.pipeline.probability")}</Text>
                           <Text style={styles.probValue}>{probPct}%</Text>
                         </View>
                         <MobileProgressBar progress={probPct} height={6} />
@@ -481,7 +475,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                       {opp.origin === "lead_conversion" && (
                         <View style={styles.tagItem}>
                           <Sparkles size={11} color="#4f46e5" />
-                          <Text style={[styles.tagItemText, { color: "#4f46e5" }]}>De Lead SQL</Text>
+                          <Text style={[styles.tagItemText, { color: "#4f46e5" }]}>{t("crm.common.fromLead")}</Text>
                         </View>
                       )}
                       {opp.expectedCloseAt && (
@@ -489,16 +483,16 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                           <Calendar size={11} color="#64748b" />
                           <Text style={styles.tagItemText}>
                             Cierre:{" "}
-                            {new Date(opp.expectedCloseAt).toLocaleDateString("es-ES", {
+                            {t("crm.pipeline.closeDate", { date: new Date(opp.expectedCloseAt).toLocaleDateString("es-ES", {
                               month: "short",
                               day: "numeric",
-                            })}
+                            }) })}
                           </Text>
                         </View>
                       )}
                       <View style={styles.tagItem}>
                         <User size={11} color="#64748b" />
-                        <Text style={styles.tagItemText}>{opp.ownerName || "Maya Chen"}</Text>
+                        <Text style={styles.tagItemText}>{opp.ownerName || t("crm.pipeline.defaultOwner")}</Text>
                       </View>
                     </View>
                   </Pressable>
@@ -527,7 +521,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                         }}
                         minHeight={44}
                       >
-                        {isTerminal ? "Reabrir" : "Mover"}
+                          {isTerminal ? t("crm.pipeline.reopen") : t("crm.pipeline.move")}
                       </MobileButton>
 
                       <MobileButton
@@ -537,7 +531,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                         onPress={() => onNavigate?.(`/app/sales-crm/opportunities/${opp.id}`)}
                         minHeight={44}
                       >
-                        Detalle
+                        {t("crm.pipeline.detail")}
                       </MobileButton>
                     </View>
                   </View>
@@ -552,11 +546,11 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
       <MobileBottomSheet
         visible={!!stageModalOpportunity}
         onClose={() => setStageModalOpportunity(null)}
-        title="Avanzar Etapa Comercial"
+        title={t("crm.pipeline.stageSheetTitle")}
       >
         <View style={styles.sheetBody}>
           <Text style={styles.sheetSub}>
-            Selecciona la nueva etapa para &quot;{stageModalOpportunity?.name}&quot;:
+            {t("crm.pipeline.stageSheetDescription", { name: stageModalOpportunity?.name || "" })}
           </Text>
           <View style={styles.stageOptionsGrid}>
             {pipelineStages.map((st) => {
@@ -568,9 +562,9 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                   style={[styles.stageOptionBtn, isCurrent && styles.stageOptionBtnActive]}
                 >
                   <Text style={[styles.stageOptionBtnText, isCurrent && styles.stageOptionBtnTextActive]}>
-                    {STAGE_LABELS[st.id] || st.label}
+                    {stageLabel(st.id) || st.label}
                   </Text>
-                  {isCurrent && <Text style={styles.currentBadge}>Actual</Text>}
+                  {isCurrent && <Text style={styles.currentBadge}>{t("crm.pipeline.current")}</Text>}
                 </Pressable>
               );
             })}
@@ -581,10 +575,10 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
       {/* Reopen Dialog */}
       <MobileConfirmDialog
         visible={!!reopenModalOpportunity}
-        title="Reabrir Oportunidad Cerrada"
-        message={`Este deal está en estado "${reopenModalOpportunity?.stageKey}". Ingresa una justificación obligatoria para reabrirlo:`}
-        confirmLabel="Reabrir Oportunidad"
-        cancelLabel="Cancelar"
+        title={t("crm.pipeline.reopenTitle")}
+        message={t("crm.pipeline.reopenMessage", { stage: reopenModalOpportunity?.stageKey || "" })}
+        confirmLabel={t("crm.pipeline.reopenOpportunity")}
+        cancelLabel={t("common.cancel")}
         onConfirm={handleReopenSubmit}
         onCancel={() => {
           setReopenModalOpportunity(null);
@@ -592,7 +586,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
         }}
       >
         <TextInput
-          placeholder="Ej. El cliente reasignó presupuesto para este trimestre..."
+          placeholder={t("crm.pipeline.reopenPlaceholder")}
           placeholderTextColor="#94a3b8"
           value={reopenReason}
           onChangeText={setReopenReason}
@@ -606,19 +600,19 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
       <MobileBottomSheet
         visible={createSheetOpen}
         onClose={() => setCreateSheetOpen(false)}
-        title="Nueva Oportunidad Comercial"
+        title={t("crm.pipeline.createTitle")}
       >
         <View style={styles.createSheetContent}>
-          <Text style={styles.inputLabel}>NOMBRE DEL DEAL *</Text>
+          <Text style={styles.inputLabel}>{t("crm.pipeline.dealNameLabel")}</Text>
           <TextInput
-            placeholder="Ej. Expansión Licencias Enterprise"
+            placeholder={t("crm.pipeline.dealNamePlaceholder")}
             placeholderTextColor="#94a3b8"
             value={newDealName}
             onChangeText={setNewDealName}
             style={styles.formInput}
           />
 
-          <Text style={styles.inputLabel}>CONTACTO ASIGNADO *</Text>
+          <Text style={styles.inputLabel}>{t("crm.pipeline.contactLabel")}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.contactPickerScroll}>
             {contacts.map((c) => {
               const isSelected = newContactId === c.id;
@@ -631,15 +625,15 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                   <Text style={[styles.contactChoiceText, isSelected && styles.contactChoiceTextActive]}>
                     {c.givenName} {c.familyName}
                   </Text>
-                  <Text style={styles.contactChoiceSub}>{c.organizationName || "B2B"}</Text>
+                  <Text style={styles.contactChoiceSub}>{c.organizationName || t("crm.pipeline.b2b")}</Text>
                 </Pressable>
               );
             })}
           </ScrollView>
 
-          <Text style={styles.inputLabel}>IMPORTE (USD)</Text>
+          <Text style={styles.inputLabel}>{t("crm.pipeline.amountLabel")}</Text>
           <TextInput
-            placeholder="25000"
+            placeholder={t("crm.common.amountPlaceholder")}
             placeholderTextColor="#94a3b8"
             keyboardType="numeric"
             value={newAmount}
@@ -649,7 +643,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
 
           <View style={styles.submitBtnWrap}>
             <MobileButton variant="primary" size="md" onPress={handleCreateSubmit} minHeight={48}>
-              Crear Oportunidad
+              {t("crm.pipeline.create")}
             </MobileButton>
           </View>
         </View>

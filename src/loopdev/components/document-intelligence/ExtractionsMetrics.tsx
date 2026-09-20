@@ -1,6 +1,7 @@
 import { FileSearch, CheckCircle2, Clock, Zap } from "lucide-react";
 import { StatCard } from "@/components/common";
 import type { ExtractionMetrics } from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
 
 interface ExtractionsMetricsProps {
   metrics: ExtractionMetrics | null;
@@ -9,6 +10,7 @@ interface ExtractionsMetricsProps {
 
 export function ExtractionsMetrics({ metrics }: ExtractionsMetricsProps) {
   const total = metrics?.totalProcessed ?? 0;
+  const t = useT();
   const completed = metrics?.completedCount ?? 0;
   const avgConfidence = metrics ? Math.round(metrics.averageConfidence * 100) : 0;
   const cost = metrics ? `$${metrics.estimatedCostUsd.toFixed(3)}` : "$0.00";
@@ -16,30 +18,30 @@ export function ExtractionsMetrics({ metrics }: ExtractionsMetricsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        label="Total procesados"
+        label={t("crm.customer360.documentIntelligence.totalProcessed")}
         value={String(total)}
-        hint="documentos en plataforma"
+        hint={t("crm.customer360.documentIntelligence.documentsOnPlatform")}
         icon={FileSearch}
         accent="primary"
       />
       <StatCard
-        label="Completados"
+        label={t("crm.customer360.documentIntelligence.completed")}
         value={String(completed)}
-        hint="revisados y aprobados"
+        hint={t("crm.customer360.documentIntelligence.reviewedApproved")}
         icon={CheckCircle2}
         accent="info"
       />
       <StatCard
-        label="Precisión media"
+        label={t("crm.customer360.documentIntelligence.averageAccuracy")}
         value={`${avgConfidence}%`}
-        hint="confianza de extracción"
+        hint={t("crm.customer360.documentIntelligence.extractionConfidence")}
         icon={Zap}
         accent="gold"
       />
       <StatCard
-        label="Coste acumulado"
+        label={t("crm.customer360.documentIntelligence.accumulatedCost")}
         value={cost}
-        hint="tokens de inferencia"
+        hint={t("crm.customer360.documentIntelligence.inferenceTokens")}
         icon={Clock}
         accent="primary"
       />

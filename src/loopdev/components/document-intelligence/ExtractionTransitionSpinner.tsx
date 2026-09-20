@@ -1,11 +1,13 @@
 import { LogoSpinner } from "@/loopdev/components/LogoSpinner";
+import { useT } from "@/i18n";
 
 export function ExtractionTransitionSpinner() {
+  const t = useT();
   return (
     <div
       role="status"
       aria-live="polite"
-      aria-label="Finalizando y preparando los campos extraídos"
+      aria-label={t("common.loopdev.documentIntelligence.finishingExtraction")}
       className="flex min-h-[460px] w-full flex-col items-center justify-center gap-5 p-8 text-center"
     >
       <div className="flex items-center justify-center">
@@ -17,10 +19,10 @@ export function ExtractionTransitionSpinner() {
           Loopdev / Neural Engine
         </div>
         <h4 className="font-display text-base font-semibold text-foreground">
-          Estructurando datos y sincronizando perfiles...
+          {t("common.loopdev.documentIntelligence.structuringData")}
         </h4>
         <p className="text-xs text-muted-foreground">
-          Preparando el panel de revisión humana y cálculo de confianza.
+          {t("common.loopdev.documentIntelligence.reviewPreparation")}
         </p>
       </div>
     </div>

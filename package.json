@@ -24,6 +24,7 @@
     "test:watch": "vitest",
     "test:quality": "vitest run --exclude src/test/visual-regression.test.tsx --exclude src/test/visual-regression-rtl.test.tsx",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "i18n:check": "node scripts/check-loopdev-i18n.mjs",
     "validate:module-runs": "node scripts/validate-module-runs.mjs",
     "validate:delivery-ledgers": "node scripts/validate-delivery-ledgers.mjs",
     "validate:delivery-evidence": "node scripts/validate-delivery-evidence.mjs",

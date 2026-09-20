@@ -2,6 +2,7 @@ import { useRef, useState, type DragEvent, type ChangeEvent } from "react";
 import { UploadCloud, Clipboard, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DEMO_DOCUMENT_FIXTURES } from "@/loopdev/domains/document-intelligence/data/fixtures";
+import { useT } from "@/i18n";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/svg+xml", "application/pdf"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -17,17 +18,18 @@ export function DocumentDropzone({
   onSelectFixture,
   compact = false,
 }: DocumentDropzoneProps) {
+  const t = useT();
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const validateAndSelect = (file: File) => {
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      setError("Formato no soportado. Por favor sube un archivo JPEG, PNG, WebP o PDF.");
+      setError(t("common.loopdev.documentIntelligence.unsupportedFormat"));
       return;
     }
     if (file.size > MAX_SIZE_BYTES) {
-      setError("El archivo supera el límite de 10 MB.");
+      setError(t("common.loopdev.documentIntelligence.fileTooLarge"));
       return;
     }
     setError(null);
@@ -64,7 +66,7 @@ export function DocumentDropzone({
   const handlePasteClipboard = async () => {
     try {
       if (!navigator.clipboard?.read) {
-        setError("La API de portapapeles no está disponible en este navegador.");
+        setError(t("common.loopdev.documentIntelligence.clipboardUnavailable"));
         return;
       }
       const items = await navigator.clipboard.read();
@@ -78,9 +80,9 @@ export function DocumentDropzone({
           return;
         }
       }
-      setError("No se detectó ninguna imagen o documento en el portapapeles.");
+      setError(t("common.loopdev.documentIntelligence.clipboardEmpty"));
     } catch {
-      setError("No se pudo leer del portapapeles. Usa el selector o arrastra un archivo.");
+      setError(t("common.loopdev.documentIntelligence.clipboardReadFailed"));
     }
   };
 
@@ -101,7 +103,7 @@ export function DocumentDropzone({
         accept={ALLOWED_MIME_TYPES.join(",")}
         onChange={handleInputChange}
         className="sr-only"
-        aria-label="Seleccionar documento"
+        aria-label={t("common.loopdev.documentIntelligence.selectDocument")}
       />
 
       <div className="flex max-w-lg flex-col items-center text-center">
@@ -110,10 +112,10 @@ export function DocumentDropzone({
         </div>
 
         <h3 className="font-display text-lg font-semibold text-foreground sm:text-xl">
-          Arrastra tu documento aquí
+          {t("common.loopdev.documentIntelligence.dropzoneTitle")}
         </h3>
         <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
-          Soporta DNI, Pasaporte o Carnet en JPEG, PNG, WebP o PDF (máx. 10 MB).
+          {t("common.loopdev.documentIntelligence.dropzoneDescription")}
         </p>
 
         {error && (
@@ -130,7 +132,7 @@ export function DocumentDropzone({
             onClick={() => inputRef.current?.click()}
           >
             <FileText className="me-2 h-4 w-4" />
-            Seleccionar archivo
+            {t("common.loopdev.documentIntelligence.selectFile")}
           </Button>
 
           <Button
@@ -140,14 +142,14 @@ export function DocumentDropzone({
             onClick={() => void handlePasteClipboard()}
           >
             <Clipboard className="me-2 h-4 w-4" />
-            Pegar imagen
+            {t("common.loopdev.documentIntelligence.pasteImage")}
           </Button>
         </div>
 
         {/* Muestras / Fixtures rápidas para pruebas */}
         <div className="mt-8 border-t border-border/60 pt-5 text-center">
           <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            O prueba con una muestra oficial:
+            {t("common.loopdev.documentIntelligence.tryFixture")}
           </span>
           <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
             {DEMO_DOCUMENT_FIXTURES.map((fixture) => (
@@ -160,7 +162,7 @@ export function DocumentDropzone({
                 onClick={() => onSelectFixture(fixture.id)}
               >
                 <Sparkles className="me-1.5 h-3 w-3 text-primary" />
-                {fixture.name.split(" ")[0]} ({fixture.documentType === "passport" ? "Pasaporte" : "DNI"})
+                {fixture.name.split(" ")[0]} ({fixture.documentType === "passport" ? t("common.loopdev.documentIntelligence.passport") : t("common.loopdev.documentIntelligence.nationalId")})
               </Button>
             ))}
           </div>

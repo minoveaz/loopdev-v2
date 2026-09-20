@@ -14,9 +14,11 @@ import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useDocumentIntelligence } from "@/loopdev/domains/document-intelligence";
 import { ExtractionsMetrics } from "@/loopdev/components/document-intelligence/ExtractionsMetrics";
 import { ExtractionsTable } from "@/loopdev/components/document-intelligence/ExtractionsTable";
+import { useT } from "@/i18n";
 
 export default function DocumentIntelligenceOverview() {
   const { trail } = useBreadcrumbs();
+  const t = useT();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [suiteFilter, setSuiteFilter] = useState<string>("all");
@@ -41,9 +43,9 @@ export default function DocumentIntelligenceOverview() {
   return (
     <PageContainer width="wide">
       <PageHeader
-        title="Document Intelligence"
-        description="Centro operativo y registro histórico de extracción neuronal de documentos para todo Loopdev."
-        breadcrumbs={trail.length ? trail : [{ label: "Tools" }, { label: "Document Intelligence" }]}
+        title={t("crm.customer360.documentIntelligence.title")}
+        description={t("crm.customer360.documentIntelligence.overviewDescription")}
+        breadcrumbs={trail.length ? trail : [{ label: t("crm.customer360.documentIntelligence.tools") }, { label: t("crm.customer360.documentIntelligence.title") }]}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={reload} title="Actualizar">
@@ -51,7 +53,7 @@ export default function DocumentIntelligenceOverview() {
             </Button>
             <Button onClick={handleStartExtraction} className="gap-2">
               <Sparkles className="h-4 w-4" />
-              Iniciar extracción
+              {t("crm.customer360.documentIntelligence.startExtraction")}
             </Button>
           </div>
         }
@@ -68,21 +70,21 @@ export default function DocumentIntelligenceOverview() {
           <SearchInput
             value={search}
             onValueChange={setSearch}
-            placeholder="Buscar por nombre, documento o persona..."
+            placeholder={t("crm.customer360.documentIntelligence.searchPlaceholder")}
           />
         </div>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <SlidersHorizontal className="h-3.5 w-3.5" />
-            <span>Origen:</span>
+            <span>{t("crm.customer360.documentIntelligence.origin")}:</span>
           </div>
           <Select value={suiteFilter} onValueChange={setSuiteFilter}>
             <SelectTrigger aria-label="Filtrar por suite de origen" className="h-9 w-44">
-              <SelectValue placeholder="Todas las suites" />
+              <SelectValue placeholder={t("crm.customer360.documentIntelligence.allSuites")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las suites</SelectItem>
+              <SelectItem value="all">{t("crm.customer360.documentIntelligence.allSuites")}</SelectItem>
               <SelectItem value="standalone">Tools (Standalone)</SelectItem>
               <SelectItem value="crm">CRM</SelectItem>
               <SelectItem value="communications">Communications</SelectItem>

@@ -28,6 +28,7 @@ import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { formatDate, getInitials } from "@/lib/formatters";
 import { useCrmContacts } from "@/loopdev/domains/crm/hooks/use-crm";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { referenceDataAdapter } from "@/loopdev/domains/reference-data";
 import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactFormDrawer";
 import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
 import { ContactMobileCard } from "@/loopdev/components/crm/contacts/ContactMobileCard";
@@ -83,6 +84,25 @@ export default function SalesCRMContacts() {
     sortBy,
     sortDirection,
   });
+  const [referenceLabels, setReferenceLabels] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let active = true;
+    const countries = [...new Set(contacts.map((contact) => contact.country).filter(Boolean))] as string[];
+    const subdivisions = [...new Set(contacts.map((contact) => contact.stateProvince).filter(Boolean))] as string[];
+    const cities = [...new Set(contacts.map((contact) => contact.city).filter(Boolean))] as string[];
+    void Promise.all([
+      referenceDataAdapter.listCountries(currentOrgId),
+      ...countries.map((country) => referenceDataAdapter.listSubdivisions(country, currentOrgId)),
+      ...countries.flatMap((country) => referenceDataAdapter.searchCities({ countryCode: country, query: "", organizationId: currentOrgId })),
+    ]).then((catalogs) => {
+      if (!active) return;
+      const labels = Object.fromEntries(catalogs.flat().map((item) => [item.code, item.label]));
+      cities.forEach((city) => { if (!labels[city]) labels[city] = city; });
+      subdivisions.forEach((subdivision) => { if (!labels[subdivision]) labels[subdivision] = subdivision; });
+      setReferenceLabels(labels);
+    });
+    return () => { active = false; };
+  }, [contacts, currentOrgId]);
 
   useEffect(() => {
     setSelectedContactIds(new Set());
@@ -494,7 +514,7 @@ export default function SalesCRMContacts() {
                   </StatusBadge>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {[customer.city, customer.stateProvince, customer.country].filter(Boolean).join(", ") || "—"}
+                  {[customer.city, customer.stateProvince, customer.country].map((code) => referenceLabels[code ?? ""] ?? code).filter(Boolean).join(", ") || "—"}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDate(customer.updatedAt)}

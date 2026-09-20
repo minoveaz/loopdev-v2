@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, EmptyState } from "@/components/common";
 import { formatDate } from "@/lib/formatters";
 import type { ExtractionRecord } from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
 
 interface ExtractionsTableProps {
   extractions: ExtractionRecord[];
@@ -28,28 +29,24 @@ const statusToneMap: Record<ExtractionRecord["status"], "success" | "warning" | 
   failed: "neutral",
 };
 
-const statusLabelMap: Record<ExtractionRecord["status"], string> = {
-  completed: "Completada",
-  review: "En revisión",
-  draft: "Borrador",
-  processing: "Procesando",
-  rejected: "Rechazada",
-  failed: "Fallida",
-};
-
-const suiteLabelMap: Record<ExtractionRecord["sourceSuite"], string> = {
-  standalone: "Tools / Standalone",
-  crm: "CRM",
-  communications: "Communications",
-  files: "Files Platform",
-};
-
 export function ExtractionsTable({ extractions, loading, onDelete }: ExtractionsTableProps) {
+  const t = useT();
+  const statusLabelMap: Record<ExtractionRecord["status"], string> = {
+    completed: t("crm.customer360.documentIntelligence.completedStatus"),
+    review: t("crm.customer360.documentIntelligence.reviewStatus"),
+    draft: t("crm.customer360.documentIntelligence.draftStatus"),
+    processing: t("crm.customer360.documentIntelligence.processingStatus"),
+    rejected: t("crm.customer360.documentIntelligence.rejectedStatus"),
+    failed: t("crm.customer360.documentIntelligence.failedStatus"),
+  };
+  const suiteLabels: Record<ExtractionRecord["sourceSuite"], string> = {
+    standalone: `${t("crm.customer360.documentIntelligence.tools")} / Standalone`, crm: "CRM", communications: "Communications", files: "Files Platform",
+  };
   if (!loading && extractions.length === 0) {
     return (
       <EmptyState
-        title="No hay extracciones registradas"
-        description="Inicia un nuevo análisis o procesa un documento para ver el histórico centralizado."
+        title={t("crm.customer360.documentIntelligence.noExtractions")}
+        description={t("crm.customer360.documentIntelligence.noExtractionsDescription")}
         icon={FileText}
       />
     );
@@ -60,13 +57,13 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Documento / Título</TableHead>
-            <TableHead>Tipo detectado</TableHead>
-            <TableHead>Origen</TableHead>
-            <TableHead>Confianza</TableHead>
-            <TableHead>Fecha</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
+            <TableHead>{t("crm.customer360.documentIntelligence.documentTitle")}</TableHead>
+            <TableHead>{t("crm.customer360.documentIntelligence.detectedType")}</TableHead>
+            <TableHead>{t("crm.customer360.documentIntelligence.origin")}</TableHead>
+            <TableHead>{t("crm.customer360.documentIntelligence.confidence")}</TableHead>
+            <TableHead>{t("crm.customer360.documentIntelligence.date")}</TableHead>
+            <TableHead>{t("crm.customer360.documentIntelligence.status")}</TableHead>
+            <TableHead className="text-right">{t("crm.customer360.documentIntelligence.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -90,7 +87,7 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   <span className="inline-flex rounded-md bg-secondary/80 px-2 py-0.5 font-medium text-secondary-foreground">
-                    {suiteLabelMap[extraction.sourceSuite]}
+                    {suiteLabels[extraction.sourceSuite]}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -122,7 +119,7 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        title="Eliminar registro"
+                        title={t("crm.customer360.documentIntelligence.deleteRecord")}
                         onClick={() => onDelete(extraction.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -135,7 +132,7 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
                       asChild
                     >
                       <Link to={`/app/tools/document-intelligence/${extraction.id}`}>
-                        Abrir
+                        {t("crm.customer360.documentIntelligence.open")}
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </Button>

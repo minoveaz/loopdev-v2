@@ -458,6 +458,15 @@ export const mobileCrmAdapter = {
     return updated;
   },
 
+  async archiveLead(id: string, expectedUpdatedAt?: string): Promise<CRMLead> {
+    if (!isUuid(id)) throw new Error("Lead archiving requires a Supabase lead.");
+    const { data: current, error: readError } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", id).single();
+    assertSupabase(readError, "read lead before archive"); if (!current) throw new Error("Lead not found");
+    if (expectedUpdatedAt && current.updated_at !== expectedUpdatedAt) throw new Error("The lead changed before it could be archived.");
+    const { data, error } = await mobileSupabaseClient.from("crm_leads").update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id).eq("updated_at", expectedUpdatedAt ?? current.updated_at).select().single();
+    assertSupabase(error, "archive lead"); if (!data) throw new Error("CRM archive lead returned no data"); return mapSupabaseLead(data);
+  },
+
   async convertLeadToOpportunity(
     leadId: string,
     opportunityData: {

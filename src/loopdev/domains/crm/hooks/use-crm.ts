@@ -169,6 +169,20 @@ export function useCrmLeads() {
     return result;
   };
 
+  const archiveLead = async (lead: CRMLead) => {
+    const result = await loopdevAdapter.crm.archiveLead(lead.id, lead.organizationId, lead.updatedAt);
+    if (result.status === "success") setLeads((current) => current.filter((item) => item.id !== lead.id));
+    return result;
+  };
+
+  const bulkArchiveLeads = async (targets: CRMLead[]) => {
+    const organizationId = targets[0]?.organizationId || activeOrganization?.id || LOCAL_ORGANIZATION_ID;
+    if (!loopdevAdapter.crm.bulkArchiveLeads) return { successCount: 0, failureCount: targets.length };
+    const result = await loopdevAdapter.crm.bulkArchiveLeads(targets.map((lead) => lead.id), organizationId);
+    if (result.successCount) setLeads((current) => current.filter((item) => !targets.some((target) => target.id === item.id)));
+    return result;
+  };
+
   return {
     leads,
     loading,
@@ -178,6 +192,8 @@ export function useCrmLeads() {
     createLead,
     createOpportunityFromLead,
     updateLead,
+    archiveLead,
+    bulkArchiveLeads,
     resetConversion: () => setConversion({ status: "idle" }),
     reload: () => setReloadToken((token) => token + 1),
   };

@@ -9,6 +9,7 @@ import {
   EXPORT_PROFILES,
   type ExportProfileId,
 } from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
 
 interface ExtractionProfileSelectorProps {
   value: ExportProfileId;
@@ -21,6 +22,7 @@ export function ExtractionProfileSelector({
   onChange,
   compact = false,
 }: ExtractionProfileSelectorProps) {
+  const t = useT();
   const currentProfile = EXPORT_PROFILES.find((p) => p.id === value) ?? EXPORT_PROFILES[0];
 
   return (
@@ -30,18 +32,18 @@ export function ExtractionProfileSelector({
           htmlFor="profile-selector"
           className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
         >
-          Formato de datos
+          {t("common.loopdev.documentIntelligence.format")}
         </label>
         {!compact && (
           <span className="text-[11px] text-muted-foreground">
-            3 opciones de organización
+            {t("common.loopdev.documentIntelligence.formatOptions")}
           </span>
         )}
       </div>
 
       <Select value={value} onValueChange={(val) => onChange(val as ExportProfileId)}>
         <SelectTrigger id="profile-selector" className="w-full bg-background">
-          <SelectValue placeholder="Selecciona formato" />
+          <SelectValue placeholder={t("common.loopdev.documentIntelligence.selectFormat")} />
         </SelectTrigger>
         <SelectContent>
           {EXPORT_PROFILES.map((profile) => (

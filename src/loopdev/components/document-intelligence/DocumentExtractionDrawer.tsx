@@ -12,6 +12,7 @@ import {
   type ExtractionDocumentFile,
   type DocumentIntelligenceSourceSuite,
 } from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
 
 export interface DocumentExtractionDrawerProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function DocumentExtractionDrawer({
   initialFile = null,
   onApplyExtractedData,
 }: DocumentExtractionDrawerProps) {
+  const t = useT();
   const generatedId = useId().replace(/[:]/g, "-");
   const extractionSessionId = `drawer-${generatedId}`;
 
@@ -49,7 +51,7 @@ export function DocumentExtractionDrawer({
   };
 
   const getFilePreviewData = () => {
-    if (!session.frontFile) return { url: "", name: "Documento", mimeType: "image/jpeg" };
+    if (!session.frontFile) return { url: "", name: t("common.loopdev.documentIntelligence.extraction"), mimeType: "image/jpeg" };
     const file = session.frontFile;
     const isNativeFile = file instanceof File;
     return {
@@ -64,12 +66,12 @@ export function DocumentExtractionDrawer({
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
-      eyebrow="TOOLS / DOCUMENT INTELLIGENCE"
-      title="Extracción de documento de identidad"
-      description="Analiza y extrae los campos de identidad automáticamente para rellenar la ficha del cliente."
+      eyebrow={t("common.loopdev.documentIntelligence.extraction")}
+      title={t("common.loopdev.documentIntelligence.identityExtractionTitle")}
+      description={t("common.loopdev.documentIntelligence.identityExtractionDescription")}
       confirmOnClose={session.step === "extracted"}
-      confirmTitle="¿Descartar datos extraídos?"
-      confirmDescription="Si cierras el drawer sin aplicar, los campos extraídos no se guardarán en el contacto."
+      confirmTitle={t("common.loopdev.documentIntelligence.discardExtractedTitle")}
+      confirmDescription={t("common.loopdev.documentIntelligence.discardExtractedDescription")}
     >
       <div className="space-y-4 py-2">
         {session.error && (
@@ -101,10 +103,10 @@ export function DocumentExtractionDrawer({
               />
               <div className="flex items-center justify-between border-t border-border pt-3">
                 <Button variant="outline" size="sm" onClick={session.resetSession}>
-                  Cambiar documento
+                  {t("common.loopdev.documentIntelligence.changeDocument")}
                 </Button>
                 <Button size="sm" onClick={session.startExtraction}>
-                  Extraer información
+                  {t("common.loopdev.documentIntelligence.extractInformation")}
                 </Button>
               </div>
             </div>
@@ -150,7 +152,7 @@ export function DocumentExtractionDrawer({
                 onConfirm={handleApply}
                 onReset={session.resetSession}
                 confirmLoading={session.actionLoading}
-                confirmLabel="Aplicar al contacto"
+                confirmLabel={t("common.loopdev.documentIntelligence.applyToContact")}
                 compact
               />
             </div>

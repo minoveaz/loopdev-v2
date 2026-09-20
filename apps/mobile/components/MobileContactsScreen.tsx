@@ -32,7 +32,10 @@ import {
   MobileSpeedDialBar,
 } from "./ui";
 import { mobileTheme } from "../theme/tokens";
+import { mobileReferenceDataAdapter } from "../adapters/reference-data";
+import { mobileTenantContextAdapter } from "../adapters/auth";
 import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
+import { useT } from "../i18n";
 
 export type MobileContactPreview = ContactRecord;
 
@@ -57,6 +60,7 @@ export function MobileContactsScreen({
   onArchive,
   onDuplicates,
 }: MobileContactsScreenProps) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [identityTab, setIdentityTab] = useState<IdentityTab>("all");
   const [channel, setChannel] = useState<ChannelFilter>("all");
@@ -65,6 +69,22 @@ export function MobileContactsScreen({
   const [actionTarget, setActionTarget] = useState<MobileContactPreview | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<MobileContactPreview | null>(null);
   const [archiving, setArchiving] = useState(false);
+  const [referenceLabels, setReferenceLabels] = useState<Record<string, string>>({});
+  const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
+
+  useEffect(() => {
+    let active = true;
+    const countryCodes = [...new Set(contacts.map((contact) => contact.country).filter(Boolean))] as string[];
+    void Promise.all([
+      mobileReferenceDataAdapter.listCountries(),
+      ...countryCodes.map((countryCode) => mobileReferenceDataAdapter.listSubdivisions(countryCode)),
+      ...countryCodes.map((countryCode) => mobileReferenceDataAdapter.searchCities({ countryCode, subdivisionCode: null, query: "" })),
+    ]).then((catalogs) => {
+      if (!active) return;
+      setReferenceLabels(Object.fromEntries(catalogs.flat().map((item) => [item.code, item.label])));
+    });
+    return () => { active = false; };
+  }, [contacts, organizationId]);
 
   // Counts for tabs
   const verifiedCount = useMemo(
@@ -138,7 +158,7 @@ export function MobileContactsScreen({
       {/* Canonical Header */}
       <MobilePageHeader
         eyebrow="SALES CRM"
-        title="Contactos"
+        title={t("crm.contacts.title")}
         subtitle={`${filteredContacts.length} de ${contacts.length} relaciones`}
         primaryAction={{
           label: "Nuevo",
@@ -152,7 +172,7 @@ export function MobileContactsScreen({
           <MobileButton
             variant="outline"
             size="sm"
-            label="Revisar duplicados"
+            label={t("crm.contacts.reviewDuplicates")}
             icon={<Users size={14} color={mobileTheme.colors.primary} />}
             onPress={onDuplicates}
           />
@@ -171,7 +191,7 @@ export function MobileContactsScreen({
         <MobileSearchBar
           value={query}
           onChangeText={setQuery}
-          placeholder="Buscar por nombre, email o empresa..."
+                placeholder={t("crm.contacts.searchPlaceholder")}
           onClear={() => setQuery("")}
         />
         <Pressable
@@ -205,7 +225,7 @@ export function MobileContactsScreen({
             const roleAndCompany = [contact.jobTitle, contact.companyName]
               .filter(Boolean)
               .join(" · ");
-            const location = [contact.city, contact.stateProvince, contact.country]
+            const location = [contact.city, contact.stateProvince, contact.country].map((code) => referenceLabels[code ?? ""] ?? code)
               .filter(Boolean)
               .join(", ");
             const isVerified = contact.identityStatus === "verified";
@@ -326,18 +346,18 @@ export function MobileContactsScreen({
       <MobileBottomSheet
         visible={filtersOpen}
         onClose={() => setFiltersOpen(false)}
-        title="Filtros de Contactos"
+        title={t("crm.contacts.filtersTitle")}
         footer={
           <View style={styles.filterSheetFooter}>
             <MobileButton
               variant="outline"
-              label="Limpiar filtros"
+              label={t("crm.contacts.clearFilters")}
               onPress={clearFilters}
               style={{ flex: 1 }}
             />
             <MobileButton
               variant="primary"
-              label="Aplicar"
+              label={t("crm.contacts.apply")}
               onPress={() => setFiltersOpen(false)}
               style={{ flex: 1 }}
             />
@@ -464,14 +484,14 @@ export function MobileContactsScreen({
       <MobileConfirmDialog
         visible={archiveTarget !== null}
         variant="destructive"
-        title="¿Archivar contacto?"
+        title={t("crm.contacts.archiveTitle")}
         description={`¿Deseas archivar a ${
           archiveTarget
             ? [archiveTarget.firstName, archiveTarget.lastName].filter(Boolean).join(" ")
             : "este contacto"
         }? Esta acción quedará registrada en el historial de auditoría.`}
-        confirmLabel="Archivar"
-        cancelLabel="Cancelar"
+        confirmLabel={t("crm.contacts.archive")}
+        cancelLabel={t("common.cancel")}
         loading={archiving}
         onConfirm={handleConfirmArchive}
         onCancel={() => setArchiveTarget(null)}

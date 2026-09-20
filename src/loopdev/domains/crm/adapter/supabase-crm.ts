@@ -67,6 +67,7 @@ function mapLead(row: any): CRMLead {
     lastActivityAt: null,
     nextActivityAt: null,
     duplicateReviewId: null,
+    archivedAt: row.archived_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -121,7 +122,7 @@ export function createSupabaseCrmAdapter() {
       const client = getClient();
       if (!client) throw new Error("Supabase is not configured for the active organization.");
       try {
-        const { data, error } = await client.from("crm_leads").select("*").eq("organization_id", activeOrganizationId()).order("created_at", { ascending: false });
+        const { data, error } = await client.from("crm_leads").select("*").eq("organization_id", activeOrganizationId()).is("archived_at", null).order("created_at", { ascending: false });
         if (error) throw error;
         return (data ?? []).map(mapLead);
       } catch (error) {
@@ -182,6 +183,32 @@ export function createSupabaseCrmAdapter() {
       const { data, error } = await client.from("crm_leads").update(payload).eq("id", leadId).eq("organization_id", input.organizationId).select().single();
       if (error || !data) return { status: "server-error", message: error?.message ?? "The lead could not be updated." };
       return { status: "success", lead: mapLead(data) };
+    },
+
+    async archiveLead(leadId: string, organizationId: string, expectedUpdatedAt?: string): Promise<CRMLeadMutationResult> {
+      if (fallbackForOrganization(organizationId) || !isUuid(leadId)) {
+        return { status: "server-error", message: "Lead archiving is only available for Supabase leads." };
+      }
+      const client = getClient(); if (!client) return { status: "server-error", message: "Supabase is not configured." };
+      const currentQuery = client.from("crm_leads").select("*").eq("id", leadId).eq("organization_id", organizationId).single();
+      const { data: current, error: readError } = await currentQuery;
+      if (readError || !current) return { status: "server-error", message: "The lead could not be found." };
+      if (expectedUpdatedAt && current.updated_at !== expectedUpdatedAt) return { status: "conflict", message: "The lead changed before it could be archived.", lead: mapLead(current) };
+      let query = client.from("crm_leads").update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", leadId).eq("organization_id", organizationId);
+      if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+      const { data, error } = await query.select().single();
+      if (error || !data) return { status: "server-error", message: error?.message ?? "The lead could not be archived." };
+      return { status: "success", lead: mapLead(data) };
+    },
+
+    async bulkArchiveLeads(leadIds: string[], organizationId: string): Promise<{ successCount: number; failureCount: number }> {
+      if (fallbackForOrganization(organizationId)) return { successCount: 0, failureCount: leadIds.length };
+      const client = getClient(); if (!client) return { successCount: 0, failureCount: leadIds.length };
+      const ids = leadIds.filter(isUuid);
+      if (!ids.length) return { successCount: 0, failureCount: leadIds.length };
+      const { data, error } = await client.from("crm_leads").update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).in("id", ids).eq("organization_id", organizationId).select("id");
+      const successCount = error ? 0 : (data ?? []).length;
+      return { successCount, failureCount: leadIds.length - successCount };
     },
 
     async listOpportunities(params: CRMOpportunityListParams) {

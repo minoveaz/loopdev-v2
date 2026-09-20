@@ -1,5 +1,6 @@
 import { useRef, useState, type PointerEvent } from "react";
 import type { FitMode } from "./DocumentViewerToolbar";
+import { useT } from "@/i18n";
 
 interface DocumentViewerViewportProps {
   previewUrl: string;
@@ -18,6 +19,7 @@ export function DocumentViewerViewport({
   rotation,
   fitMode,
 }: DocumentViewerViewportProps) {
+  const t = useT();
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragOrigin = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
@@ -76,13 +78,13 @@ export function DocumentViewerViewport({
         {isPdf ? (
           <iframe
             src={previewUrl}
-            title={`Vista previa PDF: ${fileName}`}
+            title={t("common.loopdev.documentIntelligence.documentPreviewPdf", { fileName })}
             className="h-full w-full border-0 rounded"
           />
         ) : (
           <img
             src={previewUrl}
-            alt={`Vista del documento: ${fileName}`}
+            alt={t("common.loopdev.documentIntelligence.documentPreview", { fileName })}
             className={`${getImageFitClass()} rounded shadow-md pointer-events-none`}
           />
         )}
@@ -90,7 +92,7 @@ export function DocumentViewerViewport({
 
       {!isPdf && (
         <span className="pointer-events-none absolute bottom-2 right-2 rounded bg-background/80 px-2 py-0.5 text-[10px] text-muted-foreground backdrop-blur-sm">
-          Arrastra para mover
+          {t("common.loopdev.documentIntelligence.dragToMove")}
         </span>
       )}
     </div>

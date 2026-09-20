@@ -18,6 +18,7 @@ import type {
   ExtractionRecord,
   IdentityDocumentFields,
 } from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
 
 interface ExtractionReviewPanelProps {
   extraction: ExtractionRecord;
@@ -33,9 +34,10 @@ export function ExtractionReviewPanel({
   onConfirm,
   onReset,
   confirmLoading = false,
-  confirmLabel = "Confirmar extracción",
+  confirmLabel,
   compact = false,
 }: ExtractionReviewPanelProps) {
+  const t = useT();
   const [profileId, setProfileId] = useState<ExportProfileId>(DEFAULT_EXPORT_PROFILE_ID);
   const [fields, setFields] = useState<IdentityDocumentFields>(extraction.fields);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export function ExtractionReviewPanel({
 
   const copyText = async () => {
     await navigator.clipboard.writeText(formatFieldsForProfile(fields, profileId));
-    setCopyFeedback("Campos copiados");
+    setCopyFeedback(t("common.loopdev.documentIntelligence.fieldsCopied"));
     setTimeout(() => setCopyFeedback(null), 1800);
   };
 
@@ -78,7 +80,7 @@ export function ExtractionReviewPanel({
     await navigator.clipboard.writeText(
       JSON.stringify(selectFieldsForProfile(fields, profileId), null, 2),
     );
-    setCopyFeedback("JSON copiado");
+    setCopyFeedback(t("common.loopdev.documentIntelligence.jsonCopied"));
     setTimeout(() => setCopyFeedback(null), 1800);
   };
 
@@ -87,9 +89,9 @@ export function ExtractionReviewPanel({
       {/* Cabecera contextual */}
       <div className="border-b border-border pb-4">
         <FormSectionHeader
-          eyebrow="DOCUMENT INTELLIGENCE / REVIEW"
-          title="Revisión de datos extraídos"
-          description="Verifica los campos leídos. Los datos ausentes quedan vacíos y editables sin inventar valores."
+          eyebrow={t("common.loopdev.documentIntelligence.extraction")}
+          title={t("common.loopdev.documentIntelligence.reviewTitle")}
+          description={t("common.loopdev.documentIntelligence.reviewDescription")}
           mode={compact ? "compact" : "standard"}
           responsive="auto"
         />
@@ -111,10 +113,10 @@ export function ExtractionReviewPanel({
               size="sm"
               className="h-9 gap-1.5 text-xs"
               onClick={copyText}
-              title="Copiar texto formateado"
+              title={t("common.loopdev.documentIntelligence.copyFormattedTitle")}
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
-              Copiar campos
+              {t("common.loopdev.documentIntelligence.copyFields")}
             </Button>
 
             <Button
@@ -123,10 +125,10 @@ export function ExtractionReviewPanel({
               size="sm"
               className="h-9 gap-1.5 text-xs"
               onClick={copyJson}
-              title="Copiar JSON"
+              title={t("common.loopdev.documentIntelligence.copyJsonTitle")}
             >
               <Code className="h-3.5 w-3.5" />
-              Copiar JSON
+              {t("common.loopdev.documentIntelligence.copyJson")}
             </Button>
           </div>
         </div>
@@ -134,7 +136,7 @@ export function ExtractionReviewPanel({
         {copyFeedback && (
           <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
             <Check className="h-3.5 w-3.5" />
-            <span>{copyFeedback} al portapapeles</span>
+            <span>{copyFeedback} {t("common.loopdev.documentIntelligence.toClipboard")}</span>
           </div>
         )}
       </div>
@@ -154,7 +156,7 @@ export function ExtractionReviewPanel({
         onConfirm={() => onConfirm(fields)}
         onReset={onReset}
         loading={confirmLoading}
-        confirmLabel={confirmLabel}
+        confirmLabel={confirmLabel ?? t("common.loopdev.documentIntelligence.confirmExtraction")}
       />
     </div>
   );

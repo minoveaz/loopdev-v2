@@ -7,6 +7,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n";
 
 export type FitMode = "contain" | "width" | "actual";
 
@@ -37,10 +38,11 @@ export function DocumentViewerToolbar({
   isPdf = false,
   compact = false,
 }: DocumentViewerToolbarProps) {
+  const t = useT();
   return (
     <div
       role="toolbar"
-      aria-label="Controles del visor de documento"
+      aria-label={t("common.loopdev.documentIntelligence.viewerControls")}
       className="flex flex-wrap items-center justify-between gap-1.5 border-b border-border bg-card/60 px-3 py-1.5 text-xs backdrop-blur-sm"
     >
       {/* Modos de ajuste */}
@@ -52,7 +54,7 @@ export function DocumentViewerToolbar({
           className="h-7 px-2 text-[11px]"
           onClick={() => onFitModeChange("contain")}
         >
-          Ajustar
+          {t("common.loopdev.documentIntelligence.fit")}
         </Button>
         <Button
           type="button"
@@ -61,7 +63,7 @@ export function DocumentViewerToolbar({
           className="h-7 px-2 text-[11px]"
           onClick={() => onFitModeChange("width")}
         >
-          Ancho
+          {t("common.loopdev.documentIntelligence.width")}
         </Button>
         {!compact && (
           <Button
@@ -83,7 +85,7 @@ export function DocumentViewerToolbar({
           size="icon"
           variant="ghost"
           className="h-7 w-7"
-          aria-label="Alejar"
+            aria-label={t("common.loopdev.documentIntelligence.zoomOut")}
           onClick={onZoomOut}
         >
           <ZoomOut className="h-3.5 w-3.5" />
@@ -93,7 +95,7 @@ export function DocumentViewerToolbar({
           type="button"
           onClick={onResetZoom}
           className="min-w-[42px] px-1 text-center font-mono text-[11px] font-medium text-muted-foreground hover:text-foreground"
-          title="Restablecer zoom"
+          title={t("common.loopdev.documentIntelligence.resetZoom")}
         >
           {zoomPercent}%
         </button>
@@ -103,7 +105,7 @@ export function DocumentViewerToolbar({
           size="icon"
           variant="ghost"
           className="h-7 w-7"
-          aria-label="Acercar"
+          aria-label={t("common.loopdev.documentIntelligence.zoomIn")}
           onClick={onZoomIn}
         >
           <ZoomIn className="h-3.5 w-3.5" />
@@ -116,8 +118,8 @@ export function DocumentViewerToolbar({
           size="icon"
           variant="ghost"
           className="h-7 w-7"
-          aria-label="Girar 90 grados"
-          title="Girar 90°"
+          aria-label={t("common.loopdev.documentIntelligence.rotate90")}
+          title={t("common.loopdev.documentIntelligence.rotate90")}
           onClick={onRotate}
         >
           <RotateCw className="h-3.5 w-3.5" />
@@ -129,8 +131,8 @@ export function DocumentViewerToolbar({
             size="icon"
             variant="ghost"
             className="h-7 w-7"
-            aria-label="Recortar imagen"
-            title="Recortar"
+            aria-label={t("common.loopdev.documentIntelligence.cropImage")}
+            title={t("common.loopdev.documentIntelligence.cropImage")}
             onClick={onOpenCrop}
           >
             <Crop className="h-3.5 w-3.5" />
@@ -143,8 +145,8 @@ export function DocumentViewerToolbar({
             size="icon"
             variant="ghost"
             className="h-7 w-7"
-            aria-label="Abrir en nueva pestaña"
-            title="Abrir en pestaña nueva"
+            aria-label={t("common.loopdev.documentIntelligence.openNewTab")}
+            title={t("common.loopdev.documentIntelligence.openNewTab")}
             asChild
           >
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">

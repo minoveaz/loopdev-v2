@@ -63,6 +63,7 @@ import type { ConversationContextView } from "@/loopdev/components/communication
 import { DocumentExtractionDrawer } from "@/loopdev/components/document-intelligence/DocumentExtractionDrawer";
 import { DEMO_DOCUMENT_FIXTURES } from "@/loopdev/domains/document-intelligence/data/fixtures";
 import type { IdentityDocumentFields } from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
 
 const channelIcons: Record<CommunicationChannel, ComponentType<ChannelIconProps>> = {
   whatsapp: WhatsAppIcon,
@@ -403,6 +404,7 @@ function ChannelRail({
 }
 
 export default function Communications() {
+  const t = useT();
   const { conversationId } = useParams<{ conversationId: string }>();
   const navigate = useNavigate();
   const [channel, setChannel] = useState<CommunicationChannel | "all">("all");
@@ -641,7 +643,7 @@ export default function Communications() {
               {inbox.loading ? (
                 <LoadingState variant="skeleton" rows={5} className="p-3" />
               ) : inbox.error ? (
-                <div className="p-5" role="alert"><EmptyState variant="plain" size="sm" icon={AlertCircle} title="Unable to load inbox" description={inbox.error} action={<Button variant="outline" size="sm" onClick={inbox.reload}>Try again</Button>} /></div>
+                <div className="p-5" role="alert"><EmptyState variant="plain" size="sm" icon={AlertCircle} title={t("crm.communications.loadInboxError")} description={inbox.error} action={<Button variant="outline" size="sm" onClick={inbox.reload}>{t("common.actions.retry")}</Button>} /></div>
               ) : inbox.conversations.length === 0 ? (
                 <div className="p-5"><EmptyState
                   variant="plain"
@@ -707,13 +709,13 @@ export default function Communications() {
 
           <section className={cn("min-h-0 min-w-0 flex-1 flex-col bg-background", conversationId ? "flex" : "hidden lg:flex")} aria-label="Conversation thread">
             {!conversationId ? (
-              <EmptyState variant="plain" size="lg" icon={MessageSquare} title="Select a conversation" description="Choose a conversation from the list to inspect its timeline." />
+              <EmptyState variant="plain" size="lg" icon={MessageSquare} title={t("crm.communications.selectConversation")} description={t("crm.communications.selectConversationDescription")} />
             ) : detail.loading ? (
-              <LoadingState label="Loading conversation…" />
+              <LoadingState label={t("crm.communications.loadingConversation")} />
             ) : detail.error ? (
-              <EmptyState variant="plain" size="lg" icon={AlertCircle} title="Unable to load conversation" description={detail.error} action={<Button variant="outline" size="sm" onClick={detail.reload}>Try again</Button>} />
+              <EmptyState variant="plain" size="lg" icon={AlertCircle} title={t("crm.communications.loadConversationError")} description={detail.error} action={<Button variant="outline" size="sm" onClick={detail.reload}>{t("common.actions.retry")}</Button>} />
             ) : !activeDetail || !selectedSummary ? (
-              <EmptyState variant="plain" size="lg" icon={Inbox} title="Conversation unavailable" description="This conversation may no longer be in the selected view." />
+                  <EmptyState variant="plain" size="lg" icon={Inbox} title={t("crm.communications.conversationUnavailable")} description={t("crm.communications.conversationUnavailableDescription")} />
             ) : (
               <>
                 <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border/80 bg-card px-3 py-3 sm:px-5">

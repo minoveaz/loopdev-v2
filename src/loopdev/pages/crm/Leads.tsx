@@ -61,7 +61,7 @@ export default function SalesCRMLeads() {
   const navigate = useNavigate();
   const {
     leads, loading, error, reload, conversion, createOpportunityFromLead, updateLead, resetConversion,
-    creation, createLead,
+    creation, createLead, archiveLead, bulkArchiveLeads,
   } = useCrmLeads();
   const { contacts } = useCrmContacts();
   const { opportunities, reload: reloadOpportunities } = useCrmPipeline();
@@ -154,6 +154,12 @@ export default function SalesCRMLeads() {
     const failed = results.find((result) => result.status !== "success");
     setActionMessage(failed ? failed.message : `${targets.length} lead${targets.length === 1 ? "" : "s"} updated.`);
     if (!failed) setSelectedIds([]);
+  };
+  const bulkArchive = async () => {
+    const targets = leads.filter((lead) => selectedIds.includes(lead.id));
+    const result = await bulkArchiveLeads(targets);
+    setActionMessage(`${result.successCount} lead${result.successCount === 1 ? "" : "s"} archived.`);
+    setSelectedIds([]);
   };
 
   const [conversionLead, setConversionLead] = useState<CRMLead>();
@@ -279,6 +285,7 @@ export default function SalesCRMLeads() {
           <span className="text-sm font-medium" aria-live="polite">{selectedIds.length} selected</span>
           <Button size="sm" variant="outline" onClick={() => void bulkUpdate({ status: "contacted" })}>Mark contacted</Button>
           <Button size="sm" variant="outline" onClick={() => void bulkUpdate({ assignedUserId: CURRENT_USER_ID, ownerName: CURRENT_USER_NAME })}>Assign to Maya Chen</Button>
+          <Button size="sm" variant="outline" onClick={() => void bulkArchive()}>Archive selected</Button>
           <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>Clear selection</Button>
         </div>
       )}
@@ -374,6 +381,7 @@ export default function SalesCRMLeads() {
         onConvert={(lead) => {
           openConversion(lead);
         }}
+        onArchive={(lead) => void archiveLead(lead)}
       />
       <AppDrawer
         open={Boolean(conversionLead)}

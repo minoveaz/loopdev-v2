@@ -51,6 +51,8 @@ export interface LoopdevCrmAdapter {
   listLeads(): Promise<CRMLead[]>;
   createLead(input: CRMCreateLeadInput): Promise<CRMLeadMutationResult>;
   updateLead(leadId: string, input: CRMUpdateLeadInput): Promise<CRMLeadMutationResult>;
+  archiveLead(leadId: string, organizationId: string, expectedUpdatedAt?: string): Promise<CRMLeadMutationResult>;
+  bulkArchiveLeads?(leadIds: string[], organizationId: string): Promise<{ successCount: number; failureCount: number }>;
   listOpportunities(params: CRMOpportunityListParams): Promise<CRMPipelineOpportunity[]>;
   moveOpportunityStage(opportunityId: string, input: CRMMoveOpportunityStageInput): Promise<CRMOpportunityMutationResult>;
   moveOpportunityStage(
@@ -106,6 +108,8 @@ export const loopdevAdapter: LoopdevAdapter = {
     listLeads: () => supabaseCrmAdapter.listLeads(),
     createLead: (input) => supabaseCrmAdapter.createLead(input),
     updateLead: (leadId, input) => supabaseCrmAdapter.updateLead(leadId, input),
+    archiveLead: (leadId, organizationId, expectedUpdatedAt) => supabaseCrmAdapter.archiveLead(leadId, organizationId, expectedUpdatedAt),
+    bulkArchiveLeads: (leadIds, organizationId) => supabaseCrmAdapter.bulkArchiveLeads(leadIds, organizationId),
     listOpportunities: (params) => supabaseCrmAdapter.listOpportunities(params),
     createOpportunity: (input) => supabaseCrmAdapter.createOpportunity(input),
     updateOpportunity: (opportunityId, input) => supabaseCrmAdapter.updateOpportunity(opportunityId, input),

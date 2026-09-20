@@ -1,6 +1,7 @@
 import { CheckCircle2, Circle, Loader2, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import type { ProcessingStepProgress } from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
 
 interface ExtractionProgressLoaderProps {
   steps: ProcessingStepProgress[];
@@ -11,6 +12,7 @@ export function ExtractionProgressLoader({
   steps,
   progressPercent,
 }: ExtractionProgressLoaderProps) {
+  const t = useT();
   return (
     <div className="mx-auto flex min-h-[420px] max-w-xl flex-col items-center justify-center p-6 text-center">
       <div className="mb-6 relative flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
@@ -18,16 +20,16 @@ export function ExtractionProgressLoader({
       </div>
 
       <h3 className="font-display text-xl font-semibold text-foreground">
-        Extrayendo datos del documento
+        {t("common.loopdev.documentIntelligence.extractingData")}
       </h3>
       <p className="mt-1 max-w-md text-xs text-muted-foreground sm:text-sm">
-        El documento se procesa en memoria. Ningún dato sale del perímetro de seguridad del tenant.
+        {t("common.loopdev.documentIntelligence.processingDescription")}
       </p>
 
       {/* Barra de progreso visual */}
       <div className="mt-8 w-full space-y-2">
         <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-          <span>Procesando inferencia neuronal</span>
+          <span>{t("common.loopdev.documentIntelligence.processingInference")}</span>
           <span className="font-mono text-foreground font-semibold">{progressPercent}%</span>
         </div>
         <Progress value={progressPercent} className="h-2 w-full" />

@@ -142,6 +142,7 @@ export interface CRMLead {
   lastActivityAt?: string | null;
   nextActivityAt?: string | null;
   duplicateReviewId?: string | null;
+  archivedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

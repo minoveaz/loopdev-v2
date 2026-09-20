@@ -3,6 +3,7 @@ import { ArrowLeft, RefreshCw, FileText } from "lucide-react";
 import { PageContainer, PageHeader, EmptyState } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
+import { useT } from "@/i18n";
 import { useExtractionSession } from "@/loopdev/domains/document-intelligence";
 import { DocumentDropzone } from "@/loopdev/components/document-intelligence/DocumentDropzone";
 import { DocumentViewer } from "@/loopdev/components/document-intelligence/DocumentViewer";
@@ -11,6 +12,7 @@ import { ExtractionTransitionSpinner } from "@/loopdev/components/document-intel
 import { ExtractionReviewPanel } from "@/loopdev/components/document-intelligence/ExtractionReviewPanel";
 
 export default function DocumentIntelligenceExtractionWorkspace() {
+  const t = useT();
   const { extractionId = "nueva" } = useParams<{ extractionId: string }>();
   const navigate = useNavigate();
   const { trail } = useBreadcrumbs();
@@ -42,8 +44,8 @@ export default function DocumentIntelligenceExtractionWorkspace() {
   return (
     <PageContainer width="wide">
       <PageHeader
-        title={`Extracción ${extractionId}`}
-        description="Flujo operativo para ingesta, pre-visualización y extracción neuronal de campos de identidad."
+        title={t("common.loopdev.documentIntelligence.extraction", { id: extractionId })}
+        description={t("common.loopdev.documentIntelligence.description")}
         breadcrumbs={
           trail.length
             ? trail
@@ -55,10 +57,10 @@ export default function DocumentIntelligenceExtractionWorkspace() {
         }
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
+                <Button variant="outline" size="sm" asChild>
               <Link to="/app/tools/document-intelligence">
                 <ArrowLeft className="me-1.5 h-3.5 w-3.5" />
-                Histórico
+                {t("common.loopdev.documentIntelligence.history")}
               </Link>
             </Button>
           </div>
@@ -93,10 +95,10 @@ export default function DocumentIntelligenceExtractionWorkspace() {
               />
               <div className="flex items-center justify-between border-t border-border pt-3">
                 <Button variant="outline" onClick={session.resetSession}>
-                  Cambiar documento
+                  {t("common.loopdev.documentIntelligence.changeDocument")}
                 </Button>
                 <Button onClick={session.startExtraction} className="gap-2">
-                  Extraer información
+                  {t("common.loopdev.documentIntelligence.extractInformation")}
                 </Button>
               </div>
             </div>
@@ -142,7 +144,7 @@ export default function DocumentIntelligenceExtractionWorkspace() {
                   onConfirm={handleConfirmAndFinish}
                   onReset={session.resetSession}
                   confirmLoading={session.actionLoading}
-                  confirmLabel="Confirmar extracción"
+                  confirmLabel={t("common.loopdev.documentIntelligence.confirmExtraction")}
                 />
               </div>
             </div>

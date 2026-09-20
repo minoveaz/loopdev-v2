@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n";
 
 interface CropDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ export function CropDialog({
   fileName = "documento-recortado.jpg",
   onApplyCrop,
 }: CropDialogProps) {
+  const t = useT();
   const [scale, setScale] = useState(0.85);
   const [applying, setApplying] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -84,9 +86,9 @@ export function CropDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Recortar imagen</DialogTitle>
+          <DialogTitle>{t("common.loopdev.documentIntelligence.cropImage")}</DialogTitle>
           <p className="text-xs text-muted-foreground">
-            Ajusta el área para enfocar la identificación y eliminar bordes innecesarios antes de extraer.
+            {t("common.loopdev.documentIntelligence.cropDescription")}
           </p>
         </DialogHeader>
 
@@ -94,7 +96,7 @@ export function CropDialog({
           <img
             ref={imageRef}
             src={previewUrl}
-            alt={`Vista para recortar: ${fileName}`}
+            alt={t("common.loopdev.documentIntelligence.cropPreview", { fileName })}
             className="max-h-full max-w-full object-contain transition-all duration-150"
             style={{
               clipPath: `inset(${Math.round((1 - scale) * 50)}%)`,
@@ -104,7 +106,7 @@ export function CropDialog({
 
         <div className="space-y-2 py-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Área visible</span>
+            <span>{t("common.loopdev.documentIntelligence.visibleArea")}</span>
             <span className="font-mono font-medium text-foreground">{Math.round(scale * 100)}%</span>
           </div>
           <input
@@ -115,16 +117,16 @@ export function CropDialog({
             value={scale}
             onChange={(e) => setScale(Number(e.target.value))}
             className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-secondary accent-primary"
-            aria-label="Escala de recorte"
+            aria-label={t("common.loopdev.documentIntelligence.cropScale")}
           />
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={applying}>
-            Cancelar
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleApply} disabled={applying}>
-            {applying ? "Procesando..." : "Aplicar recorte"}
+            {applying ? t("common.loopdev.documentIntelligence.processing") : t("common.loopdev.documentIntelligence.applyCrop")}
           </Button>
         </DialogFooter>
       </DialogContent>

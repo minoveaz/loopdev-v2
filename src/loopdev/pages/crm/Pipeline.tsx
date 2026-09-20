@@ -24,7 +24,7 @@ import {
   type CRMPipelineStageCode,
 } from "@/loopdev/domains/crm/adapter";
 import { useCrmPipeline } from "@/loopdev/domains/crm/hooks/use-crm";
-import { pipelineStageLabels as STAGE_LABELS } from "../../../../packages/contracts/src/pipeline-capability";
+import { useT } from "@/i18n";
 
 const STAGE_TONES: Record<CRMPipelineStageCode, string> = {
   prospecting: "bg-muted text-muted-foreground",
@@ -36,6 +36,8 @@ const STAGE_TONES: Record<CRMPipelineStageCode, string> = {
 };
 
 export default function SalesCRMPipeline() {
+  const t = useT();
+  const stageLabel = (stage: CRMPipelineStageCode) => t(`crm.opportunities.stages.${stage}`);
   const { trail } = useBreadcrumbs();
   const [query, setQuery] = useState("");
   const [stageCodes, setStageCodes] = useState<CRMPipelineStageCode[]>([]);
@@ -65,12 +67,12 @@ export default function SalesCRMPipeline() {
   );
 
   const mutationMessage = mutation.status === "pending"
-    ? "Saving stage change…"
+    ? t("crm.pipeline.saving")
     : mutation.status === "success"
-      ? "Stage updated."
+      ? t("crm.pipeline.updated")
       : mutation.status === "idle"
         ? null
-        : `${mutation.status === "conflict" ? "Conflict: " : mutation.status === "forbidden" ? "Permission denied: " : "Server error: "}${mutation.message}`;
+        : `${mutation.status === "conflict" ? t("crm.pipeline.conflict") : mutation.status === "forbidden" ? t("crm.pipeline.permission") : t("crm.pipeline.server")}${mutation.message}`;
 
   const moveOpportunity = (opportunity: CRMPipelineOpportunity, stageCode: CRMPipelineStageCode) => {
     if (opportunity.stageCode === stageCode || mutation.status === "pending") return;
@@ -106,29 +108,29 @@ export default function SalesCRMPipeline() {
     <PageContainer width="wide" className="max-w-[1600px]">
       <PageHeader
         eyebrow="CRM"
-        title="Pipeline"
-        description="Drag opportunities between stages or use the menu to move them."
-        breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Pipeline" }]}
+        title={t("crm.pipeline.title")}
+        description={t("crm.pipeline.description")}
+        breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: t("crm.pipeline.title") }]}
       />
 
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput
           value={query}
           onValueChange={setQuery}
-          placeholder="Search deals, contacts, or owners…"
+          placeholder={t("crm.pipeline.search")}
           size="sm"
           containerClassName="w-72"
         />
         <FilterDropdown
-          label="Stage"
+          label={t("crm.pipeline.stage")}
           multiple
           value={stageCodes}
           onChange={(values) => setStageCodes(values as CRMPipelineStageCode[])}
-          options={CRM_PIPELINE_STAGE_CODES.map((value) => ({ value, label: STAGE_LABELS[value] }))}
+          options={CRM_PIPELINE_STAGE_CODES.map((value) => ({ value, label: stageLabel(value) }))}
           size="sm"
         />
         <FilterDropdown
-          label="Owner"
+          label={t("crm.pipeline.owner")}
           multiple
           value={ownerIds}
           onChange={setOwnerIds}
@@ -163,21 +165,21 @@ export default function SalesCRMPipeline() {
         flush
         loading={loading}
         error={forbidden ? (
-          <span role="alert">You do not have permission to view this pipeline.</span>
+          <span role="alert">{t("crm.pipeline.noPermission")}</span>
         ) : error ? (
           <>
             <span>{error}</span>
             <Button className="mt-3" size="sm" variant="outline" onClick={reload}>
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />Try again
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />{t("crm.pipeline.tryAgain")}
             </Button>
           </>
         ) : undefined}
         empty={!loading && !error && !forbidden && opportunities.length === 0}
         emptyIcon={query || stageCodes.length || ownerIds.length ? SearchX : AlertTriangle}
-        emptyTitle={query || stageCodes.length || ownerIds.length ? "No opportunities found" : "No opportunities yet"}
+        emptyTitle={query || stageCodes.length || ownerIds.length ? t("crm.pipeline.noFound") : t("crm.pipeline.noYet")}
         emptyDescription={query || stageCodes.length || ownerIds.length
-          ? "Try changing the search or filters."
-          : "Opportunities will appear here when they are added to your workspace."}
+          ? t("crm.pipeline.tryFilters")
+          : t("crm.pipeline.willAppear")}
       >
         <div className="flex gap-4 overflow-x-auto p-3 pb-4">
           {CRM_PIPELINE_STAGE_CODES.map((stageCode) => {
@@ -202,7 +204,7 @@ export default function SalesCRMPipeline() {
                       {items.length}
                     </span>
                     <h2 id={`pipeline-stage-${stageCode}`} className="text-sm font-semibold text-foreground">
-                      {STAGE_LABELS[stageCode]}
+                      {stageLabel(stageCode)}
                     </h2>
                   </div>
                 </header>
@@ -223,7 +225,7 @@ export default function SalesCRMPipeline() {
                     />
                   )) : (
                     <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-                      Drop opportunities here
+                      {t("crm.pipeline.dropHere")}
                     </div>
                   )}
                 </div>
@@ -262,6 +264,7 @@ function OpportunityCard({
   onMove: (stageCode: CRMPipelineStageCode) => void;
   onReopen: () => void;
 }) {
+  const t = useT();
   const navigate = useNavigate();
 
   const handleCardClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -317,7 +320,7 @@ function OpportunityCard({
             )}
             {CRM_PIPELINE_STAGE_CODES.filter((stageCode) => stageCode !== opportunity.stageCode && opportunity.stageCode !== "won" && opportunity.stageCode !== "lost").map((stageCode) => (
               <DropdownMenuItem key={stageCode} onClick={() => onMove(stageCode)}>
-                <MoveRight className="mr-2 h-3.5 w-3.5" /> {STAGE_LABELS[stageCode]}
+                <MoveRight className="mr-2 h-3.5 w-3.5" /> {t(`crm.opportunities.stages.${stageCode}`)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

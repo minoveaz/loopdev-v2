@@ -31,6 +31,12 @@ just to match the legacy documentation.
 
 ## Architectural position
 
+The action semantics and colors used by CRM are normative in
+[LOOPDEV_ACTIONS_PROTOCOL.md](../../03-platform/frontend/LOOPDEV_ACTIONS_PROTOCOL.md)
+and specialized in [CRM_ACTIONS_PROTOCOL.md](CRM_ACTIONS_PROTOCOL.md). Entity
+screens must reuse those matrices instead of assigning red, primary, or
+neutral styling locally.
+
 CRM components render inside a platform-owned `SuiteCanvas` composition. They
 must not replace or extend the Shell with private headers, sidebars, rails or
 navigation primitives.

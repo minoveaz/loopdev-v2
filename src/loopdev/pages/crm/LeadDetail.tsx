@@ -74,15 +74,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const STATUS_LABELS: Record<CRMLeadStatusCode, string> = {
-  new: "Nuevo",
-  contacted: "Contactado",
-  qualified: "Calificado",
-  stalled: "En Pausa",
-  inactive: "Descartado",
-  converted: "Convertido",
-};
+import { useT } from "@/i18n";
 
 const STATUS_TONES: Record<CRMLeadStatusCode, "success" | "info" | "warning" | "neutral"> = {
   new: "info",
@@ -93,14 +85,12 @@ const STATUS_TONES: Record<CRMLeadStatusCode, "success" | "info" | "warning" | "
   converted: "success",
 };
 
-const STEPPER_STAGES: Array<{ key: CRMLeadStatusCode; label: string; step: number }> = [
-  { key: "new", label: "Nuevo Lead", step: 1 },
-  { key: "contacted", label: "Contactado", step: 2 },
-  { key: "qualified", label: "Calificado", step: 3 },
-  { key: "converted", label: "Convertido", step: 4 },
+const STEPPER_STAGES: Array<{ key: CRMLeadStatusCode; step: number }> = [
+  { key: "new", step: 1 }, { key: "contacted", step: 2 }, { key: "qualified", step: 3 }, { key: "converted", step: 4 },
 ];
 
 export default function SalesCRMLeadDetail() {
+  const t = useT();
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const { trail } = useBreadcrumbs();
@@ -213,7 +203,7 @@ export default function SalesCRMLeadDetail() {
     return (
       <PageContainer width="wide">
         <div className="py-24 text-center text-sm text-muted-foreground animate-pulse">
-          Cargando ficha de lead...
+          {t("crm.leadDetail.loading")}
         </div>
       </PageContainer>
     );
@@ -223,12 +213,12 @@ export default function SalesCRMLeadDetail() {
     return (
       <PageContainer width="narrow">
         <EmptyState
-          title="Error al cargar el lead"
+          title={t("crm.leadDetail.loadError")}
           description={leadsError}
           action={
             <Button onClick={reload}>
               <RefreshCw className="me-1.5 h-3.5 w-3.5" />
-              Reintentar
+              {t("common.actions.retry")}
             </Button>
           }
         />
@@ -240,11 +230,11 @@ export default function SalesCRMLeadDetail() {
     return (
       <PageContainer width="narrow">
         <EmptyState
-          title="Lead no encontrado"
-          description="Este lead no existe o no está disponible en la organización activa."
+          title={t("crm.leadDetail.notFound")}
+          description={t("crm.leadDetail.notFoundDescription")}
           action={
             <Button asChild>
-              <Link to="/app/sales-crm/leads">Volver a Leads</Link>
+              <Link to="/app/sales-crm/leads">{t("crm.leadDetail.back")}</Link>
             </Button>
           }
         />
@@ -331,6 +321,7 @@ export default function SalesCRMLeadDetail() {
   const isWarm = score >= 50 && score < 75;
 
   const currentStageIdx = STEPPER_STAGES.findIndex((s) => s.key === lead.status);
+  const statusLabel = (status: CRMLeadStatusCode) => t(`crm.leadDetail.status.${status}`);
 
   const activityItems: ActivityFeedItem[] = (customer.view?.timeline ?? []).map((entry) => ({
     id: entry.id,
@@ -360,7 +351,7 @@ export default function SalesCRMLeadDetail() {
       {/* Header & Breadcrumbs */}
       <PageHeader
         title={`${contactName(contact)} · Lead`}
-        description="Ficha comercial, cualificación BANT y gestión del ciclo de vida del prospecto."
+        description={t("crm.leadDetail.description")}
         breadcrumbs={
           trail.length
             ? [...trail, { label: contactName(contact) }]
@@ -376,21 +367,21 @@ export default function SalesCRMLeadDetail() {
                 onClick={handleConvert}
               >
                 <TrendingUp className="me-1.5 h-4 w-4" />
-                {converting ? "Convirtiendo..." : "Convertir a Oportunidad"}
+                {converting ? t("crm.leadDetail.converting") : t("crm.leadDetail.convert")}
               </Button>
             ) : (
               <div className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                 <CheckCircle2 className="h-4 w-4" />
-                Lead Convertido
+                {t("crm.leadDetail.converted")}
               </div>
             )}
             <Button variant="outline" onClick={openEdit}>
               <Pencil className="me-1.5 h-3.5 w-3.5" />
-              Editar
+              {t("crm.leadDetail.edit")}
             </Button>
             <Button variant="ghost" onClick={() => navigate("/app/sales-crm/leads")}>
               <ArrowLeft className="me-1.5 h-3.5 w-3.5" />
-              Volver
+              {t("crm.leadDetail.back")}
             </Button>
           </div>
         }
@@ -423,15 +414,15 @@ export default function SalesCRMLeadDetail() {
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    Lead · {score} pts
+                    {t("crm.leadDetail.leadStage")} · {t("crm.leadDetail.scorePoints", { score })}
                   </span>
                 )}
                 <StatusBadge tone={STATUS_TONES[lead.status]} dot>
-                  {STATUS_LABELS[lead.status]}
+                  {statusLabel(lead.status)}
                 </StatusBadge>
               </div>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                {contact.companyName || "Empresa no especificada"} · {contact.jobTitle || "Cargo pendiente"}
+                {contact.companyName || t("crm.leadDetail.companyMissing")} · {contact.jobTitle || t("crm.leadDetail.jobMissing")}
               </p>
             </div>
           </div>
@@ -450,8 +441,8 @@ export default function SalesCRMLeadDetail() {
               </a>
             )}
             <span className="text-border">|</span>
-            <span>Origen: <strong className="text-foreground">{lead.source || "Website"}</strong></span>
-            <span>Owner: <strong className="text-foreground">{lead.ownerName || "Sin asignar"}</strong></span>
+            <span>{t("crm.leadDetail.origin")}: <strong className="text-foreground">{lead.source || "Website"}</strong></span>
+            <span>{t("crm.leadDetail.owner")}: <strong className="text-foreground">{lead.ownerName || t("crm.leadDetail.unassigned")}</strong></span>
           </div>
         </div>
 
@@ -487,7 +478,7 @@ export default function SalesCRMLeadDetail() {
                     >
                       {isPast ? <Check className="h-3.5 w-3.5" /> : stage.step}
                     </span>
-                    <span className="text-xs">{stage.label}</span>
+                    <span className="text-xs">{statusLabel(stage.key)}</span>
                   </div>
                   {idx < STEPPER_STAGES.length - 1 && (
                     <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
@@ -510,16 +501,16 @@ export default function SalesCRMLeadDetail() {
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4 text-primary" />
                   <h3 className="font-display text-base font-bold tracking-tight text-foreground">
-                    Cualificación BANT del Lead
+                    {t("crm.leadDetail.bantTitle")}
                   </h3>
                 </div>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Evaluación de viabilidad comercial antes del paso a Pipeline.
+                  {t("crm.leadDetail.bantDescription")}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <span className="text-xs font-bold text-foreground">{bantMetrics.score}% Calificado</span>
+                  <span className="text-xs font-bold text-foreground">{t("crm.leadDetail.qualifiedPercent", { score: bantMetrics.score })}</span>
                   <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                     <div
                       className={`h-full transition-all duration-500 rounded-full ${
@@ -535,7 +526,7 @@ export default function SalesCRMLeadDetail() {
                 </div>
                 <Button size="sm" variant="outline" onClick={openEdit}>
                   <Pencil className="h-3.5 w-3.5 me-1" />
-                  Editar BANT
+                  {t("crm.leadDetail.editBant")}
                 </Button>
               </div>
             </div>
@@ -547,18 +538,18 @@ export default function SalesCRMLeadDetail() {
                 <div className="flex items-center justify-between text-xs font-semibold">
                   <span className="flex items-center gap-1.5 text-foreground">
                     <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
-                    B · Budget (Presupuesto)
+                    {t("crm.leadDetail.budget")}
                   </span>
                   {bantMetrics.budget ? (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Identificado</span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">{t("crm.leadDetail.identified")}</span>
                   ) : (
-                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Pendiente</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{t("crm.leadDetail.pending")}</span>
                   )}
                 </div>
                 <p className="mt-2 text-sm font-bold text-foreground">
                   {lead.estimatedValue != null
                     ? `${lead.estimatedValue.toLocaleString()} ${lead.estimatedCurrency || "EUR"}`
-                    : "Presupuesto sin definir"}
+                    : t("crm.leadDetail.budgetMissing")}
                 </p>
               </div>
 
@@ -567,18 +558,18 @@ export default function SalesCRMLeadDetail() {
                 <div className="flex items-center justify-between text-xs font-semibold">
                   <span className="flex items-center gap-1.5 text-foreground">
                     <UserCheck className="h-3.5 w-3.5 text-blue-600" />
-                    A · Authority (Decisión)
+                    {t("crm.leadDetail.authority")}
                   </span>
                   {bantMetrics.authority ? (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Verificado</span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">{t("crm.leadDetail.verified")}</span>
                   ) : (
                     <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Pendiente</span>
                   )}
                 </div>
                 <p className="mt-2 text-sm font-bold text-foreground truncate">
-                  {contact.jobTitle || "Cargo sin confirmar"}
+                  {contact.jobTitle || t("crm.leadDetail.authorityMissing")}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">{contact.companyName || "Empresa pendiente"}</p>
+                <p className="text-xs text-muted-foreground truncate">{contact.companyName || t("crm.leadDetail.companyPending")}</p>
               </div>
 
               {/* Need */}
@@ -586,16 +577,16 @@ export default function SalesCRMLeadDetail() {
                 <div className="flex items-center justify-between text-xs font-semibold">
                   <span className="flex items-center gap-1.5 text-foreground">
                     <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                    N · Need (Necesidad)
+                    {t("crm.leadDetail.need")}
                   </span>
                   {bantMetrics.need ? (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Definida</span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">{t("crm.leadDetail.defined")}</span>
                   ) : (
                     <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Pendiente</span>
                   )}
                 </div>
                 <p className="mt-2 text-xs font-medium text-foreground line-clamp-2">
-                  {lead.qualificationNeed || lead.interest || "Sin requerimientos documentados aún."}
+                  {lead.qualificationNeed || lead.interest || t("crm.leadDetail.needMissing")}
                 </p>
               </div>
 
@@ -604,16 +595,16 @@ export default function SalesCRMLeadDetail() {
                 <div className="flex items-center justify-between text-xs font-semibold">
                   <span className="flex items-center gap-1.5 text-foreground">
                     <Clock className="h-3.5 w-3.5 text-purple-600" />
-                    T · Timeline (Plazo)
+                    {t("crm.leadDetail.timeline")}
                   </span>
                   {bantMetrics.timeline ? (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Definido</span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">{t("crm.leadDetail.defined")}</span>
                   ) : (
                     <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Pendiente</span>
                   )}
                 </div>
                 <p className="mt-2 text-sm font-bold text-foreground">
-                  {lead.qualificationTimeline || "Sin fecha objetivo"}
+                  {lead.qualificationTimeline || t("crm.leadDetail.timelineMissing")}
                 </p>
               </div>
             </div>
@@ -623,11 +614,11 @@ export default function SalesCRMLeadDetail() {
           <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
             <div className="flex items-center gap-2 pb-2">
               <MessageSquarePlus className="h-4 w-4 text-primary" />
-              <span className="text-xs font-bold text-foreground">Registrar Nota / Actividad Rápida</span>
+              <span className="text-xs font-bold text-foreground">{t("crm.leadDetail.quickActivityTitle")}</span>
             </div>
             <div className="relative">
               <Textarea
-                placeholder="Escribe una nota interna, resumen de llamada o próximo compromiso con el lead..."
+                placeholder={t("crm.leadDetail.quickActivityPlaceholder")}
                 value={quickNoteBody}
                 onChange={(e) => setQuickNoteBody(e.target.value)}
                 className="min-h-[72px] resize-none text-xs bg-muted/20 pr-24"
@@ -640,7 +631,7 @@ export default function SalesCRMLeadDetail() {
                   onClick={handleSaveQuickNote}
                 >
                   <Send className="h-3 w-3 me-1" />
-                  {savingQuickNote ? "Guardando..." : "Guardar"}
+                  {savingQuickNote ? t("crm.leadDetail.saving") : t("crm.leadDetail.save")}
                 </Button>
               </div>
             </div>
@@ -652,29 +643,29 @@ export default function SalesCRMLeadDetail() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="font-display text-base font-bold tracking-tight text-foreground">
-                    Historial de Actividad
+                    {t("crm.leadDetail.activityTitle")}
                   </h3>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Registro cronológico de interacciones, notas y eventos.
+                    {t("crm.leadDetail.activityDescription")}
                   </p>
                 </div>
               </div>
               <Tabs value={activityCategory} onValueChange={setActivityCategory} className="mt-3">
                 <TabsList className="h-9 bg-transparent p-0">
                   <TabsTrigger value="all" className="h-9 rounded-none border-b-2 border-transparent px-3 text-xs data-[state=active]:border-primary data-[state=active]:text-primary font-medium">
-                    Todo
+                    {t("crm.leadDetail.all")}
                   </TabsTrigger>
                   <TabsTrigger value="communications" className="h-9 rounded-none border-b-2 border-transparent px-3 text-xs data-[state=active]:border-primary data-[state=active]:text-primary font-medium">
-                    Comunicaciones
+                    {t("crm.leadDetail.communications")}
                   </TabsTrigger>
                   <TabsTrigger value="notes" className="h-9 rounded-none border-b-2 border-transparent px-3 text-xs data-[state=active]:border-primary data-[state=active]:text-primary font-medium">
-                    Notas
+                    {t("crm.leadDetail.notes")}
                   </TabsTrigger>
                   <TabsTrigger value="tasks" className="h-9 rounded-none border-b-2 border-transparent px-3 text-xs data-[state=active]:border-primary data-[state=active]:text-primary font-medium">
-                    Tareas
+                    {t("crm.leadDetail.tasks")}
                   </TabsTrigger>
                   <TabsTrigger value="crm" className="h-9 rounded-none border-b-2 border-transparent px-3 text-xs data-[state=active]:border-primary data-[state=active]:text-primary font-medium">
-                    CRM
+                    {t("crm.leadDetail.crm")}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -686,8 +677,8 @@ export default function SalesCRMLeadDetail() {
                 description=""
                 loading={customer.loading}
                 error={customer.error}
-                emptyTitle="Sin actividad en esta categoría"
-                emptyDescription="Las llamadas, notas y mensajes aparecerán aquí conforme interactúes con el lead."
+                emptyTitle={t("crm.leadDetail.noActivityTitle")}
+                emptyDescription={t("crm.leadDetail.noActivityDescription")}
               />
             </div>
           </section>
@@ -698,37 +689,37 @@ export default function SalesCRMLeadDetail() {
           {/* Quick Communication Actions */}
           <div className="rounded-xl border border-border bg-card p-4 shadow-xs space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Acciones Comerciales
+              {t("crm.leadDetail.commercialActions")}
             </h4>
             <div className="grid gap-2">
               <Button className="w-full justify-start text-xs font-medium" variant="outline" asChild>
                 <a href={contact.phone ? `tel:${contact.phone}` : undefined} aria-disabled={!contact.phone} onClick={(e) => { if (!contact.phone) e.preventDefault(); }}>
                   <PhoneCall className="me-2 h-4 w-4 text-emerald-600" />
-                  Llamar{!contact.phone && " · No disponible"}
+                  {t("crm.leadDetail.call")}{!contact.phone && ` · ${t("crm.leadDetail.unavailable")}`}
                 </a>
               </Button>
               <Button className="w-full justify-start text-xs font-medium" variant="outline" asChild>
                 <a href={contact.email ? `mailto:${contact.email}` : undefined} aria-disabled={!contact.email} onClick={(e) => { if (!contact.email) e.preventDefault(); }}>
                   <Mail className="me-2 h-4 w-4 text-blue-600" />
-                  Enviar Email{!contact.email && " · No disponible"}
+                  {t("crm.leadDetail.sendEmail")}{!contact.email && ` · ${t("crm.leadDetail.unavailable")}`}
                 </a>
               </Button>
               <Button className="w-full justify-start text-xs font-medium" variant="outline" asChild>
                 <Link to="/app/sales-crm/communications">
                   <MessageCircle className="me-2 h-4 w-4 text-emerald-500" />
-                  Chat / WhatsApp
+                  {t("crm.leadDetail.chat")}
                 </Link>
               </Button>
               <Button className="w-full justify-start text-xs font-medium" variant="outline" asChild>
                 <Link to="/app/sales-crm/tasks">
                   <ListTodo className="me-2 h-4 w-4 text-amber-500" />
-                  Programar Tarea de Seguimiento
+                  {t("crm.leadDetail.scheduleTask")}
                 </Link>
               </Button>
               <Button className="w-full justify-start text-xs font-medium border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800" variant="outline" asChild>
                 <Link to={`/app/sales-crm/contacts/${contact.id}`}>
                   <ExternalLink className="me-2 h-4 w-4 text-primary" />
-                  Abrir Customer 360
+                  {t("crm.leadDetail.openCustomer360")}
                 </Link>
               </Button>
             </div>
@@ -738,13 +729,13 @@ export default function SalesCRMLeadDetail() {
           <div className="rounded-xl border border-border bg-card p-4 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Oportunidades en Pipeline
+                {t("crm.leadDetail.pipelineOpportunities")}
               </h4>
               <span className="text-xs font-semibold text-primary">{relatedOpportunities.length}</span>
             </div>
             {relatedOpportunities.length === 0 ? (
               <p className="text-xs text-muted-foreground">
-                No hay oportunidades vinculadas. Convierte este lead cuando esté calificado para crear el trato.
+                {t("crm.leadDetail.noOpportunities")}
               </p>
             ) : (
               <div className="space-y-2">
@@ -757,7 +748,7 @@ export default function SalesCRMLeadDetail() {
                     <div className="min-w-0 pr-2">
                       <span className="block truncate font-semibold text-foreground">{opp.name}</span>
                       <span className="text-[11px] text-muted-foreground font-medium">
-                        {opp.amount == null ? "Importe pendiente" : `${opp.amount.toLocaleString()} ${opp.currency || "EUR"}`}
+                        {opp.amount == null ? t("crm.leadDetail.pendingAmount") : `${opp.amount.toLocaleString()} ${opp.currency || "EUR"}`}
                       </span>
                     </div>
                     <StatusBadge tone="info">{opp.stageCode}</StatusBadge>
@@ -789,19 +780,19 @@ export default function SalesCRMLeadDetail() {
       <AppDrawer
         open={editOpen}
         onOpenChange={setEditOpen}
-        title="Editar Lead y BANT"
-        eyebrow="CRM / Leads"
+        title={t("crm.leadDetail.editTitle")}
+        eyebrow={t("crm.leadDetail.editEyebrow")}
         mode="Editing"
-        headerMeta={<span>Formulario de Cualificación</span>}
-        description="Actualiza el contexto comercial, atribución y criterios BANT."
+        headerMeta={<span>{t("crm.leadDetail.editMeta")}</span>}
+        description={t("crm.leadDetail.editDescription")}
         restoreFocusRef={editRestoreFocusRef}
         dirty={() => editLifecycle.dirtyRef.current}
         showDirtyState={editLifecycle.dirty}
         confirmOnClose
-        confirmTitle="¿Descartar cambios?"
-        confirmDescription="Los cambios no guardados se perderán."
-        confirmLabel="Descartar"
-        cancelLabel="Seguir editando"
+        confirmTitle={t("crm.leadDetail.discardTitle")}
+        confirmDescription={t("crm.leadDetail.discardDescription")}
+        confirmLabel={t("crm.leadDetail.discard")}
+        cancelLabel={t("crm.leadDetail.keepEditing")}
         onDiscard={() => editLifecycle.markClean()}
         size="md"
         layoutMode="standard"
@@ -809,10 +800,10 @@ export default function SalesCRMLeadDetail() {
         footer={
           <div className="flex w-full justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
-              Cancelar
+              {t("crm.leadDetail.cancel")}
             </Button>
             <Button type="button" onClick={() => void saveEdit()}>
-              Guardar Cambios
+              {t("crm.leadDetail.saveChanges")}
             </Button>
           </div>
         }
@@ -828,19 +819,19 @@ export default function SalesCRMLeadDetail() {
           <section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs">
             <FormSectionHeader
               eyebrow="Perfil"
-              title="Detalles del Lead"
-              description="Datos de contacto y responsable comercial."
+              title={t("crm.leadDetail.formDetailsTitle")}
+              description={t("crm.leadDetail.formDetailsDescription")}
               mode="expanded"
               responsive="auto"
               meta={<span>Básico</span>}
             />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5 sm:col-span-2">
-                <Label>Contacto</Label>
+                <Label>{t("crm.leadDetail.contact")}</Label>
                 <Input value={contactName(contact)} readOnly className="bg-muted/40" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="edit-lead-interest">Interés / Objetivo</Label>
+                <Label htmlFor="edit-lead-interest">{t("crm.leadDetail.interestLabel")}</Label>
                 <Input
                   id="edit-lead-interest"
                   value={editInterest}
@@ -848,11 +839,11 @@ export default function SalesCRMLeadDetail() {
                     editLifecycle.markDirty();
                     setEditInterest(e.target.value);
                   }}
-                  placeholder="ej. Expansión Enterprise Cloud"
+                  placeholder={t("crm.leadDetail.interestPlaceholder")}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="edit-lead-source">Fuente de Atribución</Label>
+                <Label htmlFor="edit-lead-source">{t("crm.leadDetail.sourceLabel")}</Label>
                 <Input
                   id="edit-lead-source"
                   value={editSource}
@@ -860,11 +851,11 @@ export default function SalesCRMLeadDetail() {
                     editLifecycle.markDirty();
                     setEditSource(e.target.value);
                   }}
-                  placeholder="Website, Referral, Evento..."
+                  placeholder={t("crm.leadDetail.sourcePlaceholder")}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="edit-lead-owner">Comercial Asignado (Owner)</Label>
+                <Label htmlFor="edit-lead-owner">{t("crm.leadDetail.ownerLabel")}</Label>
                 <Select
                   value={editOwner || "unassigned"}
                   onValueChange={(val) => {
@@ -886,7 +877,7 @@ export default function SalesCRMLeadDetail() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="edit-lead-status">Estado del Lead</Label>
+                <Label htmlFor="edit-lead-status">{t("crm.leadDetail.statusLabel")}</Label>
                 <Select
                   value={editStatus}
                   onValueChange={(val) => {
@@ -900,7 +891,7 @@ export default function SalesCRMLeadDetail() {
                   <SelectContent>
                     {CRM_LEAD_STATUS_CODES.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {STATUS_LABELS[s]}
+                        {statusLabel(s)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -912,15 +903,15 @@ export default function SalesCRMLeadDetail() {
           <section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs">
             <FormSectionHeader
               eyebrow="Cualificación BANT"
-              title="Contexto Comercial"
-              description="Datos clave para madurar el lead antes de pasar a propuesta."
+              title={t("crm.leadDetail.contextTitle")}
+              description={t("crm.leadDetail.contextDescription")}
               mode="expanded"
               responsive="auto"
               meta={<span>Criterios</span>}
             />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="edit-lead-need">Necesidad Detectada (Need)</Label>
+                <Label htmlFor="edit-lead-need">{t("crm.leadDetail.needLabel")}</Label>
                 <Input
                   id="edit-lead-need"
                   value={editNeed}
@@ -928,11 +919,11 @@ export default function SalesCRMLeadDetail() {
                     editLifecycle.markDirty();
                     setEditNeed(e.target.value);
                   }}
-                  placeholder="¿Qué problema u oportunidad busca resolver?"
+                  placeholder={t("crm.leadDetail.needPlaceholder")}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="edit-lead-timeline">Plazo Objetivo (Timeline)</Label>
+                <Label htmlFor="edit-lead-timeline">{t("crm.leadDetail.timelineLabel")}</Label>
                 <Input
                   id="edit-lead-timeline"
                   value={editTimeline}
@@ -940,11 +931,11 @@ export default function SalesCRMLeadDetail() {
                     editLifecycle.markDirty();
                     setEditTimeline(e.target.value);
                   }}
-                  placeholder="Este trimestre, 3-6 meses..."
+                  placeholder={t("crm.leadDetail.timelinePlaceholder")}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="edit-lead-value">Presupuesto Estimado (Budget)</Label>
+                <Label htmlFor="edit-lead-value">{t("crm.leadDetail.budgetLabel")}</Label>
                 <Input
                   id="edit-lead-value"
                   type="number"
@@ -958,7 +949,7 @@ export default function SalesCRMLeadDetail() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="edit-lead-currency">Moneda</Label>
+                <Label htmlFor="edit-lead-currency">{t("crm.leadDetail.currencyLabel")}</Label>
                 <Input
                   id="edit-lead-currency"
                   maxLength={3}

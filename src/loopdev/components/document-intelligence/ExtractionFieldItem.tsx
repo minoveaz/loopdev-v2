@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { resolveConfidenceLevel, type ExportProfileField } from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
 
 interface ExtractionFieldItemProps {
   field: ExportProfileField;
@@ -24,6 +25,7 @@ export function ExtractionFieldItem({
   span,
   onChange,
 }: ExtractionFieldItemProps) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const confidenceLevel = resolveConfidenceLevel(confidence);
   const isMrz = field === "mrz";
@@ -57,7 +59,7 @@ export function ExtractionFieldItem({
             <Badge
               variant="outline"
               className={`h-5 px-1.5 font-mono text-[10px] font-semibold ${getConfidenceBadgeColor()}`}
-              title={`Confianza de extracción: ${Math.round(confidence * 100)}%`}
+              title={t("common.loopdev.documentIntelligence.extractionConfidence", { percent: Math.round(confidence * 100) })}
             >
               {Math.round(confidence * 100)}%
             </Badge>
@@ -68,7 +70,7 @@ export function ExtractionFieldItem({
             size="icon"
             variant="ghost"
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
-            title={`Copiar ${label}`}
+            title={t("common.loopdev.documentIntelligence.copyField", { label })}
             onClick={handleCopy}
             disabled={!value}
           >
@@ -86,7 +88,7 @@ export function ExtractionFieldItem({
           id={`field-${field}`}
           value={value}
           onChange={(e) => onChange(field, e.target.value)}
-          placeholder="No detectado"
+          placeholder={t("common.loopdev.documentIntelligence.notDetected")}
           rows={3}
           className="font-mono text-xs leading-relaxed"
         />
@@ -95,7 +97,7 @@ export function ExtractionFieldItem({
           id={`field-${field}`}
           value={value}
           onChange={(e) => onChange(field, e.target.value)}
-          placeholder="No detectado"
+          placeholder={t("common.loopdev.documentIntelligence.notDetected")}
           className="h-9 text-xs"
         />
       )}

@@ -14,7 +14,7 @@ type MobileAccountSheetProps = {
 };
 
 export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAccountSheetProps) {
-  const { lang, setLang } = useMobileI18n();
+  const { lang, setLang, t } = useMobileI18n();
   const [context, setContext] = useState<TenantContextSnapshot | null>(() =>
     mobileTenantContextAdapter.getTenantContext(),
   );
@@ -60,19 +60,19 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
   };
 
   const activeOrgId = context?.activeOrganizationId ?? orgs[0]?.id;
-  const userName = session?.user.fullName || session?.user.email?.split("@")[0] || (lang === "es" ? "Usuario" : "User");
+  const userName = session?.user.fullName || session?.user.email?.split("@")[0] || t("common.user");
   const userEmail = session?.user.email || "user@loopdev.com";
   const initials = (session?.user.fullName ? session.user.fullName.split(" ").map((p: string) => p[0]).join("") : userName.slice(0, 2)).toUpperCase().slice(0, 2);
 
   const menuItems = [
-    { label: lang === "es" ? "Perfil" : "Profile", icon: UserRound },
-    { label: lang === "es" ? "Configuración de cuenta" : "Account settings", icon: Settings },
-    { label: lang === "es" ? "Seguridad" : "Security", icon: ShieldCheck },
-    { label: lang === "es" ? "Facturación" : "Billing", icon: CreditCard },
+    { label: t("common.profile"), icon: UserRound },
+    { label: t("common.accountSettings"), icon: Settings },
+    { label: t("common.security"), icon: ShieldCheck },
+    { label: t("common.billing"), icon: CreditCard },
   ];
 
   return (
-    <MobileBottomSheet onClose={onClose} title={lang === "es" ? "Cuenta" : "Account"} visible={visible}>
+    <MobileBottomSheet onClose={onClose} title={t("common.account")} visible={visible}>
       <View style={styles.profileHeader}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials || "AD"}</Text>
@@ -83,7 +83,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
             {context?.isSuperAdmin && (
               <View style={styles.superBadge}>
                 <Text style={styles.superBadgeText}>
-                  {lang === "es" ? "SUPER ADMINISTRADOR" : "SUPER ADMIN"}
+                  {t("common.superAdmin")}
                 </Text>
               </View>
             )}
@@ -97,7 +97,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
       {/* Language Switcher Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          {lang === "es" ? "IDIOMA DE LA INTERFAZ" : "INTERFACE LANGUAGE"}
+          {t("common.interfaceLanguage")}
         </Text>
         <View style={styles.langList}>
           {MOBILE_LANGUAGES.map((item) => {
@@ -130,7 +130,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
       {/* Organization Switcher inside Mobile Account Sheet */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          {lang === "es" ? "CAMBIAR ORGANIZACIÓN" : "SWITCH ORGANIZATION"}
+          {t("common.switchOrganization")}
         </Text>
         <View style={styles.orgList}>
           {orgs.map((org) => {
@@ -148,8 +148,8 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
                   <Text style={[styles.orgName, isActive && styles.activeOrgName]}>{org.name}</Text>
                   <Text style={styles.orgDetail}>
                     {isActive
-                      ? (lang === "es" ? "Organización activa" : "Active Organization")
-                      : (lang === "es" ? "Toca para cambiar" : "Tap to switch")}
+                      ? t("common.activeOrganization")
+                      : t("common.tapToSwitch")}
                   </Text>
                 </View>
                 {isActive ? (
@@ -180,19 +180,15 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
 
       <Pressable onPress={() => setConfirmSignOut(true)} style={styles.item}>
         <LogOut color="#ef334e" size={22} strokeWidth={2} />
-        <Text style={styles.signOut}>{lang === "es" ? "Cerrar sesión" : "Sign out"}</Text>
+        <Text style={styles.signOut}>{t("common.signOut")}</Text>
       </Pressable>
 
       <MobileConfirmDialog
         visible={confirmSignOut}
-        title={lang === "es" ? "¿Cerrar sesión en LoopDev?" : "Sign out of LoopDev?"}
-        description={
-          lang === "es"
-            ? "¿Estás seguro de que deseas finalizar tu sesión? Tu organización activa y contexto de trabajo se cerrarán."
-            : "Are you sure you want to end your session? Your active tenant and workspace context will be cleared."
-        }
-        cancelLabel={lang === "es" ? "Cancelar" : "Cancel"}
-        confirmLabel={lang === "es" ? "Cerrar sesión" : "Sign out"}
+        title={t("common.signOutTitle")}
+        description={t("common.signOutDescription")}
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("common.signOut")}
         destructive
         onCancel={() => setConfirmSignOut(false)}
         onConfirm={handleExecuteSignOut}

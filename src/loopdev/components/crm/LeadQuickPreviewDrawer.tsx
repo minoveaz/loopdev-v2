@@ -33,6 +33,7 @@ interface Props {
   onClose: () => void;
   onUpdateStatus: (lead: CRMLead, status: CRMLeadStatusCode) => void;
   onConvert: (lead: CRMLead) => void;
+  onArchive: (lead: CRMLead) => void;
 }
 
 const STAGES: Array<{ key: CRMLeadStatusCode; label: string }> = [
@@ -49,6 +50,7 @@ export function LeadQuickPreviewDrawer({
   onClose,
   onUpdateStatus,
   onConvert,
+  onArchive,
 }: Props) {
   if (!lead) return null;
 
@@ -229,6 +231,9 @@ export function LeadQuickPreviewDrawer({
 
         {/* Conversion & Full Page Navigation Actions */}
         <div className="flex flex-col gap-2 pt-2">
+          <Button variant="outline" className="w-full" onClick={() => { onArchive(lead); onClose(); }}>
+            Archive lead
+          </Button>
           {lead.status !== "converted" ? (
             <Button
               className="w-full"

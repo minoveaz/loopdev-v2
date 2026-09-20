@@ -54,6 +54,7 @@ interface Props {
   leadId: string;
   onBack: () => void;
   onNavigateToContact: (contactId: string) => void;
+  onArchive?: (lead: CRMLead) => Promise<void>;
 }
 
 const STAGES: Array<{ key: CRMLead["status"]; label: string }> = [
@@ -69,6 +70,7 @@ export function MobileLeadDetailScreen({
   leadId,
   onBack,
   onNavigateToContact,
+  onArchive,
 }: Props) {
   const t = useT();
   const [lead, setLead] = useState<CRMLead | null>(null);
@@ -151,7 +153,7 @@ export function MobileLeadDetailScreen({
       });
       setLead(updatedLead);
       setConvertModalOpen(false);
-      Alert.alert("¡Lead Convertido!", "Se ha creado la oportunidad en el Pipeline exitosamente.");
+      Alert.alert(t("crm.leads.convertSuccessTitle"), t("crm.leads.convertSuccessDesc"));
     } catch {
       Alert.alert(t("common.error"), t("crm.leads.convertError"));
     } finally {
@@ -244,6 +246,12 @@ export function MobileLeadDetailScreen({
           icon={<Pencil size={13} color={mobileTheme.colors.primary} />}
           onPress={() => setEditModalOpen(true)}
         />
+        {onArchive ? <MobileButton
+          variant="outline"
+          size="sm"
+          label={t("crm.leads.archive")}
+          onPress={() => Alert.alert("Archivar lead", "El lead dejará de aparecer en los listados activos.", [{ text: "Cancelar", style: "cancel" }, { text: "Archivar", style: "destructive", onPress: () => void onArchive(lead) }])}
+        /> : null}
       </View>
 
       {/* Lead Hero Card */}

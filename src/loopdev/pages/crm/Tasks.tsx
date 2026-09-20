@@ -63,6 +63,7 @@ import {
   type TaskTemplateRecord,
 } from "@/loopdev/domains/tasks";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 type ViewMode = "table" | "kanban" | "calendar";
 
@@ -118,6 +119,7 @@ const KANBAN_COLS: { key: TaskStatus; label: string; tone: "neutral" | "info" | 
 ];
 
 export default function CRMTasksPage() {
+  const t = useT();
   const { trail } = useBreadcrumbs();
   const [searchParams] = useSearchParams();
 
@@ -215,6 +217,13 @@ export default function CRMTasksPage() {
       });
     }
   };
+
+  const statusLabels = useMemo<Record<TaskStatus, string>>(() => ({
+    open: t("crm.tasks.status.open"),
+    in_progress: t("crm.tasks.status.inProgress"),
+    completed: t("crm.tasks.status.completed"),
+    cancelled: t("crm.tasks.status.cancelled"),
+  }), [t]);
 
   const stats = useMemo(() => {
     return {
@@ -561,7 +570,7 @@ export default function CRMTasksPage() {
   return (
     <PageContainer width="wide">
       <PageHeader
-        title="CRM Tasks"
+        title={t("crm.tasks.title")}
         description="Follow-up work, pipeline tasks, and contact commitments across Sales CRM."
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Tasks" }]}
         actions={
@@ -584,7 +593,7 @@ export default function CRMTasksPage() {
                 className={cn("h-8 px-2.5 text-xs font-semibold", viewMode === "kanban" && "bg-primary-soft text-primary")}
               >
                 <Columns3 className="mr-1.5 h-3.5 w-3.5" />
-                Kanban
+                {t("crm.tasks.kanban")}
               </Button>
               <Button
                 variant={viewMode === "calendar" ? "secondary" : "ghost"}
@@ -593,7 +602,7 @@ export default function CRMTasksPage() {
                 className={cn("h-8 px-2.5 text-xs font-semibold", viewMode === "calendar" && "bg-primary-soft text-primary")}
               >
                 <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
-                Calendario
+                {t("crm.tasks.calendar")}
               </Button>
             </div>
 
@@ -638,8 +647,8 @@ export default function CRMTasksPage() {
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <StatCard label="Total tasks" value={String(stats.total)} icon={ListChecks} accent="primary" compact />
         <StatCard label="Open tasks" value={String(stats.open)} icon={Circle} accent="info" compact />
-        <StatCard label="Overdue" value={String(stats.overdue)} icon={CalendarDays} accent="gold" compact />
-        <StatCard label="Urgent & overdue" value={String(stats.urgent)} icon={Siren} accent="accent" compact />
+        <StatCard label={t("crm.tasks.overdue")} value={String(stats.overdue)} icon={CalendarDays} accent="gold" compact />
+        <StatCard label={t("crm.tasks.urgentOverdue")} value={String(stats.urgent)} icon={Siren} accent="accent" compact />
       </div>
 
       {/* 1-Tap Quick Templates Bar */}
@@ -668,9 +677,9 @@ export default function CRMTasksPage() {
       <div className="mt-6 flex max-w-full items-center gap-1 overflow-x-auto border-b border-border">
         {[
           { id: "all", label: "All tasks" },
-          { id: "urgent", label: "Urgent & Overdue" },
-          { id: "today", label: "Due Today" },
-          { id: "completed", label: "Completed" },
+          { id: "urgent", label: t("crm.tasks.urgentOverdue") },
+          { id: "today", label: t("crm.tasks.dueToday") },
+          { id: "completed", label: t("crm.tasks.completed") },
         ].map((tab) => (
           <button
             key={tab.id}

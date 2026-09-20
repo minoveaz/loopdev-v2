@@ -148,7 +148,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
         <Text style={styles.cardHeading}>{t("crm.leads.selectContact")}</Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Seleccionar contacto vinculado"
+          accessibilityLabel={t("crm.leads.selectLinkedContact")}
           style={styles.selectorTrigger}
           onPress={() => setContactPickerOpen(true)}
         >
@@ -179,7 +179,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
           label={`${t("crm.leads.interest")} *`}
           value={interest}
           onChangeText={setInterest}
-          placeholder="p. ej. Migración Cloud empresarial & IA"
+          placeholder={t("crm.leads.interestPlaceholder")}
         />
 
         <Text style={styles.sectionLabel}>{t("crm.leads.source")}</Text>
@@ -221,7 +221,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
           label={t("crm.leads.need")}
           value={need}
           onChangeText={setNeed}
-          placeholder="Desafíos comerciales clave, problemas a resolver u objetivos del proyecto..."
+          placeholder={t("crm.leads.needPlaceholder")}
           rows={3}
         />
 
@@ -229,13 +229,13 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
           label={t("crm.leads.timeline")}
           value={timeline}
           onChangeText={setTimeline}
-          placeholder="p. ej. Inmediato / 1–3 meses"
+          placeholder={t("crm.leads.timelinePlaceholder")}
         />
 
         <Text style={styles.sectionLabel}>{t("crm.leads.assignedOwner")}</Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Seleccionar gestor asignado"
+          accessibilityLabel={t("crm.leads.selectOwner")}
           style={styles.selectorTrigger}
           onPress={() => setOwnerPickerOpen(true)}
         >
@@ -245,7 +245,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
             </View>
             <View style={styles.selectorCopy}>
               <Text style={styles.selectedName}>{assignedOwner.name}</Text>
-              <Text style={styles.selectedSub}>Gestor Comercial</Text>
+              <Text style={styles.selectedSub}>{t("crm.leads.commercialOwner")}</Text>
             </View>
           </View>
           <ChevronDown size={18} color="#64748b" />
@@ -256,7 +256,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
       <MobileSelectSheet
         visible={contactPickerOpen}
         onClose={() => setContactPickerOpen(false)}
-        title="Seleccionar Contacto"
+        title={t("crm.leads.selectContact")}
         options={contactOptions}
         selectedId={selectedContactId}
         onSelect={(id) => {
@@ -269,7 +269,7 @@ export function MobileCreateLeadScreen({ onCancel, onCreated }: Props) {
       <MobileSelectSheet
         visible={ownerPickerOpen}
         onClose={() => setOwnerPickerOpen(false)}
-        title="Asignar Propietario"
+        title={t("crm.leads.assignOwner")}
         options={ownerOptions}
         selectedId={assignedOwner.id}
         onSelect={(id) => {

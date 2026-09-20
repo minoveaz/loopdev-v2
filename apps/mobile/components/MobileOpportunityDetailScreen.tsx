@@ -51,22 +51,13 @@ interface Props {
   onNavigateToContact?: (contactId: string) => void;
 }
 
-const STAGES: Array<{ key: PipelineStageId; label: string; step: number; prob: number }> = [
-  { key: "prospecting", label: "Prospección", step: 1, prob: 15 },
-  { key: "qualified", label: "Cualificado", step: 2, prob: 40 },
-  { key: "proposal", label: "Propuesta", step: 3, prob: 65 },
-  { key: "negotiation", label: "Negociación", step: 4, prob: 80 },
-  { key: "won", label: "Ganada", step: 5, prob: 100 },
+const STAGE_KEYS: Array<{ key: PipelineStageId; step: number; prob: number }> = [
+  { key: "prospecting", step: 1, prob: 15 },
+  { key: "qualified", step: 2, prob: 40 },
+  { key: "proposal", step: 3, prob: 65 },
+  { key: "negotiation", step: 4, prob: 80 },
+  { key: "won", step: 5, prob: 100 },
 ];
-
-const STAGE_LABELS: Record<PipelineStageId, string> = {
-  prospecting: "Prospección",
-  qualified: "Cualificado",
-  proposal: "Propuesta",
-  negotiation: "Negociación",
-  won: "Ganada",
-  lost: "Perdida",
-};
 
 export function MobileOpportunityDetailScreen({
   opportunityId,
@@ -74,6 +65,8 @@ export function MobileOpportunityDetailScreen({
   onNavigateToContact,
 }: Props) {
   const t = useT();
+  const stageLabel = (stage: PipelineStageId) => t(`crm.pipeline.stages.${stage}`);
+  const stages = STAGE_KEYS.map((stage) => ({ ...stage, label: stageLabel(stage.key) }));
   const [opportunity, setOpportunity] = useState<CRMOpportunity | null>(null);
   const [contact, setContact] = useState<ContactRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,7 +111,7 @@ export function MobileOpportunityDetailScreen({
   const currentStep = useMemo(() => {
     if (!opportunity) return 1;
     if (opportunity.stageKey === "lost") return 6;
-    const found = STAGES.find((s) => s.key === opportunity.stageKey);
+    const found = stages.find((s) => s.key === opportunity.stageKey);
     return found ? found.step : 1;
   }, [opportunity]);
 
@@ -135,13 +128,13 @@ export function MobileOpportunityDetailScreen({
       const updated = await mobileCrmAdapter.moveOpportunityStage(opportunity.id, targetKey);
       setOpportunity(updated);
     } catch (err: any) {
-      Alert.alert("Error", err?.message || "No se pudo actualizar la etapa");
+      Alert.alert(t("crm.common.error"), err?.message || t("crm.pipeline.errors.stageUpdate"));
     }
   };
 
   const handleReopenSubmit = async () => {
     if (!opportunity || !reopenReason.trim()) {
-      Alert.alert("Motivo requerido", "Por favor indica la justificación para reabrir este deal.");
+      Alert.alert(t("crm.pipeline.errors.reasonRequired"), t("crm.pipeline.errors.reopenReason"));
       return;
     }
 
@@ -151,7 +144,7 @@ export function MobileOpportunityDetailScreen({
       setReopenModalOpen(false);
       setReopenReason("");
     } catch (err: any) {
-      Alert.alert("Error", err?.message || "No se pudo reabrir el deal");
+      Alert.alert(t("crm.common.error"), err?.message || t("crm.pipeline.errors.reopenFailed"));
     }
   };
 
@@ -168,7 +161,7 @@ export function MobileOpportunityDetailScreen({
 
   const openPhone = (phone?: string) => {
     if (!phone) {
-      Alert.alert("Sin teléfono", "El contacto no tiene teléfono asignado.");
+      Alert.alert(t("crm.pipeline.errors.noPhone"), t("crm.opportunity.noPhone"));
       return;
     }
     Linking.openURL(`tel:${phone}`);
@@ -176,7 +169,7 @@ export function MobileOpportunityDetailScreen({
 
   const openWhatsApp = (phone?: string) => {
     if (!phone) {
-      Alert.alert("Sin teléfono", "El contacto no tiene teléfono asignado.");
+      Alert.alert(t("crm.pipeline.errors.noPhone"), t("crm.opportunity.noPhone"));
       return;
     }
     const cleanNumber = phone.replace(/[^\d+]/g, "");
@@ -185,7 +178,7 @@ export function MobileOpportunityDetailScreen({
 
   const openEmail = (email?: string) => {
     if (!email) {
-      Alert.alert("Sin email", "El contacto no tiene correo asignado.");
+      Alert.alert(t("crm.pipeline.errors.noEmail"), t("crm.opportunity.noEmail"));
       return;
     }
     Linking.openURL(`mailto:${email}`);
@@ -200,7 +193,7 @@ export function MobileOpportunityDetailScreen({
     return (
       <MobilePageContainer>
         <MobileBackLink label={t("crm.pipeline.back", "Volver al pipeline")} onPress={onBack} />
-        <MobileLoadingState message="Cargando detalle del deal..." />
+        <MobileLoadingState message={t("crm.opportunity.loading")} />
       </MobilePageContainer>
     );
   }
@@ -210,9 +203,9 @@ export function MobileOpportunityDetailScreen({
       <MobilePageContainer>
         <MobileBackLink label={t("crm.pipeline.back", "Volver al pipeline")} onPress={onBack} />
         <MobileEmptyState
-          title="Oportunidad no encontrada"
-          description="No pudimos encontrar los datos de este deal comercial."
-          actionLabel="Volver al Pipeline"
+          title={t("crm.opportunity.notFound")}
+          description={t("crm.opportunity.notFoundDescription")}
+          actionLabel={t("crm.pipeline.back", "Volver al pipeline")}
           onAction={onBack}
         />
       </MobilePageContainer>
@@ -229,16 +222,16 @@ export function MobileOpportunityDetailScreen({
       : 50;
   const weightedValue = Math.round((opportunity.amount || 0) * (probPct / 100));
 
-  const stepperSteps = STAGES.map((s) => ({
+  const stepperSteps = stages.map((s) => ({
     key: s.key,
     label: s.label,
     stepNumber: s.step,
   }));
 
   const detailTabs = [
-    { id: "summary", label: "Resumen Comercial" },
-    { id: "contact", label: "Contacto 360" },
-    { id: "notes", label: "Notas", count: notes.length },
+    { id: "summary", label: t("crm.opportunity.tabs.summary") },
+    { id: "contact", label: t("crm.opportunity.tabs.contact") },
+    { id: "notes", label: t("crm.opportunity.tabs.notes"), count: notes.length },
   ];
 
   return (
@@ -254,8 +247,8 @@ export function MobileOpportunityDetailScreen({
               {opportunity.name}
             </Text>
             <Text style={styles.heroSubtitle} numberOfLines={1}>
-              {`${contact ? `${contact.givenName} ${contact.familyName}` : "Contacto B2B"} · ${
-                contact?.organizationName || "Empresa"
+              {`${contact ? `${contact.givenName} ${contact.familyName}` : t("crm.pipeline.b2bContact")} · ${
+                contact?.organizationName || t("crm.pipeline.defaultCompany")
               }`}
             </Text>
           </View>
@@ -269,7 +262,7 @@ export function MobileOpportunityDetailScreen({
                 ? "warning"
                 : "info"
             }
-            label={STAGE_LABELS[opportunity.stageKey] || opportunity.stageKey}
+            label={stageLabel(opportunity.stageKey) || opportunity.stageKey}
             size="sm"
           />
         </View>
@@ -277,8 +270,8 @@ export function MobileOpportunityDetailScreen({
         {/* Stepper Card */}
         <MobileCard style={styles.cardSpacing}>
           <View style={styles.stepperHeader}>
-            <Text style={styles.sectionHeading}>ETAPA COMERCIAL</Text>
-            <Text style={styles.probBadgeText}>{probPct}% PROBABILIDAD</Text>
+            <Text style={styles.sectionHeading}>{t("crm.opportunity.stage")}</Text>
+            <Text style={styles.probBadgeText}>{t("crm.opportunity.probability", { percent: probPct })}</Text>
           </View>
           <MobileStepper
             steps={stepperSteps}
@@ -292,7 +285,7 @@ export function MobileOpportunityDetailScreen({
               variant={opportunity.stageKey === "lost" ? "destructive" : "outline"}
               size="sm"
               icon={XCircle}
-              label={opportunity.stageKey === "lost" ? "Deal Perdido" : "Marcar como Perdida"}
+              label={opportunity.stageKey === "lost" ? t("crm.opportunity.lost") : t("crm.opportunity.markLost")}
               onPress={() => handleStageClick("lost")}
               minHeight={44}
             />
@@ -306,17 +299,17 @@ export function MobileOpportunityDetailScreen({
             metrics={[
               {
                 id: "amount",
-                label: "Valor Total",
+                label: t("crm.opportunity.totalValue"),
                 value: formatCurrency(opportunity.amount, opportunity.currency),
-                subtext: "USD nominal",
+                subtext: t("crm.pipeline.metrics.nominal"),
                 status: "info",
                 icon: DollarSign,
               },
               {
                 id: "weighted",
-                label: "Forecast Ponderado",
+                label: t("crm.pipeline.metrics.forecast"),
                 value: formatCurrency(weightedValue, opportunity.currency),
-                subtext: `${probPct}% ponderado`,
+                subtext: t("crm.opportunity.weighted", { percent: probPct }),
                 status: "success",
                 icon: Sparkles,
               },
@@ -326,7 +319,7 @@ export function MobileOpportunityDetailScreen({
 
         {/* Direct Communication Bar */}
         <MobileCard style={styles.cardSpacing}>
-          <Text style={styles.sectionHeading}>ACCIONES DIRECTAS CON EL CLIENTE</Text>
+          <Text style={styles.sectionHeading}>{t("crm.opportunity.directActions")}</Text>
           <View style={styles.actionsRow}>
             <MobileSpeedDialBar
               phone={contact?.phone}
@@ -343,7 +336,7 @@ export function MobileOpportunityDetailScreen({
                 onPress={() => onNavigateToContact(contact.id)}
                 minHeight={44}
               >
-                Ver 360
+                {t("crm.opportunity.view360")}
               </MobileButton>
             )}
           </View>
@@ -360,19 +353,19 @@ export function MobileOpportunityDetailScreen({
         <View style={styles.tabContentContainer}>
           {activeTab === "summary" && (
             <MobileCard style={styles.detailCard}>
-              <Text style={styles.detailCardTitle}>DETALLES DEL ACUERDO</Text>
+              <Text style={styles.detailCardTitle}>{t("crm.opportunity.agreementDetails")}</Text>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Origen:</Text>
+                <Text style={styles.infoLabel}>{t("crm.common.origin")}</Text>
                 <Text style={styles.infoValue}>
-                  {opportunity.origin === "lead_conversion" ? "Conversión de Lead SQL" : "Creación Manual"}
+                  {opportunity.origin === "lead_conversion" ? t("crm.opportunity.leadConversion") : t("crm.opportunity.manualCreation")}
                 </Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Responsable:</Text>
+                <Text style={styles.infoLabel}>{t("crm.opportunity.owner")}</Text>
                 <Text style={styles.infoValue}>{opportunity.ownerName || "Maya Chen"}</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Fecha Cierre Estimada:</Text>
+                <Text style={styles.infoLabel}>{t("crm.opportunity.expectedClose")}</Text>
                 <Text style={styles.infoValue}>
                   {opportunity.expectedCloseAt
                     ? new Date(opportunity.expectedCloseAt).toLocaleDateString("es-ES", {
@@ -380,17 +373,17 @@ export function MobileOpportunityDetailScreen({
                         month: "long",
                         day: "numeric",
                       })
-                    : "No definida"}
+                    : t("crm.opportunity.notDefined")}
                 </Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>ID Oportunidad:</Text>
+                <Text style={styles.infoLabel}>{t("crm.opportunity.id")}</Text>
                 <Text style={[styles.infoValue, styles.monospace]}>{opportunity.id}</Text>
               </View>
 
               {opportunity.lossReason && (
                 <View style={styles.lossNotice}>
-                  <Text style={styles.lossTitle}>Motivo de pérdida:</Text>
+                  <Text style={styles.lossTitle}>{t("crm.opportunity.lossReason")}</Text>
                   <Text style={styles.lossDesc}>{opportunity.lossReason}</Text>
                 </View>
               )}
@@ -399,34 +392,34 @@ export function MobileOpportunityDetailScreen({
 
           {activeTab === "contact" && (
             <MobileCard style={styles.detailCard}>
-              <Text style={styles.detailCardTitle}>CONTACTO PRINCIPAL</Text>
+              <Text style={styles.detailCardTitle}>{t("crm.opportunity.primaryContact")}</Text>
               {contact ? (
                 <>
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Nombre:</Text>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.name")}</Text>
                     <Text style={styles.infoValue}>
                       {contact.givenName} {contact.familyName}
                     </Text>
                   </View>
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Empresa:</Text>
-                    <Text style={styles.infoValue}>{contact.organizationName || "No indicada"}</Text>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.company")}</Text>
+                    <Text style={styles.infoValue}>{contact.organizationName || t("crm.opportunity.notProvided")}</Text>
                   </View>
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Email:</Text>
-                    <Text style={styles.infoValue}>{contact.email || "No registrado"}</Text>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.email")}</Text>
+                    <Text style={styles.infoValue}>{contact.email || t("crm.opportunity.notRegistered")}</Text>
                   </View>
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Teléfono:</Text>
-                    <Text style={styles.infoValue}>{contact.phone || "No registrado"}</Text>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.phone")}</Text>
+                    <Text style={styles.infoValue}>{contact.phone || t("crm.opportunity.notRegistered")}</Text>
                   </View>
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>País:</Text>
-                    <Text style={styles.infoValue}>{contact.country || "España"}</Text>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.country")}</Text>
+                    <Text style={styles.infoValue}>{contact.country || t("crm.opportunity.defaultCountry")}</Text>
                   </View>
                 </>
               ) : (
-                <Text style={styles.noContactText}>No hay contacto asignado a esta oportunidad.</Text>
+                <Text style={styles.noContactText}>{t("crm.opportunity.noContact")}</Text>
               )}
             </MobileCard>
           )}
@@ -434,9 +427,9 @@ export function MobileOpportunityDetailScreen({
           {activeTab === "notes" && (
             <View style={styles.notesContainer}>
               <MobileCard style={styles.newNoteCard}>
-                <Text style={styles.detailCardTitle}>AÑADIR NOTA COMERCIAL</Text>
+                <Text style={styles.detailCardTitle}>{t("crm.opportunity.addNote")}</Text>
                 <TextInput
-                  placeholder="Escribe un apunte sobre esta negociación..."
+                  placeholder={t("crm.opportunity.notePlaceholder")}
                   placeholderTextColor="#94a3b8"
                   value={newNoteText}
                   onChangeText={setNewNoteText}
@@ -451,7 +444,7 @@ export function MobileOpportunityDetailScreen({
                     onPress={handleAddNote}
                     minHeight={44}
                   >
-                    Guardar Nota
+                    {t("crm.opportunity.saveNote")}
                   </MobileButton>
                 </View>
               </MobileCard>
@@ -459,7 +452,7 @@ export function MobileOpportunityDetailScreen({
               {notes.map((n) => (
                 <MobileCard key={n.id} style={styles.noteCard}>
                   <View style={styles.noteHeader}>
-                    <Text style={styles.noteAuthor}>Nota Interna</Text>
+                    <Text style={styles.noteAuthor}>{t("crm.opportunity.internalNote")}</Text>
                     <Text style={styles.noteDate}>{n.date}</Text>
                   </View>
                   <Text style={styles.noteBody}>{n.text}</Text>
@@ -472,10 +465,10 @@ export function MobileOpportunityDetailScreen({
       {/* Reopen Dialog */}
       <MobileConfirmDialog
         visible={reopenModalOpen}
-        title="Reabrir Oportunidad Cerrada"
-        message={`Este deal está cerrado como "${opportunity.stageKey}". Ingresa un motivo para reabrirlo:`}
-        confirmLabel="Confirmar Reapertura"
-        cancelLabel="Cancelar"
+        title={t("crm.pipeline.reopenTitle")}
+        message={t("crm.opportunity.reopenMessage", { stage: stageLabel(opportunity.stageKey) })}
+        confirmLabel={t("crm.opportunity.confirmReopen")}
+        cancelLabel={t("common.cancel")}
         onConfirm={handleReopenSubmit}
         onCancel={() => {
           setReopenModalOpen(false);
@@ -483,7 +476,7 @@ export function MobileOpportunityDetailScreen({
         }}
       >
         <TextInput
-          placeholder="Ej. El cliente solicita una nueva cotización..."
+          placeholder={t("crm.opportunity.reopenPlaceholder")}
           placeholderTextColor="#94a3b8"
           value={reopenReason}
           onChangeText={setReopenReason}

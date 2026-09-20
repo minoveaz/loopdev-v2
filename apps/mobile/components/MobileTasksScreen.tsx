@@ -53,6 +53,7 @@ import { MobilePageTabs } from "./ui/MobilePageTabs";
 import { MobileSearchBar } from "./ui/MobileSearchBar";
 import { MobileModalSheet } from "./MobileModal";
 import { MobileControlSheet } from "./ui/MobileControlSheet";
+import { useT } from "../i18n";
 
 interface MobileTasksScreenProps {
   onBack?: () => void;
@@ -67,6 +68,7 @@ type CalendarSubView = "week" | "month" | "stream";
 const MOBILE_PRESET_TAGS = ["#VIP", "#Renovación", "#Reclamo", "#Urgente", "#Seguimiento", "#Comercial"];
 
 export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProps) {
+  const t = useT();
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [templates, setTemplates] = useState<TaskTemplateRecord[]>(DEFAULT_TASK_TEMPLATES);
   const [, setLoading] = useState(true);
@@ -175,19 +177,19 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
   const handleSaveDetailTitle = async () => {
     if (!detailTask || !detailTitle.trim() || detailTitle.trim() === detailTask.title) return;
     await handleUpdateTask(detailTask.id, { title: detailTitle.trim() });
-    showToast({ title: "Título actualizado" });
+    showToast({ title: t("crm.tasks.toast.titleUpdated") });
   };
 
   const handleSaveDetailDesc = async () => {
     if (!detailTask || detailDesc === (detailTask.description || "")) return;
     await handleUpdateTask(detailTask.id, { description: detailDesc.trim() || null });
-    showToast({ title: "Descripción actualizada" });
+    showToast({ title: t("crm.tasks.toast.descriptionUpdated") });
   };
 
   const handleChangeDetailPriority = async (newPriority: TaskPriority) => {
     if (!detailTask || detailTask.priority === newPriority) return;
     await handleUpdateTask(detailTask.id, { priority: newPriority });
-    showToast({ title: `Prioridad cambiada a ${newPriority.toUpperCase()}` });
+    showToast({ title: t("crm.tasks.toast.priorityChanged", { priority: t(`crm.tasks.priority.${newPriority}`) }) });
   };
 
   const handleChangeDetailAssignee = async (user: AssignableUser | null) => {
@@ -199,7 +201,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
         : null,
     });
     setShowAssigneePicker(false);
-    showToast({ title: user ? `Asignado a ${user.displayName}` : "Tarea desasignada" });
+    showToast({ title: user ? t("crm.tasks.toast.assignedTo", { name: user.displayName }) : t("crm.tasks.toast.unassigned") });
   };
 
   const handleAddDetailTag = async (tagToAdd: string) => {
@@ -213,7 +215,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     await handleUpdateTask(detailTask.id, { tags: newTags });
     setCustomTagInput("");
     setShowTagInput(false);
-    showToast({ title: `Etiqueta añadida: ${cleanTag}` });
+    showToast({ title: t("crm.tasks.toast.tagAdded", { tag: cleanTag }) });
   };
 
   const handleDeleteDetailTag = async (tagToDelete: string) => {
@@ -221,7 +223,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     const currentTags = detailTask.tags || [];
     const newTags = currentTags.filter((t) => t !== tagToDelete);
     await handleUpdateTask(detailTask.id, { tags: newTags });
-    showToast({ title: `Etiqueta eliminada: ${tagToDelete}` });
+    showToast({ title: t("crm.tasks.toast.tagRemoved", { tag: tagToDelete }) });
   };
 
   const handleAddDetailReminder = async (presetMinutes: number, label: string) => {
@@ -238,7 +240,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     const currentReminders = detailTask.reminders || [];
     const newReminders = [...currentReminders, newReminder];
     await handleUpdateTask(detailTask.id, { reminders: newReminders });
-    showToast({ title: `Recordatorio programado: ${label}` });
+    showToast({ title: t("crm.tasks.toast.reminderAdded", { label }) });
   };
 
   const handleDeleteDetailReminder = async (index: number) => {
@@ -246,7 +248,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     const currentReminders = detailTask.reminders || [];
     const newReminders = currentReminders.filter((_, i) => i !== index);
     await handleUpdateTask(detailTask.id, { reminders: newReminders });
-    showToast({ title: "Recordatorio eliminado" });
+    showToast({ title: t("crm.tasks.toast.reminderRemoved") });
   };
 
   const handleToggleComplete = async (taskId: string, isCompleted: boolean) => {
@@ -278,17 +280,17 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     if (isCompleted) {
       await mobileTasksAdapter.reopenTask(taskId);
       showToast({
-        title: "Tarea reabierta",
+        title: t("crm.tasks.toast.reopened"),
         subtitle: target?.title,
-        actionLabel: "Deshacer",
+        actionLabel: t("common.undo"),
         onAction: () => void handleToggleComplete(taskId, false),
       });
     } else {
       await mobileTasksAdapter.completeTask(taskId);
       showToast({
-        title: "Tarea completada",
+        title: t("crm.tasks.toast.completed"),
         subtitle: target?.title,
-        actionLabel: "Deshacer",
+        actionLabel: t("common.undo"),
         onAction: () => void handleToggleComplete(taskId, true),
       });
     }
@@ -306,8 +308,8 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     setActionTask(null);
     await mobileTasksAdapter.quickReschedule(taskId, nextDue);
     showToast({
-      title: "Tarea reprogramada",
-      subtitle: `Vencimiento actualizado`,
+      title: t("crm.tasks.toast.rescheduled"),
+      subtitle: t("crm.tasks.toast.dueUpdated"),
     });
   };
 
@@ -357,7 +359,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
   const handleDeleteDetailSubtask = async (itemId: string) => {
     if (!detailTask) return;
     const item = detailTask.checklist?.find((c) => c.id === itemId);
-    const itemTitle = item?.title || "Subtarea";
+    const itemTitle = item?.title || t("crm.tasks.subtask");
     const taskId = detailTask.id;
 
     setDetailTask((prev) =>
@@ -374,9 +376,9 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     }
 
     showToast({
-      title: "Subtarea eliminada",
+      title: t("crm.tasks.toast.subtaskRemoved"),
       subtitle: itemTitle,
-      actionLabel: "Deshacer",
+      actionLabel: t("common.undo"),
       onAction: async () => {
         const addRes = await mobileTasksAdapter.addChecklistItem(taskId, itemTitle);
         if (addRes.status === "success") {
@@ -396,7 +398,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     setTasks((curr) => curr.filter((t) => t.id !== id));
     await mobileTasksAdapter.deleteTask(id);
     showToast({
-      title: "Tarea eliminada definitivamente",
+      title: t("crm.tasks.toast.deleted"),
       subtitle: title,
     });
   };
@@ -413,7 +415,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
 
   const handleCreateTask = async () => {
     if (!newTitle.trim()) {
-      Alert.alert("Requerido", "Por favor ingresa un título para la tarea.");
+      Alert.alert(t("crm.tasks.required"), t("crm.tasks.titleRequired"));
       return;
     }
 
@@ -647,13 +649,13 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     });
 
     return [
-      { id: "overdue", title: "Vencidas", tone: "danger" as const, tasks: overdue },
-      { id: "today", title: "Para Hoy", tone: "primary" as const, tasks: today },
-      { id: "tomorrow", title: "Mañana", tone: "warning" as const, tasks: tomorrow },
-      { id: "thisWeek", title: "Esta Semana", tone: "info" as const, tasks: thisWeek },
-      { id: "nextWeek", title: "Próxima Semana", tone: "neutral" as const, tasks: nextWeek },
-      { id: "later", title: "Más Adelante", tone: "neutral" as const, tasks: later },
-      { id: "noDate", title: "Sin Fecha Asignada", tone: "neutral" as const, tasks: noDate },
+      { id: "overdue", title: t("crm.tasks.stream.overdue"), tone: "danger" as const, tasks: overdue },
+      { id: "today", title: t("crm.tasks.stream.today"), tone: "primary" as const, tasks: today },
+      { id: "tomorrow", title: t("crm.tasks.stream.tomorrow"), tone: "warning" as const, tasks: tomorrow },
+      { id: "thisWeek", title: t("crm.tasks.stream.thisWeek"), tone: "info" as const, tasks: thisWeek },
+      { id: "nextWeek", title: t("crm.tasks.stream.nextWeek"), tone: "neutral" as const, tasks: nextWeek },
+      { id: "later", title: t("crm.tasks.stream.later"), tone: "neutral" as const, tasks: later },
+      { id: "noDate", title: t("crm.tasks.stream.noDate"), tone: "neutral" as const, tasks: noDate },
     ].filter((g) => g.tasks.length > 0);
   }, [filteredTasks]);
 
@@ -675,11 +677,11 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
     >
       {/* 1. Global Page Header */}
       <MobilePageHeader
-        eyebrow="Sales CRM"
-        title="Tareas"
-        subtitle={`${pendingCount} pendientes de ${tasks.length} total`}
+        eyebrow={t("crm.tasks.eyebrow")}
+        title={t("crm.tasks.title")}
+        subtitle={t("crm.tasks.summary", { pending: pendingCount, total: tasks.length })}
         primaryAction={{
-          label: "Nueva tarea",
+          label: t("crm.tasks.new"),
           onPress: () => {
             setNewTitle("");
             setNewDesc("");
@@ -697,9 +699,9 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
         activeTab={viewMode}
         onTabChange={(tab) => setViewMode(tab as ViewMode)}
         tabs={[
-          { id: "list", label: "Lista", count: tasks.length },
-          { id: "kanban", label: "Kanban" },
-          { id: "calendar", label: "Calendario" },
+          { id: "list", label: t("crm.tasks.views.list"), count: tasks.length },
+          { id: "kanban", label: t("crm.tasks.views.kanban") },
+          { id: "calendar", label: t("crm.tasks.views.calendar") },
         ]}
       />
 
@@ -707,7 +709,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       <MobileSearchBar
         value={searchQuery}
         onChangeText={setSearchQuery}
-        placeholder="Buscar tareas, clientes o notas..."
+        placeholder={t("crm.tasks.searchPlaceholder")}
         onFilterPress={() => setFilterModalOpen(true)}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={handleClearAllFilters}
@@ -724,10 +726,10 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                 {filterMode === "completed" && <CheckCircle2 size={13} color="#16a34a" />}
                 <Text style={styles.activeFilterChipText}>
                   {filterMode === "urgent"
-                    ? `Urgentes (${urgentCount})`
+                    ? t("crm.tasks.filters.urgentCount", { count: urgentCount })
                     : filterMode === "today"
-                    ? "Para hoy"
-                    : `Completadas (${completedCount})`}
+                    ? t("crm.tasks.filters.today")
+                    : t("crm.tasks.filters.completedCount", { count: completedCount })}
                 </Text>
                 <X size={12} color={mobileTheme.colors.primary} />
               </Pressable>
@@ -736,7 +738,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             {assigneeFilter !== "all" && (
               <Pressable style={styles.activeFilterChip} onPress={() => setAssigneeFilter("all")}>
                 <User size={13} color={mobileTheme.colors.primary} />
-                <Text style={styles.activeFilterChipText}>Mis tareas</Text>
+                <Text style={styles.activeFilterChipText}>{t("crm.tasks.filters.myTasks")}</Text>
                 <X size={12} color={mobileTheme.colors.primary} />
               </Pressable>
             )}
@@ -750,7 +752,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             )}
 
             <Pressable onPress={handleClearAllFilters} style={styles.clearAllFiltersLink}>
-              <Text style={styles.clearAllFiltersText}>Limpiar todo</Text>
+              <Text style={styles.clearAllFiltersText}>{t("crm.tasks.filters.clearAll")}</Text>
             </Pressable>
           </ScrollView>
         </View>
@@ -763,7 +765,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
           {filteredTasks.length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyText}>
-                {tasks.length ? "No hay tareas que coincidan con los filtros." : "Sin tareas pendientes. Crea la primera."}
+                {tasks.length ? t("crm.tasks.empty.filtered") : t("crm.tasks.empty.none")}
               </Text>
             </View>
           ) : (
@@ -788,15 +790,15 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             activeTab={kanbanCol}
             onTabChange={(tab) => setKanbanCol(tab as KanbanCol)}
             tabs={[
-              { id: "pending", label: "Pendientes", count: pendingCount },
-              { id: "urgent", label: "Urgentes", count: urgentCount },
-              { id: "completed", label: "Listas", count: completedCount },
+              { id: "pending", label: t("crm.tasks.columns.pending"), count: pendingCount },
+              { id: "urgent", label: t("crm.tasks.columns.urgent"), count: urgentCount },
+              { id: "completed", label: t("crm.tasks.columns.completed"), count: completedCount },
             ]}
           />
 
           {kanbanTasks.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>No hay tareas en esta columna.</Text>
+              <Text style={styles.emptyText}>{t("crm.tasks.empty.column")}</Text>
             </View>
           ) : (
             kanbanTasks.map((task) => (
@@ -821,9 +823,9 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             activeTab={calendarSubView}
             onTabChange={(tab) => setCalendarSubView(tab as CalendarSubView)}
             tabs={[
-              { id: "week", label: "Semana" },
-              { id: "month", label: "Mes" },
-              { id: "stream", label: "Flujo" },
+              { id: "week", label: t("crm.tasks.calendar.week") },
+              { id: "month", label: t("crm.tasks.calendar.month") },
+              { id: "stream", label: t("crm.tasks.calendar.stream") },
             ]}
           />
 
@@ -840,7 +842,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                       setSelectedCalendarDate(new Date().toISOString().slice(0, 10));
                     }}
                   >
-                    <Text style={styles.calendarTodayText}>Hoy</Text>
+                    <Text style={styles.calendarTodayText}>{t("crm.tasks.calendar.today")}</Text>
                   </Pressable>
                   <Pressable
                     style={styles.calendarArrowButton}
@@ -896,7 +898,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
 
               {calendarDateTasks.length === 0 ? (
                 <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>Sin tareas programadas para este día.</Text>
+                  <Text style={styles.emptyText}>{t("crm.tasks.empty.day")}</Text>
                 </View>
               ) : (
                 calendarDateTasks.map((task) => (
@@ -926,7 +928,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                       setSelectedCalendarDate(new Date().toISOString().slice(0, 10));
                     }}
                   >
-                    <Text style={styles.calendarTodayText}>Hoy</Text>
+                    <Text style={styles.calendarTodayText}>{t("crm.tasks.calendar.today")}</Text>
                   </Pressable>
                   <Pressable
                     style={styles.calendarArrowButton}
@@ -1007,7 +1009,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
 
               {calendarDateTasks.length === 0 ? (
                 <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>Sin tareas programadas para este día.</Text>
+                  <Text style={styles.emptyText}>{t("crm.tasks.empty.day")}</Text>
                 </View>
               ) : (
                 calendarDateTasks.map((task) => (
@@ -1029,7 +1031,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             <View>
               {streamGroups.length === 0 ? (
                 <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>No hay tareas para mostrar en el flujo.</Text>
+                  <Text style={styles.emptyText}>{t("crm.tasks.empty.stream")}</Text>
                 </View>
               ) : (
                 streamGroups.map((group) => (
@@ -1093,7 +1095,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       <MobileModalSheet
         visible={Boolean(actionTask)}
         onClose={() => setActionTask(null)}
-        title={actionTask ? `Acciones: ${actionTask.title}` : "Acciones"}
+        title={actionTask ? t("crm.tasks.actions.titleWithTask", { title: actionTask.title }) : t("crm.tasks.actions.title")}
       >
         {actionTask && (
           <View>
@@ -1107,7 +1109,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
               style={styles.actionItem}
             >
               <Eye size={18} color={mobileTheme.colors.textMuted} />
-              <Text style={styles.actionText}>Ver detalle y subtareas</Text>
+              <Text style={styles.actionText}>{t("crm.tasks.actions.viewDetails")}</Text>
             </Pressable>
 
             <Pressable
@@ -1120,7 +1122,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
               style={styles.actionItem}
             >
               <Clock size={18} color={mobileTheme.colors.warning} />
-              <Text style={styles.actionText}>Posponer / Reprogramar fecha</Text>
+              <Text style={styles.actionText}>{t("crm.tasks.actions.reschedule")}</Text>
             </Pressable>
 
             <Pressable
@@ -1134,12 +1136,12 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
               {actionTask.status === "completed" ? (
                 <>
                   <RotateCcw size={18} color={mobileTheme.colors.primary} />
-                  <Text style={styles.actionText}>Reabrir tarea</Text>
+                  <Text style={styles.actionText}>{t("crm.tasks.actions.reopen")}</Text>
                 </>
               ) : (
                 <>
                   <CheckCircle2 size={18} color={mobileTheme.colors.success} />
-                  <Text style={styles.actionText}>Marcar como completada</Text>
+                  <Text style={styles.actionText}>{t("crm.tasks.actions.complete")}</Text>
                 </>
               )}
             </Pressable>
@@ -1154,7 +1156,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
               style={[styles.actionItem, styles.destructiveAction]}
             >
               <Trash2 size={18} color={mobileTheme.colors.danger} />
-              <Text style={[styles.actionText, styles.destructiveText]}>Eliminar tarea</Text>
+              <Text style={[styles.actionText, styles.destructiveText]}>{t("crm.tasks.actions.delete")}</Text>
             </Pressable>
           </View>
         )}
@@ -1166,16 +1168,16 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       <MobileModalSheet
         visible={Boolean(rescheduleSheetTask)}
         onClose={() => setRescheduleSheetTask(null)}
-        title="Reprogramar Tarea"
+        title={t("crm.tasks.reschedule.title")}
       >
         {rescheduleSheetTask && (
           <View style={styles.rescheduleList}>
             {[
-              { label: "En 1 hora", hours: 1 },
-              { label: "En 4 horas", hours: 4 },
-              { label: "Mañana a esta hora", hours: 24 },
-              { label: "En 2 días", hours: 48 },
-              { label: "Próxima semana", hours: 168 },
+              { label: t("crm.tasks.reschedule.oneHour"), hours: 1 },
+              { label: t("crm.tasks.reschedule.fourHours"), hours: 4 },
+              { label: t("crm.tasks.reschedule.tomorrow"), hours: 24 },
+              { label: t("crm.tasks.reschedule.twoDays"), hours: 48 },
+              { label: t("crm.tasks.reschedule.nextWeek"), hours: 168 },
             ].map((opt) => (
               <Pressable
                 key={opt.hours}
@@ -1196,19 +1198,19 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       <MobileModalSheet
         visible={Boolean(detailTask)}
         onClose={() => setDetailTask(null)}
-        title="Detalle y Edición de Tarea"
+        title={t("crm.tasks.detail.title")}
       >
         {detailTask && (
           <View style={{ gap: 14 }}>
             {/* 1. Editable Title */}
             <View style={styles.detailSection}>
-              <Text style={styles.detailSectionLabel}>TÍTULO DE LA TAREA</Text>
+              <Text style={styles.detailSectionLabel}>{t("crm.tasks.labels.title")}</Text>
               <TextInput
                 style={styles.detailTitleInput}
                 value={detailTitle}
                 onChangeText={setDetailTitle}
                 onBlur={handleSaveDetailTitle}
-                placeholder="Título de la tarea..."
+                placeholder={t("crm.tasks.placeholders.title")}
                 placeholderTextColor={mobileTheme.colors.textSubtle}
               />
             </View>
@@ -1216,7 +1218,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             {/* 2. Priority & Due Date Row */}
             <View style={styles.detailMetaGrid}>
               <View style={styles.detailMetaCol}>
-                <Text style={styles.detailMetaLabel}>PRIORIDAD</Text>
+                <Text style={styles.detailMetaLabel}>{t("crm.tasks.labels.priority")}</Text>
                 <View style={styles.detailPriorityRow}>
                   {(["normal", "high", "urgent"] as TaskPriority[]).map((p) => {
                     const isSelected = detailTask.priority === p;
@@ -1244,7 +1246,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
               </View>
 
               <View style={styles.detailMetaCol}>
-                <Text style={styles.detailMetaLabel}>FECHA LÍMITE</Text>
+                <Text style={styles.detailMetaLabel}>{t("crm.tasks.labels.dueDate")}</Text>
                 <Text style={styles.detailMetaValue}>
                   {detailTask.dueAt
                     ? new Date(detailTask.dueAt).toLocaleDateString("es-ES", {
@@ -1253,7 +1255,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                         hour: "2-digit",
                         minute: "2-digit",
                       })
-                    : "Sin fecha"}
+                    : t("crm.tasks.noDueDate")}
                 </Text>
               </View>
             </View>
@@ -1261,10 +1263,10 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             {/* 3. Assignee User Selector */}
             <View style={styles.detailSection}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                <Text style={styles.detailSectionLabel}>RESPONSABLE ASIGNADO</Text>
+                <Text style={styles.detailSectionLabel}>{t("crm.tasks.labels.assignee")}</Text>
                 <Pressable onPress={() => setShowAssigneePicker(!showAssigneePicker)}>
                   <Text style={{ fontSize: 11, fontWeight: "700", color: mobileTheme.colors.primary }}>
-                    {showAssigneePicker ? "Cerrar" : "Cambiar"}
+                    {showAssigneePicker ? t("common.close") : t("crm.tasks.change")}
                   </Text>
                 </Pressable>
               </View>
@@ -1276,7 +1278,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                   </Text>
                 </View>
                 <Text style={styles.assigneeCurrentName}>
-                  {detailTask.assignedUser?.displayName || "Sin responsable asignado"}
+                  {detailTask.assignedUser?.displayName || t("crm.tasks.unassigned")}
                 </Text>
               </View>
 
@@ -1287,7 +1289,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                     style={[styles.assigneePickerOption, !detailTask.assignedUserId && styles.assigneePickerOptionSelected]}
                   >
                     <User size={13} color={mobileTheme.colors.textMuted} />
-                    <Text style={styles.assigneePickerOptionText}>Sin asignar</Text>
+                    <Text style={styles.assigneePickerOptionText}>{t("crm.tasks.unassigned")}</Text>
                   </Pressable>
                   {AVAILABLE_ASSIGNABLE_USERS.map((u) => {
                     const isSelected = detailTask.assignedUserId === u.id;
@@ -1314,10 +1316,10 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             {/* 4. Tags & Categories */}
             <View style={styles.detailSection}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                <Text style={styles.detailSectionLabel}>ETIQUETAS & CATEGORÍAS</Text>
+                <Text style={styles.detailSectionLabel}>{t("crm.tasks.labels.tags")}</Text>
                 <Pressable onPress={() => setShowTagInput(!showTagInput)}>
                   <Text style={{ fontSize: 11, fontWeight: "700", color: mobileTheme.colors.primary }}>
-                    {showTagInput ? "Cerrar" : "+ Añadir"}
+                    {showTagInput ? t("common.close") : t("crm.tasks.add")}
                   </Text>
                 </Pressable>
               </View>
@@ -1333,7 +1335,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                   </View>
                 ))}
                 {(!detailTask.tags || detailTask.tags.length === 0) && !showTagInput && (
-                  <Text style={styles.detailEmptyText}>Sin etiquetas.</Text>
+                  <Text style={styles.detailEmptyText}>{t("crm.tasks.empty.tags")}</Text>
                 )}
               </View>
 
@@ -1343,7 +1345,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                   <View style={styles.addTagRow}>
                     <TextInput
                       style={styles.addTagInput}
-                      placeholder="Ej: #VIP o #Renovación"
+                      placeholder={t("crm.tasks.placeholders.tag")}
                       placeholderTextColor={mobileTheme.colors.textSubtle}
                       value={customTagInput}
                       onChangeText={setCustomTagInput}
@@ -1375,7 +1377,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
 
             {/* 5. Programmed Reminders */}
             <View style={styles.detailSection}>
-              <Text style={styles.detailSectionLabel}>RECORDATORIOS PROGRAMADOS</Text>
+              <Text style={styles.detailSectionLabel}>{t("crm.tasks.labels.reminders")}</Text>
 
               <View style={{ gap: 6, marginVertical: 4 }}>
                 {(detailTask.reminders || []).map((rem, idx) => (
@@ -1397,15 +1399,15 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                   </View>
                 ))}
                 {(!detailTask.reminders || detailTask.reminders.length === 0) && (
-                  <Text style={styles.detailEmptyText}>Sin recordatorios activos.</Text>
+                  <Text style={styles.detailEmptyText}>{t("crm.tasks.empty.reminders")}</Text>
                 )}
               </View>
 
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginTop: 4 }}>
                 {[
-                  { label: "15 min antes", minutes: 15 },
-                  { label: "1 hora antes", minutes: 60 },
-                  { label: "1 día antes", minutes: 1440 },
+                  { label: t("crm.tasks.reminders.15m"), minutes: 15 },
+                  { label: t("crm.tasks.reminders.1h"), minutes: 60 },
+                  { label: t("crm.tasks.reminders.1d"), minutes: 1440 },
                 ].map((preset) => (
                   <Pressable
                     key={preset.minutes}
@@ -1421,14 +1423,14 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
 
             {/* 6. Editable Description */}
             <View style={styles.detailSection}>
-              <Text style={styles.detailSectionLabel}>DESCRIPCIÓN O NOTAS</Text>
+              <Text style={styles.detailSectionLabel}>{t("crm.tasks.labels.description")}</Text>
               <TextInput
                 style={[styles.detailTitleInput, styles.detailDescInput]}
                 multiline
                 value={detailDesc}
                 onChangeText={setDetailDesc}
                 onBlur={handleSaveDetailDesc}
-                placeholder="Añade detalles o notas..."
+                placeholder={t("crm.tasks.placeholders.description")}
                 placeholderTextColor={mobileTheme.colors.textSubtle}
               />
             </View>
@@ -1439,7 +1441,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                 SUBTAREAS ({(detailTask.checklist || []).filter((c) => c.completed).length}/{(detailTask.checklist || []).length})
               </Text>
               {(detailTask.checklist || []).length === 0 ? (
-                <Text style={styles.detailEmptyText}>No hay subtareas registradas.</Text>
+                <Text style={styles.detailEmptyText}>{t("crm.tasks.empty.subtasks")}</Text>
               ) : (
                 (detailTask.checklist || []).map((item) => (
                   <View key={item.id} style={styles.checklistItemRow}>
@@ -1469,7 +1471,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
               <View style={styles.addChecklistInlineRow}>
                 <TextInput
                   style={styles.addChecklistInput}
-                  placeholder="Añadir subtarea..."
+                  placeholder={t("crm.tasks.placeholders.subtask")}
                   placeholderTextColor={mobileTheme.colors.textSubtle}
                   value={newDetailSubtask}
                   onChangeText={setNewDetailSubtask}
@@ -1491,7 +1493,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                       !newDetailSubtask.trim() && styles.addChecklistButtonTextDisabled,
                     ]}
                   >
-                    Añadir
+                    {t("crm.tasks.add")}
                   </Text>
                 </Pressable>
               </View>
@@ -1510,13 +1512,13 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
                 ]}
               >
                 <Text style={styles.detailActionButtonText}>
-                  {detailTask.status === "completed" ? "Reabrir Tarea" : "Marcar como Completada"}
+                  {detailTask.status === "completed" ? t("crm.tasks.actions.reopen") : t("crm.tasks.actions.complete")}
                 </Text>
               </Pressable>
 
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Eliminar tarea"
+                accessibilityLabel={t("crm.tasks.actions.delete")}
                 onPress={() => {
                   const target = detailTask;
                   setDetailTask(null);
@@ -1537,12 +1539,12 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       <MobileModalSheet
         visible={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        title="Crear Nueva Tarea"
+        title={t("crm.tasks.create.title")}
       >
         <View style={styles.formContainer}>
           {templates.length > 0 && (
             <View style={{ marginBottom: 14 }}>
-              <Text style={styles.formLabel}>PLANTILLAS RÁPIDAS</Text>
+              <Text style={styles.formLabel}>{t("crm.tasks.create.templates")}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                 {templates.map((tpl) => (
                   <Pressable
@@ -1558,26 +1560,26 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             </View>
           )}
 
-          <Text style={styles.formLabel}>TÍTULO DE LA TAREA *</Text>
+          <Text style={styles.formLabel}>{t("crm.tasks.labels.titleRequired")}</Text>
           <TextInput
             style={styles.formInput}
-            placeholder="Ej: Revisión de propuesta comercial"
+            placeholder={t("crm.tasks.placeholders.createTitle")}
             placeholderTextColor={mobileTheme.colors.textSubtle}
             value={newTitle}
             onChangeText={setNewTitle}
           />
 
-          <Text style={styles.formLabel}>DESCRIPCIÓN O NOTAS</Text>
+          <Text style={styles.formLabel}>{t("crm.tasks.labels.description")}</Text>
           <TextInput
             style={[styles.formInput, styles.formTextArea]}
-            placeholder="Detalles adicionales o contexto..."
+            placeholder={t("crm.tasks.placeholders.createDescription")}
             placeholderTextColor={mobileTheme.colors.textSubtle}
             multiline
             value={newDesc}
             onChangeText={setNewDesc}
           />
 
-          <Text style={styles.formLabel}>PRIORIDAD</Text>
+          <Text style={styles.formLabel}>{t("crm.tasks.labels.priority")}</Text>
           <View style={styles.prioritySelector}>
             {(["normal", "high", "urgent"] as TaskPriority[]).map((p) => {
               const active = newPriority === p;
@@ -1595,19 +1597,19 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             })}
           </View>
 
-          <Text style={styles.formLabel}>CLIENTE / RELACIÓN</Text>
+          <Text style={styles.formLabel}>{t("crm.tasks.labels.relation")}</Text>
           <TextInput
             style={styles.formInput}
-            placeholder="Nombre de cliente o empresa..."
+            placeholder={t("crm.tasks.placeholders.relation")}
             placeholderTextColor={mobileTheme.colors.textSubtle}
             value={newRelationLabel}
             onChangeText={setNewRelationLabel}
           />
 
-          <Text style={styles.formLabel}>CHECKLIST / SUBTAREAS (Una por línea)</Text>
+          <Text style={styles.formLabel}>{t("crm.tasks.labels.checklist")}</Text>
           <TextInput
             style={[styles.formInput, styles.formTextArea]}
-            placeholder="Paso 1: Llamar al cliente&#10;Paso 2: Enviar PDF"
+            placeholder={t("crm.tasks.placeholders.checklist")}
             placeholderTextColor={mobileTheme.colors.textSubtle}
             multiline
             value={newChecklistText}
@@ -1615,7 +1617,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
           />
 
           <Pressable style={styles.createSubmitButton} onPress={handleCreateTask}>
-            <Text style={styles.createSubmitButtonText}>Crear Tarea</Text>
+            <Text style={styles.createSubmitButtonText}>{t("crm.tasks.create.submit")}</Text>
           </Pressable>
         </View>
       </MobileModalSheet>
@@ -1626,26 +1628,26 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       <MobileModalSheet
         visible={Boolean(taskToDelete)}
         onClose={() => setTaskToDelete(null)}
-        title="¿Eliminar Tarea?"
+        title={t("crm.tasks.delete.title")}
       >
         {taskToDelete && (
           <View style={styles.confirmDeleteContainer}>
             <Text style={styles.confirmDeleteDescription}>
-              ¿Estás seguro de que deseas eliminar "{taskToDelete.title}"? Esta acción no se puede deshacer y borrará sus subtareas.
+              {t("crm.tasks.delete.description", { title: taskToDelete.title })}
             </Text>
 
             <Pressable
               onPress={handleConfirmDeleteTask}
               style={styles.confirmDeleteButton}
             >
-              <Text style={styles.confirmDeleteButtonText}>Eliminar definitivamente</Text>
+              <Text style={styles.confirmDeleteButtonText}>{t("crm.tasks.delete.confirm")}</Text>
             </Pressable>
 
             <Pressable
               onPress={() => setTaskToDelete(null)}
               style={styles.confirmCancelButton}
             >
-              <Text style={styles.confirmCancelButtonText}>Cancelar</Text>
+              <Text style={styles.confirmCancelButtonText}>{t("common.cancel")}</Text>
             </Pressable>
           </View>
         )}
@@ -1657,8 +1659,8 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       <MobileControlSheet
         visible={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
-        title="Filtros y Vistas CRM"
-        eyebrow="Sales CRM · Control Center"
+        title={t("crm.tasks.filters.title")}
+        eyebrow={t("crm.tasks.eyebrowControl")}
         activeFilterCount={activeFilterCount}
         resultCount={filteredTasks.length}
         onReset={handleClearAllFilters}
@@ -1703,13 +1705,13 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
       >
         {/* Section 1: Estado */}
         <View style={styles.sheetSectionBlock}>
-          <Text style={styles.sheetSectionHeader}>ESTADO DE LA TAREA</Text>
+          <Text style={styles.sheetSectionHeader}>{t("crm.tasks.labels.status")}</Text>
           <View style={styles.filterGrid}>
             {[
-              { id: "all", label: `Todas (${tasks.length})`, icon: null },
-              { id: "urgent", label: `Urgentes (${urgentCount})`, icon: Flame },
-              { id: "today", label: "Para hoy", icon: Calendar },
-              { id: "completed", label: `Completadas (${completedCount})`, icon: CheckCircle2 },
+              { id: "all", label: t("crm.tasks.filters.allCount", { count: tasks.length }), icon: null },
+              { id: "urgent", label: t("crm.tasks.filters.urgentCount", { count: urgentCount }), icon: Flame },
+              { id: "today", label: t("crm.tasks.filters.today"), icon: Calendar },
+              { id: "completed", label: t("crm.tasks.filters.completedCount", { count: completedCount }), icon: CheckCircle2 },
             ].map((item) => {
               const selected = filterMode === item.id;
               const Icon = item.icon;
@@ -1744,7 +1746,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
 
         {/* Section 2: Responsable y Equipo */}
         <View style={styles.sheetSectionBlock}>
-          <Text style={styles.sheetSectionHeader}>RESPONSABLE / AGENTE ASIGNADO</Text>
+          <Text style={styles.sheetSectionHeader}>{t("crm.tasks.labels.assigneeFilter")}</Text>
           <View style={styles.assigneesGrid}>
             <Pressable
               onPress={() => setAssigneeFilter("all")}
@@ -1752,7 +1754,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             >
               <Users size={14} color={assigneeFilter === "all" ? "#ffffff" : mobileTheme.colors.textMuted} />
               <Text style={[styles.assigneeTileText, assigneeFilter === "all" && styles.assigneeTileTextSelected]}>
-                Todo el equipo
+                {t("crm.tasks.filters.allTeam")}
               </Text>
             </Pressable>
 
@@ -1762,7 +1764,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
             >
               <User size={14} color={assigneeFilter === "mine" ? "#ffffff" : mobileTheme.colors.primary} />
               <Text style={[styles.assigneeTileText, assigneeFilter === "mine" && styles.assigneeTileTextSelected]}>
-                Solo mis tareas
+                {t("crm.tasks.filters.onlyMine")}
               </Text>
             </Pressable>
 
@@ -1806,7 +1808,7 @@ export function MobileTasksScreen({ onNavigateToContact }: MobileTasksScreenProp
 
         {/* Section 3: Etiquetas Temáticas */}
         <View style={styles.sheetSectionBlock}>
-          <Text style={styles.sheetSectionHeader}>ETIQUETAS TEMÁTICAS</Text>
+          <Text style={styles.sheetSectionHeader}>{t("crm.tasks.labels.tags")}</Text>
           <View style={styles.tagsFilterWrap}>
             {MOBILE_PRESET_TAGS.map((tag) => {
               const selected = tagFilter === tag;
@@ -1877,6 +1879,7 @@ function TaskCard({
   onOpenActions: () => void;
   onNavigateToContact?: (contactId: string) => void;
 }) {
+  const t = useT();
   const isCompleted = task.status === "completed";
   const isOverdue = task.dueAt && new Date(task.dueAt).getTime() < Date.now() && !isCompleted;
   const totalChecklist = task.checklist?.length || 0;
@@ -1929,7 +1932,7 @@ function TaskCard({
         <Pressable
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={`Acciones para ${task.title}`}
+          accessibilityLabel={t("crm.tasks.actions.forTask", { title: task.title })}
           onPress={onOpenActions}
           style={styles.moreButton}
         >
@@ -1964,7 +1967,7 @@ function TaskCard({
                   : styles.priorityNormalText,
               ]}
             >
-              {task.priority.toUpperCase()}
+              {t(`crm.tasks.priority.${task.priority}`)}
             </Text>
           </View>
 
@@ -1972,7 +1975,7 @@ function TaskCard({
           {isOverdue && (
             <View style={styles.overdueBadge}>
               <AlertCircle size={11} color={mobileTheme.colors.danger} />
-              <Text style={styles.overdueBadgeText}>Vencida</Text>
+              <Text style={styles.overdueBadgeText}>{t("crm.tasks.overdue")}</Text>
             </View>
           )}
 

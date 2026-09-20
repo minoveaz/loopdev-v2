@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import SalesCRMPipeline from "@/loopdev/pages/crm/Pipeline";
 import { localCrmOpportunitiesStore } from "@/loopdev/domains/crm/data/localOpportunities";
+import { I18nProvider } from "@/i18n";
 
 describe("Pipeline page", () => {
   beforeEach(() => {
@@ -11,9 +12,9 @@ describe("Pipeline page", () => {
 
   it("renders stage columns and moves an opportunity", async () => {
     render(
-      <MemoryRouter initialEntries={["/app/sales-crm/pipeline"]}>
+      <I18nProvider><MemoryRouter initialEntries={["/app/sales-crm/pipeline"]}>
         <SalesCRMPipeline />
-      </MemoryRouter>,
+      </MemoryRouter></I18nProvider>,
     );
 
     expect(screen.getByRole("heading", { name: "Pipeline" })).toBeInTheDocument();

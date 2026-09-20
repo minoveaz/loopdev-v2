@@ -47,11 +47,12 @@ import { MobileCatalogItemPickerSheet } from "./MobileCatalogItemPickerSheet";
 import { mobileContactAdapter } from "../../adapters/contact";
 import type { CatalogItem } from "../../adapters/catalog";
 import {
-  localCommunicationsAdapter,
   COMMUNICATIONS_LOCAL_CONTEXT,
   type CommunicationMessage,
   type ConversationStatus,
 } from "../../../../src/loopdev/domains/communications";
+import { supabaseCommunicationsAdapter as communicationsAdapter } from "../../../../src/loopdev/domains/communications/adapter/supabase";
+import { mobileTenantContextAdapter } from "../../adapters/auth";
 import { buildConversationTimelineMarkers } from "../../domains/communicationsTimeline";
 
 interface Props {
@@ -87,7 +88,7 @@ export function MobileConversationScreen({
   const flatListRef = useRef<FlatList>(null);
 
   const messages = conversation?.messages || [];
-  const markers = useMemo(() => buildConversationTimelineMarkers(messages), [messages]);
+  const markers = useMemo(() => buildConversationTimelineMarkers(messages, lang), [messages, lang]);
 
   const handleJumpToMessage = (messageId: string) => {
     const index = messages.findIndex((m) => m.id === messageId);
@@ -203,8 +204,12 @@ export function MobileConversationScreen({
   const handleStatusChange = async (status: ConversationStatus) => {
     if (!conversation) return;
     try {
-      await localCommunicationsAdapter.updateConversationStatus(
-        COMMUNICATIONS_LOCAL_CONTEXT,
+      await communicationsAdapter.updateConversationStatus(
+        {
+          organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId ?? COMMUNICATIONS_LOCAL_CONTEXT.organizationId,
+          workspaceId: mobileTenantContextAdapter.getTenantContext()?.activeWorkspaceId ?? COMMUNICATIONS_LOCAL_CONTEXT.workspaceId,
+          userId: "mobile-user",
+        },
         conversation.summary.id,
         status,
         conversation.summary.version,
@@ -488,11 +493,11 @@ export function MobileConversationScreen({
         >
           <View style={styles.timelineBarLeft}>
             <Clock size={13} color="#475569" />
-            <Text style={styles.timelineBarTitle}>{lang === "es" ? "Actividad de conversación" : "Conversation activity"}</Text>
+            <Text style={styles.timelineBarTitle}>{t("crm.communications.timeline.title")}</Text>
           </View>
           <View style={styles.timelineBarRight}>
             <Text style={styles.timelineBarCount}>
-              {markers.length} {markers.length === 1 ? (lang === "es" ? "hito" : "milestone") : (lang === "es" ? "hitos" : "milestones")}
+              {markers.length} {markers.length === 1 ? t("crm.communications.timeline.milestone") : t("crm.communications.timeline.milestones")}
             </Text>
             <ChevronRight size={13} color={mobileTheme.colors.primary} />
           </View>

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  localCommunicationsAdapter,
   COMMUNICATIONS_LOCAL_CONTEXT,
   type CommunicationChannelAccount,
   type CommunicationSendResult,
@@ -14,6 +13,8 @@ import {
   type ConversationSummary,
   type CollaborationAgent,
 } from "../../../src/loopdev/domains/communications";
+import { supabaseCommunicationsAdapter as localCommunicationsAdapter } from "../../../src/loopdev/domains/communications/adapter/supabase";
+import { mobileTenantContextAdapter } from "../adapters/auth";
 
 function messageFor(error: unknown): string {
   return error instanceof Error ? error.message : "Unable to load communications.";
@@ -32,8 +33,13 @@ function stableFilters(filters: ConversationFilters): ConversationFilters {
 
 export function useCommunicationsInbox(
   filters: ConversationFilters = {},
-  context: CommunicationsContext = COMMUNICATIONS_LOCAL_CONTEXT,
+  providedContext?: CommunicationsContext,
 ) {
+  const context = providedContext ?? {
+    organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId ?? COMMUNICATIONS_LOCAL_CONTEXT.organizationId,
+    workspaceId: mobileTenantContextAdapter.getTenantContext()?.activeWorkspaceId ?? COMMUNICATIONS_LOCAL_CONTEXT.workspaceId,
+    userId: "mobile-user",
+  };
   const request = useMemo(() => stableFilters(filters), [
     filters.assignee,
     filters.channel,
@@ -151,8 +157,13 @@ export function useCommunicationsInbox(
 
 export function useCommunicationConversation(
   conversationId: string | undefined,
-  context: CommunicationsContext = COMMUNICATIONS_LOCAL_CONTEXT,
+  providedContext?: CommunicationsContext,
 ) {
+  const context = providedContext ?? {
+    organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId ?? COMMUNICATIONS_LOCAL_CONTEXT.organizationId,
+    workspaceId: mobileTenantContextAdapter.getTenantContext()?.activeWorkspaceId ?? COMMUNICATIONS_LOCAL_CONTEXT.workspaceId,
+    userId: "mobile-user",
+  };
   const [conversation, setConversation] = useState<ConversationDetail | null>(null);
   const [loading, setLoading] = useState(Boolean(conversationId));
   const [error, setError] = useState<string | null>(null);

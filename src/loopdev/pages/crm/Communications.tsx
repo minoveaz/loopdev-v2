@@ -64,6 +64,8 @@ import { DocumentExtractionDrawer } from "@/loopdev/components/document-intellig
 import { DEMO_DOCUMENT_FIXTURES } from "@/loopdev/domains/document-intelligence/data/fixtures";
 import type { IdentityDocumentFields } from "@/loopdev/domains/document-intelligence";
 import { useT } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 const channelIcons: Record<CommunicationChannel, ComponentType<ChannelIconProps>> = {
   whatsapp: WhatsAppIcon,
@@ -228,6 +230,7 @@ function ConversationComposer({
   draft,
   onDraftChange,
   actionError,
+  currentUserId,
   onReply,
 }: {
   summary: ConversationSummary;
@@ -236,6 +239,7 @@ function ConversationComposer({
   draft: { body: string };
   onDraftChange: (draft: { body: string }) => void;
   actionError: string | null;
+  currentUserId: string;
   onReply: (body: string, content?: { contentType?: "catalog_item"; contentMetadata?: { catalogItemId?: string; catalogItemKey?: string; catalogItemType?: string; catalogPrice?: string; catalogCurrency?: string } }) => Promise<unknown>;
 }) {
   const [sending, setSending] = useState(false);
@@ -248,7 +252,7 @@ function ConversationComposer({
   const windowExpired = Boolean(summary.windowExpiresAt && new Date(summary.windowExpiresAt).getTime() <= Date.now());
   const accountConnected = account?.state === "connected";
   const policyDisabled = account?.policyState === "disabled";
-  const composerOwnedByOther = collaboration?.composerLock && collaboration.composerLock.userId !== COMMUNICATIONS_LOCAL_CONTEXT.userId;
+  const composerOwnedByOther = collaboration?.composerLock && collaboration.composerLock.userId !== currentUserId;
   const canReply = Boolean(accountConnected && account?.capabilities.canReply && !policyDisabled && !windowExpired && !composerOwnedByOther);
   const canSend = canReply;
 
@@ -405,6 +409,8 @@ function ChannelRail({
 
 export default function Communications() {
   const t = useT();
+  const { authSession, session } = useAuth();
+  const { tenantContext } = useTenantContext();
   const { conversationId } = useParams<{ conversationId: string }>();
   const navigate = useNavigate();
   const [channel, setChannel] = useState<CommunicationChannel | "all">("all");
@@ -419,11 +425,16 @@ export default function Communications() {
   const threadScrollPositions = useRef<Record<string, number>>({});
   const threadScrollRef = useRef<HTMLDivElement>(null);
   const presenceConversationRef = useRef<string | null>(null);
+  const communicationsContext = useMemo(() => ({
+    organizationId: tenantContext?.activeOrganizationId ?? session?.activeOrganizationId ?? COMMUNICATIONS_LOCAL_CONTEXT.organizationId,
+    workspaceId: tenantContext?.activeWorkspaceId ?? COMMUNICATIONS_LOCAL_CONTEXT.workspaceId,
+    userId: authSession?.user.id ?? session?.userId ?? COMMUNICATIONS_LOCAL_CONTEXT.userId,
+  }), [authSession?.user.id, session?.activeOrganizationId, session?.userId, tenantContext?.activeOrganizationId, tenantContext?.activeWorkspaceId]);
   const filters = useMemo(() => ({ channel, status, assignee, query, unreadOnly, starredOnly }), [assignee, channel, query, starredOnly, status, unreadOnly]);
-  const inbox = useCommunicationsInbox(filters, COMMUNICATIONS_LOCAL_CONTEXT);
+  const inbox = useCommunicationsInbox(filters, communicationsContext);
   const selectedSummary = inbox.conversations.find((item) => item.id === conversationId) ?? null;
   const selectedId = selectedSummary?.id ?? (conversationId && inbox.loading ? conversationId : undefined);
-  const detail = useCommunicationConversation(selectedId, COMMUNICATIONS_LOCAL_CONTEXT);
+  const detail = useCommunicationConversation(selectedId, communicationsContext);
   const selectedAccount = inbox.channels.find((item) => item.id === selectedSummary?.accountId);
   const selectedChannelAccount = inbox.channels.find((item) => item.channel === channel);
   const openContextView = (view: ConversationContextView) => {
@@ -643,7 +654,7 @@ export default function Communications() {
               {inbox.loading ? (
                 <LoadingState variant="skeleton" rows={5} className="p-3" />
               ) : inbox.error ? (
-                <div className="p-5" role="alert"><EmptyState variant="plain" size="sm" icon={AlertCircle} title={t("crm.communications.loadInboxError")} description={inbox.error} action={<Button variant="outline" size="sm" onClick={inbox.reload}>{t("common.actions.retry")}</Button>} /></div>
+                <div className="p-5" role="alert"><EmptyState variant="plain" size="sm" icon={AlertCircle} title={t("crm.customer360.communications.loadInboxError")} description={inbox.error} action={<Button variant="outline" size="sm" onClick={inbox.reload}>{t("common.actions.retry")}</Button>} /></div>
               ) : inbox.conversations.length === 0 ? (
                 <div className="p-5"><EmptyState
                   variant="plain"
@@ -709,13 +720,13 @@ export default function Communications() {
 
           <section className={cn("min-h-0 min-w-0 flex-1 flex-col bg-background", conversationId ? "flex" : "hidden lg:flex")} aria-label="Conversation thread">
             {!conversationId ? (
-              <EmptyState variant="plain" size="lg" icon={MessageSquare} title={t("crm.communications.selectConversation")} description={t("crm.communications.selectConversationDescription")} />
+              <EmptyState variant="plain" size="lg" icon={MessageSquare} title={t("crm.customer360.communications.selectConversation")} description={t("crm.customer360.communications.selectConversationDescription")} />
             ) : detail.loading ? (
-              <LoadingState label={t("crm.communications.loadingConversation")} />
+              <LoadingState label={t("crm.customer360.communications.loadingConversation")} />
             ) : detail.error ? (
-              <EmptyState variant="plain" size="lg" icon={AlertCircle} title={t("crm.communications.loadConversationError")} description={detail.error} action={<Button variant="outline" size="sm" onClick={detail.reload}>{t("common.actions.retry")}</Button>} />
+              <EmptyState variant="plain" size="lg" icon={AlertCircle} title={t("crm.customer360.communications.loadConversationError")} description={detail.error} action={<Button variant="outline" size="sm" onClick={detail.reload}>{t("common.actions.retry")}</Button>} />
             ) : !activeDetail || !selectedSummary ? (
-                  <EmptyState variant="plain" size="lg" icon={Inbox} title={t("crm.communications.conversationUnavailable")} description={t("crm.communications.conversationUnavailableDescription")} />
+                  <EmptyState variant="plain" size="lg" icon={Inbox} title={t("crm.customer360.communications.conversationUnavailable")} description={t("crm.customer360.communications.conversationUnavailableDescription")} />
             ) : (
               <>
                 <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border/80 bg-card px-3 py-3 sm:px-5">
@@ -831,6 +842,7 @@ export default function Communications() {
                     draft={composerDraft}
                     onDraftChange={updateComposerDraft}
                     actionError={detail.actionError ?? inbox.actionError}
+                    currentUserId={communicationsContext.userId}
                     onReply={async (body, content) => {
                       await detail.sendReply(body, undefined, content);
                       inbox.reload();

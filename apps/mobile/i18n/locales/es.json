@@ -454,6 +454,23 @@
         "insertProduct": "Insertar producto del catálogo ERP",
         "closeConversation": "Cerrar conversación / ticket",
         "reopenConversation": "Reabrir conversación"
+      },
+      "timeline": {
+        "title": "Línea de conversación",
+        "milestone": "hito",
+        "milestones": "hitos",
+        "all": "Todos",
+        "files": "Archivos",
+        "media": "Multimedia",
+        "linksPlaces": "Enlaces y lugares",
+        "search": "Buscar hitos en la conversación...",
+        "noResults": "No se encontraron hitos",
+        "noSearchResults": "Ningún hito coincide con tu búsqueda.",
+        "noCategoryResults": "No hay elementos registrados en esta categoría.",
+        "jump": "Saltar",
+        "started": "Conversación iniciada",
+        "initialDetail": "Inicio de interacción",
+        "sharedItem": "Elemento compartido"
       }
     },
     "customer360": {

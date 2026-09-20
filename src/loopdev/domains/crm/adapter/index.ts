@@ -1,6 +1,7 @@
 import { localLoopdevAdapter } from "./local";
 import { desktopContactAdapter } from "./contact";
 import { supabaseCrmAdapter } from "./supabase-crm";
+import { supabaseCommunicationsAdapter } from "@/loopdev/domains/communications/adapter/supabase";
 import type { ContactPort } from "../../../../../packages/contracts/src/contact-port";
 import type { ReferenceDataAdapter } from "@/loopdev/domains/reference-data";
 import type { CatalogAdapter } from "@/loopdev/domains/catalog";
@@ -93,6 +94,7 @@ export interface LoopdevAdapter {
 // The adapter boundary is global to Loopdev; CRM connects contacts to desktopContactAdapter (Supabase with local fallback)
 export const loopdevAdapter: LoopdevAdapter = {
   ...localLoopdevAdapter,
+  communications: supabaseCommunicationsAdapter,
   crm: {
     ...localLoopdevAdapter.crm,
     listContacts: (params) => desktopContactAdapter.listContacts(params),

@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ConversationTimelineRail } from "@/loopdev/components/communications/ConversationTimelineRail";
 import type { CommunicationMessage } from "@/loopdev/domains/communications";
+import { I18nProvider } from "@/i18n";
 
 const messages: CommunicationMessage[] = [
   {
@@ -30,11 +31,11 @@ describe("ConversationTimelineRail", () => {
     const scrollIntoView = vi.fn();
     HTMLElement.prototype.scrollIntoView = scrollIntoView;
     render(
-      <>
+      <I18nProvider>
         <div id="conversation-message-message-text" />
         <div id="conversation-message-message-document" />
         <ConversationTimelineRail messages={messages} />
-      </>,
+      </I18nProvider>,
     );
 
     expect(screen.getByRole("complementary", { name: "Conversation timeline" })).toBeInTheDocument();

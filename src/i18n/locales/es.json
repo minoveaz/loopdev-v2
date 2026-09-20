@@ -758,7 +758,26 @@
         "loadingConversation": "Cargando conversación…",
         "loadConversationError": "No se pudo cargar la conversación",
         "conversationUnavailable": "Conversación no disponible",
-        "conversationUnavailableDescription": "Es posible que esta conversación ya no esté en la vista seleccionada."
+        "conversationUnavailableDescription": "Es posible que esta conversación ya no esté en la vista seleccionada.",
+        "timeline": {
+          "title": "Línea de conversación",
+          "subtitle": "Momentos importantes recibidos del cliente",
+          "categories": "Categorías de la línea",
+          "all": "Todos",
+          "files": "Archivos",
+          "media": "Multimedia",
+          "linksPlaces": "Enlaces y lugares",
+          "search": "Buscar hitos en la conversación...",
+          "noFiles": "No se recibieron archivos en esta conversación.",
+          "noMedia": "No se recibió contenido multimedia en esta conversación.",
+          "noLinksPlaces": "No se recibieron enlaces ni ubicaciones en esta conversación.",
+          "noResults": "Ningún hito coincide con tu búsqueda.",
+          "noDetail": "Sin detalles adicionales",
+          "jumpToMessage": "Ir al mensaje",
+          "openDetails": "Abrir detalles de la línea de conversación",
+          "jumpTo": "Ir a",
+          "checkpoints": "hitos"
+        }
       },
       "tasks": {
         "title": "Tareas de CRM",

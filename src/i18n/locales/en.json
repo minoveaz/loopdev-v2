@@ -758,7 +758,26 @@
         "loadingConversation": "Loading conversation…",
         "loadConversationError": "Unable to load conversation",
         "conversationUnavailable": "Conversation unavailable",
-        "conversationUnavailableDescription": "This conversation may no longer be in the selected view."
+        "conversationUnavailableDescription": "This conversation may no longer be in the selected view.",
+        "timeline": {
+          "title": "Conversation timeline",
+          "subtitle": "Important moments received from the customer",
+          "categories": "Timeline categories",
+          "all": "All",
+          "files": "Files",
+          "media": "Media",
+          "linksPlaces": "Links & Places",
+          "search": "Search conversation milestones...",
+          "noFiles": "No files received in this conversation.",
+          "noMedia": "No media received in this conversation.",
+          "noLinksPlaces": "No links or places received in this conversation.",
+          "noResults": "No milestones match your search.",
+          "noDetail": "No additional detail",
+          "jumpToMessage": "Jump to message",
+          "openDetails": "Open conversation timeline details",
+          "jumpTo": "Jump to",
+          "checkpoints": "checkpoints"
+        }
       },
       "tasks": {
         "title": "CRM Tasks",

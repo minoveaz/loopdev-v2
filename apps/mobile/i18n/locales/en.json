@@ -454,6 +454,23 @@
         "insertProduct": "Insert ERP Catalog Item",
         "closeConversation": "Close Conversation",
         "reopenConversation": "Reopen Conversation"
+      },
+      "timeline": {
+        "title": "Conversation timeline",
+        "milestone": "milestone",
+        "milestones": "milestones",
+        "all": "All",
+        "files": "Files",
+        "media": "Media",
+        "linksPlaces": "Links & Places",
+        "search": "Search conversation milestones...",
+        "noResults": "No milestones found",
+        "noSearchResults": "No milestone matches your search.",
+        "noCategoryResults": "No items recorded in this category.",
+        "jump": "Jump",
+        "started": "Conversation started",
+        "initialDetail": "Interaction started",
+        "sharedItem": "Shared item"
       }
     },
     "customer360": {

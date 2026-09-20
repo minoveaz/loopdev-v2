@@ -97,7 +97,7 @@ export function MobileConversationContextSheet({
   onCloseConversation,
   onReopenConversation,
 }: Props) {
-  const { lang } = useMobileI18n();
+  const { lang, t } = useMobileI18n();
   const [activeTab, setActiveTab] = useState<ConversationContextTab>(initialTab);
   const [timelineCategory, setTimelineCategory] = useState<TimelineCategory>("all");
   const [timelineSearch, setTimelineSearch] = useState("");
@@ -121,15 +121,15 @@ export function MobileConversationContextSheet({
     : "success";
 
   // Timeline processing
-  const markers = useMemo(() => buildConversationTimelineMarkers(messages), [messages]);
+  const markers = useMemo(() => buildConversationTimelineMarkers(messages, lang), [messages, lang]);
   const categoryCounts = useMemo(() => getTimelineCategoryCounts(markers), [markers]);
   const filteredMarkers = useMemo(
     () => filterTimelineMarkers(markers, timelineCategory, timelineSearch),
     [markers, timelineCategory, timelineSearch]
   );
   const groupedMarkers = useMemo(
-    () => groupTimelineMarkersByDate(filteredMarkers),
-    [filteredMarkers]
+    () => groupTimelineMarkersByDate(filteredMarkers, lang),
+    [filteredMarkers, lang]
   );
 
   const handleMarkerPress = (messageId: string) => {
@@ -381,7 +381,7 @@ export function MobileConversationContextSheet({
                     timelineCategory === "all" && styles.categoryChipTextActive,
                   ]}
                 >
-                  {lang === "es" ? `Todos (${categoryCounts.all})` : `All (${categoryCounts.all})`}
+                  {t("crm.communications.timeline.all")} ({categoryCounts.all})
                 </Text>
               </Pressable>
 
@@ -399,7 +399,7 @@ export function MobileConversationContextSheet({
                     timelineCategory === "files" && styles.categoryChipTextActive,
                   ]}
                 >
-                  {lang === "es" ? `Archivos (${categoryCounts.files})` : `Files (${categoryCounts.files})`}
+                  {t("crm.communications.timeline.files")} ({categoryCounts.files})
                 </Text>
               </Pressable>
 
@@ -417,7 +417,7 @@ export function MobileConversationContextSheet({
                     timelineCategory === "media" && styles.categoryChipTextActive,
                   ]}
                 >
-                  {lang === "es" ? `Multimedia (${categoryCounts.media})` : `Media (${categoryCounts.media})`}
+                  {t("crm.communications.timeline.media")} ({categoryCounts.media})
                 </Text>
               </Pressable>
 
@@ -435,7 +435,7 @@ export function MobileConversationContextSheet({
                     timelineCategory === "links-places" && styles.categoryChipTextActive,
                   ]}
                 >
-                  {lang === "es" ? `Enlaces y Lugares (${categoryCounts["links-places"]})` : `Links & Places (${categoryCounts["links-places"]})`}
+                  {t("crm.communications.timeline.linksPlaces")} ({categoryCounts["links-places"]})
                 </Text>
               </Pressable>
             </ScrollView>
@@ -445,7 +445,7 @@ export function MobileConversationContextSheet({
               <Search size={16} color={mobileTheme.colors.textMuted} />
               <TextInput
                 style={styles.searchInput}
-                placeholder={lang === "es" ? "Buscar hitos en la conversación..." : "Search conversation milestones..."}
+                placeholder={t("crm.communications.timeline.search")}
                 placeholderTextColor={mobileTheme.colors.textMuted}
                 value={timelineSearch}
                 onChangeText={setTimelineSearch}
@@ -466,11 +466,11 @@ export function MobileConversationContextSheet({
             {filteredMarkers.length === 0 ? (
               <View style={styles.emptyState}>
                 <Clock size={28} color={mobileTheme.colors.textSubtle} />
-                <Text style={styles.emptyStateTitle}>{lang === "es" ? "No se encontraron hitos" : "No milestones found"}</Text>
+                <Text style={styles.emptyStateTitle}>{t("crm.communications.timeline.noResults")}</Text>
                 <Text style={styles.emptyStateSubtitle}>
                   {timelineSearch
-                    ? (lang === "es" ? "Ningún hito coincide con tu búsqueda." : "No milestone matches your search.")
-                    : (lang === "es" ? "No hay elementos registrados en esta categoría." : "No items recorded in this category.")}
+                    ? t("crm.communications.timeline.noSearchResults")
+                    : t("crm.communications.timeline.noCategoryResults")}
                 </Text>
               </View>
             ) : (
@@ -508,7 +508,7 @@ export function MobileConversationContextSheet({
                             </View>
 
                             <View style={styles.milestoneJumpBtn}>
-                              <Text style={styles.milestoneJumpText}>{lang === "es" ? "Saltar" : "Jump"}</Text>
+                              <Text style={styles.milestoneJumpText}>{t("crm.communications.timeline.jump")}</Text>
                               <ChevronRight
                                 size={14}
                                 color={mobileTheme.colors.primary}

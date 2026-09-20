@@ -4,10 +4,18 @@ begin;
 
 select plan(18);
 
-insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at)
-values
-  ('00000000-0000-4000-8a00-000000000001', 'authenticated', 'authenticated', 'communications-agent-a@example.test', '', now()),
-  ('00000000-0000-4000-8a00-000000000002', 'authenticated', 'authenticated', 'communications-viewer-b@example.test', '', now());
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema = 'auth' and table_name = 'users' and column_name = 'email_confirmed_at') then
+    insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at) values
+      ('00000000-0000-4000-8a00-000000000001', 'authenticated', 'authenticated', 'communications-agent-a@example.test', '', now()),
+      ('00000000-0000-4000-8a00-000000000002', 'authenticated', 'authenticated', 'communications-viewer-b@example.test', '', now());
+  else
+    insert into auth.users (id, aud, role, email, encrypted_password) values
+      ('00000000-0000-4000-8a00-000000000001', 'authenticated', 'authenticated', 'communications-agent-a@example.test', ''),
+      ('00000000-0000-4000-8a00-000000000002', 'authenticated', 'authenticated', 'communications-viewer-b@example.test', '');
+  end if;
+end $$;
 
 insert into public.organizations (id, name, slug)
 values

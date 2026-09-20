@@ -1,4 +1,5 @@
 import type { CommunicationMessage } from "../../../src/loopdev/domains/communications";
+import type { MobileLangCode } from "../i18n";
 
 export type TimelineMarkerType =
   | "day"
@@ -23,34 +24,46 @@ export interface TimelineMarker {
   direction: "inbound" | "outbound" | "internal";
 }
 
-const contentLabels: Record<NonNullable<CommunicationMessage["contentType"]>, string> = {
-  text: "Mensaje",
-  document: "Documento adjunto",
-  audio: "Mensaje de voz",
-  image: "Imagen",
-  video: "Video",
-  location: "Ubicación compartida",
-  link: "Enlace web",
-  catalog_item: "Producto del catálogo",
+const contentLabels: Record<MobileLangCode, Record<NonNullable<CommunicationMessage["contentType"]>, string>> = {
+  es: {
+    text: "Mensaje",
+    document: "Documento adjunto",
+    audio: "Mensaje de voz",
+    image: "Imagen",
+    video: "Vídeo",
+    location: "Ubicación compartida",
+    link: "Enlace web",
+    catalog_item: "Producto del catálogo",
+  },
+  en: {
+    text: "Message",
+    document: "Attached document",
+    audio: "Voice message",
+    image: "Image",
+    video: "Video",
+    location: "Shared location",
+    link: "Web link",
+    catalog_item: "Catalog item",
+  },
 };
 
-function formatRelativeTime(dateStr: string): string {
+function formatRelativeTime(dateStr: string, lang: MobileLangCode): string {
   try {
     const date = new Date(dateStr);
     const now = new Date();
     const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffSec < 60) return "Ahora";
-    if (diffSec < 3600) return `Hace ${Math.floor(diffSec / 60)} min`;
-    if (diffSec < 86400) return `Hace ${Math.floor(diffSec / 3600)} h`;
-    if (diffSec < 604800) return `Hace ${Math.floor(diffSec / 86400)} d`;
-    return date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+    if (diffSec < 60) return lang === "es" ? "Ahora" : "Now";
+    if (diffSec < 3600) return lang === "es" ? `Hace ${Math.floor(diffSec / 60)} min` : `${Math.floor(diffSec / 60)} min ago`;
+    if (diffSec < 86400) return lang === "es" ? `Hace ${Math.floor(diffSec / 3600)} h` : `${Math.floor(diffSec / 3600)}h ago`;
+    if (diffSec < 604800) return lang === "es" ? `Hace ${Math.floor(diffSec / 86400)} d` : `${Math.floor(diffSec / 86400)}d ago`;
+    return date.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { day: "numeric", month: "short" });
   } catch {
     return dateStr;
   }
 }
 
-function formatDateHeader(dateStr: string): string {
+function formatDateHeader(dateStr: string, lang: MobileLangCode): string {
   try {
     const date = new Date(dateStr);
     const now = new Date();
@@ -66,10 +79,10 @@ function formatDateHeader(dateStr: string): string {
       date.getMonth() === yesterday.getMonth() &&
       date.getFullYear() === yesterday.getFullYear();
 
-    if (isToday) return "Hoy";
-    if (isYesterday) return "Ayer";
+    if (isToday) return lang === "es" ? "Hoy" : "Today";
+    if (isYesterday) return lang === "es" ? "Ayer" : "Yesterday";
 
-    return date.toLocaleDateString("es-ES", {
+    return date.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -83,22 +96,22 @@ function formatDateHeader(dateStr: string): string {
  * Builds timeline markers from conversation messages matching desktop semantics.
  */
 export function buildConversationTimelineMarkers(
-  messages: CommunicationMessage[]
+  messages: CommunicationMessage[],
+  lang: MobileLangCode = "es",
 ): TimelineMarker[] {
   const markers: TimelineMarker[] = [];
-  const nonInternal = messages.filter((m) => m.direction !== "internal");
-  const firstInboundIndex = nonInternal.findIndex((m) => m.direction === "inbound");
+  const inboundMessages = messages.filter((m) => m.direction === "inbound");
 
-  nonInternal.forEach((message, index) => {
+  inboundMessages.forEach((message, index) => {
     // 1. Initial milestone: Conversation started
-    if (index === (firstInboundIndex >= 0 ? firstInboundIndex : 0)) {
+    if (index === 0) {
       markers.push({
         id: `start-${message.id}`,
         messageId: message.id,
         type: "day",
-        label: `Conversación iniciada`,
+        label: lang === "es" ? "Conversación iniciada" : "Conversation started",
         occurredAt: message.occurredAt,
-        detail: message.body || "Inicio de interacción",
+        detail: message.body || (lang === "es" ? "Inicio de interacción" : "Interaction started"),
         authorName: message.authorName,
         direction: message.direction,
       });
@@ -106,7 +119,7 @@ export function buildConversationTimelineMarkers(
 
     // 2. Rich content milestones
     if (message.contentType && message.contentType !== "text") {
-      const label = `${contentLabels[message.contentType]} · ${formatRelativeTime(message.occurredAt)}`;
+      const label = `${contentLabels[lang][message.contentType]} · ${formatRelativeTime(message.occurredAt, lang)}`;
       const detailParts = [
         message.contentMetadata?.name,
         message.contentMetadata?.url,
@@ -120,7 +133,7 @@ export function buildConversationTimelineMarkers(
         type: message.contentType,
         label,
         occurredAt: message.occurredAt,
-        detail: detailParts.length > 0 ? detailParts.join(" · ") : "Elemento compartido",
+        detail: detailParts.length > 0 ? detailParts.join(" · ") : (lang === "es" ? "Elemento compartido" : "Shared item"),
         authorName: message.authorName,
         direction: message.direction,
       });
@@ -174,11 +187,12 @@ export function filterTimelineMarkers(
  * Groups filtered markers chronologically by date string.
  */
 export function groupTimelineMarkersByDate(
-  markers: TimelineMarker[]
+  markers: TimelineMarker[],
+  lang: MobileLangCode = "es",
 ): Record<string, TimelineMarker[]> {
   const groups: Record<string, TimelineMarker[]> = {};
   for (const marker of markers) {
-    const groupKey = formatDateHeader(marker.occurredAt);
+    const groupKey = formatDateHeader(marker.occurredAt, lang);
     if (!groups[groupKey]) {
       groups[groupKey] = [];
     }

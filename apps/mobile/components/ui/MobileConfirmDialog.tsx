@@ -12,40 +12,49 @@ import { mobileTheme } from "../../theme/tokens";
 import { MobileButton } from "./MobileButton";
 
 export interface MobileConfirmDialogProps {
+  children?: React.ReactNode;
   visible: boolean;
-  onClose: () => void;
+  onClose?: () => void;
+  onCancel?: () => void;
   onConfirm: () => void;
   title: string;
-  message: string;
+  message?: string;
+  description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  variant?: "default" | "destructive";
   loading?: boolean;
 }
 
 export function MobileConfirmDialog({
   visible,
   onClose,
+  onCancel,
   onConfirm,
   title,
   message,
+  description,
   confirmLabel = "Confirmar",
   cancelLabel = "Cancelar",
   destructive = false,
+  variant,
   loading = false,
 }: MobileConfirmDialogProps) {
+  const close = onCancel ?? onClose ?? (() => undefined);
+  const isDestructive = destructive || variant === "destructive";
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
       <View style={styles.backdrop}>
-        <Pressable style={styles.dismissOverlay} onPress={onClose} />
+        <Pressable style={styles.dismissOverlay} onPress={close} />
         <View style={styles.dialog}>
           <View
             style={[
               styles.iconWrap,
-              destructive ? styles.iconWrapDestructive : styles.iconWrapPrimary,
+              isDestructive ? styles.iconWrapDestructive : styles.iconWrapPrimary,
             ]}
           >
-            {destructive ? (
+            {isDestructive ? (
               <Trash2 size={22} color={mobileTheme.colors.danger} />
             ) : (
               <AlertTriangle size={22} color={mobileTheme.colors.primary} />
@@ -53,12 +62,12 @@ export function MobileConfirmDialog({
           </View>
 
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+          <Text style={styles.message}>{message || description || ""}</Text>
 
           <View style={styles.actions}>
             <MobileButton
               label={cancelLabel}
-              onPress={onClose}
+              onPress={close}
               variant="outline"
               size="md"
               style={styles.actionBtn}
@@ -66,7 +75,7 @@ export function MobileConfirmDialog({
             <MobileButton
               label={confirmLabel}
               onPress={onConfirm}
-              variant={destructive ? "destructive" : "primary"}
+              variant={isDestructive ? "destructive" : "primary"}
               size="md"
               loading={loading}
               style={styles.actionBtn}

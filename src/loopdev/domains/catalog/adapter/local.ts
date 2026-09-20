@@ -68,7 +68,7 @@ function assertWrite(params: CatalogScopeParams): void {
   }
 }
 
-function assertOwned<T extends { id: string; organizationId: string; workspaceId: string | null }>(store: { get(id: string): T | null }, id: string, params: CatalogScopeParams): T {
+function assertOwned<T extends { id: string; organizationId: string; workspaceId: string | null }>(store: { get(id: string): T | null | undefined }, id: string, params: CatalogScopeParams): T {
   const current = store.get(id);
   if (!current || current.organizationId !== params.organizationId || (params.workspaceId !== undefined && current.workspaceId !== params.workspaceId)) {
     throw new CatalogAdapterError("Catalog record not found in this scope.", "server-error");

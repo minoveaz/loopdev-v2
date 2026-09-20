@@ -17,6 +17,7 @@ export interface MobileSearchBarProps {
   onFilterPress?: () => void;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
+  onClear?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
   style?: StyleProp<ViewStyle>;
 }
@@ -28,6 +29,7 @@ export function MobileSearchBar({
   onFilterPress,
   hasActiveFilters = false,
   onClearFilters,
+  onClear,
   containerStyle,
   style,
 }: MobileSearchBarProps) {
@@ -46,7 +48,7 @@ export function MobileSearchBar({
         {value.length > 0 && (
           <Pressable
             accessibilityLabel="Borrar búsqueda"
-            onPress={() => onChangeText("")}
+            onPress={() => { onChangeText(""); onClear?.(); }}
             hitSlop={8}
           >
             <X size={16} color={mobileTheme.colors.textSubtle} />

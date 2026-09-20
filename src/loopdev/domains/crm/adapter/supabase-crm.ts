@@ -144,7 +144,7 @@ export function createSupabaseCrmAdapter() {
       const { data, error } = await client.from("crm_leads").insert({
         organization_id: input.organizationId,
         contact_id: input.contactId,
-        interest: input.interest.trim(),
+        interest: input.interest?.trim() ?? "",
         source: normalizeLeadSource(input.source),
         status: status.status,
         stage: status.stage,

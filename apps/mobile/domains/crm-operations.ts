@@ -103,12 +103,12 @@ export const mobileCrmOperationsAdapter = {
     if (!query) return [];
     return [];
   },
-  async listSavedViews(): Promise<CRMSavedView[]> { return []; },
+  async listSavedViews(_context: CRMOperationsContext, _entityType?: CRMEntityType): Promise<CRMSavedView[]> { return []; },
   async createSavedView(context: CRMOperationsContext, input: Pick<CRMSavedView, "name" | "entityType" | "filters" | "columns" | "visibility">) {
     const timestamp = new Date().toISOString();
     return { ...context, ...input, id: `mobile-view-${Date.now()}`, ownerId: context.userId, createdAt: timestamp, updatedAt: timestamp };
   },
-  async listTags(): Promise<CRMTag[]> { return [...tags]; },
+  async listTags(_context: CRMOperationsContext): Promise<CRMTag[]> { return [...tags]; },
   async listCustomFieldDefinitions(_context: CRMOperationsContext, entityType?: CRMEntityType) {
     return customFields.filter((field) => !entityType || field.entityType === entityType);
   },
@@ -125,11 +125,11 @@ export const mobileCrmOperationsAdapter = {
     return field;
   },
   async bulkUpdateEntityTags(_input: { entityType: CRMEntityType; entityIds: string[]; tagId: string; operation: "add" | "remove" }) { return { updated: 0 }; },
-  async exportCsv() { return "id,name,email,phone\r\n"; },
-  async deleteSavedView() { return false; },
-  async updateTag() { return null; },
-  async updateCustomFieldDefinition() { return null; },
+  async exportCsv(_input: CRMExportInput) { return "id,name,email,phone\r\n"; },
+  async deleteSavedView(_context: CRMOperationsContext, _id: string) { return false; },
+  async updateTag(_context: CRMOperationsContext, _id: string, _patch: Partial<Pick<CRMTag, "name" | "color" | "visibility">>): Promise<CRMTag | null> { return null; },
+  async updateCustomFieldDefinition(_context: CRMOperationsContext, _id: string, _patch: Partial<Pick<CRMCustomFieldDefinition, "label" | "required" | "options" | "active">>): Promise<CRMCustomFieldDefinition | null> { return null; },
   async setCustomFieldValue(input: { entityType: CRMEntityType; entityId: string; definitionId: string; value: CRMCustomFieldValue["value"] }) { return input; },
-  async listCustomFieldValues() { return []; },
-  async importContacts(): Promise<CRMImportResult> { return { totalRows: 0, importedRows: 0, duplicateRows: 0, invalidRows: 0, results: [] }; },
+  async listCustomFieldValues(_context: CRMOperationsContext, _entityType: CRMEntityType, _entityId: string) { return []; },
+  async importContacts(_input: { csv: string; mode: "validate" | "commit"; deduplicateBy: "email" | "phone" | "email_or_phone" } & CRMOperationsContext): Promise<CRMImportResult> { return { totalRows: 0, importedRows: 0, duplicateRows: 0, invalidRows: 0, results: [] }; },
 };

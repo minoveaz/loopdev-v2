@@ -16,6 +16,8 @@ interface MobilePageHeaderProps {
     icon?: React.ReactNode;
     onPress: () => void;
   };
+  rightAction?: React.ReactNode;
+  onBack?: () => void;
 }
 
 export function MobilePageHeader({
@@ -24,10 +26,13 @@ export function MobilePageHeader({
   subtitle,
   actionButton,
   primaryAction,
+  onBack,
+  rightAction,
 }: MobilePageHeaderProps) {
   const action = actionButton ?? primaryAction;
   return (
     <View style={styles.heading}>
+      {onBack ? <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack}><Text style={styles.back}>‹</Text></Pressable> : null}
       <View style={styles.textColumn}>
         {eyebrow ? (
           <View style={styles.eyebrowRow}>
@@ -38,7 +43,7 @@ export function MobilePageHeader({
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
-      {action ? (
+      {rightAction ?? (action ? (
         <Pressable
           accessibilityRole="button"
           onPress={action.onPress}
@@ -47,7 +52,7 @@ export function MobilePageHeader({
           {action.icon}
           <Text style={styles.buttonText}>{action.label}</Text>
         </Pressable>
-      ) : null}
+      ) : null)}
     </View>
   );
 }
@@ -101,4 +106,5 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     fontSize: 13,
   },
+  back: { fontSize: 30, color: mobileTheme.colors.textMuted, marginRight: 8 },
 });

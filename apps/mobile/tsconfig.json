@@ -3,9 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "baseUrl": ".",
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["../../src/*"],
+      "@contracts/*": ["../../packages/contracts/src/*"],
       "@mobile/*": ["./*"]
     }
   },
@@ -13,5 +14,6 @@
     "**/*.ts",
     "**/*.tsx",
     "../../packages/contracts/src/**/*.ts"
+    ,"../../src/vite-env.d.ts"
   ]
 }

@@ -13,6 +13,8 @@ export interface MobileProgressBarProps {
   color?: string;
   height?: number;
   showLabel?: boolean;
+  showPercentage?: boolean;
+  tone?: string;
   labelPrefix?: string;
   style?: StyleProp<ViewStyle>;
 }
@@ -22,6 +24,7 @@ export function MobileProgressBar({
   color = mobileTheme.colors.primary,
   height = 6,
   showLabel = false,
+  showPercentage = false,
   labelPrefix,
   style,
 }: MobileProgressBarProps) {
@@ -29,7 +32,7 @@ export function MobileProgressBar({
 
   return (
     <View style={[styles.container, style]}>
-      {showLabel ? (
+      {showLabel || showPercentage ? (
         <View style={styles.labelRow}>
           {labelPrefix ? <Text style={styles.prefixText}>{labelPrefix}</Text> : <View />}
           <Text style={[styles.labelText, { color }]}>{bounded}%</Text>

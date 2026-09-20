@@ -65,7 +65,7 @@ export function MobileCustomer360Timeline({ timeline }: Props) {
               sourceType: item.sourceType,
               summary: item.summary,
               occurredAt: item.occurredAt,
-              status: item.status,
+              status: item.status ?? undefined,
             }))}
           />
         )}

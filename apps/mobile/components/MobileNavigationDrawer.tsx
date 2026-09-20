@@ -48,7 +48,9 @@ const suiteThemes: Record<
   string,
   {
     bgActive: string;
+    bg?: string;
     textActive: string;
+    color?: string;
     borderActive: string;
     iconActive: string;
   }

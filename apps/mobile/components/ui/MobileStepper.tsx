@@ -26,8 +26,10 @@ export interface MobileStepItem<T extends string = string> {
 export interface MobileStepperProps<T extends string = string> {
   steps: MobileStepItem<T>[];
   currentStep?: T;
+  activeKey?: T;
   currentStepIndex?: number;
   onStepSelect?: (stepKey: T) => void;
+  onSelectStep?: (stepKey: T) => void;
   onStepPress?: (stepIndex: number) => void;
   style?: StyleProp<ViewStyle>;
 }
@@ -42,16 +44,18 @@ export interface MobileStepperProps<T extends string = string> {
 export function MobileStepper<T extends string = string>({
   steps,
   currentStep,
+  activeKey,
   currentStepIndex,
   onStepSelect,
+  onSelectStep,
   onStepPress,
   style,
 }: MobileStepperProps<T>) {
   const currentIndex =
     currentStepIndex !== undefined
       ? currentStepIndex
-      : currentStep
-      ? steps.findIndex((s) => (s.key ?? s.id) === currentStep)
+      : (currentStep ?? activeKey)
+      ? steps.findIndex((s) => (s.key ?? s.id) === (currentStep ?? activeKey))
       : -1;
 
   return (
@@ -75,8 +79,8 @@ export function MobileStepper<T extends string = string>({
               accessibilityLabel={`Etapa ${stepLabel}, ${isCurrent ? "actual" : isPassed ? "completada" : "pendiente"}`}
               disabled={!isInteractive}
               onPress={() => {
-                if (onStepSelect && (step.key || step.id)) {
-                  onStepSelect((step.key || step.id) as T);
+                if ((onStepSelect || onSelectStep) && (step.key || step.id)) {
+                  (onStepSelect ?? onSelectStep)!((step.key || step.id) as T);
                 }
                 if (onStepPress) {
                   onStepPress(index);

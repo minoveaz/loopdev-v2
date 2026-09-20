@@ -1,4 +1,3 @@
-  return <MobileLeadDetailScreen leadId={leadMatch.leadId} onBack={() => navigate("/app/sales-crm/leads")} onNavigateToContact={(contactId) => navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contactId)))} onArchive={async (lead) => { await mobileCrmAdapter.archiveLead(lead.id, lead.updatedAt); navigate("/app/sales-crm/leads"); }} />;
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEffect, useMemo, useState } from "react";
 import {

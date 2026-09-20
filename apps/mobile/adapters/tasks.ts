@@ -10,7 +10,6 @@ import type {
   UpdateTaskPatch,
 } from "../../../packages/contracts/src/tasks";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./auth";
-import { SupabaseTasksAdapter } from "../../src/loopdev/domains/tasks/adapter/supabase";
 
 const SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845";
@@ -462,7 +461,4 @@ export const localMobileTasksAdapter: TasksPort = {
   },
 };
 
-export const mobileTasksAdapter: TasksPort = new SupabaseTasksAdapter({
-  supabaseUrl: SUPABASE_URL,
-  supabaseAnonKey: SUPABASE_ANON_KEY,
-});
+export const mobileTasksAdapter: TasksPort = localMobileTasksAdapter;

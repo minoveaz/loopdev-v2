@@ -502,9 +502,9 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
                     <MobileSpeedDialBar
                       phone={contact?.phone}
                       email={contact?.email}
-                      onCall={() => openPhone(contact?.phone)}
-                      onWhatsApp={() => openWhatsApp(contact?.phone)}
-                      onEmail={() => openEmail(contact?.email)}
+                      onCall={() => openPhone(contact?.phone ?? undefined)}
+                      onWhatsApp={() => openWhatsApp(contact?.phone ?? undefined)}
+                      onEmail={() => openEmail(contact?.email ?? undefined)}
                     />
 
                     <View style={styles.rightActionBtns}>

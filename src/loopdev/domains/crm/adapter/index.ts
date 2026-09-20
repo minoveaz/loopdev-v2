@@ -105,7 +105,7 @@ export const loopdevAdapter: LoopdevAdapter = {
     findPotentialDuplicates: (contactId) => desktopContactAdapter.findPotentialDuplicates(contactId),
     dismissDuplicateReview: (contactId, candidateId, confirmation) =>
       desktopContactAdapter.dismissDuplicateReview(contactId, candidateId, confirmation),
-    bulkArchiveContacts: (contactIds) => desktopContactAdapter.bulkArchiveContacts(contactIds),
+    bulkArchiveContacts: (contactIds) => desktopContactAdapter.bulkArchiveContacts?.(contactIds) ?? Promise.resolve({ successCount: 0, failureCount: contactIds.length }),
     listLeads: () => supabaseCrmAdapter.listLeads(),
     createLead: (input) => supabaseCrmAdapter.createLead(input),
     updateLead: (leadId, input) => supabaseCrmAdapter.updateLead(leadId, input),
@@ -115,7 +115,7 @@ export const loopdevAdapter: LoopdevAdapter = {
     bulkArchiveOpportunities: (opportunityIds, organizationId) => supabaseCrmAdapter.bulkArchiveOpportunities(opportunityIds, organizationId),
     createOpportunity: (input) => supabaseCrmAdapter.createOpportunity(input),
     updateOpportunity: (opportunityId, input) => supabaseCrmAdapter.updateOpportunity(opportunityId, input),
-    moveOpportunityStage: (opportunityId, input) => supabaseCrmAdapter.moveOpportunityStage(opportunityId, input),
+    moveOpportunityStage: (opportunityId, input) => supabaseCrmAdapter.moveOpportunityStage(opportunityId, input as CRMMoveOpportunityStageInput),
     reopenOpportunity: (opportunityId, input) => supabaseCrmAdapter.reopenOpportunity(opportunityId, input),
     createOpportunityFromLead: (leadId, input) => supabaseCrmAdapter.createOpportunityFromLead(leadId, input),
     listOpportunityStageHistory: (opportunityId) => supabaseCrmAdapter.listOpportunityStageHistory(opportunityId),

@@ -16,9 +16,13 @@ export interface MobileSpeedDialBarProps {
   phone?: string | null;
   email?: string | null;
   whatsApp?: string | null;
+  whatsapp?: string | null;
   sms?: string | null;
   contactName?: string;
   variant?: "compact" | "full";
+  onCall?: () => void;
+  onWhatsApp?: () => void;
+  onEmail?: () => void;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -26,12 +30,13 @@ export function MobileSpeedDialBar({
   phone,
   email,
   whatsApp,
+  whatsapp,
   sms,
   contactName,
   variant = "compact",
   style,
 }: MobileSpeedDialBarProps) {
-  const targetWhatsApp = whatsApp || phone;
+  const targetWhatsApp = whatsApp || whatsapp || phone;
   const targetSms = sms || phone;
 
   const handleCall = () => {

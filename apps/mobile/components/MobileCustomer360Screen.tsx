@@ -65,9 +65,48 @@ export function MobileCustomer360Screen({
 
   useEffect(() => {
     if (view) {
-      setLeads(view.leads || []);
-      setOpportunities(view.opportunities || []);
-      setTimeline(view.timeline || []);
+      setLeads((view.leads || []).map((item) => ({
+        id: item.id,
+        organizationId: view.contact.organizationId,
+        contactId: view.contact.id,
+        interest: item.name || item.summary || "",
+        source: "customer360",
+        status: "new" as const,
+        ownerName: "",
+        assignedUserId: "",
+        score: null,
+        createdAt: item.occurredAt || view.contact.createdAt,
+        updatedAt: item.occurredAt || view.contact.updatedAt,
+        lastActivityAt: item.occurredAt || null,
+        nextActivityAt: null,
+      })));
+      setOpportunities((view.opportunities || []).map((item) => ({
+        id: item.id,
+        organizationId: view.contact.organizationId,
+        contactId: view.contact.id,
+        leadId: null,
+        catalogItemId: null,
+        productKey: null,
+        name: item.name || item.summary || "Opportunity",
+        amount: item.amount ?? null,
+        currency: "EUR",
+        stageKey: "prospecting" as const,
+        origin: "manual" as const,
+        ownerName: "",
+        ownerId: "",
+        expectedCloseAt: null,
+        createdAt: item.occurredAt || view.contact.createdAt,
+        updatedAt: item.occurredAt || view.contact.updatedAt,
+      })));
+      setTimeline((view.timeline || []).map((item) => ({
+        id: item.id,
+        sourceType: "note" as const,
+        sourceId: item.id,
+        type: "activity",
+        summary: item.summary || item.name || "",
+        occurredAt: item.occurredAt || view.contact.updatedAt,
+        status: null,
+      })));
     }
   }, [view]);
 

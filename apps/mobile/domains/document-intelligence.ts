@@ -71,8 +71,9 @@ export const localDocumentIntelligenceAdapter = {
     backFile?: File | ExtractionDocumentFile | null;
   }) {
     const now = new Date().toISOString();
+    const isWebFile = (value: File | ExtractionDocumentFile): value is File => typeof File !== "undefined" && value instanceof File;
     const toDocumentFile = (file: File | ExtractionDocumentFile): ExtractionDocumentFile =>
-      typeof File !== "undefined" && file instanceof File
+      isWebFile(file)
         ? { name: file.name, size: file.size, mimeType: file.type, file, previewUrl: URL.createObjectURL(file) }
         : file;
     const extraction: ExtractionRecord = {

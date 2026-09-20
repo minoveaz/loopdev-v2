@@ -24,6 +24,7 @@ export interface FileRecord {
   };
   createdAt: string;
   updatedAt: string;
+  uri?: string;
 }
 
 const FILES_STORAGE_KEY = "loopdev_mobile_files_records";

@@ -17,15 +17,20 @@ export type MobileStatusTone =
   | "destructive";
 
 export interface MobileStatusBadgeProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  label?: string;
+  status?: string;
   tone?: MobileStatusTone;
   dot?: boolean;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  size?: "sm" | "md" | "lg";
 }
 
 export function MobileStatusBadge({
   children,
+  label,
+  status,
   tone = "neutral",
   dot = false,
   style,
@@ -45,7 +50,7 @@ export function MobileStatusBadge({
         <View style={[styles.dot, { backgroundColor: config.text }]} />
       ) : null}
       <Text style={[styles.label, { color: config.text }, textStyle]}>
-        {children}
+        {children ?? label ?? status}
       </Text>
     </View>
   );

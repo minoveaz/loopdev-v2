@@ -91,7 +91,7 @@ export function MobileOpportunityDetailScreen({
         if (opp.contactId) {
           try {
             const found = await mobileContactAdapter.getCustomer360(opp.contactId);
-            if (found?.summary) setContact(found.summary);
+            if (found?.contact) setContact(found.contact);
           } catch {
             // noop
           }
@@ -324,9 +324,9 @@ export function MobileOpportunityDetailScreen({
             <MobileSpeedDialBar
               phone={contact?.phone}
               email={contact?.email}
-              onCall={() => openPhone(contact?.phone)}
-              onWhatsApp={() => openWhatsApp(contact?.phone)}
-              onEmail={() => openEmail(contact?.email)}
+              onCall={() => openPhone(contact?.phone ?? undefined)}
+              onWhatsApp={() => openWhatsApp(contact?.phone ?? undefined)}
+              onEmail={() => openEmail(contact?.email ?? undefined)}
             />
             {contact && onNavigateToContact && (
               <MobileButton

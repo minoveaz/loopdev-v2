@@ -177,7 +177,7 @@ export const localCrmOperationsAdapter: CRMOperationsAdapter = {
     if (types.includes("lead")) {
       localCrmLeadsStore.list().forEach((lead) => {
         const contact = crmCustomersStore.get(lead.contactId);
-        const fields = { interest: lead.interest ?? "", source: lead.source ?? "", status: lead.status, owner: lead.ownerName ?? "" };
+        const fields: Record<string, string> = { interest: lead.interest ?? "", source: lead.source ?? "", status: lead.status, owner: lead.ownerName ?? "" };
         if ((!query || Object.values(fields).some((value) => value.toLowerCase().includes(query))) && matchesFilters(fields, input.filters)) {
           results.push({ id: lead.id, entityType: "lead", title: lead.interest ?? "Untitled lead", subtitle: contact ? contact.name : lead.status, matchedFields: Object.keys(fields).filter((key) => fields[key].toLowerCase().includes(query)), tags: [] });
         }
@@ -186,7 +186,7 @@ export const localCrmOperationsAdapter: CRMOperationsAdapter = {
     if (types.includes("opportunity")) {
       localCrmOpportunitiesStore.list().filter((opportunity) => !opportunity.archivedAt).forEach((opportunity) => {
         const contact = crmCustomersStore.get(opportunity.contactId);
-        const fields = { name: opportunity.name, stage: opportunity.stageCode, owner: opportunity.ownerName ?? "", amount: String(opportunity.amount ?? "") };
+        const fields: Record<string, string> = { name: opportunity.name, stage: opportunity.stageCode, owner: opportunity.ownerName ?? "", amount: String(opportunity.amount ?? "") };
         if ((!query || Object.values(fields).some((value) => value.toLowerCase().includes(query))) && matchesFilters(fields, input.filters)) {
           results.push({ id: opportunity.id, entityType: "opportunity", title: opportunity.name, subtitle: contact?.name ?? opportunity.stageCode, matchedFields: Object.keys(fields).filter((key) => fields[key].toLowerCase().includes(query)), tags: [] });
         }

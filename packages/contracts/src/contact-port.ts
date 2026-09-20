@@ -32,6 +32,18 @@ export interface ContactRecord {
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  // Legacy mobile aliases kept during contract migration.
+  givenName?: string;
+  familyName?: string | null;
+  organizationName?: string | null;
+  nationality?: string | null;
+  state?: string | null;
+  taxId?: string | null;
+  lifecycleStage?: string | null;
+  leadSource?: string | null;
+  mobilePhone?: string | null;
+  website?: string | null;
+  linkedinUrl?: string | null;
 }
 
 export interface ContactListParams {
@@ -94,6 +106,9 @@ export interface PotentialContactDuplicate {
   contact: ContactRecord;
   score: number;
   reasons: string[];
+  targetContactId?: string;
+  targetName?: string;
+  matchedFields?: string[];
 }
 
 export type DuplicateReviewResult =
@@ -122,6 +137,7 @@ export interface ContactCustomer360View {
   cursors: Record<Customer360Section, string | null>;
   sectionState: Record<Customer360Section, Customer360SectionState>;
   sectionPermissions: Record<Customer360Section, boolean>;
+  summary?: string;
 }
 
 export interface ContactPort {

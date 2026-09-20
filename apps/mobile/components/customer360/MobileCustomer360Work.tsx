@@ -225,11 +225,11 @@ export function MobileCustomer360Work({
                 <MobileNotesCard
                   key={note.id}
                   note={note}
-                  onPress={() => {
+                  onOpen={() => {
                     setSelectedNote(note);
                     setEditorOpen(true);
                   }}
-                  onDelete={onDeleteNote ? () => onDeleteNote(note) : undefined}
+                  onActions={onDeleteNote ? () => void onDeleteNote(note) : () => undefined}
                 />
               ))}
             </View>
@@ -238,12 +238,12 @@ export function MobileCustomer360Work({
           {/* Note Editor Modal */}
           {editorOpen && (
             <MobileNoteEditor
-              visible={editorOpen}
-              onClose={() => {
+              onCancel={() => {
                 setEditorOpen(false);
                 setSelectedNote(undefined);
               }}
-              note={selectedNote}
+              initialNote={selectedNote}
+              relationLabel={contactName}
               onSave={async (draft) => {
                 if (selectedNote && onUpdateNote) {
                   await onUpdateNote(selectedNote.id, selectedNote.version, draft);
@@ -252,11 +252,6 @@ export function MobileCustomer360Work({
                 }
                 setEditorOpen(false);
                 setSelectedNote(undefined);
-              }}
-              initialEntity={{
-                type: "contact",
-                id: contactId,
-                name: contactName,
               }}
             />
           )}

@@ -67,7 +67,8 @@ export interface MobileMetricDef {
 export interface MobileMetricGridProps {
   children?: React.ReactNode;
   metrics?: MobileMetricDef[];
-  columns?: 2 | 3;
+  items?: MobileMetricDef[];
+  columns?: number;
   bordered?: boolean;
   style?: StyleProp<ViewStyle>;
 }
@@ -75,6 +76,7 @@ export interface MobileMetricGridProps {
 export function MobileMetricGrid({
   children,
   metrics,
+  items,
   columns = 2,
   bordered = true,
   style,
@@ -96,8 +98,8 @@ export function MobileMetricGrid({
         style,
       ]}
     >
-      {metrics
-        ? metrics.map((m, idx) => (
+      {(metrics ?? items)
+        ? (metrics ?? items)!.map((m, idx) => (
             <MobileMetricItem
               key={m.id || idx}
               label={m.label}

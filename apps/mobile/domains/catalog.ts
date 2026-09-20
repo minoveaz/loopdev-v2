@@ -16,6 +16,8 @@ export interface OrganizationCatalog {
   status: CatalogItemStatus;
   createdAt: string;
   updatedAt: string;
+  kind?: string;
+  currency?: string;
 }
 
 export interface CatalogItem {

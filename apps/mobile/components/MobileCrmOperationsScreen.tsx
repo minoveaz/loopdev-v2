@@ -117,10 +117,7 @@ export function MobileCrmOperationsScreen({
   const loadDuplicateCandidates = async () => {
     setLoadingDuplicates(true);
     try {
-      const dups = await mobileContactAdapter.findPotentialDuplicates({
-        organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
-        threshold: 0.7,
-      });
+      const dups = await mobileContactAdapter.findPotentialDuplicates("mobile-operations");
       setDuplicateCandidates(dups);
     } catch {
       setDuplicateCandidates([]);
@@ -131,12 +128,12 @@ export function MobileCrmOperationsScreen({
 
   const handleDismissDuplicate = async (targetId: string) => {
     try {
-      await mobileContactAdapter.dismissDuplicateCandidate(
-        "80fce911-57c5-4a83-809f-78df6a3736f7",
+      await mobileContactAdapter.dismissDuplicateReview(
+        "mobile-operations",
         targetId,
-        "Revisado manualmente desde Operaciones Mobile"
+        "DISMISS_DUPLICATE_REVIEW"
       );
-      setDuplicateCandidates((prev) => prev.filter((d) => d.targetContactId !== targetId));
+      setDuplicateCandidates((prev) => prev.filter((d) => d.contact.id !== targetId));
       Alert.alert("Descartado", "El candidato de duplicado ha sido descartado.");
     } catch (err: any) {
       Alert.alert("Error", err?.message || "No se pudo descartar el duplicado.");
@@ -155,7 +152,7 @@ export function MobileCrmOperationsScreen({
       return;
     }
     try {
-      await bulkUpdateEntityTags(selectedIds, [selectedBulkTag], "add");
+      await bulkUpdateEntityTags(selectedIds, selectedBulkTag, "add");
       setSelectedIds([]);
       setBulkTagSheetOpen(false);
       setSelectedBulkTag("");
@@ -201,9 +198,10 @@ export function MobileCrmOperationsScreen({
         label: newFieldLabel.trim(),
         key,
         entityType,
-        fieldType: newFieldType,
+        type: newFieldType,
         required: newFieldRequired,
         visibility: newFieldVisibility,
+        options: [],
       });
       setNewFieldLabel("");
       setNewFieldKey("");
@@ -216,7 +214,7 @@ export function MobileCrmOperationsScreen({
 
   const handleExportCsv = async () => {
     try {
-      const csv = await exportCsv(entityType);
+      const csv = await exportCsv({ entityType: "contact" });
       Alert.alert(
         "Exportación Generada",
         `Se han generado ${csv.split("\n").length} filas de datos para ${entityType}.`
@@ -337,9 +335,9 @@ export function MobileCrmOperationsScreen({
                         <Text style={styles.resultSubtitle}>{item.subtitle || "Sin detalles"}</Text>
                         {item.tags && item.tags.length > 0 && (
                           <View style={styles.tagsRow}>
-                            {item.tags.map((t) => (
-                              <View key={t} style={styles.tagBadge}>
-                                <Text style={styles.tagBadgeText}>{t}</Text>
+                            {item.tags.map((tag) => (
+                              <View key={tag.id} style={styles.tagBadge}>
+                                <Text style={styles.tagBadgeText}>{tag.name}</Text>
                               </View>
                             ))}
                           </View>
@@ -445,7 +443,7 @@ export function MobileCrmOperationsScreen({
                   </View>
                   <Text style={styles.fieldKey}>Clave: {field.key}</Text>
                   <View style={styles.fieldFooter}>
-                    <Text style={styles.fieldMeta}>Tipo: {field.fieldType}</Text>
+                    <Text style={styles.fieldMeta}>Type: {field.type}</Text>
                     <Text style={styles.fieldMeta}>Scope: {field.visibility}</Text>
                   </View>
                 </MobileCard>
@@ -480,23 +478,23 @@ export function MobileCrmOperationsScreen({
               />
             ) : (
               duplicateCandidates.map((dup) => (
-                <MobileCard key={dup.targetContactId} style={styles.dupCard}>
+                <MobileCard key={dup.contact.id} style={styles.dupCard}>
                   <View style={styles.dupHeader}>
-                    <Text style={styles.dupName}>{dup.targetName}</Text>
+                    <Text style={styles.dupName}>{dup.targetName || `${dup.contact.firstName} ${dup.contact.lastName ?? ""}`.trim()}</Text>
                     <MobileStatusBadge
                       status="warning"
                       label={`${Math.round(dup.score * 100)}% coincidencia`}
                       size="sm"
                     />
                   </View>
-                  <Text style={styles.dupReason}>{dup.matchedFields.join(" · ")}</Text>
+                  <Text style={styles.dupReason}>{(dup.matchedFields || dup.reasons).join(" · ")}</Text>
 
                   <View style={styles.dupActions}>
                     <MobileButton
                       variant="destructive"
                       size="sm"
                       icon={Trash2}
-                      onPress={() => handleDismissDuplicate(dup.targetContactId)}
+                      onPress={() => handleDismissDuplicate(dup.targetContactId || dup.contact.id)}
                       minHeight={44}
                     >
                       Descartar Alerta
@@ -506,7 +504,7 @@ export function MobileCrmOperationsScreen({
                         variant="secondary"
                         size="sm"
                         icon={Users}
-                        onPress={() => onNavigateToContact(dup.targetContactId)}
+                        onPress={() => onNavigateToContact(dup.targetContactId || dup.contact.id)}
                         minHeight={44}
                       >
                         Ver Contacto

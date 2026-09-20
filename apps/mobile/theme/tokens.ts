@@ -49,6 +49,14 @@ export const mobileTheme = {
     info: "#1d4ed8",
     infoBg: "#eff6ff",
     infoBorder: "#bfdbfe",
+    // Compatibility aliases for existing mobile screens during token migration.
+    background: "#f8fafc",
+    input: "#ffffff",
+    text: "#111827",
+    textPrimary: "#111827",
+    textSecondary: "#64748b",
+    destructive: "#dc2626",
+    error: "#dc2626",
   },
 
   radii: {
@@ -56,6 +64,7 @@ export const mobileTheme = {
     sm: 6,
     md: 10,
     lg: 14,
+    input: 10,
     card: 17,
     sheet: 22,
     pill: 99,
@@ -115,6 +124,7 @@ export const mobileTheme = {
   },
 
   shadows: {
+    sm: { boxShadow: "0px 1px 3px rgba(15,23,42,0.08)", elevation: 1 },
     card: {
       boxShadow: "0px 2px 7px rgba(15,23,42,0.04)",
       elevation: 1,

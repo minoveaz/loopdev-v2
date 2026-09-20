@@ -18,6 +18,8 @@ export interface MobileEmptyStateProps {
     onPress: () => void;
     icon?: React.ReactNode;
   };
+  actionLabel?: string;
+  onAction?: () => void;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -26,6 +28,8 @@ export function MobileEmptyState({
   title,
   description,
   action,
+  actionLabel,
+  onAction,
   style,
 }: MobileEmptyStateProps) {
   return (
@@ -33,12 +37,12 @@ export function MobileEmptyState({
       {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
       <Text style={styles.title}>{title}</Text>
       {description ? <Text style={styles.description}>{description}</Text> : null}
-      {action ? (
+      {(action || (actionLabel && onAction)) ? (
         <View style={styles.actionWrap}>
           <MobileButton
-            label={action.label}
-            onPress={action.onPress}
-            iconLeft={action.icon}
+            label={action?.label ?? actionLabel ?? "Action"}
+            onPress={action?.onPress ?? onAction!}
+            iconLeft={action?.icon}
             variant="outline"
             size="sm"
           />

@@ -11,6 +11,7 @@ import {
 import { mobileTheme } from "../../theme/tokens";
 
 export interface MobileInputProps extends TextInputProps {
+  rows?: number;
   label?: string;
   required?: boolean;
   error?: string;

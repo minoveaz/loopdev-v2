@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { ArrowLeft, ArrowRight, CheckCircle2, Info, Mail, ShieldAlert } from "lucide-react-native";
 import { mobileAuthAdapter } from "../adapters/auth";
+import { useMobileI18n } from "../i18n";
 
 type MobileForgotPasswordScreenProps = {
   onBackToLogin: () => void;
@@ -22,10 +23,11 @@ export function MobileForgotPasswordScreen({
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { t } = useMobileI18n();
 
   const handleReset = async () => {
     if (!email.trim()) {
-      setErrorMessage("Please enter your email address.");
+      setErrorMessage(t("forgotPassword.emailRequired"));
       return;
     }
     setErrorMessage(null);
@@ -35,12 +37,12 @@ export function MobileForgotPasswordScreen({
         email: email.trim(),
       });
       if (!res.success) {
-        setErrorMessage(res.error.message || "Failed to submit password reset.");
+        setErrorMessage(res.error.message || t("forgotPassword.submitFailed"));
       } else {
         setSubmitted(true);
       }
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Error submitting request.");
+      setErrorMessage(err instanceof Error ? err.message : t("forgotPassword.requestError"));
     } finally {
       setLoading(false);
     }
@@ -54,7 +56,7 @@ export function MobileForgotPasswordScreen({
       {/* Back button */}
       <Pressable onPress={onBackToLogin} style={styles.backButton}>
         <ArrowLeft color="#135bec" size={18} />
-        <Text style={styles.backText}>Back to sign in</Text>
+        <Text style={styles.backText}>{t("forgotPassword.back")}</Text>
       </Pressable>
 
       {/* Brand Header */}
@@ -75,23 +77,22 @@ export function MobileForgotPasswordScreen({
           <View style={styles.successIconBox}>
             <CheckCircle2 color="#16a34a" size={32} />
           </View>
-          <Text style={styles.successTitle}>Check your inbox</Text>
+          <Text style={styles.successTitle}>{t("forgotPassword.checkInbox")}</Text>
           <Text style={styles.successMessage}>
-            We have processed a password recovery request for{" "}
-            <Text style={styles.bold}>{email}</Text>. In development without an SMTP server, check local Inbucket or Supabase CLI admin logs.
+            {t("forgotPassword.recoveryRequest", { email })}
           </Text>
           <Pressable onPress={onBackToLogin} style={styles.submitButton}>
-            <Text style={styles.submitText}>Return to sign in</Text>
+            <Text style={styles.submitText}>{t("forgotPassword.returnToSignIn")}</Text>
           </Pressable>
         </View>
       ) : (
         <>
           {/* Title & Eyebrow */}
           <View style={styles.titleGroup}>
-            <Text style={styles.eyebrow}>RECOVER ACCOUNT</Text>
-            <Text style={styles.title}>Forgot password?</Text>
+            <Text style={styles.eyebrow}>{t("forgotPassword.eyebrow")}</Text>
+            <Text style={styles.title}>{t("forgotPassword.title")}</Text>
             <Text style={styles.subtitle}>
-              Enter your verified email to receive a password reset link.
+              {t("forgotPassword.subtitle")}
             </Text>
           </View>
 
@@ -105,12 +106,12 @@ export function MobileForgotPasswordScreen({
           {/* Form Fields */}
           <View style={styles.form}>
             <View style={styles.field}>
-              <Text style={styles.label}>Email address</Text>
+              <Text style={styles.label}>{t("forgotPassword.emailLabel")}</Text>
               <View style={styles.inputContainer}>
                 <Mail color="#64748b" size={18} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="user@organization.com"
+                  placeholder={t("forgotPassword.emailPlaceholder")}
                   placeholderTextColor="#94a3b8"
                   value={email}
                   onChangeText={setEmail}
@@ -125,9 +126,9 @@ export function MobileForgotPasswordScreen({
             <View style={styles.infoBox}>
               <Info color="#135bec" size={18} style={styles.infoIcon} />
               <View style={styles.infoContent}>
-                <Text style={styles.infoTitle}>Local Development Note</Text>
+                <Text style={styles.infoTitle}>{t("forgotPassword.localNoteTitle")}</Text>
                 <Text style={styles.infoDesc}>
-                  No active SMTP server is configured. Recovery requests will log to local Inbucket or Supabase admin without errors.
+                  {t("forgotPassword.localNoteDescription")}
                 </Text>
               </View>
             </View>
@@ -141,7 +142,7 @@ export function MobileForgotPasswordScreen({
                 <ActivityIndicator color="#ffffff" size="small" />
               ) : (
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Text style={styles.submitText}>Send reset link</Text>
+                  <Text style={styles.submitText}>{t("forgotPassword.sendLink")}</Text>
                   <ArrowRight size={16} color="#ffffff" />
                 </View>
               )}

@@ -1,4 +1,21 @@
 {
+  "forgotPassword": {
+    "back": "Back to sign in",
+    "checkInbox": "Check your inbox",
+    "recoveryRequest": "We have processed a password recovery request for {{email}}. In development without an SMTP server, check local Inbucket or Supabase CLI admin logs.",
+    "returnToSignIn": "Return to sign in",
+    "eyebrow": "RECOVER ACCOUNT",
+    "title": "Forgot password?",
+    "subtitle": "Enter your verified email to receive a password reset link.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "user@organization.com",
+    "localNoteTitle": "Local Development Note",
+    "localNoteDescription": "No active SMTP server is configured. Recovery requests will log to local Inbucket or Supabase admin without errors.",
+    "sendLink": "Send reset link",
+    "emailRequired": "Please enter your email address.",
+    "submitFailed": "Failed to submit password reset.",
+    "requestError": "Error submitting request."
+  },
   "common": {
     "search": "Search…",
     "language": "Language",

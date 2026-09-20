@@ -1,4 +1,21 @@
 {
+  "forgotPassword": {
+    "back": "Volver a iniciar sesión",
+    "checkInbox": "Revisa tu bandeja de entrada",
+    "recoveryRequest": "Hemos procesado una solicitud de recuperación para {{email}}. En desarrollo, sin servidor SMTP, revisa Inbucket local o los registros de administración de Supabase.",
+    "returnToSignIn": "Volver a iniciar sesión",
+    "eyebrow": "RECUPERAR CUENTA",
+    "title": "¿Olvidaste tu contraseña?",
+    "subtitle": "Introduce tu email verificado para recibir un enlace de restablecimiento.",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "usuario@organizacion.com",
+    "localNoteTitle": "Nota de desarrollo local",
+    "localNoteDescription": "No hay un servidor SMTP activo. Las solicitudes se registrarán en Inbucket local o en la administración de Supabase.",
+    "sendLink": "Enviar enlace",
+    "emailRequired": "Introduce tu correo electrónico.",
+    "submitFailed": "No se pudo enviar la solicitud de restablecimiento.",
+    "requestError": "Error al enviar la solicitud."
+  },
   "common": {
     "search": "Buscar…",
     "language": "Idioma",

@@ -20,6 +20,7 @@ import {
 } from "lucide-react-native";
 import {
   LOCAL_CATALOG_ORGANIZATION_ID,
+  getMobileOrganizationId,
   mobileCatalogAdapter,
   type CatalogItem,
   type OrganizationCatalog,
@@ -86,7 +87,7 @@ export function MobileProductCatalogScreen({
     try {
       setLoading(true);
       const loaded = await mobileCatalogAdapter.listCatalogs({
-        organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
+        organizationId: getMobileOrganizationId(),
       });
       setCatalogs(loaded);
       if (loaded.length > 0) {
@@ -107,7 +108,7 @@ export function MobileProductCatalogScreen({
     try {
       setItemsLoading(true);
       const loaded = await mobileCatalogAdapter.listCatalogItems({
-        organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
+        organizationId: getMobileOrganizationId(),
         catalogId: selectedCatalog.id,
         includeArchived: true,
       });
@@ -167,7 +168,7 @@ export function MobileProductCatalogScreen({
           .replace(/^-+|-+$/g, "");
 
       await mobileCatalogAdapter.createCatalogItem({
-        organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
+        organizationId: getMobileOrganizationId(),
         catalogId: selectedCatalog.id,
         name: newName.trim(),
         key,
@@ -194,7 +195,7 @@ export function MobileProductCatalogScreen({
     if (!archiveTargetItem) return;
     try {
       await mobileCatalogAdapter.archiveCatalogItem({
-        organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
+        organizationId: getMobileOrganizationId(),
         catalogId: archiveTargetItem.catalogId,
         itemId: archiveTargetItem.id,
       });

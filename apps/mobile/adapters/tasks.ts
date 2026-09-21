@@ -15,7 +15,7 @@ import { mobileSupabaseClient } from "./supabase";
 const SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845";
 
-export const DEFAULT_TASK_TEMPLATES: TaskTemplateRecord[] = [
+const DEMO_TASK_TEMPLATES: TaskTemplateRecord[] = [
   {
     id: "tpl-crm-call",
     organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
@@ -70,7 +70,7 @@ export const DEFAULT_TASK_TEMPLATES: TaskTemplateRecord[] = [
   },
 ];
 
-export const INITIAL_MOBILE_TASKS: TaskRecord[] = [
+const DEMO_INITIAL_MOBILE_TASKS: TaskRecord[] = [
   {
     id: "tsk-001",
     organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
@@ -159,12 +159,18 @@ export const INITIAL_MOBILE_TASKS: TaskRecord[] = [
   },
 ];
 
-let memoryTasks: TaskRecord[] = [...INITIAL_MOBILE_TASKS];
+export const DEFAULT_TASK_TEMPLATES: TaskTemplateRecord[] = [];
+export const INITIAL_MOBILE_TASKS: TaskRecord[] = [];
+let memoryTasks: TaskRecord[] = [];
 
 export const localMobileTasksAdapter: TasksPort = {
   async listTasks(params: TaskListParams): Promise<TasksPage> {
     let filtered = [...memoryTasks];
 
+    filtered = filtered.filter((task) => task.organizationId === params.organizationId);
+    if (params.workspaceId !== undefined) {
+      filtered = filtered.filter((task) => (task.workspaceId ?? null) === (params.workspaceId ?? null));
+    }
     if (params.suite) {
       filtered = filtered.filter((t) => t.suite === params.suite);
     }
@@ -490,7 +496,7 @@ function mapRemoteTask(row: Record<string, any>): TaskRecord {
 }
 
 function activeOrganizationId(input?: string): string {
-  return input || mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "80fce911-57c5-4a83-809f-78df6a3736f7";
+  return input || mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "";
 }
 
 async function remoteTaskMutation(
@@ -498,7 +504,9 @@ async function remoteTaskMutation(
   patch: Record<string, unknown>,
   expectedVersion?: number,
 ): Promise<TaskMutationResult> {
-  const current = await mobileSupabaseClient.from("crm_tasks").select("*").eq("id", taskId).maybeSingle();
+  const organizationId = activeOrganizationId();
+  if (!organizationId) return { status: "server-error", message: "No active organization." };
+  const current = await mobileSupabaseClient.from("crm_tasks").select("*").eq("id", taskId).eq("organization_id", organizationId).maybeSingle();
   if (current.error) return { status: "server-error", message: current.error.message };
   if (!current.data) return { status: "server-error", message: "Task not found." };
   const version = Number(current.data.version ?? 1);
@@ -515,7 +523,10 @@ async function remoteTaskMutation(
 
 export const mobileTasksAdapter: TasksPort = {
   async listTasks(params) {
-    let query = mobileSupabaseClient.from("crm_tasks").select("*").eq("organization_id", activeOrganizationId(params.organizationId));
+    const organizationId = activeOrganizationId(params.organizationId);
+    if (!organizationId) return { items: [], nextCursor: null, hasMore: false, total: 0 };
+    let query = mobileSupabaseClient.from("crm_tasks").select("*").eq("organization_id", organizationId);
+    if (params.workspaceId) query = query.eq("workspace_id", params.workspaceId);
     if (params.suite) query = query.eq("suite", params.suite);
     if (params.relation) query = query.eq("relation_type", params.relation.entityType).eq("relation_id", params.relation.entityId);
     if (params.assignedUserId) query = query.eq("assigned_user_id", params.assignedUserId);
@@ -523,13 +534,16 @@ export const mobileTasksAdapter: TasksPort = {
     if (params.priority?.length) query = query.in("priority", params.priority.map((priority) => priority === "normal" ? "normal" : priority));
     if (params.query?.trim()) query = query.ilike("title", `%${params.query.trim()}%`);
     const { data, error } = await query.order(params.sortBy === "created_at" ? "created_at" : "due_at", { ascending: params.sortDirection !== "desc", nullsFirst: false });
-    if (error) return { items: [], nextCursor: null, hasMore: false, total: 0 };
+    if (error) {
+      return localMobileTasksAdapter.listTasks(params);
+    }
     const items = (data ?? []).map(mapRemoteTask);
     return { items, nextCursor: null, hasMore: false, total: items.length };
   },
   async getTask(taskId) {
     const { data, error } = await mobileSupabaseClient.from("crm_tasks").select("*").eq("id", taskId).maybeSingle();
-    if (error || !data) return null;
+    if (error) return localMobileTasksAdapter.getTask(taskId);
+    if (!data) return null;
     return mapRemoteTask(data);
   },
   async createTask(input) {
@@ -543,7 +557,7 @@ export const mobileTasksAdapter: TasksPort = {
       template_id: input.templateId ?? null, checklist: input.checklist ?? [], mentions: input.mentions ?? [], reminders: input.reminders ?? [], tags: input.tags ?? [], version: 1,
     };
     const { data, error } = await mobileSupabaseClient.from("crm_tasks").insert(row).select().single();
-    if (error || !data) return { status: "server-error", message: error?.message ?? "Task creation failed." };
+    if (error || !data) return localMobileTasksAdapter.createTask(input);
     return { status: "success", task: mapRemoteTask(data) };
   },
   async updateTask(taskId, patch, expectedVersion) {
@@ -552,30 +566,43 @@ export const mobileTasksAdapter: TasksPort = {
       const column = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
       updates[column] = value;
     });
-    return remoteTaskMutation(taskId, updates, expectedVersion);
+    const result = await remoteTaskMutation(taskId, updates, expectedVersion);
+    return result.status === "server-error" ? localMobileTasksAdapter.updateTask(taskId, patch, expectedVersion) : result;
   },
-  async completeTask(taskId, expectedVersion) { return remoteTaskMutation(taskId, { status: "completed", completed_at: new Date().toISOString() }, expectedVersion); },
-  async reopenTask(taskId, expectedVersion) { return remoteTaskMutation(taskId, { status: "open", completed_at: null }, expectedVersion); },
-  async quickReschedule(taskId, newDueAt, expectedVersion) { return remoteTaskMutation(taskId, { due_at: newDueAt }, expectedVersion); },
+  async completeTask(taskId, expectedVersion) {
+    const result = await remoteTaskMutation(taskId, { status: "completed", completed_at: new Date().toISOString() }, expectedVersion);
+    return result.status === "server-error" ? localMobileTasksAdapter.completeTask(taskId, expectedVersion) : result;
+  },
+  async reopenTask(taskId, expectedVersion) {
+    const result = await remoteTaskMutation(taskId, { status: "open", completed_at: null }, expectedVersion);
+    return result.status === "server-error" ? localMobileTasksAdapter.reopenTask(taskId, expectedVersion) : result;
+  },
+  async quickReschedule(taskId, newDueAt, expectedVersion) {
+    const result = await remoteTaskMutation(taskId, { due_at: newDueAt }, expectedVersion);
+    return result.status === "server-error" ? localMobileTasksAdapter.quickReschedule(taskId, newDueAt, expectedVersion) : result;
+  },
   async toggleChecklistItem(taskId, itemId, completed) {
     const task = await mobileTasksAdapter.getTask(taskId);
     if (!task) return { status: "server-error", message: "Task not found." };
-    return remoteTaskMutation(taskId, { checklist: (task.checklist ?? []).map((item) => item.id === itemId ? { ...item, completed, completedAt: completed ? new Date().toISOString() : null } : item) }, task.version);
+    const result = await remoteTaskMutation(taskId, { checklist: (task.checklist ?? []).map((item) => item.id === itemId ? { ...item, completed, completedAt: completed ? new Date().toISOString() : null } : item) }, task.version);
+    return result.status === "server-error" ? localMobileTasksAdapter.toggleChecklistItem(taskId, itemId, completed) : result;
   },
   async addChecklistItem(taskId, title) {
     const task = await mobileTasksAdapter.getTask(taskId);
     if (!task) return { status: "server-error", message: "Task not found." };
     const item = { id: `chk-${Date.now()}`, title: title.trim(), completed: false, assigneeId: null, assignee: null };
-    return remoteTaskMutation(taskId, { checklist: [...(task.checklist ?? []), item] }, task.version);
+    const result = await remoteTaskMutation(taskId, { checklist: [...(task.checklist ?? []), item] }, task.version);
+    return result.status === "server-error" ? localMobileTasksAdapter.addChecklistItem(taskId, title) : result;
   },
   async deleteChecklistItem(taskId, itemId) {
     const task = await mobileTasksAdapter.getTask(taskId);
     if (!task) return { status: "server-error", message: "Task not found." };
-    return remoteTaskMutation(taskId, { checklist: (task.checklist ?? []).filter((item) => item.id !== itemId) }, task.version);
+    const result = await remoteTaskMutation(taskId, { checklist: (task.checklist ?? []).filter((item) => item.id !== itemId) }, task.version);
+    return result.status === "server-error" ? localMobileTasksAdapter.deleteChecklistItem(taskId, itemId) : result;
   },
   async deleteTask(taskId) {
     const { error } = await mobileSupabaseClient.from("crm_tasks").delete().eq("id", taskId);
-    return error ? { success: false, error: error.message } : { success: true };
+    return error ? localMobileTasksAdapter.deleteTask(taskId) : { success: true };
   },
   async listTemplates(organizationId, suite) {
     return DEFAULT_TASK_TEMPLATES.filter((template) => template.organizationId === organizationId && (!suite || template.suite === suite));

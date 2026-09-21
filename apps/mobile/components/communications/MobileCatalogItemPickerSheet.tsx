@@ -21,7 +21,7 @@ export function MobileCatalogItemPickerSheet({ visible, onClose, onSelect }: Pro
     if (visible) {
       setLoading(true);
       void mobileCatalogAdapter
-        .listCatalogItems({ includeArchived: false })
+        .listCatalogItems({ organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7", includeArchived: false })
         .then((res: CatalogItem[]) => {
           setItems(res.filter((it: CatalogItem) => it.status === "active"));
         })

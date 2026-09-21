@@ -104,7 +104,7 @@ export interface CreateTaskInput {
   dueAt?: string | null;
   relation?: TaskEntityRef | null;
   templateId?: string | null;
-  checklist?: Array<{ id?: string; title: string; completed?: boolean }>;
+  checklist?: Array<{ id?: string; title: string; completed?: boolean; assigneeId?: string | null; assignee?: AssignableUser | null }>;
   mentions?: TaskUserMention[];
   reminders?: TaskReminder[];
   tags?: string[];

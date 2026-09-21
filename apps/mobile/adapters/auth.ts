@@ -62,13 +62,8 @@ const tenantListeners = new Set<(context: TenantContextSnapshot | null) => void>
 
 function buildMobileSnapshot(): TenantContextSnapshot | null {
   if (!currentMobileSession) return null;
-  const org = currentOrganizations.find((o) => o.id === activeOrgId) ?? currentOrganizations[0] ?? {
-    id: activeOrgId || "80fce911-57c5-4a83-809f-78df6a3736f7",
-    name: "LoopDev",
-    slug: "loopdev",
-    status: "active",
-    createdAt: new Date().toISOString(),
-  };
+  const org = currentOrganizations.find((o) => o.id === activeOrgId) ?? currentOrganizations[0];
+  if (!org) return null;
 
   const role: PlatformRole = currentMobileSession?.user.isSuperAdmin ? "owner" : "admin";
 
@@ -132,10 +127,7 @@ async function fetchRemoteOrgs(userId?: string): Promise<Organization[]> {
     console.warn("Mobile org fetch failed:", err);
   }
 
-  return [
-    { id: "80fce911-57c5-4a83-809f-78df6a3736f7", name: "LoopDev", slug: "loopdev", status: "active", createdAt: new Date().toISOString() },
-    { id: "31bf9e13-7ba4-46e9-9b47-cccd0a0baa3e", name: "Estar Protegidos", slug: "estar-protegidos", status: "active", createdAt: new Date().toISOString() },
-  ];
+  return [];
 }
 
 export const mobileAuthAdapter: AuthPort = {
@@ -148,7 +140,7 @@ export const mobileAuthAdapter: AuthPort = {
         const user = data.session.user;
         const orgs = await fetchRemoteOrgs(user.id);
         currentOrganizations = orgs;
-        activeOrgId = currentOrganizations[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
+        activeOrgId = currentOrganizations[0]?.id || "";
 
         currentMobileSession = {
           accessToken: data.session.access_token,
@@ -175,7 +167,7 @@ export const mobileAuthAdapter: AuthPort = {
         if (parsed.user && parsed.accessToken) {
           currentMobileSession = parsed;
           currentOrganizations = await fetchRemoteOrgs(parsed.user.id);
-          activeOrgId = currentOrganizations[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
+          activeOrgId = currentOrganizations[0]?.id || "";
           return currentMobileSession;
         }
       } catch {}
@@ -198,45 +190,6 @@ export const mobileAuthAdapter: AuthPort = {
       });
 
       if (error || !data.session) {
-        // Fallback for local demo accounts only if not admin@loop.dev or offline
-        const isDemo =
-          credentials.email.includes("@localhost") ||
-          credentials.email.includes("@rivera.app") ||
-          (credentials.email.includes("@loop.dev") && credentials.password === "loopdev" && Boolean(error?.message?.includes("fetch")));
-
-        if (isDemo) {
-          const name = credentials.email.split("@")[0] || "Admin";
-          currentOrganizations = [
-            { id: "80fce911-57c5-4a83-809f-78df6a3736f7", name: "LoopDev", slug: "loopdev", status: "active", createdAt: new Date().toISOString() },
-            { id: "31bf9e13-7ba4-46e9-9b47-cccd0a0baa3e", name: "Estar Protegidos", slug: "estar-protegidos", status: "active", createdAt: new Date().toISOString() },
-          ];
-          activeOrgId = currentOrganizations[0].id;
-
-          currentMobileSession = {
-            accessToken: `demo-token-${Date.now()}`,
-            refreshToken: `demo-refresh-${Date.now()}`,
-            expiresAt: Date.now() + 24 * 3600 * 1000,
-            user: {
-              id: "80fce911-57c5-4a83-809f-78df6a3736f7",
-              email: credentials.email,
-              fullName: name.charAt(0).toUpperCase() + name.slice(1),
-              avatarUrl: null,
-              isSuperAdmin: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-          };
-
-          await mobileStorage.setItem("auth_session", JSON.stringify(currentMobileSession));
-          for (const listener of authListeners) {
-            listener("SIGNED_IN", currentMobileSession);
-          }
-          for (const listener of tenantListeners) {
-            listener(buildMobileSnapshot());
-          }
-          return { success: true, data: currentMobileSession };
-        }
-
         return {
           success: false,
           error: {
@@ -249,7 +202,7 @@ export const mobileAuthAdapter: AuthPort = {
       const user = data.session.user;
       const orgs = await fetchRemoteOrgs(user.id);
       currentOrganizations = orgs;
-      activeOrgId = orgs[0]?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
+      activeOrgId = orgs[0]?.id || "";
 
       currentMobileSession = {
         accessToken: data.session.access_token,

@@ -67,7 +67,7 @@ function collaborationFromRow(value: unknown): ConversationCollaboration {
 
 function auditFromRow(value: unknown, conversationId: string) {
   if (!Array.isArray(value)) return [];
-  return value.filter((item): item is ConversationDetail["auditTrail"][number] => Boolean(item && typeof item === "object" && item.conversationId === conversationId));
+  return value.filter((item): item is NonNullable<ConversationDetail["auditTrail"]>[number] => Boolean(item && typeof item === "object" && item.conversationId === conversationId));
 }
 
 function connectionState(status: string): CommunicationChannelAccount["state"] {
@@ -196,7 +196,7 @@ async function fetchDetail(context: CommunicationsContext, conversationId: strin
   };
 }
 
-async function saveConversation(context: CommunicationsContext, current: ConversationDetail, patch: Record<string, unknown>, action?: ConversationDetail["auditTrail"][number]["action"], details?: string): Promise<ConversationSummary> {
+async function saveConversation(context: CommunicationsContext, current: ConversationDetail, patch: Record<string, unknown>, action?: NonNullable<ConversationDetail["auditTrail"]>[number]["action"], details?: string): Promise<ConversationSummary> {
   const client = clientOrThrow();
   const collaboration = current.summary.collaboration ?? emptyCollaboration();
   const auditTrail = current.auditTrail ?? [];
@@ -213,7 +213,7 @@ async function saveConversation(context: CommunicationsContext, current: Convers
   return summaryFromRow({ ...current.summary, ...data, contact: current.summary.contact, collaboration });
 }
 
-async function mutateCollaboration(context: CommunicationsContext, conversationId: string, expectedVersion: number | undefined, update: (value: ConversationCollaboration) => ConversationCollaboration, action: ConversationDetail["auditTrail"][number]["action"], details?: string): Promise<ConversationDetail> {
+async function mutateCollaboration(context: CommunicationsContext, conversationId: string, expectedVersion: number | undefined, update: (value: ConversationCollaboration) => ConversationCollaboration, action: NonNullable<ConversationDetail["auditTrail"]>[number]["action"], details?: string): Promise<ConversationDetail> {
   const current = await fetchDetail(context, conversationId);
   if (!current) throw new CommunicationsAdapterError("Conversation not found.", "NOT_FOUND");
   if (expectedVersion !== undefined && current.summary.version !== expectedVersion) throw new CommunicationsAdapterError("Conversation changed. Refresh and try again.", "CONFLICT");

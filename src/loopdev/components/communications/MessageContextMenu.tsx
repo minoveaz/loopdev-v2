@@ -63,7 +63,7 @@ export function MessageContextMenu({
 
   return (
     <AdaptiveContextMenu
-      trigger={children}
+      trigger={<div className="contents">{children}</div>}
       label="Message actions"
       description="Choose an action for this message."
       actions={actions}

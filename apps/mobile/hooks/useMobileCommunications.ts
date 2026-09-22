@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  COMMUNICATIONS_LOCAL_CONTEXT,
   type CommunicationChannelAccount,
   type CommunicationSendResult,
   type CollaborationPresenceState,
@@ -12,8 +11,8 @@ import {
   type ConversationStatus,
   type ConversationSummary,
   type CollaborationAgent,
-} from "../../../src/loopdev/domains/communications";
-import { supabaseCommunicationsAdapter as localCommunicationsAdapter } from "../../../src/loopdev/domains/communications/adapter/supabase";
+} from "../../../packages/contracts/src/communications";
+import { supabaseCommunicationsAdapter as localCommunicationsAdapter } from "../../../packages/contracts/src/communications-adapter";
 import { mobileTenantContextAdapter } from "../adapters/auth";
 
 function messageFor(error: unknown): string {
@@ -36,9 +35,9 @@ export function useCommunicationsInbox(
   providedContext?: CommunicationsContext,
 ) {
   const context = providedContext ?? {
-    organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId ?? COMMUNICATIONS_LOCAL_CONTEXT.organizationId,
-    workspaceId: mobileTenantContextAdapter.getTenantContext()?.activeWorkspaceId ?? COMMUNICATIONS_LOCAL_CONTEXT.workspaceId,
-    userId: "mobile-user",
+    organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId ?? "",
+    workspaceId: mobileTenantContextAdapter.getTenantContext()?.activeWorkspaceId ?? "",
+    userId: "",
   };
   const request = useMemo(() => stableFilters(filters), [
     filters.assignee,
@@ -160,9 +159,9 @@ export function useCommunicationConversation(
   providedContext?: CommunicationsContext,
 ) {
   const context = providedContext ?? {
-    organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId ?? COMMUNICATIONS_LOCAL_CONTEXT.organizationId,
-    workspaceId: mobileTenantContextAdapter.getTenantContext()?.activeWorkspaceId ?? COMMUNICATIONS_LOCAL_CONTEXT.workspaceId,
-    userId: "mobile-user",
+    organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId ?? "",
+    workspaceId: mobileTenantContextAdapter.getTenantContext()?.activeWorkspaceId ?? "",
+    userId: "",
   };
   const [conversation, setConversation] = useState<ConversationDetail | null>(null);
   const [loading, setLoading] = useState(Boolean(conversationId));

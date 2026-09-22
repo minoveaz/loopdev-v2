@@ -1,4 +1,4 @@
-import type { CommunicationMessage } from "../../../src/loopdev/domains/communications";
+import type { CommunicationMessage } from "../../../packages/contracts/src/communications";
 import type { MobileLangCode } from "../i18n";
 
 export type TimelineMarkerType =

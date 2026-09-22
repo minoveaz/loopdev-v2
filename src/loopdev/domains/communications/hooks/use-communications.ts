@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
+import { localCommunicationsAdapter } from "../adapter/local";
 import {
   COMMUNICATIONS_LOCAL_CONTEXT,
   type CommunicationChannelAccount,
@@ -29,10 +30,19 @@ function stableFilters(filters: ConversationFilters): ConversationFilters {
   };
 }
 
+const useLocalAdapter = Boolean(
+  (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test"))
+  || (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITEST || (import.meta as any).env?.MODE === "test")),
+);
+
 export function useCommunicationsInbox(
   filters: ConversationFilters = {},
   context: CommunicationsContext = COMMUNICATIONS_LOCAL_CONTEXT,
 ) {
+  const communicationsAdapter = useLocalAdapter || context.organizationId === COMMUNICATIONS_LOCAL_CONTEXT.organizationId || context.userId === COMMUNICATIONS_LOCAL_CONTEXT.userId
+    ? localCommunicationsAdapter
+    : loopdevAdapter.communications;
+  const adapterContext = communicationsAdapter === localCommunicationsAdapter ? COMMUNICATIONS_LOCAL_CONTEXT : context;
   const request = useMemo(() => stableFilters(filters), [
     filters.assignee,
     filters.channel,
@@ -60,8 +70,8 @@ export function useCommunicationsInbox(
     setLoading(true);
     setError(null);
     void Promise.all([
-      loopdevAdapter.communications.listChannels(context),
-      loopdevAdapter.communications.listConversations(context, request),
+      communicationsAdapter.listChannels(adapterContext),
+      communicationsAdapter.listConversations(adapterContext, request),
     ]).then(([nextChannels, nextResult]) => {
       if (!active) return;
       setChannels(nextChannels);
@@ -72,7 +82,7 @@ export function useCommunicationsInbox(
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [context, reloadToken, request]);
+  }, [adapterContext, communicationsAdapter, reloadToken, request]);
 
   const update = useCallback(async (action: () => Promise<ConversationSummary>) => {
     setActionError(null);
@@ -99,28 +109,28 @@ export function useCommunicationsInbox(
   }, []);
 
   const markRead = useCallback(
-    (conversationId: string) => update(() => loopdevAdapter.communications.markConversationRead(context, conversationId)),
-    [context, update],
+    (conversationId: string) => update(() => communicationsAdapter.markConversationRead(adapterContext, conversationId)),
+    [adapterContext, update],
   );
   const toggleStar = useCallback(
-    (conversationId: string) => update(() => loopdevAdapter.communications.toggleConversationStar(context, conversationId)),
-    [context, update],
+    (conversationId: string) => update(() => communicationsAdapter.toggleConversationStar(adapterContext, conversationId)),
+    [adapterContext, update],
   );
   const changeStatus = useCallback(
     (conversationId: string, status: ConversationStatus, expectedVersion: number) =>
-      update(() => loopdevAdapter.communications.updateConversationStatus(context, conversationId, status, expectedVersion)),
-    [context, update],
+      update(() => communicationsAdapter.updateConversationStatus(adapterContext, conversationId, status, expectedVersion)),
+    [adapterContext, update],
   );
   const assignConversation = useCallback(
     (conversationId: string, assigneeUserId: string | null, assigneeName: string | null, expectedVersion: number) =>
-      update(() => loopdevAdapter.communications.assignConversation(
-        context,
+      update(() => communicationsAdapter.assignConversation(
+        adapterContext,
         conversationId,
         assigneeUserId,
         assigneeName,
         expectedVersion,
       )),
-    [context, update],
+    [adapterContext, update],
   );
 
   return {
@@ -145,6 +155,10 @@ export function useCommunicationConversation(
   conversationId: string | undefined,
   context: CommunicationsContext = COMMUNICATIONS_LOCAL_CONTEXT,
 ) {
+  const communicationsAdapter = useLocalAdapter || context.organizationId === COMMUNICATIONS_LOCAL_CONTEXT.organizationId || context.userId === COMMUNICATIONS_LOCAL_CONTEXT.userId
+    ? localCommunicationsAdapter
+    : loopdevAdapter.communications;
+  const adapterContext = communicationsAdapter === localCommunicationsAdapter ? COMMUNICATIONS_LOCAL_CONTEXT : context;
   const [conversation, setConversation] = useState<ConversationDetail | null>(null);
   const [loading, setLoading] = useState(Boolean(conversationId));
   const [error, setError] = useState<string | null>(null);
@@ -160,12 +174,12 @@ export function useCommunicationConversation(
     }
     setLoading(true);
     setError(null);
-    void loopdevAdapter.communications.getConversation(context, conversationId)
+    void communicationsAdapter.getConversation(adapterContext, conversationId)
       .then((next) => { if (active) setConversation(next); })
       .catch((cause: unknown) => { if (active) setError(messageFor(cause)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [context, conversationId, reloadToken]);
+  }, [adapterContext, communicationsAdapter, conversationId, reloadToken]);
 
   const mutate = useCallback(async (action: () => Promise<CommunicationSendResult>) => {
     setActionError(null);
@@ -195,12 +209,12 @@ export function useCommunicationConversation(
   }, []);
 
   const sendReply = useCallback(
-    (body: string, idempotencyKey?: string, content?: Parameters<typeof loopdevAdapter.communications.sendReply>[5]) => {
+    (body: string, idempotencyKey?: string, content?: Parameters<typeof communicationsAdapter.sendReply>[5]) => {
       if (!conversation) return Promise.reject(new Error("No conversation selected."));
-      return loopdevAdapter.communications.getConversation(context, conversation.summary.id).then((current) => {
+      return communicationsAdapter.getConversation(adapterContext, conversation.summary.id).then((current) => {
         if (!current) throw new Error("No conversation selected.");
-        return mutate(() => loopdevAdapter.communications.sendReply(
-          context,
+        return mutate(() => communicationsAdapter.sendReply(
+          adapterContext,
           current.summary.id,
           body,
           current.summary.version,
@@ -215,10 +229,10 @@ export function useCommunicationConversation(
   const addInternalNote = useCallback(
     (body: string, idempotencyKey?: string) => {
       if (!conversation) return Promise.reject(new Error("No conversation selected."));
-      return loopdevAdapter.communications.getConversation(context, conversation.summary.id).then((current) => {
+      return communicationsAdapter.getConversation(adapterContext, conversation.summary.id).then((current) => {
         if (!current) throw new Error("No conversation selected.");
-        return mutate(() => loopdevAdapter.communications.addInternalNote(
-          context,
+        return mutate(() => communicationsAdapter.addInternalNote(
+          adapterContext,
           current.summary.id,
           body,
           current.summary.version,
@@ -231,32 +245,32 @@ export function useCommunicationConversation(
   const reload = useCallback(() => setReloadToken((value) => value + 1), []);
   const setPresence = useCallback((state: CollaborationPresenceState, ttlMs?: number) => {
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
-    return loopdevAdapter.communications.setPresence(context, conversation.summary.id, state, ttlMs)
+    return communicationsAdapter.setPresence(adapterContext, conversation.summary.id, state, ttlMs)
       .then(setConversation);
   }, [context, conversation]);
   const setDrafting = useCallback((mode: ComposerMode | null, ttlMs?: number) => {
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
-    return loopdevAdapter.communications.setDrafting(context, conversation.summary.id, mode, ttlMs)
+    return communicationsAdapter.setDrafting(adapterContext, conversation.summary.id, mode, ttlMs)
       .then(setConversation);
   }, [context, conversation]);
   const acquireComposerLock = useCallback((expectedVersion: number, ttlMs?: number) => {
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
-    return loopdevAdapter.communications.acquireComposerLock(context, conversation.summary.id, expectedVersion, ttlMs)
+    return communicationsAdapter.acquireComposerLock(adapterContext, conversation.summary.id, expectedVersion, ttlMs)
       .then(setConversation);
   }, [context, conversation]);
   const releaseComposerLock = useCallback(() => {
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
-    return loopdevAdapter.communications.releaseComposerLock(context, conversation.summary.id).then(setConversation);
+    return communicationsAdapter.releaseComposerLock(adapterContext, conversation.summary.id).then(setConversation);
   }, [context, conversation]);
   const takeoverComposerLock = useCallback(() => {
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
-    return loopdevAdapter.communications.takeoverComposerLock(context, conversation.summary.id, conversation.summary.version)
+    return communicationsAdapter.takeoverComposerLock(adapterContext, conversation.summary.id, conversation.summary.version)
       .then(setConversation);
   }, [context, conversation]);
   const claimConversation = useCallback((expectedVersion: number) => {
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
-    return loopdevAdapter.communications.claimConversation(context, conversation.summary.id, expectedVersion)
-      .then(() => loopdevAdapter.communications.getConversation(context, conversation.summary.id))
+    return communicationsAdapter.claimConversation(adapterContext, conversation.summary.id, expectedVersion)
+      .then(() => communicationsAdapter.getConversation(adapterContext, conversation.summary.id))
       .then((next) => {
         if (next) setConversation(next);
         return next;
@@ -264,8 +278,8 @@ export function useCommunicationConversation(
   }, [context, conversation]);
   const transferConversation = useCallback((userId: string, name: string, expectedVersion: number) => {
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
-    return loopdevAdapter.communications.transferConversation(context, conversation.summary.id, userId, name, expectedVersion)
-      .then(() => loopdevAdapter.communications.getConversation(context, conversation.summary.id))
+    return communicationsAdapter.transferConversation(adapterContext, conversation.summary.id, userId, name, expectedVersion)
+      .then(() => communicationsAdapter.getConversation(adapterContext, conversation.summary.id))
       .then((next) => {
         if (next) setConversation(next);
         return next;
@@ -273,8 +287,8 @@ export function useCommunicationConversation(
   }, [context, conversation]);
   const unassignConversation = useCallback((expectedVersion: number) => {
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
-    return loopdevAdapter.communications.unassignConversation(context, conversation.summary.id, expectedVersion)
-      .then(() => loopdevAdapter.communications.getConversation(context, conversation.summary.id))
+    return communicationsAdapter.unassignConversation(adapterContext, conversation.summary.id, expectedVersion)
+      .then(() => communicationsAdapter.getConversation(adapterContext, conversation.summary.id))
       .then((next) => {
         if (next) setConversation(next);
         return next;
@@ -282,8 +296,8 @@ export function useCommunicationConversation(
   }, [context, conversation]);
   const requestHandoff = useCallback((userId: string, name: string, expectedVersion: number) => {
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
-    return loopdevAdapter.communications.requestHandoff(context, conversation.summary.id, userId, name, expectedVersion)
-      .then(() => loopdevAdapter.communications.getConversation(context, conversation.summary.id))
+    return communicationsAdapter.requestHandoff(adapterContext, conversation.summary.id, userId, name, expectedVersion)
+      .then(() => communicationsAdapter.getConversation(adapterContext, conversation.summary.id))
       .then((next) => {
         if (next) setConversation(next);
         return next;
@@ -297,21 +311,21 @@ export function useCommunicationConversation(
     if (!conversation) return Promise.reject(new Error("No conversation selected."));
     const id = conversation.summary.id;
     const version = conversation.summary.version;
-    const adapter = loopdevAdapter.communications;
+    const adapter = communicationsAdapter;
     const actionPromise = action === "addCollaborator" && agent
-      ? adapter.addConversationCollaborator(context, id, agent, version)
+      ? adapter.addConversationCollaborator(adapterContext, id, agent, version)
       : action === "removeCollaborator"
-        ? adapter.removeConversationCollaborator(context, id, userId, version)
+        ? adapter.removeConversationCollaborator(adapterContext, id, userId, version)
         : action === "addWatcher" && agent
-          ? adapter.addConversationWatcher(context, id, agent, version)
-          : adapter.removeConversationWatcher(context, id, userId, version);
+          ? adapter.addConversationWatcher(adapterContext, id, agent, version)
+          : adapter.removeConversationWatcher(adapterContext, id, userId, version);
     return actionPromise
-      .then(() => adapter.getConversation(context, id))
+      .then(() => adapter.getConversation(adapterContext, id))
       .then((next) => {
         if (next) setConversation(next);
         return next;
       });
-  }, [context, conversation]);
+  }, [communicationsAdapter, context, conversation]);
 
   return {
     conversation,

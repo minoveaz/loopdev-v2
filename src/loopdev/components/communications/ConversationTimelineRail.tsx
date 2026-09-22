@@ -12,7 +12,7 @@ import {
 import type { CommunicationMessage } from "@/loopdev/domains/communications";
 import { formatDate, formatRelative } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import { useI18n } from "@/i18n";
+import { useT } from "@/i18n";
 
 type TimelineMarkerType = "day" | NonNullable<CommunicationMessage["contentType"]>;
 
@@ -99,8 +99,8 @@ export function buildConversationTimelineMarkers(messages: CommunicationMessage[
 }
 
 export function ConversationTimelineRail({ messages, onOpenDetails }: ConversationTimelineRailProps) {
-  const { lang, t } = useI18n();
-  const locale = lang === "es" ? "es" : "en";
+  const t = useT();
+  const locale = typeof document !== "undefined" && document.documentElement.lang === "es" ? "es" : "en";
   const markers = buildConversationTimelineMarkers(messages, locale);
   if (markers.length < 2) return null;
 

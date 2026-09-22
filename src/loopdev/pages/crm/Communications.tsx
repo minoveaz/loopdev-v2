@@ -433,7 +433,7 @@ export default function Communications() {
   const filters = useMemo(() => ({ channel, status, assignee, query, unreadOnly, starredOnly }), [assignee, channel, query, starredOnly, status, unreadOnly]);
   const inbox = useCommunicationsInbox(filters, communicationsContext);
   const selectedSummary = inbox.conversations.find((item) => item.id === conversationId) ?? null;
-  const selectedId = selectedSummary?.id ?? (conversationId && inbox.loading ? conversationId : undefined);
+  const selectedId = conversationId ?? selectedSummary?.id;
   const detail = useCommunicationConversation(selectedId, communicationsContext);
   const selectedAccount = inbox.channels.find((item) => item.id === selectedSummary?.accountId);
   const selectedChannelAccount = inbox.channels.find((item) => item.channel === channel);
@@ -453,9 +453,6 @@ export default function Communications() {
       // Keep the root inbox useful without forcing a route change before data is ready.
       return;
     }
-    if (conversationId && !inbox.loading && !selectedSummary && inbox.conversations.length > 0) {
-      navigate("/app/sales-crm/communications", { replace: true });
-    }
   }, [conversationId, inbox.conversations, inbox.loading, navigate, selectedSummary]);
 
   const { markRead } = inbox;
@@ -471,7 +468,7 @@ export default function Communications() {
   const lastActiveDetailRef = useRef<ConversationDetail | null>(null);
   if (activeDetail) lastActiveDetailRef.current = activeDetail;
   const renderedDetail = activeDetail ?? lastActiveDetailRef.current;
-  const renderedSummary = selectedSummary ?? renderedDetail?.summary ?? null;
+  const renderedSummary = renderedDetail?.summary ?? selectedSummary;
   const actionSummary = activeDetail?.summary ?? selectedSummary;
   const presenceDetail = detail.conversation;
   const updatePresence = detail.setPresence;
@@ -725,26 +722,26 @@ export default function Communications() {
               <LoadingState label={t("crm.customer360.communications.loadingConversation")} />
             ) : detail.error ? (
               <EmptyState variant="plain" size="lg" icon={AlertCircle} title={t("crm.customer360.communications.loadConversationError")} description={detail.error} action={<Button variant="outline" size="sm" onClick={detail.reload}>{t("common.actions.retry")}</Button>} />
-            ) : !activeDetail || !selectedSummary ? (
+            ) : !activeDetail || !renderedSummary ? (
                   <EmptyState variant="plain" size="lg" icon={Inbox} title={t("crm.customer360.communications.conversationUnavailable")} description={t("crm.customer360.communications.conversationUnavailableDescription")} />
             ) : (
               <>
                 <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border/80 bg-card px-3 py-3 sm:px-5">
                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 lg:hidden" aria-label="Back to conversations" onClick={() => navigate("/app/sales-crm/communications")}><ArrowLeft className="h-4 w-4" /></Button>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">{initials(selectedSummary.contact.displayName)}</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">{initials(renderedSummary.contact.displayName)}</span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-display text-base font-semibold text-foreground">{selectedSummary.contact.displayName}</h2><StatusBadge tone={statusTone[selectedSummary.status]} dot>{statusLabels[selectedSummary.status]}</StatusBadge></div>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{selectedAccount ? selectedAccount.label : CHANNEL_LABELS[selectedSummary.channel]} · {selectedSummary.contact.phone ?? selectedSummary.contact.email ?? "No contact detail"}</p>
+                    <div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-display text-base font-semibold text-foreground">{renderedSummary.contact.displayName}</h2><StatusBadge tone={statusTone[renderedSummary.status]} dot>{statusLabels[renderedSummary.status]}</StatusBadge></div>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{selectedAccount ? selectedAccount.label : CHANNEL_LABELS[renderedSummary.channel]} · {renderedSummary.contact.phone ?? renderedSummary.contact.email ?? "No contact detail"}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <span
                       className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[9px] font-semibold text-muted-foreground"
-                      aria-label={selectedSummary.assignedToName ? `Responsible: ${selectedSummary.assignedToName}` : "Responsible: unassigned"}
-                      title={selectedSummary.assignedToName ? `Responsible: ${selectedSummary.assignedToName}` : "Responsible: unassigned"}
+                      aria-label={renderedSummary.assignedToName ? `Responsible: ${renderedSummary.assignedToName}` : "Responsible: unassigned"}
+                      title={renderedSummary.assignedToName ? `Responsible: ${renderedSummary.assignedToName}` : "Responsible: unassigned"}
                     >
-                      {selectedSummary.assignedToName ? initials(selectedSummary.assignedToName) : "—"}
+                      {renderedSummary.assignedToName ? initials(renderedSummary.assignedToName) : "—"}
                     </span>
-                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", selectedSummary.starred && "text-gold")} aria-label={selectedSummary.starred ? "Unstar conversation" : "Star conversation"} onClick={() => void inbox.toggleStar(selectedSummary.id)}><Star className={cn("h-4 w-4", selectedSummary.starred && "fill-current")} /></Button>
+                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", renderedSummary.starred && "text-gold")} aria-label={renderedSummary.starred ? "Unstar conversation" : "Star conversation"} onClick={() => void inbox.toggleStar(renderedSummary.id)}><Star className={cn("h-4 w-4", renderedSummary.starred && "fill-current")} /></Button>
                     {!contextView && (
                       <Button
                         variant="ghost"
@@ -773,7 +770,7 @@ export default function Communications() {
                 </header>
                 {selectedAccount && selectedAccount.state !== "connected" && <div className="flex items-center gap-2 border-b border-warning/20 bg-warning-soft px-5 py-2 text-xs text-warning"><ShieldAlert className="h-3.5 w-3.5 shrink-0" />{selectedAccount.statusMessage}. Reading is available; provider actions remain disabled.</div>}
                 <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-                  <div ref={threadScrollRef} onScroll={(event) => { threadScrollPositions.current[selectedSummary.id] = event.currentTarget.scrollTop; }} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 sm:py-5">
+                  <div ref={threadScrollRef} onScroll={(event) => { threadScrollPositions.current[renderedSummary.id] = event.currentTarget.scrollTop; }} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 sm:py-5">
                     <ol className="space-y-4">
                       {activeDetail.messages.filter((message) => message.direction !== "internal").map((message, index, visibleMessages) => {
                         const outbound = message.direction === "outbound";

@@ -35,7 +35,7 @@ import { useMobileI18n } from "../../i18n";
 import type {
   CommunicationMessage,
   ConversationSummary,
-} from "../../../../src/loopdev/domains/communications";
+} from "../../../../packages/contracts/src/communications";
 import {
   buildConversationTimelineMarkers,
   filterTimelineMarkers,

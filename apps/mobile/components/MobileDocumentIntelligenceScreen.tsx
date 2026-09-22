@@ -41,7 +41,6 @@ import { MobileSearchBar } from "./ui/MobileSearchBar";
 import { MobilePageTabs } from "./ui/MobilePageTabs";
 import { MobileBackLink } from "./ui/MobileBackLink";
 import {
-  localDocumentIntelligenceAdapter,
   EXPORT_PROFILES,
   DEFAULT_EXPORT_PROFILE_ID,
   splitSurnames,
@@ -54,6 +53,7 @@ import {
   type ExportProfileId,
   type ExportProfileField,
 } from "../domains/document-intelligence";
+import { mobileDocumentIntelligenceAdapter } from "../adapters/document-intelligence";
 
 interface MobileDocumentIntelligenceScreenProps {
   onBack: () => void;
@@ -148,7 +148,7 @@ export function MobileDocumentIntelligenceScreen({
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
-      const page = await localDocumentIntelligenceAdapter.listExtractions({
+      const page = await mobileDocumentIntelligenceAdapter.listExtractions({
         organizationId: "local-development-organization",
         limit: 50,
       });
@@ -228,7 +228,7 @@ export function MobileDocumentIntelligenceScreen({
     setProgressPercent(100);
 
     try {
-      const result = await localDocumentIntelligenceAdapter.startExtraction({
+      const result = await mobileDocumentIntelligenceAdapter.startExtraction({
         organizationId: "local-development-organization",
         sourceSuite: "standalone",
         frontFile: selectedFile,
@@ -302,7 +302,7 @@ export function MobileDocumentIntelligenceScreen({
   const handleConfirmExtraction = async () => {
     if (!currentExtraction) return;
     try {
-      const res = await localDocumentIntelligenceAdapter.confirmExtraction({
+      const res = await mobileDocumentIntelligenceAdapter.confirmExtraction({
         extractionId: currentExtraction.id,
         fields: editableFields,
       });
@@ -336,7 +336,7 @@ export function MobileDocumentIntelligenceScreen({
 
   // Delete extraction
   const handleDeleteExtraction = async (id: string) => {
-    await localDocumentIntelligenceAdapter.deleteExtraction(id);
+    await mobileDocumentIntelligenceAdapter.deleteExtraction(id);
     loadHistory();
   };
 

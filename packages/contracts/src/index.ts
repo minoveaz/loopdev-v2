@@ -11,3 +11,5 @@ export * from "./notes";
 export * from "./auth-port";
 export * from "./tasks";
 export * from "./activity-timeline";
+export * from "./communications";
+export * from "./communications-adapter";

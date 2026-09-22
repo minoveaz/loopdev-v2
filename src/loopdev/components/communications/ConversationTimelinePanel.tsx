@@ -34,11 +34,11 @@ function useDesktopLayout() {
 
   return desktop;
 }
-import { useI18n, useT } from "@/i18n";
+import { useT } from "@/i18n";
 
 function TimelineBody({ messages, onOpenChange, contextView, onContextViewChange }: Omit<ConversationTimelinePanelProps, "open">) {
-  const { lang, t } = useI18n();
-  const locale = lang === "es" ? "es" : "en";
+  const t = useT();
+  const locale = typeof document !== "undefined" && document.documentElement.lang === "es" ? "es" : "en";
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<TimelineCategory>("all");
   const markers = buildConversationTimelineMarkers(messages, locale);

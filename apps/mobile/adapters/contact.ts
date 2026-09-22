@@ -46,7 +46,7 @@ function mapRowToContact(row: any): ContactRecord {
 
   return {
     id: row.id,
-    organizationId: row.organization_id || "80fce911-57c5-4a83-809f-78df6a3736f7",
+    organizationId: row.organization_id,
     firstName: firstName || "Contacto",
     lastName,
     secondLastName: row.second_last_name || null,

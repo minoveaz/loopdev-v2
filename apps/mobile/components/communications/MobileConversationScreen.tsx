@@ -50,8 +50,8 @@ import {
   COMMUNICATIONS_LOCAL_CONTEXT,
   type CommunicationMessage,
   type ConversationStatus,
-} from "../../../../src/loopdev/domains/communications";
-import { supabaseCommunicationsAdapter as communicationsAdapter } from "../../../../src/loopdev/domains/communications/adapter/supabase";
+} from "../../../../packages/contracts/src/communications";
+import { supabaseCommunicationsAdapter as communicationsAdapter } from "../../../../packages/contracts/src/communications-adapter";
 import { mobileTenantContextAdapter } from "../../adapters/auth";
 import { buildConversationTimelineMarkers } from "../../domains/communicationsTimeline";
 

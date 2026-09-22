@@ -45,7 +45,8 @@
     "delivery:validate": "node scripts/delivery-run.mjs validate",
     "delivery:report": "node scripts/delivery-run.mjs report",
     "delivery:resume": "node scripts/delivery-run.mjs resume",
-    "smoke:routes": "node scripts/smoke-routes.mjs"
+    "smoke:routes": "node scripts/smoke-routes.mjs",
+    "smoke:crm-authenticated": "node scripts/smoke-crm-authenticated.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -39,7 +39,7 @@ import type {
   ConversationAssigneeFilter,
   ConversationStatus,
   ConversationSummary,
-} from "../../../../src/loopdev/domains/communications";
+} from "../../../../packages/contracts/src/communications";
 
 interface Props {
   onSelectConversation: (conversationId: string) => void;

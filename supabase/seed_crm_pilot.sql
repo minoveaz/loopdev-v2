@@ -45,7 +45,7 @@ begin
   insert into public.organization_memberships (organization_id, user_id, role, status)
   select target_organization_id, id, 'owner', 'active'
   from auth.users
-  where lower(email) = 'admin@localhost.com'
+  where lower(email) in ('admin@localhost.com', 'admin@loop.dev')
   on conflict (organization_id, user_id) do update
     set role = excluded.role,
         status = excluded.status;

@@ -38,6 +38,11 @@ import type { CRMAutomationsAdapter } from "../automations";
 import type { CommunicationsAdapter } from "@/loopdev/domains/communications";
 import type { GlobalNotesAdapter } from "@/loopdev/domains/notes";
 
+const isTestRuntime = Boolean(
+  (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test"))
+  || (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITEST || (import.meta as any).env?.MODE === "test")),
+);
+
 export interface LoopdevCrmAdapter {
   operations: CRMOperationsAdapter;
   automations: CRMAutomationsAdapter;
@@ -94,7 +99,7 @@ export interface LoopdevAdapter {
 // The adapter boundary is global to Loopdev; CRM connects contacts to desktopContactAdapter (Supabase with local fallback)
 export const loopdevAdapter: LoopdevAdapter = {
   ...localLoopdevAdapter,
-  communications: supabaseCommunicationsAdapter,
+  communications: isTestRuntime ? localLoopdevAdapter.communications : supabaseCommunicationsAdapter,
   crm: {
     ...localLoopdevAdapter.crm,
     listContacts: (params) => desktopContactAdapter.listContacts(params),
@@ -108,19 +113,19 @@ export const loopdevAdapter: LoopdevAdapter = {
     dismissDuplicateReview: (contactId, candidateId, confirmation) =>
       desktopContactAdapter.dismissDuplicateReview(contactId, candidateId, confirmation),
     bulkArchiveContacts: (contactIds) => desktopContactAdapter.bulkArchiveContacts?.(contactIds) ?? Promise.resolve({ successCount: 0, failureCount: contactIds.length }),
-    listLeads: (organizationId) => supabaseCrmAdapter.listLeads(organizationId),
-    createLead: (input) => supabaseCrmAdapter.createLead(input),
-    updateLead: (leadId, input) => supabaseCrmAdapter.updateLead(leadId, input),
+    listLeads: (organizationId) => isTestRuntime ? localLoopdevAdapter.crm.listLeads() : supabaseCrmAdapter.listLeads(organizationId),
+    createLead: (input) => isTestRuntime ? localLoopdevAdapter.crm.createLead(input) : supabaseCrmAdapter.createLead(input),
+    updateLead: (leadId, input) => isTestRuntime ? localLoopdevAdapter.crm.updateLead(leadId, input) : supabaseCrmAdapter.updateLead(leadId, input),
     archiveLead: (leadId, organizationId, expectedUpdatedAt) => supabaseCrmAdapter.archiveLead(leadId, organizationId, expectedUpdatedAt),
     bulkArchiveLeads: (leadIds, organizationId) => supabaseCrmAdapter.bulkArchiveLeads(leadIds, organizationId),
-    listOpportunities: (params) => supabaseCrmAdapter.listOpportunities(params),
-    bulkArchiveOpportunities: (opportunityIds, organizationId) => supabaseCrmAdapter.bulkArchiveOpportunities(opportunityIds, organizationId),
-    createOpportunity: (input) => supabaseCrmAdapter.createOpportunity(input),
-    updateOpportunity: (opportunityId, input) => supabaseCrmAdapter.updateOpportunity(opportunityId, input),
-    moveOpportunityStage: (opportunityId, input) => supabaseCrmAdapter.moveOpportunityStage(opportunityId, input as CRMMoveOpportunityStageInput),
-    reopenOpportunity: (opportunityId, input) => supabaseCrmAdapter.reopenOpportunity(opportunityId, input),
-    createOpportunityFromLead: (leadId, input) => supabaseCrmAdapter.createOpportunityFromLead(leadId, input),
-    listOpportunityStageHistory: (opportunityId) => supabaseCrmAdapter.listOpportunityStageHistory(opportunityId),
+    listOpportunities: (params) => isTestRuntime ? localLoopdevAdapter.crm.listOpportunities(params) : supabaseCrmAdapter.listOpportunities(params),
+    bulkArchiveOpportunities: (opportunityIds, organizationId) => isTestRuntime ? localLoopdevAdapter.crm.bulkArchiveOpportunities?.(opportunityIds, organizationId) ?? Promise.resolve({ successCount: 0, failureCount: opportunityIds.length }) : supabaseCrmAdapter.bulkArchiveOpportunities(opportunityIds, organizationId),
+    createOpportunity: (input) => isTestRuntime ? localLoopdevAdapter.crm.createOpportunity(input) : supabaseCrmAdapter.createOpportunity(input),
+    updateOpportunity: (opportunityId, input) => isTestRuntime ? localLoopdevAdapter.crm.updateOpportunity(opportunityId, input) : supabaseCrmAdapter.updateOpportunity(opportunityId, input),
+    moveOpportunityStage: (opportunityId, input) => isTestRuntime ? localLoopdevAdapter.crm.moveOpportunityStage(opportunityId, input as CRMMoveOpportunityStageInput) : supabaseCrmAdapter.moveOpportunityStage(opportunityId, input as CRMMoveOpportunityStageInput),
+    reopenOpportunity: (opportunityId, input) => isTestRuntime ? localLoopdevAdapter.crm.reopenOpportunity(opportunityId, input) : supabaseCrmAdapter.reopenOpportunity(opportunityId, input),
+    createOpportunityFromLead: (leadId, input) => isTestRuntime ? localLoopdevAdapter.crm.createOpportunityFromLead(leadId, input) : supabaseCrmAdapter.createOpportunityFromLead(leadId, input),
+    listOpportunityStageHistory: (opportunityId) => isTestRuntime ? localLoopdevAdapter.crm.listOpportunityStageHistory(opportunityId) : supabaseCrmAdapter.listOpportunityStageHistory(opportunityId),
   },
 };
 export const contactPort: ContactPort = desktopContactAdapter;

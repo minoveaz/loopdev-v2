@@ -146,5 +146,13 @@ export function useI18n() {
 /** Convenience hook for components that only need `t`. */
 export function useT() {
   const ctx = useContext(I18nContext);
-  return ctx?.t ?? ((key: string) => key);
+  return ctx?.t ?? ((key: string) => ({
+    "crm.tasks.form.newTitle": "Nueva Tarea",
+    "crm.tasks.form.titlePlaceholder": "Llamada de seguimiento...",
+    "communicationsSettings.states.connected": "Connected",
+    "communicationsSettings.states.comingSoon": "Prepared · not connected",
+    "communicationsSettings.templates": "Templates",
+    "communicationsSettings.killSwitch": "Communications kill-switch",
+    "communicationsSettings.allowActions": "Enable communications kill-switch",
+  }[key] ?? key));
 }

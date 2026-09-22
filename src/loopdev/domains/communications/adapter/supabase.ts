@@ -26,7 +26,7 @@ function isUuid(value: string | null | undefined): value is string {
 }
 
 function isLocal(context: CommunicationsContext): boolean {
-  return context.organizationId === LOCAL_ORGANIZATION_ID || !isUuid(context.organizationId);
+  return context.organizationId === LOCAL_ORGANIZATION_ID;
 }
 
 function clientOrThrow() {

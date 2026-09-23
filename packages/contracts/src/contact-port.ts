@@ -155,10 +155,11 @@ export function validateContactMutationInput(input: {
   firstName?: string | null;
   email?: string | null;
   phone?: string | null;
+  documentNumber?: string | null;
 }): Extract<ContactMutationResult, { status: "validation-error" }> | null {
   const fieldErrors: Record<string, string> = {};
   if (!input.firstName?.trim()) fieldErrors.firstName = "First name is required.";
-  if (!input.email?.trim() && !input.phone?.trim()) {
+  if (!input.email?.trim() && !input.phone?.trim() && !input.documentNumber?.trim()) {
     fieldErrors.email = "Email or phone is required.";
     fieldErrors.phone = "Email or phone is required.";
   }

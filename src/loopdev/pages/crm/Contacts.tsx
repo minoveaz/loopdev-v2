@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Archive, AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote, Trash2 } from "lucide-react";
 import { contactActions } from "../../../../packages/contracts/src/contact-actions";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { loopdevAdapter, contactName, type CRMContact, type CRMCreateContactInput, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import {
   DataCard,
@@ -54,8 +54,10 @@ export default function SalesCRMContacts() {
   const currentOrgId = activeOrganization?.id || (!isVitest ? "80fce911-57c5-4a83-809f-78df6a3736f7" : "local-development-organization");
   const { trail } = useBreadcrumbs();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [editorOpen, setEditorOpen] = useState(false);
+  const [initialContactValues, setInitialContactValues] = useState<Partial<ContactFormValues> | undefined>();
   const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<CRMContact | null>(null);
@@ -104,6 +106,25 @@ export default function SalesCRMContacts() {
     });
     return () => { active = false; };
   }, [contacts, currentOrgId]);
+
+  useEffect(() => {
+    const state = location.state as { documentFields?: Record<string, string | null> } | null;
+    if (!state?.documentFields) return;
+    const fields = state.documentFields;
+    setInitialContactValues({
+      firstName: fields.givenNames || fields.fullName?.split(/\s+/)[0] || "",
+      lastName: fields.firstSurname || fields.surnames || "",
+      secondLastName: fields.secondSurname || "",
+      documentType: fields.documentType === "passport" ? "passport" : fields.documentType || "",
+      documentNumber: fields.documentNumber || "",
+      birthDate: fields.birthDate || "",
+      gender: fields.sex === "M" ? "male" : fields.sex === "F" ? "female" : "",
+      country: fields.issuingCountry === "COL" ? "CO" : fields.issuingCountry || "",
+    });
+    setEditingContact(null);
+    setEditorOpen(true);
+    navigate(location.pathname + location.search, { replace: true, state: null });
+  }, [location.pathname, location.search, location.state, navigate]);
 
   useEffect(() => {
     setSelectedContactIds(new Set());
@@ -162,6 +183,7 @@ export default function SalesCRMContacts() {
   const openCreate = () => {
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingContact(null);
+    setInitialContactValues(undefined);
     setEditorOpen(true);
   };
 
@@ -575,6 +597,7 @@ export default function SalesCRMContacts() {
       <ContactFormDrawer
         open={editorOpen}
         contact={editingContact}
+        initialValues={initialContactValues}
         onOpenChange={(open) => {
           setEditorOpen(open);
           if (!open) setEditingContact(null);

@@ -60,7 +60,7 @@ export const contactFormSections: readonly ContactFormSectionDefinition[] = [
   },
   {
     id: "channels", label: "Contact channels", eyebrow: "Communication",
-    description: "At least an email address or phone number is required.", iconKey: "contact", meta: "At least one",
+    description: "Add an email, phone number, or identity document.", iconKey: "contact", meta: "At least one",
     fields: [
       field("email", "Primary email", "email", false, "email-or-phone"),
       field("secondaryEmail", "Secondary email", "email"), field("phone", "Primary phone", "phone", false, "email-or-phone"),
@@ -102,9 +102,9 @@ export function validateContactForm(values: ContactFormValues): ContactFormError
   });
   if (values.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) errors.email = "Enter a valid email.";
   if (values.secondaryEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.secondaryEmail.trim())) errors.secondaryEmail = "Enter a valid email.";
-  if (!values.email.trim() && !values.phone.trim()) {
-    errors.email = "Email or phone is required.";
-    errors.phone = "Email or phone is required.";
+  if (!values.email.trim() && !values.phone.trim() && !values.documentNumber.trim()) {
+    errors.email = "Email, phone, or document number is required.";
+    errors.phone = "Email, phone, or document number is required.";
   }
   return errors;
 }

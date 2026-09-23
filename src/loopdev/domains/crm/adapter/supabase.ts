@@ -21,6 +21,20 @@ function isUUID(str?: string | null): boolean {
   return typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 }
 
+function normalizeDateForDatabase(value: string | null | undefined): string | null {
+  const normalized = value?.trim() ?? "";
+  if (!normalized) return null;
+  const dayMonthYear = normalized.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);
+  if (dayMonthYear) {
+    return `${dayMonthYear[3]}-${dayMonthYear[2].padStart(2, "0")}-${dayMonthYear[1].padStart(2, "0")}`;
+  }
+  const yearMonthDay = normalized.match(/^(\d{4})[/.\-](\d{1,2})[/.\-](\d{1,2})$/);
+  if (yearMonthDay) {
+    return `${yearMonthDay[1]}-${yearMonthDay[2].padStart(2, "0")}-${yearMonthDay[3].padStart(2, "0")}`;
+  }
+  return normalized;
+}
+
 function resolveOrgId(explicit?: string | null): string {
   if (explicit && isUUID(explicit)) return explicit;
   try {
@@ -435,7 +449,7 @@ export function createDesktopContactAdapter(): ContactPort {
           country: input.country?.trim() || null,
           document_type: input.documentType?.trim() || null,
           document_number: input.documentNumber?.trim() || null,
-          birth_date: input.birthDate?.trim() || null,
+          birth_date: normalizeDateForDatabase(input.birthDate),
           gender: input.gender?.trim() || null,
           attributes: input.attributes || {},
         };
@@ -513,7 +527,7 @@ export function createDesktopContactAdapter(): ContactPort {
         if (patch.country !== undefined) payload.country = patch.country?.trim() || null;
         if (patch.documentType !== undefined) payload.document_type = patch.documentType?.trim() || null;
         if (patch.documentNumber !== undefined) payload.document_number = patch.documentNumber?.trim() || null;
-        if (patch.birthDate !== undefined) payload.birth_date = patch.birthDate?.trim() || null;
+        if (patch.birthDate !== undefined) payload.birth_date = normalizeDateForDatabase(patch.birthDate);
         if (patch.gender !== undefined) payload.gender = patch.gender?.trim() || null;
         if (patch.attributes !== undefined) payload.attributes = patch.attributes;
 

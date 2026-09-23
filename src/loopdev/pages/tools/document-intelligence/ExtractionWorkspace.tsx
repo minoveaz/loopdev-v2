@@ -81,19 +81,7 @@ export default function DocumentIntelligenceExtractionWorkspace() {
   };
 
   const createContact = async (fields: IdentityDocumentFields) => {
-    setContactActionLoading(true);
-    setContactMessage(null);
-    try {
-      const input = contactInputFromFields(fields);
-      const result = await loopdevAdapter.crm.createContact(input);
-      if (result.status !== "success") throw new Error(result.message);
-      setContactMessage(`Contacto creado: ${result.contact.firstName} ${result.contact.lastName ?? ""}`);
-      setContactMatches([]);
-    } catch (error) {
-      setContactMessage(error instanceof Error ? error.message : "No se pudo crear el contacto.");
-    } finally {
-      setContactActionLoading(false);
-    }
+    navigate("/app/sales-crm/contacts", { state: { documentFields: fields } });
   };
 
   const linkExistingContact = (contact: CRMContact) => {

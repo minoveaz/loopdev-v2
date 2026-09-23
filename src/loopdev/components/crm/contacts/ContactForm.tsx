@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { FormSection } from "@/components/common";
+import { useT } from "@/i18n";
 
 export type { ContactFormValues };
 const contactFormResolver: Resolver<ContactFormValues> = async (values) => {
@@ -46,7 +47,7 @@ function valuesFromContact(contact: CRMContact | null | undefined): ContactFormV
     preferredName: contact.preferredName ?? "",
     documentType: normalizeDocumentType(contact.documentType),
     documentNumber: contact.documentNumber ?? "",
-    birthDate: contact.birthDate ?? "",
+    birthDate: normalizeDateInput(contact.birthDate),
     gender: normalizeGender(contact.gender),
     email: contact.email ?? "",
     secondaryEmail: contact.secondaryEmail ?? "",
@@ -102,8 +103,17 @@ function optionalValue(value: string): string | null {
   return value.trim() || null;
 }
 
+function normalizeDateInput(value: string | null | undefined): string {
+  const normalized = value?.trim() ?? "";
+  const match = normalized.match(/^(\d{1,2})[/\.\-](\d{1,2})[/\.\-](\d{4})$/);
+  return match
+    ? `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`
+    : normalized;
+}
+
 interface ContactFormProps {
   contact?: CRMContact | null;
+  initialValues?: Partial<ContactFormValues>;
   onCancel: () => void;
   onSubmit: (values: ContactFormValues) => Promise<CRMContactMutationResult>;
   onSuccess: (contact: CRMContact) => void;
@@ -113,11 +123,15 @@ interface ContactFormProps {
 
 export type ContactSectionStats = { completed: number; total: number; errors: number; status: "error" | "complete" | "progress" | "neutral" };
 
-export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyChange, onSectionStatsChange }: ContactFormProps) {
+export function ContactForm({ contact, initialValues, onCancel, onSubmit, onSuccess, onDirtyChange, onSectionStatsChange }: ContactFormProps) {
   const organizationId = "local-development-organization";
+  const t = useT();
+  const formInitialValues = contact
+    ? valuesFromContact(contact)
+    : { ...emptyContactFormValues, ...initialValues, birthDate: normalizeDateInput(initialValues?.birthDate) };
   const form = useForm<ContactFormValues>({
     resolver: contactFormResolver,
-    defaultValues: valuesFromContact(contact),
+    defaultValues: formInitialValues,
   });
   const { formState } = form;
   const values = form.watch();
@@ -133,12 +147,17 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
   const { items: subdivisions } = useSubdivisions(countryCode, organizationId);
   const { items: cities } = useCities(countryCode, form.watch("stateProvince") || null, "", organizationId);
   const { items: documentTypes } = useDocumentTypes(countryCode, organizationId);
+  const documentTypeItems = documentTypes.some((item) => item.code === "passport")
+    ? documentTypes
+    : [{ code: "passport", label: t("common.loopdev.documentIntelligence.passport") }, ...documentTypes];
   const { items: genderOptions } = useGenderOptions(organizationId);
   const { items: languages } = useLanguages(organizationId);
 
   useEffect(() => {
-    form.reset(valuesFromContact(contact));
-  }, [contact, form]);
+    form.reset(contact
+      ? valuesFromContact(contact)
+      : { ...emptyContactFormValues, ...initialValues, birthDate: normalizeDateInput(initialValues?.birthDate) });
+  }, [contact, form, initialValues]);
 
   useEffect(() => {
     onDirtyChange?.(formState.isDirty);
@@ -222,7 +241,7 @@ export function ContactForm({ contact, onCancel, onSubmit, onSuccess, onDirtyCha
   const iconByKey = { user: UserRound, contact: Contact, building: Building2, "map-pin": MapPin } as const;
   const renderField = (id: keyof ContactFormValues) => {
     const definition = contactFormSections.flatMap((section) => section.fields).find((item) => item.id === id)!;
-    if (id === "documentType") return <FormField key={id} control={form.control} name={id} render={({ field }) => <FormItem><FormLabel>{definition.label}</FormLabel><ReferenceSelect items={documentTypes} value={field.value} onValueChange={field.onChange} placeholder="Select document type" aria-label={definition.label} /><FormMessage /></FormItem>} />;
+    if (id === "documentType") return <FormField key={id} control={form.control} name={id} render={({ field }) => <FormItem><FormLabel>{definition.label}</FormLabel><ReferenceSelect items={documentTypeItems} value={field.value} onValueChange={field.onChange} placeholder="Select document type" aria-label={definition.label} /><FormMessage /></FormItem>} />;
     if (id === "gender") return <FormField key={id} control={form.control} name={id} render={({ field }) => <FormItem><FormLabel>{definition.label}</FormLabel><ReferenceSelect items={genderOptions} value={field.value} onValueChange={field.onChange} placeholder="Select gender" aria-label={definition.label} /><FormMessage /></FormItem>} />;
     if (id === "preferredLanguage") return <FormField key={id} control={form.control} name={id} render={({ field }) => <FormItem><FormLabel>{definition.label}</FormLabel><ReferenceSelect items={languages} value={field.value} onValueChange={field.onChange} placeholder="Select preferred language" aria-label={definition.label} /><FormMessage /></FormItem>} />;
     if (id === "preferredChannel") return <FormField key={id} control={form.control} name={id} render={({ field }) => <FormItem><FormLabel>{definition.label}</FormLabel><Select value={field.value} onValueChange={field.onChange}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="email">Email</SelectItem><SelectItem value="phone">Phone</SelectItem><SelectItem value="whatsapp">WhatsApp</SelectItem></SelectContent></Select><FormMessage /></FormItem>} />;

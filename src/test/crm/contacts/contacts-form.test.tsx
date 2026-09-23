@@ -43,10 +43,12 @@ const success: CRMContactMutationResult = { status: "success", contact };
 function renderForm(
   onSubmit: (values: Record<string, unknown>) => Promise<CRMContactMutationResult>,
   selectedContact?: CRMContact | null,
+  initialValues?: Partial<import("@/loopdev/components/crm/contacts/ContactForm").ContactFormValues>,
 ) {
   return render(
     <ContactForm
       contact={selectedContact}
+      initialValues={initialValues}
       onCancel={vi.fn()}
       onSubmit={onSubmit}
       onSuccess={vi.fn()}
@@ -89,6 +91,22 @@ describe("ContactForm", () => {
     expect(onSubmit.mock.calls[0][0]).toMatchObject({ firstName: "Augusta", documentNumber: "P-100" });
   });
 
+  it("loads extracted passport values into a new contact form", () => {
+    const onSubmit = vi.fn().mockResolvedValue(success);
+    renderForm(onSubmit, null, {
+      firstName: "Valentina",
+      lastName: "Gómez",
+      secondLastName: "Rivera",
+      documentType: "passport",
+      documentNumber: "AS4827316",
+      country: "CO",
+    });
+
+    expect(screen.getByLabelText("First name *")).toHaveValue("Valentina");
+    expect(screen.getByLabelText("Last name")).toHaveValue("Gómez");
+    expect(screen.getByLabelText("Document number")).toHaveValue("AS4827316");
+  });
+
   it("blocks invalid submission and shows field errors", async () => {
     const onSubmit = vi.fn().mockResolvedValue(success);
     renderForm(onSubmit);
@@ -96,7 +114,7 @@ describe("ContactForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create contact" }));
 
     expect(await screen.findByText("First name is required.")).toBeVisible();
-    expect(screen.getAllByText("Email or phone is required.")).toHaveLength(2);
+    expect(screen.getAllByText("Email, phone, or document number is required.")).toHaveLength(2);
     expect(onSubmit).not.toHaveBeenCalled();
   });
 

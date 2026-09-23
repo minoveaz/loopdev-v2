@@ -9,6 +9,7 @@ import { contactActions } from "../../../../../packages/contracts/src/contact-ac
 interface ContactFormDrawerProps {
   open: boolean;
   contact?: CRMContact | null;
+  initialValues?: Partial<ContactFormValues>;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: ContactFormValues) => Promise<CRMContactMutationResult>;
   onSuccess: (contact: CRMContact) => void;
@@ -18,6 +19,7 @@ interface ContactFormDrawerProps {
 export function ContactFormDrawer({
   open,
   contact,
+  initialValues,
   onOpenChange,
   onSubmit,
   onSuccess,
@@ -77,6 +79,7 @@ export function ContactFormDrawer({
       {({ requestClose }) => (
         <ContactForm
           contact={contact}
+          initialValues={initialValues}
           onCancel={requestClose}
           onSubmit={onSubmit}
           onSuccess={onSuccess}

@@ -1,21 +1,18 @@
 import { useRef, useState, type DragEvent, type ChangeEvent } from "react";
-import { UploadCloud, Clipboard, FileText, Sparkles } from "lucide-react";
+import { UploadCloud, Clipboard, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DEMO_DOCUMENT_FIXTURES } from "@/loopdev/domains/document-intelligence/data/fixtures";
 import { useT } from "@/i18n";
 
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/svg+xml", "application/pdf"];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 interface DocumentDropzoneProps {
   onFileSelected: (file: File) => void;
-  onSelectFixture: (fixtureId: string) => void;
   compact?: boolean;
 }
 
 export function DocumentDropzone({
   onFileSelected,
-  onSelectFixture,
   compact = false,
 }: DocumentDropzoneProps) {
   const t = useT();
@@ -146,27 +143,6 @@ export function DocumentDropzone({
           </Button>
         </div>
 
-        {/* Muestras / Fixtures rápidas para pruebas */}
-        <div className="mt-8 border-t border-border/60 pt-5 text-center">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            {t("common.loopdev.documentIntelligence.tryFixture")}
-          </span>
-          <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
-            {DEMO_DOCUMENT_FIXTURES.map((fixture) => (
-              <Button
-                key={fixture.id}
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => onSelectFixture(fixture.id)}
-              >
-                <Sparkles className="me-1.5 h-3 w-3 text-primary" />
-                {fixture.name.split(" ")[0]} ({fixture.documentType === "passport" ? t("common.loopdev.documentIntelligence.passport") : t("common.loopdev.documentIntelligence.nationalId")})
-              </Button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

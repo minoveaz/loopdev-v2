@@ -28,6 +28,19 @@ function mapExtraction(row: any): ExtractionRecord {
   };
 }
 
+function fileFromInput(input: StartExtractionInput): File | null {
+  if (typeof File !== "undefined" && input.frontFile instanceof File) return input.frontFile;
+  return "file" in input.frontFile ? input.frontFile.file ?? null : null;
+}
+
+function extensionFor(file: File): string {
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  if (extension === "jpeg" || extension === "jpg" || extension === "png" || extension === "pdf") return extension;
+  if (file.type === "application/pdf") return "pdf";
+  if (file.type === "image/png") return "png";
+  return "jpg";
+}
+
 export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = {
   async listExtractions(params: ExtractionListParams): Promise<ExtractionPage> {
     let query = client.from("document_intelligence_extractions").select("*").eq("organization_id", params.organizationId).order("created_at", { ascending: params.sortDirection === "asc" });
@@ -49,12 +62,44 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
     return { totalProcessed: page.items.length, completedCount, reviewCount, averageConfidence: 0, averageDurationMs: 0, estimatedCostUsd: 0 };
   },
   async startExtraction(input: StartExtractionInput): Promise<ExtractionMutationResult> {
-    const document = await client.from("document_intelligence_documents").insert({ organization_id: input.organizationId, status: "uploaded", retention_class: "standard", concurrency_token: `doc-${Date.now()}-${Math.random()}` }).select().single();
+    const file = fileFromInput(input);
+    if (!file) return { ok: false, error: { code: "FILE_REQUIRED", message: "Select a passport image or PDF before extracting." } };
+    const { data: sessionData } = await client.auth.getSession();
+    const userId = sessionData.session?.user.id;
+    if (!userId) return { ok: false, error: { code: "UNAUTHORIZED", message: "An authenticated session is required." } };
+    const fileId = crypto.randomUUID();
+    const documentPath = `organizations/${input.organizationId}/${userId}/${fileId}.${extensionFor(file)}`;
+    const upload = await client.storage.from("document-intelligence-temp").upload(documentPath, file, {
+      contentType: file.type || "application/octet-stream",
+      upsert: false,
+    });
+    if (upload.error) return { ok: false, error: { code: "UPLOAD_FAILED", message: upload.error.message } };
+
+    const extractionRequest = await client.functions.invoke("extract-identity-document", {
+      body: {
+        fileName: file.name,
+        mimeType: file.type || "application/octet-stream",
+        documentReference: documentPath,
+      },
+    });
+    if (extractionRequest.error || !extractionRequest.data?.fields) {
+      return { ok: false, error: { code: "EXTRACTION_FAILED", message: extractionRequest.error?.message ?? "The document extraction failed." } };
+    }
+
+    const extracted = extractionRequest.data as {
+      classification?: { type?: string | null };
+      fields: Record<string, string | null>;
+      fieldConfidence?: Record<string, number>;
+      usage?: Record<string, unknown>;
+    };
+    const document = await client.from("document_intelligence_documents").insert({ organization_id: input.organizationId, status: "review", retention_class: "standard", concurrency_token: `doc-${Date.now()}-${Math.random()}` }).select().single();
     if (document.error) return { ok: false, error: { code: "DOCUMENT_CREATE_FAILED", message: document.error.message } };
     const version = await client.from("document_intelligence_versions").insert({ document_id: document.data.id, organization_id: input.organizationId, version_number: 1, source_reference: input.sourceReferenceId ?? input.title ?? null, concurrency_token: `version-${Date.now()}-${Math.random()}` }).select().single();
     if (version.error) return { ok: false, error: { code: "DOCUMENT_VERSION_FAILED", message: version.error.message } };
-    const extraction = await client.from("document_intelligence_extractions").insert({ document_version_id: version.data.id, organization_id: input.organizationId, status: "review", attempt: 1, provider: "loopdev-local", provider_version: "v1", schema_version: "identity-v1", fields: { title: input.title, sourceSuite: input.sourceSuite, sourceReferenceId: input.sourceReferenceId } }).select().single();
+    const extraction = await client.from("document_intelligence_extractions").insert({ document_version_id: version.data.id, organization_id: input.organizationId, status: "review", attempt: 1, provider: "gemini", provider_version: "gemini-2.5-flash", schema_version: "identity-v1", concurrency_token: `extraction-${Date.now()}-${Math.random()}`, fields: { title: input.title ?? file.name, sourceSuite: input.sourceSuite, sourceReferenceId: input.sourceReferenceId, documentType: extracted.classification?.type ?? "unknown", identity: extracted.fields, fieldConfidence: extracted.fieldConfidence ?? {}, overallConfidence: 0, usage: extracted.usage ?? null, files: { front: { name: file.name, size: file.size, mimeType: file.type, url: documentPath } } } }).select().single();
     if (extraction.error) return { ok: false, error: { code: "EXTRACTION_CREATE_FAILED", message: extraction.error.message } };
+    await client.from("document_intelligence_versions").update({ extraction_id: extraction.data.id }).eq("id", version.data.id);
+    await client.from("document_intelligence_documents").update({ current_version_id: version.data.id }).eq("id", document.data.id);
     return { ok: true, extraction: mapExtraction(extraction.data) };
   },
   async confirmExtraction(input: ConfirmExtractionInput) {

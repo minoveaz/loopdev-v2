@@ -1,4 +1,6 @@
-import { useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { FitMode } from "./DocumentViewerToolbar";
 import { useT } from "@/i18n";
 
@@ -22,7 +24,35 @@ export function DocumentViewerViewport({
   const t = useT();
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const pdfCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const dragOrigin = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+
+  useEffect(() => {
+    if (!isPdf || !previewUrl || !pdfCanvasRef.current) return;
+    GlobalWorkerOptions.workerSrc = workerSrc;
+    let cancelled = false;
+    const canvas = pdfCanvasRef.current;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    void getDocument({ url: previewUrl }).promise.then(async (pdf) => {
+      if (cancelled) return;
+      const page = await pdf.getPage(1);
+      if (cancelled) return;
+      const baseViewport = page.getViewport({ scale: 1 });
+      const scale = Math.min(1.8, 760 / baseViewport.width);
+      const viewport = page.getViewport({ scale });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: context, canvas, viewport }).promise;
+    }).catch(() => {
+      if (!cancelled) context.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPdf, previewUrl]);
 
   const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 || isPdf) return;
@@ -76,10 +106,10 @@ export function DocumentViewerViewport({
         }}
       >
         {isPdf ? (
-          <iframe
-            src={previewUrl}
-            title={t("common.loopdev.documentIntelligence.documentPreviewPdf", { fileName })}
-            className="h-full w-full border-0 rounded"
+          <canvas
+            ref={pdfCanvasRef}
+            aria-label={t("common.loopdev.documentIntelligence.documentPreviewPdf", { fileName })}
+            className="max-h-full max-w-full rounded bg-white shadow-md"
           />
         ) : (
           <img

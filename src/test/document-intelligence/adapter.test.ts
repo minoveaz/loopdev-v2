@@ -1,9 +1,44 @@
 import { describe, it, expect } from "vitest";
 import { localDocumentIntelligenceAdapter } from "@/loopdev/domains/document-intelligence/adapter/local";
+import { DEMO_DOCUMENT_FIXTURES } from "@/loopdev/domains/document-intelligence/data/fixtures";
 
 const ORG_ID = "local-development-organization";
 
 describe("Document Intelligence - Local Adapter", () => {
+  it("supports the Latin American passport review flow", async () => {
+    const fixture = DEMO_DOCUMENT_FIXTURES.find((item) => item.id === "fixture-passport-colombia-valentina");
+    expect(fixture).toBeDefined();
+    if (!fixture) return;
+
+    const started = await localDocumentIntelligenceAdapter.startExtraction({
+      organizationId: ORG_ID,
+      sourceSuite: "crm",
+      fixtureId: fixture.id,
+      frontFile: fixture.record.files.front!,
+    });
+
+    expect(started.ok).toBe(true);
+    if (!started.ok) return;
+    expect(started.extraction.status).toBe("review");
+    expect(started.extraction.documentType).toBe("passport");
+    expect(started.extraction.fields.issuingCountry).toBe("COL");
+    expect(started.extraction.fields.documentNumber).toBe("AS4827316");
+    expect(started.extraction.fields.mrz).toContain("P<COLGOMEZ<RIVERA");
+
+    const confirmed = await localDocumentIntelligenceAdapter.confirmExtraction({
+      extractionId: started.extraction.id,
+      fields: { fullName: "Valentina Gómez Rivera" },
+    });
+
+    expect(confirmed.ok).toBe(true);
+    if (confirmed.ok) {
+      expect(confirmed.extraction.status).toBe("completed");
+      expect(confirmed.extraction.fields.fullName).toBe("Valentina Gómez Rivera");
+    }
+
+    await localDocumentIntelligenceAdapter.deleteExtraction(started.extraction.id);
+  });
+
   it("lists extractions with pagination and filtering", async () => {
     const res = await localDocumentIntelligenceAdapter.listExtractions({
       organizationId: ORG_ID,

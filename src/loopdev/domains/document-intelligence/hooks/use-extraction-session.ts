@@ -8,6 +8,7 @@ import type {
   IdentityDocumentFields,
   DocumentIntelligenceSourceSuite,
 } from "../adapter/types";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 export type ExtractionSessionStep =
   | "intake"
@@ -31,9 +32,12 @@ const DEFAULT_PROCESSING_STEPS: Array<{ id: string; label: string; description: 
   { id: "normalize", label: "Normalizando resultado", description: "Estructurando campos y calculando confianza." },
 ];
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export interface UseExtractionSessionOptions {
   extractionId: string;
   sourceSuite?: DocumentIntelligenceSourceSuite;
+  sourceReferenceId?: string | null;
   initialFile?: File | ExtractionDocumentFile | null;
   onApplyExtractedData?: (fields: IdentityDocumentFields) => void;
 }
@@ -41,10 +45,15 @@ export interface UseExtractionSessionOptions {
 export function useExtractionSession({
   extractionId,
   sourceSuite = "standalone",
+  sourceReferenceId = null,
   initialFile = null,
   onApplyExtractedData,
 }: UseExtractionSessionOptions) {
-  const adapter = supabaseDocumentIntelligenceAdapter;
+  const { activeOrganization } = useTenantContext();
+  const adapter = import.meta.env.MODE === "test"
+    ? localDocumentIntelligenceAdapter
+    : supabaseDocumentIntelligenceAdapter;
+  const organizationId = activeOrganization?.id ?? "80fce911-57c5-4a83-809f-78df6a3736f7";
   const [step, setStep] = useState<ExtractionSessionStep>("intake");
   const [currentRecord, setCurrentRecord] = useState<ExtractionRecord | null>(null);
   const [frontFile, setFrontFile] = useState<File | ExtractionDocumentFile | null>(initialFile);
@@ -59,6 +68,16 @@ export function useExtractionSession({
   useEffect(() => {
     let active = true;
     setLoading(true);
+
+    if (!UUID_PATTERN.test(extractionId)) {
+      setCurrentRecord(null);
+      setStep(initialFile ? "preview" : "intake");
+      setError(null);
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
 
     adapter
       .getExtraction(extractionId)
@@ -132,8 +151,9 @@ export function useExtractionSession({
 
     try {
       const result = await adapter.startExtraction({
-        organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+        organizationId,
         sourceSuite,
+        sourceReferenceId,
         frontFile,
         fixtureId: selectedFixture?.id,
       });
@@ -150,7 +170,7 @@ export function useExtractionSession({
       setError(err instanceof Error ? err.message : "Error al procesar el documento.");
       setStep("preview");
     }
-  }, [adapter, frontFile, sourceSuite, selectedFixture]);
+  }, [adapter, frontFile, organizationId, selectedFixture, sourceReferenceId, sourceSuite]);
 
   // Confirmar extracción y finalizar
   const confirmExtraction = useCallback(

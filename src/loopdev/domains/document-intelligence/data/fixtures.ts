@@ -50,6 +50,24 @@ const SAMPLE_PASSPORT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.o
   <text x="45" y="355" font-family="monospace" font-size="15" fill="%2344403c">PAB9832104ESP8811203M3204128&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;02</text>
 </svg>`;
 
+const SAMPLE_COLOMBIAN_PASSPORT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+  <rect width="600" height="400" rx="16" fill="%23f8fafc" stroke="%2394a3b8" stroke-width="4"/>
+  <rect x="30" y="42" width="150" height="200" rx="8" fill="%23dbeafe" stroke="%2360a5fa" stroke-width="2"/>
+  <circle cx="105" cy="112" r="40" fill="%2364748b"/>
+  <path d="M55,212 C55,164 155,164 155,212 Z" fill="%2364748b"/>
+  <text x="205" y="62" font-family="sans-serif" font-size="21" font-weight="bold" fill="%230f172a">PASAPORTE / PASSPORT</text>
+  <text x="205" y="90" font-family="sans-serif" font-size="14" fill="%23334155">COLOMBIA / COL</text>
+  <text x="205" y="126" font-family="sans-serif" font-size="11" fill="%2364758b">APELLIDOS / SURNAMES</text>
+  <text x="205" y="146" font-family="sans-serif" font-size="16" font-weight="bold" fill="%231e293b">GOMEZ RIVERA</text>
+  <text x="205" y="176" font-family="sans-serif" font-size="11" fill="%2364758b">NOMBRES / GIVEN NAMES</text>
+  <text x="205" y="196" font-family="sans-serif" font-size="16" font-weight="bold" fill="%231e293b">VALENTINA</text>
+  <text x="205" y="226" font-family="sans-serif" font-size="11" fill="%2364758b">PASSPORT NO.</text>
+  <text x="205" y="246" font-family="monospace" font-size="16" font-weight="bold" fill="%231e293b">AS4827316</text>
+  <rect x="30" y="290" width="540" height="80" rx="8" fill="%23e2e8f0"/>
+  <text x="45" y="325" font-family="monospace" font-size="15" fill="%231e293b">P&lt;COLGOMEZ&lt;RIVERA&lt;&lt;VALENTINA&lt;&lt;&lt;&lt;&lt;&lt;</text>
+  <text x="45" y="355" font-family="monospace" font-size="15" fill="%231e293b">AS4827316&lt;6COL9402148F3008127&lt;&lt;&lt;&lt;&lt;&lt;&lt;04</text>
+</svg>`;
+
 export const DEMO_DOCUMENT_FIXTURES: DocumentDemoFixture[] = [
   {
     id: "fixture-dni-carmen",
@@ -166,6 +184,64 @@ export const DEMO_DOCUMENT_FIXTURES: DocumentDemoFixture[] = [
       overallConfidence: 0.98,
       extractedAt: "2026-09-12T14:20:10Z",
       completedAt: "2026-09-12T14:22:00Z",
+    },
+  },
+  {
+    id: "fixture-passport-colombia-valentina",
+    name: "Pasaporte Valentina Gómez Rivera (Colombia)",
+    description: "Pasaporte latinoamericano con país emisor COL y zona MRZ ICAO.",
+    documentType: "passport",
+    mimeType: "image/svg+xml",
+    previewUrl: SAMPLE_COLOMBIAN_PASSPORT_SVG,
+    record: {
+      organizationId: "local-development-organization",
+      title: "Pasaporte Valentina Gómez Rivera",
+      documentType: "passport",
+      status: "completed",
+      sourceSuite: "crm",
+      files: {
+        front: {
+          name: "pasaporte-valentina-gomez-rivera.svg",
+          size: 49800,
+          mimeType: "image/svg+xml",
+          previewUrl: SAMPLE_COLOMBIAN_PASSPORT_SVG,
+        },
+        back: null,
+      },
+      fields: {
+        documentType: "passport",
+        issuingCountry: "COL",
+        fullName: "Valentina Gómez Rivera",
+        givenNames: "Valentina",
+        surnames: "Gómez Rivera",
+        firstSurname: "Gómez",
+        secondSurname: "Rivera",
+        documentNumber: "AS4827316",
+        birthDate: "1994-02-14",
+        nationality: "COL",
+        sex: "F",
+        issueDate: "2023-08-12",
+        expiryDate: "2030-08-12",
+        birthplace: "Bogotá",
+        supportNumber: null,
+        address: null,
+        mrz: "P<COLGOMEZ<RIVERA<<VALENTINA<<<<<<<<<<<<<<\nAS4827316<6COL9402148F3008127<<<<<<<04",
+      },
+      fieldConfidence: {
+        documentNumber: 0.99,
+        issuingCountry: 0.99,
+        givenNames: 0.98,
+        firstSurname: 0.97,
+        secondSurname: 0.96,
+        birthDate: 0.98,
+        nationality: 0.99,
+        sex: 0.99,
+        expiryDate: 0.98,
+        mrz: 0.99,
+      },
+      overallConfidence: 0.98,
+      extractedAt: "2026-09-23T09:00:00Z",
+      completedAt: "2026-09-23T09:00:30Z",
     },
   },
 ];

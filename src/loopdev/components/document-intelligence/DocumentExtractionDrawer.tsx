@@ -38,6 +38,7 @@ export function DocumentExtractionDrawer({
   const session = useExtractionSession({
     extractionId: extractionSessionId,
     sourceSuite,
+    sourceReferenceId,
     initialFile,
     onApplyExtractedData,
   });
@@ -85,7 +86,6 @@ export function DocumentExtractionDrawer({
           <DocumentDropzone
             compact
             onFileSelected={session.selectFile}
-            onSelectFixture={session.loadFixture}
           />
         )}
 

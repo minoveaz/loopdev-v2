@@ -78,6 +78,7 @@ export interface CRMCreateContactInput {
   documentNumber?: string | null;
   birthDate?: string | null;
   gender?: string | null;
+  attributes?: Record<string, unknown>;
 }
 
 export interface CRMUpdateContactPatch {

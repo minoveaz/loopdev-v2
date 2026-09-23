@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { ArrowLeft, RefreshCw, FileText } from "lucide-react";
 import { PageContainer, PageHeader, EmptyState } from "@/components/common";
 import { Button } from "@/components/ui/button";
@@ -10,16 +11,22 @@ import { DocumentViewer } from "@/loopdev/components/document-intelligence/Docum
 import { ExtractionProgressLoader } from "@/loopdev/components/document-intelligence/ExtractionProgressLoader";
 import { ExtractionTransitionSpinner } from "@/loopdev/components/document-intelligence/ExtractionTransitionSpinner";
 import { ExtractionReviewPanel } from "@/loopdev/components/document-intelligence/ExtractionReviewPanel";
+import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
+import type { CRMContact } from "@/loopdev/domains/crm/adapter";
+import type { IdentityDocumentFields } from "@/loopdev/domains/document-intelligence";
 
 export default function DocumentIntelligenceExtractionWorkspace() {
   const t = useT();
   const { extractionId = "nueva" } = useParams<{ extractionId: string }>();
   const navigate = useNavigate();
   const { trail } = useBreadcrumbs();
+  const [contactActionLoading, setContactActionLoading] = useState(false);
+  const [contactMatches, setContactMatches] = useState<CRMContact[]>([]);
+  const [contactMessage, setContactMessage] = useState<string | null>(null);
 
   const session = useExtractionSession({
     extractionId,
-    sourceSuite: "standalone",
+    sourceSuite: "crm",
   });
 
   const handleConfirmAndFinish = async (fields: any) => {
@@ -28,6 +35,70 @@ export default function DocumentIntelligenceExtractionWorkspace() {
       // Regresa al histórico global con la nueva extracción completada
       navigate("/app/tools/document-intelligence");
     }
+  };
+
+  const contactInputFromFields = (fields: IdentityDocumentFields) => {
+    const fullName = fields.fullName?.trim() || "";
+    const givenNames = fields.givenNames?.trim() || fullName.split(/\s+/)[0] || "Cliente";
+    return {
+      organizationId: session.currentRecord?.organizationId ?? "",
+      firstName: givenNames,
+      lastName: fields.firstSurname ?? fields.surnames ?? null,
+      secondLastName: fields.secondSurname ?? null,
+      documentType: fields.documentType || "passport",
+      documentNumber: fields.documentNumber,
+      birthDate: fields.birthDate,
+      gender: fields.sex === "M" ? "male" : fields.sex === "F" ? "female" : null,
+      country: fields.issuingCountry,
+      attributes: {
+        nationality: fields.nationality,
+        passportIssueDate: fields.issueDate,
+        passportExpiryDate: fields.expiryDate,
+        mrz: fields.mrz,
+        documentIntelligenceExtractionId: session.currentRecord?.id,
+      },
+    };
+  };
+
+  const findExistingContact = async (fields: IdentityDocumentFields) => {
+    setContactActionLoading(true);
+    setContactMessage(null);
+    try {
+      const input = contactInputFromFields(fields);
+      if (!input.organizationId) throw new Error("No hay una organización activa.");
+      const page = await loopdevAdapter.crm.listContacts({ organizationId: input.organizationId, query: input.documentNumber ?? input.firstName, limit: 20 });
+      const matches = page.items.filter((contact) =>
+        (input.documentNumber && contact.documentNumber?.toLowerCase() === input.documentNumber.toLowerCase())
+        || `${contact.firstName} ${contact.lastName ?? ""}`.toLowerCase().includes(input.firstName.toLowerCase()),
+      );
+      setContactMatches(matches);
+      setContactMessage(matches.length ? "Encontramos posibles contactos existentes." : "No encontramos coincidencias. Puedes crear el contacto.");
+    } catch (error) {
+      setContactMessage(error instanceof Error ? error.message : "No se pudieron buscar contactos.");
+    } finally {
+      setContactActionLoading(false);
+    }
+  };
+
+  const createContact = async (fields: IdentityDocumentFields) => {
+    setContactActionLoading(true);
+    setContactMessage(null);
+    try {
+      const input = contactInputFromFields(fields);
+      const result = await loopdevAdapter.crm.createContact(input);
+      if (result.status !== "success") throw new Error(result.message);
+      setContactMessage(`Contacto creado: ${result.contact.firstName} ${result.contact.lastName ?? ""}`);
+      setContactMatches([]);
+    } catch (error) {
+      setContactMessage(error instanceof Error ? error.message : "No se pudo crear el contacto.");
+    } finally {
+      setContactActionLoading(false);
+    }
+  };
+
+  const linkExistingContact = (contact: CRMContact) => {
+    setContactMessage(`Contacto vinculado para continuar la póliza: ${contact.firstName} ${contact.lastName ?? ""}`);
+    setContactMatches([contact]);
   };
 
   const getFilePreviewData = () => {
@@ -78,7 +149,6 @@ export default function DocumentIntelligenceExtractionWorkspace() {
         {session.step === "intake" && (
           <DocumentDropzone
             onFileSelected={session.selectFile}
-            onSelectFixture={session.loadFixture}
           />
         )}
 
@@ -145,7 +215,22 @@ export default function DocumentIntelligenceExtractionWorkspace() {
                   onReset={session.resetSession}
                   confirmLoading={session.actionLoading}
                   confirmLabel={t("common.loopdev.documentIntelligence.confirmExtraction")}
+                  onCreateContact={createContact}
+                  onFindExistingContact={findExistingContact}
+                  contactActionLoading={contactActionLoading}
                 />
+                {contactMessage && <p className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{contactMessage}</p>}
+                {contactMatches.length > 0 && (
+                  <div className="mt-3 space-y-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
+                    <p className="font-medium">Posibles contactos existentes</p>
+                    {contactMatches.map((contact) => (
+                      <div key={contact.id} className="flex items-center justify-between gap-3">
+                        <p>{contact.firstName} {contact.lastName ?? ""} · {contact.documentNumber ?? "sin documento"}</p>
+                        <Button type="button" size="sm" variant="outline" onClick={() => linkExistingContact(contact)}>Vincular</Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           );

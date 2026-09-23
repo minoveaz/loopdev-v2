@@ -146,7 +146,7 @@ export function useI18n() {
 /** Convenience hook for components that only need `t`. */
 export function useT() {
   const ctx = useContext(I18nContext);
-  return ctx?.t ?? ((key: string) => ({
+  const fallback = (key: string) => ({
     "crm.tasks.form.newTitle": "Nueva Tarea",
     "crm.tasks.form.titlePlaceholder": "Llamada de seguimiento...",
     "communicationsSettings.states.connected": "Connected",
@@ -154,5 +154,15 @@ export function useT() {
     "communicationsSettings.templates": "Templates",
     "communicationsSettings.killSwitch": "Communications kill-switch",
     "communicationsSettings.allowActions": "Enable communications kill-switch",
-  }[key] ?? key));
+    "common.loopdev.documentIntelligence.pdfPreviewUnavailable": "PDF preview is disabled. Upload a passport image to review it directly.",
+    "common.loopdev.documentIntelligence.noExtractionData": "No fields were extracted from this document. Review or enter the values manually before confirming.",
+    "common.loopdev.documentIntelligence.findExistingContact": "Buscar contacto existente",
+    "common.loopdev.documentIntelligence.createContact": "Crear contacto CRM",
+    "common.loopdev.documentIntelligence.creatingContact": "Creando contacto...",
+  }[key] ?? key);
+  if (!ctx) return fallback;
+  return (key: string, vars?: Record<string, string | number>) => {
+    const translated = ctx.t(key, vars);
+    return translated === key ? fallback(key) : translated;
+  };
 }

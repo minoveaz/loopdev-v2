@@ -113,7 +113,9 @@ export const localDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = {
 
   async startExtraction(input: StartExtractionInput): Promise<ExtractionMutationResult> {
     await delay(200);
-    const fixture = DEMO_DOCUMENT_FIXTURES.find((f) => f.id === input.fixtureId) ?? DEMO_DOCUMENT_FIXTURES[0];
+    const fixture = input.fixtureId
+      ? DEMO_DOCUMENT_FIXTURES.find((f) => f.id === input.fixtureId)
+      : undefined;
     const newId = `ext-${Date.now().toString(36)}`;
     const now = new Date().toISOString();
 
@@ -129,11 +131,31 @@ export const localDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = {
         }
       : input.frontFile;
 
+    const emptyFields = (): ExtractionRecord["fields"] => ({
+      documentType: "unknown",
+      issuingCountry: null,
+      fullName: null,
+      givenNames: null,
+      surnames: null,
+      firstSurname: null,
+      secondSurname: null,
+      documentNumber: null,
+      birthDate: null,
+      nationality: null,
+      sex: null,
+      issueDate: null,
+      expiryDate: null,
+      birthplace: null,
+      supportNumber: null,
+      address: null,
+      mrz: null,
+    });
+    const emptyConfidence: ExtractionRecord["fieldConfidence"] = {};
     const newRecord: ExtractionRecord = {
       id: newId,
       organizationId: input.organizationId,
-      title: input.title || fixture.record.title,
-      documentType: fixture.record.documentType,
+      title: input.title || frontFileObj.name,
+      documentType: fixture?.record.documentType ?? "unknown",
       status: "review",
       sourceSuite: input.sourceSuite ?? "standalone",
       sourceReferenceId: input.sourceReferenceId ?? null,
@@ -147,9 +169,9 @@ export const localDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = {
           previewUrl: URL.createObjectURL(input.backFile),
         } : input.backFile) : null,
       },
-      fields: JSON.parse(JSON.stringify(fixture.record.fields)),
-      fieldConfidence: JSON.parse(JSON.stringify(fixture.record.fieldConfidence)),
-      overallConfidence: fixture.record.overallConfidence,
+      fields: JSON.parse(JSON.stringify(fixture?.record.fields ?? emptyFields())),
+      fieldConfidence: JSON.parse(JSON.stringify(fixture?.record.fieldConfidence ?? emptyConfidence)),
+      overallConfidence: fixture?.record.overallConfidence ?? 0,
       extractedAt: now,
       completedAt: null,
       createdAt: now,

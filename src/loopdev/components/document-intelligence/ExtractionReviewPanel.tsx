@@ -27,6 +27,9 @@ interface ExtractionReviewPanelProps {
   confirmLoading?: boolean;
   confirmLabel?: string;
   compact?: boolean;
+  onCreateContact?: (fields: IdentityDocumentFields) => void | Promise<void>;
+  onFindExistingContact?: (fields: IdentityDocumentFields) => void | Promise<void>;
+  contactActionLoading?: boolean;
 }
 
 export function ExtractionReviewPanel({
@@ -36,6 +39,9 @@ export function ExtractionReviewPanel({
   confirmLoading = false,
   confirmLabel,
   compact = false,
+  onCreateContact,
+  onFindExistingContact,
+  contactActionLoading = false,
 }: ExtractionReviewPanelProps) {
   const t = useT();
   const [profileId, setProfileId] = useState<ExportProfileId>(DEFAULT_EXPORT_PROFILE_ID);
@@ -84,6 +90,10 @@ export function ExtractionReviewPanel({
     setTimeout(() => setCopyFeedback(null), 1800);
   };
 
+  const hasExtractedFields = Object.values(extraction.fields).some(
+    (value) => typeof value === "string" && value.trim().length > 0,
+  );
+
   return (
     <div className="flex h-full min-h-0 flex-col rounded-xl border border-border bg-card p-4 sm:p-5 shadow-sm">
       {/* Cabecera contextual */}
@@ -95,6 +105,11 @@ export function ExtractionReviewPanel({
           mode={compact ? "compact" : "standard"}
           responsive="auto"
         />
+        {!hasExtractedFields && (
+          <p className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-800">
+            {t("common.loopdev.documentIntelligence.noExtractionData")}
+          </p>
+        )}
 
         {/* Barra de Formatos y Acciones globales de Copiado */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -158,6 +173,33 @@ export function ExtractionReviewPanel({
         loading={confirmLoading}
         confirmLabel={confirmLabel ?? t("common.loopdev.documentIntelligence.confirmExtraction")}
       />
+      {(onCreateContact || onFindExistingContact) && (
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-3">
+          {onFindExistingContact && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void onFindExistingContact(fields)}
+              disabled={contactActionLoading || confirmLoading}
+            >
+              {t("common.loopdev.documentIntelligence.findExistingContact")}
+            </Button>
+          )}
+          {onCreateContact && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => void onCreateContact(fields)}
+              disabled={contactActionLoading || confirmLoading}
+            >
+              {contactActionLoading
+                ? t("common.loopdev.documentIntelligence.creatingContact")
+                : t("common.loopdev.documentIntelligence.createContact")}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

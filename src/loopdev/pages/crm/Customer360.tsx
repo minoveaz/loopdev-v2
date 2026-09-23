@@ -60,7 +60,7 @@ export default function SalesCRMCustomer360() {
         <EmptyState
           icon={AlertTriangle}
           title="Unable to load contact"
-          description={error}
+          description={error || "Unable to load contact details."}
           action={<Button onClick={reload}><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Try again</Button>}
         />
       </PageContainer>

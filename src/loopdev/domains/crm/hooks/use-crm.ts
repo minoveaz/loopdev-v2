@@ -111,7 +111,7 @@ export function useCrmLeads() {
         if (active) setLeads(items);
       })
       .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : "Please try again.");
+        if (active) setError(cause instanceof Error ? cause.message : "Unable to load contact details.");
       })
       .finally(() => {
         if (active) setLoading(false);

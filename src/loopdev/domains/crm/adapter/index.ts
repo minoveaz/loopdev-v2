@@ -108,7 +108,9 @@ export const loopdevAdapter: LoopdevAdapter = {
       desktopContactAdapter.updateContact(contactId, patch, expectedUpdatedAt),
     archiveContact: (contactId, expectedUpdatedAt) =>
       desktopContactAdapter.archiveContact(contactId, expectedUpdatedAt),
-    getCustomer360: (contactId) => localLoopdevAdapter.crm.getCustomer360(contactId),
+    getCustomer360: (contactId) => isTestRuntime
+      ? localLoopdevAdapter.crm.getCustomer360(contactId)
+      : desktopContactAdapter.getCustomer360(contactId) as unknown as Promise<Customer360View | null>,
     findPotentialDuplicates: (contactId) => desktopContactAdapter.findPotentialDuplicates(contactId),
     dismissDuplicateReview: (contactId, candidateId, confirmation) =>
       desktopContactAdapter.dismissDuplicateReview(contactId, candidateId, confirmation),

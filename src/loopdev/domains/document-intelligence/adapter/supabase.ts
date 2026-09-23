@@ -98,6 +98,22 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
     if (version.error) return { ok: false, error: { code: "DOCUMENT_VERSION_FAILED", message: version.error.message } };
     const extraction = await client.from("document_intelligence_extractions").insert({ document_version_id: version.data.id, organization_id: input.organizationId, status: "review", attempt: 1, provider: "gemini", provider_version: "gemini-2.5-flash", schema_version: "identity-v1", concurrency_token: `extraction-${Date.now()}-${Math.random()}`, fields: { title: input.title ?? file.name, sourceSuite: input.sourceSuite, sourceReferenceId: input.sourceReferenceId, documentType: extracted.classification?.type ?? "unknown", identity: extracted.fields, fieldConfidence: extracted.fieldConfidence ?? {}, overallConfidence: 0, usage: extracted.usage ?? null, files: { front: { name: file.name, size: file.size, mimeType: file.type, url: documentPath } } } }).select().single();
     if (extraction.error) return { ok: false, error: { code: "EXTRACTION_CREATE_FAILED", message: extraction.error.message } };
+    await client.from("platform_timeline_events").upsert({
+      organization_id: input.organizationId,
+      relation_type: null,
+      relation_id: null,
+      type: "document_extraction",
+      actor_id: userId,
+      actor_type: "user",
+      origin: "document_intelligence",
+      source_type: "document_intelligence_extraction",
+      source_id: extraction.data.id,
+      dedupe_key: `document-extraction:${extraction.data.id}`,
+      summary: "Passport extraction completed",
+      metadata: { extractionId: extraction.data.id, documentType: extracted.classification?.type ?? "unknown", documentNumber: extracted.fields.documentNumber ?? "" },
+      visibility: "organization",
+      occurred_at: new Date().toISOString(),
+    }, { onConflict: "organization_id,dedupe_key" });
     await client.from("document_intelligence_versions").update({ extraction_id: extraction.data.id }).eq("id", version.data.id);
     await client.from("document_intelligence_documents").update({ current_version_id: version.data.id }).eq("id", document.data.id);
     return { ok: true, extraction: mapExtraction(extraction.data) };

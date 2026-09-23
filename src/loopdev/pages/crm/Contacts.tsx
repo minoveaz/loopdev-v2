@@ -58,6 +58,7 @@ export default function SalesCRMContacts() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [editorOpen, setEditorOpen] = useState(false);
   const [initialContactValues, setInitialContactValues] = useState<Partial<ContactFormValues> | undefined>();
+  const [documentExtractionId, setDocumentExtractionId] = useState<string | null>(null);
   const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<CRMContact | null>(null);
@@ -108,7 +109,7 @@ export default function SalesCRMContacts() {
   }, [contacts, currentOrgId]);
 
   useEffect(() => {
-    const state = location.state as { documentFields?: Record<string, string | null> } | null;
+    const state = location.state as { documentFields?: Record<string, string | null>; extractionId?: string | null } | null;
     if (!state?.documentFields) return;
     const fields = state.documentFields;
     setInitialContactValues({
@@ -122,6 +123,7 @@ export default function SalesCRMContacts() {
       country: fields.issuingCountry === "COL" ? "CO" : fields.issuingCountry || "",
     });
     setEditingContact(null);
+    setDocumentExtractionId(state.extractionId ?? null);
     setEditorOpen(true);
     navigate(location.pathname + location.search, { replace: true, state: null });
   }, [location.pathname, location.search, location.state, navigate]);
@@ -184,6 +186,7 @@ export default function SalesCRMContacts() {
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingContact(null);
     setInitialContactValues(undefined);
+    setDocumentExtractionId(null);
     setEditorOpen(true);
   };
 
@@ -250,6 +253,7 @@ export default function SalesCRMContacts() {
       stateProvince: optional(values.stateProvince),
       postalCode: optional(values.postalCode),
       country: optional(values.country),
+      attributes: documentExtractionId ? { documentIntelligenceExtractionId: documentExtractionId } : {},
     };
     return loopdevAdapter.crm.createContact(input);
   };

@@ -81,7 +81,7 @@ export default function DocumentIntelligenceExtractionWorkspace() {
   };
 
   const createContact = async (fields: IdentityDocumentFields) => {
-    navigate("/app/sales-crm/contacts", { state: { documentFields: fields } });
+    navigate("/app/sales-crm/contacts", { state: { documentFields: fields, extractionId: session.currentRecord?.id ?? null } });
   };
 
   const linkExistingContact = (contact: CRMContact) => {

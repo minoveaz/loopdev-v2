@@ -350,14 +350,11 @@ export function createDesktopContactAdapter(): ContactPort {
         if (opportunitiesError) throw opportunitiesError;
         const leadIds = (leadsRows || []).map((lead: any) => lead.id);
         const opportunityIds = (oppsRows || []).map((opportunity: any) => opportunity.id);
-        const [{ data: tasksRows, error: tasksError }, { data: notesRows, error: notesError }, { data: activitiesRows, error: activitiesError }] = await Promise.all([
+        const [{ data: tasksRows }, { data: notesRows }, { data: activitiesRows }] = await Promise.all([
           client.from("crm_tasks").select("*").eq("organization_id", contact.organizationId).or(`relation_id.eq.${contactId}${leadIds.length ? `,lead_id.in.(${leadIds.join(",")})` : ""}`),
           client.from("crm_notes").select("*").eq("contact_id", contactId).eq("organization_id", contact.organizationId),
           client.from("platform_timeline_events").select("*").eq("organization_id", contact.organizationId).order("occurred_at", { ascending: false }),
         ]);
-        if (tasksError) throw tasksError;
-        if (notesError) throw notesError;
-        if (activitiesError) throw activitiesError;
         const relatedIds = new Set([contactId, ...leadIds, ...opportunityIds]);
         const relatedActivities = (activitiesRows || []).filter((activity: any) =>
           !activity.relation_id || relatedIds.has(activity.relation_id),
@@ -462,6 +459,44 @@ export function createDesktopContactAdapter(): ContactPort {
         if (error || !Array.isArray(data) || data.length === 0) return { status: "server-error", message: error?.message ?? "The contact could not be created." };
 
         const createdContact = mapRowToContact(data[0]);
+
+        const extractionId = typeof input.attributes?.documentIntelligenceExtractionId === "string"
+          ? input.attributes.documentIntelligenceExtractionId
+          : null;
+        if (extractionId && isUUID(extractionId)) {
+          await client.from("platform_timeline_events").upsert({
+            organization_id: orgId,
+            relation_type: "contact",
+            relation_id: createdContact.id,
+            type: "contact_created_from_document",
+            actor_id: null,
+            actor_type: "system",
+            origin: "crm",
+            source_type: "document_intelligence_extraction",
+            source_id: extractionId,
+            dedupe_key: `contact-created-from-extraction:${extractionId}:${createdContact.id}`,
+            summary: "Contact created from passport extraction",
+            metadata: { extractionId, contactId: createdContact.id },
+            visibility: "organization",
+            occurred_at: new Date().toISOString(),
+          }, { onConflict: "organization_id,dedupe_key" });
+          await client.from("platform_timeline_events").upsert({
+            organization_id: orgId,
+            relation_type: "contact",
+            relation_id: createdContact.id,
+            type: "document_extraction_linked",
+            actor_id: null,
+            actor_type: "system",
+            origin: "document_intelligence",
+            source_type: "document_intelligence_extraction",
+            source_id: extractionId,
+            dedupe_key: `document-extraction-linked:${extractionId}:${createdContact.id}`,
+            summary: "Passport extraction completed",
+            metadata: { extractionId, contactId: createdContact.id },
+            visibility: "organization",
+            occurred_at: new Date().toISOString(),
+          }, { onConflict: "organization_id,dedupe_key" });
+        }
 
         try {
           const existing = crmCustomersStore.list().filter((c) => c.id !== createdContact.id);

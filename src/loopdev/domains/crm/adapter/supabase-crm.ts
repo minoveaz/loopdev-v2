@@ -291,23 +291,17 @@ export function createSupabaseCrmAdapter() {
     async createOpportunityFromLead(leadId: string, input: CRMCreateOpportunityFromLeadInput): Promise<CRMOpportunityMutationResult> {
       if (fallbackForOrganization(input.organizationId)) return local.createOpportunityFromLead(leadId, input);
       const client = getClient(); if (!client) return { status: "server-error", message: "Supabase is not configured." };
-      const { data: lead, error } = await client.from("crm_leads").select("*").eq("id", leadId).eq("organization_id", input.organizationId).single();
-      if (error || !lead) return opportunityError(error);
-      const productKey = (input.productKey ?? input.name ?? lead.interest ?? "opportunity").trim().toLowerCase().replace(/\s+/g, "-");
-      const idempotencyKey = input.idempotencyKey?.trim() || null;
-      const { data: existing, error: existingError } = await client.from("crm_opportunities").select("*").eq("organization_id", input.organizationId).eq("lead_id", leadId).eq("origin", "lead_conversion").eq("product_key", productKey).maybeSingle();
-      if (existingError) return opportunityError(existingError);
-      if (existing) return { status: "success", opportunity: mapOpportunity(existing) };
-      if (idempotencyKey) {
-        const { data: keyMatch, error: keyError } = await client.from("crm_opportunities").select("*").eq("organization_id", input.organizationId).eq("origin", "lead_conversion").eq("idempotency_key", idempotencyKey).maybeSingle();
-        if (keyError) return opportunityError(keyError);
-        if (keyMatch) return { status: "conflict", message: "The idempotency key was already used for a different lead conversion.", opportunity: mapOpportunity(keyMatch) };
-      }
-      const result = await this.createOpportunity({ ...input, productKey, contactId: lead.contact_id, leadId, name: input.name ?? lead.interest ?? "Opportunity", lines: [] });
-      if (result.status !== "success") return result;
-      const { error: leadError } = await client.from("crm_leads").update({ status: "convertido", stage: "won", updated_at: new Date().toISOString() }).eq("id", leadId).eq("organization_id", input.organizationId);
-      if (leadError) return opportunityError(leadError);
-      return result;
+      const { data, error } = await client.rpc("crm_convert_lead_to_opportunity", {
+        p_lead_id: leadId,
+        p_organization_id: input.organizationId,
+        p_name: input.name ?? "Converted opportunity",
+        p_amount: input.amount ?? null,
+        p_currency: input.currency ?? "EUR",
+        p_stage_key: "qualified",
+        p_idempotency_key: input.idempotencyKey?.trim() || null,
+      });
+      if (error || !data?.opportunity) return opportunityError(error);
+      return { status: "success", opportunity: mapOpportunity(data.opportunity) };
     },
 
     async listOpportunityStageHistory(opportunityId: string) {

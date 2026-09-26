@@ -51,7 +51,7 @@ export function MobileLeadsScreen({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterStatus>("all");
-  const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "80fce911-57c5-4a83-809f-78df6a3736f7";
+  const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "";
 
   const loadData = async () => {
     setLoading(true);

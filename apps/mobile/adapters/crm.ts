@@ -496,19 +496,19 @@ export const mobileCrmAdapter = {
     }
   ): Promise<{ lead: CRMLead; opportunity: CRMOpportunity }> {
     if (isUuid(leadId)) {
-      const { data: leadRow, error: leadError } = await mobileSupabaseClient.from("crm_leads").select("*").eq("id", leadId).eq("organization_id", mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId).single();
-      assertSupabase(leadError, "get lead for conversion"); if (!leadRow) throw new Error("Lead not found");
-      if (!["cualificado", "qualified"].includes(leadRow.status) && leadRow.stage !== "proposal") throw new Error("Only qualified leads can be converted.");
-      const productKey = (leadRow.interest || "converted-lead").toLowerCase().replace(/\s+/g, "-");
-      const { data: existing } = await mobileSupabaseClient.from("crm_opportunities").select("*").eq("organization_id", leadRow.organization_id).eq("lead_id", leadId).eq("origin", "lead_conversion").eq("product_key", productKey).maybeSingle();
-      let opportunityRow = existing;
-      if (!opportunityRow) {
-        const { data, error } = await mobileSupabaseClient.from("crm_opportunities").insert({ organization_id: leadRow.organization_id, contact_id: leadRow.contact_id, lead_id: leadId, product_key: productKey, name: opportunityData.name || `Opportunity · ${leadRow.interest}`, stage_key: opportunityData.stageKey || "qualified", stage: opportunityData.stageKey || "qualified", origin: "lead_conversion", amount: opportunityData.amount ?? null, currency: opportunityData.currency || "EUR", expected_close_at: opportunityData.expectedCloseAt ?? null, version: 1 }).select().single();
-        assertSupabase(error, "convert lead"); opportunityRow = data;
-      }
-      const { data: updatedLead, error: updateError } = await mobileSupabaseClient.from("crm_leads").update({ status: "convertido", stage: "won", updated_at: new Date().toISOString() }).eq("id", leadId).eq("organization_id", leadRow.organization_id).select().single();
-      assertSupabase(updateError, "mark lead converted"); if (!opportunityRow || !updatedLead) throw new Error("Lead conversion returned no data");
-      return { lead: mapSupabaseLead(updatedLead), opportunity: mapSupabaseOpportunity(opportunityRow) };
+      const organizationId = mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId;
+      const { data, error } = await mobileSupabaseClient.rpc("crm_convert_lead_to_opportunity", {
+        p_lead_id: leadId,
+        p_organization_id: organizationId,
+        p_name: opportunityData.name,
+        p_amount: opportunityData.amount ?? null,
+        p_currency: opportunityData.currency || "EUR",
+        p_stage_key: opportunityData.stageKey || "qualified",
+        p_idempotency_key: `mobile-lead-conversion:${leadId}`,
+      });
+      assertSupabase(error, "convert lead");
+      if (!data?.lead || !data?.opportunity) throw new Error("Lead conversion returned no data");
+      return { lead: mapSupabaseLead(data.lead), opportunity: mapSupabaseOpportunity(data.opportunity) };
     }
     const leads = loadStoredLeads();
     const leadIndex = leads.findIndex((l) => l.id === leadId);

@@ -69,6 +69,7 @@ export interface CRMOpportunity {
   probability?: number;
   expectedCloseAt: string | null;
   lossReason?: string | null;
+  lines?: Array<{ id?: string; catalogItemId?: string | null; productKey?: string | null; label?: string | null; quantity: number; unitAmount: number | null }>;
   createdAt: string;
   updatedAt: string;
 }

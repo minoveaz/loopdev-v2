@@ -22,8 +22,10 @@ import {
   TrendingUp,
   User,
   XCircle,
+  FileText,
 } from "lucide-react-native";
 import { mobileCrmAdapter, type CRMOpportunity } from "../adapters/crm";
+import { createMobileQuote } from "../adapters/quotes";
 import { mobileContactAdapter } from "../adapters/contact";
 import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
 import { type PipelineStageId } from "../../../packages/contracts/src/pipeline-capability";
@@ -157,6 +159,21 @@ export function MobileOpportunityDetailScreen({
     };
     setNotes([item, ...notes]);
     setNewNoteText("");
+  };
+
+  const handleCreateQuote = async () => {
+    if (!opportunity) return;
+    const lines = (opportunity.lines ?? []).filter((line: any) => line.unitAmount != null).map((line: any) => ({ catalogItemId: line.catalogItemId ?? null, productKey: line.productKey ?? null, label: line.label || line.productKey || "Product line", quantity: line.quantity, unitAmount: line.unitAmount }));
+    if (!lines.length) {
+      Alert.alert("Cotización", "Añade una línea con importe antes de crear la cotización.");
+      return;
+    }
+    try {
+      await createMobileQuote({ organizationId: opportunity.organizationId, opportunityId: opportunity.id, currency: opportunity.currency || "EUR", lines });
+      Alert.alert("Cotización", "Cotización creada correctamente.");
+    } catch (cause) {
+      Alert.alert("Cotización", cause instanceof Error ? cause.message : "No se pudo crear la cotización.");
+    }
   };
 
   const openPhone = (phone?: string) => {
@@ -316,6 +333,12 @@ export function MobileOpportunityDetailScreen({
             ]}
           />
         </View>
+
+        <MobileCard style={styles.cardSpacing}>
+          <MobileButton variant="primary" size="sm" icon={FileText} onPress={() => void handleCreateQuote()} minHeight={44}>
+            Crear cotización
+          </MobileButton>
+        </MobileCard>
 
         {/* Direct Communication Bar */}
         <MobileCard style={styles.cardSpacing}>

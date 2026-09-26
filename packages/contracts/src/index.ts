@@ -10,6 +10,7 @@ export * from "./pipeline-capability";
 export * from "./notes";
 export * from "./auth-port";
 export * from "./tasks";
+export * from "./quotes";
 export * from "./activity-timeline";
 export * from "./communications";
 export * from "./communications-adapter";

@@ -86,7 +86,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
       const [oppList, contactsPage] = await Promise.all([
         mobileCrmAdapter.listAllOpportunities(),
         mobileContactAdapter.listContacts({
-          organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "local-development-organization",
+          organizationId: mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "",
           limit: 100,
         }),
       ]);
@@ -224,7 +224,7 @@ export default function MobilePipelineScreen({ onBack, onNavigate }: MobilePipel
     try {
       const selectedContact = contactsMap.get(newContactId);
       await mobileCrmAdapter.createOpportunity({
-        organizationId: selectedContact?.organizationId || mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "local-development-organization",
+        organizationId: selectedContact?.organizationId || mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "",
         contactId: newContactId,
         leadId: null,
         catalogItemId: null,

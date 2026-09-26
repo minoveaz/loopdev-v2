@@ -16,6 +16,7 @@ import { CRM_PIPELINE_STAGE_CODES, contactName, type CRMPipelineStageCode } from
 import { useCrmContacts, useCrmPipeline, useCrmCustomer360, useCrmLeads } from "@/loopdev/domains/crm/hooks/use-crm";
 import { platformAdapter } from "@/loopdev/domains/platform";
 import { usePlatformNotes } from "@/loopdev/domains/platform";
+import { createQuote } from "@/loopdev/domains/crm/quotes";
 import type { EntityRef } from "@/loopdev/domains/platform";
 
 const labels: Record<CRMPipelineStageCode, string> = { prospecting: "Prospecting", qualified: "Qualified", proposal: "Proposal", negotiation: "Negotiation", won: "Won", lost: "Lost" };
@@ -33,7 +34,7 @@ export default function SalesCRMOpportunityDetail() {
   const foundContact = opportunity ? contacts.find((item) => item.id === opportunity.contactId) : undefined;
   const fallbackContact = opportunity ? {
     id: opportunity.contactId,
-    organizationId: "local-development-organization",
+    organizationId: platformAdapter.getScope().organizationId,
     firstName: (opportunity.contact.displayName || "Assigned Contact").split(" ")[0] || "Assigned",
     lastName: (opportunity.contact.displayName || "Assigned Contact").split(" ").slice(1).join(" ") || "Contact",
     companyName: "B2B Account",
@@ -57,6 +58,7 @@ export default function SalesCRMOpportunityDetail() {
   const [ownerId, setOwnerId] = useState("");
   const [lossReason, setLossReason] = useState("");
   const [stage, setStage] = useState<CRMPipelineStageCode>("prospecting");
+  const [quoteCreating, setQuoteCreating] = useState(false);
   const [editLines, setEditLines] = useState<Record<string, string>>({});
   const lifecycle = useFormLifecycle();
 
@@ -86,6 +88,28 @@ export default function SalesCRMOpportunityDetail() {
     });
     if (result.status === "success") { if (stage !== opportunity.stageCode) await moveStage(result.opportunity, stage); lifecycle.markClean(); setEditOpen(false); reload(); }
   };
+  const createOpportunityQuote = async () => {
+    const lines = opportunity.lines.filter((line) => line.unitAmount != null).map((line) => ({ catalogItemId: line.catalogItemId ?? null, productKey: line.productKey ?? null, label: line.label || line.productKey || "Product line", quantity: line.quantity, unitAmount: line.unitAmount as number }));
+    if (!lines.length) {
+      window.alert("Add a priced commercial line before creating a quote.");
+      return;
+    }
+    setQuoteCreating(true);
+    try {
+      await createQuote({ organizationId: opportunity.organizationId, opportunityId: opportunity.id, currency: opportunity.currency ?? "EUR", lines });
+      window.alert("Quote created successfully.");
+    } catch (cause) {
+      window.alert(cause instanceof Error ? cause.message : "Unable to create quote.");
+    } finally {
+      setQuoteCreating(false);
+    }
+  };
+  const reopenWithReason = async () => {
+    const reason = window.prompt("Why is this opportunity being reopened?");
+    if (!reason?.trim()) return;
+    await reopenOpportunity(opportunity, { reason: reason.trim() });
+    reload();
+  };
   const activityItems: ActivityFeedItem[] = (customer.view?.timeline ?? []).map((entry) => ({ id: entry.id, kind: getActivityKind(entry.type), actorLabel: entry.source ?? entry.sourceType, actorInitials: (entry.source ?? entry.sourceType).slice(0, 2).toUpperCase(), action: entry.type, actionLabel: getActivityActionLabel(entry.type), contextLabel: entry.status ?? undefined, occurredAt: entry.occurredAt, summary: entry.summary }));
   const visibleActivity = activityCategory === "all" ? activityItems : activityItems.filter((item) => item.actorLabel.toLowerCase().includes(activityCategory === "communications" ? "communication" : activityCategory === "notes" ? "note" : activityCategory === "tasks" ? "task" : "crm"));
   const originatingLead = opportunity.leadId ? leads.find((lead) => lead.id === opportunity.leadId) : undefined;
@@ -98,11 +122,11 @@ export default function SalesCRMOpportunityDetail() {
           <div className="flex flex-wrap items-center gap-3 border-b border-border pb-5"><div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary"><TrendingUp className="h-6 w-6" /></div><div className="min-w-0 flex-1"><h2 className="font-display text-xl font-semibold">{opportunity.name}</h2><div className="mt-1 flex flex-wrap items-center gap-2"><StatusBadge tone={tones[opportunity.stageCode]} dot>{labels[opportunity.stageCode]}</StatusBadge><StatusBadge tone="neutral">{opportunity.origin === "lead_conversion" ? "Lead conversion" : "Manual"}</StatusBadge></div><p className="mt-1 text-sm text-muted-foreground"><Link className="hover:text-primary hover:underline" to={`/app/sales-crm/contacts/${contact.id}`}>{contactDisplayName}</Link>{contact.companyName ? ` · ${contact.companyName}` : ""}</p></div></div>
           <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-5"><Metric label="Amount" value={opportunity.amount == null ? "—" : formatCurrency(opportunity.amount, (opportunity.currency ?? "EUR") as never)} /><Metric label="Probability" value={opportunity.probability == null ? "—" : `${Math.round(opportunity.probability * 100)}%`} /><Metric label="Weighted amount" value={opportunity.amount == null || opportunity.probability == null ? "—" : formatCurrency(opportunity.amount * opportunity.probability, (opportunity.currency ?? "EUR") as never)} /><Metric label="Expected close" value={opportunity.expectedCloseDate ? formatDate(opportunity.expectedCloseDate) : "—"} /><Metric label="Owner" value={opportunity.owner?.displayName ?? "Unassigned"} /></dl>
         </DataCard>
-        <DataCard title="Commercial lines" description="Products and quantities attached to the opportunity."><div className="space-y-2">{opportunity.lines.map((line) => <div key={line.id} className="flex items-center justify-between rounded-md border border-border p-3"><span><span className="block font-medium">{line.label || line.productKey || "Product line"}</span><span className="text-xs text-muted-foreground">{line.unitAmount == null ? "Unit amount pending" : formatCurrency(line.unitAmount, (line.currency ?? opportunity.currency ?? "EUR") as never)}</span></span><span className="text-sm text-muted-foreground">Qty {line.quantity}</span></div>)}</div></DataCard>
+        <DataCard title="Commercial lines" description="Products and quantities attached to the opportunity." action={<Button size="sm" onClick={() => void createOpportunityQuote()} disabled={quoteCreating}><FileText className="me-1.5 h-4 w-4" />{quoteCreating ? "Creating…" : "Create quote"}</Button>}><div className="space-y-2">{opportunity.lines.map((line) => <div key={line.id} className="flex items-center justify-between rounded-md border border-border p-3"><span><span className="block font-medium">{line.label || line.productKey || "Product line"}</span><span className="text-xs text-muted-foreground">{line.unitAmount == null ? "Unit amount pending" : formatCurrency(line.unitAmount, (line.currency ?? opportunity.currency ?? "EUR") as never)}</span></span><span className="text-sm text-muted-foreground">Qty {line.quantity}</span></div>)}</div></DataCard>
         <section className="surface-card overflow-hidden"><div className="border-b border-border px-5 pt-4"><h3 className="font-display text-lg font-semibold">Activity</h3><p className="text-sm text-muted-foreground">Recent opportunity and customer timeline</p><Tabs value={activityCategory} onValueChange={setActivityCategory} className="mt-3"><TabsList className="h-9 bg-transparent p-0"><TabsTrigger value="all" className="h-9 rounded-none border-b-2 border-transparent px-3 data-[state=active]:border-primary">All</TabsTrigger><TabsTrigger value="communications" className="h-9 rounded-none border-b-2 border-transparent px-3 data-[state=active]:border-primary">Communications</TabsTrigger><TabsTrigger value="notes" className="h-9 rounded-none border-b-2 border-transparent px-3 data-[state=active]:border-primary">Notes</TabsTrigger><TabsTrigger value="tasks" className="h-9 rounded-none border-b-2 border-transparent px-3 data-[state=active]:border-primary">Tasks</TabsTrigger><TabsTrigger value="crm" className="h-9 rounded-none border-b-2 border-transparent px-3 data-[state=active]:border-primary">CRM</TabsTrigger></TabsList></Tabs></div><div className="p-5"><ActivityFeed items={visibleActivity} title="" description="" loading={customer.loading} error={customer.error} emptyTitle="No activity in this category" emptyDescription="Activity will appear here as the opportunity progresses." /></div></section>
       </main>
       <aside className="space-y-6">
-        <DataCard title="Opportunity actions" description="Move and manage this opportunity."><div className="grid gap-2"><Button variant="outline" className="justify-start" onClick={openEdit}><FileText className="me-2 h-4 w-4" />Edit opportunity</Button>{opportunity.stageCode !== "won" && <Button variant="outline" className="justify-start" onClick={() => void moveStage(opportunity, "won")}><TrendingUp className="me-2 h-4 w-4" />Mark won</Button>}{opportunity.stageCode !== "lost" && <Button variant="outline" className="justify-start" onClick={() => void moveStage(opportunity, "lost")}><CalendarClock className="me-2 h-4 w-4" />Mark lost</Button>}{(opportunity.stageCode === "won" || opportunity.stageCode === "lost") && <Button variant="outline" className="justify-start" onClick={() => void reopenOpportunity(opportunity, { reason: "Reopened from opportunity detail" })}><RefreshCw className="me-2 h-4 w-4" />Reopen opportunity</Button>}<Button variant="outline" className="justify-start" asChild><Link to={`/app/sales-crm/contacts/${contact.id}`}><ExternalLink className="me-2 h-4 w-4" />Open Customer 360<ArrowRight className="ms-auto h-3.5 w-3.5" /></Link></Button></div></DataCard>
+        <DataCard title="Opportunity actions" description="Move and manage this opportunity."><div className="grid gap-2"><Button variant="outline" className="justify-start" onClick={openEdit}><FileText className="me-2 h-4 w-4" />Edit opportunity</Button>{opportunity.stageCode !== "won" && <Button variant="outline" className="justify-start" onClick={() => void moveStage(opportunity, "won")}><TrendingUp className="me-2 h-4 w-4" />Mark won</Button>}{opportunity.stageCode !== "lost" && <Button variant="outline" className="justify-start" onClick={() => void moveStage(opportunity, "lost")}><CalendarClock className="me-2 h-4 w-4" />Mark lost</Button>}{(opportunity.stageCode === "won" || opportunity.stageCode === "lost") && <Button variant="outline" className="justify-start" onClick={() => void reopenWithReason()}><RefreshCw className="me-2 h-4 w-4" />Reopen opportunity</Button>}<Button variant="outline" className="justify-start" asChild><Link to={`/app/sales-crm/contacts/${contact.id}`}><ExternalLink className="me-2 h-4 w-4" />Open Customer 360<ArrowRight className="ms-auto h-3.5 w-3.5" /></Link></Button></div></DataCard>
         <DataCard title="Relationships" description="Records connected to this opportunity."><div className="space-y-2 text-sm"><Link className="flex items-center justify-between rounded-md border border-border p-3 hover:border-primary/40" to={`/app/sales-crm/contacts/${contact.id}`}><span>Contact</span><span className="font-medium">{contactDisplayName}</span></Link>{originatingLead && <Link className="flex items-center justify-between rounded-md border border-border p-3 hover:border-primary/40" to={`/app/sales-crm/leads/${originatingLead.id}`}><span>Originating lead</span><span className="font-medium">{originatingLead.interest || "Lead"}</span></Link>}</div></DataCard>
         <PlatformNotesPanel notes={notes.notes} loading={notes.loading} error={notes.error} forbidden={notes.forbidden} relation={relation} onCreate={(body, visibility, attachments) => relation ? notes.createNote({ relation, body, visibility, attachments }) : Promise.resolve()} onUpdate={(noteId, body, expectedVersion) => notes.updateNote(noteId, { body, expectedVersion })} />
         <RelatedFilesPanel relation={{ entityType: "opportunity", entityId: opportunity.id, scope: platformAdapter.getScope() }} />

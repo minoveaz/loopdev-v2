@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import type { CRMOpportunity } from "@/loopdev/domains/crm/adapter";
 import type { CRMCustomerProduct, CRMLead } from "@/loopdev/domains/crm/adapter";
 import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
+import { platformAdapter } from "@/loopdev/domains/platform";
 import { localCatalogAdapter } from "@/loopdev/domains/catalog";
-import { LOCAL_CATALOG_ORGANIZATION_ID } from "@/loopdev/domains/catalog/data/localCatalog";
 import type { CatalogItem, CatalogAvailability, CatalogVariant, Offer, ProductPartyRole } from "@/loopdev/domains/catalog";
 import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/formatters";
@@ -31,7 +31,7 @@ export function Customer360ProductsTab({ contactId, opportunities, leads, select
   const [selectorError, setSelectorError] = useState<string | null>(null);
   const [itemContext, setItemContext] = useState<{ offers: Offer[]; variants: CatalogVariant[]; roles: ProductPartyRole[]; availability: CatalogAvailability[] }>({ offers: [], variants: [], roles: [], availability: [] });
   useEffect(() => {
-    void localCatalogAdapter.listCatalogItems({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, includeArchived: false }).then(setCatalogOptions).catch(() => setCatalogOptions([]));
+    void localCatalogAdapter.listCatalogItems({ organizationId: platformAdapter.getScope().organizationId, includeArchived: false }).then(setCatalogOptions).catch(() => setCatalogOptions([]));
   }, []);
   useEffect(() => {
     void loopdevAdapter.crm.listCustomerProducts(contactId).then(setCustomerProducts).catch(() => setCustomerProducts([]));
@@ -43,7 +43,7 @@ export function Customer360ProductsTab({ contactId, opportunities, leads, select
       setItems([]);
       return;
     }
-    void localCatalogAdapter.listCatalogItems({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, includeArchived: true }).then((catalogItems) => {
+    void localCatalogAdapter.listCatalogItems({ organizationId: platformAdapter.getScope().organizationId, includeArchived: true }).then((catalogItems) => {
       setItems(catalogItems.filter((item) => associationIds.has(item.id) || references.some((opportunity) => opportunity.catalogItemId === item.id || opportunity.productKey === item.key)));
     });
   }, [opportunities, customerProducts]);
@@ -54,8 +54,8 @@ export function Customer360ProductsTab({ contactId, opportunities, leads, select
       return;
     }
     void Promise.all([
-      localCatalogAdapter.listOffers({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogItemId: selectedCatalogItemId }),
-      localCatalogAdapter.listVariants({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogItemId: selectedCatalogItemId }),
+      localCatalogAdapter.listOffers({ organizationId: platformAdapter.getScope().organizationId, catalogItemId: selectedCatalogItemId }),
+      localCatalogAdapter.listVariants({ organizationId: platformAdapter.getScope().organizationId, catalogItemId: selectedCatalogItemId }),
     ]).then(([offers, variants]) => {
       setSelectorOffers(offers);
       setSelectorVariants(variants);
@@ -75,7 +75,7 @@ export function Customer360ProductsTab({ contactId, opportunities, leads, select
     setSavingAssociation(true);
     try {
       const created = await loopdevAdapter.crm.createCustomerProduct({
-        organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
+        organizationId: platformAdapter.getScope().organizationId,
         contactId,
         catalogItemId: selectedCatalogItemId,
         offerId: selectedOfferId || null,
@@ -103,10 +103,10 @@ export function Customer360ProductsTab({ contactId, opportunities, leads, select
   useEffect(() => {
     if (!selectedItem) return;
     void Promise.all([
-      localCatalogAdapter.listOffers({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogItemId: selectedItem.id }),
-      localCatalogAdapter.listVariants({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogItemId: selectedItem.id }),
-      localCatalogAdapter.listProductPartyRoles({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogItemId: selectedItem.id }),
-      localCatalogAdapter.listAvailabilities({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogItemId: selectedItem.id }),
+      localCatalogAdapter.listOffers({ organizationId: platformAdapter.getScope().organizationId, catalogItemId: selectedItem.id }),
+      localCatalogAdapter.listVariants({ organizationId: platformAdapter.getScope().organizationId, catalogItemId: selectedItem.id }),
+      localCatalogAdapter.listProductPartyRoles({ organizationId: platformAdapter.getScope().organizationId, catalogItemId: selectedItem.id }),
+      localCatalogAdapter.listAvailabilities({ organizationId: platformAdapter.getScope().organizationId, catalogItemId: selectedItem.id }),
     ]).then(([offers, variants, roles, availability]) => setItemContext({ offers, variants, roles, availability }));
   }, [selectedItem]);
   if (!items.length) return <><EmptyState icon={Package} title="No associated products" description="Products, subscriptions, and services associated with this customer will appear here." /><AssociationDrawer /></>;

@@ -89,7 +89,7 @@ export default function SalesCRMOpportunities() {
   }], [navigate, t]);
 
   useEffect(() => {
-    void loopdevAdapter.catalog.listCatalogItems({ organizationId: "local-development-organization", status: ["active"] })
+    void loopdevAdapter.catalog.listCatalogItems({ organizationId: platformAdapter.getScope().organizationId, status: ["active"] })
       .then(setCatalogItems)
       .catch(() => setCatalogItems([]));
   }, []);

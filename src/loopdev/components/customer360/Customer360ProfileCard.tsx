@@ -1,4 +1,4 @@
-import { Building2, Calendar, Clock, Mail, MapPin, Phone } from "lucide-react";
+import { Building2, Calendar, Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { DataCard, StatusBadge } from "@/components/common";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -38,8 +38,9 @@ export function Customer360ProfileCard({ contact }: { contact: CRMContact }) {
         <ContactLine icon={Clock} value={`Updated ${formatRelative(contact.updatedAt)}`} />
       </ul>
       <div className="mt-5 flex gap-2 border-t border-border pt-4">
-        <Button size="sm" variant="outline"><Mail className="mr-1.5 h-3.5 w-3.5" />Email</Button>
-        <Button size="sm" variant="outline"><Phone className="mr-1.5 h-3.5 w-3.5" />Call</Button>
+        <Button size="sm" variant="outline" disabled={!contact.email} onClick={() => contact.email && (window.location.href = `mailto:${contact.email}`)}><Mail className="mr-1.5 h-3.5 w-3.5" />Email</Button>
+        <Button size="sm" variant="outline" disabled={!contact.phone} onClick={() => contact.phone && (window.location.href = `tel:${contact.phone.replace(/[^\d+]/g, "")}`)}><Phone className="mr-1.5 h-3.5 w-3.5" />Call</Button>
+        <Button size="sm" variant="outline" disabled={!contact.phone} onClick={() => contact.phone && window.open(`https://wa.me/${contact.phone.replace(/[^\d+]/g, "")}`, "_blank", "noopener,noreferrer")}><MessageCircle className="mr-1.5 h-3.5 w-3.5" />WhatsApp</Button>
       </div>
     </DataCard>
   );

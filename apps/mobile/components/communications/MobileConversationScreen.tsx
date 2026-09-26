@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Clock,
   FileText,
+  Mail,
   Lock,
   MessageSquare,
   Package,
@@ -84,6 +85,8 @@ export function MobileConversationScreen({
   const [catalogPickerOpen, setCatalogPickerOpen] = useState(false);
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<CatalogItem | null>(null);
   const [sending, setSending] = useState(false);
+  const [composerMode, setComposerMode] = useState<"reply" | "call-note">("reply");
+  const templates = ["Gracias por tu interés. Te contactaremos con los siguientes pasos.", "Hemos recibido tu mensaje y lo revisaremos con el equipo.", "¿Agendamos una llamada para revisarlo?"];
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -171,6 +174,11 @@ export function MobileConversationScreen({
 
     setSending(true);
     try {
+      if (composerMode === "call-note") {
+        await addInternalNote(text);
+        setMessageText("");
+        return;
+      }
       if (selectedCatalogItem) {
         await sendReply(text || `Te comparto información sobre ${selectedCatalogItem.name}`, undefined, {
           contentType: "catalog_item",
@@ -199,6 +207,16 @@ export function MobileConversationScreen({
     if (phone) {
       void Linking.openURL(`tel:${phone.replace(/[^\d+]/g, "")}`);
     }
+  };
+
+  const handleWhatsApp = () => {
+    const phone = customerInfo?.phone || summary.contact?.phone;
+    if (phone) void Linking.openURL(`https://wa.me/${phone.replace(/[^\d+]/g, "")}`);
+  };
+
+  const handleEmail = () => {
+    const email = customerInfo?.email || summary.contact?.email;
+    if (email) void Linking.openURL(`mailto:${email}`);
   };
 
   const handleStatusChange = async (status: ConversationStatus) => {
@@ -413,6 +431,7 @@ export function MobileConversationScreen({
           </Pressable>
 
           <View style={styles.topActions}>
+            {summary.contact?.phone ? <Pressable onPress={handleWhatsApp} style={({ pressed }) => [styles.actionCircleBtn, pressed && { opacity: 0.7 }]} accessibilityRole="button" accessibilityLabel="Abrir WhatsApp"><MessageSquare size={17} color="#16a34a" /></Pressable> : null}
             {summary.contact?.phone ? (
               <Pressable
                 onPress={handleCall}
@@ -423,6 +442,7 @@ export function MobileConversationScreen({
                 <Phone size={17} color="#334155" />
               </Pressable>
             ) : null}
+            {summary.contact?.email ? <Pressable onPress={handleEmail} style={({ pressed }) => [styles.actionCircleBtn, pressed && { opacity: 0.7 }]} accessibilityRole="button" accessibilityLabel="Enviar email"><Mail size={17} color="#334155" /></Pressable> : null}
 
             <Pressable
               onPress={() => {
@@ -505,6 +525,11 @@ export function MobileConversationScreen({
 
         {/* Dedicated Customer Reply Composer (Matching Mobile Web) */}
         <View style={styles.composerWrapper}>
+          <View style={styles.composerHeaderRow}>
+            <Pressable onPress={() => setComposerMode("reply")}><Text style={styles.customerReplyBadgeText}>{lang === "es" ? "Respuesta" : "Reply"}</Text></Pressable>
+            <Pressable onPress={() => setComposerMode("call-note")}><Text style={styles.composerAvailabilityText}>{lang === "es" ? "Nota de llamada" : "Call note"}</Text></Pressable>
+            {composerMode === "reply" && templates.map((template) => <Pressable key={template} onPress={() => setMessageText(template)}><Text style={styles.composerAvailabilityText}>{template.slice(0, 24)}...</Text></Pressable>)}
+          </View>
           {/* Header Row: Customer reply Badge + Subtitle */}
           <View style={styles.composerHeaderRow}>
             <View style={styles.customerReplyBadge}>
@@ -570,7 +595,9 @@ export function MobileConversationScreen({
             <TextInput
               style={styles.composerTextarea}
               placeholder={
-                summary.channel === "whatsapp"
+                composerMode === "call-note"
+                  ? (lang === "es" ? "Escribe una nota de llamada..." : "Write a call note...")
+                  : summary.channel === "whatsapp"
                   ? (lang === "es" ? "Escribe una respuesta por WhatsApp..." : "Write a WhatsApp reply...")
                   : (lang === "es" ? `Escribe una respuesta por ${channelDisplay}...` : `Write a reply via ${channelDisplay}...`)
               }

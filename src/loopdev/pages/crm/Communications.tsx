@@ -232,6 +232,7 @@ function ConversationComposer({
   actionError,
   currentUserId,
   onReply,
+  onInternalNote,
 }: {
   summary: ConversationSummary;
   collaboration?: ConversationCollaboration;
@@ -241,11 +242,14 @@ function ConversationComposer({
   actionError: string | null;
   currentUserId: string;
   onReply: (body: string, content?: { contentType?: "catalog_item"; contentMetadata?: { catalogItemId?: string; catalogItemKey?: string; catalogItemType?: string; catalogPrice?: string; catalogCurrency?: string } }) => Promise<unknown>;
+  onInternalNote: (body: string) => Promise<unknown>;
 }) {
   const [sending, setSending] = useState(false);
+  const [mode, setMode] = useState<"reply" | "call-note">("reply");
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [catalogItemId, setCatalogItemId] = useState("");
   const { body } = draft;
+  const templates = ["Gracias por tu interés. Te contactaremos con los siguientes pasos.", "Hemos recibido tu mensaje y lo revisaremos con el equipo.", "¿Te parece bien si agendamos una llamada para revisarlo?"];
   useEffect(() => {
     void loopdevAdapter.catalog.listCatalogItems({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID }).then(setCatalogItems).catch(() => setCatalogItems([]));
   }, []);
@@ -261,7 +265,8 @@ function ConversationComposer({
     setSending(true);
     try {
       const selected = catalogItems.find((item) => item.id === catalogItemId);
-      await onReply(body, selected ? { contentType: "catalog_item", contentMetadata: { catalogItemId: selected.id, catalogItemKey: selected.key, catalogItemType: selected.type, catalogPrice: selected.metadata.price ? String(selected.metadata.price) : undefined, catalogCurrency: selected.metadata.currency ? String(selected.metadata.currency) : undefined } } : undefined);
+      if (mode === "call-note") await onInternalNote(body);
+      else await onReply(body, selected ? { contentType: "catalog_item", contentMetadata: { catalogItemId: selected.id, catalogItemKey: selected.key, catalogItemType: selected.type, catalogPrice: selected.metadata.price ? String(selected.metadata.price) : undefined, catalogCurrency: selected.metadata.currency ? String(selected.metadata.currency) : undefined } } : undefined);
       onDraftChange({ body: "" });
       setCatalogItemId("");
     } catch {
@@ -287,12 +292,13 @@ function ConversationComposer({
         {accountConnected && <span className="text-[11px] font-medium text-muted-foreground">Queued</span>}
       </div>
       {actionError && <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive" role="alert">{actionError}</p>}
-      <div className="flex items-center gap-2"><Package className="h-3.5 w-3.5 text-muted-foreground" /><select aria-label="Attach catalog item" value={catalogItemId} onChange={(event) => setCatalogItemId(event.target.value)} disabled={!canSend || sending} className="h-8 max-w-full rounded-md border border-input bg-background px-2 text-xs"><option value="">Attach catalog item (optional)</option>{catalogItems.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.type}</option>)}</select></div>
+      <div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" variant={mode === "reply" ? "secondary" : "ghost"} onClick={() => setMode("reply")}>Reply</Button><Button type="button" size="sm" variant={mode === "call-note" ? "secondary" : "ghost"} onClick={() => setMode("call-note")}>Call note</Button>{mode === "reply" && templates.map((template) => <Button key={template} type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => onDraftChange({ body: template })}>{template.slice(0, 28)}...</Button>)}</div>
+      {mode === "reply" && <div className="flex items-center gap-2"><Package className="h-3.5 w-3.5 text-muted-foreground" /><select aria-label="Attach catalog item" value={catalogItemId} onChange={(event) => setCatalogItemId(event.target.value)} disabled={!canSend || sending} className="h-8 max-w-full rounded-md border border-input bg-background px-2 text-xs"><option value="">Attach catalog item (optional)</option>{catalogItems.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.type}</option>)}</select></div>}
       <div className="flex items-end gap-2">
         <Textarea
           value={body}
           onChange={(event) => onDraftChange({ body: event.target.value })}
-          placeholder="Write a WhatsApp reply…"
+          placeholder={mode === "call-note" ? "Write a call note…" : "Write a WhatsApp reply…"}
           aria-label={`Customer reply to ${summary.contact.displayName}`}
           disabled={!canSend || sending}
           rows={2}
@@ -842,6 +848,10 @@ export default function Communications() {
                     currentUserId={communicationsContext.userId}
                     onReply={async (body, content) => {
                       await detail.sendReply(body, undefined, content);
+                      inbox.reload();
+                    }}
+                    onInternalNote={async (body) => {
+                      await detail.addInternalNote(body);
                       inbox.reload();
                     }}
                   />

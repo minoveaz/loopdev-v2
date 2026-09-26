@@ -123,7 +123,7 @@ function contactFromRow(row: any) {
 
 function summaryFromRow(row: any): ConversationSummary {
   const channel = row.channel_record ?? row.communication_channels ?? {};
-  const account = row.account ?? row.communication_accounts ?? {};
+  const account = row.account ?? row.communication_accounts ?? row.channel_record?.account ?? {};
   const collaboration = collaborationFromRow(row.collaboration);
   const assigneeId = row.assigned_to_user_id ?? collaboration.assignee?.userId ?? null;
   const assigneeName = collaboration.assignee?.name ?? null;
@@ -175,7 +175,7 @@ function assertBody(body: string): string {
 
 async function fetchDetail(context: CommunicationsContext, conversationId: string): Promise<ConversationDetail | null> {
   const client = clientOrThrow();
-  let query = client.from("communication_conversations").select("*, contact:crm_contacts(*), channel_record:communication_channels(*), account:communication_accounts(*)").eq("id", conversationId).eq("organization_id", context.organizationId);
+  let query = client.from("communication_conversations").select("*, contact:crm_contacts!communication_conversations_contact_org_fkey(*), channel_record:communication_channels!communication_conversations_channel_org_fkey(*, account:communication_accounts!communication_channels_account_org_fkey(*))").eq("id", conversationId).eq("organization_id", context.organizationId);
   if (isUuid(context.workspaceId)) query = query.or(`workspace_id.is.null,workspace_id.eq.${context.workspaceId}`);
   const { data: row, error } = await query.maybeSingle();
   if (error) throw error;
@@ -240,7 +240,7 @@ export const supabaseCommunicationsAdapter: CommunicationsAdapter = {
     if (isLocal(context)) return localCommunicationsAdapter.listConversations(context, filters);
     try {
       const client = clientOrThrow();
-      let query = client.from("communication_conversations").select("*, contact:crm_contacts(*), channel_record:communication_channels(*), account:communication_accounts(*)").eq("organization_id", context.organizationId).order("last_activity_at", { ascending: false });
+      let query = client.from("communication_conversations").select("*, contact:crm_contacts!communication_conversations_contact_org_fkey(*), channel_record:communication_channels!communication_conversations_channel_org_fkey(*, account:communication_accounts!communication_channels_account_org_fkey(*))").eq("organization_id", context.organizationId).order("last_activity_at", { ascending: false });
       if (isUuid(context.workspaceId)) query = query.or(`workspace_id.is.null,workspace_id.eq.${context.workspaceId}`);
       const { data, error } = await query;
       if (error) throw error;

@@ -38,6 +38,7 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
   const [, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [uploadCategory, setUploadCategory] = useState<FileCategory>("identity");
   const [fileToDelete, setFileToDelete] = useState<FileRecord | null>(null);
 
@@ -63,6 +64,18 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
     void loadFiles();
   }, [contactId]);
 
+  useEffect(() => {
+    let active = true;
+    setPreviewUri(null);
+    if (!previewFile) return () => { active = false; };
+    void localFilesAdapter.getPreviewUrl(previewFile.id).then((url) => {
+      if (active) setPreviewUri(url);
+    }).catch(() => {
+      if (active) setPreviewUri(previewFile.uri ?? null);
+    });
+    return () => { active = false; };
+  }, [previewFile]);
+
   const handleFileUpload = async (event: any) => {
     const selectedFiles: globalThis.File[] = Array.from(event.target.files || []);
     if (!selectedFiles.length) return;
@@ -76,6 +89,7 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
         relation: { entityType: "contact", entityId: contactId, label: contactName },
         mediaType: f.type || "application/octet-stream",
         size: f.size,
+        file: f,
       });
     }
 
@@ -274,7 +288,7 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
             <View style={styles.previewModalBody}>
               {previewFile?.mediaType.startsWith("image/") ? (
                 <Image
-                  source={{ uri: previewFile.uri || previewFile.name }}
+                  source={{ uri: previewUri || previewFile.uri || previewFile.name }}
                   style={styles.previewImage}
                   resizeMode="contain"
                 />

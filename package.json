@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "vite",
     "doctor": "node scripts/doctor.mjs",
+    "harness:doctor": "node scripts/harness-doctor.mjs",
     "setup": "node scripts/doctor.mjs",
     "supabase:check": "node scripts/doctor.mjs",
     "supabase:start": "node scripts/start-supabase-local.mjs",

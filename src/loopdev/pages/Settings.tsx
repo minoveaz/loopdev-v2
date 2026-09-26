@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Bot, Database, MessageCircle, Settings2, SlidersHorizontal, Tags } from "lucide-react";
+import { ArrowRight, Bot, Database, MessageCircle, Settings2, ShieldCheck, SlidersHorizontal, Tags } from "lucide-react";
 import { PageContainer, PageHeader, SurfaceCard, SurfaceCardBody, SurfaceCardHeader } from "@/components/common";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useT } from "@/i18n";
@@ -29,6 +29,7 @@ const settingsAreas = [
     icon: Database,
     items: [
       { labelKey: "settings.importExport", descriptionKey: "settings.importExportDescription", to: "/app/settings/data/operations?tab=import", icon: Database },
+      { labelKey: "settings.documentRetention", descriptionKey: "settings.documentRetentionDescription", to: "/app/settings/document-retention", icon: ShieldCheck },
     ],
   },
 ];

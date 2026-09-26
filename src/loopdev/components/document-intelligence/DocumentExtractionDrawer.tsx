@@ -10,6 +10,7 @@ import {
   useExtractionSession,
   type IdentityDocumentFields,
   type ExtractionDocumentFile,
+  type ExtractionRecord,
   type DocumentIntelligenceSourceSuite,
 } from "@/loopdev/domains/document-intelligence";
 import { useT } from "@/i18n";
@@ -20,7 +21,7 @@ export interface DocumentExtractionDrawerProps {
   sourceSuite?: DocumentIntelligenceSourceSuite;
   sourceReferenceId?: string | null;
   initialFile?: File | ExtractionDocumentFile | null;
-  onApplyExtractedData: (fields: IdentityDocumentFields) => void;
+  onApplyExtractedData: (fields: IdentityDocumentFields, record?: ExtractionRecord) => void | Promise<void>;
 }
 
 export function DocumentExtractionDrawer({
@@ -46,7 +47,7 @@ export function DocumentExtractionDrawer({
   const handleApply = async (fields: any) => {
     const record = await session.confirmExtraction(fields);
     if (record) {
-      onApplyExtractedData(record.fields);
+      await onApplyExtractedData(record.fields, record);
       onOpenChange(false);
     }
   };

@@ -736,7 +736,9 @@
         "dataTitle": "Data management",
         "dataDescription": "Import and export CRM data with validation and deduplication.",
         "importExport": "Import / export",
-        "importExportDescription": "Manage local CRM data operations."
+        "importExportDescription": "Manage local CRM data operations.",
+        "documentRetention": "Document retention",
+        "documentRetentionDescription": "Configure retention for associated identity documents."
       },
       "timeline": {
         "title": "Activity timeline",

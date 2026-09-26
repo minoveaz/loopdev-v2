@@ -34,6 +34,7 @@ import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactForm
 import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
 import { ContactMobileCard } from "@/loopdev/components/crm/contacts/ContactMobileCard";
 import { DuplicateReviewPanel } from "@/loopdev/components/crm/contacts/DuplicateReviewPanel";
+import { promoteDocumentToPlatformFile, type ExtractionRecord } from "@/loopdev/domains/document-intelligence";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +60,7 @@ export default function SalesCRMContacts() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [initialContactValues, setInitialContactValues] = useState<Partial<ContactFormValues> | undefined>();
   const [documentExtractionId, setDocumentExtractionId] = useState<string | null>(null);
+  const [pendingDocument, setPendingDocument] = useState<ExtractionRecord | null>(null);
   const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<CRMContact | null>(null);
@@ -109,7 +111,12 @@ export default function SalesCRMContacts() {
   }, [contacts, currentOrgId]);
 
   useEffect(() => {
-    const state = location.state as { documentFields?: Record<string, string | null>; extractionId?: string | null } | null;
+    const state = location.state as {
+      documentFields?: Record<string, string | null>;
+      extractionId?: string | null;
+      documentLifecycle?: ExtractionRecord["lifecycle"];
+      documentFile?: ExtractionRecord["files"]["front"];
+    } | null;
     if (!state?.documentFields) return;
     const fields = state.documentFields;
     setInitialContactValues({
@@ -124,6 +131,25 @@ export default function SalesCRMContacts() {
     });
     setEditingContact(null);
     setDocumentExtractionId(state.extractionId ?? null);
+    setPendingDocument(state.extractionId && state.documentLifecycle
+      ? {
+          id: state.extractionId,
+          organizationId: currentOrgId,
+          title: state.documentFile?.name ?? "Document",
+          documentType: (fields.documentType as ExtractionRecord["documentType"]) ?? "unknown",
+          status: "completed",
+          sourceSuite: "crm",
+          files: { front: state.documentFile ?? null, back: null },
+          fields: fields as unknown as ExtractionRecord["fields"],
+          fieldConfidence: {},
+          overallConfidence: 0,
+          extractedAt: null,
+          completedAt: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lifecycle: state.documentLifecycle,
+        }
+      : null);
     setEditorOpen(true);
     navigate(location.pathname + location.search, { replace: true, state: null });
   }, [location.pathname, location.search, location.state, navigate]);
@@ -255,7 +281,26 @@ export default function SalesCRMContacts() {
       country: optional(values.country),
       attributes: documentExtractionId ? { documentIntelligenceExtractionId: documentExtractionId } : {},
     };
-    return loopdevAdapter.crm.createContact(input);
+    const result = await loopdevAdapter.crm.createContact(input);
+    if (result.status === "success" && pendingDocument?.lifecycle) {
+      const sourceFile = pendingDocument.files.front;
+      await promoteDocumentToPlatformFile({
+        organizationId: pendingDocument.organizationId,
+        documentId: pendingDocument.lifecycle.documentId,
+        extractionId: pendingDocument.id,
+        sourceSuite: pendingDocument.sourceSuite,
+        documentType: pendingDocument.documentType,
+        contactId: result.contact.id,
+        tempStoragePath: pendingDocument.lifecycle.tempStoragePath,
+        fileName: sourceFile?.name ?? pendingDocument.title,
+        mediaType: sourceFile?.mimeType ?? "application/pdf",
+        size: sourceFile?.size ?? 0,
+        expectedVersion: pendingDocument.lifecycle.version,
+        idempotencyKey: `document-promote:${pendingDocument.id}:${result.contact.id}`,
+      });
+      setPendingDocument(null);
+    }
+    return result;
   };
 
   const handleEditorSuccess = () => {

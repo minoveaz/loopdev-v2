@@ -14,6 +14,7 @@ import { ExtractionReviewPanel } from "@/loopdev/components/document-intelligenc
 import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
 import type { CRMContact } from "@/loopdev/domains/crm/adapter";
 import type { IdentityDocumentFields } from "@/loopdev/domains/document-intelligence";
+import { promoteDocumentToPlatformFile } from "@/loopdev/domains/document-intelligence";
 
 export default function DocumentIntelligenceExtractionWorkspace() {
   const t = useT();
@@ -81,12 +82,45 @@ export default function DocumentIntelligenceExtractionWorkspace() {
   };
 
   const createContact = async (fields: IdentityDocumentFields) => {
-    navigate("/app/sales-crm/contacts", { state: { documentFields: fields, extractionId: session.currentRecord?.id ?? null } });
+    navigate("/app/sales-crm/contacts", {
+      state: {
+        documentFields: fields,
+        extractionId: session.currentRecord?.id ?? null,
+        documentLifecycle: session.currentRecord?.lifecycle ?? null,
+        documentFile: session.currentRecord?.files.front ?? null,
+      },
+    });
   };
 
-  const linkExistingContact = (contact: CRMContact) => {
-    setContactMessage(`Contacto vinculado para continuar la póliza: ${contact.firstName} ${contact.lastName ?? ""}`);
-    setContactMatches([contact]);
+  const linkExistingContact = async (contact: CRMContact) => {
+    const record = session.currentRecord;
+    if (!record?.lifecycle) {
+      setContactMessage("La extracción no tiene una referencia persistente para promocionar el documento.");
+      return;
+    }
+    setContactActionLoading(true);
+    try {
+      await promoteDocumentToPlatformFile({
+        organizationId: record.organizationId,
+        documentId: record.lifecycle.documentId,
+        extractionId: record.id,
+        sourceSuite: record.sourceSuite,
+        documentType: record.documentType,
+        contactId: contact.id,
+        tempStoragePath: record.lifecycle.tempStoragePath,
+        fileName: record.files.front?.name ?? record.title,
+        mediaType: record.files.front?.mimeType ?? "application/pdf",
+        size: record.files.front?.size ?? 0,
+        expectedVersion: record.lifecycle.version,
+        idempotencyKey: `document-promote:${record.id}:${contact.id}`,
+      });
+      setContactMessage(`Documento vinculado a ${contact.firstName} ${contact.lastName ?? ""} y promovido a Files.`);
+      setContactMatches([contact]);
+    } catch (error) {
+      setContactMessage(error instanceof Error ? error.message : "No se pudo promover el documento.");
+    } finally {
+      setContactActionLoading(false);
+    }
   };
 
   const getFilePreviewData = () => {

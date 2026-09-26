@@ -70,6 +70,11 @@ export interface ExtractionRecord {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  lifecycle?: {
+    documentId: string;
+    tempStoragePath: string;
+    version: number;
+  } | null;
 }
 
 export interface ExtractionListParams {

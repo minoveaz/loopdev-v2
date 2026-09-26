@@ -736,7 +736,9 @@
         "dataTitle": "Gestión de datos",
         "dataDescription": "Importa y exporta datos CRM con validación y deduplicación.",
         "importExport": "Importar / exportar",
-        "importExportDescription": "Gestiona las operaciones de datos CRM."
+        "importExportDescription": "Gestiona las operaciones de datos CRM.",
+        "documentRetention": "Retención de documentos",
+        "documentRetentionDescription": "Configura la retención de documentos de identidad asociados."
       },
       "timeline": {
         "title": "Línea de actividad",

@@ -62,7 +62,11 @@ import { ConversationTimelinePanel } from "@/loopdev/components/communications/C
 import type { ConversationContextView } from "@/loopdev/components/communications/ConversationContextTabs";
 import { DocumentExtractionDrawer } from "@/loopdev/components/document-intelligence/DocumentExtractionDrawer";
 import { DEMO_DOCUMENT_FIXTURES } from "@/loopdev/domains/document-intelligence/data/fixtures";
-import type { IdentityDocumentFields } from "@/loopdev/domains/document-intelligence";
+import {
+  promoteDocumentToPlatformFile,
+  type IdentityDocumentFields,
+  type ExtractionRecord,
+} from "@/loopdev/domains/document-intelligence";
 import { useT } from "@/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { useTenantContext } from "@/hooks/use-tenant-context";
@@ -508,7 +512,7 @@ export default function Communications() {
     setExtractionDrawerOpen(true);
   };
 
-  const handleApplyExtractedDocument = async (fields: IdentityDocumentFields) => {
+  const handleApplyExtractedDocument = async (fields: IdentityDocumentFields, record?: ExtractionRecord) => {
     if (!selectedSummary?.contact?.id) {
       toast({ title: "Datos extraídos", description: "No hay un contacto seleccionado para actualizar." });
       return;
@@ -516,6 +520,23 @@ export default function Communications() {
 
     try {
       const contactId = selectedSummary.contact.id;
+      if (record?.lifecycle) {
+        const sourceFile = record.files.front;
+        await promoteDocumentToPlatformFile({
+          organizationId: record.organizationId,
+          documentId: record.lifecycle.documentId,
+          extractionId: record.id,
+          sourceSuite: "communications",
+          documentType: record.documentType,
+          contactId,
+          tempStoragePath: record.lifecycle.tempStoragePath,
+          fileName: sourceFile?.name ?? record.title,
+          mediaType: sourceFile?.mimeType ?? "application/pdf",
+          size: sourceFile?.size ?? 0,
+          expectedVersion: record.lifecycle.version,
+          idempotencyKey: `document-promote:${record.id}:${contactId}`,
+        });
+      }
       const c360 = await loopdevAdapter.crm.getCustomer360(contactId);
       if (!c360) {
         toast({ title: "Error", description: "No se encontró el registro del contacto.", variant: "destructive" });

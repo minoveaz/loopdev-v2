@@ -39,7 +39,7 @@ export interface UseExtractionSessionOptions {
   sourceSuite?: DocumentIntelligenceSourceSuite;
   sourceReferenceId?: string | null;
   initialFile?: File | ExtractionDocumentFile | null;
-  onApplyExtractedData?: (fields: IdentityDocumentFields) => void;
+  onApplyExtractedData?: (fields: IdentityDocumentFields, record?: ExtractionRecord) => void;
 }
 
 export function useExtractionSession({
@@ -185,9 +185,13 @@ export function useExtractionSession({
         });
 
         if (result.ok) {
-          setCurrentRecord(result.extraction);
-          onApplyExtractedData?.(result.extraction.fields);
-          return result.extraction;
+          const confirmed = {
+            ...result.extraction,
+            lifecycle: result.extraction.lifecycle ?? currentRecord.lifecycle ?? null,
+          };
+          setCurrentRecord(confirmed);
+          onApplyExtractedData?.(confirmed.fields, confirmed);
+          return confirmed;
         } else {
           const errMessage = "error" in result ? result.error.message : "Error al confirmar la extracción.";
           setError(errMessage);

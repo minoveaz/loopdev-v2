@@ -254,7 +254,7 @@ export default function SalesCRMLeadDetail() {
       const dealTitle = `Oportunidad · ${lead.interest || contactName(contact)}`;
       const amount = lead.estimatedValue || 35000;
       const res = await createOpportunityFromLead(lead.id, {
-        organizationId: lead.organizationId || "local-development-organization",
+        organizationId: lead.organizationId || platformAdapter.getScope().organizationId,
         name: dealTitle,
         amount,
         currency: lead.estimatedCurrency || "EUR",

@@ -231,7 +231,7 @@ export default function SalesCRMLeads() {
   const submitConversion = async () => {
     if (!conversionLead) return;
     const result = await createOpportunityFromLead(conversionLead.id, {
-      organizationId: conversionLead.organizationId || activeOrganization?.id || "local-development-organization",
+      organizationId: conversionLead.organizationId || activeOrganization?.id || "",
       productKey,
       name: opportunityName || productKey,
       amount: amount ? Number(amount) : null,

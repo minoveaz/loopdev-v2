@@ -493,7 +493,7 @@ export default function SalesCRMLeadDetail() {
       {/* Main 2-Column Workstation Layout */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.85fr)]">
         {/* Main Column */}
-        <main className="space-y-6 min-w-0">
+        <div className="space-y-6 min-w-0">
           {/* BANT Qualification Scorecard */}
           <div className="rounded-xl border border-border bg-card p-5 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
@@ -682,7 +682,7 @@ export default function SalesCRMLeadDetail() {
               />
             </div>
           </section>
-        </main>
+        </div>
 
         {/* Sidebar Column */}
         <aside className="space-y-6">

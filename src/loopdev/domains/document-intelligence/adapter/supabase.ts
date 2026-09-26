@@ -1,11 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
 import type { DocumentIntelligenceAdapter } from "./index";
 import type { ExtractionListParams, ExtractionMutationResult, ExtractionPage, ExtractionRecord, ExtractionMetrics, StartExtractionInput, ConfirmExtractionInput, RejectExtractionInput } from "./types";
+import { defaultWebAuthAdapter } from "@/loopdev/domains/platform/adapter/auth-supabase";
 
-const client = createClient(
-  import.meta.env.VITE_SUPABASE_URL || "https://sukjcsylkljiyvfklxvj.supabase.co",
-  import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845",
-);
+const client = defaultWebAuthAdapter.getClient();
+if (!client) {
+  throw new Error("Document Intelligence requires the shared Supabase client.");
+}
 
 function mapExtraction(row: any): ExtractionRecord {
   const fields = row.fields ?? {};

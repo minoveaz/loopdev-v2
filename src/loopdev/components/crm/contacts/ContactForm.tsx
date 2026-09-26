@@ -105,7 +105,7 @@ function optionalValue(value: string): string | null {
 
 function normalizeDateInput(value: string | null | undefined): string {
   const normalized = value?.trim() ?? "";
-  const match = normalized.match(/^(\d{1,2})[/\.\-](\d{1,2})[/\.\-](\d{4})$/);
+  const match = normalized.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);
   return match
     ? `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`
     : normalized;

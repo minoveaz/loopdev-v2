@@ -27,7 +27,7 @@ class MobileSecureStorage implements PlatformAuthStorage {
     if (typeof localStorage !== "undefined") {
       try {
         return localStorage.getItem(`mobile:${key}`);
-      } catch {}
+      } catch { /* localStorage may be unavailable in native runtimes */ }
     }
     return this.memoryStore.get(key) ?? null;
   }
@@ -36,7 +36,7 @@ class MobileSecureStorage implements PlatformAuthStorage {
     if (typeof localStorage !== "undefined") {
       try {
         localStorage.setItem(`mobile:${key}`, value);
-      } catch {}
+      } catch { /* localStorage may be unavailable in native runtimes */ }
     }
     this.memoryStore.set(key, value);
   }
@@ -45,7 +45,7 @@ class MobileSecureStorage implements PlatformAuthStorage {
     if (typeof localStorage !== "undefined") {
       try {
         localStorage.removeItem(`mobile:${key}`);
-      } catch {}
+      } catch { /* localStorage may be unavailable in native runtimes */ }
     }
     this.memoryStore.delete(key);
   }
@@ -158,7 +158,7 @@ export const mobileAuthAdapter: AuthPort = {
         };
         return currentMobileSession;
       }
-    } catch {}
+    } catch { /* fall through to the persisted session fallback */ }
 
     const raw = await mobileStorage.getItem("auth_session");
     if (raw) {
@@ -170,7 +170,7 @@ export const mobileAuthAdapter: AuthPort = {
           activeOrgId = currentOrganizations[0]?.id || "";
           return currentMobileSession;
         }
-      } catch {}
+      } catch { /* corrupted persisted data is ignored */ }
     }
     return null;
   },
@@ -245,7 +245,7 @@ export const mobileAuthAdapter: AuthPort = {
   async signOut(): Promise<AuthResult<void>> {
     try {
       await mobileSupabaseClient.auth.signOut();
-    } catch {}
+    } catch { /* sign-out remains local if the remote session is unavailable */ }
     currentMobileSession = null;
     currentOrganizations = [];
     activeOrgId = "";

@@ -15,7 +15,7 @@ export function ExtractionProgressLoader({
   const t = useT();
   return (
     <div className="mx-auto flex min-h-[420px] max-w-xl flex-col items-center justify-center p-6 text-center">
-      <div className="mb-6 relative flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
+      <div className="mb-6 relative flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm">
         <Sparkles className="h-8 w-8 animate-pulse" />
       </div>
 

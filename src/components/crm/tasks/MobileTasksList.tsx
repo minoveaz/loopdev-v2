@@ -81,7 +81,7 @@ export function MobileTasksList({
 
       {/* Empty State */}
       {tasks.length === 0 && (
-        <div className="text-center py-10 px-4 space-y-3 bg-card rounded-2xl border border-border mx-4">
+        <div className="text-center py-10 px-4 space-y-3 bg-card rounded-xl border border-border mx-4">
           <div className="w-12 h-12 rounded-full bg-primary-soft flex items-center justify-center mx-auto text-primary">
             <CheckCircle2 className="w-6 h-6 text-primary" />
           </div>
@@ -115,7 +115,7 @@ export function MobileTasksList({
               key={task.id}
               onClick={() => onSelectTask?.(task)}
               className={cn(
-                "relative rounded-2xl p-4 transition-all duration-200 border cursor-pointer",
+                "relative rounded-xl p-4 transition-all duration-200 border cursor-pointer",
                 isCompleted
                   ? "bg-card-muted/50 border-border opacity-70"
                   : isOverdue

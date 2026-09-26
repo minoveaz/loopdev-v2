@@ -85,7 +85,7 @@ export function DocumentDropzone({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200 ${
+      className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all duration-200 ${
         isDragOver
           ? "border-primary bg-primary/5 scale-[0.99]"
           : "border-border/80 bg-card/60 hover:border-primary/40 hover:bg-card/90"
@@ -104,7 +104,7 @@ export function DocumentDropzone({
       />
 
       <div className="flex max-w-lg flex-col items-center text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner">
           <UploadCloud className="h-7 w-7" />
         </div>
 

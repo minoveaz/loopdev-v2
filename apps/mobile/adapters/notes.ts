@@ -13,6 +13,7 @@ import type {
   UpdateNoteInput,
 } from "../../../packages/contracts/src/notes";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./auth";
+import { enqueueOfflineMutation, registerOfflineMutationHandler } from "./offlineQueue";
 
 const SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845";
@@ -91,12 +92,50 @@ async function getHeaders(): Promise<HeadersInit> {
   return headers;
 }
 
+const LOCAL_NOTES_STORAGE_KEY = "loopdev_mobile_notes_cache";
 const localNotesStore: NoteRecord[] = [];
+let replayingQueuedNote = false;
+
+function readLocalNotes(): NoteRecord[] {
+  if (typeof window === "undefined") return [...localNotesStore];
+  try {
+    const raw = window.localStorage.getItem(LOCAL_NOTES_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [...localNotesStore];
+  }
+}
+
+function writeLocalNotes(notes: NoteRecord[]) {
+  localNotesStore.splice(0, localNotesStore.length, ...notes);
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LOCAL_NOTES_STORAGE_KEY, JSON.stringify(notes));
+  } catch {
+    // Memory remains the fallback when local persistence is unavailable.
+  }
+}
+
+function createLocalNote(input: CreateNoteInput): NoteRecord {
+  const now = new Date().toISOString();
+  return mapRowToNote({
+    id: `local-note-${Date.now()}-${readLocalNotes().length}`,
+    organization_id: input.scope.organizationId,
+    author_user_id: input.authorId,
+    body: JSON.stringify({ plainTextPreview: input.plainTextPreview.trim(), mode: input.mode, content: input.content, mentions: input.mentions ?? [] }),
+    visibility: input.visibility,
+    version: 1,
+    created_at: now,
+    updated_at: now,
+    ...(input.relations[0]?.type === "contact" ? { contact_id: input.relations[0].id } : { relation_type: input.relations[0]?.type, relation_id: input.relations[0]?.id }),
+  });
+}
 
 export const mobileNotesAdapter: NotesPort = {
   async listNotes(params: NotesListParams) {
     if (!isUUID(params.scope.organizationId)) {
-      const items = localNotesStore.filter((note) => !params.relation || note.relations.some((relation) => relation.id === params.relation?.id));
+      const items = readLocalNotes().filter((note) => !params.relation || note.relations.some((relation) => relation.id === params.relation?.id));
       return success({ items, nextCursor: null });
     }
     const orgId =
@@ -118,31 +157,25 @@ export const mobileNotesAdapter: NotesPort = {
         headers,
       });
 
-      if (!resp.ok) return error("NOTES_NETWORK", `Unable to list notes (${resp.status}).`);
+      if (!resp.ok) {
+        const cached = readLocalNotes().filter((note) => note.scope.organizationId === orgId && (!params.relation || note.relations.some((item) => item.id === params.relation?.id)));
+        return success({ items: cached, nextCursor: null });
+      }
 
       const rows = await resp.json();
       const items = Array.isArray(rows) ? rows.map(mapRowToNote) : [];
+      writeLocalNotes(items);
       return success({ items, nextCursor: null });
     } catch (err) {
-      return error("NOTES_NETWORK", err instanceof Error ? err.message : "Unable to list notes.");
+      const cached = readLocalNotes().filter((note) => note.scope.organizationId === orgId && (!params.relation || note.relations.some((item) => item.id === params.relation?.id)));
+      return success({ items: cached, nextCursor: null });
     }
   },
 
   async createNote(input: CreateNoteInput) {
     if (!isUUID(input.scope.organizationId)) {
-      const now = new Date().toISOString();
-      const note = mapRowToNote({
-        id: `local-note-${Date.now()}-${localNotesStore.length}`,
-        organization_id: input.scope.organizationId,
-        author_user_id: input.authorId,
-        body: JSON.stringify({ plainTextPreview: input.plainTextPreview.trim(), mode: input.mode, content: input.content, mentions: input.mentions ?? [] }),
-        visibility: input.visibility,
-        version: 1,
-        created_at: now,
-        updated_at: now,
-        ...(input.relations[0]?.type === "contact" ? { contact_id: input.relations[0].id } : { relation_type: input.relations[0]?.type, relation_id: input.relations[0]?.id }),
-      });
-      localNotesStore.unshift(note);
+      const note = createLocalNote(input);
+      writeLocalNotes([note, ...readLocalNotes()]);
       return success(note);
     }
     const orgId =
@@ -188,23 +221,37 @@ export const mobileNotesAdapter: NotesPort = {
         body: JSON.stringify(payload),
       });
 
-      if (!resp.ok) return error("NOTES_NETWORK", `Unable to create note (${resp.status}).`);
+      if (!resp.ok) {
+        if (replayingQueuedNote) throw new Error(`Unable to create note (${resp.status}).`);
+        const note = createLocalNote(input);
+        writeLocalNotes([note, ...readLocalNotes()]);
+        enqueueOfflineMutation("notes.create", input);
+        return success(note);
+      }
 
       const rows = await resp.json();
       if (!rows[0]) return error("NOTES_NETWORK", "The notes service returned no created record.");
       return success(mapRowToNote(rows[0]));
     } catch (err) {
+      if (!replayingQueuedNote) {
+        const note = createLocalNote(input);
+        writeLocalNotes([note, ...readLocalNotes()]);
+        enqueueOfflineMutation("notes.create", input);
+        return success(note);
+      }
       return error("NOTES_NETWORK", err instanceof Error ? err.message : "Unable to create note.");
     }
   },
 
   async updateNote(noteId: string, input: UpdateNoteInput) {
-    const localIndex = localNotesStore.findIndex((note) => note.id === noteId);
-    if (localIndex >= 0) {
-      const current = localNotesStore[localIndex];
+    const localNotes = readLocalNotes();
+    const localIndex = localNotes.findIndex((note) => note.id === noteId);
+    if (localIndex >= 0 && !replayingQueuedNote) {
+      const current = localNotes[localIndex];
       if (current.version !== input.expectedVersion) return error("NOTES_CONFLICT", "The note changed before it could be updated.");
       const updated = { ...current, mode: input.mode ?? current.mode, content: input.content ?? current.content, plainTextPreview: input.plainTextPreview ?? current.plainTextPreview, mentions: input.mentions ?? current.mentions, visibility: input.visibility ?? current.visibility, version: current.version + 1, updatedAt: new Date().toISOString() };
-      localNotesStore[localIndex] = updated;
+      localNotes[localIndex] = updated;
+      writeLocalNotes(localNotes);
       return success(updated);
     }
     try {
@@ -249,17 +296,30 @@ export const mobileNotesAdapter: NotesPort = {
       if (!rows[0]) return error("NOTES_NOT_FOUND", "The note was not found.");
       return success(mapRowToNote(rows[0]));
     } catch (err) {
+      const cached = readLocalNotes();
+      const cachedIndex = cached.findIndex((note) => note.id === noteId);
+      if (cachedIndex >= 0 && !replayingQueuedNote) {
+        const current = cached[cachedIndex];
+        if (current.version !== input.expectedVersion) return error("NOTES_CONFLICT", "The note changed before it could be updated.");
+        const updated = { ...current, mode: input.mode ?? current.mode, content: input.content ?? current.content, plainTextPreview: input.plainTextPreview ?? current.plainTextPreview, mentions: input.mentions ?? current.mentions, visibility: input.visibility ?? current.visibility, version: current.version + 1, updatedAt: new Date().toISOString() };
+        cached[cachedIndex] = updated;
+        writeLocalNotes(cached);
+        enqueueOfflineMutation("notes.update", { noteId, input });
+        return success(updated);
+      }
       return error("NOTES_NETWORK", err instanceof Error ? err.message : "Unable to update note.");
     }
   },
 
   async deleteNote(noteId: string, _input: DeleteNoteInput): Promise<NotesResult<NoteRecord>> {
-    const localIndex = localNotesStore.findIndex((note) => note.id === noteId);
-    if (localIndex >= 0) {
-      const current = localNotesStore[localIndex];
+    const localNotes = readLocalNotes();
+    const localIndex = localNotes.findIndex((note) => note.id === noteId);
+    if (localIndex >= 0 && !replayingQueuedNote) {
+      const current = localNotes[localIndex];
       if (current.version !== _input.expectedVersion) return error("NOTES_CONFLICT", "The note changed before it could be deleted.");
       const deleted = { ...current, status: "deleted" as const, updatedAt: new Date().toISOString() };
-      localNotesStore.splice(localIndex, 1);
+      localNotes.splice(localIndex, 1);
+      writeLocalNotes(localNotes);
       return success(deleted);
     }
     try {
@@ -277,6 +337,17 @@ export const mobileNotesAdapter: NotesPort = {
       if (!response.ok) return error(response.status === 404 ? "NOTES_NOT_FOUND" : "NOTES_NETWORK", `Unable to delete note (${response.status}).`);
       return success(mapRowToNote({ ...current, status: "deleted", updated_at: new Date().toISOString() }));
     } catch (err) {
+      const cached = readLocalNotes();
+      const cachedIndex = cached.findIndex((note) => note.id === noteId);
+      if (cachedIndex >= 0 && !replayingQueuedNote) {
+        const current = cached[cachedIndex];
+        if (current.version !== _input.expectedVersion) return error("NOTES_CONFLICT", "The note changed before it could be deleted.");
+        const deleted = { ...current, status: "deleted" as const, updatedAt: new Date().toISOString() };
+        cached.splice(cachedIndex, 1);
+        writeLocalNotes(cached);
+        enqueueOfflineMutation("notes.delete", { noteId, input: _input });
+        return success(deleted);
+      }
       return error("NOTES_NETWORK", err instanceof Error ? err.message : "Unable to delete note.");
     }
   },
@@ -297,3 +368,35 @@ export const mobileNotesAdapter: NotesPort = {
     });
   },
 };
+
+registerOfflineMutationHandler("notes.create", async (payload) => {
+  replayingQueuedNote = true;
+  try {
+    const result = await mobileNotesAdapter.createNote(payload as CreateNoteInput);
+    if (result.status === "error") throw new Error(result.error.message);
+  } finally {
+    replayingQueuedNote = false;
+  }
+});
+
+registerOfflineMutationHandler("notes.update", async (payload) => {
+  const operation = payload as { noteId: string; input: UpdateNoteInput };
+  replayingQueuedNote = true;
+  try {
+    const result = await mobileNotesAdapter.updateNote(operation.noteId, operation.input);
+    if (result.status === "error") throw new Error(result.error.message);
+  } finally {
+    replayingQueuedNote = false;
+  }
+});
+
+registerOfflineMutationHandler("notes.delete", async (payload) => {
+  const operation = payload as { noteId: string; input: DeleteNoteInput };
+  replayingQueuedNote = true;
+  try {
+    const result = await mobileNotesAdapter.deleteNote(operation.noteId, operation.input);
+    if (result.status === "error") throw new Error(result.error.message);
+  } finally {
+    replayingQueuedNote = false;
+  }
+});

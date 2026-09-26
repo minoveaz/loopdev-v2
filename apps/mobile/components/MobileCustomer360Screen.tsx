@@ -6,6 +6,7 @@ import type { NoteRecord } from "../../../packages/contracts/src/notes";
 import type { TaskRecord } from "../../../packages/contracts/src/tasks";
 import type { CRMActivity, CRMLead, CRMOpportunity } from "../adapters/crm";
 import { mobileTasksAdapter } from "../adapters/tasks";
+import { flushOfflineMutations } from "../adapters/offlineQueue";
 import { useT } from "../i18n";
 import {
   MobilePageContainer,
@@ -64,6 +65,14 @@ export function MobileCustomer360Screen({
   const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
+    void flushOfflineMutations();
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", flushOfflineMutations);
+      return () => window.removeEventListener("online", flushOfflineMutations);
+    }
+  }, []);
+
+  useEffect(() => {
     if (view) {
       setLeads((view.leads || []).map((item) => ({
         id: item.id,
@@ -110,10 +119,10 @@ export function MobileCustomer360Screen({
     }
   }, [view]);
 
-  const loadTasks = async (contactId: string) => {
+  const loadTasks = async (organizationId: string, contactId: string) => {
     try {
       const res = await mobileTasksAdapter.listTasks({
-        organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+        organizationId,
         suite: "crm",
         relation: { entityType: "contact", entityId: contactId },
       });
@@ -124,8 +133,8 @@ export function MobileCustomer360Screen({
   };
 
   useEffect(() => {
-    if (view?.contact.id) {
-      void loadTasks(view.contact.id);
+    if (view?.contact.id && view.contact.organizationId) {
+      void loadTasks(view.contact.organizationId, view.contact.id);
     }
   }, [view?.contact.id]);
 
@@ -157,7 +166,7 @@ export function MobileCustomer360Screen({
     if (!view) return;
     const name = [view.contact.firstName, view.contact.lastName].filter(Boolean).join(" ");
     const res = await mobileTasksAdapter.createTask({
-      organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+      organizationId: view.contact.organizationId,
       suite: "crm",
       title,
       priority,
@@ -172,7 +181,7 @@ export function MobileCustomer360Screen({
   const handleCreateLead = async (lead: Partial<CRMLead>) => {
     const newLead: CRMLead = {
       id: `lead_${Date.now()}`,
-      organizationId: "local-development-organization",
+      organizationId: view?.contact.organizationId || "",
       contactId: view?.contact.id || "",
       interest: lead.interest || "General",
       source: lead.source || "Direct",
@@ -191,7 +200,7 @@ export function MobileCustomer360Screen({
   const handleCreateOpp = async (opp: Partial<CRMOpportunity>) => {
     const newOpp: CRMOpportunity = {
       id: `opp_${Date.now()}`,
-      organizationId: "local-development-organization",
+      organizationId: view?.contact.organizationId || "",
       contactId: view?.contact.id || "",
       leadId: null,
       catalogItemId: null,
@@ -317,12 +326,14 @@ export function MobileCustomer360Screen({
           <MobileCustomer360Documents
             contactId={contact.id}
             contactName={fullName}
+            organizationId={contact.organizationId}
           />
         )}
 
         {activeTab === "products" && (
           <MobileCustomer360Products
             contactId={contact.id}
+            organizationId={contact.organizationId}
           />
         )}
 

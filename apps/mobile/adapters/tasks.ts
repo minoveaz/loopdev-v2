@@ -11,6 +11,7 @@ import type {
 } from "../../../packages/contracts/src/tasks";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./auth";
 import { mobileSupabaseClient } from "./supabase";
+import { enqueueOfflineMutation, registerOfflineMutationHandler } from "./offlineQueue";
 
 const SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845";
@@ -161,7 +162,30 @@ const DEMO_INITIAL_MOBILE_TASKS: TaskRecord[] = [
 
 export const DEFAULT_TASK_TEMPLATES: TaskTemplateRecord[] = [];
 export const INITIAL_MOBILE_TASKS: TaskRecord[] = [];
-let memoryTasks: TaskRecord[] = [];
+const LOCAL_TASKS_STORAGE_KEY = "loopdev_mobile_tasks_cache";
+
+function readStoredTasks(): TaskRecord[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(LOCAL_TASKS_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistTasks(tasks: TaskRecord[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LOCAL_TASKS_STORAGE_KEY, JSON.stringify(tasks));
+  } catch {
+    // Memory remains the fallback when local persistence is unavailable.
+  }
+}
+
+let memoryTasks: TaskRecord[] = readStoredTasks();
+let replayingQueuedTask = false;
 
 export const localMobileTasksAdapter: TasksPort = {
   async listTasks(params: TaskListParams): Promise<TasksPage> {
@@ -283,6 +307,7 @@ export const localMobileTasksAdapter: TasksPort = {
     };
 
     memoryTasks = [newTask, ...memoryTasks];
+    persistTasks(memoryTasks);
     return { status: "success", task: newTask };
   },
 
@@ -499,6 +524,30 @@ function activeOrganizationId(input?: string): string {
   return input || mobileTenantContextAdapter.getTenantContext()?.activeOrganizationId || "";
 }
 
+function taskCacheKey(params: TaskListParams, organizationId: string): string {
+  return `loopdev_mobile_tasks:${organizationId}:${params.suite ?? "all"}:${params.relation?.entityType ?? ""}:${params.relation?.entityId ?? ""}`;
+}
+
+function readTaskCache(key: string): TaskRecord[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeTaskCache(key: string, items: TaskRecord[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(items));
+  } catch {
+    // Remote data remains the source of truth when local storage is unavailable.
+  }
+}
+
 async function remoteTaskMutation(
   taskId: string,
   patch: Record<string, unknown>,
@@ -525,6 +574,7 @@ export const mobileTasksAdapter: TasksPort = {
   async listTasks(params) {
     const organizationId = activeOrganizationId(params.organizationId);
     if (!organizationId) return { items: [], nextCursor: null, hasMore: false, total: 0 };
+    const cacheKey = taskCacheKey(params, organizationId);
     let query = mobileSupabaseClient.from("crm_tasks").select("*").eq("organization_id", organizationId);
     if (params.workspaceId) query = query.eq("workspace_id", params.workspaceId);
     if (params.suite) query = query.eq("suite", params.suite);
@@ -534,8 +584,15 @@ export const mobileTasksAdapter: TasksPort = {
     if (params.priority?.length) query = query.in("priority", params.priority.map((priority) => priority === "normal" ? "normal" : priority));
     if (params.query?.trim()) query = query.ilike("title", `%${params.query.trim()}%`);
     const { data, error } = await query.order(params.sortBy === "created_at" ? "created_at" : "due_at", { ascending: params.sortDirection !== "desc", nullsFirst: false });
-    if (error) return { items: [], nextCursor: null, hasMore: false, total: 0 };
+    if (error) {
+      const cached = readTaskCache(cacheKey);
+      if (cached.length > 0) return { items: cached, nextCursor: null, hasMore: false, total: cached.length };
+      return localMobileTasksAdapter.listTasks(params);
+    }
     const items = (data ?? []).map(mapRemoteTask);
+    memoryTasks = [...items, ...memoryTasks.filter((task) => !items.some((item) => item.id === task.id))];
+    persistTasks(memoryTasks);
+    writeTaskCache(cacheKey, items);
     return { items, nextCursor: null, hasMore: false, total: items.length };
   },
   async getTask(taskId) {
@@ -555,7 +612,12 @@ export const mobileTasksAdapter: TasksPort = {
       template_id: input.templateId ?? null, checklist: input.checklist ?? [], mentions: input.mentions ?? [], reminders: input.reminders ?? [], tags: input.tags ?? [], version: 1,
     };
     const { data, error } = await mobileSupabaseClient.from("crm_tasks").insert(row).select().single();
-    if (error || !data) return { status: "server-error", message: error?.message ?? "Task creation failed." };
+    if (error || !data) {
+      if (replayingQueuedTask) return { status: "server-error", message: error?.message ?? "Task creation failed." };
+      const fallback = await localMobileTasksAdapter.createTask(input);
+      if (fallback.status === "success") enqueueOfflineMutation("tasks.create", input);
+      return fallback;
+    }
     return { status: "success", task: mapRemoteTask(data) };
   },
   async updateTask(taskId, patch, expectedVersion) {
@@ -565,6 +627,11 @@ export const mobileTasksAdapter: TasksPort = {
       updates[column] = value;
     });
     const result = await remoteTaskMutation(taskId, updates, expectedVersion);
+    if (result.status === "server-error" && !replayingQueuedTask) {
+      const fallback = await localMobileTasksAdapter.updateTask(taskId, patch, expectedVersion);
+      if (fallback.status === "success") enqueueOfflineMutation("tasks.update", { taskId, patch, expectedVersion });
+      return fallback;
+    }
     return result;
   },
   async completeTask(taskId, expectedVersion) {
@@ -600,9 +667,47 @@ export const mobileTasksAdapter: TasksPort = {
   },
   async deleteTask(taskId) {
     const { error } = await mobileSupabaseClient.from("crm_tasks").delete().eq("id", taskId);
-    return error ? { success: false, error: error.message } : { success: true };
+    if (error) {
+      if (replayingQueuedTask) return { success: false, error: error.message };
+      const fallback = await localMobileTasksAdapter.deleteTask(taskId);
+      if (fallback.success) enqueueOfflineMutation("tasks.delete", { taskId });
+      return fallback;
+    }
+    return { success: true };
   },
   async listTemplates(organizationId, suite) {
     return DEFAULT_TASK_TEMPLATES.filter((template) => template.organizationId === organizationId && (!suite || template.suite === suite));
   },
 };
+
+registerOfflineMutationHandler("tasks.create", async (payload) => {
+  replayingQueuedTask = true;
+  try {
+    const result = await mobileTasksAdapter.createTask(payload as CreateTaskInput);
+    if (result.status !== "success") throw new Error(result.message ?? "Task replay failed.");
+  } finally {
+    replayingQueuedTask = false;
+  }
+});
+
+registerOfflineMutationHandler("tasks.update", async (payload) => {
+  const operation = payload as { taskId: string; patch: UpdateTaskPatch; expectedVersion?: number };
+  replayingQueuedTask = true;
+  try {
+    const result = await mobileTasksAdapter.updateTask(operation.taskId, operation.patch, operation.expectedVersion);
+    if (result.status !== "success") throw new Error(result.message ?? "Task update replay failed.");
+  } finally {
+    replayingQueuedTask = false;
+  }
+});
+
+registerOfflineMutationHandler("tasks.delete", async (payload) => {
+  const operation = payload as { taskId: string };
+  replayingQueuedTask = true;
+  try {
+    const result = await mobileTasksAdapter.deleteTask(operation.taskId);
+    if (!result.success) throw new Error(result.error ?? "Task delete replay failed.");
+  } finally {
+    replayingQueuedTask = false;
+  }
+});

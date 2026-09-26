@@ -14,6 +14,7 @@ import {
 interface Props {
   contactId: string;
   contactName: string;
+  organizationId: string;
 }
 
 const categories: Array<{ id: FileCategory | "all"; label: string }> = [
@@ -32,7 +33,7 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function MobileCustomer360Documents({ contactId, contactName }: Props) {
+export function MobileCustomer360Documents({ contactId, contactName, organizationId }: Props) {
   const t = useT();
   const [files, setFiles] = useState<FileRecord[]>([]);
   const [, setLoading] = useState(false);
@@ -49,7 +50,7 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
     setLoading(true);
     try {
       const res = await localFilesAdapter.listFiles({
-        organizationId: "local-development-organization",
+        organizationId,
         relation: { entityType: "contact", entityId: contactId },
       });
       setFiles(res.items);
@@ -82,7 +83,7 @@ export function MobileCustomer360Documents({ contactId, contactName }: Props) {
 
     for (const f of selectedFiles) {
       await localFilesAdapter.createFile({
-        organizationId: "local-development-organization",
+        organizationId,
         name: f.name,
         category: uploadCategory,
         source: "upload",

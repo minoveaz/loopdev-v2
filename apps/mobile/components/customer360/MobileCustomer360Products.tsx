@@ -16,10 +16,11 @@ import {
 
 interface Props {
   contactId: string;
+  organizationId: string;
   onViewCatalog?: () => void;
 }
 
-export function MobileCustomer360Products({ contactId, onViewCatalog }: Props) {
+export function MobileCustomer360Products({ contactId, organizationId, onViewCatalog }: Props) {
   const t = useT();
   const [customerProducts, setCustomerProducts] = useState<CRMCustomerProduct[]>([]);
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
@@ -40,7 +41,7 @@ export function MobileCustomer360Products({ contactId, onViewCatalog }: Props) {
       const [cp, cat] = await Promise.all([
         loopdevAdapter.listCustomerProducts(contactId),
         localCatalogAdapter.listCatalogItems({
-          organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+          organizationId,
           includeArchived: false,
         }),
       ]);
@@ -65,7 +66,7 @@ export function MobileCustomer360Products({ contactId, onViewCatalog }: Props) {
     setSaving(true);
     try {
       const created = await loopdevAdapter.createCustomerProduct({
-        organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+        organizationId,
         contactId,
         catalogItemId: selectedCatalogId,
         offerId: null,

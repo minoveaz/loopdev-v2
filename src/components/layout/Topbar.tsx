@@ -134,7 +134,7 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
   const currentLang = languages.find((l) => l.code === lang) ?? languages[0];
 
   return (
-    <header data-app-topbar className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border/70 bg-card px-4 md:gap-3 md:px-6">
+    <header data-app-topbar className="sticky top-0 z-30 flex h-16 min-w-0 items-center gap-2 border-b border-border/70 bg-card px-4 md:gap-3 md:px-6">
       <button
         onClick={onSidebarToggle}
         aria-label={sidebarCollapsed ? t("topbar.expandSidebar") : t("topbar.collapseSidebar")}
@@ -145,7 +145,7 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
         {sidebarCollapsed ? <PanelLeftOpen className="h-[18px] w-[18px]" /> : <PanelLeftClose className="h-[18px] w-[18px]" />}
       </button>
 
-      <div className="hidden md:flex md:flex-1 md:max-w-sm">
+      <div className="hidden min-w-0 md:flex md:flex-1 md:max-w-sm">
         <button
           type="button"
           onClick={() => setCmdOpen(true)}
@@ -171,7 +171,7 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
 
       <CommandMenu open={cmdOpen} onOpenChange={setCmdOpen} />
 
-      <div className="flex flex-1 items-center justify-end gap-0.5 md:gap-1">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5 md:ms-auto md:flex-none md:shrink-0 md:gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label={`${t("common.language")}: ${currentLang.label}`}
@@ -211,15 +211,15 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
         {/* User Profile & Organization Dropdown (matching desktop-account-org-selector.svg) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2.5 rounded-lg border border-border/70 bg-card/60 py-1 ps-1 pe-3 transition-smooth hover:border-border hover:bg-muted/70">
+            <button className="flex min-w-0 max-w-[min(18rem,32vw)] items-center gap-2.5 rounded-lg border border-border/70 bg-card/60 py-1 ps-1 pe-3 transition-smooth hover:border-border hover:bg-muted/70">
               <Avatar className="h-7 w-7 ring-1 ring-border/60">
                 <AvatarFallback className="bg-gradient-primary text-xs font-semibold text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden text-start leading-tight md:block">
-                <p className="text-[13px] font-semibold text-foreground">{session?.name ?? t("common.guest")}</p>
-                <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
+              <div className="hidden min-w-0 text-start leading-tight md:block">
+                <p className="truncate text-[13px] font-semibold text-foreground">{session?.name ?? t("common.guest")}</p>
+                <p className="truncate text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
                   {isSuperAdmin ? "Super Admin" : (session?.role ?? "viewer")}
                 </p>
               </div>

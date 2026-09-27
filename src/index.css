@@ -529,6 +529,10 @@
 }
 
 /* Scrollbar polish */
+html {
+  scrollbar-gutter: stable;
+}
+
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: hsl(var(--border-strong)); border-radius: 8px; border: 2px solid hsl(var(--background)); }

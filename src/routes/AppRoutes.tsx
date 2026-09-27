@@ -1,8 +1,7 @@
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { RouteLoader } from "@/components/common/RouteLoader";
 import { collectNavRoutes } from "@/app/navigation";
 import { loopdevRouteElements } from "./LoopdevRoutes";
 
@@ -456,7 +455,6 @@ export function AppRoutes() {
   ]);
 
   return (
-    <Suspense fallback={<RouteLoader />}>
     <Routes>
       {/* Public auth + sample pages */}
       <Route path="/preview" element={<Preview />} />
@@ -703,6 +701,5 @@ export function AppRoutes() {
 
       <Route path="*" element={<NotFound />} />
     </Routes>
-    </Suspense>
   );
 }

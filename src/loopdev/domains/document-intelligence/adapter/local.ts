@@ -214,6 +214,17 @@ export const localDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = {
     };
   },
 
+  async reopenExtraction(input: { extractionId: string }): Promise<ExtractionMutationResult> {
+    await delay(120);
+    const index = extractionsStore.findIndex((item) => item.id === input.extractionId);
+    if (index === -1) return { ok: false, error: { code: "NOT_FOUND", message: "Extraction not found." } };
+    const current = extractionsStore[index];
+    if (current.status !== "completed") return { ok: false, error: { code: "INVALID_STATUS", message: "Only confirmed extractions can be reopened." } };
+    const reopened = { ...current, status: "review" as const, completedAt: null, validatedAccuracy: null, updatedAt: new Date().toISOString() };
+    extractionsStore[index] = reopened;
+    return { ok: true, extraction: reopened };
+  },
+
   async rejectExtraction(input: RejectExtractionInput): Promise<ExtractionMutationResult> {
     await delay(120);
     const index = extractionsStore.findIndex((item) => item.id === input.extractionId);

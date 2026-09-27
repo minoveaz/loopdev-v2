@@ -26,6 +26,7 @@ interface ExtractionFieldsGridProps {
   fields: IdentityDocumentFields;
   confidence: ExtractionFieldConfidence;
   onChange: (field: ExportProfileField, value: string) => void;
+  readOnly?: boolean;
 }
 
 const GROUP_ICONS: Record<ExportFieldGroup, LucideIcon> = {
@@ -41,6 +42,7 @@ export function ExtractionFieldsGrid({
   fields,
   confidence,
   onChange,
+  readOnly = false,
 }: ExtractionFieldsGridProps) {
   const profile = getExportProfile(profileId);
 
@@ -105,6 +107,7 @@ export function ExtractionFieldsGrid({
                     confidence={conf}
                     span={span}
                     onChange={onChange}
+                    readOnly={readOnly}
                   />
                 );
               })}
@@ -115,4 +118,3 @@ export function ExtractionFieldsGrid({
     </div>
   );
 }
-

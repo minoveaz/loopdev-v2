@@ -213,6 +213,26 @@ export function useExtractionSession({
     [adapter, currentRecord, onApplyExtractedData, organizationId],
   );
 
+  const reopenExtraction = useCallback(async () => {
+    if (!currentRecord) return;
+    setActionLoading(true);
+    setError(null);
+    try {
+      const result = await adapter.reopenExtraction({ extractionId: currentRecord.id });
+      if (!result.ok) {
+        setError("error" in result ? result.error.message : "Error al reabrir la extracción.");
+        return;
+      }
+      const reopened = { ...result.extraction, lifecycle: result.extraction.lifecycle ?? currentRecord.lifecycle ?? null };
+      setCurrentRecord(reopened);
+      return reopened;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al reabrir la extracción.");
+    } finally {
+      setActionLoading(false);
+    }
+  }, [adapter, currentRecord]);
+
   // Reiniciar a nueva subida
   const resetSession = useCallback(() => {
     setFrontFile(null);
@@ -242,6 +262,7 @@ export function useExtractionSession({
     loadFixture,
     startExtraction,
     confirmExtraction,
+    reopenExtraction,
     resetSession,
   };
 }

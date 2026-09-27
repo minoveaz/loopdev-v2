@@ -7,6 +7,8 @@ interface ExtractionActionsBarProps {
   onReset: () => void;
   loading?: boolean;
   confirmLabel?: string;
+  confirmed?: boolean;
+  onReopen?: () => void;
 }
 
 export function ExtractionActionsBar({
@@ -14,6 +16,8 @@ export function ExtractionActionsBar({
   onReset,
   loading = false,
   confirmLabel,
+  confirmed = false,
+  onReopen,
 }: ExtractionActionsBarProps) {
   const t = useT();
   return (
@@ -30,6 +34,16 @@ export function ExtractionActionsBar({
         {t("common.loopdev.documentIntelligence.newDocument")}
       </Button>
 
+      {confirmed ? (
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-emerald-700">Extracción confirmada</span>
+          {onReopen && (
+            <Button type="button" variant="outline" size="sm" onClick={onReopen} disabled={loading}>
+              Reabrir revisión
+            </Button>
+          )}
+        </div>
+      ) : (
       <div className="flex items-center gap-2">
         <Button
           type="button"
@@ -41,6 +55,7 @@ export function ExtractionActionsBar({
           {loading ? t("common.loopdev.documentIntelligence.confirming") : confirmLabel ?? t("common.loopdev.documentIntelligence.confirmExtraction")}
         </Button>
       </div>
+      )}
     </div>
   );
 }

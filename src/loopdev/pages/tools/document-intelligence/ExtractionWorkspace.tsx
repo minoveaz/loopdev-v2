@@ -248,6 +248,7 @@ export default function DocumentIntelligenceExtractionWorkspace() {
                 <ExtractionReviewPanel
                   extraction={session.currentRecord}
                   onConfirm={handleConfirmAndFinish}
+                  onReopen={() => void session.reopenExtraction()}
                   onReset={session.resetSession}
                   confirmLoading={session.actionLoading}
                   confirmLabel={t("common.loopdev.documentIntelligence.confirmExtraction")}

@@ -15,6 +15,7 @@ export interface DocumentIntelligenceAdapter {
   getMetrics(organizationId: string): Promise<ExtractionMetrics>;
   startExtraction(input: StartExtractionInput): Promise<ExtractionMutationResult>;
   confirmExtraction(input: ConfirmExtractionInput): Promise<ExtractionMutationResult>;
+  reopenExtraction(input: { extractionId: string }): Promise<ExtractionMutationResult>;
   rejectExtraction(input: RejectExtractionInput): Promise<ExtractionMutationResult>;
   deleteExtraction(id: string): Promise<{ ok: boolean }>;
 }

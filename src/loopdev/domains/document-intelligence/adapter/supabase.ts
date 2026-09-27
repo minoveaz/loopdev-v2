@@ -2,7 +2,7 @@ import type { DocumentIntelligenceAdapter } from "./index";
 import type { ExtractionListParams, ExtractionMutationResult, ExtractionPage, ExtractionRecord, ExtractionMetrics, StartExtractionInput, ConfirmExtractionInput, RejectExtractionInput } from "./types";
 import { defaultWebAuthAdapter } from "@/loopdev/domains/platform/adapter/auth-supabase";
 import { TEMPORARY_DOCUMENT_RETENTION_DAYS, getDocumentExpiry } from "../lifecycle";
-import type { IdentityDocumentFields } from "./types";
+import type { IdentityDocumentFields, ReopenExtractionInput } from "./types";
 
 const client = defaultWebAuthAdapter.getClient();
 if (!client) {
@@ -272,6 +272,38 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
       },
     }).eq("id", input.extractionId).select().single();
     if (error) return { ok: false, error: { code: "EXTRACTION_UPDATE_FAILED", message: error.message } };
+    return { ok: true, extraction: mapExtraction(data) };
+  },
+  async reopenExtraction(input: ReopenExtractionInput) {
+    const { data: current, error: currentError } = await client
+      .from("document_intelligence_extractions")
+      .select("id, organization_id, document_version_id, status")
+      .eq("id", input.extractionId)
+      .maybeSingle();
+    if (currentError) return { ok: false, error: { code: "NOT_FOUND", message: currentError.message } };
+    if (!current) return { ok: false, error: { code: "NOT_FOUND", message: "Extraction not found." } };
+    if (current.status !== "approved") {
+      return { ok: false, error: { code: "INVALID_STATUS", message: "Only confirmed extractions can be reopened." } };
+    }
+
+    const { data, error } = await client
+      .from("document_intelligence_extractions")
+      .update({ status: "review", completed_at: null })
+      .eq("id", input.extractionId)
+      .eq("organization_id", current.organization_id)
+      .select()
+      .single();
+    if (error) return { ok: false, error: { code: "EXTRACTION_UPDATE_FAILED", message: error.message } };
+
+    const { error: auditError } = await client.from("document_intelligence_audit_events").insert({
+      organization_id: current.organization_id,
+      actor_type: "user",
+      event_type: "retry_requested",
+      document_version_id: current.document_version_id,
+      extraction_id: current.id,
+      metadata: { reason: "manual_reopen" },
+    });
+    if (auditError) return { ok: false, error: { code: "AUDIT_FAILED", message: auditError.message } };
     return { ok: true, extraction: mapExtraction(data) };
   },
   async rejectExtraction(input: RejectExtractionInput) {

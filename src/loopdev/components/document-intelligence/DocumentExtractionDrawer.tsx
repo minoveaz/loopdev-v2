@@ -151,6 +151,7 @@ export function DocumentExtractionDrawer({
               <ExtractionReviewPanel
                 extraction={session.currentRecord}
                 onConfirm={handleApply}
+                onReopen={() => void session.reopenExtraction()}
                 onReset={session.resetSession}
                 confirmLoading={session.actionLoading}
                 confirmLabel={t("common.loopdev.documentIntelligence.applyToContact")}

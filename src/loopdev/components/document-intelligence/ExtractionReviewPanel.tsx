@@ -23,6 +23,7 @@ import { useT } from "@/i18n";
 interface ExtractionReviewPanelProps {
   extraction: ExtractionRecord;
   onConfirm: (fields: Partial<IdentityDocumentFields>) => void;
+  onReopen?: () => void;
   onReset: () => void;
   confirmLoading?: boolean;
   confirmLabel?: string;
@@ -42,6 +43,7 @@ export function ExtractionReviewPanel({
   onCreateContact,
   onFindExistingContact,
   contactActionLoading = false,
+  onReopen,
 }: ExtractionReviewPanelProps) {
   const t = useT();
   const [profileId, setProfileId] = useState<ExportProfileId>(DEFAULT_EXPORT_PROFILE_ID);
@@ -93,6 +95,7 @@ export function ExtractionReviewPanel({
   const hasExtractedFields = Object.values(extraction.fields).some(
     (value) => typeof value === "string" && value.trim().length > 0,
   );
+  const confirmed = extraction.status === "completed";
 
   return (
     <div className="flex h-full min-h-0 flex-col rounded-xl border border-border bg-card p-4 sm:p-5 shadow-sm">
@@ -163,6 +166,7 @@ export function ExtractionReviewPanel({
           fields={fields}
           confidence={extraction.fieldConfidence}
           onChange={handleFieldChange}
+          readOnly={confirmed}
         />
       </div>
 
@@ -172,6 +176,8 @@ export function ExtractionReviewPanel({
         onReset={onReset}
         loading={confirmLoading}
         confirmLabel={confirmLabel ?? t("common.loopdev.documentIntelligence.confirmExtraction")}
+        confirmed={confirmed}
+        onReopen={onReopen}
       />
       {(onCreateContact || onFindExistingContact) && (
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-3">

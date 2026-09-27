@@ -15,6 +15,7 @@ interface ExtractionFieldItemProps {
   confidence?: number;
   span?: "full";
   onChange: (field: ExportProfileField, nextValue: string) => void;
+  readOnly?: boolean;
 }
 
 export function ExtractionFieldItem({
@@ -24,6 +25,7 @@ export function ExtractionFieldItem({
   confidence,
   span,
   onChange,
+  readOnly = false,
 }: ExtractionFieldItemProps) {
   const t = useT();
   const [copied, setCopied] = useState(false);
@@ -88,6 +90,7 @@ export function ExtractionFieldItem({
           id={`field-${field}`}
           value={value}
           onChange={(e) => onChange(field, e.target.value)}
+          readOnly={readOnly}
           placeholder={t("common.loopdev.documentIntelligence.notDetected")}
           rows={3}
           className="font-mono text-xs leading-relaxed"
@@ -97,6 +100,7 @@ export function ExtractionFieldItem({
           id={`field-${field}`}
           value={value}
           onChange={(e) => onChange(field, e.target.value)}
+          readOnly={readOnly}
           placeholder={t("common.loopdev.documentIntelligence.notDetected")}
           className="h-9 text-xs"
         />

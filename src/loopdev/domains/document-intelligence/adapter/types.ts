@@ -122,6 +122,10 @@ export interface ConfirmExtractionInput {
   fields: Partial<IdentityDocumentFields>;
 }
 
+export interface ReopenExtractionInput {
+  extractionId: string;
+}
+
 export interface RejectExtractionInput {
   extractionId: string;
   reason?: string;

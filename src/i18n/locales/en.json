@@ -95,6 +95,7 @@
   "settings": {
     "title": "Settings",
     "description": "Manage your organization, tenant users, and access roles.",
+    "tabs": { "organization": "Organization", "users": "Users & roles" },
     "forbidden": {
       "title": "Settings access restricted",
       "description": "You do not have permission to manage this organization's settings."
@@ -110,6 +111,15 @@
       "name": "Organization name",
       "slug": "Visible identifier",
       "timezone": "Timezone",
+      "timezones": {
+        "madrid": "Europe/Madrid (Madrid)",
+        "london": "Europe/London (London)",
+        "paris": "Europe/Paris (Paris)",
+        "newYork": "America/New York (New York)",
+        "losAngeles": "America/Los Angeles (Los Angeles)",
+        "mexicoCity": "America/Mexico City (Mexico City)",
+        "utc": "UTC"
+      },
       "locale": "Organization locale",
       "english": "English",
       "spanish": "Spanish",
@@ -131,6 +141,11 @@
       "invite": "Invite user",
       "invited": "Invitation created.",
       "updated": "User access updated.",
+      "removed": "User access removed.",
+      "remove": "Remove access",
+      "removeTitle": "Remove organization access?",
+      "removeDescription": "This revokes {{name}}'s access to the organization without deleting their account.",
+      "removeConfirm": "Remove access",
       "empty": "No users belong to this organization yet.",
       "activate": "Activate",
       "suspend": "Suspend"
@@ -138,7 +153,8 @@
     "roles": {
       "owner": "Owner",
       "admin": "Administrator",
-      "member": "Member"
+      "agent": "Agent",
+      "viewer": "Viewer"
     },
     "status": {
       "active": "Active",

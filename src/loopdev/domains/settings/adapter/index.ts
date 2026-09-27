@@ -1,4 +1,5 @@
 import { localSettingsAdapter } from "./local";
+import { supabaseSettingsAdapter } from "./supabase";
 import type {
   InviteSettingsUserInput,
   OrganizationSettings,
@@ -21,6 +22,7 @@ export interface SettingsAdapter {
     userId: string,
     status: SettingsUser["status"],
   ): Promise<SettingsUser>;
+  removeUser(organizationId: OrganizationId, userId: string): Promise<void>;
 }
 
 export class SettingsAdapterError extends Error {
@@ -33,8 +35,9 @@ export class SettingsAdapterError extends Error {
   }
 }
 
-export const settingsAdapter: SettingsAdapter = localSettingsAdapter;
+export const settingsAdapter: SettingsAdapter = supabaseSettingsAdapter;
 export { localSettingsAdapter };
+export { supabaseSettingsAdapter };
 export type {
   InviteSettingsUserInput,
   OrganizationSettings,

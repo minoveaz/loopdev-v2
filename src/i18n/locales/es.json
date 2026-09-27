@@ -95,6 +95,7 @@
   "settings": {
     "title": "Configuración",
     "description": "Administra tu organización, usuarios del tenant y roles de acceso.",
+    "tabs": { "organization": "Organización", "users": "Usuarios y roles" },
     "forbidden": {
       "title": "Acceso restringido",
       "description": "No tienes permisos para administrar la configuración de esta organización."
@@ -110,6 +111,15 @@
       "name": "Nombre de la organización",
       "slug": "Identificador visible",
       "timezone": "Zona horaria",
+      "timezones": {
+        "madrid": "Europe/Madrid (Madrid)",
+        "london": "Europe/London (Londres)",
+        "paris": "Europe/Paris (París)",
+        "newYork": "America/New York (Nueva York)",
+        "losAngeles": "America/Los Angeles (Los Ángeles)",
+        "mexicoCity": "America/Mexico City (Ciudad de México)",
+        "utc": "UTC"
+      },
       "locale": "Idioma de la organización",
       "english": "Inglés",
       "spanish": "Español",
@@ -131,6 +141,11 @@
       "invite": "Invitar usuario",
       "invited": "Invitación creada.",
       "updated": "Acceso del usuario actualizado.",
+      "removed": "Acceso del usuario eliminado.",
+      "remove": "Eliminar acceso",
+      "removeTitle": "¿Eliminar el acceso a la organización?",
+      "removeDescription": "Esto revoca el acceso de {{name}} a la organización sin eliminar su cuenta.",
+      "removeConfirm": "Eliminar acceso",
       "empty": "Todavía no hay usuarios en esta organización.",
       "activate": "Activar",
       "suspend": "Suspender"
@@ -138,7 +153,8 @@
     "roles": {
       "owner": "Propietario",
       "admin": "Administrador",
-      "member": "Miembro"
+      "agent": "Agente",
+      "viewer": "Observador"
     },
     "status": {
       "active": "Activo",

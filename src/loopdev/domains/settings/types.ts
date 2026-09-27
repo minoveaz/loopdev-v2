@@ -1,7 +1,7 @@
 import type { OrganizationId } from "../platform/types";
 
 export type SettingsUserStatus = "active" | "pending" | "suspended";
-export type SettingsRole = "owner" | "admin" | "member";
+export type SettingsRole = "owner" | "admin" | "agent" | "viewer";
 export type SettingsLocale = "en" | "es";
 
 export interface SettingsUser {

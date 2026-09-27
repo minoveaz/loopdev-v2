@@ -120,7 +120,7 @@ export class SupabaseAuthAdapter implements AuthPort {
                   id: o.id || m.organization_id,
                   name: o.name || "Organización",
                   slug: o.slug || "org",
-                  role: m.role || "member",
+                  role: m.role || "viewer",
                 };
               })
               .filter(Boolean) as Array<{ id: string; name: string; slug: string; role: string }>;

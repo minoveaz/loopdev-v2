@@ -44,7 +44,7 @@ describe("settings adapter", () => {
     const snapshot = await localSettingsAdapter.getSnapshot("local-development-organization");
     await expect(localSettingsAdapter.updateUserStatus("local-development-organization", snapshot.users[0].id, "suspended"))
       .rejects.toMatchObject({ code: "invalid" });
-    await expect(localSettingsAdapter.inviteUser("local-development-organization", { name: "", email: "invalid", role: "member" }))
+    await expect(localSettingsAdapter.inviteUser("local-development-organization", { name: "", email: "invalid", role: "viewer" }))
       .rejects.toMatchObject({ code: "invalid" });
   });
 });

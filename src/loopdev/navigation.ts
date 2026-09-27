@@ -45,11 +45,11 @@ export const loopdevNavigation: NavSection[] = [
     ],
   },
   {
-    label: "Workspace / Tools",
+    label: "Workspace",
     items: [
       {
-        label: loopdevNavigationContract.groups[2].label,
-        to: loopdevNavigationContract.groups[2].items[0].path,
+        label: loopdevNavigationContract.groups[3].label,
+        to: loopdevNavigationContract.groups[3].items[0].path,
         icon: Settings,
       },
     ],

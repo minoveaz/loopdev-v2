@@ -132,4 +132,13 @@ export const localSettingsAdapter: SettingsAdapter = {
     writeSnapshot({ ...snapshot, users: snapshot.users.map((candidate) => candidate.id === userId ? updated : candidate) });
     return structuredClone(updated);
   },
+
+  async removeUser(organizationId, userId) {
+    assertOrganization(organizationId);
+    const snapshot = getSnapshot(organizationId);
+    const user = snapshot.users.find((candidate) => candidate.id === userId);
+    if (!user) throw new SettingsAdapterError("User not found in the active organization.", "not-found");
+    if (user.role === "owner") throw new SettingsAdapterError("The organization owner cannot be removed.", "invalid");
+    writeSnapshot({ ...snapshot, users: snapshot.users.filter((candidate) => candidate.id !== userId) });
+  },
 };

@@ -1,0 +1,80 @@
+{
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:01-design",
+  "phase": "01-design",
+  "skill": "module-design",
+  "parent_span_id": "MOD-CRM-20260927-001:00-discovery",
+  "module": "CRM Overview",
+  "status": "completed",
+  "decision_status": "open",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:26:05+02:00",
+  "completed_at": "2026-09-27T17:26:05+02:00",
+  "environment": {
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "branch": "feature/crm-v2-foundation",
+    "head_commit": "e9ca052",
+    "working_tree": "modified"
+  },
+  "input_artifacts": [
+    "discovery.md",
+    "approved request",
+    "CRM product/track docs"
+  ],
+  "decisions": [
+    {
+      "id": "USER-CRM-OVERVIEW-20260927",
+      "status": "confirmed",
+      "summary": "User resolved KPI catalogue, freshness, RLS team scope, activity allowlist, read-only Tasks, cache/offline, activation/rollback and export decisions."
+    }
+  ],
+  "actions": [
+    "Produced complete design and architecture specification",
+    "Defined states, contracts, RBAC/RLS, local-first migration, rollout and acceptance"
+  ],
+  "output_artifacts": [
+    "design.md",
+    "architecture-design.md",
+    "domain-model.md",
+    "access-design.md",
+    "api-contracts.md",
+    "sync-design.md"
+  ],
+  "validation": [
+    {
+      "command": "Design quality gate checklist",
+      "result": "passed with open decisions",
+      "evidence": "design.md §§1-15"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "OVR-DESIGN",
+      "status": "PARTIAL",
+      "evidence": "design.md; approval pending"
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "WAITING_IMPLEMENTATION_APPROVAL",
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "evidence_links": [
+    "design.md",
+    "architecture-design.md",
+    "phase-evidence.md"
+  ],
+  "updated_at": "2026-09-27T18:10:00+02:00",
+  "decision_reconciliation": {
+    "status": "confirmed",
+    "summary": "User decisions recorded in canonical CRM Overview artifacts; implementation remains gated."
+  },
+  "open_decisions": [
+    "Exact aggregate-versus-read-model threshold",
+    "Native iOS/Android ownership"
+  ]
+}

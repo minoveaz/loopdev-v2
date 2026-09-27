@@ -67,6 +67,12 @@ export function TaskDetailDrawer({
   onUpdateTask,
 }: TaskDetailDrawerProps) {
   const t = useT();
+  const priorityLabels: Record<TaskPriority, string> = {
+    urgent: t("crm.tasks.priority.urgent"),
+    high: t("crm.tasks.priority.high"),
+    normal: t("crm.tasks.priority.normal"),
+    low: t("crm.tasks.priority.low"),
+  };
   // Local edit states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -307,7 +313,7 @@ export function TaskDetailDrawer({
                     }
                     dot
                   >
-                    {task.priority.toUpperCase()}
+                    {priorityLabels[task.priority]}
                   </StatusBadge>
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-1" />
                 </Button>

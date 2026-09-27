@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Sparkles, SlidersHorizontal, RefreshCw } from "lucide-react";
 import { PageContainer, PageHeader, SearchInput } from "@/components/common";
@@ -15,6 +15,8 @@ import { useDocumentIntelligence } from "@/loopdev/domains/document-intelligence
 import { ExtractionsMetrics } from "@/loopdev/components/document-intelligence/ExtractionsMetrics";
 import { ExtractionsTable } from "@/loopdev/components/document-intelligence/ExtractionsTable";
 import { useT } from "@/i18n";
+import { useTenantContext } from "@/hooks/use-tenant-context";
+import { useAnalyticsMetric } from "@/loopdev/domains/platform/analytics";
 
 export default function DocumentIntelligenceOverview() {
   const { trail } = useBreadcrumbs();
@@ -22,6 +24,17 @@ export default function DocumentIntelligenceOverview() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [suiteFilter, setSuiteFilter] = useState<string>("all");
+  const { activeOrganization } = useTenantContext();
+  const analyticsFilters = useMemo(() => ({
+    scope: {
+      organizationId: activeOrganization?.id ?? "",
+      workspaceId: null,
+    },
+  }), [activeOrganization?.id]);
+  const processedMetric = useAnalyticsMetric("document_intelligence.processed", analyticsFilters);
+  const pendingReviewMetric = useAnalyticsMetric("document_intelligence.pending_review", analyticsFilters);
+  const confidenceMetric = useAnalyticsMetric("document_intelligence.average_confidence", analyticsFilters);
+  const costMetric = useAnalyticsMetric("document_intelligence.estimated_cost", analyticsFilters);
 
   const {
     extractions,
@@ -61,7 +74,16 @@ export default function DocumentIntelligenceOverview() {
 
       {/* Métricas consolidadas */}
       <div className="mb-6">
-        <ExtractionsMetrics metrics={metrics} loading={loading} />
+        <ExtractionsMetrics
+          metrics={metrics}
+          loading={loading || processedMetric.status === "loading"}
+          analytics={{
+            processed: processedMetric.data,
+            pendingReview: pendingReviewMetric.data,
+            confidence: confidenceMetric.data,
+            cost: costMetric.data,
+          }}
+        />
       </div>
 
       {/* Barra de Búsqueda y Filtros */}

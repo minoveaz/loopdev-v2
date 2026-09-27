@@ -100,7 +100,7 @@ export class SupabaseTasksAdapter implements TasksPort {
         query += `&relation_type=eq.${params.relation.entityType}&relation_id=eq.${params.relation.entityId}`;
       }
       if (params.assignedUserId) {
-        query += `&assigned_user_id=eq.${params.assignedUserId}`;
+        query += `&assigned_to_user_id=eq.${params.assignedUserId}`;
       }
       query += `&order=created_at.desc`;
 
@@ -110,7 +110,7 @@ export class SupabaseTasksAdapter implements TasksPort {
       });
 
       if (!response.ok) {
-        return this.localFallback.listTasks(params);
+        throw new Error(`Unable to load CRM tasks (${response.status}).`);
       }
 
       const rows: any[] = await response.json();
@@ -124,7 +124,7 @@ export class SupabaseTasksAdapter implements TasksPort {
         status: row.status,
         priority: row.priority,
         ownerId: row.owner_id,
-        assignedUserId: row.assigned_user_id,
+        assignedUserId: row.assigned_to_user_id ?? row.assigned_user_id,
         assignedUser: row.assigned_user ? (typeof row.assigned_user === "string" ? JSON.parse(row.assigned_user) : row.assigned_user) : null,
         dueAt: row.due_at,
         completedAt: row.completed_at,
@@ -147,8 +147,8 @@ export class SupabaseTasksAdapter implements TasksPort {
         hasMore: false,
         total: items.length,
       };
-    } catch {
-      return this.localFallback.listTasks(params);
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -160,7 +160,7 @@ export class SupabaseTasksAdapter implements TasksPort {
         method: "GET",
         headers: this.getHeaders(),
       });
-      if (!response.ok) return this.localFallback.getTask(taskId);
+      if (!response.ok) throw new Error(`Unable to load CRM task (${response.status}).`);
 
       const rows: any[] = await response.json();
       if (rows.length === 0) return null;
@@ -176,7 +176,7 @@ export class SupabaseTasksAdapter implements TasksPort {
         status: data.status,
         priority: data.priority,
         ownerId: data.owner_id,
-        assignedUserId: data.assigned_user_id,
+        assignedUserId: data.assigned_to_user_id ?? data.assigned_user_id,
         assignedUser: data.assigned_user ? (typeof data.assigned_user === "string" ? JSON.parse(data.assigned_user) : data.assigned_user) : null,
         dueAt: data.due_at,
         completedAt: data.completed_at,
@@ -192,8 +192,8 @@ export class SupabaseTasksAdapter implements TasksPort {
         updatedAt: data.updated_at,
         version: data.version || 1,
       };
-    } catch {
-      return this.localFallback.getTask(taskId);
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -210,7 +210,7 @@ export class SupabaseTasksAdapter implements TasksPort {
         description: input.description || null,
         status: "open",
         priority: input.priority || "normal",
-        assigned_user_id: input.assignedUserId || null,
+        assigned_to_user_id: input.assignedUserId || null,
         assigned_user: input.assignedUser ? JSON.stringify(input.assignedUser) : null,
         due_at: input.dueAt || null,
         relation_type: input.relation?.entityType || null,
@@ -230,9 +230,7 @@ export class SupabaseTasksAdapter implements TasksPort {
         body: JSON.stringify(row),
       });
 
-      if (!response.ok) {
-        return this.localFallback.createTask(input);
-      }
+      if (!response.ok) throw new Error(`Unable to create CRM task (${response.status}).`);
 
       const rows: any[] = await response.json();
       const data = rows[0];
@@ -249,7 +247,7 @@ export class SupabaseTasksAdapter implements TasksPort {
           status: data.status,
           priority: data.priority,
           ownerId: data.owner_id,
-          assignedUserId: data.assigned_user_id,
+          assignedUserId: data.assigned_to_user_id ?? data.assigned_user_id,
           assignedUser: input.assignedUser || null,
           dueAt: data.due_at,
           completedAt: null,
@@ -264,8 +262,8 @@ export class SupabaseTasksAdapter implements TasksPort {
           version: data.version || 1,
         },
       };
-    } catch {
-      return this.localFallback.createTask(input);
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -280,7 +278,7 @@ export class SupabaseTasksAdapter implements TasksPort {
       if (patch.description !== undefined) updates.description = patch.description;
       if (patch.status !== undefined) updates.status = patch.status;
       if (patch.priority !== undefined) updates.priority = patch.priority;
-      if (patch.assignedUserId !== undefined) updates.assigned_user_id = patch.assignedUserId;
+      if (patch.assignedUserId !== undefined) updates.assigned_to_user_id = patch.assignedUserId;
       if (patch.dueAt !== undefined) updates.due_at = patch.dueAt;
       if (patch.checklist !== undefined) updates.checklist = patch.checklist;
 
@@ -290,9 +288,7 @@ export class SupabaseTasksAdapter implements TasksPort {
         body: JSON.stringify(updates),
       });
 
-      if (!response.ok) {
-        return this.localFallback.updateTask(taskId, patch, expectedVersion);
-      }
+      if (!response.ok) throw new Error(`Unable to update CRM task (${response.status}).`);
 
       const rows: any[] = await response.json();
       const data = rows[0];
@@ -319,8 +315,8 @@ export class SupabaseTasksAdapter implements TasksPort {
           version: (data.version || 1) + 1,
         },
       };
-    } catch {
-      return this.localFallback.updateTask(taskId, patch, expectedVersion);
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -337,15 +333,26 @@ export class SupabaseTasksAdapter implements TasksPort {
   }
 
   async toggleChecklistItem(taskId: string, itemId: string, completed: boolean): Promise<TaskMutationResult> {
-    return this.localFallback.toggleChecklistItem(taskId, itemId, completed);
+    const current = await this.getTask(taskId);
+    if (!current) return { status: "server-error", message: "CRM task not found." };
+    const checklist = (current.checklist ?? []).map((item) =>
+      item.id === itemId ? { ...item, completed, completedAt: completed ? new Date().toISOString() : null } : item,
+    );
+    return this.updateTask(taskId, { checklist }, current.version);
   }
 
   async addChecklistItem(taskId: string, title: string): Promise<TaskMutationResult> {
-    return this.localFallback.addChecklistItem(taskId, title);
+    const current = await this.getTask(taskId);
+    if (!current) return { status: "server-error", message: "CRM task not found." };
+    return this.updateTask(taskId, {
+      checklist: [...(current.checklist ?? []), { id: `chk-${Date.now()}`, title: title.trim(), completed: false }],
+    }, current.version);
   }
 
   async deleteChecklistItem(taskId: string, itemId: string): Promise<TaskMutationResult> {
-    return this.localFallback.deleteChecklistItem(taskId, itemId);
+    const current = await this.getTask(taskId);
+    if (!current) return { status: "server-error", message: "CRM task not found." };
+    return this.updateTask(taskId, { checklist: (current.checklist ?? []).filter((item) => item.id !== itemId) }, current.version);
   }
 
   async deleteTask(taskId: string): Promise<{ success: boolean; error?: string }> {
@@ -356,10 +363,10 @@ export class SupabaseTasksAdapter implements TasksPort {
         method: "DELETE",
         headers: this.getHeaders(),
       });
-      if (!response.ok) return this.localFallback.deleteTask(taskId);
+      if (!response.ok) throw new Error(`Unable to delete CRM task (${response.status}).`);
       return { success: true };
-    } catch {
-      return this.localFallback.deleteTask(taskId);
+    } catch (error) {
+      throw error;
     }
   }
 

@@ -2,6 +2,7 @@
   "common": {
     "search": "Search…",
     "language": "Language",
+    "pagination": { "showing": "Showing", "of": "of", "rowsPerPage": "Rows per page", "page": "Page", "first": "First page", "previous": "Previous page", "next": "Next page", "last": "Last page", "selectPage": "Select page", "selectRow": "Select row", "actions": "Actions", "rowActions": "Row actions" },
     "signOut": "Logout",
     "profile": "Profile",
     "accountSettings": "Account Settings",
@@ -121,6 +122,14 @@
     "sectionsLabel": "Helpdesk sections"
   },
   "nav": {
+    "Launchpad": "Launchpad",
+    "Suites": "Suites",
+    "Workspace": "Workspace",
+    "Tools": "Tools",
+    "Opportunities": "Opportunities",
+    "Communications": "Communications",
+    "Document Intelligence": "Document Intelligence",
+    "Product Catalog": "Product Catalog",
     "Dashboards": "Dashboards",
     "WebApps": "WebApps",
     "Applications": "Applications",
@@ -320,6 +329,48 @@
     "Miscellaneous": "Miscellaneous"
   },
   "crm": {
+    "overview": {
+      "description": "Pipeline health, customer activity, and sales performance.",
+      "dashboard": "Dashboard",
+      "openLeads": "Open leads",
+      "openOpportunities": "Open opportunities",
+      "contacts": "Contacts",
+      "pipelineValue": "Pipeline value",
+      "noDataYet": "No data yet",
+      "tenantScope": "tenant scope",
+      "inPipeline": "in pipeline",
+      "noPipelineYet": "No pipeline yet",
+      "openOpportunitiesHint": "open opportunities",
+      "dealsPipeline": "Deals pipeline",
+      "openDealsByStage": "Open deals by stage",
+      "noPipelineOpportunities": "No opportunities in the pipeline",
+      "dataAppearsWithActivity": "Data will appear when the tenant records activity.",
+      "salesFunnel": "Sales funnel",
+      "conversionJourney": "Conversion across the journey",
+      "funnelAppearsWithLeads": "The funnel will appear when leads are registered.",
+      "contactActivity": "Contact activity",
+      "contactActivityDescription": "Calls, emails, and meetings this week",
+      "noActivity": "No activity recorded",
+      "topOwners": "Top owners",
+      "topOwnersDescription": "By pipeline this week",
+      "noOwnersActivity": "No owners with activity yet",
+      "recentInteractions": "Recent interactions",
+      "recentInteractionsDescription": "Latest touchpoints across your team",
+      "noInteractions": "No interactions yet",
+      "interactionsDescription": "Logged calls, emails, and meetings will appear here.",
+      "interactionCount": "{{count}} interactions",
+      "type": "Type",
+      "contact": "Contact",
+      "company": "Company",
+      "owner": "Owner",
+      "summary": "Summary",
+      "when": "When",
+      "workCenter": "CRM work center",
+      "workCenterDescription": "Shared Platform capabilities across the commercial workspace.",
+      "platformSignals": "Platform work signals",
+      "platformSignalsDescription": "Tasks, notes, activities, timeline and files are scoped for the active organization and ready for the future Supabase adapter.",
+      "refresh": "Refresh", "contactUpdate": "Contact update", "opportunityUpdate": "Opportunity update", "assignment": "assignment", "stageChange": "stage change", "loading": "Loading…", "forbiddenTitle": "Not available for this scope", "forbiddenDescription": "Your current access does not include this data.", "errorTitle": "Unable to load this panel", "errorDescription": "Check your connection and try again.", "retry": "Retry", "openPipeline": "Open pipeline", "openLeads": "Open leads", "openOpportunities": "Open opportunities", "scopeHint": "Tenant-scoped read-only view · refreshes when requested", "kpisTitle": "Sales KPIs", "noData": "No data for this scope", "unavailable": "Unavailable", "rlsVisible": "RLS-visible records", "overdueToday": "Overdue / today tasks", "stale": "Showing an authorized stale snapshot. Refresh to retry.", "tasksHint": "Read-only · open Tasks for changes", "pipelineTitle": "Pipeline health", "pipelineDescription": "Open opportunities by stage", "noPipeline": "No pipeline data", "noPipelineDescription": "Authorized pipeline activity will appear here.", "tasksTitle": "Task summary", "tasksDescription": "Next actions in the selected scope", "noDueDate": "No due date", "noTasks": "No tasks in this scope", "noTasksDescription": "Open Tasks to create or update work.", "openTasks": "Open Tasks", "activityTitle": "Business activity", "activityDescription": "Calls, emails, meetings, notes, tasks and CRM changes only", "noActivity": "No business activity", "noActivityDescription": "Technical and Document Intelligence events are excluded."
+    },
     "leads": {
       "title": "Leads",
       "newLead": "New Lead",
@@ -391,7 +442,7 @@
       }
     },
     "opportunities": {
-      "stages": { "prospecting": "Prospecting", "qualified": "Qualified", "proposal": "Proposal", "negotiation": "Negotiation", "won": "Won", "lost": "Lost" },
+      "stages": { "prospecting": "Prospecting", "qualified": "Qualified", "proposal": "Proposal", "propuesta": "Proposal", "negotiation": "Negotiation", "negociacion": "Negotiation", "won": "Won", "lost": "Lost" },
       "title": "Opportunities", "description": "Manage the sales cycle behind your pipeline.", "new": "New opportunity", "search": "Search opportunities, contacts, owners…", "stage": "Stage", "origin": "Origin", "owner": "Owner", "sort": "Sort", "manual": "Manual", "leadConversion": "Lead conversion", "recentlyUpdated": "Recently updated", "name": "Name", "amount": "Amount", "closeDate": "Close date", "opportunity": "Opportunity", "contact": "Contact", "expectedClose": "Expected close", "noProduct": "No product", "unassigned": "Unassigned", "noAmount": "No amount", "noCloseDate": "No close date", "noPermission": "You do not have permission to view opportunities.", "noFound": "No opportunities found", "tryFilters": "Try changing the search or filters.", "tryAgain": "Try again", "view": "View", "updated": "Opportunity updated.", "done": "Done", "lead": "Lead", "formEyebrow": "CRM / Opportunities", "formMeta": "Opportunity form", "formDescription": "Create a local opportunity with at least one catalog or legacy product line.", "detailsTitle": "Opportunity details", "detailsDescription": "Connect the opportunity to a contact and define its initial commercial line.", "coreDetails": "Core details", "searchContacts": "Search contacts...", "opportunityName": "Opportunity name", "catalogItem": "Catalog item", "legacyProduct": "Use legacy product key", "legacyProductKey": "Legacy product key", "legacyProductPlaceholder": "Optional when a catalog item is selected", "quantity": "Line quantity", "discardTitle": "Discard opportunity changes?", "discardDescription": "Your unsaved opportunity changes will be lost.", "discard": "Discard", "keepEditing": "Keep editing", "cancel": "Cancel", "creating": "Creating…", "create": "Create opportunity", "terminalTitle": "Reopen terminal opportunity", "terminalDescription": "Won and lost opportunities require an explicit reason before re-entering the pipeline.", "reason": "Reason", "reasonPlaceholder": "Customer re-engaged…", "reopen": "Reopen opportunity", "reopenDiscardTitle": "Discard reopen changes?", "reopenDiscardDescription": "Your reopen reason will be lost.", "originLead": "Lead conversion", "product": "Product", "probability": "Probability", "stageLabel": "Stage", "reopenTerminal": "Reopen terminal opportunity", "lossReason": "Loss reason", "lossReasonPlaceholder": "Why was this opportunity lost?", "saving": "Saving…", "saveChanges": "Save changes", "relationships": "Relationships", "noOriginatingLead": "No originating lead", "lines": "Lines", "lineQuantity": "Quantity for {{label}}", "contactLink": "Contact", "leadLink": "Lead", "catalogOrLegacy": "Use legacy product key"
     },
     "pipeline": {
@@ -560,6 +611,8 @@
       "deletedSelected": "{{count}} task(s) deleted",
       "status": { "open": "Open", "inProgress": "In progress", "completed": "Completed", "cancelled": "Cancelled" }
       ,"unassigned": "Unassigned",
+      "actions": { "viewDetails": "View details", "quickOneDay": "Quick +1 day", "markComplete": "Mark complete", "reopen": "Reopen task", "delete": "Delete" },
+      "empty": { "title": "No tasks match your filters", "description": "Try clearing filters or create a new follow-up task." },
       "priority": { "urgent": "Urgent", "high": "High", "normal": "Normal", "low": "Low" },
         "detail": { "title": "Task title", "titlePlaceholder": "Task title...", "priority": "Priority", "completed": "COMPLETED", "overdue": "OVERDUE", "pending": "PENDING", "assignee": "Assignee", "reassign": "Reassign", "noAssignee": "No assignee", "assignedAgent": "Team member assigned", "clickToAssign": "Click Reassign to assign", "tags": "Tags & categories", "add": "Add", "noTags": "No tags assigned.", "deleteTag": "Delete tag", "tagPlaceholder": "e.g. #VIP or #Renewal", "reminders": "Scheduled reminders", "remind15": "15 min before due", "remindHour": "1 hour before", "remindHourDue": "1 hour before due", "remindDay": "1 day before", "remindDayDue": "1 day before due", "noReminders": "No active reminders.", "deleteReminder": "Delete reminder", "quickReschedule": "Quick reschedule", "tomorrow": "Tomorrow", "inThreeDays": "In 3 days", "nextMonday": "Next Monday", "description": "Description or notes", "descriptionPlaceholder": "Add details or notes for this task...", "subtasks": "Subtasks & checklist ({{completed}}/{{total}})", "deleteSubtask": "Delete subtask", "addSubtaskPlaceholder": "Add a subtask or checklist item...", "markComplete": "Mark as complete", "taskCompleted": "Task completed", "deleteTask": "Delete task permanently" },
       "form": {

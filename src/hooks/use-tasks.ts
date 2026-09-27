@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import type {
   CreateTaskInput,
   PlatformSuiteKey,
@@ -7,6 +8,7 @@ import type {
   TaskTemplateRecord,
   UpdateTaskPatch,
 } from "@/loopdev/domains/tasks";
+import { getTasksAdapter } from "@/loopdev/domains/tasks/index";
 
 export const DEFAULT_TEMPLATES: TaskTemplateRecord[] = [
   {
@@ -159,7 +161,12 @@ export const INITIAL_TASKS: TaskRecord[] = [
 const STORAGE_KEY = "loopdev_tasks_crm_v2";
 
 export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
+  const { activeOrganization } = useTenantContext();
+  const organizationId = activeOrganization?.id ?? "";
+  const isRemoteTenant = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(organizationId);
+  const tasksAdapter = getTasksAdapter();
   const [tasks, setTasks] = useState<TaskRecord[]>(() => {
+    if (isRemoteTenant) return [];
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) return JSON.parse(stored);
@@ -169,8 +176,20 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
     return INITIAL_TASKS;
   });
 
-  const [templates] = useState<TaskTemplateRecord[]>(DEFAULT_TEMPLATES);
-  const [isLoading, setIsLoading] = useState(false);
+  const [templates] = useState<TaskTemplateRecord[]>(isRemoteTenant ? [] : DEFAULT_TEMPLATES);
+  const [isLoading, setIsLoading] = useState(isRemoteTenant);
+
+  useEffect(() => {
+    if (!isRemoteTenant) return;
+    let active = true;
+    setIsLoading(true);
+    tasksAdapter.listTasks({ organizationId, suite }).then((page) => {
+      if (active) setTasks(page.items);
+    }).finally(() => {
+      if (active) setIsLoading(false);
+    });
+    return () => { active = false; };
+  }, [isRemoteTenant, organizationId, suite, tasksAdapter]);
 
   const persistTasks = useCallback((nextTasks: TaskRecord[]) => {
     setTasks(nextTasks);
@@ -183,6 +202,12 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
 
   const createTask = useCallback(
     async (input: CreateTaskInput) => {
+      if (isRemoteTenant) {
+        const result = await tasksAdapter.createTask({ ...input, organizationId });
+        if (result.status !== "success") throw new Error(result.message);
+        setTasks((current) => [result.task, ...current]);
+        return result.task;
+      }
       setIsLoading(true);
       const newTask: TaskRecord = {
         id: `tsk-${Date.now()}`,
@@ -217,11 +242,18 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
       setIsLoading(false);
       return newTask;
     },
-    [persistTasks, suite, tasks],
+    [isRemoteTenant, organizationId, persistTasks, suite, tasks, tasksAdapter],
   );
 
   const updateTask = useCallback(
     async (taskId: string, patch: UpdateTaskPatch, expectedVersion?: number) => {
+      if (isRemoteTenant) {
+        const current = tasks.find((task) => task.id === taskId);
+        const result = await tasksAdapter.updateTask(taskId, patch, expectedVersion ?? current?.version);
+        if (result.status !== "success") throw new Error(result.message);
+        setTasks((items) => items.map((task) => task.id === taskId ? result.task : task));
+        return result.task;
+      }
       let updatedTask: TaskRecord | null = null;
       const updated = tasks.map((t) => {
         if (t.id !== taskId) return t;
@@ -237,11 +269,17 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
       persistTasks(updated);
       return updatedTask!;
     },
-    [persistTasks, tasks],
+    [isRemoteTenant, persistTasks, tasks, tasksAdapter],
   );
 
   const completeTask = useCallback(
     async (taskId: string, expectedVersion?: number) => {
+      if (isRemoteTenant) {
+        const result = await tasksAdapter.completeTask(taskId, expectedVersion);
+        if (result.status !== "success") throw new Error(result.message);
+        setTasks((items) => items.map((task) => task.id === taskId ? result.task : task));
+        return result.task;
+      }
       const now = new Date().toISOString();
       const updated = tasks.map((t) => {
         if (t.id !== taskId) return t;
@@ -255,11 +293,17 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
       });
       persistTasks(updated);
     },
-    [persistTasks, tasks],
+    [isRemoteTenant, persistTasks, tasks, tasksAdapter],
   );
 
   const reopenTask = useCallback(
     async (taskId: string, expectedVersion?: number) => {
+      if (isRemoteTenant) {
+        const result = await tasksAdapter.reopenTask(taskId, expectedVersion);
+        if (result.status !== "success") throw new Error(result.message);
+        setTasks((items) => items.map((task) => task.id === taskId ? result.task : task));
+        return result.task;
+      }
       const now = new Date().toISOString();
       const updated = tasks.map((t) => {
         if (t.id !== taskId) return t;
@@ -273,12 +317,18 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
       });
       persistTasks(updated);
     },
-    [persistTasks, tasks],
+    [isRemoteTenant, persistTasks, tasks, tasksAdapter],
   );
 
   const quickReschedule = useCallback(
     async (taskId: string, dueAt: string | Date, expectedVersion?: number) => {
       const dateStr = typeof dueAt === "string" ? dueAt : dueAt.toISOString();
+      if (isRemoteTenant) {
+        const result = await tasksAdapter.quickReschedule(taskId, dateStr, expectedVersion);
+        if (result.status !== "success") throw new Error(result.message);
+        setTasks((items) => items.map((task) => task.id === taskId ? result.task : task));
+        return result.task;
+      }
       const updated = tasks.map((t) => {
         if (t.id !== taskId) return t;
         return {
@@ -290,11 +340,17 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
       });
       persistTasks(updated);
     },
-    [persistTasks, tasks],
+    [isRemoteTenant, persistTasks, tasks, tasksAdapter],
   );
 
   const toggleChecklistItem = useCallback(
     async (taskId: string, itemId: string, completed: boolean) => {
+      if (isRemoteTenant) {
+        const result = await tasksAdapter.toggleChecklistItem(taskId, itemId, completed);
+        if (result.status !== "success") throw new Error(result.message);
+        setTasks((items) => items.map((task) => task.id === taskId ? result.task : task));
+        return result.task;
+      }
       const now = new Date().toISOString();
       const updated = tasks.map((t) => {
         if (t.id !== taskId) return t;
@@ -315,11 +371,17 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
       });
       persistTasks(updated);
     },
-    [persistTasks, tasks],
+    [isRemoteTenant, persistTasks, tasks, tasksAdapter],
   );
 
   const addChecklistItem = useCallback(
     async (taskId: string, title: string) => {
+      if (isRemoteTenant) {
+        const result = await tasksAdapter.addChecklistItem(taskId, title);
+        if (result.status !== "success") throw new Error(result.message);
+        setTasks((items) => items.map((task) => task.id === taskId ? result.task : task));
+        return result.task;
+      }
       const updated = tasks.map((t) => {
         if (t.id !== taskId) return t;
         const newItem = {
@@ -337,11 +399,17 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
       });
       persistTasks(updated);
     },
-    [persistTasks, tasks],
+    [isRemoteTenant, persistTasks, tasks, tasksAdapter],
   );
 
   const deleteChecklistItem = useCallback(
     async (taskId: string, itemId: string) => {
+      if (isRemoteTenant) {
+        const result = await tasksAdapter.deleteChecklistItem(taskId, itemId);
+        if (result.status !== "success") throw new Error(result.message);
+        setTasks((items) => items.map((task) => task.id === taskId ? result.task : task));
+        return result.task;
+      }
       const updated = tasks.map((t) => {
         if (t.id !== taskId) return t;
         return {
@@ -353,16 +421,22 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
       });
       persistTasks(updated);
     },
-    [persistTasks, tasks],
+    [isRemoteTenant, persistTasks, tasks, tasksAdapter],
   );
 
   const deleteTask = useCallback(
     async (taskId: string) => {
+      if (isRemoteTenant) {
+        const result = await tasksAdapter.deleteTask(taskId);
+        if (!result.success) throw new Error(result.error || "Unable to delete task.");
+        setTasks((items) => items.filter((task) => task.id !== taskId));
+        return true;
+      }
       const updated = tasks.filter((t) => t.id !== taskId);
       persistTasks(updated);
       return true;
     },
-    [persistTasks, tasks],
+    [isRemoteTenant, persistTasks, tasks, tasksAdapter],
   );
 
   return {
@@ -378,6 +452,10 @@ export function useTasks({ suite = "crm" }: { suite?: PlatformSuiteKey } = {}) {
     addChecklistItem,
     deleteChecklistItem,
     deleteTask,
-    refresh: async () => {},
+    refresh: async () => {
+      if (!isRemoteTenant) return;
+      const page = await tasksAdapter.listTasks({ organizationId, suite });
+      setTasks(page.items);
+    },
   };
 }

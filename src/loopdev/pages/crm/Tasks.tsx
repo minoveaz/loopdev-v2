@@ -69,13 +69,6 @@ const priorityTone: Record<TaskPriority, "neutral" | "info" | "warning" | "destr
   urgent: "destructive",
 };
 
-const statusLabel: Record<TaskStatus, string> = {
-  open: "Open",
-  in_progress: "In progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
-
 function isOverdue(task: TaskRecord) {
   return Boolean(
     task.dueAt &&
@@ -119,6 +112,7 @@ export default function CRMTasksPage() {
   const [searchParams] = useSearchParams();
   const contactIdFromRoute = searchParams.get("contactId");
   const contactNameFromRoute = searchParams.get("contactName");
+  const taskIdFromRoute = searchParams.get("taskId");
 
   const {
     tasks,
@@ -157,6 +151,15 @@ export default function CRMTasksPage() {
   useEffect(() => {
     if (contactIdFromRoute) setIsCreateModalOpen(true);
   }, [contactIdFromRoute]);
+
+  useEffect(() => {
+    if (!taskIdFromRoute || isLoading) return;
+    const task = tasks.find((candidate) => candidate.id === taskIdFromRoute);
+    if (task) {
+      setSelectedTask(task);
+      setIsDetailOpen(true);
+    }
+  }, [isLoading, taskIdFromRoute, tasks]);
 
   const availableTags = useMemo(() => {
     const set = new Set<string>(["#VIP", "#Renovación", "#Reclamo", "#Urgente", "#Seguimiento", "#Comercial"]);
@@ -215,6 +218,13 @@ export default function CRMTasksPage() {
     completed: t("crm.tasks.status.completed"),
     cancelled: t("crm.tasks.status.cancelled"),
   }), [t]);
+  const statusLabel = statusLabels;
+  const priorityLabels = {
+    urgent: t("crm.tasks.priority.urgent"),
+    high: t("crm.tasks.priority.high"),
+    normal: t("crm.tasks.priority.normal"),
+    low: t("crm.tasks.priority.low"),
+  } satisfies Record<TaskPriority, string>;
 
   const visibleTasks = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -423,7 +433,7 @@ export default function CRMTasksPage() {
         sortable: true,
         cell: (task) => (
           <StatusBadge tone={priorityTone[task.priority]} dot>
-            {task.priority.toUpperCase()}
+            {priorityLabels[task.priority]}
           </StatusBadge>
         ),
       },
@@ -437,7 +447,7 @@ export default function CRMTasksPage() {
                 {task.assignedUser?.displayName ? task.assignedUser.displayName.slice(0, 2).toUpperCase() : "U"}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs font-medium">{task.assignedUser?.displayName || "Unassigned"}</span>
+            <span className="text-xs font-medium">{task.assignedUser?.displayName || t("crm.tasks.unassigned")}</span>
           </div>
         ),
       },
@@ -455,7 +465,7 @@ export default function CRMTasksPage() {
                   {new Date(task.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </>
               ) : (
-                "No due date"
+                t("crm.tasks.form.noDueDate")
               )}
             </span>
           );
@@ -472,20 +482,20 @@ export default function CRMTasksPage() {
         ) : <span className="text-xs text-muted-foreground">—</span>,
       },
     ],
-    [completeTask, reopenTask],
+    [completeTask, priorityLabels, reopenTask, t],
   );
 
   const rowActions: DataTableAction<TaskRecord>[] = useMemo(
     () => [
       {
-        label: "View details",
+        label: t("crm.tasks.actions.viewDetails"),
         onClick: (task) => {
           setSelectedTask(task);
           setIsDetailOpen(true);
         },
       },
       {
-        label: "Quick +1 day",
+        label: t("crm.tasks.actions.quickOneDay"),
         icon: Clock,
         hidden: (task) => task.status === "completed",
         onClick: (task) => {
@@ -494,25 +504,25 @@ export default function CRMTasksPage() {
         },
       },
       {
-        label: "Mark complete",
+        label: t("crm.tasks.actions.markComplete"),
         icon: CheckCircle2,
         hidden: (task) => task.status === "completed",
         onClick: (task) => void handleCompleteWithToast(task.id),
       },
       {
-        label: "Reopen task",
+        label: t("crm.tasks.actions.reopen"),
         icon: Circle,
         hidden: (task) => task.status !== "completed",
         onClick: (task) => void handleReopenWithToast(task.id),
       },
       {
-        label: "Delete",
+        label: t("crm.tasks.actions.delete"),
         icon: Trash2,
         tone: "destructive",
         onClick: (task) => setTaskToDelete(task),
       },
     ],
-    [handleCompleteWithToast, handleReopenWithToast, quickReschedule],
+    [handleCompleteWithToast, handleReopenWithToast, quickReschedule, t],
   );
 
   return (
@@ -592,7 +602,7 @@ export default function CRMTasksPage() {
               value={priorityFilter}
               onChange={setPriorityFilter}
               size="sm"
-              options={( ["low", "normal", "high", "urgent"] as TaskPriority[]).map((value) => ({ value, label: value.toUpperCase() }))}
+              options={( ["low", "normal", "high", "urgent"] as TaskPriority[]).map((value) => ({ value, label: priorityLabels[value] }))}
             />
             <FilterDropdown
               label={t("crm.tasks.filters.assignee")}
@@ -628,8 +638,8 @@ export default function CRMTasksPage() {
             }}
             loading={isLoading}
             emptyIcon={ListChecks}
-            emptyTitle="No tasks match your filters"
-            emptyDescription="Try clearing filters or create a new follow-up task."
+            emptyTitle={t("crm.tasks.empty.title")}
+            emptyDescription={t("crm.tasks.empty.description")}
             initialSort={{ key: "dueAt", dir: "asc" }}
             initialPageSize={10}
           />
@@ -743,7 +753,7 @@ export default function CRMTasksPage() {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <StatusBadge tone={priorityTone[t.priority]} dot>
-                              {t.priority.toUpperCase()}
+                              {priorityLabels[t.priority]}
                             </StatusBadge>
                             {overdue && (
                               <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 flex items-center gap-1">
@@ -1081,7 +1091,7 @@ export default function CRMTasksPage() {
                                   }
                                   className="text-[9px] px-1.5 py-0 uppercase"
                                 >
-                                  {overdue ? "Vencida" : task.priority}
+                                  {overdue ? t("crm.tasks.detail.overdue") : priorityLabels[task.priority]}
                                 </StatusBadge>
 
                                 {task.dueAt && (
@@ -1207,7 +1217,7 @@ export default function CRMTasksPage() {
                                     tone={isDone ? "success" : overdue ? "destructive" : priorityTone[task.priority]}
                                     className="text-[10px] px-2 py-0 uppercase font-bold"
                                   >
-                                    {overdue ? "Vencida" : task.priority}
+                                    {overdue ? t("crm.tasks.detail.overdue") : priorityLabels[task.priority]}
                                   </StatusBadge>
                                 </div>
 

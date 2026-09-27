@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:07-build",
+  "phase": "07-build",
+  "skill": "module-build",
+  "parent_span_id": "MOD-CRM-20260927-001:06-plan",
+  "module": "overview",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:43:00+02:00",
+  "completed_at": "2026-09-27T17:45:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/crm/overview/design.md",
+    "docs/implementation/crm/overview/implementation-plan.md",
+    "docs/implementation/crm/overview/view-state-matrix.md"
+  ],
+  "actions": [
+    "Replaced legacy Overview composition with approved dashboard UX",
+    "Added allowlisted/deduplicated activity and task summary helpers",
+    "Added 60-second analytics read cache and manual retry",
+    "Preserved unrelated dirty changes"
+  ],
+  "output_artifacts": [
+    "src/loopdev/pages/crm/Overview.tsx",
+    "src/loopdev/domains/crm/overview.ts",
+    "src/loopdev/domains/platform/analytics/hooks.ts",
+    "src/test/crm/overview/dashboard.test.ts",
+    "docs/implementation/crm/overview/phase-evidence.md"
+  ],
+  "validation": [
+    {"command": "npm run typecheck", "result": "pass"},
+    {"command": "npx eslint src/loopdev/pages/crm/Overview.tsx src/loopdev/domains/crm/overview.ts src/loopdev/domains/platform/analytics/hooks.ts src/test/crm/overview/dashboard.test.ts", "result": "pass"},
+    {"command": "npx vitest run src/test/crm/overview/dashboard.test.ts", "result": "pass", "tests": 3},
+    {"command": "npm run build", "result": "pass"},
+    {"command": "git diff --check", "result": "pass"}
+  ],
+  "requirements": [
+    {"id": "OVR-07", "status": "pass", "evidence": "Overview composition and focused tests"},
+    {"id": "OVR-05", "status": "partial", "evidence": "loading/empty/error/forbidden states; runtime offline evidence pending"},
+    {"id": "OVR-09", "status": "partial", "evidence": "analytics cache/retry; task/activity freshness metadata pending"}
+  ],
+  "evidence": [
+    "3 focused dashboard tests passed",
+    "Production bundle built successfully",
+    "No authenticated runtime or RLS evidence in this phase"
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "WAITING_OVR-08_APPROVAL",
+  "approval_gate": {
+    "status": "required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false,
+  "evidence_links": [
+    "docs/implementation/crm/overview/phase-evidence.md"
+  ],
+  "notes": [
+    "No commit, reset, revert, push or pull request created.",
+    "Do not claim backend/API implementation or release readiness."
+  ]
+}

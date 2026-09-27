@@ -4,7 +4,6 @@ import { RiveraShell } from "@/template/rivera/RiveraShell";
 import { LoopdevShell } from "@/loopdev/LoopdevShell";
 import { Topbar } from "./Topbar";
 import { AppFooter } from "./AppFooter";
-import { ThemeCustomizerFab } from "@/components/theme/ThemeCustomizer";
 import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
@@ -166,7 +165,6 @@ export function AppShell() {
         </main>
         {!isCommunicationsRoute && <AppFooter />}
       </div>
-      {!pathname.startsWith("/launchpad") && !isCommunicationsRoute && <ThemeCustomizerFab />}
     </div>
   );
 }

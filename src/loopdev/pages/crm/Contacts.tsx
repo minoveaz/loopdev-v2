@@ -52,7 +52,7 @@ export default function SalesCRMContacts() {
     (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test")) ||
     (typeof import.meta !== "undefined" && import.meta.env?.MODE === "test")
   );
-  const currentOrgId = activeOrganization?.id || (!isVitest ? "80fce911-57c5-4a83-809f-78df6a3736f7" : "local-development-organization");
+  const currentOrgId = activeOrganization?.id || (isVitest ? "local-development-organization" : "");
   const { trail } = useBreadcrumbs();
   const navigate = useNavigate();
   const location = useLocation();

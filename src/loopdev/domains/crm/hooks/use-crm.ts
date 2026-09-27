@@ -38,10 +38,17 @@ export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
     (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test")) ||
     (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITEST || (import.meta as any).env?.MODE === "test"))
   );
-  const orgId = params.organizationId || activeOrganization?.id || (!isVitest ? "80fce911-57c5-4a83-809f-78df6a3736f7" : "local-development-organization");
+  const orgId = params.organizationId || activeOrganization?.id || (isVitest ? "local-development-organization" : "");
 
   useEffect(() => {
     let active = true;
+    if (!orgId) {
+      setContacts([]);
+      setNextCursor(null);
+      setHasMore(false);
+      setLoading(false);
+      return () => { active = false; };
+    }
     setLoading(true);
     setError(null);
     const request: CRMContactListParams = {

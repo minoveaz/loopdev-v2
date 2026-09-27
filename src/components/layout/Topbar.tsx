@@ -19,7 +19,6 @@ import { ThemeToggle } from "./ThemeToggle";
 import { NotificationsMenu } from "./NotificationsMenu";
 import { MessagesMenu } from "./MessagesMenu";
 import { CommandMenu } from "./CommandMenu";
-import { ThemeCustomizerTrigger } from "@/components/theme/ThemeCustomizer";
 import { useAuth } from "@/hooks/use-auth";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -206,7 +205,6 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
         <MessagesMenu />
         <NotificationsMenu />
         <ThemeToggle />
-        <ThemeCustomizerTrigger />
 
         <span aria-hidden className="mx-1 hidden h-6 w-px bg-border/70 md:block" />
 

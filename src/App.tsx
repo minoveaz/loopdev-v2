@@ -12,6 +12,7 @@ import { TenantContextProvider } from "@/hooks/use-tenant-context";
 import { AppRoutes } from "@/routes/AppRoutes";
 import { I18nProvider } from "@/i18n";
 import { wireActivityLogging } from "@/lib/activity-wiring";
+import { DocumentTitle } from "@/components/layout/DocumentTitle";
 
 wireActivityLogging();
 
@@ -29,6 +30,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <DocumentTitle />
                 <ThemeCustomizerProvider>
                   <AppRoutes />
                 </ThemeCustomizerProvider>

@@ -44,6 +44,19 @@ function useStableParams<T>(params: T): T {
   return current.current.value;
 }
 
+const READ_CACHE_TTL = 60_000;
+const READ_CACHE_MAX_AGE = 5 * 60_000;
+type ReadCacheEntry<T> = { savedAt: number; items: T[] };
+const taskReadCache = new Map<string, ReadCacheEntry<TaskRecord>>();
+const activityReadCache = new Map<string, ReadCacheEntry<ActivityRecord>>();
+
+function readCache<T>(cache: Map<string, ReadCacheEntry<T>>, key: string) {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  const age = Date.now() - entry.savedAt;
+  return age <= READ_CACHE_MAX_AGE ? { ...entry, fresh: age <= READ_CACHE_TTL } : null;
+}
+
 export function usePlatformTasks(params: PlatformTaskListParams = {}) {
   const request = useStableParams(params);
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
@@ -55,11 +68,16 @@ export function usePlatformTasks(params: PlatformTaskListParams = {}) {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
+    const cached = readCache(taskReadCache, key);
+    setTasks(cached?.items ?? []);
+    setLoading(!cached);
     setError(null);
     setForbidden(false);
     void platformWorkAdapter.listTasks(request)
-      .then((page) => { if (active) setTasks(page.items); })
+      .then((page) => {
+        taskReadCache.set(key, { savedAt: Date.now(), items: page.items });
+        if (active) setTasks(page.items);
+      })
       .catch((cause: unknown) => {
         if (!active) return;
         setForbidden(isForbidden(cause));
@@ -86,6 +104,7 @@ export function usePlatformTasks(params: PlatformTaskListParams = {}) {
     loading,
     error,
     forbidden,
+    freshness: readCache(taskReadCache, key)?.fresh ? "fresh" as const : readCache(taskReadCache, key) ? "stale" as const : "unavailable" as const,
     createTask: (input: CreateTaskInput) => run(() => platformWorkAdapter.createTask(input)),
     updateTask: (taskId: string, input: UpdateTaskInput) => run(() => platformWorkAdapter.updateTask(taskId, input)),
     transitionTask: (taskId: string, status: TaskStatus, expectedVersion: number) =>
@@ -225,16 +244,28 @@ export function usePlatformActivities(params: PlatformActivityListParams = {}) {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
+    const cached = readCache(activityReadCache, key);
+    setActivities(cached?.items ?? []);
+    setLoading(!cached);
     setError(null);
     void platformWorkAdapter.listActivities(request)
-      .then((page) => { if (active) setActivities(page.items); })
+      .then((page) => {
+        activityReadCache.set(key, { savedAt: Date.now(), items: page.items });
+        if (active) setActivities(page.items);
+      })
       .catch((cause: unknown) => { if (active) setError(messageFor(cause)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [key, reloadToken, request]);
 
-  return { activities, loading, error, reload: () => setReloadToken((token) => token + 1) };
+  const cached = readCache(activityReadCache, key);
+  return {
+    activities,
+    loading,
+    error,
+    freshness: cached?.fresh ? "fresh" as const : cached ? "stale" as const : "unavailable" as const,
+    reload: () => setReloadToken((token) => token + 1),
+  };
 }
 
 export function usePlatformAttachments(params: PlatformAttachmentListParams = {}) {

@@ -10,6 +10,7 @@ import type {
   PlatformPermissionSet,
   WorkspaceId,
 } from "../types";
+import type { AnalyticsAdapter } from "../analytics";
 export {
   PlatformWorkAdapterError,
   type AppendTimelineInput,
@@ -44,6 +45,7 @@ export interface PlatformAdapter {
   canAccessEntity(ref: EntityRef, scope?: EntityScope): boolean;
   entitlements: OrganizationEntitlementsAdapter;
   work: PlatformWorkAdapter;
+  analytics: AnalyticsAdapter;
 }
 
 export const platformAdapter: PlatformAdapter = localPlatformAdapter;

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:08-verify",
+  "phase": "08-verify",
+  "skill": "module-verify",
+  "parent_span_id": "MOD-CRM-20260927-001:07-build",
+  "module": "overview",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:46:42+02:00",
+  "completed_at": "2026-09-27T17:50:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified",
+    "runtime_url": "http://127.0.0.1:8081",
+    "runtime_port": 8081
+  },
+  "input_artifacts": [
+    "docs/implementation/crm/overview/api-contracts.md",
+    "docs/implementation/crm/overview/access-design.md",
+    "docs/implementation/crm/overview/sync-design.md",
+    "docs/implementation/crm/overview/07-build.json"
+  ],
+  "actions": [
+    "Closed the UUID-tenant adapter path against local/demo fallback",
+    "Added explicit remote error mapping for auth, RLS, invalid filter and schema failures",
+    "Added tenant descendant filters and freshness metadata to remote analytics results",
+    "Verified shared Tasks/Timeline RLS smoke path and dashboard route response",
+    "Preserved unrelated dirty changes"
+  ],
+  "output_artifacts": [
+    "src/loopdev/domains/platform/analytics/types.ts",
+    "src/loopdev/domains/platform/analytics/supabase.ts",
+    "src/loopdev/domains/platform/analytics/hooks.ts",
+    "src/loopdev/domains/platform/adapter/local.ts",
+    "src/test/platform/analytics.test.ts"
+  ],
+  "validation": [
+    {"command": "npm run typecheck", "result": "pass"},
+    {"command": "npm run lint", "result": "pass"},
+    {"command": "npx eslint src/loopdev/domains/platform/analytics/*.ts src/loopdev/domains/platform/adapter/local.ts src/test/platform/analytics.test.ts", "result": "pass"},
+    {"command": "npx vitest run src/test/platform/analytics.test.ts src/test/crm/overview/dashboard.test.ts", "result": "pass", "tests": 10},
+    {"command": "npm run build", "result": "pass"},
+    {"command": "git diff --check", "result": "pass"},
+    {"command": "curl -I --max-time 10 http://127.0.0.1:8081/app/sales-crm/overview", "result": "pass", "evidence": "HTTP 200"},
+    {"command": "npm run smoke:crm-authenticated", "result": "pass", "evidence": "authenticated organization membership, CRM contact/task/opportunity/timeline RLS path and cleanup completed"}
+  ],
+  "requirements": [
+    {"id": "OVR-08-REMOTE-MAPPING", "status": "PASS", "evidence": "remote adapter maps scoped rows and explicit remote errors; 7 analytics tests pass"},
+    {"id": "OVR-08-TENANT-ISOLATION", "status": "PASS", "evidence": "UUID scope is routed remote-only; organization/workspace/brand predicates and RLS smoke pass"},
+    {"id": "OVR-08-FRESHNESS-CACHE", "status": "PASS", "evidence": "60-second freshUntil metadata, five-minute stale bound, cache boundary test"},
+    {"id": "OVR-08-PARTIAL-FAILURE", "status": "PASS", "evidence": "explicit forbidden/error/schema mappings and dashboard error/forbidden states"},
+    {"id": "OVR-08-AUTHENTICATED-UI", "status": "PARTIAL", "evidence": "route HTTP 200 and authenticated API smoke pass; browser-level loading/empty/error/forbidden/deep-link capture not executed"}
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "WAITING_OVR-09_APPROVAL",
+  "approval_gate": {
+    "status": "required",
+    "approved_by": null,
+    "approved_at": null,
+    "summary": "Approve activity/task migration and final verification only; do not begin automation or enterprise work."
+  },
+  "invalidated": false,
+  "evidence_links": [
+    "docs/implementation/crm/overview/phase-evidence.md",
+    "src/test/platform/analytics.test.ts"
+  ],
+  "notes": [
+    "No migration was added in this phase because existing CRM/Tasks/Timeline RLS policies already cover the read paths; analytics migration remains the existing uncommitted artifact.",
+    "No commit, reset, revert, push or pull request created.",
+    "Browser-level authenticated visual state evidence remains partial."
+  ]
+}

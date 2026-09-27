@@ -2,6 +2,7 @@
   "common": {
     "search": "Buscar…",
     "language": "Idioma",
+    "pagination": { "showing": "Mostrando", "of": "de", "rowsPerPage": "Filas por página", "page": "Página", "first": "Primera página", "previous": "Página anterior", "next": "Página siguiente", "last": "Última página", "selectPage": "Seleccionar página", "selectRow": "Seleccionar fila", "actions": "Acciones", "rowActions": "Acciones de la fila" },
     "signOut": "Cerrar sesión",
     "profile": "Perfil",
     "accountSettings": "Configuración de cuenta",
@@ -121,6 +122,14 @@
     "sectionsLabel": "Secciones de ayuda"
   },
   "nav": {
+    "Launchpad": "Launchpad",
+    "Suites": "Suites",
+    "Workspace": "Espacio de trabajo",
+    "Tools": "Herramientas",
+    "Opportunities": "Oportunidades",
+    "Communications": "Comunicaciones",
+    "Document Intelligence": "Inteligencia Documental",
+    "Product Catalog": "Catálogo de productos",
     "Dashboards": "Paneles",
     "WebApps": "Aplicaciones web",
     "Applications": "Aplicaciones",
@@ -320,6 +329,48 @@
     "Miscellaneous": "Misceláneo"
   },
   "crm": {
+    "overview": {
+      "description": "Estado del pipeline, actividad de clientes y rendimiento comercial.",
+      "dashboard": "Panel",
+      "openLeads": "Leads abiertos",
+      "openOpportunities": "Oportunidades abiertas",
+      "contacts": "Contactos",
+      "pipelineValue": "Valor del pipeline",
+      "noDataYet": "Sin datos todavía",
+      "tenantScope": "ámbito del tenant",
+      "inPipeline": "en el pipeline",
+      "noPipelineYet": "Sin pipeline todavía",
+      "openOpportunitiesHint": "oportunidades abiertas",
+      "dealsPipeline": "Pipeline de oportunidades",
+      "openDealsByStage": "Oportunidades abiertas por etapa",
+      "noPipelineOpportunities": "No hay oportunidades en el pipeline",
+      "dataAppearsWithActivity": "Los datos aparecerán cuando el tenant registre actividad.",
+      "salesFunnel": "Funnel comercial",
+      "conversionJourney": "Conversión a lo largo del recorrido",
+      "funnelAppearsWithLeads": "El funnel aparecerá al registrar leads.",
+      "contactActivity": "Actividad de contactos",
+      "contactActivityDescription": "Llamadas, emails y reuniones esta semana",
+      "noActivity": "No hay actividad registrada",
+      "topOwners": "Responsables principales",
+      "topOwnersDescription": "Por pipeline esta semana",
+      "noOwnersActivity": "Aún no hay responsables con actividad",
+      "recentInteractions": "Interacciones recientes",
+      "recentInteractionsDescription": "Últimos puntos de contacto del equipo",
+      "noInteractions": "No hay interacciones todavía",
+      "interactionsDescription": "Las llamadas, emails y reuniones registradas aparecerán aquí.",
+      "interactionCount": "{{count}} interacciones",
+      "type": "Tipo",
+      "contact": "Contacto",
+      "company": "Empresa",
+      "owner": "Responsable",
+      "summary": "Resumen",
+      "when": "Cuándo",
+      "workCenter": "Centro de trabajo CRM",
+      "workCenterDescription": "Capacidades compartidas de Platform para el espacio comercial.",
+      "platformSignals": "Señales de trabajo de Platform",
+      "platformSignalsDescription": "Las tareas, notas, actividades, timeline y archivos están aislados por la organización activa y preparados para el futuro adapter de Supabase.",
+      "refresh": "Actualizar", "contactUpdate": "Actualización de contacto", "opportunityUpdate": "Actualización de oportunidad", "assignment": "asignación", "stageChange": "cambio de etapa", "loading": "Cargando…", "forbiddenTitle": "No disponible para este ámbito", "forbiddenDescription": "Tu acceso actual no incluye estos datos.", "errorTitle": "No se pudo cargar este panel", "errorDescription": "Comprueba la conexión e inténtalo de nuevo.", "retry": "Reintentar", "openPipeline": "Pipeline abierto", "openLeads": "Leads abiertos", "openOpportunities": "Oportunidades abiertas", "scopeHint": "Vista de solo lectura por tenant · se actualiza al solicitarlo", "kpisTitle": "Indicadores comerciales", "noData": "Sin datos para este ámbito", "unavailable": "No disponible", "rlsVisible": "Registros visibles según permisos", "overdueToday": "Tareas vencidas / de hoy", "stale": "Mostrando una instantánea autorizada desactualizada. Actualiza para reintentar.", "tasksHint": "Solo lectura · abre Tareas para modificar", "pipelineTitle": "Salud del pipeline", "pipelineDescription": "Oportunidades abiertas por etapa", "noPipeline": "Sin datos del pipeline", "noPipelineDescription": "La actividad autorizada del pipeline aparecerá aquí.", "tasksTitle": "Resumen de tareas", "tasksDescription": "Próximas acciones del ámbito seleccionado", "noDueDate": "Sin fecha límite", "noTasks": "No hay tareas en este ámbito", "noTasksDescription": "Abre Tareas para crear o actualizar trabajo.", "openTasks": "Abrir Tareas", "activityTitle": "Actividad comercial", "activityDescription": "Solo llamadas, emails, reuniones, notas, tareas y cambios de CRM", "noActivity": "Sin actividad comercial", "noActivityDescription": "Se excluyen los eventos técnicos y de Document Intelligence."
+    },
     "leads": {
       "title": "Leads",
       "newLead": "Nuevo Lead",
@@ -391,7 +442,7 @@
       }
     },
     "opportunities": {
-      "stages": { "prospecting": "Prospección", "qualified": "Calificada", "proposal": "Propuesta", "negotiation": "Negociación", "won": "Ganada", "lost": "Perdida" },
+      "stages": { "prospecting": "Prospección", "qualified": "Calificada", "proposal": "Propuesta", "propuesta": "Propuesta", "negotiation": "Negociación", "negociacion": "Negociación", "won": "Ganada", "lost": "Perdida" },
       "title": "Oportunidades", "description": "Gestiona el ciclo comercial de tu pipeline.", "new": "Nueva oportunidad", "search": "Buscar oportunidades, contactos y responsables…", "stage": "Etapa", "origin": "Origen", "owner": "Responsable", "sort": "Ordenar", "manual": "Manual", "leadConversion": "Conversión de lead", "recentlyUpdated": "Actualizadas recientemente", "name": "Nombre", "amount": "Importe", "closeDate": "Fecha de cierre", "opportunity": "Oportunidad", "contact": "Contacto", "expectedClose": "Cierre previsto", "noProduct": "Sin producto", "unassigned": "Sin asignar", "noAmount": "Sin importe", "noCloseDate": "Sin fecha de cierre", "noPermission": "No tienes permiso para ver las oportunidades.", "noFound": "No se encontraron oportunidades", "tryFilters": "Prueba cambiando la búsqueda o los filtros.", "tryAgain": "Intentar de nuevo", "view": "Ver", "updated": "Oportunidad actualizada.", "done": "Listo", "lead": "Lead", "formEyebrow": "CRM / Oportunidades", "formMeta": "Formulario de oportunidad", "formDescription": "Crea una oportunidad local con al menos una línea de catálogo o producto heredado.", "detailsTitle": "Detalles de la oportunidad", "detailsDescription": "Vincula la oportunidad a un contacto y define su línea comercial inicial.", "coreDetails": "Detalles principales", "searchContacts": "Buscar contactos...", "opportunityName": "Nombre de la oportunidad", "catalogItem": "Artículo del catálogo", "legacyProduct": "Usar clave de producto heredada", "legacyProductKey": "Clave de producto heredada", "legacyProductPlaceholder": "Opcional al seleccionar un artículo del catálogo", "quantity": "Cantidad de línea", "discardTitle": "¿Descartar cambios de la oportunidad?", "discardDescription": "Se perderán los cambios no guardados.", "discard": "Descartar", "keepEditing": "Seguir editando", "cancel": "Cancelar", "creating": "Creando…", "create": "Crear oportunidad", "terminalTitle": "Reabrir oportunidad terminada", "terminalDescription": "Las oportunidades ganadas y perdidas requieren un motivo explícito para volver al pipeline.", "reason": "Motivo", "reasonPlaceholder": "El cliente volvió a contactar…", "reopen": "Reabrir oportunidad", "reopenDiscardTitle": "¿Descartar cambios de reapertura?", "reopenDiscardDescription": "Se perderá el motivo de reapertura.", "originLead": "Conversión de lead", "product": "Producto", "probability": "Probabilidad", "stageLabel": "Etapa", "reopenTerminal": "Reabrir oportunidad terminada", "lossReason": "Motivo de pérdida", "lossReasonPlaceholder": "¿Por qué se perdió esta oportunidad?", "saving": "Guardando…", "saveChanges": "Guardar cambios", "relationships": "Relaciones", "noOriginatingLead": "Sin lead de origen", "lines": "Líneas", "lineQuantity": "Cantidad de {{label}}", "contactLink": "Contacto", "leadLink": "Lead", "catalogOrLegacy": "Usar clave de producto heredada"
     },
     "pipeline": {
@@ -560,8 +611,10 @@
       "deletedSelected": "{{count}} tarea(s) eliminada(s)",
       "status": { "open": "Abierta", "inProgress": "En progreso", "completed": "Completada", "cancelled": "Cancelada" }
       ,"unassigned": "Sin asignar",
+      "actions": { "viewDetails": "Ver detalles", "quickOneDay": "Aplazar 1 día", "markComplete": "Marcar como completada", "reopen": "Reabrir tarea", "delete": "Eliminar" },
+      "empty": { "title": "Ninguna tarea coincide con los filtros", "description": "Limpia los filtros o crea una nueva tarea de seguimiento." },
       "priority": { "urgent": "Urgente", "high": "Alta", "normal": "Normal", "low": "Baja" },
-      "detail": { "title": "Título de la tarea", "titlePlaceholder": "Título de la tarea...", "priority": "Prioridad", "completed": "COMPLETADA", "overdue": "VENCIDA", "pending": "PENDIENTE", "assignee": "Responsable", "reassign": "Reasignar", "tags": "Etiquetas y categorías", "add": "Añadir", "noTags": "Sin etiquetas asignadas.", "reminders": "Recordatorios programados", "remind15": "15 min antes del vencimiento", "remindHour": "1 hora antes", "remindHourDue": "1 hora antes del vencimiento", "remindDay": "1 día antes", "remindDayDue": "1 día antes del vencimiento", "noReminders": "Sin recordatorios activos.", "quickReschedule": "Reprogramación rápida", "description": "Descripción o notas", "descriptionPlaceholder": "Añade detalles o notas para esta tarea...", "subtasks": "Subtareas y checklist ({{completed}}/{{total}})", "deleteSubtask": "Eliminar subtarea", "addSubtaskPlaceholder": "Añadir subtarea o elemento de checklist...", "markComplete": "Marcar como completada", "taskCompleted": "Tarea completada", "deleteTask": "Eliminar tarea definitivamente" },
+      "detail": { "title": "Título de la tarea", "titlePlaceholder": "Título de la tarea...", "priority": "Prioridad", "completed": "COMPLETADA", "overdue": "VENCIDA", "pending": "PENDIENTE", "assignee": "Responsable", "reassign": "Reasignar", "noAssignee": "Sin responsable", "assignedAgent": "Miembro del equipo asignado", "clickToAssign": "Pulsa Reasignar para asignar", "tags": "Etiquetas y categorías", "add": "Añadir", "noTags": "Sin etiquetas asignadas.", "reminders": "Recordatorios programados", "remind15": "15 min antes del vencimiento", "remindHour": "1 hora antes", "remindHourDue": "1 hora antes del vencimiento", "remindDay": "1 día antes", "remindDayDue": "1 día antes del vencimiento", "noReminders": "Sin recordatorios activos.",       "quickReschedule": "Reprogramación rápida", "tomorrow": "Mañana", "inThreeDays": "En 3 días", "nextMonday": "Próximo lunes", "description": "Descripción o notas", "descriptionPlaceholder": "Añade detalles o notas para esta tarea...", "subtasks": "Subtareas y checklist ({{completed}}/{{total}})", "deleteSubtask": "Eliminar subtarea", "addSubtaskPlaceholder": "Añadir subtarea o elemento de checklist...", "markComplete": "Marcar como completada", "taskCompleted": "Tarea completada", "deleteTask": "Eliminar tarea definitivamente" },
       "form": {
         "newTitle": "Nueva tarea", "eyebrow": "CRM / Tareas", "description": "Crea una tarea con subtareas, fecha límite y registro relacionado.",
         "saving": "Guardando...", "create": "Crear tarea", "quickTemplates": "Plantillas rápidas", "clearTemplate": "Limpiar plantilla",

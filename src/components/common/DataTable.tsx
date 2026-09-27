@@ -14,6 +14,7 @@ import { EmptyState } from "./EmptyState";
 import { TablePagination } from "./TablePagination";
 import { TableSkeleton } from "./TableSkeleton";
 import { BulkSelectionBar } from "./BulkSelectionBar";
+import { useT } from "@/i18n";
 
 /**
  * Column definition for {@link DataTable}.
@@ -121,6 +122,7 @@ export function DataTable<T extends { id: string }>({
   striped = false,
   className,
 }: DataTableProps<T>) {
+  const t = useT();
   const [sortKey, setSortKey] = useState<string | null>(initialSort?.key ?? null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">(initialSort?.dir ?? "asc");
   const [page, setPage] = useState(1);
@@ -241,7 +243,7 @@ export function DataTable<T extends { id: string }>({
                 {showBulk && (
                   <th className={cn("w-10", headPad)}>
                     <Checkbox
-                      aria-label="Select page"
+                      aria-label={t("common.pagination.selectPage")}
                       checked={allSelected ? true : someSelected ? "indeterminate" : false}
                       onCheckedChange={(v) => togglePageSelection(!!v)}
                     />
@@ -287,7 +289,7 @@ export function DataTable<T extends { id: string }>({
                 })}
                 {rowActions?.length ? (
                   <th className={cn("w-12 text-right", headPad)}>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t("common.pagination.actions")}</span>
                   </th>
                 ) : null}
               </tr>
@@ -324,7 +326,7 @@ export function DataTable<T extends { id: string }>({
                     {showBulk && (
                       <td className={rowPad} onClick={(e) => e.stopPropagation()}>
                         <Checkbox
-                          aria-label="Select row"
+                          aria-label={t("common.pagination.selectRow")}
                           checked={isSelected}
                           onCheckedChange={(v) => toggleRow(row.id, !!v)}
                         />
@@ -355,7 +357,7 @@ export function DataTable<T extends { id: string }>({
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 rounded-lg text-muted-foreground opacity-70 transition-fast hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100 group-hover/row:opacity-100 data-[state=open]:bg-muted data-[state=open]:text-foreground data-[state=open]:opacity-100"
-                              aria-label="Row actions"
+                              aria-label={t("common.pagination.rowActions")}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>

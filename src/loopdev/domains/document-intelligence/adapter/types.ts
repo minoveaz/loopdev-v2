@@ -54,6 +54,15 @@ export interface ExtractionFiles {
   back: ExtractionDocumentFile | null;
 }
 
+export interface ExtractionUsage {
+  promptTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  estimatedCostUsd: number;
+  effort?: string | null;
+  latencyMs?: number | null;
+}
+
 export interface ExtractionRecord {
   id: string;
   organizationId: string;
@@ -68,6 +77,9 @@ export interface ExtractionRecord {
   fieldConfidence: ExtractionFieldConfidence;
   overallConfidence: number;
   validatedAccuracy?: number | null;
+  provider?: string | null;
+  model?: string | null;
+  usage?: ExtractionUsage | null;
   extractedAt: string | null;
   completedAt: string | null;
   createdAt: string;

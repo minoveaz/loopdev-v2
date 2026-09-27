@@ -27,6 +27,9 @@ function mapExtraction(row: any): ExtractionRecord {
       ? calculateModelConfidence(fields.fieldConfidence, fields.identity ?? fields)
       : Number(fields.overallConfidence),
     validatedAccuracy: fields.validatedAccuracy == null ? null : Number(fields.validatedAccuracy),
+    provider: row.provider ?? null,
+    model: row.provider_version ?? null,
+    usage: fields.usage ?? null,
     extractedAt: row.completed_at ?? row.created_at,
     completedAt: row.completed_at,
     createdAt: row.created_at,
@@ -62,6 +65,24 @@ function calculateValidatedAccuracy(
   if (!extractedKeys.length) return null;
   const unchanged = extractedKeys.filter((key) => (originalFields[key] ?? "").trim() === (reviewedFields[key] ?? "").trim());
   return unchanged.length / extractedKeys.length;
+}
+
+function documentTitle(
+  documentType: string | null | undefined,
+  fullName: string | null | undefined,
+  fallback: string,
+): string {
+  const name = fullName?.trim();
+  if (!name) return fallback;
+  const typeLabel: Record<string, string> = {
+    "spanish-dni": "DNI",
+    "spanish-nie": "NIE",
+    passport: "Pasaporte",
+    "driver-license": "Licencia de conducir",
+    "foreign-id": "Documento de identidad",
+    unknown: "Documento",
+  };
+  return `${typeLabel[documentType ?? "unknown"] ?? "Documento"} - ${name}`;
 }
 
 async function hydrateExtractionFileUrl(record: ExtractionRecord, row: any): Promise<ExtractionRecord> {
@@ -156,9 +177,28 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
   },
   async getMetrics(organizationId): Promise<ExtractionMetrics> {
     const page = await this.listExtractions({ organizationId, limit: 100 });
+    const { data: usageRows, error: usageError } = await client
+      .from("document_intelligence_extractions")
+      .select("fields")
+      .eq("organization_id", organizationId);
+    if (usageError) throw usageError;
     const completedCount = page.items.filter((item) => item.status === "completed").length;
     const reviewCount = page.items.filter((item) => item.status === "review").length;
-    return { totalProcessed: page.items.length, completedCount, reviewCount, averageConfidence: 0, averageDurationMs: 0, estimatedCostUsd: 0 };
+    const averageConfidence = page.items.length
+      ? page.items.reduce((sum, item) => sum + item.overallConfidence, 0) / page.items.length
+      : 0;
+    const estimatedCostUsd = (usageRows ?? []).reduce(
+      (sum, row) => sum + (Number(row.fields?.usage?.estimatedCostUsd) || 0),
+      0,
+    );
+    return {
+      totalProcessed: page.items.length,
+      completedCount,
+      reviewCount,
+      averageConfidence: Math.round(averageConfidence * 100) / 100,
+      averageDurationMs: 0,
+      estimatedCostUsd: Math.round(estimatedCostUsd * 1_000_000) / 1_000_000,
+    };
   },
   async startExtraction(input: StartExtractionInput): Promise<ExtractionMutationResult> {
     const file = fileFromInput(input);
@@ -215,7 +255,7 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
     const version = await client.from("document_intelligence_versions").insert({ document_id: document.data.id, organization_id: input.organizationId, version_number: 1, source_reference: input.sourceReferenceId ?? input.title ?? null, concurrency_token: `version-${Date.now()}-${Math.random()}` }).select().single();
     if (version.error) return { ok: false, error: { code: "DOCUMENT_VERSION_FAILED", message: version.error.message } };
     const overallConfidence = calculateModelConfidence(extracted.fieldConfidence, extracted.fields);
-    const extraction = await client.from("document_intelligence_extractions").insert({ document_version_id: version.data.id, organization_id: input.organizationId, status: "review", attempt: 1, provider: "gemini", provider_version: "gemini-2.5-flash", schema_version: "identity-v1", concurrency_token: `extraction-${Date.now()}-${Math.random()}`, fields: { title: input.title ?? file.name, sourceSuite: input.sourceSuite, sourceReferenceId: input.sourceReferenceId, documentType, identity: extracted.fields, initialIdentity: extracted.fields, fieldConfidence: extracted.fieldConfidence ?? {}, overallConfidence, validatedAccuracy: null, usage: extracted.usage ?? null, files: { front: { name: file.name, size: file.size, mimeType: file.type, url: documentPath } } } }).select().single();
+    const extraction = await client.from("document_intelligence_extractions").insert({ document_version_id: version.data.id, organization_id: input.organizationId, status: "review", attempt: 1, provider: "gemini", provider_version: "gemini-2.5-flash", schema_version: "identity-v1", concurrency_token: `extraction-${Date.now()}-${Math.random()}`, fields: { title: input.title ?? documentTitle(documentType, extracted.fields.fullName, file.name), sourceSuite: input.sourceSuite, sourceReferenceId: input.sourceReferenceId, documentType, identity: extracted.fields, initialIdentity: extracted.fields, fieldConfidence: extracted.fieldConfidence ?? {}, overallConfidence, validatedAccuracy: null, usage: extracted.usage ?? null, files: { front: { name: file.name, size: file.size, mimeType: file.type, url: documentPath } } } }).select().single();
     if (extraction.error) return { ok: false, error: { code: "EXTRACTION_CREATE_FAILED", message: extraction.error.message } };
     await client.from("platform_timeline_events").upsert({
       organization_id: input.organizationId,

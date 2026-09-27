@@ -154,7 +154,7 @@ export const localDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = {
     const newRecord: ExtractionRecord = {
       id: newId,
       organizationId: input.organizationId,
-      title: input.title || frontFileObj.name,
+      title: input.title || (fixture?.record.fields.fullName ? `${fixture.record.documentType === "passport" ? "Pasaporte" : fixture.record.documentType === "spanish-dni" ? "DNI" : "Documento"} - ${fixture.record.fields.fullName}` : frontFileObj.name),
       documentType: fixture?.record.documentType ?? "unknown",
       status: "review",
       sourceSuite: input.sourceSuite ?? "standalone",
@@ -172,6 +172,9 @@ export const localDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = {
       fields: JSON.parse(JSON.stringify(fixture?.record.fields ?? emptyFields())),
       fieldConfidence: JSON.parse(JSON.stringify(fixture?.record.fieldConfidence ?? emptyConfidence)),
       overallConfidence: fixture?.record.overallConfidence ?? 0,
+      provider: "fixture",
+      model: "local-fixture",
+      usage: { promptTokens: 0, outputTokens: 0, totalTokens: 0, estimatedCostUsd: 0 },
       extractedAt: now,
       completedAt: null,
       createdAt: now,

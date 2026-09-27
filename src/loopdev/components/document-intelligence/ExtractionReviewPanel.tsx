@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Check, Copy, Code, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormSectionHeader } from "@/components/common";
 import { ExtractionProfileSelector } from "./ExtractionProfileSelector";
 import { ExtractionFieldsGrid } from "./ExtractionFieldsGrid";
@@ -159,16 +160,42 @@ export function ExtractionReviewPanel({
         )}
       </div>
 
-      {/* Grid de campos editables con scroll independiente */}
-      <div className="flex-1 overflow-y-auto py-4">
-        <ExtractionFieldsGrid
-          profileId={profileId}
-          fields={fields}
-          confidence={extraction.fieldConfidence}
-          onChange={handleFieldChange}
-          readOnly={confirmed}
-        />
-      </div>
+      <Tabs defaultValue="review" className="flex min-h-0 flex-1 flex-col">
+        <TabsList className="mt-4 grid w-full grid-cols-2">
+          <TabsTrigger value="review">Revisión de datos extraídos</TabsTrigger>
+          <TabsTrigger value="usage">Reporte de consumo</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="review" className="min-h-0 flex-1 overflow-y-auto py-4">
+          <ExtractionFieldsGrid
+            profileId={profileId}
+            fields={fields}
+            confidence={extraction.fieldConfidence}
+            onChange={handleFieldChange}
+            readOnly={confirmed}
+          />
+        </TabsContent>
+
+        <TabsContent value="usage" className="min-h-0 flex-1 overflow-y-auto py-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              ["Proveedor", extraction.provider ?? "No disponible"],
+              ["Modelo", extraction.model ?? "No disponible"],
+              ["Tokens de entrada", String(extraction.usage?.promptTokens ?? 0)],
+              ["Tokens de salida", String(extraction.usage?.outputTokens ?? 0)],
+              ["Tokens totales", String(extraction.usage?.totalTokens ?? 0)],
+              ["Coste estimado", `$${(extraction.usage?.estimatedCostUsd ?? 0).toFixed(6)}`],
+              ["Esfuerzo del modelo", extraction.usage?.effort ?? "No disponible"],
+              ["Latencia", extraction.usage?.latencyMs != null ? `${extraction.usage.latencyMs} ms` : "No disponible"],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg border border-border/70 bg-muted/20 p-3">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Footer de confirmación */}
       <ExtractionActionsBar

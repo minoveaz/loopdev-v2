@@ -2,6 +2,7 @@ import type { DocumentIntelligenceAdapter } from "./index";
 import type { ExtractionListParams, ExtractionMutationResult, ExtractionPage, ExtractionRecord, ExtractionMetrics, StartExtractionInput, ConfirmExtractionInput, RejectExtractionInput } from "./types";
 import { defaultWebAuthAdapter } from "@/loopdev/domains/platform/adapter/auth-supabase";
 import { TEMPORARY_DOCUMENT_RETENTION_DAYS, getDocumentExpiry } from "../lifecycle";
+import type { IdentityDocumentFields } from "./types";
 
 const client = defaultWebAuthAdapter.getClient();
 if (!client) {
@@ -20,13 +21,109 @@ function mapExtraction(row: any): ExtractionRecord {
     sourceReferenceId: fields.sourceReferenceId ?? null,
     files: fields.files ?? { front: null, back: null },
     fields: fields.identity ?? fields,
+    initialFields: fields.initialIdentity ?? fields.identity ?? fields,
     fieldConfidence: fields.fieldConfidence ?? {},
-    overallConfidence: Number(fields.overallConfidence ?? 0),
+    overallConfidence: fields.overallConfidence == null || Number(fields.overallConfidence) === 0
+      ? calculateModelConfidence(fields.fieldConfidence, fields.identity ?? fields)
+      : Number(fields.overallConfidence),
+    validatedAccuracy: fields.validatedAccuracy == null ? null : Number(fields.validatedAccuracy),
     extractedAt: row.completed_at ?? row.created_at,
     completedAt: row.completed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     lifecycle: row.lifecycle ?? null,
+  };
+}
+
+function calculateFieldCoverage(fields: Partial<IdentityDocumentFields> | undefined): number {
+  const values = Object.values(fields ?? {});
+  if (!values.length) return 0;
+  const populated = values.filter((value) => typeof value === "string" && value.trim().length > 0);
+  return populated.length / values.length;
+}
+
+function calculateModelConfidence(
+  fieldConfidence: Record<string, number> | undefined,
+  fields?: Partial<IdentityDocumentFields>,
+): number {
+  const values = Object.values(fieldConfidence ?? {}).filter((value) => Number.isFinite(value));
+  if (!values.length) return calculateFieldCoverage(fields);
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function calculateValidatedAccuracy(
+  originalFields: Record<string, string | null>,
+  reviewedFields: Record<string, string | null>,
+): number | null {
+  const extractedKeys = Object.keys(originalFields).filter((key) => {
+    const value = originalFields[key];
+    return typeof value === "string" && value.trim().length > 0;
+  });
+  if (!extractedKeys.length) return null;
+  const unchanged = extractedKeys.filter((key) => (originalFields[key] ?? "").trim() === (reviewedFields[key] ?? "").trim());
+  return unchanged.length / extractedKeys.length;
+}
+
+async function hydrateExtractionFileUrl(record: ExtractionRecord, row: any): Promise<ExtractionRecord> {
+  const frontFile = record.files.front;
+  if (!frontFile) return record;
+
+  let bucket = "document-intelligence-temp";
+  let storagePath = typeof frontFile.url === "string" ? frontFile.url : null;
+
+  if (row.document_version_id) {
+    const { data: version, error: versionError } = await client
+      .from("document_intelligence_versions")
+      .select("document_id")
+      .eq("id", row.document_version_id)
+      .eq("organization_id", row.organization_id)
+      .maybeSingle();
+    if (versionError) throw versionError;
+
+    if (version?.document_id) {
+      const { data: document, error: documentError } = await client
+        .from("document_intelligence_documents")
+        .select("platform_file_id, temporary_storage_path")
+        .eq("id", version.document_id)
+        .eq("organization_id", row.organization_id)
+        .maybeSingle();
+      if (documentError) throw documentError;
+
+      if (document?.platform_file_id) {
+        const { data: platformFile, error: platformFileError } = await client
+          .from("platform_files")
+          .select("storage_path")
+          .eq("id", document.platform_file_id)
+          .eq("organization_id", row.organization_id)
+          .maybeSingle();
+        if (platformFileError) throw platformFileError;
+        if (platformFile?.storage_path) {
+          bucket = "platform-files";
+          storagePath = platformFile.storage_path;
+        }
+      }
+      if (bucket === "document-intelligence-temp" && document?.temporary_storage_path) {
+        storagePath = document.temporary_storage_path;
+      }
+    }
+  }
+
+  if (!storagePath) return record;
+
+  const { data: signedUrl, error: signedUrlError } = await client.storage
+    .from(bucket)
+    .createSignedUrl(storagePath, 60 * 60);
+  if (signedUrlError) return record;
+
+  return {
+    ...record,
+    files: {
+      ...record.files,
+      front: {
+        ...frontFile,
+        previewUrl: signedUrl.signedUrl,
+      },
+    },
   };
 }
 
@@ -55,7 +152,7 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
   async getExtraction(id) {
     const { data, error } = await client.from("document_intelligence_extractions").select("*").eq("id", id).maybeSingle();
     if (error) throw error;
-    return data ? mapExtraction(data) : null;
+    return data ? hydrateExtractionFileUrl(mapExtraction(data), data) : null;
   },
   async getMetrics(organizationId): Promise<ExtractionMetrics> {
     const page = await this.listExtractions({ organizationId, limit: 100 });
@@ -109,6 +206,7 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
       retention_class: "temporary",
       retention_days: TEMPORARY_DOCUMENT_RETENTION_DAYS,
       expires_at: getDocumentExpiry(now, TEMPORARY_DOCUMENT_RETENTION_DAYS),
+      temporary_storage_path: documentPath,
       source_suite: input.sourceSuite ?? "standalone",
       document_type: documentType,
       concurrency_token: `doc-${Date.now()}-${Math.random()}`,
@@ -116,7 +214,8 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
     if (document.error) return { ok: false, error: { code: "DOCUMENT_CREATE_FAILED", message: document.error.message } };
     const version = await client.from("document_intelligence_versions").insert({ document_id: document.data.id, organization_id: input.organizationId, version_number: 1, source_reference: input.sourceReferenceId ?? input.title ?? null, concurrency_token: `version-${Date.now()}-${Math.random()}` }).select().single();
     if (version.error) return { ok: false, error: { code: "DOCUMENT_VERSION_FAILED", message: version.error.message } };
-    const extraction = await client.from("document_intelligence_extractions").insert({ document_version_id: version.data.id, organization_id: input.organizationId, status: "review", attempt: 1, provider: "gemini", provider_version: "gemini-2.5-flash", schema_version: "identity-v1", concurrency_token: `extraction-${Date.now()}-${Math.random()}`, fields: { title: input.title ?? file.name, sourceSuite: input.sourceSuite, sourceReferenceId: input.sourceReferenceId,     documentType, identity: extracted.fields, fieldConfidence: extracted.fieldConfidence ?? {}, overallConfidence: 0, usage: extracted.usage ?? null, files: { front: { name: file.name, size: file.size, mimeType: file.type, url: documentPath } } } }).select().single();
+    const overallConfidence = calculateModelConfidence(extracted.fieldConfidence, extracted.fields);
+    const extraction = await client.from("document_intelligence_extractions").insert({ document_version_id: version.data.id, organization_id: input.organizationId, status: "review", attempt: 1, provider: "gemini", provider_version: "gemini-2.5-flash", schema_version: "identity-v1", concurrency_token: `extraction-${Date.now()}-${Math.random()}`, fields: { title: input.title ?? file.name, sourceSuite: input.sourceSuite, sourceReferenceId: input.sourceReferenceId, documentType, identity: extracted.fields, initialIdentity: extracted.fields, fieldConfidence: extracted.fieldConfidence ?? {}, overallConfidence, validatedAccuracy: null, usage: extracted.usage ?? null, files: { front: { name: file.name, size: file.size, mimeType: file.type, url: documentPath } } } }).select().single();
     if (extraction.error) return { ok: false, error: { code: "EXTRACTION_CREATE_FAILED", message: extraction.error.message } };
     await client.from("platform_timeline_events").upsert({
       organization_id: input.organizationId,
@@ -149,9 +248,29 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
     };
   },
   async confirmExtraction(input: ConfirmExtractionInput) {
-    const current = await this.getExtraction(input.extractionId);
-    if (!current) return { ok: false, error: { code: "NOT_FOUND", message: "Extraction not found." } };
-    const { data, error } = await client.from("document_intelligence_extractions").update({ status: "approved", completed_at: new Date().toISOString(), fields: { ...current.fields, identity: { ...current.fields, ...input.fields } } }).eq("id", input.extractionId).select().single();
+    const { data: currentRow, error: currentError } = await client
+      .from("document_intelligence_extractions")
+      .select("*")
+      .eq("id", input.extractionId)
+      .maybeSingle();
+    if (currentError) return { ok: false, error: { code: "NOT_FOUND", message: currentError.message } };
+    if (!currentRow) return { ok: false, error: { code: "NOT_FOUND", message: "Extraction not found." } };
+    const current = mapExtraction(currentRow);
+    const reviewedFields = { ...current.fields, ...input.fields };
+    const validatedAccuracy = calculateValidatedAccuracy(
+      (current.initialFields ?? {}) as Record<string, string | null>,
+      input.fields as Record<string, string | null>,
+    );
+    const { data, error } = await client.from("document_intelligence_extractions").update({
+      status: "approved",
+      completed_at: new Date().toISOString(),
+      fields: {
+        ...(currentRow.fields ?? {}),
+        identity: reviewedFields,
+        initialIdentity: currentRow.fields?.initialIdentity ?? current.initialFields ?? {},
+        validatedAccuracy,
+      },
+    }).eq("id", input.extractionId).select().single();
     if (error) return { ok: false, error: { code: "EXTRACTION_UPDATE_FAILED", message: error.message } };
     return { ok: true, extraction: mapExtraction(data) };
   },
@@ -161,7 +280,104 @@ export const supabaseDocumentIntelligenceAdapter: DocumentIntelligenceAdapter = 
     return { ok: true, extraction: mapExtraction(data) };
   },
   async deleteExtraction(id) {
-    const { error } = await client.from("document_intelligence_extractions").delete().eq("id", id);
-    return { ok: !error };
+    const { data: extraction, error: extractionReadError } = await client
+      .from("document_intelligence_extractions")
+      .select("id, organization_id, document_version_id, fields")
+      .eq("id", id)
+      .maybeSingle();
+    if (extractionReadError) throw extractionReadError;
+    if (!extraction) return { ok: true };
+
+    const frontPath = extraction.fields?.files?.front?.url;
+    if (typeof frontPath === "string" && frontPath.length > 0) {
+      const { error: tempStorageError } = await client.storage
+        .from("document-intelligence-temp")
+        .remove([frontPath]);
+      if (tempStorageError && !tempStorageError.message.toLowerCase().includes("not found")) {
+        throw tempStorageError;
+      }
+    }
+
+    const { data: version, error: versionReadError } = await client
+      .from("document_intelligence_versions")
+      .select("id, document_id")
+      .eq("id", extraction.document_version_id)
+      .eq("organization_id", extraction.organization_id)
+      .maybeSingle();
+    if (versionReadError) throw versionReadError;
+
+    let platformStoragePath: string | null = null;
+    let platformFileId: string | null = null;
+    if (version?.document_id) {
+      const { data: document, error: documentReadError } = await client
+        .from("document_intelligence_documents")
+        .select("platform_file_id, temporary_storage_path")
+        .eq("id", version.document_id)
+        .eq("organization_id", extraction.organization_id)
+        .maybeSingle();
+      if (documentReadError) throw documentReadError;
+      platformFileId = document?.platform_file_id ?? null;
+
+      if (typeof extraction.fields?.files?.front?.url !== "string" && document?.temporary_storage_path) {
+        const { error: tempStorageError } = await client.storage
+          .from("document-intelligence-temp")
+          .remove([document.temporary_storage_path]);
+        if (tempStorageError && !tempStorageError.message.toLowerCase().includes("not found")) {
+          throw tempStorageError;
+        }
+      }
+
+      if (platformFileId) {
+        const { data: platformFile, error: platformFileReadError } = await client
+          .from("platform_files")
+          .select("storage_path")
+          .eq("id", platformFileId)
+          .eq("organization_id", extraction.organization_id)
+          .maybeSingle();
+        if (platformFileReadError) throw platformFileReadError;
+        platformStoragePath = platformFile?.storage_path ?? null;
+      }
+    }
+
+    if (platformStoragePath) {
+      const { error: platformStorageError } = await client.storage
+        .from("platform-files")
+        .remove([platformStoragePath]);
+      if (platformStorageError && !platformStorageError.message.toLowerCase().includes("not found")) {
+        throw platformStorageError;
+      }
+    }
+
+    const { error: associationError } = await client
+      .from("document_intelligence_associations")
+      .delete()
+      .eq("extraction_id", id)
+      .eq("organization_id", extraction.organization_id);
+    if (associationError) throw associationError;
+
+    const { error: operationError } = await client
+      .from("document_intelligence_lifecycle_operations")
+      .delete()
+      .eq("document_id", version?.document_id ?? "")
+      .eq("organization_id", extraction.organization_id);
+    if (operationError) throw operationError;
+
+    const { error: extractionDeleteError } = await client
+      .from("document_intelligence_extractions")
+      .delete()
+      .eq("id", id)
+      .eq("organization_id", extraction.organization_id);
+    if (extractionDeleteError) throw extractionDeleteError;
+
+    if (platformFileId) {
+      const { error: platformFileDeleteError } = await client
+        .from("platform_files")
+        .delete()
+        .eq("id", platformFileId)
+        .eq("organization_id", extraction.organization_id);
+      if (platformFileDeleteError) throw platformFileDeleteError;
+    }
+
+    return { ok: true };
   },
 };

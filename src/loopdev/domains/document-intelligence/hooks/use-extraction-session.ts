@@ -53,7 +53,7 @@ export function useExtractionSession({
   const adapter = import.meta.env.MODE === "test"
     ? localDocumentIntelligenceAdapter
     : supabaseDocumentIntelligenceAdapter;
-  const organizationId = activeOrganization?.id ?? "80fce911-57c5-4a83-809f-78df6a3736f7";
+  const organizationId = activeOrganization?.id ?? "";
   const [step, setStep] = useState<ExtractionSessionStep>("intake");
   const [currentRecord, setCurrentRecord] = useState<ExtractionRecord | null>(null);
   const [frontFile, setFrontFile] = useState<File | ExtractionDocumentFile | null>(initialFile);
@@ -130,6 +130,10 @@ export function useExtractionSession({
   // Iniciar proceso de extracción
   const startExtraction = useCallback(async () => {
     if (!frontFile) return;
+    if (!organizationId) {
+      setError("Selecciona una organización activa antes de procesar documentos.");
+      return;
+    }
     setStep("processing");
     setProcessingIndex(0);
     setProgressPercent(15);
@@ -176,6 +180,10 @@ export function useExtractionSession({
   const confirmExtraction = useCallback(
     async (editedFields: Partial<IdentityDocumentFields>) => {
       if (!currentRecord) return;
+      if (!organizationId) {
+        setError("Selecciona una organización activa antes de confirmar la extracción.");
+        return;
+      }
       setActionLoading(true);
 
       try {
@@ -202,7 +210,7 @@ export function useExtractionSession({
         setActionLoading(false);
       }
     },
-    [adapter, currentRecord, onApplyExtractedData],
+    [adapter, currentRecord, onApplyExtractedData, organizationId],
   );
 
   // Reiniciar a nueva subida

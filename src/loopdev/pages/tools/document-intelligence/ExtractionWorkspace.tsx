@@ -1,8 +1,16 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { ArrowLeft, RefreshCw, FileText } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, RefreshCw, Search } from "lucide-react";
 import { PageContainer, PageHeader, EmptyState } from "@/components/common";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useT } from "@/i18n";
 import { useExtractionSession } from "@/loopdev/domains/document-intelligence";
@@ -24,6 +32,8 @@ export default function DocumentIntelligenceExtractionWorkspace() {
   const [contactActionLoading, setContactActionLoading] = useState(false);
   const [contactMatches, setContactMatches] = useState<CRMContact[]>([]);
   const [contactMessage, setContactMessage] = useState<string | null>(null);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [contactSearchFields, setContactSearchFields] = useState<IdentityDocumentFields | null>(null);
 
   const session = useExtractionSession({
     extractionId,
@@ -62,8 +72,11 @@ export default function DocumentIntelligenceExtractionWorkspace() {
   };
 
   const findExistingContact = async (fields: IdentityDocumentFields) => {
+    setContactSearchFields(fields);
+    setContactDialogOpen(true);
     setContactActionLoading(true);
     setContactMessage(null);
+    setContactMatches([]);
     try {
       const input = contactInputFromFields(fields);
       if (!input.organizationId) throw new Error("No hay una organización activa.");
@@ -82,6 +95,7 @@ export default function DocumentIntelligenceExtractionWorkspace() {
   };
 
   const createContact = async (fields: IdentityDocumentFields) => {
+    setContactDialogOpen(false);
     navigate("/app/sales-crm/contacts", {
       state: {
         documentFields: fields,
@@ -241,23 +255,65 @@ export default function DocumentIntelligenceExtractionWorkspace() {
                   onFindExistingContact={findExistingContact}
                   contactActionLoading={contactActionLoading}
                 />
-                {contactMessage && <p className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{contactMessage}</p>}
-                {contactMatches.length > 0 && (
-                  <div className="mt-3 space-y-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
-                    <p className="font-medium">Posibles contactos existentes</p>
-                    {contactMatches.map((contact) => (
-                      <div key={contact.id} className="flex items-center justify-between gap-3">
-                        <p>{contact.firstName} {contact.lastName ?? ""} · {contact.documentNumber ?? "sin documento"}</p>
-                        <Button type="button" size="sm" variant="outline" onClick={() => linkExistingContact(contact)}>Vincular</Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           );
         })()}
       </div>
+
+      <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Buscar contacto existente
+            </DialogTitle>
+            <DialogDescription>
+              Comprobamos si ya existe un contacto asociado a los datos extraídos del documento.
+            </DialogDescription>
+          </DialogHeader>
+
+          {contactActionLoading && (
+            <div className="flex min-h-28 flex-col items-center justify-center gap-3 rounded-lg border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
+              <span>Buscando contactos…</span>
+            </div>
+          )}
+
+          {!contactActionLoading && contactMatches.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Encontramos posibles contactos existentes</p>
+              <div className="space-y-2">
+                {contactMatches.map((contact) => (
+                  <div key={contact.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-sm">
+                    <p>{contact.firstName} {contact.lastName ?? ""} · {contact.documentNumber ?? "sin documento"}</p>
+                    <Button type="button" size="sm" variant="outline" onClick={() => void linkExistingContact(contact)} disabled={contactActionLoading}>
+                      Vincular
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!contactActionLoading && contactMatches.length === 0 && contactMessage && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-900">
+              {contactMessage}
+            </div>
+          )}
+
+          <DialogFooter>
+            {!contactActionLoading && contactMatches.length === 0 && contactSearchFields && (
+              <Button type="button" onClick={() => void createContact(contactSearchFields)}>
+                Crear contacto CRM
+              </Button>
+            )}
+            <Button type="button" variant="outline" onClick={() => setContactDialogOpen(false)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }

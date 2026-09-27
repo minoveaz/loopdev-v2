@@ -260,6 +260,7 @@ Deno.serve(async (request) => {
   }
 
   const pathsToCleanup = [front.path, ...(back ? [back.path] : [])];
+  let extractionSucceeded = false;
   try {
     const parts: Array<Record<string, unknown>> = [];
     for (const [path, mimeType] of [
@@ -347,13 +348,15 @@ Deno.serve(async (request) => {
       return errorResponse(request, 'provider-failed', 'The provider returned no extraction.', 502);
 
     try {
-      return jsonResponse(
+      const response = jsonResponse(
         request,
         normalizeExtraction(
           JSON.parse(text) as Record<string, unknown>,
           providerPayload.usageMetadata,
         ),
       );
+      extractionSucceeded = true;
+      return response;
     } catch {
       return errorResponse(
         request,
@@ -363,13 +366,15 @@ Deno.serve(async (request) => {
       );
     }
   } finally {
-    try {
-      await client.storage.from(BUCKET).remove(pathsToCleanup);
-    } catch (error) {
-      console.error('Document extraction temporary cleanup failed', {
-        referenceCount: pathsToCleanup.length,
-        error: error instanceof Error ? error.message : 'unknown-error',
-      });
+    if (!extractionSucceeded) {
+      try {
+        await client.storage.from(BUCKET).remove(pathsToCleanup);
+      } catch (error) {
+        console.error('Document extraction temporary cleanup failed', {
+          referenceCount: pathsToCleanup.length,
+          error: error instanceof Error ? error.message : 'unknown-error',
+        });
+      }
     }
   }
 });

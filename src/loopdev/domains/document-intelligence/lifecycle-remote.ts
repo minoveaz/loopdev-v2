@@ -22,6 +22,23 @@ export async function promoteDocumentToPlatformFile(command: PromoteDocumentComm
     .maybeSingle();
   if (existing.error) throw existing.error;
   if (existing.data) return { platformFileId: existing.data.platform_file_id, replayed: true };
+  const operation = await client
+    .from("document_intelligence_lifecycle_operations")
+    .select("operation, result")
+    .eq("organization_id", command.organizationId)
+    .eq("idempotency_key", command.idempotencyKey)
+    .maybeSingle();
+  if (operation.error) throw operation.error;
+  if (!operation.data) {
+    const started = await client.from("document_intelligence_lifecycle_operations").insert({
+      organization_id: command.organizationId,
+      idempotency_key: command.idempotencyKey,
+      operation: "promotion_started",
+      document_id: command.documentId,
+      result: { sourceSuite: command.sourceSuite, contactId: command.contactId },
+    });
+    if (started.error && started.error.code !== "23505") throw started.error;
+  }
 
   const { data: document, error: documentError } = await client
     .from("document_intelligence_documents")
@@ -121,5 +138,14 @@ export async function promoteDocumentToPlatformFile(command: PromoteDocumentComm
   if (cleanup.error) {
     throw new DocumentLifecycleError("PROMOTION_INCOMPLETE", cleanup.error.message, true);
   }
+  const operationUpdate = await client
+    .from("document_intelligence_lifecycle_operations")
+    .update({
+      operation: "promotion_completed",
+      result: { platformFileId: file.data.id, permanentPath },
+    })
+    .eq("organization_id", command.organizationId)
+    .eq("idempotency_key", command.idempotencyKey);
+  if (operationUpdate.error) throw new DocumentLifecycleError("PROMOTION_INCOMPLETE", operationUpdate.error.message, true);
   return { platformFileId: file.data.id, permanentPath, replayed: false };
 }

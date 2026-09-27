@@ -64,8 +64,10 @@ export interface ExtractionRecord {
   sourceReferenceId?: string | null; // e.g. contactId or messageId
   files: ExtractionFiles;
   fields: IdentityDocumentFields;
+  initialFields?: IdentityDocumentFields;
   fieldConfidence: ExtractionFieldConfidence;
   overallConfidence: number;
+  validatedAccuracy?: number | null;
   extractedAt: string | null;
   completedAt: string | null;
   createdAt: string;

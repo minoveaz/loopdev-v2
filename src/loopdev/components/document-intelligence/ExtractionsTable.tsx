@@ -9,15 +9,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { StatusBadge, EmptyState } from "@/components/common";
+import { ConfirmDialog, StatusBadge, EmptyState } from "@/components/common";
 import { formatDate } from "@/lib/formatters";
 import type { ExtractionRecord } from "@/loopdev/domains/document-intelligence";
 import { useT } from "@/i18n";
+import { useState } from "react";
 
 interface ExtractionsTableProps {
   extractions: ExtractionRecord[];
   loading?: boolean;
-  onDelete?: (id: string) => void;
+  onDelete?: (id: string) => void | Promise<void>;
 }
 
 const statusToneMap: Record<ExtractionRecord["status"], "success" | "warning" | "neutral" | "info"> = {
@@ -31,6 +32,9 @@ const statusToneMap: Record<ExtractionRecord["status"], "success" | "warning" | 
 
 export function ExtractionsTable({ extractions, loading, onDelete }: ExtractionsTableProps) {
   const t = useT();
+  const [deleteTarget, setDeleteTarget] = useState<ExtractionRecord | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const statusLabelMap: Record<ExtractionRecord["status"], string> = {
     completed: t("documentIntelligenceOverview.completedStatus"),
     review: t("documentIntelligenceOverview.reviewStatus"),
@@ -40,7 +44,7 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
     failed: t("documentIntelligenceOverview.failedStatus"),
   };
   const suiteLabels: Record<ExtractionRecord["sourceSuite"], string> = {
-    standalone: `${t("documentIntelligenceOverview.tools")} / Standalone`, crm: "CRM", communications: "Communications", files: "Files Platform",
+    standalone: "Document Intelligence", crm: "CRM", communications: "Communications", files: "Files Platform",
   };
   if (!loading && extractions.length === 0) {
     return (
@@ -61,6 +65,7 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
             <TableHead>{t("documentIntelligenceOverview.detectedType")}</TableHead>
             <TableHead>{t("documentIntelligenceOverview.origin")}</TableHead>
             <TableHead>{t("documentIntelligenceOverview.confidence")}</TableHead>
+            <TableHead>Precisión validada</TableHead>
             <TableHead>{t("documentIntelligenceOverview.date")}</TableHead>
             <TableHead>{t("documentIntelligenceOverview.status")}</TableHead>
             <TableHead className="text-right">{t("documentIntelligenceOverview.actions")}</TableHead>
@@ -103,6 +108,13 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
                     {confPercent}%
                   </span>
                 </TableCell>
+                <TableCell>
+                  <span className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    {extraction.validatedAccuracy == null
+                      ? "Pendiente"
+                      : `${Math.round(extraction.validatedAccuracy * 100)}%`}
+                  </span>
+                </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {formatDate(extraction.createdAt)}
                 </TableCell>
@@ -120,7 +132,10 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
                         variant="ghost"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         title={t("documentIntelligenceOverview.deleteRecord")}
-                        onClick={() => onDelete(extraction.id)}
+                        onClick={() => {
+                          setDeleteError(null);
+                          setDeleteTarget(extraction);
+                        }}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -143,6 +158,42 @@ export function ExtractionsTable({ extractions, loading, onDelete }: Extractions
           })}
         </TableBody>
       </Table>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !deleteLoading) setDeleteTarget(null);
+        }}
+        title="¿Eliminar esta extracción?"
+        description={deleteTarget ? `${deleteTarget.title} y sus archivos asociados se eliminarán definitivamente.` : undefined}
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        tone="destructive"
+        loading={deleteLoading}
+        onConfirm={async () => {
+          if (!deleteTarget || !onDelete) return;
+          setDeleteLoading(true);
+          setDeleteError(null);
+          try {
+            await onDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          } catch (error) {
+            const message = error instanceof Error
+              ? error.message
+              : typeof error === "object" && error !== null && "message" in error && typeof error.message === "string"
+                ? error.message
+                : "No se pudo eliminar la extracción.";
+            setDeleteError(message);
+          } finally {
+            setDeleteLoading(false);
+          }
+        }}
+      >
+        {deleteError && (
+          <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {deleteError}
+          </p>
+        )}
+      </ConfirmDialog>
     </div>
   );
 }

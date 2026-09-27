@@ -23,7 +23,7 @@ const DOCUMENT_TYPES: Array<{ value: DocumentType; label: string }> = [
 export default function DocumentRetentionSettings() {
   const { activeOrganization } = useTenantContext();
   const { trail } = useBreadcrumbs();
-  const organizationId = activeOrganization?.id ?? "80fce911-57c5-4a83-809f-78df6a3736f7";
+  const organizationId = activeOrganization?.id ?? "";
   const [values, setValues] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -32,6 +32,11 @@ export default function DocumentRetentionSettings() {
 
   useEffect(() => {
     let active = true;
+    if (!organizationId) {
+      setLoading(false);
+      setError("Selecciona una organización activa para configurar la retención.");
+      return () => { active = false; };
+    }
     setLoading(true);
     void getDocumentRetentionSettings(organizationId)
       .then((settings) => {

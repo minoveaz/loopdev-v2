@@ -6,11 +6,13 @@ import type {
   ExtractionListParams,
   ExtractionMetrics,
 } from "../adapter/types";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
-const DEFAULT_ORGANIZATION_ID = "80fce911-57c5-4a83-809f-78df6a3736f7";
 const DEFAULT_LIMIT = 10;
 
 export function useDocumentIntelligence(params: Partial<Omit<ExtractionListParams, "organizationId">> = {}) {
+  const { activeOrganization } = useTenantContext();
+  const organizationId = activeOrganization?.id ?? "";
   const [extractions, setExtractions] = useState<ExtractionRecord[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -30,7 +32,7 @@ export function useDocumentIntelligence(params: Partial<Omit<ExtractionListParam
     setError(null);
 
     const requestParams: ExtractionListParams = {
-      organizationId: DEFAULT_ORGANIZATION_ID,
+      organizationId,
       query: params.query,
       cursor: params.cursor ?? null,
       limit: params.limit ?? DEFAULT_LIMIT,
@@ -41,10 +43,16 @@ export function useDocumentIntelligence(params: Partial<Omit<ExtractionListParam
       sortDirection: params.sortDirection,
     };
 
-    const adapter = /^[0-9a-f-]{36}$/i.test(DEFAULT_ORGANIZATION_ID) ? supabaseDocumentIntelligenceAdapter : localDocumentIntelligenceAdapter;
+    if (!organizationId) {
+      setExtractions([]);
+      setMetrics(null);
+      setLoading(false);
+      return () => { active = false; };
+    }
+    const adapter = /^[0-9a-f-]{36}$/i.test(organizationId) ? supabaseDocumentIntelligenceAdapter : localDocumentIntelligenceAdapter;
     Promise.all([
       adapter.listExtractions(requestParams),
-      adapter.getMetrics(DEFAULT_ORGANIZATION_ID),
+      adapter.getMetrics(organizationId),
     ])
       .then(([page, currentMetrics]) => {
         if (active) {
@@ -77,15 +85,17 @@ export function useDocumentIntelligence(params: Partial<Omit<ExtractionListParam
     params.sortBy,
     params.sortDirection,
     reloadKey,
+    organizationId,
   ]);
 
   const deleteExtraction = useCallback(
     async (id: string) => {
-      const adapter = /^[0-9a-f-]{36}$/i.test(DEFAULT_ORGANIZATION_ID) ? supabaseDocumentIntelligenceAdapter : localDocumentIntelligenceAdapter;
+      if (!organizationId) throw new Error("Selecciona una organización activa.");
+      const adapter = /^[0-9a-f-]{36}$/i.test(organizationId) ? supabaseDocumentIntelligenceAdapter : localDocumentIntelligenceAdapter;
       await adapter.deleteExtraction(id);
       reload();
     },
-    [reload],
+    [organizationId, reload],
   );
 
   return {

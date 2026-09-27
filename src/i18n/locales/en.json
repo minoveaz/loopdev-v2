@@ -24,6 +24,7 @@
     "next": "Next",
     "previous": "Previous",
     "confirm": "Confirm",
+    "retry": "Try again",
     "yes": "Yes",
     "no": "No",
     "readMore": "Read more",
@@ -90,6 +91,60 @@
     "noExtractionsDescription": "Start a new analysis or process a document to see the centralized history.",
     "deleteRecord": "Delete record",
     "open": "Open"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your organization, tenant users, and access roles.",
+    "forbidden": {
+      "title": "Settings access restricted",
+      "description": "You do not have permission to manage this organization's settings."
+    },
+    "errors": {
+      "title": "Settings could not be loaded",
+      "load": "We could not load the active organization's settings.",
+      "save": "We could not save your changes."
+    },
+    "organization": {
+      "title": "Organization",
+      "description": "Keep the tenant identity and essential locale settings up to date.",
+      "name": "Organization name",
+      "slug": "Visible identifier",
+      "timezone": "Timezone",
+      "locale": "Organization locale",
+      "english": "English",
+      "spanish": "Spanish",
+      "saved": "Organization settings saved."
+    },
+    "overview": {
+      "title": "Access boundary",
+      "description": "Every record shown here is scoped to the active organization.",
+      "organizationId": "Active organization",
+      "members": "Members",
+      "singleEntry": "Settings is the single organization entry point."
+    },
+    "users": {
+      "title": "Tenant users",
+      "description": "Invite and manage members without exposing users from another organization.",
+      "name": "Full name",
+      "email": "Email address",
+      "role": "Role",
+      "invite": "Invite user",
+      "invited": "Invitation created.",
+      "updated": "User access updated.",
+      "empty": "No users belong to this organization yet.",
+      "activate": "Activate",
+      "suspend": "Suspend"
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Administrator",
+      "member": "Member"
+    },
+    "status": {
+      "active": "Active",
+      "pending": "Pending",
+      "suspended": "Suspended"
+    }
   },
   "topbar": {
     "expandSidebar": "Expand sidebar",
@@ -241,6 +296,7 @@
     "Workload": "Workload",
     "Time Tracking": "Time Tracking",
     "Workspace": "Workspace",
+    "Workspace / Tools": "Workspace / Tools",
     "Team": "Team",
     "Overview": "Overview",
     "Sales Report": "Sales Report",

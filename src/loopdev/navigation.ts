@@ -45,7 +45,7 @@ export const loopdevNavigation: NavSection[] = [
     ],
   },
   {
-    label: "Workspace",
+    label: "Workspace / Tools",
     items: [
       {
         label: loopdevNavigationContract.groups[2].label,

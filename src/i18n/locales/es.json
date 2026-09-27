@@ -24,6 +24,7 @@
     "next": "Siguiente",
     "previous": "Anterior",
     "confirm": "Confirmar",
+    "retry": "Reintentar",
     "yes": "Sí",
     "no": "No",
     "readMore": "Leer más",
@@ -90,6 +91,60 @@
     "noExtractionsDescription": "Inicia un nuevo análisis o procesa un documento para ver el histórico centralizado.",
     "deleteRecord": "Eliminar registro",
     "open": "Abrir"
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Administra tu organización, usuarios del tenant y roles de acceso.",
+    "forbidden": {
+      "title": "Acceso restringido",
+      "description": "No tienes permisos para administrar la configuración de esta organización."
+    },
+    "errors": {
+      "title": "No se pudo cargar la configuración",
+      "load": "No pudimos cargar la configuración de la organización activa.",
+      "save": "No pudimos guardar los cambios."
+    },
+    "organization": {
+      "title": "Organización",
+      "description": "Mantén actualizados la identidad del tenant y los ajustes esenciales de idioma.",
+      "name": "Nombre de la organización",
+      "slug": "Identificador visible",
+      "timezone": "Zona horaria",
+      "locale": "Idioma de la organización",
+      "english": "Inglés",
+      "spanish": "Español",
+      "saved": "Configuración de la organización guardada."
+    },
+    "overview": {
+      "title": "Límite de acceso",
+      "description": "Todos los registros mostrados están aislados en la organización activa.",
+      "organizationId": "Organización activa",
+      "members": "Miembros",
+      "singleEntry": "Settings es el único punto de entrada de organización."
+    },
+    "users": {
+      "title": "Usuarios del tenant",
+      "description": "Invita y administra miembros sin exponer usuarios de otra organización.",
+      "name": "Nombre completo",
+      "email": "Correo electrónico",
+      "role": "Rol",
+      "invite": "Invitar usuario",
+      "invited": "Invitación creada.",
+      "updated": "Acceso del usuario actualizado.",
+      "empty": "Todavía no hay usuarios en esta organización.",
+      "activate": "Activar",
+      "suspend": "Suspender"
+    },
+    "roles": {
+      "owner": "Propietario",
+      "admin": "Administrador",
+      "member": "Miembro"
+    },
+    "status": {
+      "active": "Activo",
+      "pending": "Pendiente",
+      "suspended": "Suspendido"
+    }
   },
   "topbar": {
     "expandSidebar": "Expandir barra lateral",
@@ -241,6 +296,7 @@
     "Workload": "Carga de trabajo",
     "Time Tracking": "Seguimiento de tiempo",
     "Workspace": "Espacio de trabajo",
+    "Workspace / Tools": "Espacio de trabajo / Herramientas",
     "Team": "Equipo",
     "Overview": "Resumen",
     "Sales Report": "Informe de ventas",

@@ -1,4 +1,5 @@
 import { localCatalogAdapter } from "./local";
+import { supabaseCatalogAdapter } from "./supabase";
 import type {
   CatalogItem,
   CatalogCreateInput,
@@ -53,8 +54,27 @@ deleteCatalogItem(id: string, params: CatalogScopeParams): Promise<void>;
   resolveReference(params: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null>;
 }
 
-export const catalogAdapter: CatalogAdapter = localCatalogAdapter;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (value: unknown): value is string => typeof value === "string" && UUID_PATTERN.test(value);
+
+// Keep local fixtures available for unauthenticated/demo consumers while all
+// real organization UUIDs use the tenant-scoped Supabase adapter.
+export const catalogAdapter: CatalogAdapter = new Proxy(supabaseCatalogAdapter, {
+  get(target, property, receiver) {
+    const value = Reflect.get(target, property, receiver);
+    if (typeof value !== "function") return value;
+    return (...args: unknown[]) => {
+      const scope = args.find((arg): arg is { organizationId?: unknown } => Boolean(arg) && typeof arg === "object" && "organizationId" in arg);
+      if (scope && scope.organizationId && !isUuid(scope.organizationId)) {
+        const localValue = Reflect.get(localCatalogAdapter, property);
+        if (typeof localValue === "function") return localValue.apply(localCatalogAdapter, args);
+      }
+      return value.apply(target, args);
+    };
+  },
+});
 export { localCatalogAdapter };
+export { supabaseCatalogAdapter };
 
 export { CatalogAdapterError } from "../types";
 

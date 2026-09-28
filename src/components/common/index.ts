@@ -26,6 +26,7 @@ export { TablePagination } from "./TablePagination";
 export { TableSkeleton } from "./TableSkeleton";
 export { BulkSelectionBar, type BulkSelectionAction, type BulkSelectionBarProps } from "./BulkSelectionBar";
 export { DateRangeFilter, type DateRangeFilterProps } from "./DateRangeFilter";
+export { LocalizedDateField } from "./LocalizedDateField";
 export { UserAvatar } from "./UserAvatar";
 export { PageTabs, type PageTab } from "./PageTabs";
 export { FormSection } from "./FormSection";

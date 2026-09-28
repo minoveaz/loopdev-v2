@@ -2,21 +2,23 @@ import { Boxes, FolderKanban, Package, Plus, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DataCard, EmptyState, PageContainer, PageHeader, StatCard } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { localCatalogAdapter } from "@/loopdev/domains/catalog/adapter";
-import { LOCAL_CATALOG_ORGANIZATION_ID } from "@/loopdev/domains/catalog/data/localCatalog";
+import { catalogAdapter as localCatalogAdapter } from "@/loopdev/domains/catalog/adapter";
 import { useEffect, useState } from "react";
 import type { OrganizationCatalog } from "@/loopdev/domains/catalog";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useT } from "@/i18n";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 export default function ERPOverview() {
   const t = useT();
   const { trail } = useBreadcrumbs();
+  const { activeOrganization } = useTenantContext();
   const [catalogs, setCatalogs] = useState<OrganizationCatalog[]>([]);
 
   useEffect(() => {
-    void localCatalogAdapter.listCatalogs({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID }).then(setCatalogs);
-  }, []);
+    if (!activeOrganization?.id) return;
+    void localCatalogAdapter.listCatalogs({ organizationId: activeOrganization.id }).then(setCatalogs);
+  }, [activeOrganization?.id]);
 
   const products = catalogs.filter((catalog) => catalog.kind === "products").length;
   const services = catalogs.filter((catalog) => catalog.kind === "services").length;
@@ -32,8 +34,8 @@ export default function ERPOverview() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label={t("common.loopdev.erp.catalogs")} value={String(catalogs.length)} hint={t("common.loopdev.erp.companyCatalogs")} icon={Boxes} accent="primary" />
-        <StatCard label={t("common.loopdev.erp.productCatalogs")} value={String(products)} hint="physical, digital and packaged" icon={Package} accent="info" />
-        <StatCard label={t("common.loopdev.erp.serviceCatalogs")} value={String(services)} hint="professional and recurring" icon={Wrench} accent="gold" />
+        <StatCard label={t("common.loopdev.erp.productCatalogs")} value={String(products)} hint={t("common.loopdev.erp.productCatalogHint")} icon={Package} accent="info" />
+        <StatCard label={t("common.loopdev.erp.serviceCatalogs")} value={String(services)} hint={t("common.loopdev.erp.serviceCatalogHint")} icon={Wrench} accent="gold" />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -46,7 +48,7 @@ export default function ERPOverview() {
         <DataCard title={t("common.loopdev.erp.readiness")} description={t("common.loopdev.erp.currentWorkspace")}>
           {catalogs.length ? (
             <ul className="space-y-2 text-sm">
-              {catalogs.map((catalog) => <li key={catalog.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2"><span className="font-medium">{catalog.name}</span><span className="text-xs text-muted-foreground">{catalog.kind}</span></li>)}
+              {catalogs.map((catalog) => <li key={catalog.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2"><span className="font-medium">{catalog.name}</span><span className="text-xs text-muted-foreground">{catalog.kind === "products" ? t("common.loopdev.erp.products") : t("common.loopdev.erp.services")}</span></li>)}
             </ul>
           ) : <EmptyState title={t("common.loopdev.erp.none")} description={t("common.loopdev.erp.createFirst")} />}
         </DataCard>

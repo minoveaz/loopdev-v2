@@ -21,6 +21,9 @@ const allowedPhaseStatuses = new Set([
   "paused",
 ]);
 const allowedDecisionStatuses = new Set(["confirmed", "assumed", "open", "rejected"]);
+const fingerprintPattern = /^sha256:[a-f0-9]{64}$/;
+const placeholderFingerprint = `sha256:${"0".repeat(64)}`;
+const canonicalCheckpointNames = new Set(workflow.phases.map((phase) => `${phase.id}.json`));
 const requiredCheckpointFields = [
   "run_id",
   "span_id",
@@ -88,6 +91,27 @@ function walk(directory) {
   });
 }
 
+function isCheckpointFile(file) {
+  return canonicalCheckpointNames.has(file.slice(file.lastIndexOf(sep) + 1));
+}
+
+function validateFingerprint(file, checkpoint) {
+  if (checkpoint.input_fingerprint === placeholderFingerprint) {
+    addError(file, "input_fingerprint is a placeholder, not input evidence");
+  } else if (checkpoint.input_fingerprint === null) {
+    if (
+      checkpoint.schema_version !== undefined ||
+      checkpoint.status !== "blocked" ||
+      checkpoint.legacy_evidence?.input_fingerprint !== "unavailable" ||
+      !checkpoint.legacy_evidence?.reason
+    ) {
+      addError(file, "unavailable fingerprint is only permitted for explicitly annotated, blocked legacy checkpoints");
+    }
+  } else if (!fingerprintPattern.test(checkpoint.input_fingerprint ?? "")) {
+    addError(file, "input_fingerprint must be a sha256:<64 hex> value");
+  }
+}
+
 function validateCheckpoint(file) {
   let checkpoint;
   try {
@@ -111,6 +135,8 @@ function validateCheckpoint(file) {
     addError(file, "completed checkpoints require completed_at");
   }
   const phase = phaseById.get(checkpoint.phase);
+  const filename = file.slice(file.lastIndexOf(sep) + 1);
+  if (filename !== `${checkpoint.phase}.json`) addError(file, `phase "${checkpoint.phase}" does not match filename "${filename}"`);
   if (!phase) {
     addError(file, `unknown canonical phase "${checkpoint.phase}"`);
   } else if (checkpoint.skill !== phase.skill) {
@@ -179,7 +205,7 @@ function validateManifest(file) {
   if (manifest.retention && typeof manifest.retention !== "object") {
     addError(file, "retention must be an object");
   }
-  if (!/^sha256:[a-f0-9]{64}$/.test(manifest.input_fingerprint ?? "")) {
+  if (!fingerprintPattern.test(manifest.input_fingerprint ?? "") || manifest.input_fingerprint === placeholderFingerprint) {
     addError(file, "input_fingerprint must be a sha256:<64 hex> value");
   }
   if (!Array.isArray(manifest.approval_gates) || !Array.isArray(manifest.invalidated_phases) || !Array.isArray(manifest.shared_contract_inputs)) {
@@ -198,7 +224,7 @@ function validateManifest(file) {
     }
     if (!Array.isArray(manifest.platform_scope) || !manifest.platform_scope.length) addError(file, "schema v1 platform_scope must be a non-empty array");
     for (const category of Object.keys(workflow.fingerprint_invalidation)) {
-      if (!/^sha256:[a-f0-9]{64}$/.test(manifest.fingerprints?.[category] ?? "")) addError(file, `schema v1 fingerprint "${category}" is missing or invalid`);
+      if (!fingerprintPattern.test(manifest.fingerprints?.[category] ?? "") || manifest.fingerprints?.[category] === placeholderFingerprint) addError(file, `schema v1 fingerprint "${category}" is missing or invalid`);
     }
     for (const requiredFile of workflow.required_schema_v1_files) {
       if (!existsSync(join(workspace, requiredFile))) addError(file, `schema v1 workspace is missing required file "${requiredFile}"`);
@@ -211,7 +237,7 @@ function validateManifest(file) {
 
   const runDirectory = dirname(file);
   const checkpoints = new Map();
-  for (const checkpointFile of walk(runDirectory).filter((candidate) => !candidate.endsWith(`${sep}run.json`))) {
+  for (const checkpointFile of walk(runDirectory).filter(isCheckpointFile)) {
     try {
       const checkpoint = JSON.parse(readFileSync(checkpointFile, "utf8"));
       if (checkpoint.run_id === manifest.run_id && checkpoint.phase) checkpoints.set(checkpoint.phase, checkpoint);
@@ -237,7 +263,7 @@ function validateManifest(file) {
 }
 
 function validateCheckpointApproval(file, checkpoint) {
-  if (!/^sha256:[a-f0-9]{64}$/.test(checkpoint.input_fingerprint ?? "")) addError(file, "input_fingerprint must be a sha256:<64 hex> value");
+  validateFingerprint(file, checkpoint);
   if (!checkpoint.approval_gate || typeof checkpoint.approval_gate !== "object") addError(file, "approval_gate must be an object");
   if (checkpoint.approval_gate?.status === "approved" && (!checkpoint.approval_gate.approved_by || !checkpoint.approval_gate.approved_at)) {
     addError(file, "approved checkpoint gate requires approved_by and approved_at");
@@ -245,7 +271,7 @@ function validateCheckpointApproval(file, checkpoint) {
   if (typeof checkpoint.invalidated !== "boolean") addError(file, "invalidated must be boolean");
 }
 
-const checkpointFiles = runsRoots
+const runFiles = runsRoots
   .flatMap((runsRoot) => walk(runsRoot))
   .filter(
     (file) =>
@@ -254,11 +280,22 @@ const checkpointFiles = runsRoots
       file.includes(`${sep}module-runs${sep}`),
   );
 
+const checkpointFiles = runFiles.filter((file) => {
+  const filename = file.slice(file.lastIndexOf(sep) + 1);
+  return filename === "run.json" || isCheckpointFile(file) || /^\d{2}-.*\.json$/.test(filename) && !filename.endsWith("-data.json");
+});
+
 for (const file of checkpointFiles) {
-  if (file.endsWith(`${sep}run.json`)) validateManifest(file);
+  const filename = file.slice(file.lastIndexOf(sep) + 1);
+  if (filename === "run.json") validateManifest(file);
+  else if (!isCheckpointFile(file)) addError(file, `unknown checkpoint phase filename "${filename}"`);
   else {
     let checkpoint;
-    try { checkpoint = JSON.parse(readFileSync(file, "utf8")); } catch { continue; }
+    try { checkpoint = JSON.parse(readFileSync(file, "utf8")); }
+    catch (error) {
+      addError(file, `invalid JSON (${error.message})`);
+      continue;
+    }
     validateCheckpoint(file);
     validateCheckpointApproval(file, checkpoint);
   }

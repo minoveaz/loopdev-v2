@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import { DeliveryStateMachine } from "../lib/delivery-state-machine.mjs";
 import { validateLedger } from "../lib/delivery-ledger.mjs";
+import { deliveryEnvironment } from "../lib/delivery-environment.mjs";
 
 const repositoryRoot = new URL("../..", import.meta.url).pathname;
 const fixedClock = () => new Date("2026-09-14T12:00:00.000Z");
@@ -74,6 +76,9 @@ function fixture() {
   write(join(root, "src/contact.ts"), "export const contact = true;\n");
   write(join(root, "src/test/contact.test.ts"), "// test\n");
   write(join(root, "docs/implementation/crm/contacts/delivery-ledger.json"), `${JSON.stringify(validLedger(), null, 2)}\n`);
+  execFileSync("git", ["init", "-q", root]);
+  execFileSync("git", ["-C", root, "add", "."]);
+  execFileSync("git", ["-C", root, "-c", "user.name=Delivery Test", "-c", "user.email=delivery@example.invalid", "commit", "-qm", "fixture"]);
   const machine = new DeliveryStateMachine(root, fixedClock);
   const initialized = machine.initialize({ suite: "crm", moduleName: "Contacts" });
   return { root, machine, runId: initialized.run_id, initialized, cleanup: () => rmSync(root, { recursive: true, force: true }) };
@@ -102,6 +107,35 @@ function approve(machine, runId, gate) {
   });
 }
 
+test("environment distinguishes a branch and isolated worktree without guessing their base", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const branch = deliveryEnvironment(current.root);
+  assert.equal(branch.checkout_type, "branch");
+  assert.equal(branch.base_branch, null);
+  assert.equal(branch.base_branch_source, "unavailable");
+  const worktree = join(current.root, "isolated-worktree");
+  execFileSync("git", ["-C", current.root, "worktree", "add", "-qb", "isolated", worktree]);
+  const isolated = deliveryEnvironment(worktree);
+  assert.equal(isolated.checkout_type, "worktree");
+  assert.equal(isolated.branch, "isolated");
+  assert.equal(isolated.head_commit, branch.head_commit);
+  assert.equal(isolated.base_branch, null);
+  execFileSync("git", ["-C", worktree, "branch", "--set-upstream-to", branch.branch]);
+  assert.equal(deliveryEnvironment(worktree).base_branch, branch.branch);
+  assert.equal(deliveryEnvironment(worktree).base_branch_source, "git-upstream");
+});
+
+test("initialization fails before writing files when checkout cannot be identified", (context) => {
+  const root = mkdtempSync(join(tmpdir(), "loopdev-no-checkout-"));
+  context.after(() => rmSync(root, { recursive: true, force: true }));
+  write(join(root, "docs/03-platform/governance/delivery-workflow.json"),
+    readFileSync(join(repositoryRoot, "docs/03-platform/governance/delivery-workflow.json"), "utf8"));
+  const machine = new DeliveryStateMachine(root, fixedClock);
+  assert.throws(() => machine.initialize({ suite: "crm", moduleName: "Contacts" }));
+  assert.equal(existsSync(machine.workspace("crm", "Contacts")), false);
+});
+
 test("init materializes the required workspace and starts at discovery", (context) => {
   const current = fixture();
   context.after(current.cleanup);
@@ -109,6 +143,8 @@ test("init materializes the required workspace and starts at discovery", (contex
   const workspace = join(current.root, "docs/implementation/crm/contacts");
   for (const file of [...current.machine.workflow.required_workspace_files, ...current.machine.workflow.required_schema_v1_files]) assert.ok(existsSync(join(workspace, file)), file);
   const manifest = JSON.parse(readFileSync(join(workspace, "runs", current.runId, "run.json")));
+  assert.equal(manifest.environment.checkout_type, "branch");
+  assert.equal(manifest.environment.base_branch_source, "unavailable");
   assert.equal(manifest.current_phase, "00-discovery");
   assert.deepEqual(Object.keys(manifest.fingerprints), ["product", "scope", "design", "plan", "contracts", "code", "tests"]);
   const readme = join(workspace, "README.md");

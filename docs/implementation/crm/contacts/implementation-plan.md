@@ -15,7 +15,7 @@ production work.
 
 ## Historical implementation
 
-The code listed by `runs/MOD-CONTACTS-20260913-001/03-build.json` must be audited
+The code listed by `runs/MOD-CONTACTS-20260913-001/07-build.json` must be audited
 and either adopted by an approved task or replaced. Its presence is not phase
 completion evidence.
 

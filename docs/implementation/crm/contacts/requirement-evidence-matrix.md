@@ -4,7 +4,7 @@
 |---|---|---|---|---|---|
 | CONTACTS-DISCOVERY | `docs/06-product/crm/contacts/` | `discovery.md` | `runs/MOD-CONTACTS-20260913-001/00-discovery.json` | `PARTIAL` | Resolve open desktop/mobile and native decisions |
 | CONTACTS-DESIGN | Product and architecture contracts | None approved | None | `NOT_TESTED` | Execute canonical design and visual gates |
-| CONTACTS-BUILD | Approved plan | Historical implementation only | `runs/MOD-CONTACTS-20260913-001/03-build.json` | `FAIL` | Reconcile implementation after plan approval |
+| CONTACTS-BUILD | Approved plan | Historical implementation only | `runs/MOD-CONTACTS-20260913-001/07-build.json` | `FAIL` | Reconcile implementation after plan approval |
 
 ## Release blockers
 

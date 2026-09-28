@@ -19,6 +19,18 @@
     "working_tree": "modified",
     "runtime_evidence": "not recorded"
   },
+  "input_fingerprint": null,
+  "legacy_evidence": {
+    "input_fingerprint": "unavailable",
+    "reason": "Original inputs were not fingerprinted; historical checkpoint remains blocked and cannot establish input integrity."
+  },
+  "output_artifacts": [],
+  "approval_gate": {
+    "status": "unverified",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false,
   "input_artifacts": [
     "docs/06-product/communications/communications-core/COMMUNICATIONS_CORE_CONTRACT.md",
     "docs/06-product/communications/crm-communications-inbox/CRM_COMMUNICATIONS_INBOX_CONTRACT.md",

@@ -7,6 +7,8 @@ const runsRoots = [
   join(root, "docs", "06-product"),
 ];
 const checkpoints = [];
+const workflow = JSON.parse(readFileSync(join(root, "docs/03-platform/governance/delivery-workflow.json"), "utf8"));
+const phaseFiles = new Set(workflow.phases.map((phase) => `${phase.id}.json`));
 
 function walk(directory) {
   if (!existsSync(directory)) return [];
@@ -25,7 +27,7 @@ for (const file of runsRoots.flatMap((runsRoot) => walk(runsRoot))) {
   ) {
     continue;
   }
-  if (file.endsWith(`${sep}run.json`)) continue;
+  if (!phaseFiles.has(file.slice(file.lastIndexOf(sep) + 1))) continue;
   try {
     checkpoints.push(JSON.parse(readFileSync(file, "utf8")));
   } catch {
@@ -55,7 +57,7 @@ const report = {
     pending: count((checkpoint) => checkpoint.status === "pending"),
   },
   attempts,
-  detected_failures: count((checkpoint) => checkpoint.detected_failure !== null),
+  detected_failures: count((checkpoint) => checkpoint.detected_failure != null),
   validation: {
     passed: validationEntries.filter((entry) => entry.result === "passed").length,
     failed: validationEntries.filter((entry) => entry.result === "failed").length,

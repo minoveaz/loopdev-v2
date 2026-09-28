@@ -26,7 +26,7 @@
 
 | Command | Result | Evidence | Notes |
 |---|---|---|---|
-| Historical commands in `03-build.json` | NOT_TESTED | `runs/MOD-CONTACTS-20260913-001/03-build.json` | Claims retained but not accepted as current runtime evidence |
+| Historical commands in `07-build.json` | NOT_TESTED | `runs/MOD-CONTACTS-20260913-001/07-build.json` | Claims retained but not accepted as current runtime evidence |
 | `npm run test:multiplatform-contracts` | PASS | 10 tests against desktop and mobile adapters | Contract evidence only; no runtime claim |
 | `npm run validate:mobile-boundaries` | PASS | Static import graph scan | `apps/mobile` has no imports from desktop `src/` |
 | `npm run smoke:routes` | PASS | 4 desktop and 5 mobile route declarations | Parameterized templates include concrete deep-link examples |

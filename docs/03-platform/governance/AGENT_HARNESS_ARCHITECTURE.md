@@ -112,6 +112,29 @@ A capability is not accepted merely because an agent follows it in one demo.
 It must not regress existing workflows, bypass project policy or add continuous
 context without a measured benefit.
 
+The opt-in evaluation cases are in `harness-evaluation-cases.json`. They are
+manual agent trials in an isolated checkout, not executable approvals or a
+second delivery workflow. Compare the same requests before and after a harness
+change; record gate errors (false positives and missed blockers), tool calls,
+elapsed time and human interventions when observable. `not_run` and
+`not_available` are not success values. Deterministic harness tests can prove
+validator behavior but cannot establish agent outcome improvement.
+`npm run evaluate:harness` runs the deterministic validator comparison against
+the repository `HEAD` baseline and the current working tree in temporary
+fixtures; it does not mutate either checkout or install dependencies.
+
+## Current harness improvement boundaries
+
+| Capability | Trigger / non-trigger | Authority and reuse | Scope and failure | Negative evidence / cost |
+|---|---|---|---|---|
+| Run validator | Run-check CI; not a phase approval | Existing delivery graph; extend the validator, no new ledger | Local read-only JSON; fail on malformed checkpoints, reject invented fingerprints, mark blocked legacy inputs unverified | Corrupt canonical JSON and invented phase tests; no persistent agent context |
+| Environment capture | Initialize a new run; not a retroactive correction | Existing state machine; use Git's recorded upstream, not a guessed fork point | Read local Git metadata only; fail if no branch or HEAD; report absent upstream | Checkout/worktree tests; one optional field in new runs |
+| Harness doctor | Explicit read-only diagnostic; not an auto-repair or production probe | Existing `harness:doctor`; never substitutes delivery gates | Read tracked configuration and skill metadata; flag missing phase skills or scripts | Missing phase skill fixture; no hook, network, credential or background process |
+| Evaluation cases | Opt-in isolated pilot comparison; not automatic CI acceptance | Existing governance and delivery contract; no second orchestrator | JSON rubric only; user reviews results before promoting portable changes | Migration refusal and tenant denial cases; no always-on prompt |
+
+No external capability, hook, MCP integration or package was added. Portable
+extraction is deferred until comparable before/after agent outcomes exist.
+
 ## LoopDev mapping
 
 | Harness concern | LoopDev implementation | Improvement direction |

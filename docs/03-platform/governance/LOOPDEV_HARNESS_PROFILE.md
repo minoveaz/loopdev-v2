@@ -84,8 +84,9 @@ requests always require explicit approval. The canonical policy is
 
 - GitHub Copilot is the supported agent surface; portable capabilities must not
   assume session hooks or local-memory support.
-- LoopDev delivery records currently include legacy checkpoint data that must be
-  remediated before `npm run validate:module-runs` can become a reliable global
-  gate.
+- Legacy blocked checkpoints without original input fingerprints are explicitly
+  marked as unverified, not reconstructed or counted as passing evidence.
+- A worktree's originating branch cannot always be reconstructed from Git;
+  new runs record the configured upstream or `unavailable` without guessing.
 - The default harness is read-only configuration and validation. It does not
   install a third-party catalog or enable executable hooks.

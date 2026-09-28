@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { validateLedgerFile } from "./delivery-ledger.mjs";
+import { deliveryEnvironment } from "./delivery-environment.mjs";
 
 const sha256 = (value) => `sha256:${createHash("sha256").update(value).digest("hex")}`;
 const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -39,14 +39,6 @@ function fingerprintPaths(root, paths, excludedFragments = []) {
     .map((file) => `${relative(root, file)}:${readFileSync(file)}`)
     .join("\n");
   return sha256(content);
-}
-
-function git(root, args, fallback = null) {
-  try {
-    return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-  } catch {
-    return fallback;
-  }
 }
 
 export class DeliveryStateMachine {
@@ -113,6 +105,7 @@ export class DeliveryStateMachine {
 
   initialize({ suite, moduleName, platformScope = ["desktop_web", "mobile_web", "ios", "android"] }) {
     if (!suite || !moduleName) throw new Error("--suite and --module are required");
+    const environment = deliveryEnvironment(this.root);
     const createdFiles = this.materializeWorkspace(suite, moduleName);
     const runs = join(this.workspace(suite, moduleName), "runs");
     mkdirSync(runs, { recursive: true });
@@ -132,13 +125,7 @@ export class DeliveryStateMachine {
       suite: slug(suite), module: moduleName, status: "running", current_phase: this.workflow.initial_phase,
       attempt: 1, started_at: this.now(), updated_at: this.now(),
       input_fingerprint: sha256(JSON.stringify(fingerprints)), fingerprints,
-      environment: {
-        repository_path: this.root, checkout_type: "branch",
-        branch: git(this.root, ["branch", "--show-current"]),
-        base_branch: null, head_commit: git(this.root, ["rev-parse", "HEAD"]),
-        working_tree: git(this.root, ["status", "--porcelain"], "") ? "modified" : "clean",
-        runtime_url: null, runtime_port: null,
-      },
+      environment,
       platform_scope: platformScope, approvals, approval_gates: [], architecture_quality: "PENDING",
       platform_impact: [], checkpoint_paths: [], evidence_links: [], change_requests: [], blocked_by: [],
       invalidated_phases: [], invalidation_reason: null, shared_contract_inputs: ["packages/contracts/src"],
@@ -152,7 +139,7 @@ export class DeliveryStateMachine {
   checkpoints(suite, moduleName, runId) {
     const directory = this.runDirectory(suite, moduleName, runId);
     return new Map(listFiles(directory)
-      .filter((file) => file.endsWith(".json") && basename(file) !== "run.json")
+      .filter((file) => this.phaseById.has(basename(file, ".json")) && file.endsWith(".json"))
       .map((file) => [readJson(file).phase, { file, checkpoint: readJson(file) }]));
   }
 

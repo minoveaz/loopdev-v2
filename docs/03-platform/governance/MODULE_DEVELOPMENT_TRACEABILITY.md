@@ -88,6 +88,18 @@ docs/implementation/<suite>/<module>/runs/<run-id>/
 └── 10-git.json
 ```
 
+Only `run.json` and the phase-named files listed above are operational
+checkpoints. Other JSON files stored under a run directory, such as
+`*-data.json` evidence or report artifacts, are data artifacts and are not
+validated as checkpoints.
+An old blocked checkpoint with no original input hash may explicitly record
+`input_fingerprint: null` and `legacy_evidence: { "input_fingerprint":
+"unavailable", "reason": "..." }`. This exception does not verify its inputs
+or authorize completion; schema-v1 runs must retain real fingerprints. Never
+substitute a syntactically valid placeholder hash.
+For old blocked records only, `approval_gate.status: "unverified"` records
+missing historical approval evidence; it must not be read as an approval.
+
 If the implementation directory has not been created yet, use:
 
 ```text

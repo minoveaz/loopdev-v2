@@ -12,6 +12,5 @@
     "**/*.ts",
     "**/*.tsx",
     "../../packages/contracts/src/**/*.ts"
-    ,"../../src/vite-env.d.ts"
   ]
 }

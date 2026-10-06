@@ -5,6 +5,7 @@
   "dependencies": {
     "@react-native-community/datetimepicker": "9.1.0",
     "@react-native-picker/picker": "2.11.4",
+    "@supabase/supabase-js": "^2.117.2",
     "@tiptap/extension-link": "^3.31.3",
     "@tiptap/extension-placeholder": "^3.31.3",
     "@tiptap/extension-task-item": "^3.31.3",

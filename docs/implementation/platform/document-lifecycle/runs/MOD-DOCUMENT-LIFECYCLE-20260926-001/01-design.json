@@ -1,1 +1,69 @@
-{"schema_version":1,"run_id":"MOD-DOCUMENT-LIFECYCLE-20260926-001","span_id":"MOD-DOCUMENT-LIFECYCLE-20260926-001:01-design","phase":"01-design","skill":"module-design","parent_span_id":"MOD-DOCUMENT-LIFECYCLE-20260926-001:00-discovery","module":"Platform Document Lifecycle","status":"completed","decision_status":"confirmed","architecture_quality":"PASS_WITH_DEBT","attempt":1,"started_at":"2026-09-26T18:35:00+02:00","completed_at":"2026-09-26T18:42:00+02:00","environment":{"repository":"minoveaz/loopdev-v2","repository_path":"/Users/minoveaz/Documents/Proyectos/loopdev-v2","checkout_type":"branch","branch":"feature/crm-v2-foundation","base_branch":"develop","head_commit":"2f45278","working_tree":"modified"},"input_artifacts":["discovery.md","issue-14"],"decisions":[{"id":"DEC-DOC-002","status":"confirmed","summary":"Extend shared Platform retention and Files metadata; do not create module-local storage."}],"actions":["Defined contracts, errors, events, RBAC and architecture boundary."],"output_artifacts":["architecture-design.md","lifecycle-contracts.ts"],"validation":[{"command":"npm run typecheck","result":"passed","evidence":"typecheck output"}],"requirements":[{"id":"DESIGN-CONTRACTS","status":"PASS","evidence":"lifecycle-contracts.ts"}],"evidence":[],"detected_failure":null,"likely_failure_origin":null,"next_handoff":"02-local","approval_gate":{"status":"assumed_from_user_request","approved_by":"user","approved_at":"2026-09-26T18:12:20+02:00"},"invalidated":false,"evidence_links":[],"notes":[]}
+{
+  "schema_version": 0,
+  "run_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001",
+  "span_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001:01-design",
+  "phase": "01-design",
+  "skill": "module-design",
+  "parent_span_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001:00-discovery",
+  "module": "Platform Document Lifecycle",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-26T18:35:00+02:00",
+  "completed_at": "2026-09-26T18:42:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "2f45278",
+    "working_tree": "modified"
+  },
+  "input_artifacts": [
+    "discovery.md",
+    "issue-14"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-DOC-002",
+      "status": "confirmed",
+      "summary": "Extend shared Platform retention and Files metadata; do not create module-local storage."
+    }
+  ],
+  "actions": [
+    "Defined contracts, errors, events, RBAC and architecture boundary."
+  ],
+  "output_artifacts": [
+    "architecture-design.md",
+    "lifecycle-contracts.ts"
+  ],
+  "validation": [
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "typecheck output"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "DESIGN-CONTRACTS",
+      "status": "PASS",
+      "evidence": "lifecycle-contracts.ts"
+    }
+  ],
+  "evidence": [],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "02-local",
+  "approval_gate": {
+    "status": "assumed_from_user_request",
+    "approved_by": "user",
+    "approved_at": "2026-09-26T18:12:20+02:00"
+  },
+  "invalidated": false,
+  "evidence_links": [],
+  "notes": [],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

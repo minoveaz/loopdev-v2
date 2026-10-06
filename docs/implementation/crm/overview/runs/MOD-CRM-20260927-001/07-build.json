@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 0,
   "run_id": "MOD-CRM-20260927-001",
   "span_id": "MOD-CRM-20260927-001:07-build",
   "phase": "07-build",
@@ -41,16 +41,44 @@
     "docs/implementation/crm/overview/phase-evidence.md"
   ],
   "validation": [
-    {"command": "npm run typecheck", "result": "pass"},
-    {"command": "npx eslint src/loopdev/pages/crm/Overview.tsx src/loopdev/domains/crm/overview.ts src/loopdev/domains/platform/analytics/hooks.ts src/test/crm/overview/dashboard.test.ts", "result": "pass"},
-    {"command": "npx vitest run src/test/crm/overview/dashboard.test.ts", "result": "pass", "tests": 3},
-    {"command": "npm run build", "result": "pass"},
-    {"command": "git diff --check", "result": "pass"}
+    {
+      "command": "npm run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npx eslint src/loopdev/pages/crm/Overview.tsx src/loopdev/domains/crm/overview.ts src/loopdev/domains/platform/analytics/hooks.ts src/test/crm/overview/dashboard.test.ts",
+      "result": "pass"
+    },
+    {
+      "command": "npx vitest run src/test/crm/overview/dashboard.test.ts",
+      "result": "pass",
+      "tests": 3
+    },
+    {
+      "command": "npm run build",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    }
   ],
   "requirements": [
-    {"id": "OVR-07", "status": "pass", "evidence": "Overview composition and focused tests"},
-    {"id": "OVR-05", "status": "partial", "evidence": "loading/empty/error/forbidden states; runtime offline evidence pending"},
-    {"id": "OVR-09", "status": "partial", "evidence": "analytics cache/retry; task/activity freshness metadata pending"}
+    {
+      "id": "OVR-07",
+      "status": "pass",
+      "evidence": "Overview composition and focused tests"
+    },
+    {
+      "id": "OVR-05",
+      "status": "partial",
+      "evidence": "loading/empty/error/forbidden states; runtime offline evidence pending"
+    },
+    {
+      "id": "OVR-09",
+      "status": "partial",
+      "evidence": "analytics cache/retry; task/activity freshness metadata pending"
+    }
   ],
   "evidence": [
     "3 focused dashboard tests passed",
@@ -72,5 +100,6 @@
   "notes": [
     "No commit, reset, revert, push or pull request created.",
     "Do not claim backend/API implementation or release readiness."
-  ]
+  ],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
 }

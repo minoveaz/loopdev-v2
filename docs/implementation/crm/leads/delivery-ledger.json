@@ -3,7 +3,7 @@
   "schema_version": 1,
   "suite": "crm",
   "module": "leads",
-  "status": "approved",
+  "status": "blocked",
   "approved_by": "user",
   "approved_at": "2026-09-17T20:00:00+02:00",
   "approval_source": "user approval during leads delivery run",
@@ -289,7 +289,7 @@
       "id": "LEADS-TASK-SPEED-DIAL-MOBILE",
       "phase": "07-build",
       "type": "mobile_renderer",
-      "status": "done",
+      "status": "blocked",
       "title": "Implement mobile 1-tap speed dial",
       "requirement_ids": ["LEADS-REQ-SPEED-DIAL"],
       "capability_ids": ["LEADS-CAP-SPEED-DIAL"],
@@ -301,7 +301,7 @@
       "acceptance_criteria": ["1-tap phone, email, messaging triggers platform native handlers"],
       "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }],
       "files": ["apps/mobile/components/MobileLeadsScreen.tsx"],
-      "blocked_by": [],
+      "blocked_by": ["Structured E4 runtime evidence is required for the mobile native phone, email, and messaging handlers."],
       "evidence_refs": ["apps/mobile/components/MobileLeadsScreen.tsx"]
     },
     {
@@ -346,7 +346,7 @@
       "id": "LEADS-TASK-CONVERT-DESKTOP",
       "phase": "07-build",
       "type": "desktop_renderer",
-      "status": "done",
+      "status": "blocked",
       "title": "Verify desktop lead conversion dialog",
       "requirement_ids": ["LEADS-REQ-CONVERT"],
       "capability_ids": ["LEADS-CAP-CONVERT"],
@@ -358,14 +358,14 @@
       "acceptance_criteria": ["Desktop conversion dialog creates opportunity and marks lead converted"],
       "validation": [{ "command": "npx tsc -p tsconfig.app.json --noEmit", "required": true }],
       "files": ["src/loopdev/pages/crm/Leads.tsx"],
-      "blocked_by": [],
+      "blocked_by": ["Structured E4 desktop journey evidence is required for lead-to-opportunity conversion."],
       "evidence_refs": ["src/loopdev/pages/crm/Leads.tsx"]
     },
     {
       "id": "LEADS-TASK-CONVERT-MOBILE",
       "phase": "07-build",
       "type": "mobile_renderer",
-      "status": "done",
+      "status": "blocked",
       "title": "Implement mobile opportunity conversion modal",
       "requirement_ids": ["LEADS-REQ-CONVERT"],
       "capability_ids": ["LEADS-CAP-CONVERT"],
@@ -377,10 +377,14 @@
       "acceptance_criteria": ["Mobile conversion modal creates opportunity and updates state"],
       "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }],
       "files": ["apps/mobile/components/MobileLeadDetailScreen.tsx", "apps/mobile/adapters/crm.ts"],
-      "blocked_by": [],
+      "blocked_by": ["Structured E4 mobile journey evidence is required for lead-to-opportunity conversion."],
       "evidence_refs": ["apps/mobile/components/MobileLeadDetailScreen.tsx"]
     }
   ],
   "change_requests": [],
-  "blockers": []
+  "blockers": [
+    "LEADS-TASK-SPEED-DIAL-MOBILE: Structured E4 mobile journey evidence is required for native phone, email, and messaging handlers.",
+    "LEADS-TASK-CONVERT-DESKTOP: Structured E4 desktop journey evidence is required for lead-to-opportunity conversion.",
+    "LEADS-TASK-CONVERT-MOBILE: Structured E4 mobile journey evidence is required for lead-to-opportunity conversion."
+  ]
 }

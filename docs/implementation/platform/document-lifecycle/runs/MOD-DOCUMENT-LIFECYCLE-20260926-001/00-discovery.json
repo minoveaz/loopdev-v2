@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 0,
   "run_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001",
   "span_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001:00-discovery",
   "phase": "00-discovery",
@@ -12,19 +12,62 @@
   "attempt": 1,
   "started_at": "2026-09-26T18:12:20+02:00",
   "completed_at": "2026-09-26T18:35:00+02:00",
-  "environment": {"repository": "minoveaz/loopdev-v2", "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2", "checkout_type": "branch", "branch": "feature/crm-v2-foundation", "base_branch": "develop", "head_commit": "2f45278", "working_tree": "modified"},
-  "input_artifacts": ["GitHub issue #14", "docs/06-product/ai-platform/document-intelligence-core", "MODULE_DELIVERY_AGENT_CONTRACT.md", "MODULE_DEVELOPMENT_TRACEABILITY.md"],
-  "decisions": [{"id": "DEC-DOC-001", "status": "confirmed", "summary": "Files remains authoritative for permanent binaries; temporary unassociated retention is 30 days and associated default is 365 days."}],
-  "actions": ["Audited existing Document Intelligence, Files, CRM and timeline contracts.", "Recorded three bounded industry references and differentiation hypotheses."],
-  "output_artifacts": ["docs/implementation/platform/document-lifecycle/discovery.md"],
-  "validation": [{"command": "git status and source/migration audit", "result": "passed", "evidence": "canonical checkout inspection"}],
-  "requirements": [{"id": "DISCOVERY-SCOPE", "status": "PASS", "evidence": "discovery.md matrix"}],
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "2f45278",
+    "working_tree": "modified"
+  },
+  "input_artifacts": [
+    "GitHub issue #14",
+    "docs/06-product/ai-platform/document-intelligence-core",
+    "MODULE_DELIVERY_AGENT_CONTRACT.md",
+    "MODULE_DEVELOPMENT_TRACEABILITY.md"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-DOC-001",
+      "status": "confirmed",
+      "summary": "Files remains authoritative for permanent binaries; temporary unassociated retention is 30 days and associated default is 365 days."
+    }
+  ],
+  "actions": [
+    "Audited existing Document Intelligence, Files, CRM and timeline contracts.",
+    "Recorded three bounded industry references and differentiation hypotheses."
+  ],
+  "output_artifacts": [
+    "docs/implementation/platform/document-lifecycle/discovery.md"
+  ],
+  "validation": [
+    {
+      "command": "git status and source/migration audit",
+      "result": "passed",
+      "evidence": "canonical checkout inspection"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "DISCOVERY-SCOPE",
+      "status": "PASS",
+      "evidence": "discovery.md matrix"
+    }
+  ],
   "evidence": [],
   "detected_failure": null,
   "likely_failure_origin": null,
   "next_handoff": "01-design",
-  "approval_gate": {"status": "not_required", "approved_by": null, "approved_at": null},
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
   "invalidated": false,
   "evidence_links": [],
-  "notes": ["No legacy checkout configured."]
+  "notes": [
+    "No legacy checkout configured."
+  ],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
 }

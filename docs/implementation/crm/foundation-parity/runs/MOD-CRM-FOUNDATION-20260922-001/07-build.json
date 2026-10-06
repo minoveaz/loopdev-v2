@@ -42,5 +42,7 @@
     "Mobile Communications still crosses the desktop runtime boundary.",
     "Full quality suite retains pre-existing Communications and Tasks UI localization failures."
   ],
-  "decision": "Do not close issue 8 or claim release readiness until Files remote persistence and the remaining runtime gates are approved and verified."
+  "decision": "Do not close issue 8 or claim release readiness until Files remote persistence and the remaining runtime gates are approved and verified.",
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
 }

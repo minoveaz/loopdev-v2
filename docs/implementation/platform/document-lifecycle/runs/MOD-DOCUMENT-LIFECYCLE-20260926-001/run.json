@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 0,
   "workflow_version": 1,
   "run_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001",
   "suite": "platform",
@@ -21,18 +21,62 @@
     "runtime_port": null
   },
   "approvals": {
-    "design": {"status": "assumed_from_user_request", "approved_by": "user", "source": "issue-14/request"},
-    "plan": {"status": "assumed_from_user_request", "approved_by": "user", "source": "issue-14/request"},
-    "verification": {"status": "pending"},
-    "release": {"status": "pending"},
-    "push": {"status": "not_requested"},
-    "pull_request": {"status": "not_requested"}
+    "design": {
+      "status": "assumed_from_user_request",
+      "approved_by": "user",
+      "source": "issue-14/request"
+    },
+    "plan": {
+      "status": "assumed_from_user_request",
+      "approved_by": "user",
+      "source": "issue-14/request"
+    },
+    "verification": {
+      "status": "pending"
+    },
+    "release": {
+      "status": "pending"
+    },
+    "push": {
+      "status": "not_requested"
+    },
+    "pull_request": {
+      "status": "not_requested"
+    }
   },
   "platform_impact": [
-    {"capability": "Files", "decision": "REUSE", "consumers": ["CRM", "Communications"], "migration_required": true},
-    {"capability": "Retention/Reconciliation", "decision": "EXTEND_PLATFORM", "consumers": ["Document Intelligence"], "migration_required": true},
-    {"capability": "Document Intelligence", "decision": "MODULE_SPECIFIC", "consumers": ["CRM", "Communications", "Files"], "migration_required": false}
+    {
+      "capability": "Files",
+      "decision": "REUSE",
+      "consumers": [
+        "CRM",
+        "Communications"
+      ],
+      "migration_required": true
+    },
+    {
+      "capability": "Retention/Reconciliation",
+      "decision": "EXTEND_PLATFORM",
+      "consumers": [
+        "Document Intelligence"
+      ],
+      "migration_required": true
+    },
+    {
+      "capability": "Document Intelligence",
+      "decision": "MODULE_SPECIFIC",
+      "consumers": [
+        "CRM",
+        "Communications",
+        "Files"
+      ],
+      "migration_required": false
+    }
   ],
   "change_requests": [],
-  "notes": ["Phase 1 lifecycle.ts, index.ts and lifecycle.test.ts were preserved; additions are compatible exports/new files.", "Blocked pending Supabase project link and migration/security approval evidence. No commit created because remote validation is incomplete."]
+  "notes": [
+    "Phase 1 lifecycle.ts, index.ts and lifecycle.test.ts were preserved; additions are compatible exports/new files.",
+    "Blocked pending Supabase project link and migration/security approval evidence. No commit created because remote validation is incomplete."
+  ],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
 }

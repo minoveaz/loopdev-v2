@@ -91,5 +91,7 @@
   "notes": [
     "Review is read-only; no product code was changed.",
     "The only pre-existing working-tree code change is the TypeScript 6 compatibility fix in the Supabase adapter."
-  ]
+  ],
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
 }

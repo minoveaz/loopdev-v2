@@ -108,6 +108,13 @@ The operational JSON templates are:
 - `MODULE_CHECKPOINT_TEMPLATE.json`;
 - `delivery-ledger.json`.
 
+Historical run records that cannot be upgraded without inventing missing
+fingerprints, approvals, or phase metadata may be preserved as schema version
+`0` by setting `legacy_schema_reason` on the manifest and its checkpoints. These
+records remain archival evidence, not current approval or release evidence;
+new work must use schema version `1`, which is validated against the canonical
+workflow.
+
 ## Issue and track linkage
 
 Every implementation track must link:

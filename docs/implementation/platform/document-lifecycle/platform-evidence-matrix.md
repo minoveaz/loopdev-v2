@@ -4,8 +4,8 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Contracts, lifecycle events and errors | `lifecycle-contracts.ts`; lifecycle tests | Implemented; unit-tested | N/A — shared domain contract | N/A | N/A | PASS | Document Intelligence | Add authenticated contract coverage if required by release review |
 | Local-first association and idempotency | `lifecycle-local.ts`; local lifecycle tests | Implemented; unit-tested | N/A — shared local store | N/A | N/A | PARTIAL | Document Intelligence | Add runtime offline queue evidence |
-| Remote promotion to Files and contact relation | `lifecycle-remote.ts`; migration; authenticated smoke | Implemented and verified against Supabase | Reuses `platform_files` metadata contract | N/A | N/A | PASS | Platform/Files | Scheduled worker evidence remains |
-| Retention configuration and cleanup | `retention.ts`; settings route; migration function; authenticated smoke | Policy UI and remote cleanup implemented | N/A | N/A | N/A | PASS_WITH_DEBT | Platform | Verify scheduled worker invocation |
+| Remote promotion to Files and contact relation | `lifecycle-remote.ts`; migration; authenticated smoke test via `npm run smoke:document-lifecycle-authenticated --silent` | Implemented and verified against Supabase | Reuses `platform_files` metadata contract | N/A | N/A | PASS | Platform/Files | Scheduled worker evidence remains |
+| Retention configuration and cleanup | `retention.ts`; settings route; migration function; authenticated smoke | Policy UI and remote cleanup implemented | N/A | N/A | N/A | PARTIAL | Platform | Verify scheduled worker invocation |
 | Communications launch integration | `Communications.tsx`; shared drawer; promotion command | Real attachment record now carries lifecycle metadata and promotes on contact apply | N/A | N/A | N/A | PARTIAL | Communications | Add authenticated UI journey evidence |
 
 `PASS` requires verified domain, renderer and operations on every required

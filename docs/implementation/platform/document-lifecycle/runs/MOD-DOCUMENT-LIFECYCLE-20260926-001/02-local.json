@@ -1,1 +1,66 @@
-{"schema_version":1,"run_id":"MOD-DOCUMENT-LIFECYCLE-20260926-001","span_id":"MOD-DOCUMENT-LIFECYCLE-20260926-001:02-local","phase":"02-domain","skill":"domain-model","parent_span_id":"MOD-DOCUMENT-LIFECYCLE-20260926-001:01-design","module":"Platform Document Lifecycle","status":"completed","decision_status":"confirmed","architecture_quality":"PASS_WITH_DEBT","attempt":1,"started_at":"2026-09-26T18:42:00+02:00","completed_at":"2026-09-26T18:46:00+02:00","environment":{"repository":"minoveaz/loopdev-v2","repository_path":"/Users/minoveaz/Documents/Proyectos/loopdev-v2","checkout_type":"branch","branch":"feature/crm-v2-foundation","base_branch":"develop","head_commit":"2f45278","working_tree":"modified"},"input_artifacts":["lifecycle-contracts.ts","lifecycle.ts"],"decisions":[],"actions":["Implemented local-first association store with optimistic versioning and idempotent replay."],"output_artifacts":["lifecycle-local.ts","lifecycle-local.test.ts"],"validation":[{"command":"npx vitest run src/test/document-intelligence/lifecycle.test.ts src/test/document-intelligence/lifecycle-local.test.ts","result":"passed","evidence":"6 tests passed"}],"requirements":[{"id":"LOCAL-IDEMPOTENCY","status":"PASS","evidence":"lifecycle-local.test.ts"},{"id":"LOCAL-CONCURRENCY","status":"PASS","evidence":"lifecycle-local.test.ts"}],"evidence":[],"detected_failure":null,"likely_failure_origin":null,"next_handoff":"03-remote","approval_gate":{"status":"not_required"},"invalidated":false,"evidence_links":[],"notes":[]}
+{
+  "schema_version": 0,
+  "run_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001",
+  "span_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001:02-local",
+  "phase": "02-domain",
+  "skill": "domain-model",
+  "parent_span_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001:01-design",
+  "module": "Platform Document Lifecycle",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-26T18:42:00+02:00",
+  "completed_at": "2026-09-26T18:46:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "2f45278",
+    "working_tree": "modified"
+  },
+  "input_artifacts": [
+    "lifecycle-contracts.ts",
+    "lifecycle.ts"
+  ],
+  "decisions": [],
+  "actions": [
+    "Implemented local-first association store with optimistic versioning and idempotent replay."
+  ],
+  "output_artifacts": [
+    "lifecycle-local.ts",
+    "lifecycle-local.test.ts"
+  ],
+  "validation": [
+    {
+      "command": "npx vitest run src/test/document-intelligence/lifecycle.test.ts src/test/document-intelligence/lifecycle-local.test.ts",
+      "result": "passed",
+      "evidence": "6 tests passed"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "LOCAL-IDEMPOTENCY",
+      "status": "PASS",
+      "evidence": "lifecycle-local.test.ts"
+    },
+    {
+      "id": "LOCAL-CONCURRENCY",
+      "status": "PASS",
+      "evidence": "lifecycle-local.test.ts"
+    }
+  ],
+  "evidence": [],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "03-remote",
+  "approval_gate": {
+    "status": "not_required"
+  },
+  "invalidated": false,
+  "evidence_links": [],
+  "notes": [],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

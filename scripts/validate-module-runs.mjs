@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 
 const root = process.cwd();
 const workflow = JSON.parse(readFileSync(join(root, "docs", "03-platform", "governance", "delivery-workflow.json"), "utf8"));
@@ -22,6 +22,7 @@ const allowedPhaseStatuses = new Set([
 ]);
 const allowedDecisionStatuses = new Set(["confirmed", "assumed", "open", "rejected"]);
 const requiredCheckpointFields = [
+  "schema_version",
   "run_id",
   "span_id",
   "phase",
@@ -39,6 +40,8 @@ const requiredCheckpointFields = [
   "invalidated",
 ];
 const requiredManifestFields = [
+  "schema_version",
+  "workflow_version",
   "run_id",
   "module",
   "status",
@@ -60,6 +63,7 @@ const requiredManifestFields = [
 ];
 
 const errors = [];
+let legacyRecordCount = 0;
 
 const phaseIds = new Set();
 for (const phase of workflow.phases) {
@@ -94,6 +98,18 @@ function validateCheckpoint(file) {
     checkpoint = JSON.parse(readFileSync(file, "utf8"));
   } catch (error) {
     addError(file, `invalid JSON (${error.message})`);
+    return;
+  }
+
+  if (checkpoint.schema_version === 0) {
+    legacyRecordCount += 1;
+    if (typeof checkpoint.legacy_schema_reason !== "string" || !checkpoint.legacy_schema_reason.trim()) {
+      addError(file, "legacy records require a legacy_schema_reason");
+    }
+    return;
+  }
+  if (checkpoint.schema_version !== 1) {
+    addError(file, `unsupported schema_version "${checkpoint.schema_version}"`);
     return;
   }
 
@@ -153,6 +169,18 @@ function validateManifest(file) {
     manifest = JSON.parse(readFileSync(file, "utf8"));
   } catch (error) {
     addError(file, `invalid JSON (${error.message})`);
+    return;
+  }
+
+  if (manifest.schema_version === 0) {
+    legacyRecordCount += 1;
+    if (typeof manifest.legacy_schema_reason !== "string" || !manifest.legacy_schema_reason.trim()) {
+      addError(file, "legacy records require a legacy_schema_reason");
+    }
+    return;
+  }
+  if (manifest.schema_version !== 1) {
+    addError(file, `unsupported schema_version "${manifest.schema_version}"`);
     return;
   }
 
@@ -220,7 +248,8 @@ function validateManifest(file) {
     }
   }
   for (const checkpointPath of manifest.checkpoint_paths ?? []) {
-    if (!existsSync(join(root, checkpointPath))) addError(file, `checkpoint path does not exist: "${checkpointPath}"`);
+    const candidates = [join(workspace, checkpointPath), join(root, checkpointPath)];
+    if (!candidates.some(existsSync)) addError(file, `checkpoint path does not exist: "${checkpointPath}"`);
   }
   for (const [phaseId, checkpoint] of checkpoints) {
     const phase = phaseById.get(phaseId);
@@ -247,12 +276,13 @@ function validateCheckpointApproval(file, checkpoint) {
 
 const checkpointFiles = runsRoots
   .flatMap((runsRoot) => walk(runsRoot))
-  .filter(
-    (file) =>
-      file.includes(`${sep}runs${sep}`) ||
-      file.includes(`${sep}development-runs${sep}`) ||
-      file.includes(`${sep}module-runs${sep}`),
-  );
+  .filter((file) => {
+    const name = basename(file);
+    return (
+      name === "run.json" ||
+      (/^\d{2}-[a-z0-9][a-z0-9-]*\.json$/.test(name) && !name.endsWith("-data.json"))
+    );
+  });
 
 for (const file of checkpointFiles) {
   if (file.endsWith(`${sep}run.json`)) validateManifest(file);
@@ -260,7 +290,7 @@ for (const file of checkpointFiles) {
     let checkpoint;
     try { checkpoint = JSON.parse(readFileSync(file, "utf8")); } catch { continue; }
     validateCheckpoint(file);
-    validateCheckpointApproval(file, checkpoint);
+    if (checkpoint.schema_version === 1) validateCheckpointApproval(file, checkpoint);
   }
 }
 
@@ -272,6 +302,6 @@ if (errors.length > 0) {
   console.log(
     checkpointFiles.length === 0
       ? "Module run validation passed: no production checkpoints are currently recorded."
-      : `Module run validation passed: ${checkpointFiles.length} checkpoint file(s) checked.`,
+      : `Module run validation passed: ${checkpointFiles.length} checkpoint file(s) checked (${legacyRecordCount} archived legacy record(s)).`,
   );
 }

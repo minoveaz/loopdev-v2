@@ -3,7 +3,7 @@
   "schema_version": 1,
   "suite": "crm",
   "module": "pipeline",
-  "status": "approved",
+  "status": "blocked",
   "approved_by": "user",
   "approved_at": "2026-09-18T11:04:35.973Z",
   "approval_source": "user approved implementation run",
@@ -772,7 +772,7 @@
       "id": "PIPELINE-TASK-SPEED-DIAL-MOBILE",
       "phase": "07-build",
       "type": "mobile_renderer",
-      "status": "done",
+      "status": "blocked",
       "title": "Implement mobile 1-tap speed dial for pipeline cards",
       "requirement_ids": [
         "PIPELINE-REQ-SPEED-DIAL"
@@ -803,7 +803,7 @@
       "files": [
         "apps/mobile/components/MobilePipelineScreen.tsx"
       ],
-      "blocked_by": [],
+      "blocked_by": ["Structured E4 runtime evidence is required for the mobile phone, email, and WhatsApp handlers."],
       "evidence_refs": [
         "apps/mobile/components/MobilePipelineScreen.tsx"
       ]
@@ -888,5 +888,7 @@
     }
   ],
   "change_requests": [],
-  "blockers": []
+  "blockers": [
+    "PIPELINE-TASK-SPEED-DIAL-MOBILE: Structured E4 runtime evidence is required for mobile phone, email, and WhatsApp handlers."
+  ]
 }

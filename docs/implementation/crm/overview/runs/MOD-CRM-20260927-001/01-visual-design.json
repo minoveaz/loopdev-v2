@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 0,
   "run_id": "MOD-CRM-20260927-001",
   "span_id": "MOD-CRM-20260927-001:01-visual-design",
   "phase": "01-visual-design",
@@ -143,5 +143,6 @@
   },
   "open_decisions": [
     "Native iOS/Android ownership"
-  ]
+  ],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
 }

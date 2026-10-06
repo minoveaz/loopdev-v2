@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 0,
   "workflow_version": 1,
   "run_id": "MOD-CRM-20260927-001",
   "suite": "crm",
@@ -134,5 +134,6 @@
     "production_code_changed": false,
     "detected_by": "delivery",
     "likely_origin": "prior design checkpoint wording"
-  }
+  },
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
 }

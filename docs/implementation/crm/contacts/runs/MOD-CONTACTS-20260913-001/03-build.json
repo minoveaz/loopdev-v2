@@ -93,5 +93,7 @@
     "http://localhost:8080/app/sales-crm/contacts/crm_cust_1",
     "http://localhost:8082/app/sales-crm/contacts",
     "http://localhost:8082/app/sales-crm/contacts/crm_cust_1"
-  ]
+  ],
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
 }

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 0,
   "run_id": "MOD-CRM-20260927-001",
   "span_id": "MOD-CRM-20260927-001:08-verify",
   "phase": "08-verify",
@@ -44,21 +44,68 @@
     "src/test/platform/analytics.test.ts"
   ],
   "validation": [
-    {"command": "npm run typecheck", "result": "pass"},
-    {"command": "npm run lint", "result": "pass"},
-    {"command": "npx eslint src/loopdev/domains/platform/analytics/*.ts src/loopdev/domains/platform/adapter/local.ts src/test/platform/analytics.test.ts", "result": "pass"},
-    {"command": "npx vitest run src/test/platform/analytics.test.ts src/test/crm/overview/dashboard.test.ts", "result": "pass", "tests": 10},
-    {"command": "npm run build", "result": "pass"},
-    {"command": "git diff --check", "result": "pass"},
-    {"command": "curl -I --max-time 10 http://127.0.0.1:8081/app/sales-crm/overview", "result": "pass", "evidence": "HTTP 200"},
-    {"command": "npm run smoke:crm-authenticated", "result": "pass", "evidence": "authenticated organization membership, CRM contact/task/opportunity/timeline RLS path and cleanup completed"}
+    {
+      "command": "npm run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npm run lint",
+      "result": "pass"
+    },
+    {
+      "command": "npx eslint src/loopdev/domains/platform/analytics/*.ts src/loopdev/domains/platform/adapter/local.ts src/test/platform/analytics.test.ts",
+      "result": "pass"
+    },
+    {
+      "command": "npx vitest run src/test/platform/analytics.test.ts src/test/crm/overview/dashboard.test.ts",
+      "result": "pass",
+      "tests": 10
+    },
+    {
+      "command": "npm run build",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "curl -I --max-time 10 http://127.0.0.1:8081/app/sales-crm/overview",
+      "result": "pass",
+      "evidence": "HTTP 200"
+    },
+    {
+      "command": "npm run smoke:crm-authenticated",
+      "result": "pass",
+      "evidence": "authenticated organization membership, CRM contact/task/opportunity/timeline RLS path and cleanup completed"
+    }
   ],
   "requirements": [
-    {"id": "OVR-08-REMOTE-MAPPING", "status": "PASS", "evidence": "remote adapter maps scoped rows and explicit remote errors; 7 analytics tests pass"},
-    {"id": "OVR-08-TENANT-ISOLATION", "status": "PASS", "evidence": "UUID scope is routed remote-only; organization/workspace/brand predicates and RLS smoke pass"},
-    {"id": "OVR-08-FRESHNESS-CACHE", "status": "PASS", "evidence": "60-second freshUntil metadata, five-minute stale bound, cache boundary test"},
-    {"id": "OVR-08-PARTIAL-FAILURE", "status": "PASS", "evidence": "explicit forbidden/error/schema mappings and dashboard error/forbidden states"},
-    {"id": "OVR-08-AUTHENTICATED-UI", "status": "PARTIAL", "evidence": "route HTTP 200 and authenticated API smoke pass; browser-level loading/empty/error/forbidden/deep-link capture not executed"}
+    {
+      "id": "OVR-08-REMOTE-MAPPING",
+      "status": "PASS",
+      "evidence": "remote adapter maps scoped rows and explicit remote errors; 7 analytics tests pass"
+    },
+    {
+      "id": "OVR-08-TENANT-ISOLATION",
+      "status": "PASS",
+      "evidence": "UUID scope is routed remote-only; organization/workspace/brand predicates and RLS smoke pass"
+    },
+    {
+      "id": "OVR-08-FRESHNESS-CACHE",
+      "status": "PASS",
+      "evidence": "60-second freshUntil metadata, five-minute stale bound, cache boundary test"
+    },
+    {
+      "id": "OVR-08-PARTIAL-FAILURE",
+      "status": "PASS",
+      "evidence": "explicit forbidden/error/schema mappings and dashboard error/forbidden states"
+    },
+    {
+      "id": "OVR-08-AUTHENTICATED-UI",
+      "status": "PARTIAL",
+      "evidence": "route HTTP 200 and authenticated API smoke pass; browser-level loading/empty/error/forbidden/deep-link capture not executed"
+    }
   ],
   "detected_failure": null,
   "likely_failure_origin": null,
@@ -78,5 +125,6 @@
     "No migration was added in this phase because existing CRM/Tasks/Timeline RLS policies already cover the read paths; analytics migration remains the existing uncommitted artifact.",
     "No commit, reset, revert, push or pull request created.",
     "Browser-level authenticated visual state evidence remains partial."
-  ]
+  ],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
 }

@@ -1,1 +1,92 @@
-{"schema_version":1,"run_id":"MOD-DOCUMENT-LIFECYCLE-20260926-001","span_id":"MOD-DOCUMENT-LIFECYCLE-20260926-001:03-remote","phase":"03-access","skill":"access-design","parent_span_id":"MOD-DOCUMENT-LIFECYCLE-20260926-001:01-design","module":"Platform Document Lifecycle","status":"completed","decision_status":"confirmed","architecture_quality":"PASS_WITH_DEBT","attempt":2,"started_at":"2026-09-26T18:46:00+02:00","completed_at":"2026-09-26T19:20:00+02:00","environment":{"repository":"minoveaz/loopdev-v2","repository_path":"/Users/minoveaz/Documents/Proyectos/loopdev-v2","checkout_type":"branch","branch":"feature/crm-v2-foundation","base_branch":"develop","head_commit":"2f45278","working_tree":"modified"},"input_artifacts":["20260929000000_document_lifecycle_platform_promotion.sql","lifecycle-remote.ts"],"decisions":[{"id":"DEC-DOC-003","status":"confirmed","summary":"The linked Supabase project is the configured remote for authenticated lifecycle verification."}],"actions":["Added migration, RLS policies, cleanup and reconciliation functions.","Added remote promotion adapter with copy-before-delete semantics.","Applied migration and verified the remote lifecycle smoke."],"output_artifacts":["supabase/migrations/20260929000000_document_lifecycle_platform_promotion.sql","src/loopdev/domains/document-intelligence/lifecycle-remote.ts","scripts/smoke-document-lifecycle-authenticated.mjs"],"validation":[{"command":"supabase db push","result":"passed","evidence":"Migration applied remotely"},{"command":"npm run smoke:document-lifecycle-authenticated --silent","result":"passed","evidence":"Temporary PDF upload, promotion, contact relation, idempotent replay and cleanupResult 0"}],"requirements":[{"id":"REMOTE-RLS","status":"PARTIAL","evidence":"Authenticated tenant-scoped path passed; cross-tenant negative test remains"},{"id":"REMOTE-PROMOTION","status":"PASS","evidence":"Smoke returned fileId and idempotentReplay true"},{"id":"REMOTE-CLEANUP","status":"PASS","evidence":"Smoke returned cleanupResult 0"}],"evidence":["Supabase migration applied","Authenticated lifecycle smoke passed"],"detected_failure":null,"likely_failure_origin":null,"next_handoff":"04-integration: wire promotion into CRM association and evidence Communications invocation","approval_gate":{"status":"approved","approved_by":"delivery","approved_at":"2026-09-26T19:20:00+02:00"},"invalidated":false,"evidence_links":[],"notes":["No secret or credential was recorded."]}
+{
+  "schema_version": 0,
+  "run_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001",
+  "span_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001:03-remote",
+  "phase": "03-access",
+  "skill": "access-design",
+  "parent_span_id": "MOD-DOCUMENT-LIFECYCLE-20260926-001:01-design",
+  "module": "Platform Document Lifecycle",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 2,
+  "started_at": "2026-09-26T18:46:00+02:00",
+  "completed_at": "2026-09-26T19:20:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "2f45278",
+    "working_tree": "modified"
+  },
+  "input_artifacts": [
+    "20260929000000_document_lifecycle_platform_promotion.sql",
+    "lifecycle-remote.ts"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-DOC-003",
+      "status": "confirmed",
+      "summary": "The linked Supabase project is the configured remote for authenticated lifecycle verification."
+    }
+  ],
+  "actions": [
+    "Added migration, RLS policies, cleanup and reconciliation functions.",
+    "Added remote promotion adapter with copy-before-delete semantics.",
+    "Applied migration and verified the remote lifecycle smoke."
+  ],
+  "output_artifacts": [
+    "supabase/migrations/20260929000000_document_lifecycle_platform_promotion.sql",
+    "src/loopdev/domains/document-intelligence/lifecycle-remote.ts",
+    "scripts/smoke-document-lifecycle-authenticated.mjs"
+  ],
+  "validation": [
+    {
+      "command": "supabase db push",
+      "result": "passed",
+      "evidence": "Migration applied remotely"
+    },
+    {
+      "command": "npm run smoke:document-lifecycle-authenticated --silent",
+      "result": "passed",
+      "evidence": "Temporary PDF upload, promotion, contact relation, idempotent replay and cleanupResult 0"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REMOTE-RLS",
+      "status": "PARTIAL",
+      "evidence": "Authenticated tenant-scoped path passed; cross-tenant negative test remains"
+    },
+    {
+      "id": "REMOTE-PROMOTION",
+      "status": "PASS",
+      "evidence": "Smoke returned fileId and idempotentReplay true"
+    },
+    {
+      "id": "REMOTE-CLEANUP",
+      "status": "PASS",
+      "evidence": "Smoke returned cleanupResult 0"
+    }
+  ],
+  "evidence": [
+    "Supabase migration applied",
+    "Authenticated lifecycle smoke passed"
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "04-integration: wire promotion into CRM association and evidence Communications invocation",
+  "approval_gate": {
+    "status": "approved",
+    "approved_by": "delivery",
+    "approved_at": "2026-09-26T19:20:00+02:00"
+  },
+  "invalidated": false,
+  "evidence_links": [],
+  "notes": [
+    "No secret or credential was recorded."
+  ],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

@@ -2,19 +2,19 @@
 
 | Capability/operation | Domain parity | Desktop renderer/action | Mobile renderer/action | iOS | Android | Status | Owner | Gap/next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `CAP-AUTH-CORE.getSession` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.onAuthStateChange` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.signInWithPassword` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.signOut` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.requestPasswordReset` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.updatePassword` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.listOrganizations` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.selectOrganization` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.listWorkspaces` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.selectWorkspace` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
-| `CAP-AUTH-CORE.getTenantContext` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | `PASS` | Platform Delivery | Verified in `auth-port.test.ts` |
+| `CAP-AUTH-CORE.getSession` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.onAuthStateChange` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.signInWithPassword` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.signOut` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.requestPasswordReset` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.updatePassword` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.listOrganizations` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.selectOrganization` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.listWorkspaces` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.selectWorkspace` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
+| `CAP-AUTH-CORE.getTenantContext` | `contract/test` | `implemented/adapted` | `implemented/adapted` | `planned` | `planned` | PARTIAL | Platform Delivery | `auth-port.test.ts` covers the shared contract; native iOS/Android adapters and runtime remain unverified. |
 
-`PASS` requires verified domain, renderer and operations on every required platform. A shared port, a visible section or a registered route alone does not prove action parity.
+`PARTIAL` reflects shared contract tests and desktop/mobile web implementation only; native iOS/Android adapters and runtime are planned and not verified. A shared port, a visible section or a registered route alone does not prove action parity.
 
 ## Runtime snapshot
 

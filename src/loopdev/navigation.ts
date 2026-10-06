@@ -52,6 +52,24 @@ export const loopdevNavigation: NavSection[] = [
         to: loopdevNavigationContract.groups[3].items[0].path,
         icon: Settings,
       },
+      {
+        label: "ERP",
+        icon: Boxes,
+        children: [
+          { label: "Overview", to: "/app/erp/overview" },
+          { label: "Product Catalog", to: "/app/erp/product-catalog" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Workspace",
+    items: [
+      {
+        label: "Settings",
+        to: "/app/settings",
+        icon: Settings,
+      },
     ],
   },
 ];

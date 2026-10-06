@@ -179,7 +179,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/mobile/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            apps/mobile/package-lock.json
+
+      - name: Instalar dependencias compartidas del workspace
+        run: npm ci
 
       - name: Instalar dependencias mobile
         working-directory: apps/mobile

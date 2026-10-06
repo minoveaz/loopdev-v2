@@ -60,6 +60,16 @@ import { localFilesAdapter } from "@/loopdev/domains/files";
 import { ConversationTimelineRail } from "@/loopdev/components/communications/ConversationTimelineRail";
 import { ConversationTimelinePanel } from "@/loopdev/components/communications/ConversationTimelinePanel";
 import type { ConversationContextView } from "@/loopdev/components/communications/ConversationContextTabs";
+import { DocumentExtractionDrawer } from "@/loopdev/components/document-intelligence/DocumentExtractionDrawer";
+import { DEMO_DOCUMENT_FIXTURES } from "@/loopdev/domains/document-intelligence/data/fixtures";
+import {
+  promoteDocumentToPlatformFile,
+  type IdentityDocumentFields,
+  type ExtractionRecord,
+} from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 const channelIcons: Record<CommunicationChannel, ComponentType<ChannelIconProps>> = {
   whatsapp: WhatsAppIcon,
@@ -224,7 +234,9 @@ function ConversationComposer({
   draft,
   onDraftChange,
   actionError,
+  currentUserId,
   onReply,
+  onInternalNote,
 }: {
   summary: ConversationSummary;
   collaboration?: ConversationCollaboration;
@@ -232,19 +244,23 @@ function ConversationComposer({
   draft: { body: string };
   onDraftChange: (draft: { body: string }) => void;
   actionError: string | null;
+  currentUserId: string;
   onReply: (body: string, content?: { contentType?: "catalog_item"; contentMetadata?: { catalogItemId?: string; catalogItemKey?: string; catalogItemType?: string; catalogPrice?: string; catalogCurrency?: string } }) => Promise<unknown>;
+  onInternalNote: (body: string) => Promise<unknown>;
 }) {
   const [sending, setSending] = useState(false);
+  const [mode, setMode] = useState<"reply" | "call-note">("reply");
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [catalogItemId, setCatalogItemId] = useState("");
   const { body } = draft;
+  const templates = ["Gracias por tu interés. Te contactaremos con los siguientes pasos.", "Hemos recibido tu mensaje y lo revisaremos con el equipo.", "¿Te parece bien si agendamos una llamada para revisarlo?"];
   useEffect(() => {
     void loopdevAdapter.catalog.listCatalogItems({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID }).then(setCatalogItems).catch(() => setCatalogItems([]));
   }, []);
   const windowExpired = Boolean(summary.windowExpiresAt && new Date(summary.windowExpiresAt).getTime() <= Date.now());
   const accountConnected = account?.state === "connected";
   const policyDisabled = account?.policyState === "disabled";
-  const composerOwnedByOther = collaboration?.composerLock && collaboration.composerLock.userId !== COMMUNICATIONS_LOCAL_CONTEXT.userId;
+  const composerOwnedByOther = collaboration?.composerLock && collaboration.composerLock.userId !== currentUserId;
   const canReply = Boolean(accountConnected && account?.capabilities.canReply && !policyDisabled && !windowExpired && !composerOwnedByOther);
   const canSend = canReply;
 
@@ -253,7 +269,8 @@ function ConversationComposer({
     setSending(true);
     try {
       const selected = catalogItems.find((item) => item.id === catalogItemId);
-      await onReply(body, selected ? { contentType: "catalog_item", contentMetadata: { catalogItemId: selected.id, catalogItemKey: selected.key, catalogItemType: selected.type, catalogPrice: selected.metadata.price ? String(selected.metadata.price) : undefined, catalogCurrency: selected.metadata.currency ? String(selected.metadata.currency) : undefined } } : undefined);
+      if (mode === "call-note") await onInternalNote(body);
+      else await onReply(body, selected ? { contentType: "catalog_item", contentMetadata: { catalogItemId: selected.id, catalogItemKey: selected.key, catalogItemType: selected.type, catalogPrice: selected.metadata.price ? String(selected.metadata.price) : undefined, catalogCurrency: selected.metadata.currency ? String(selected.metadata.currency) : undefined } } : undefined);
       onDraftChange({ body: "" });
       setCatalogItemId("");
     } catch {
@@ -279,12 +296,13 @@ function ConversationComposer({
         {accountConnected && <span className="text-[11px] font-medium text-muted-foreground">Queued</span>}
       </div>
       {actionError && <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive" role="alert">{actionError}</p>}
-      <div className="flex items-center gap-2"><Package className="h-3.5 w-3.5 text-muted-foreground" /><select aria-label="Attach catalog item" value={catalogItemId} onChange={(event) => setCatalogItemId(event.target.value)} disabled={!canSend || sending} className="h-8 max-w-full rounded-md border border-input bg-background px-2 text-xs"><option value="">Attach catalog item (optional)</option>{catalogItems.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.type}</option>)}</select></div>
+      <div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" variant={mode === "reply" ? "secondary" : "ghost"} onClick={() => setMode("reply")}>Reply</Button><Button type="button" size="sm" variant={mode === "call-note" ? "secondary" : "ghost"} onClick={() => setMode("call-note")}>Call note</Button>{mode === "reply" && templates.map((template) => <Button key={template} type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => onDraftChange({ body: template })}>{template.slice(0, 28)}...</Button>)}</div>
+      {mode === "reply" && <div className="flex items-center gap-2"><Package className="h-3.5 w-3.5 text-muted-foreground" /><select aria-label="Attach catalog item" value={catalogItemId} onChange={(event) => setCatalogItemId(event.target.value)} disabled={!canSend || sending} className="h-8 max-w-full rounded-md border border-input bg-background px-2 text-xs"><option value="">Attach catalog item (optional)</option>{catalogItems.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.type}</option>)}</select></div>}
       <div className="flex items-end gap-2">
         <Textarea
           value={body}
           onChange={(event) => onDraftChange({ body: event.target.value })}
-          placeholder="Write a WhatsApp reply…"
+          placeholder={mode === "call-note" ? "Write a call note…" : "Write a WhatsApp reply…"}
           aria-label={`Customer reply to ${summary.contact.displayName}`}
           disabled={!canSend || sending}
           rows={2}
@@ -400,6 +418,9 @@ function ChannelRail({
 }
 
 export default function Communications() {
+  const t = useT();
+  const { authSession, session } = useAuth();
+  const { tenantContext } = useTenantContext();
   const { conversationId } = useParams<{ conversationId: string }>();
   const navigate = useNavigate();
   const [channel, setChannel] = useState<CommunicationChannel | "all">("all");
@@ -414,11 +435,16 @@ export default function Communications() {
   const threadScrollPositions = useRef<Record<string, number>>({});
   const threadScrollRef = useRef<HTMLDivElement>(null);
   const presenceConversationRef = useRef<string | null>(null);
+  const communicationsContext = useMemo(() => ({
+    organizationId: tenantContext?.activeOrganizationId ?? session?.activeOrganizationId ?? COMMUNICATIONS_LOCAL_CONTEXT.organizationId,
+    workspaceId: tenantContext?.activeWorkspaceId ?? COMMUNICATIONS_LOCAL_CONTEXT.workspaceId,
+    userId: authSession?.user.id ?? session?.userId ?? COMMUNICATIONS_LOCAL_CONTEXT.userId,
+  }), [authSession?.user.id, session?.activeOrganizationId, session?.userId, tenantContext?.activeOrganizationId, tenantContext?.activeWorkspaceId]);
   const filters = useMemo(() => ({ channel, status, assignee, query, unreadOnly, starredOnly }), [assignee, channel, query, starredOnly, status, unreadOnly]);
-  const inbox = useCommunicationsInbox(filters, COMMUNICATIONS_LOCAL_CONTEXT);
+  const inbox = useCommunicationsInbox(filters, communicationsContext);
   const selectedSummary = inbox.conversations.find((item) => item.id === conversationId) ?? null;
-  const selectedId = selectedSummary?.id ?? (conversationId && inbox.loading ? conversationId : undefined);
-  const detail = useCommunicationConversation(selectedId, COMMUNICATIONS_LOCAL_CONTEXT);
+  const selectedId = conversationId ?? selectedSummary?.id;
+  const detail = useCommunicationConversation(selectedId, communicationsContext);
   const selectedAccount = inbox.channels.find((item) => item.id === selectedSummary?.accountId);
   const selectedChannelAccount = inbox.channels.find((item) => item.channel === channel);
   const openContextView = (view: ConversationContextView) => {
@@ -437,9 +463,6 @@ export default function Communications() {
       // Keep the root inbox useful without forcing a route change before data is ready.
       return;
     }
-    if (conversationId && !inbox.loading && !selectedSummary && inbox.conversations.length > 0) {
-      navigate("/app/sales-crm/communications", { replace: true });
-    }
   }, [conversationId, inbox.conversations, inbox.loading, navigate, selectedSummary]);
 
   const { markRead } = inbox;
@@ -455,7 +478,7 @@ export default function Communications() {
   const lastActiveDetailRef = useRef<ConversationDetail | null>(null);
   if (activeDetail) lastActiveDetailRef.current = activeDetail;
   const renderedDetail = activeDetail ?? lastActiveDetailRef.current;
-  const renderedSummary = selectedSummary ?? renderedDetail?.summary ?? null;
+  const renderedSummary = renderedDetail?.summary ?? selectedSummary;
   const actionSummary = activeDetail?.summary ?? selectedSummary;
   const presenceDetail = detail.conversation;
   const updatePresence = detail.setPresence;
@@ -472,6 +495,100 @@ export default function Communications() {
     if (!selectedSummary) return;
     setComposerDrafts((current) => ({ ...current, [selectedSummary.id]: draft }));
     void detail.setDrafting(draft.body.trim() ? "reply" : null).catch(() => undefined);
+  };
+
+  const [extractionDrawerOpen, setExtractionDrawerOpen] = useState(false);
+  const [extractionInitialFile, setExtractionInitialFile] = useState<any>(null);
+
+  const handleExtractDocument = (message: import("@/loopdev/domains/communications").CommunicationMessage) => {
+    const fixtureMatch = DEMO_DOCUMENT_FIXTURES[0];
+    const previewUrl = message.contentMetadata?.url || fixtureMatch.previewUrl;
+    setExtractionInitialFile({
+      name: message.contentMetadata?.name || "documento-adjunto.svg",
+      size: Number.parseInt(message.contentMetadata?.size ?? "45000", 10) || 45000,
+      mimeType: message.contentMetadata?.mimeType || "image/svg+xml",
+      previewUrl,
+    });
+    setExtractionDrawerOpen(true);
+  };
+
+  const handleApplyExtractedDocument = async (fields: IdentityDocumentFields, record?: ExtractionRecord) => {
+    if (!selectedSummary?.contact?.id) {
+      toast({ title: "Datos extraídos", description: "No hay un contacto seleccionado para actualizar." });
+      return;
+    }
+
+    try {
+      const contactId = selectedSummary.contact.id;
+      if (record?.lifecycle) {
+        const sourceFile = record.files.front;
+        await promoteDocumentToPlatformFile({
+          organizationId: record.organizationId,
+          documentId: record.lifecycle.documentId,
+          extractionId: record.id,
+          sourceSuite: "communications",
+          documentType: record.documentType,
+          contactId,
+          tempStoragePath: record.lifecycle.tempStoragePath,
+          fileName: sourceFile?.name ?? record.title,
+          mediaType: sourceFile?.mimeType ?? "application/pdf",
+          size: sourceFile?.size ?? 0,
+          expectedVersion: record.lifecycle.version,
+          idempotencyKey: `document-promote:${record.id}:${contactId}`,
+        });
+      }
+      const c360 = await loopdevAdapter.crm.getCustomer360(contactId);
+      if (!c360) {
+        toast({ title: "Error", description: "No se encontró el registro del contacto.", variant: "destructive" });
+        return;
+      }
+
+      const docTypeMap: Record<string, string> = {
+        "spanish-dni": "DNI",
+        "spanish-nie": "NIE",
+        passport: "PASSPORT",
+      };
+
+      const patch: any = {
+        organizationId: selectedSummary.organizationId,
+      };
+
+      if (fields.givenNames) patch.firstName = fields.givenNames;
+      if (fields.firstSurname) patch.lastName = fields.firstSurname;
+      if (fields.secondSurname) patch.secondLastName = fields.secondSurname;
+      if (fields.documentNumber) patch.documentNumber = fields.documentNumber;
+      if (fields.birthDate) patch.birthDate = fields.birthDate;
+      if (fields.address) patch.addressLine1 = fields.address;
+      if (fields.nationality === "ESP") patch.country = "Spain";
+      if (fields.sex) {
+        const genderMap: Record<string, string> = { M: "male", F: "female" };
+        if (genderMap[fields.sex]) patch.gender = genderMap[fields.sex];
+      }
+      if (fields.documentType && docTypeMap[fields.documentType]) {
+        patch.documentType = docTypeMap[fields.documentType];
+      }
+
+      const result = await loopdevAdapter.crm.updateContact(contactId, patch, c360.contact.updatedAt);
+      if (result.status === "success") {
+        toast({
+          title: "Contacto actualizado",
+          description: `Los datos extraídos se aplicaron correctamente a ${result.contact.firstName} ${result.contact.lastName ?? ""}.`,
+        });
+        inbox.reload();
+      } else {
+        toast({
+          title: "No se pudo actualizar el contacto",
+          description: "message" in result ? result.message : "Error de validación",
+          variant: "destructive",
+        });
+      }
+    } catch (cause) {
+      toast({
+        title: "Error al actualizar contacto",
+        description: cause instanceof Error ? cause.message : "Ocurrió un error inesperado.",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => {
@@ -561,7 +678,7 @@ export default function Communications() {
               {inbox.loading ? (
                 <LoadingState variant="skeleton" rows={5} className="p-3" />
               ) : inbox.error ? (
-                <div className="p-5" role="alert"><EmptyState variant="plain" size="sm" icon={AlertCircle} title="Unable to load inbox" description={inbox.error} action={<Button variant="outline" size="sm" onClick={inbox.reload}>Try again</Button>} /></div>
+                <div className="p-5" role="alert"><EmptyState variant="plain" size="sm" icon={AlertCircle} title={t("crm.customer360.communications.loadInboxError")} description={inbox.error} action={<Button variant="outline" size="sm" onClick={inbox.reload}>{t("common.actions.retry")}</Button>} /></div>
               ) : inbox.conversations.length === 0 ? (
                 <div className="p-5"><EmptyState
                   variant="plain"
@@ -627,31 +744,31 @@ export default function Communications() {
 
           <section className={cn("min-h-0 min-w-0 flex-1 flex-col bg-background", conversationId ? "flex" : "hidden lg:flex")} aria-label="Conversation thread">
             {!conversationId ? (
-              <EmptyState variant="plain" size="lg" icon={MessageSquare} title="Select a conversation" description="Choose a conversation from the list to inspect its timeline." />
+              <EmptyState variant="plain" size="lg" icon={MessageSquare} title={t("crm.customer360.communications.selectConversation")} description={t("crm.customer360.communications.selectConversationDescription")} />
             ) : detail.loading ? (
-              <LoadingState label="Loading conversation…" />
+              <LoadingState label={t("crm.customer360.communications.loadingConversation")} />
             ) : detail.error ? (
-              <EmptyState variant="plain" size="lg" icon={AlertCircle} title="Unable to load conversation" description={detail.error} action={<Button variant="outline" size="sm" onClick={detail.reload}>Try again</Button>} />
-            ) : !activeDetail || !selectedSummary ? (
-              <EmptyState variant="plain" size="lg" icon={Inbox} title="Conversation unavailable" description="This conversation may no longer be in the selected view." />
+              <EmptyState variant="plain" size="lg" icon={AlertCircle} title={t("crm.customer360.communications.loadConversationError")} description={detail.error} action={<Button variant="outline" size="sm" onClick={detail.reload}>{t("common.actions.retry")}</Button>} />
+            ) : !activeDetail || !renderedSummary ? (
+                  <EmptyState variant="plain" size="lg" icon={Inbox} title={t("crm.customer360.communications.conversationUnavailable")} description={t("crm.customer360.communications.conversationUnavailableDescription")} />
             ) : (
               <>
                 <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border/80 bg-card px-3 py-3 sm:px-5">
                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 lg:hidden" aria-label="Back to conversations" onClick={() => navigate("/app/sales-crm/communications")}><ArrowLeft className="h-4 w-4" /></Button>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">{initials(selectedSummary.contact.displayName)}</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">{initials(renderedSummary.contact.displayName)}</span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-display text-base font-semibold text-foreground">{selectedSummary.contact.displayName}</h2><StatusBadge tone={statusTone[selectedSummary.status]} dot>{statusLabels[selectedSummary.status]}</StatusBadge></div>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{selectedAccount ? selectedAccount.label : CHANNEL_LABELS[selectedSummary.channel]} · {selectedSummary.contact.phone ?? selectedSummary.contact.email ?? "No contact detail"}</p>
+                    <div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-display text-base font-semibold text-foreground">{renderedSummary.contact.displayName}</h2><StatusBadge tone={statusTone[renderedSummary.status]} dot>{statusLabels[renderedSummary.status]}</StatusBadge></div>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{selectedAccount ? selectedAccount.label : CHANNEL_LABELS[renderedSummary.channel]} · {renderedSummary.contact.phone ?? renderedSummary.contact.email ?? "No contact detail"}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <span
                       className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[9px] font-semibold text-muted-foreground"
-                      aria-label={selectedSummary.assignedToName ? `Responsible: ${selectedSummary.assignedToName}` : "Responsible: unassigned"}
-                      title={selectedSummary.assignedToName ? `Responsible: ${selectedSummary.assignedToName}` : "Responsible: unassigned"}
+                      aria-label={renderedSummary.assignedToName ? `Responsible: ${renderedSummary.assignedToName}` : "Responsible: unassigned"}
+                      title={renderedSummary.assignedToName ? `Responsible: ${renderedSummary.assignedToName}` : "Responsible: unassigned"}
                     >
-                      {selectedSummary.assignedToName ? initials(selectedSummary.assignedToName) : "—"}
+                      {renderedSummary.assignedToName ? initials(renderedSummary.assignedToName) : "—"}
                     </span>
-                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", selectedSummary.starred && "text-gold")} aria-label={selectedSummary.starred ? "Unstar conversation" : "Star conversation"} onClick={() => void inbox.toggleStar(selectedSummary.id)}><Star className={cn("h-4 w-4", selectedSummary.starred && "fill-current")} /></Button>
+                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", renderedSummary.starred && "text-gold")} aria-label={renderedSummary.starred ? "Unstar conversation" : "Star conversation"} onClick={() => void inbox.toggleStar(renderedSummary.id)}><Star className={cn("h-4 w-4", renderedSummary.starred && "fill-current")} /></Button>
                     {!contextView && (
                       <Button
                         variant="ghost"
@@ -680,7 +797,7 @@ export default function Communications() {
                 </header>
                 {selectedAccount && selectedAccount.state !== "connected" && <div className="flex items-center gap-2 border-b border-warning/20 bg-warning-soft px-5 py-2 text-xs text-warning"><ShieldAlert className="h-3.5 w-3.5 shrink-0" />{selectedAccount.statusMessage}. Reading is available; provider actions remain disabled.</div>}
                 <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-                  <div ref={threadScrollRef} onScroll={(event) => { threadScrollPositions.current[selectedSummary.id] = event.currentTarget.scrollTop; }} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 sm:py-5">
+                  <div ref={threadScrollRef} onScroll={(event) => { threadScrollPositions.current[renderedSummary.id] = event.currentTarget.scrollTop; }} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 sm:py-5">
                     <ol className="space-y-4">
                       {activeDetail.messages.filter((message) => message.direction !== "internal").map((message, index, visibleMessages) => {
                         const outbound = message.direction === "outbound";
@@ -701,6 +818,7 @@ export default function Communications() {
                                 onCopy={(selectedMessage) => navigator.clipboard.writeText(selectedMessage.body)}
                                 onReply={(selectedMessage) => updateComposerDraft({ body: `> ${selectedMessage.body}\n\n` })}
                                 onOpenOperations={() => openContextView("operations")}
+                                onExtractDocument={handleExtractDocument}
                                 onSaveToCustomer={async (selectedMessage) => {
                                   const metadata = selectedMessage.contentMetadata;
                                   if (!metadata?.name) {
@@ -748,8 +866,13 @@ export default function Communications() {
                     draft={composerDraft}
                     onDraftChange={updateComposerDraft}
                     actionError={detail.actionError ?? inbox.actionError}
+                    currentUserId={communicationsContext.userId}
                     onReply={async (body, content) => {
                       await detail.sendReply(body, undefined, content);
+                      inbox.reload();
+                    }}
+                    onInternalNote={async (body) => {
+                      await detail.addInternalNote(body);
                       inbox.reload();
                     }}
                   />
@@ -805,6 +928,17 @@ export default function Communications() {
           )}
         </div>
       </section>
+
+      {selectedSummary && (
+        <DocumentExtractionDrawer
+          open={extractionDrawerOpen}
+          onOpenChange={setExtractionDrawerOpen}
+          sourceSuite="communications"
+          sourceReferenceId={selectedSummary.id}
+          initialFile={extractionInitialFile}
+          onApplyExtractedData={handleApplyExtractedDocument}
+        />
+      )}
     </div>
   );
 }

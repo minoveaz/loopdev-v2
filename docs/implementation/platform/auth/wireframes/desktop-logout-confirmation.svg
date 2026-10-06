@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="100%" height="100%" style="background:#090d16;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <defs>
+    <radialGradient id="meshGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0" />
+    </radialGradient>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="32" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1280" height="800" fill="#090d16" />
+  <rect x="0" y="0" width="1280" height="800" fill="url(#meshGlow)" />
+
+  <!-- Background App Shell (Blurred/Dimmed for modal context) -->
+  <g opacity="0.15">
+    <rect x="0" y="0" width="1280" height="64" fill="#111827" />
+    <rect x="0" y="64" width="240" height="736" fill="#0f172a" />
+    <rect x="264" y="88" width="992" height="688" rx="8" fill="#1e293b" />
+  </g>
+
+  <!-- Modal Backdrop -->
+  <rect x="0" y="0" width="1280" height="800" fill="#000000" fill-opacity="0.65" />
+
+  <!-- Confirmation Modal Dialog -->
+  <g transform="translate(400, 220)" filter="url(#cardShadow)">
+    <rect width="480" height="320" rx="16" fill="#0e1726" stroke="#1e293b" stroke-width="1.5" />
+
+    <!-- Icon Badge -->
+    <g transform="translate(32, 32)">
+      <circle cx="24" cy="24" r="24" fill="#ef4444" fill-opacity="0.15" />
+      <g transform="translate(14, 14)" stroke="#ef4444" stroke-width="2" fill="none">
+        <path d="M9 3 H4 A2 2 0 0 0 2 5 V15 A2 2 0 0 0 4 17 H9" />
+        <polyline points="13 13 17 9 13 5" />
+        <line x1="17" y1="9" x2="6" y2="9" />
+      </g>
+    </g>
+
+    <!-- Content -->
+    <g transform="translate(32, 96)">
+      <text x="0" y="24" fill="#f8fafc" font-size="20" font-weight="700">Sign out of LoopDev Platform?</text>
+      <text x="0" y="54" fill="#94a3b8" font-size="14" line-height="1.5">
+        <tspan x="0" dy="0">Your active tenant session, local mutations and query caches</tspan>
+        <tspan x="0" dy="22">will be securely purged. No tenant data will remain in memory.</tspan>
+      </text>
+    </g>
+
+    <!-- Tenant Context Warning Box -->
+    <g transform="translate(32, 192)">
+      <rect width="416" height="42" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1" />
+      <text x="14" y="25" fill="#cbd5e1" font-size="12">Current organization: <tspan fill="#60a5fa" font-weight="600">Acme Global Corp</tspan> (Owner)</text>
+    </g>
+
+    <!-- Dialog Actions -->
+    <g transform="translate(32, 252)">
+      <!-- Cancel Button -->
+      <rect x="180" y="0" width="100" height="40" rx="8" fill="transparent" stroke="#334155" stroke-width="1" />
+      <text x="212" y="25" fill="#cbd5e1" font-size="13" font-weight="600">Cancel</text>
+
+      <!-- Confirm Sign Out Button -->
+      <rect x="296" y="0" width="120" height="40" rx="8" fill="#ef4444" />
+      <text x="328" y="25" fill="#ffffff" font-size="13" font-weight="600">Sign out</text>
+    </g>
+  </g>
+</svg>

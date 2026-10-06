@@ -1,0 +1,87 @@
+{
+  "run_id": "MOD-CRM-PIPELINE-20260913-002",
+  "span_id": "MOD-CRM-PIPELINE-20260913-002:01-design",
+  "phase": "01-design",
+  "skill": "module-design",
+  "parent_span_id": null,
+  "module": "CRM Pipeline",
+  "status": "deviated",
+  "decision_status": "open",
+  "architecture_quality": "DEVIATED",
+  "attempt": 1,
+  "started_at": "2026-09-13T10:23:24+02:00",
+  "completed_at": "2026-09-13T12:18:30+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "c03a5d812fb72a97b4e0d90866d0415cef7395de",
+    "working_tree": "modified by documentation run",
+    "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
+    "runtime_port": 8081,
+    "runtime_status": "running"
+  },
+  "input_artifacts": [
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_UX_SPEC.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_COMPONENT_AUDIT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_IMPACT_ASSESSMENT.md",
+    "docs/implementation/crm/pipeline/runs/MOD-CRM-PIPELINE-20260913-001/"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-PIPELINE-BASELINE-001",
+      "status": "confirmed",
+      "summary": "Existing Kanban and CRM adapter are a baseline to verify, not proof of compliance."
+    },
+    {
+      "id": "DEC-PIPELINE-SCOPE-001",
+      "status": "confirmed",
+      "summary": "The target pilot includes Kanban, table, detail and manual opportunity creation."
+    }
+  ],
+  "actions": [
+    "Started a fresh delivery run without discarding the existing implementation.",
+    "Registered the existing route, adapter and tests as baseline evidence.",
+    "Preserved the previous intake run as historical evidence.",
+    "Added the proposed Opportunity card hierarchy, states, permissions and responsive rules to the design baseline."
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/discovery.md"
+  ],
+  "validation": [
+    {
+      "command": "curl -I http://localhost:8081/app/sales-crm/pipeline",
+      "result": "passed",
+      "evidence": "HTTP 200 from the canonical runtime"
+    }
+  ],
+  "requirements": [],
+  "detected_failure": "The historical run started design without a canonical completed 00-discovery checkpoint.",
+  "likely_failure_origin": "The previous CLI initialized runs at 01-design.",
+  "next_handoff": "01-visual-design: create normative visual source and evidence before specialized analysis or plan approval.",
+  "evidence_links": [
+    "docs/implementation/crm/pipeline/discovery.md",
+    "src/loopdev/pages/crm/Pipeline.tsx",
+    "src/loopdev/domains/crm/adapter/local.ts",
+    "src/test/crm/pipeline/pipeline-page.test.tsx",
+    "src/test/crm/pipeline/pipeline-adapter.test.ts"
+  ],
+  "notes": [
+    "This run intentionally starts from INTAKE and does not inherit completion claims from run 001.",
+    "Existing code must be classified requirement-by-requirement as PASS, PARTIAL, FAIL or NOT_TESTED.",
+    "The current card is a partial baseline: it has core commercial fields and movement actions, but the proposed design requires explicit product/origin, activity health, indicators, permission states and responsive evidence.",
+    "Approved by the product owner on 2026-09-13: legacy component and view documentation is informational only; reuse the current Rivera template, shared LoopDev primitives and existing LoopDev v2 surfaces."
+  ],
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false,
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

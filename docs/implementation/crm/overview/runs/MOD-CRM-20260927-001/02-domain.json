@@ -1,0 +1,79 @@
+{
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:02-domain",
+  "phase": "02-domain",
+  "skill": "domain-model",
+  "parent_span_id": "MOD-CRM-20260927-001:01-design",
+  "module": "CRM Overview",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:34:17+02:00",
+  "completed_at": "2026-09-27T17:40:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "design.md",
+    "architecture-design.md",
+    "01-design.json",
+    "01-visual-design.json"
+  ],
+  "decisions": [
+    {
+      "id": "DOM-OVR-01",
+      "status": "confirmed",
+      "summary": "Overview owns projections, not aggregate entities or source lifecycles."
+    },
+    {
+      "id": "DOM-OVR-02",
+      "status": "confirmed",
+      "summary": "Organization scope and projection freshness are domain invariants."
+    },
+    {
+      "id": "USER-CRM-OVERVIEW-20260927",
+      "status": "confirmed",
+      "summary": "Resolved KPI, freshness, RLS team scope, activity allowlist, read-only Tasks, cache/offline, activation/rollback and export decisions."
+    }
+  ],
+  "actions": [
+    "Defined projection entities, relationships, ownership, versions and lifecycle.",
+    "Defined invariants, source events, dedupe and deletion semantics.",
+    "Reconciled remote analytics partial implementation and noisy extraction/activity baseline."
+  ],
+  "output_artifacts": [
+    "domain-model.md"
+  ],
+  "validation": [
+    {
+      "command": "Canonical decision reconciliation",
+      "result": "passed",
+      "evidence": "domain-model.md"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "OVR-DOMAIN",
+      "status": "PASS",
+      "evidence": "domain-model.md"
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "WAITING_IMPLEMENTATION_APPROVAL",
+  "evidence_links": [
+    "domain-model.md"
+  ],
+  "updated_at": "2026-09-27T18:10:00+02:00",
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

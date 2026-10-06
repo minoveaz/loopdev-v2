@@ -1,8 +1,7 @@
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { RouteLoader } from "@/components/common/RouteLoader";
 import { collectNavRoutes } from "@/app/navigation";
 import { loopdevRouteElements } from "./LoopdevRoutes";
 
@@ -52,6 +51,7 @@ const Login = lazy(() => import("@/template/rivera/pages/auth/Login"));
 const Register = lazy(() => import("@/template/rivera/pages/auth/Register"));
 const ForgotPassword = lazy(() => import("@/template/rivera/pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/template/rivera/pages/auth/ResetPassword"));
+const ActivateInvitation = lazy(() => import("@/template/rivera/pages/auth/ActivateInvitation"));
 const Error500 = lazy(() => import("@/template/rivera/pages/errors/Error500"));
 const Preview = lazy(() => import("@/template/rivera/pages/Preview"));
 const DataConsole = lazy(() => import("@/template/rivera/pages/dev/DataConsole"));
@@ -231,6 +231,7 @@ const PUBLIC_PATHS = new Set([
   "/pages/register",
   "/pages/forgot-password",
   "/pages/reset-password",
+  "/pages/activate-invitation",
   "/pages/404",
   "/pages/500",
 ]);
@@ -456,7 +457,6 @@ export function AppRoutes() {
   ]);
 
   return (
-    <Suspense fallback={<RouteLoader />}>
     <Routes>
       {/* Public auth + sample pages */}
       <Route path="/preview" element={<Preview />} />
@@ -464,11 +464,18 @@ export function AppRoutes() {
       <Route path="/pages/register" element={<Register />} />
       <Route path="/pages/forgot-password" element={<ForgotPassword />} />
       <Route path="/pages/reset-password" element={<ResetPassword />} />
+      <Route path="/pages/activate-invitation" element={<ActivateInvitation />} />
       <Route path="/pages/404" element={<NotFound />} />
       <Route path="/pages/500" element={<Error500 />} />
 
-      {/* Legacy alias */}
+      {/* Auth route aliases */}
       <Route path="/sign-in" element={<Navigate to="/pages/login" replace />} />
+      <Route path="/login" element={<Navigate to="/pages/login" replace />} />
+      <Route path="/auth/login" element={<Navigate to="/pages/login" replace />} />
+      <Route path="/register" element={<Navigate to="/pages/register" replace />} />
+      <Route path="/sign-up" element={<Navigate to="/pages/register" replace />} />
+      <Route path="/forgot-password" element={<Navigate to="/pages/forgot-password" replace />} />
+      <Route path="/reset-password" element={<Navigate to="/pages/reset-password" replace />} />
 
       {/* Authenticated app shell */}
       <Route
@@ -697,6 +704,5 @@ export function AppRoutes() {
 
       <Route path="*" element={<NotFound />} />
     </Routes>
-    </Suspense>
   );
 }

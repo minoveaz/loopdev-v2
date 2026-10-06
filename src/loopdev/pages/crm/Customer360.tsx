@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
 import { EmptyState, NoteEditorDrawer, PageContainer, PageHeader, type NoteEditorValue } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { useCrmCustomer360 } from "@/loopdev/domains/crm/hooks/use-crm";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { contactName, loopdevAdapter, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import type { GlobalNoteRecord } from "@/loopdev/domains/notes";
@@ -14,6 +15,8 @@ import { Customer360DetailTabs } from "@/loopdev/components/customer360/Customer
 import { Customer360TimelineCard } from "@/loopdev/components/customer360/Customer360ActivityCards";
 
 export default function SalesCRMCustomer360() {
+  const { activeOrganization } = useTenantContext();
+  const currentOrgId = activeOrganization?.id || "80fce911-57c5-4a83-809f-78df6a3736f7";
   const { contactId } = useParams<{ contactId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -40,6 +43,13 @@ export default function SalesCRMCustomer360() {
     if (view) setCustomerNotes(view.notes);
   }, [view]);
 
+  useEffect(() => {
+    if (view && searchParams.get("action") === "note") {
+      setSelectedNote(null);
+      setNoteEditorOpen(true);
+    }
+  }, [searchParams, view]);
+
   if (loading) {
     return <PageContainer width="narrow"><div className="py-16 text-center text-sm text-muted-foreground">Loading contact...</div></PageContainer>;
   }
@@ -50,7 +60,7 @@ export default function SalesCRMCustomer360() {
         <EmptyState
           icon={AlertTriangle}
           title="Unable to load contact"
-          description={error}
+          description={error || "Unable to load contact details."}
           action={<Button onClick={reload}><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Try again</Button>}
         />
       </PageContainer>
@@ -128,7 +138,7 @@ export default function SalesCRMCustomer360() {
   const submitContact = async (values: ContactFormValues) => {
     const optional = (value: string) => value.trim() || null;
     const patch: CRMUpdateContactPatch = {
-      organizationId: "local-development-organization",
+      organizationId: currentOrgId,
       firstName: values.firstName.trim(),
       lastName: optional(values.lastName),
       secondLastName: optional(values.secondLastName),

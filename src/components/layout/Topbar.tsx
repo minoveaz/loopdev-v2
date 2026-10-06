@@ -8,6 +8,9 @@ import {
   Settings as SettingsIcon,
   ShieldCheck,
   CreditCard,
+  Building2,
+  ChevronRight,
+  ShieldAlert,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -16,9 +19,19 @@ import { ThemeToggle } from "./ThemeToggle";
 import { NotificationsMenu } from "./NotificationsMenu";
 import { MessagesMenu } from "./MessagesMenu";
 import { CommandMenu } from "./CommandMenu";
-import { ThemeCustomizerTrigger } from "@/components/theme/ThemeCustomizer";
 import { useAuth } from "@/hooks/use-auth";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +40,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LogoSpinner } from "@/loopdev/components";
 import { useI18n } from "@/i18n";
+import type { Organization } from "@contracts/auth-port";
 
 interface TopbarProps {
   onSidebarToggle: () => void;
@@ -36,9 +51,28 @@ interface TopbarProps {
 
 export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
   const { session, signOut } = useAuth();
+  const {
+    activeOrganization,
+    isSuperAdmin,
+    listOrganizations,
+    selectOrganization,
+  } = useTenantContext();
+
   const navigate = useNavigate();
   const { lang, setLang, t, languages } = useI18n();
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [switchingOrg, setSwitchingOrg] = useState<{ isSwitching: boolean; orgName: string } | null>(null);
+  const [availableOrgs, setAvailableOrgs] = useState<Organization[]>([]);
+
+  useEffect(() => {
+    void listOrganizations().then((res) => {
+      if (res.success) {
+        setAvailableOrgs(res.data);
+      }
+    });
+  }, [listOrganizations, session]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -58,12 +92,39 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
   };
 
   const handleSignOut = () => {
-    signOut();
-    toast.success("Signed out", { description: "See you soon." });
-    navigate("/pages/login", { replace: true });
+    toast.dismiss();
+    setConfirmLogoutOpen(false);
+    setSigningOut(true);
+    setTimeout(async () => {
+      await signOut();
+      navigate("/pages/login", { replace: true });
+    }, 850);
   };
 
-  const initials = (session?.name ?? "RA")
+  const handleOrgSwitch = async (orgId: string, orgName: string) => {
+    if (orgId === activeOrganization?.id) return;
+    toast.dismiss();
+    setSwitchingOrg({ isSwitching: true, orgName });
+    const res = await selectOrganization(orgId);
+    if (res.success) {
+      const orgsRes = await listOrganizations();
+      if (orgsRes.success) setAvailableOrgs(orgsRes.data);
+      setTimeout(() => {
+        setSwitchingOrg(null);
+        navigate("/launchpad", { replace: true });
+        toast.success(`Switched to ${orgName}`, {
+          description: "Workspace reloaded & local tenant caches purged.",
+        });
+      }, 750);
+    } else {
+      setSwitchingOrg(null);
+      toast.error("Failed to switch organization", {
+        description: (res as { error: { message: string } }).error.message,
+      });
+    }
+  };
+
+  const initials = (session?.name ?? "AD")
     .split(" ")
     .map((s) => s[0])
     .slice(0, 2)
@@ -73,7 +134,7 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
   const currentLang = languages.find((l) => l.code === lang) ?? languages[0];
 
   return (
-    <header data-app-topbar className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border/70 bg-card px-4 md:gap-3 md:px-6">
+    <header data-app-topbar className="sticky top-0 z-30 flex h-16 min-w-0 items-center gap-2 border-b border-border/70 bg-card px-4 md:gap-3 md:px-6">
       <button
         onClick={onSidebarToggle}
         aria-label={sidebarCollapsed ? t("topbar.expandSidebar") : t("topbar.collapseSidebar")}
@@ -84,7 +145,7 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
         {sidebarCollapsed ? <PanelLeftOpen className="h-[18px] w-[18px]" /> : <PanelLeftClose className="h-[18px] w-[18px]" />}
       </button>
 
-      <div className="hidden md:flex md:flex-1 md:max-w-sm">
+      <div className="hidden min-w-0 md:flex md:flex-1 md:max-w-sm">
         <button
           type="button"
           onClick={() => setCmdOpen(true)}
@@ -110,7 +171,7 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
 
       <CommandMenu open={cmdOpen} onOpenChange={setCmdOpen} />
 
-      <div className="flex flex-1 items-center justify-end gap-0.5 md:gap-1">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5 md:ms-auto md:flex-none md:shrink-0 md:gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label={`${t("common.language")}: ${currentLang.label}`}
@@ -144,30 +205,79 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
         <MessagesMenu />
         <NotificationsMenu />
         <ThemeToggle />
-        <ThemeCustomizerTrigger />
 
         <span aria-hidden className="mx-1 hidden h-6 w-px bg-border/70 md:block" />
 
+        {/* User Profile & Organization Dropdown (matching desktop-account-org-selector.svg) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2.5 rounded-lg border border-border/70 bg-card/60 py-1 ps-1 pe-3 transition-smooth hover:border-border hover:bg-muted/70">
+            <button className="flex min-w-0 max-w-[min(18rem,32vw)] items-center gap-2.5 rounded-lg border border-border/70 bg-card/60 py-1 ps-1 pe-3 transition-smooth hover:border-border hover:bg-muted/70">
               <Avatar className="h-7 w-7 ring-1 ring-border/60">
                 <AvatarFallback className="bg-gradient-primary text-xs font-semibold text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden text-start leading-tight md:block">
-                <p className="text-[13px] font-semibold text-foreground">{session?.name ?? t("common.guest")}</p>
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{session?.role ?? "viewer"}</p>
+              <div className="hidden min-w-0 text-start leading-tight md:block">
+                <p className="truncate text-[13px] font-semibold text-foreground">{session?.name ?? t("common.guest")}</p>
+                <p className="truncate text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
+                  {isSuperAdmin ? "Super Admin" : (session?.role ?? "viewer")}
+                </p>
               </div>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuLabel className="flex flex-col gap-0.5">
-              <span className="text-sm font-semibold text-foreground">{session?.name ?? t("common.guest")}</span>
+          <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuLabel className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">{session?.name ?? t("common.guest")}</span>
+                {isSuperAdmin && (
+                  <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
+                    Global Owner
+                  </span>
+                )}
+              </div>
               <span className="text-xs font-normal text-muted-foreground">{session?.email ?? t("common.notSignedIn")}</span>
             </DropdownMenuLabel>
+            
             <DropdownMenuSeparator />
+
+            {/* Embedded Organization Switcher inside Account menu */}
+            <div className="px-2 py-1.5">
+              <div className="flex items-center justify-between pb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <span>Active Organization</span>
+                {isSuperAdmin && <span className="text-primary font-semibold">Global Access</span>}
+              </div>
+              <div className="space-y-1">
+                {availableOrgs.map((org) => {
+                  const isActive = org.id === activeOrganization?.id;
+                  return (
+                    <button
+                      key={org.id}
+                      onClick={() => handleOrgSwitch(org.id, org.name)}
+                      className={`flex w-full items-center justify-between rounded-md p-2 text-start text-xs transition-colors ${
+                        isActive
+                          ? "border border-primary/50 bg-primary/10 text-primary font-semibold"
+                          : "text-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/20 text-[10px] font-bold text-primary">
+                          {org.name.slice(0, 1).toUpperCase()}
+                        </div>
+                        <span className="truncate">{org.name}</span>
+                      </div>
+                      {isActive ? (
+                        <Check className="h-4 w-4 shrink-0 text-primary" />
+                      ) : (
+                        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-60" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <DropdownMenuSeparator />
+
             <DropdownMenuItem asChild>
               <Link to="/account/profile" className="gap-2">
                 <User className="h-4 w-4" />
@@ -193,12 +303,70 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive focus:text-destructive">
+            <DropdownMenuItem
+              onClick={() => setConfirmLogoutOpen(true)}
+              className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+            >
               <LogOut className="h-4 w-4" />
               {t("common.signOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <AlertDialog open={confirmLogoutOpen} onOpenChange={setConfirmLogoutOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                <LogOut className="h-6 w-6" />
+              </div>
+              <AlertDialogTitle className="text-center text-lg font-semibold">
+                Sign out of LoopDev?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-sm text-muted-foreground">
+                You will be signed out from your active workspace and organization. Any unsaved data will be cleared from cache.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <AlertDialogCancel className="w-full sm:w-auto">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleSignOut}
+                className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto"
+              >
+                Sign out
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {signingOut && (
+          <div className="fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-background/85 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="flex flex-col items-center gap-5">
+              <LogoSpinner size="2xl" speed="fast" />
+              <div className="text-center space-y-1">
+                <p className="text-sm font-semibold text-foreground tracking-tight">Signing out of LoopDev...</p>
+                <p className="text-xs text-muted-foreground">Purging local tenant cache and session security tokens...</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {switchingOrg && (
+          <div className="fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-background/85 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="flex flex-col items-center gap-5">
+              <LogoSpinner size="2xl" speed="fast" />
+              <div className="text-center space-y-1">
+                <p className="text-sm font-semibold text-foreground tracking-tight">
+                  Switching to {switchingOrg.orgName}...
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Purging local cache and reloading workspace launchpad...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

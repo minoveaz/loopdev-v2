@@ -226,9 +226,9 @@ export function NoteEditorDrawer({ open, onOpenChange, relation, initialValue, t
         return;
       }
       uploadedThisSessionRef.current.set(uploaded.id, uploaded);
-      setAttachments((current) => current.map((item) => item.id === pendingId ? uploaded : item));
+      setAttachments((current) => current.map((item) => item.id === pendingId ? { ...uploaded, file } : item));
     } catch (cause) {
-      setAttachments((current) => current.map((item) => item.id === pendingId ? { ...item, status: "error", error: cause instanceof Error ? cause.message : "Upload failed." } : item));
+      setAttachments((current) => current.map((item) => item.id === pendingId ? { ...item, file, status: "error", error: cause instanceof Error ? cause.message : "Upload failed." } : item));
     }
   };
   const removeAttachment = (attachment: NoteAttachment) => {

@@ -1,0 +1,148 @@
+{
+  "schema_version": 0,
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:01-visual-design",
+  "phase": "01-visual-design",
+  "skill": "module-visual-design",
+  "parent_span_id": "MOD-CRM-20260927-001:01-design",
+  "module": "CRM Overview",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:29:58+02:00",
+  "completed_at": "2026-09-27T17:29:58+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "design.md",
+    "architecture-design.md",
+    "implementation-plan.md",
+    "platform-scope.md",
+    "platform-evidence-matrix.md",
+    "docs/03-platform/governance/MODULE_DELIVERY_AGENT_CONTRACT.md",
+    "docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md"
+  ],
+  "decisions": [
+    {
+      "id": "USER-CRM-OVERVIEW-20260927",
+      "status": "confirmed",
+      "summary": "Visual composition uses canonical KPI catalogue, read-only Tasks deep link, 60-second stale/offline cache state and no export surface."
+    }
+  ],
+  "actions": [
+    "Produced normative Rivera-compatible visual source.",
+    "Defined desktop, tablet and mobile hierarchy and responsive behavior.",
+    "Defined component ownership, shared Platform reuse and prohibited duplicate surfaces.",
+    "Documented state recovery, accessibility, keyboard, focus, i18n, RTL and deep-link behavior.",
+    "Created before/after legacy flow matrix and conceptual visual acceptance criteria.",
+    "Created desktop and mobile SVG review evidence with representative values explicitly marked as non-runtime."
+  ],
+  "output_artifacts": [
+    "visual-design.md",
+    "view-state-matrix.md",
+    "runs/MOD-CRM-20260927-001/visual-desktop.svg",
+    "runs/MOD-CRM-20260927-001/visual-mobile.svg"
+  ],
+  "validation": [
+    {
+      "command": "git -C /Users/minoveaz/Documents/Proyectos/loopdev-v2 status --short --branch",
+      "result": "passed",
+      "evidence": "canonical branch checkout is modified; pre-existing dirty changes preserved"
+    },
+    {
+      "command": "git -C /Users/minoveaz/Documents/Proyectos/loopdev-v2 diff --name-only",
+      "result": "passed",
+      "evidence": "production changes were not authored by this phase; documentation-only additions are isolated"
+    },
+    {
+      "command": "test -s docs/implementation/crm/overview/visual-design.md && test -s docs/implementation/crm/overview/view-state-matrix.md && test -s docs/implementation/crm/overview/runs/MOD-CRM-20260927-001/visual-desktop.svg && test -s docs/implementation/crm/overview/runs/MOD-CRM-20260927-001/visual-mobile.svg",
+      "result": "passed",
+      "evidence": "all visual-gate artifacts exist and are non-empty"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "VD-01",
+      "status": "PASS",
+      "evidence": "visual-design.md V1-V3 and desktop/mobile SVGs"
+    },
+    {
+      "id": "VD-02",
+      "status": "PASS",
+      "evidence": "before/after legacy flow matrix"
+    },
+    {
+      "id": "VD-03",
+      "status": "PASS",
+      "evidence": "view-state-matrix.md"
+    },
+    {
+      "id": "VD-04",
+      "status": "PASS",
+      "evidence": "responsive breakpoints and mobile SVG"
+    },
+    {
+      "id": "VD-05",
+      "status": "PASS",
+      "evidence": "Rivera baseline and zone reuse matrix"
+    },
+    {
+      "id": "VD-06",
+      "status": "PASS",
+      "evidence": "accessibility, keyboard, focus, i18n and RTL section"
+    },
+    {
+      "id": "VD-07",
+      "status": "PASS",
+      "evidence": "routes, deep links and navigation section"
+    },
+    {
+      "id": "VD-08",
+      "status": "PASS",
+      "evidence": "wireframe representative-data disclaimer"
+    }
+  ],
+  "evidence": [
+    "Conceptual evidence only; runtime visual comparison is NOT_RUN until implementation.",
+    "No production code, commit, push or pull request was created."
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "WAITING_IMPLEMENTATION_APPROVAL",
+  "approval_gate": {
+    "status": "approved",
+    "approved_by": "user",
+    "approved_at": "2026-09-27T17:34:17+02:00"
+  },
+  "invalidated": false,
+  "evidence_links": [
+    "visual-design.md",
+    "view-state-matrix.md",
+    "runs/MOD-CRM-20260927-001/visual-desktop.svg",
+    "runs/MOD-CRM-20260927-001/visual-mobile.svg"
+  ],
+  "notes": [
+    "The requested checkout path and branch were used.",
+    "All pre-existing dirty changes remain untouched.",
+    "Visual approval is recorded; specialized analysis completed and the run is paused at its next approval gate."
+  ],
+  "updated_at": "2026-09-27T18:10:00+02:00",
+  "decision_reconciliation": {
+    "status": "confirmed",
+    "summary": "User decisions recorded in canonical CRM Overview artifacts; implementation remains gated."
+  },
+  "open_decisions": [
+    "Native iOS/Android ownership"
+  ],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

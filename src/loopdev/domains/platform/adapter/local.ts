@@ -1,4 +1,4 @@
-import { isScopeVisible } from "../types";
+import { isScopeVisible, PlatformAdapterError } from "../types";
 import type {
   EntityRef,
   EntityScope,
@@ -7,9 +7,12 @@ import type {
   PlatformPermission,
   PlatformPermissionSet,
 } from "../types";
-import { PlatformAdapterError, type PlatformAdapter } from "./index";
+import type { PlatformAdapter } from "./index";
 import { createLocalPlatformWorkAdapter } from "./work";
 import { localOrganizationEntitlementsAdapter } from "../entitlements";
+import { createSupabaseTimelineAdapter } from "./supabase-timeline";
+import { localAnalyticsAdapter, supabaseAnalyticsAdapter, supabaseAnalyticsConfigured } from "../analytics";
+import type { AnalyticsAdapter } from "../analytics";
 
 export const LOCAL_ORGANIZATION_ID = "local-development-organization";
 export const LOCAL_WORKSPACE_ID = "local-workspace";
@@ -22,7 +25,6 @@ const localContext: OrganizationContext = {
   userId: "local-development-user",
   membershipStatus: "active",
 };
-
 const localPermissionSet: PlatformPermissionSet = {
   organizationId: LOCAL_ORGANIZATION_ID,
   permissions: [
@@ -63,6 +65,7 @@ const localWorkDependencies = {
 };
 
 export const localPlatformWorkAdapter = createLocalPlatformWorkAdapter(localWorkDependencies);
+export const platformWorkAdapter = createSupabaseTimelineAdapter(localPlatformWorkAdapter);
 
 export const localPlatformAdapter: PlatformAdapter = {
   entitlements: localOrganizationEntitlementsAdapter,
@@ -99,7 +102,37 @@ export const localPlatformAdapter: PlatformAdapter = {
     return hasLocalPermission("organization.read", scope) && isScopeVisible(ref.scope, scope);
   },
 
-  work: localPlatformWorkAdapter,
+  work: platformWorkAdapter,
+  analytics: {
+    async getMetric(metricId, filters) {
+      const remoteScope = /^[0-9a-f-]{36}$/i.test(filters.scope.organizationId);
+      if (remoteScope) {
+        if (!supabaseAnalyticsConfigured) {
+          return { success: false, error: { code: "UNAVAILABLE", message: "Remote analytics is not configured for this tenant." } };
+        }
+        return supabaseAnalyticsAdapter.getMetric(metricId, filters);
+      }
+      return localAnalyticsAdapter.getMetric(metricId, filters);
+    },
+    async getTimeSeries(metricId, filters, interval) {
+      const remoteScope = /^[0-9a-f-]{36}$/i.test(filters.scope.organizationId);
+      if (remoteScope) {
+        if (!supabaseAnalyticsConfigured) {
+          return { success: false, error: { code: "UNAVAILABLE", message: "Remote analytics is not configured for this tenant." } };
+        }
+        return supabaseAnalyticsAdapter.getTimeSeries(metricId, filters, interval);
+      }
+      return localAnalyticsAdapter.getTimeSeries(metricId, filters, interval);
+    },
+    getBreakdown(metricId, filters) {
+      const remoteScope = /^[0-9a-f-]{36}$/i.test(filters.scope.organizationId);
+      if (remoteScope && supabaseAnalyticsConfigured) {
+        return supabaseAnalyticsAdapter.getBreakdown(metricId, filters);
+      }
+      if (remoteScope) {
+        return Promise.resolve({ success: false, error: { code: "UNAVAILABLE", message: "Remote analytics is not configured for this tenant." } });
+      }
+      return localAnalyticsAdapter.getBreakdown(metricId, filters);
+    },
+  } satisfies AnalyticsAdapter,
 };
-
-export const platformWorkAdapter = localPlatformWorkAdapter;

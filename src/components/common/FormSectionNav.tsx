@@ -10,22 +10,22 @@ export interface FormSectionNavItem {
 
 export function FormSectionNav({ items, activeId, onSelect }: { items: FormSectionNavItem[]; activeId?: string; onSelect: (id: string) => void }) {
   return (
-    <nav className="mb-1 flex min-w-0 rounded-lg border border-border/80 bg-muted/70 p-1.5" aria-label="Form sections">
-      <div className="flex min-w-0 gap-1 overflow-x-auto">
+    <nav className="mb-1 flex min-w-0 border-b border-border/80" aria-label="Form sections">
+      <div className="flex min-w-0 gap-4 overflow-x-auto">
         {items.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => onSelect(item.id)}
             className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-md border border-transparent px-2.5 py-1.5 text-xs font-medium transition-colors",
-              activeId === item.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-background hover:text-foreground",
+              "relative inline-flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-1 py-2.5 text-xs font-medium transition-colors",
+              activeId === item.id ? "border-primary text-primary" : "text-muted-foreground hover:border-border hover:text-foreground",
             )}
           >
             {item.icon}
             <span>{item.label}</span>
             {item.status === "error" && <span className="h-1.5 w-1.5 rounded-full bg-destructive" />}
-            {item.status === "complete" && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
+            {item.status === "complete" && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
           </button>
         ))}
       </div>

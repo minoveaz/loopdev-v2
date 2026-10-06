@@ -53,4 +53,52 @@ git diff --cached --check
   external integrations when applicable.
 - Merge only after required CI and review checks pass.
 
-The canonical reference is `docs/03-platform/GIT_WORKFLOW.md`.
+The canonical reference is `docs/03-platform/governance/GIT_WORKFLOW.md`.
+
+## Common Contract
+
+### Input context
+
+- repository and checkout path;
+- current branch, base branch and working-tree state;
+- requested Git operation and any linked issue or pull request.
+
+### Decision status
+
+Classify repository facts as `confirmed`, `assumed` or `open`. Stop before a
+destructive or ambiguous operation instead of inferring user intent.
+
+### Output handoff
+
+Report:
+
+- operation performed or intentionally not performed;
+- branch, commit, remote and pull-request evidence;
+- validation commands and results;
+- conflicts, blockers and required user decisions;
+- state `complete`, `partial` or `blocked`.
+
+### Action boundaries
+
+This skill handles Git workflow only. It does not design modules, implement
+production behavior, rewrite history or force-push. Once the approved scope
+and validation gates pass, creating a local commit does not require a second
+approval. Pushes and pull requests always require explicit user approval.
+Neither a commit nor a clean Git state alone proves functional completion.
+
+Local commits should be created at coherent phase boundaries or before risky
+changes, using a Conventional Commit message that includes the module run ID
+when available. They are recovery checkpoints, not publication events. If a
+checkpoint must be undone, create a new `git revert` commit; do not reset,
+amend, force-push or rewrite history autonomously.
+
+### Traceability
+
+Record a Git checkpoint linked to the module run using
+`docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md`, with repository path,
+branch, base, `HEAD`, working-tree state, commit/push/PR evidence, detected
+failure, likely origin and status. Git evidence must never be presented as
+functional or runtime evidence. Use
+`docs/implementation/_templates/module-implementation-readme.md` for the
+delivery links and update the relevant phase evidence before linking the
+commit, remote branch, pull request and related issue/track.

@@ -40,7 +40,7 @@ La fuente detallada por fases es `tracks/active/crm/2026-09-09-loopdev-v2-crm-fr
 | Custom Fields | Parcial frontend | Contratos, validación y operaciones locales | Integración de valores en formularios y detalles |
 | Import/export y bulk actions | Completado local | Operaciones locales con validación | Jobs remotos y permisos server-side |
 | Automations y entitlements | Completado local | `pages/crm/Automations.tsx`, adapters y tests | Billing, workers y ejecución remota |
-| Formularios globales y superficies responsive | Parcial frontend | `LOOPDEV_GLOBAL_FORMS_PHASE.md`, `useFormLifecycle`, `AppDrawer`, `FormSectionHeader` y rollout CRM/Platform | Completar rollout en Settings/Communications y ampliar cobertura de tests |
+| Formularios globales y superficies responsive | Parcial frontend | [`LOOPDEV_GLOBAL_FORMS_PHASE.md`](../../03-platform/frontend/LOOPDEV_GLOBAL_FORMS_PHASE.md), `useFormLifecycle`, `AppDrawer`, `FormSectionHeader` y rollout CRM/Platform | Completar rollout en Settings/Communications y ampliar cobertura de tests |
 | Comments y Mentions | Parcial frontend | Contrato reservado, sin UI aprobada | Validar necesidad y diseñar UX |
 | Búsqueda global | Pendiente backend | Búsquedas locales por dominio | Índice autorizado y persistencia remota |
 

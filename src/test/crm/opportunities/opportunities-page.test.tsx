@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import SalesCRMOpportunities from "@/loopdev/pages/crm/Opportunities";
 import { localCrmOpportunitiesStore, localCrmOpportunityLinesStore } from "@/loopdev/domains/crm/data/localOpportunities";
+import { I18nProvider } from "@/i18n";
 
 describe("Opportunities page", () => {
   beforeEach(() => {
@@ -11,7 +12,7 @@ describe("Opportunities page", () => {
   });
 
   it("creates a manual opportunity from a contact and catalog item", async () => {
-    render(<MemoryRouter initialEntries={["/app/sales-crm/opportunities"]}><SalesCRMOpportunities /></MemoryRouter>);
+    render(<I18nProvider><MemoryRouter initialEntries={["/app/sales-crm/opportunities"]}><SalesCRMOpportunities /></MemoryRouter></I18nProvider>);
 
     await waitFor(() => expect(screen.getAllByText("Enterprise expansion").length).toBeGreaterThan(0));
     fireEvent.click(screen.getByRole("button", { name: "New opportunity" }));

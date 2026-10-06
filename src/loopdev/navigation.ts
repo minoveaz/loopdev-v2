@@ -1,13 +1,14 @@
-import { Boxes, LayoutDashboard, Settings, Users } from "lucide-react";
+import { Boxes, FileSearch, LayoutDashboard, Settings, Users } from "lucide-react";
 import type { NavSection } from "@/app/nav-types";
+import { loopdevNavigationContract } from "../../packages/contracts/src/navigation";
 
 export const loopdevNavigation: NavSection[] = [
   {
     label: "Launchpad",
     items: [
       {
-        label: "Launchpad",
-        to: "/launchpad",
+        label: loopdevNavigationContract.launchpad.label,
+        to: loopdevNavigationContract.launchpad.path,
         icon: LayoutDashboard,
       },
     ],
@@ -16,17 +17,40 @@ export const loopdevNavigation: NavSection[] = [
     label: "Suites",
     items: [
       {
-        label: "CRM",
+        label: loopdevNavigationContract.groups[0].label,
         icon: Users,
-        children: [
-          { label: "Overview", to: "/app/sales-crm/overview" },
-          { label: "Contacts", to: "/app/sales-crm/contacts" },
-          { label: "Leads", to: "/app/sales-crm/leads" },
-          { label: "Pipeline", to: "/app/sales-crm/pipeline" },
-          { label: "Opportunities", to: "/app/sales-crm/opportunities" },
-          { label: "Tasks", to: "/app/sales-crm/tasks" },
-          { label: "Communications", to: "/app/sales-crm/communications" },
-        ],
+        children: loopdevNavigationContract.groups[0].items.map((item) => ({
+          label: item.label,
+          to: item.path,
+        })),
+      },
+      {
+        label: loopdevNavigationContract.groups[1].label,
+        icon: Boxes,
+        children: loopdevNavigationContract.groups[1].items.map((item) => ({
+          label: item.label,
+          to: item.path,
+        })),
+      },
+    ],
+  },
+  {
+    label: "Tools",
+    items: [
+      {
+        label: "Document Intelligence",
+        to: "/app/tools/document-intelligence",
+        icon: FileSearch,
+      },
+    ],
+  },
+  {
+    label: "Workspace",
+    items: [
+      {
+        label: loopdevNavigationContract.groups[3].label,
+        to: loopdevNavigationContract.groups[3].items[0].path,
+        icon: Settings,
       },
       {
         label: "ERP",

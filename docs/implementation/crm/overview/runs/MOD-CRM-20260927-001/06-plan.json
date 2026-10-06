@@ -1,0 +1,82 @@
+{
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:06-plan",
+  "phase": "06-plan",
+  "skill": "module-plan",
+  "parent_span_id": "MOD-CRM-20260927-001:01-design",
+  "module": "CRM Overview",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:26:05+02:00",
+  "completed_at": "2026-09-27T17:29:58+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified"
+  },
+  "input_artifacts": [
+    "design.md",
+    "architecture-design.md",
+    "requirement-evidence-matrix.md"
+  ],
+  "decisions": [
+    {
+      "id": "PLAN-OVR-01",
+      "status": "confirmed",
+      "summary": "Plan is approved; no production implementation starts in this run."
+    },
+    {
+      "id": "PLAN-OVR-02",
+      "status": "confirmed",
+      "summary": "Specialized analysis precedes issue setup and build."
+    }
+  ],
+  "actions": [
+    "Defined dependency-aware OVR phases and evidence requirements."
+  ],
+  "output_artifacts": [
+    "implementation-plan.md",
+    "requirement-evidence-matrix.md",
+    "platform-scope.md",
+    "platform-evidence-matrix.md"
+  ],
+  "validation": [
+    {
+      "command": "Plan dependency and gate review",
+      "result": "passed",
+      "evidence": "implementation-plan.md"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "OVR-PLAN",
+      "status": "PASS",
+      "evidence": "approved implementation-plan.md"
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "WAITING_IMPLEMENTATION_APPROVAL",
+  "approval_gate": {
+    "status": "approved",
+    "approved_by": "user",
+    "approved_at": "2026-09-27T17:29:58+02:00"
+  },
+  "evidence_links": [
+    "implementation-plan.md",
+    "phase-evidence.md"
+  ],
+  "updated_at": "2026-09-27T18:10:00+02:00",
+  "decision_reconciliation": {
+    "status": "confirmed",
+    "summary": "User decisions recorded in canonical CRM Overview artifacts; implementation remains gated."
+  },
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

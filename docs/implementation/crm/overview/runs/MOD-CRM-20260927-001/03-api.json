@@ -1,0 +1,79 @@
+{
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:03-api",
+  "phase": "03-api",
+  "skill": "api-contracts",
+  "parent_span_id": "MOD-CRM-20260927-001:02-domain",
+  "module": "CRM Overview",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:40:00+02:00",
+  "completed_at": "2026-09-27T17:46:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified"
+  },
+  "input_artifacts": [
+    "domain-model.md",
+    "design.md",
+    "architecture-design.md"
+  ],
+  "decisions": [
+    {
+      "id": "API-OVR-01",
+      "status": "confirmed",
+      "summary": "Overview exposes bounded idempotent queries and delegates task mutation to Platform Tasks."
+    },
+    {
+      "id": "API-OVR-02",
+      "status": "confirmed",
+      "summary": "Every response carries scope, period, freshness, sourceVersion, permission and correlation metadata."
+    },
+    {
+      "id": "USER-CRM-OVERVIEW-20260927",
+      "status": "confirmed",
+      "summary": "Resolved KPI, freshness, RLS team scope, activity allowlist, read-only Tasks, cache/offline, activation/rollback and export decisions."
+    }
+  ],
+  "actions": [
+    "Defined query catalog, DTO envelope, validation, pagination, errors, retries, events and rollback."
+  ],
+  "output_artifacts": [
+    "api-contracts.md"
+  ],
+  "validation": [
+    {
+      "command": "Adapter and source contract inspection",
+      "result": "passed with runtime gap",
+      "evidence": "Existing analytics hooks/adapters support partial remote reads; no runtime endpoint proof claimed."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "OVR-API",
+      "status": "PASS",
+      "evidence": "api-contracts.md"
+    },
+    {
+      "id": "OVR-API-RUNTIME",
+      "status": "NOT_TESTED",
+      "evidence": "No production/runtime endpoint invoked in this analysis run"
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "WAITING_IMPLEMENTATION_APPROVAL",
+  "evidence_links": [
+    "api-contracts.md"
+  ],
+  "updated_at": "2026-09-27T18:10:00+02:00",
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

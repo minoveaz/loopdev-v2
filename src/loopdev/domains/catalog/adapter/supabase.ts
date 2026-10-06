@@ -1,0 +1,139 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { defaultWebAuthAdapter } from "@/loopdev/domains/platform/adapter/auth-supabase";
+import type {
+  CatalogAvailability,
+  CatalogCreateInput,
+  CatalogEligibility,
+  CatalogItem,
+  CatalogItemCreateInput,
+  CatalogListParams,
+  CatalogOfferCreateInput,
+  CatalogPriceBookCreateInput,
+  CatalogPriceEntryCreateInput,
+  CatalogReferenceResolutionParams,
+  CatalogScopeParams,
+  CatalogVariantCreateInput,
+  OrganizationCatalog,
+  Offer,
+  PriceBook,
+  PriceEntry,
+  ProductPartyRole,
+  ResolvedCatalogReference,
+} from "../types";
+import { CatalogAdapterError } from "../types";
+import type { CatalogAdapter } from "./index";
+
+type Row = Record<string, unknown>;
+type TableName = "erp_catalogs" | "erp_catalog_items" | "erp_catalog_offers" | "erp_catalog_variants" | "erp_price_books" | "erp_price_entries";
+
+function client(): SupabaseClient {
+  const value = defaultWebAuthAdapter.getClient();
+  if (!value) throw new CatalogAdapterError("Supabase is not configured.", "server-error");
+  return value;
+}
+
+function mapError(error: { code?: string; message: string }): CatalogAdapterError {
+  if (error.code === "42501" || /permission|policy|forbidden/i.test(error.message)) {
+    return new CatalogAdapterError("You do not have permission to manage this catalog.", "forbidden");
+  }
+  if (error.code === "23505") return new CatalogAdapterError("A catalog record with this key already exists.", "conflict");
+  if (error.code === "PGRST116") return new CatalogAdapterError("The catalog record was not found.", "not-found");
+  return new CatalogAdapterError(error.message, "server-error");
+}
+
+function base(row: Row) {
+  return { id: String(row.id), createdAt: String(row.created_at), updatedAt: String(row.updated_at) };
+}
+
+function mapCatalog(row: Row): OrganizationCatalog {
+  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, key: String(row.key), name: String(row.name), description: (row.description as string | null) ?? null, kind: row.kind as OrganizationCatalog["kind"], status: row.status as OrganizationCatalog["status"], metadata: (row.metadata as Record<string, unknown>) ?? {} };
+}
+
+function mapItem(row: Row): CatalogItem {
+  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, catalogId: (row.catalog_id as string | null) ?? null, key: String(row.key), sku: String(row.sku ?? ""), type: row.type as CatalogItem["type"], name: String(row.name), description: (row.description as string | null) ?? null, categoryKey: (row.category_key as string | null) ?? null, status: row.status as CatalogItem["status"], visibility: (row.visibility as CatalogItem["visibility"]) ?? { organizationId: String(row.organization_id), workspaceId: null }, metadata: (row.metadata as Record<string, unknown>) ?? {} };
+}
+
+function mapOffer(row: Row): Offer {
+  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, catalogItemId: String(row.catalog_item_id), key: String(row.key), name: String(row.name), status: row.status as Offer["status"], billingModel: row.billing_model as Offer["billingModel"], currency: String(row.currency), unit: String(row.unit), validFrom: (row.valid_from as string | null) ?? null, validTo: (row.valid_to as string | null) ?? null, metadata: (row.metadata as Record<string, unknown>) ?? {} };
+}
+
+function mapVariant(row: Row): import("../types").CatalogVariant {
+  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, catalogItemId: String(row.catalog_item_id), key: String(row.key), sku: String(row.sku ?? ""), name: String(row.name), status: row.status as import("../types").CatalogVariant["status"], attributes: (row.attributes as Record<string, string>) ?? {}, metadata: (row.metadata as Record<string, unknown>) ?? {} };
+}
+
+function mapPriceBook(row: Row): PriceBook {
+  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, key: String(row.key), name: String(row.name), currency: String(row.currency), status: row.status as PriceBook["status"], validFrom: (row.valid_from as string | null) ?? null, validTo: (row.valid_to as string | null) ?? null, visibility: (row.visibility as PriceBook["visibility"]) ?? { organizationId: String(row.organization_id), workspaceId: null } };
+}
+
+function mapPriceEntry(row: Row): PriceEntry {
+  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, priceBookId: String(row.price_book_id), catalogItemId: (row.catalog_item_id as string | null) ?? null, offerId: (row.offer_id as string | null) ?? null, variantId: (row.variant_id as string | null) ?? null, amount: Number(row.amount), currency: String(row.currency), unit: String(row.unit), status: row.status as PriceEntry["status"], minQuantity: row.min_quantity == null ? null : Number(row.min_quantity), maxQuantity: row.max_quantity == null ? null : Number(row.max_quantity), validFrom: (row.valid_from as string | null) ?? null, validTo: (row.valid_to as string | null) ?? null };
+}
+
+async function listRows(table: TableName, params: CatalogListParams, filters: Record<string, string | undefined> = {}) {
+  let query = client().from(table).select("*").eq("organization_id", params.organizationId);
+  if (params.workspaceId !== undefined) query = query.eq("workspace_id", params.workspaceId);
+  if (!params.includeArchived) query = query.neq("status", "archived");
+  if (params.status?.length) query = query.in("status", params.status);
+  for (const [key, value] of Object.entries(filters)) if (value) query = query.eq(key, value);
+  const { data, error } = await query;
+  if (error) throw mapError(error);
+  return (data ?? []) as Row[];
+}
+
+async function insertRow(table: TableName, payload: Record<string, unknown>) {
+  const { data, error } = await client().from(table).insert(payload).select("*").single();
+  if (error) throw mapError(error);
+  if (!data) throw new CatalogAdapterError("The catalog record was not created.", "server-error");
+  return data as Row;
+}
+
+async function updateRow(table: TableName, id: string, organizationId: string, patch: Record<string, unknown>) {
+  const { data, error } = await client().from(table).update(patch).eq("id", id).eq("organization_id", organizationId).select("*").single();
+  if (error) throw mapError(error);
+  if (!data) throw new CatalogAdapterError("The catalog record was not updated.", "server-error");
+  return data as Row;
+}
+
+async function deleteRow(table: TableName, id: string, organizationId: string) {
+  const { error } = await client().from(table).delete().eq("id", id).eq("organization_id", organizationId);
+  if (error) throw mapError(error);
+}
+
+const write = (value: Record<string, unknown>) => Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined));
+
+export const supabaseCatalogAdapter: CatalogAdapter = {
+  async listCatalogs(params) { return (await listRows("erp_catalogs", params)).map(mapCatalog); },
+  async createCatalog(input: CatalogCreateInput) { return mapCatalog(await insertRow("erp_catalogs", { organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, key: input.key.trim().toLowerCase().replace(/\s+/g, "-"), name: input.name.trim(), description: input.description?.trim() || null, kind: input.kind, metadata: input.metadata ?? {} })); },
+  async createCatalogItem(input: CatalogItemCreateInput) { return mapItem(await insertRow("erp_catalog_items", { organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, catalog_id: input.catalogId, key: input.key.trim().toLowerCase().replace(/\s+/g, "-"), sku: input.sku.trim(), type: input.type, name: input.name.trim(), description: input.description?.trim() || null, category_key: input.categoryKey?.trim() || null, status: input.status ?? "draft", visibility: { organizationId: input.organizationId, workspaceId: input.workspaceId ?? null }, metadata: input.metadata ?? {} })); },
+  async updateCatalogItem(id, params, patch) { return mapItem(await updateRow("erp_catalog_items", id, params.organizationId, write({ name: patch.name?.trim(), key: patch.key?.trim(), sku: patch.sku?.trim(), type: patch.type, description: patch.description, category_key: patch.categoryKey, status: patch.status, metadata: patch.metadata }))); },
+  async deleteCatalogItem(id, params) { await deleteRow("erp_catalog_items", id, params.organizationId); },
+  async listCatalogItems(params) { return (await listRows("erp_catalog_items", params, { catalog_id: params.catalogId })).map(mapItem); },
+  async getCatalogItem(id, params) { const rows = await listRows("erp_catalog_items", params, { id }); return rows[0] ? mapItem(rows[0]) : null; },
+  async findCatalogItemByKey(key, params) { const rows = await listRows("erp_catalog_items", params, { key: key.trim().toLowerCase() }); return rows[0] ? mapItem(rows[0]) : null; },
+  async listOffers(params) { return (await listRows("erp_catalog_offers", params, { catalog_item_id: params.catalogItemId })).map(mapOffer); },
+  async createOffer(input: CatalogOfferCreateInput) { return mapOffer(await insertRow("erp_catalog_offers", write({ organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, catalog_item_id: input.catalogItemId, key: input.key, name: input.name, status: input.status, billing_model: input.billingModel, currency: input.currency, unit: input.unit, valid_from: input.validFrom, valid_to: input.validTo, metadata: input.metadata }))); },
+  async updateOffer(id, params, patch) { return mapOffer(await updateRow("erp_catalog_offers", id, params.organizationId, write({ key: patch.key, name: patch.name, status: patch.status, billing_model: patch.billingModel, currency: patch.currency, unit: patch.unit, valid_from: patch.validFrom, valid_to: patch.validTo, metadata: patch.metadata }))); },
+  async deleteOffer(id, params) { await deleteRow("erp_catalog_offers", id, params.organizationId); },
+  async listVariants(params) { return (await listRows("erp_catalog_variants", params, { catalog_item_id: params.catalogItemId })).map(mapVariant); },
+  async createVariant(input: CatalogVariantCreateInput) { return mapVariant(await insertRow("erp_catalog_variants", write({ organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, catalog_item_id: input.catalogItemId, key: input.key, sku: input.sku, name: input.name, status: input.status, attributes: input.attributes, metadata: input.metadata }))); },
+  async updateVariant(id, params, patch) { return mapVariant(await updateRow("erp_catalog_variants", id, params.organizationId, write({ catalog_item_id: patch.catalogItemId, key: patch.key, sku: patch.sku, name: patch.name, status: patch.status, attributes: patch.attributes, metadata: patch.metadata }))); },
+  async deleteVariant(id, params) { await deleteRow("erp_catalog_variants", id, params.organizationId); },
+  async listPriceBooks(params) { return (await listRows("erp_price_books", params)).map(mapPriceBook); },
+  async createPriceBook(input: CatalogPriceBookCreateInput) { return mapPriceBook(await insertRow("erp_price_books", write({ organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, key: input.key, name: input.name, currency: input.currency, status: input.status, valid_from: input.validFrom, valid_to: input.validTo, visibility: input.visibility }))); },
+  async updatePriceBook(id, params, patch) { return mapPriceBook(await updateRow("erp_price_books", id, params.organizationId, write({ key: patch.key, name: patch.name, currency: patch.currency, status: patch.status, valid_from: patch.validFrom, valid_to: patch.validTo, visibility: patch.visibility }))); },
+  async deletePriceBook(id, params) { await deleteRow("erp_price_books", id, params.organizationId); },
+  async listPriceEntries(params) { return (await listRows("erp_price_entries", params, { price_book_id: params.priceBookId })).map(mapPriceEntry); },
+  async createPriceEntry(input: CatalogPriceEntryCreateInput) { return mapPriceEntry(await insertRow("erp_price_entries", write({ organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, price_book_id: input.priceBookId, catalog_item_id: input.catalogItemId, offer_id: input.offerId, variant_id: input.variantId, amount: input.amount, currency: input.currency, unit: input.unit, status: input.status, min_quantity: input.minQuantity, max_quantity: input.maxQuantity, valid_from: input.validFrom, valid_to: input.validTo }))); },
+  async updatePriceEntry(id, params, patch) { return mapPriceEntry(await updateRow("erp_price_entries", id, params.organizationId, write({ price_book_id: patch.priceBookId, catalog_item_id: patch.catalogItemId, offer_id: patch.offerId, variant_id: patch.variantId, amount: patch.amount, currency: patch.currency, unit: patch.unit, status: patch.status, min_quantity: patch.minQuantity, max_quantity: patch.maxQuantity, valid_from: patch.validFrom, valid_to: patch.validTo }))); },
+  async deletePriceEntry(id, params) { await deleteRow("erp_price_entries", id, params.organizationId); },
+  async listProductPartyRoles() { return [] as ProductPartyRole[]; },
+  async listAvailabilities() { return [] as CatalogAvailability[]; },
+  async listEligibilities() { return [] as CatalogEligibility[]; },
+  async resolveReference(params: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null> {
+    const item = params.reference.catalogItemId ? await this.getCatalogItem(params.reference.catalogItemId, params) : params.reference.productKey ? await this.findCatalogItemByKey(params.reference.productKey, params) : null;
+    if (!item) return null;
+    const offers = await this.listOffers({ ...params, catalogItemId: item.id });
+    const variants = await this.listVariants({ ...params, catalogItemId: item.id });
+    return { item, offer: params.reference.offerId ? offers.find((offer) => offer.id === params.reference.offerId) ?? null : offers[0] ?? null, variant: params.reference.variantId ? variants.find((variant) => variant.id === params.reference.variantId) ?? null : variants[0] ?? null, reference: { entityType: "catalog_item", entityId: item.id, scope: { organizationId: item.organizationId, workspaceId: item.workspaceId } } };
+  },
+};

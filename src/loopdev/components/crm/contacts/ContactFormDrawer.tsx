@@ -2,11 +2,14 @@ import { useCallback, useRef, useState, type RefObject } from "react";
 import { AppDrawer } from "@/components/platform";
 import { FormSectionNav } from "@/components/common";
 import type { CRMContact, CRMContactMutationResult } from "@/loopdev/domains/crm/adapter";
-import { ContactForm, type ContactFormValues } from "./ContactForm";
+import { ContactForm, type ContactFormValues, type ContactSectionStats } from "./ContactForm";
+import { contactFormSections } from "../../../../../packages/contracts/src/contact-form";
+import { contactActions } from "../../../../../packages/contracts/src/contact-actions";
 
 interface ContactFormDrawerProps {
   open: boolean;
   contact?: CRMContact | null;
+  initialValues?: Partial<ContactFormValues>;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: ContactFormValues) => Promise<CRMContactMutationResult>;
   onSuccess: (contact: CRMContact) => void;
@@ -16,6 +19,7 @@ interface ContactFormDrawerProps {
 export function ContactFormDrawer({
   open,
   contact,
+  initialValues,
   onOpenChange,
   onSubmit,
   onSuccess,
@@ -24,6 +28,7 @@ export function ContactFormDrawer({
   const editing = Boolean(contact);
   const dirtyRef = useRef(false);
   const [dirty, setDirty] = useState(false);
+  const [sectionStats, setSectionStats] = useState<Record<string, ContactSectionStats>>({});
   const handleDirtyChange = useCallback((dirty: boolean) => {
     dirtyRef.current = dirty;
     setDirty(dirty);
@@ -45,21 +50,17 @@ export function ContactFormDrawer({
     <AppDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title={editing ? "Edit contact" : "Create contact"}
+      title={editing ? contactActions.find((action) => action.id === "edit")?.label : "Create contact"}
       eyebrow="CRM / Contact"
       mode={editing ? "Editing" : "New"}
+      size="xl"
       layoutMode="expanded"
       responsive="auto"
       showDirtyState={dirty}
       headerMeta={<span>Profile form</span>}
       headerNav={
         <FormSectionNav
-          items={[
-            { id: "contact-form-identity", label: "Identity" },
-            { id: "contact-form-address", label: "Address" },
-            { id: "contact-form-organization", label: "Organization" },
-            { id: "contact-form-channels", label: "Contact channels" },
-          ]}
+          items={contactFormSections.map((section) => ({ id: `contact-form-${section.id}`, label: section.label, status: sectionStats[section.id]?.status ?? "neutral" }))}
           onSelect={scrollToSection}
         />
       }
@@ -78,10 +79,12 @@ export function ContactFormDrawer({
       {({ requestClose }) => (
         <ContactForm
           contact={contact}
+          initialValues={initialValues}
           onCancel={requestClose}
           onSubmit={onSubmit}
           onSuccess={onSuccess}
           onDirtyChange={handleDirtyChange}
+          onSectionStatsChange={setSectionStats}
         />
       )}
     </AppDrawer>

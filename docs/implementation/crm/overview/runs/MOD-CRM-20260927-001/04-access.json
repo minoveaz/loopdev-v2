@@ -1,0 +1,81 @@
+{
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:04-access",
+  "phase": "04-access",
+  "skill": "access-design",
+  "parent_span_id": "MOD-CRM-20260927-001:03-api",
+  "module": "CRM Overview",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:46:00+02:00",
+  "completed_at": "2026-09-27T17:52:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified"
+  },
+  "input_artifacts": [
+    "domain-model.md",
+    "api-contracts.md",
+    "design.md",
+    "docs/06-product/crm/shared/CRM_PILOT_SECURITY_AND_ISOLATION_MATRIX.md"
+  ],
+  "decisions": [
+    {
+      "id": "ACCESS-OVR-01",
+      "status": "confirmed",
+      "summary": "RLS and server-side membership/scope checks are authoritative."
+    },
+    {
+      "id": "ACCESS-OVR-02",
+      "status": "confirmed",
+      "summary": "Shared Tasks, Notes, Files, Relations and Document Intelligence policies are reused."
+    },
+    {
+      "id": "USER-CRM-OVERVIEW-20260927",
+      "status": "confirmed",
+      "summary": "Resolved KPI, freshness, RLS team scope, activity allowlist, read-only Tasks, cache/offline, activation/rollback and export decisions."
+    }
+  ],
+  "actions": [
+    "Defined tenant/org/workspace/team/record scope and role matrix.",
+    "Defined RLS, sensitive-field, audit, revocation and escalation tests."
+  ],
+  "output_artifacts": [
+    "access-design.md"
+  ],
+  "validation": [
+    {
+      "command": "Product security and current adapter reconciliation",
+      "result": "passed with runtime gap",
+      "evidence": "CRM security matrix plus existing adapters; Notes remote permission failure remains open."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "OVR-ACCESS",
+      "status": "PASS",
+      "evidence": "access-design.md"
+    },
+    {
+      "id": "OVR-RLS-RUNTIME",
+      "status": "NOT_TESTED",
+      "evidence": "No live RLS/session test run in this analysis phase"
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "WAITING_IMPLEMENTATION_APPROVAL",
+  "evidence_links": [
+    "access-design.md"
+  ],
+  "updated_at": "2026-09-27T18:10:00+02:00",
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

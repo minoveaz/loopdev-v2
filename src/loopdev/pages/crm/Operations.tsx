@@ -12,6 +12,7 @@ import { PageContainer, PageHeader, SearchInput, StatusBadge, SurfaceCard, Surfa
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useCrmOperations } from "@/loopdev/domains/crm/hooks/use-crm-operations";
 import type { CRMEntityType, CRMFieldType, CRMFilter, CRMImportResult, CRMVisibility } from "@/loopdev/domains/crm/operations/types";
+import { useT } from "@/i18n";
 
 const visibilityOptions: Array<{ value: CRMVisibility; label: string }> = [
   { value: "private", label: "Only me" },
@@ -22,6 +23,7 @@ const visibilityOptions: Array<{ value: CRMVisibility; label: string }> = [
 const entityLabels: Record<CRMEntityType, string> = { contact: "Contacts", lead: "Leads", opportunity: "Opportunities" };
 
 export default function SalesCRMOperations() {
+  const t = useT();
   const { trail } = useBreadcrumbs();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("search");
@@ -206,8 +208,8 @@ export default function SalesCRMOperations() {
   return (
     <PageContainer width="wide">
       <PageHeader
-        title="CRM operations"
-        description="Reusable search, workspace views, governance, and local data operations."
+        title={t("crm.operations.title")}
+        description={t("crm.operations.description")}
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Operations" }]}
         actions={<Button variant="outline" onClick={() => void downloadExport()}><Download className="mr-1.5 h-3.5 w-3.5" />Export contacts</Button>}
       />

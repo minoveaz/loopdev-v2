@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useT } from "@/i18n";
 
 interface Props {
   page: number;
@@ -21,24 +22,25 @@ export function TablePagination({
   onPageSizeChange,
   pageSizes = [10, 25, 50],
 }: Props) {
+  const t = useT();
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t("common.pagination.page")}
       className="flex flex-col items-center justify-between gap-3 border-t border-border bg-card-muted/50 px-4 py-2.5 text-xs text-muted-foreground sm:flex-row"
     >
       <span className="tabular-nums">
-        Showing <span className="font-semibold text-foreground">{start}–{end}</span> of{" "}
+        {t("common.pagination.showing")} <span className="font-semibold text-foreground">{start}–{end}</span> {t("common.pagination.of")}{" "}
         <span className="font-semibold text-foreground">{total.toLocaleString()}</span>
       </span>
       <div className="flex items-center gap-4">
         {onPageSizeChange && (
           <label className="flex items-center gap-2">
-            <span className="text-muted-foreground">Rows per page</span>
+            <span className="text-muted-foreground">{t("common.pagination.rowsPerPage")}</span>
             <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
-              <SelectTrigger aria-label="Rows per page" className="h-7 w-16 bg-card px-2 text-xs font-medium">
+              <SelectTrigger aria-label={t("common.pagination.rowsPerPage")} className="h-7 w-16 bg-card px-2 text-xs font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -54,7 +56,7 @@ export function TablePagination({
             className="h-7 w-7 rounded-md"
             disabled={page <= 1}
             onClick={() => onPageChange(1)}
-            aria-label="First page"
+            aria-label={t("common.pagination.first")}
           >
             <ChevronsLeft className="h-4 w-4" />
           </Button>
@@ -64,7 +66,7 @@ export function TablePagination({
             className="h-7 w-7 rounded-md"
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
-            aria-label="Previous page"
+            aria-label={t("common.pagination.previous")}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -72,7 +74,7 @@ export function TablePagination({
             className="px-2 tabular-nums text-foreground"
             aria-live="polite"
           >
-            Page <span className="font-semibold">{page}</span> of {pageCount}
+            {t("common.pagination.page")} <span className="font-semibold">{page}</span> {t("common.pagination.of")} {pageCount}
           </span>
           <Button
             variant="ghost"
@@ -80,7 +82,7 @@ export function TablePagination({
             className="h-7 w-7 rounded-md"
             disabled={page >= pageCount}
             onClick={() => onPageChange(page + 1)}
-            aria-label="Next page"
+            aria-label={t("common.pagination.next")}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -90,7 +92,7 @@ export function TablePagination({
             className="h-7 w-7 rounded-md"
             disabled={page >= pageCount}
             onClick={() => onPageChange(pageCount)}
-            aria-label="Last page"
+            aria-label={t("common.pagination.last")}
           >
             <ChevronsRight className="h-4 w-4" />
           </Button>

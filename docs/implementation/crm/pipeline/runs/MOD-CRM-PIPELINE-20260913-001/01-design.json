@@ -1,0 +1,100 @@
+{
+  "run_id": "MOD-CRM-PIPELINE-20260913-001",
+  "span_id": "MOD-CRM-PIPELINE-20260913-001:01-design",
+  "phase": "01-design",
+  "skill": "module-design",
+  "parent_span_id": null,
+  "module": "CRM Pipeline",
+  "status": "deviated",
+  "decision_status": "open",
+  "architecture_quality": "DEVIATED",
+  "attempt": 1,
+  "started_at": "2026-09-13T10:15:45+02:00",
+  "completed_at": null,
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "c80b814",
+    "working_tree": "modified by implementation workspace documentation",
+    "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
+    "runtime_port": 8081,
+    "runtime_status": "running"
+  },
+  "input_artifacts": [
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_UX_SPEC.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_COMPONENT_AUDIT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_IMPACT_ASSESSMENT.md"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-PIPELINE-001",
+      "status": "confirmed",
+      "summary": "Treat the existing Kanban route and local adapter as the baseline and implement the complete pilot surface set."
+    },
+    {
+      "id": "DEC-PIPELINE-002",
+      "status": "confirmed",
+      "summary": "Pilot scope includes Kanban, Opportunities table, opportunity detail and manual opportunity creation."
+    },
+    {
+      "id": "BLOCK-PIPELINE-001",
+      "status": "resolved",
+      "summary": "Canonical Vite runtime was started on localhost:8081; functional and visual evidence can proceed."
+    }
+  ],
+  "actions": [
+    "Audited the approved Pipeline product contract, UX specification, component audit and impact assessment.",
+    "Audited the existing Pipeline page, CRM adapter and pipeline tests.",
+    "Initialized the canonical implementation workspace."
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/README.md",
+    "docs/implementation/crm/pipeline/architecture-design.md",
+    "docs/implementation/crm/pipeline/implementation-plan.md",
+    "docs/implementation/crm/pipeline/runs/MOD-CRM-PIPELINE-20260913-001/run.json"
+  ],
+  "validation": [
+    {
+      "command": "git branch --show-current && git rev-parse --short HEAD",
+      "result": "passed",
+      "evidence": "feature/crm-v2-foundation at c80b814"
+    },
+    {
+      "command": "curl -I http://localhost:8081/app/sales-crm/pipeline",
+      "result": "passed",
+      "evidence": "HTTP 200 from http://localhost:8081/app/sales-crm/pipeline; Vite listening on 127.0.0.1:8081"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-PIPELINE-CONTEXT",
+      "status": "PASS",
+      "evidence": "Approved product artifacts, existing source, tests and live route audited."
+    }
+  ],
+  "detected_failure": "Historical design started without a canonical completed 00-discovery checkpoint.",
+  "likely_failure_origin": "The previous CLI initialized runs at 01-design.",
+  "next_handoff": "Keep this superseded run blocked; use run 002 only after resolving its visual gate.",
+  "evidence_links": [
+    "docs/implementation/crm/pipeline/architecture-design.md",
+    "docs/implementation/crm/pipeline/README.md"
+  ],
+  "notes": [
+    "No production source files were changed during intake.",
+    "Runtime started from the canonical checkout on 127.0.0.1:8081.",
+    "No GitHub issues were created because plan approval has not occurred."
+  ],
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false,
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

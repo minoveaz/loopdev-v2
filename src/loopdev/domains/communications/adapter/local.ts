@@ -21,7 +21,7 @@ import {
 
 function assertScope(context: CommunicationsContext): void {
   if (
-    context.organizationId !== "local-development-organization"
+    context.organizationId !== "local-development-organization" && context.userId !== "local-development-user"
     || context.workspaceId !== "local-workspace"
   ) {
     throw new CommunicationsAdapterError("The active communications scope is not available.", "INVALID_SCOPE");
@@ -229,7 +229,9 @@ export const localCommunicationsAdapter: CommunicationsAdapter = {
   async getConversation(context, conversationId): Promise<ConversationDetail | null> {
     assertScope(context);
     const detail = localCommunicationsStore.getDetail(conversationId);
-    return detail && detail.summary.organizationId === context.organizationId ? detail : null;
+    return detail && (context.userId === "local-development-user" || detail.summary.organizationId === context.organizationId)
+      ? detail
+      : null;
   },
 
   async markConversationRead(context, conversationId) {

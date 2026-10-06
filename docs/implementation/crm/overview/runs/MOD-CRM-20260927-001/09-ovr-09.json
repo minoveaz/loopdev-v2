@@ -1,0 +1,120 @@
+{
+  "schema_version": 0,
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:09-ovr-09",
+  "phase": "09-ovr-09",
+  "skill": "module-verify",
+  "parent_span_id": "MOD-CRM-20260927-001:08-verify",
+  "module": "overview",
+  "status": "partial",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:50:53+02:00",
+  "completed_at": "2026-09-27T17:53:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified",
+    "runtime_url": "http://127.0.0.1:8081",
+    "runtime_port": 8081
+  },
+  "actions": [
+    "Verified shared authoritative Activity and Tasks read paths",
+    "Added 60-second shared read cache with five-minute stale bound",
+    "Applied remote workspace/brand scope predicates",
+    "Preserved read-only Tasks deep links and allowlisted deduplicated activity",
+    "Preserved unrelated dirty changes"
+  ],
+  "validation": [
+    {
+      "command": "npm run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npm run lint",
+      "result": "pass"
+    },
+    {
+      "command": "npx vitest run src/test/crm/overview/dashboard.test.ts src/test/platform/platform-work.test.ts src/test/platform/analytics.test.ts",
+      "result": "pass",
+      "tests": 18
+    },
+    {
+      "command": "npm run build",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "npm run smoke:crm-authenticated",
+      "result": "pass"
+    },
+    {
+      "command": "curl -I --max-time 10 http://127.0.0.1:8081/app/sales-crm/overview",
+      "result": "not_available",
+      "evidence": "port 8081 was not serving"
+    }
+  ],
+  "migration": {
+    "status": "verified_adapter_cutover",
+    "database_migration": "not_required",
+    "feature_flag": false,
+    "rollback": "restore prior Overview composition; preserve source records and authorized caches"
+  },
+  "requirements": [
+    {
+      "id": "OVR-04",
+      "status": "PASS",
+      "evidence": "allowlist/dedupe focused test and shared Activity adapter"
+    },
+    {
+      "id": "OVR-09-ACTIVITY-TASK",
+      "status": "PASS",
+      "evidence": "authoritative shared reads, read-only Tasks deep links, no duplicate surfaces"
+    },
+    {
+      "id": "OVR-09-FRESHNESS",
+      "status": "PASS",
+      "evidence": "60s cache target and 5m maximum stale bound in hooks and tests"
+    },
+    {
+      "id": "OVR-09-SCOPE",
+      "status": "PASS_WITH_DEBT",
+      "evidence": "UUID remote-only routing, authenticated RLS smoke, workspace/brand predicates; browser team evidence pending"
+    },
+    {
+      "id": "OVR-09-RUNTIME-STATES",
+      "status": "PARTIAL",
+      "evidence": "source/state regression coverage and smoke; browser/runtime capture unavailable"
+    }
+  ],
+  "detected_failure": {
+    "code": "RUNTIME_NOT_SERVING",
+    "detected_by": "delivery",
+    "likely_origin": "local dev server was not running on the recorded port",
+    "next_action": "capture authenticated browser state matrix during OVR-10 readiness review"
+  },
+  "residual_debt": [
+    "Authenticated browser evidence for loading, empty, error, forbidden, stale/offline, deep links, responsive and i18n/RTL remains open."
+  ],
+  "next_handoff": "OVR-10_RELEASE_READINESS_REVIEW",
+  "approval_gate": {
+    "status": "required",
+    "summary": "Approve or explicitly waive missing authenticated browser/runtime evidence before release readiness closure."
+  },
+  "invalidated": false,
+  "evidence_links": [
+    "docs/implementation/crm/overview/phase-evidence.md",
+    "docs/implementation/crm/overview/requirement-evidence-matrix.md"
+  ],
+  "notes": [
+    "No commit, reset, revert, push, pull request, automation or enterprise work performed."
+  ],
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

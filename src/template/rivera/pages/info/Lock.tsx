@@ -14,7 +14,7 @@ export default function LockScreenPage() {
   const { session } = useAuth();
   const navigate = useNavigate();
   const [pw, setPw] = useState("");
-  const name = session?.name ?? "Aria Bennet";
+  const name = session?.name ?? "Admin";
   return (
     <AuthLayout eyebrow="Locked" title="Welcome back" description="Enter your password to unlock the workspace.">
       <div className="space-y-5">
@@ -22,7 +22,7 @@ export default function LockScreenPage() {
           <Avatar className="h-12 w-12 border border-border"><AvatarFallback className="bg-gradient-primary text-primary-foreground">{getInitials(name)}</AvatarFallback></Avatar>
           <div>
             <p className="font-medium">{name}</p>
-            <p className="text-xs text-muted-foreground">{session?.email ?? "aria@rivera.app"}</p>
+            <p className="text-xs text-muted-foreground">{session?.email ?? "admin@loop.dev"}</p>
           </div>
         </div>
         <div className="space-y-1.5"><Label htmlFor="pw">Password</Label>

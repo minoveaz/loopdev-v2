@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "delivery-checkpoint.schema.json",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["schema_version", "legacy_schema_reason"],
+      "properties": {
+        "schema_version": { "const": 0 },
+        "legacy_schema_reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["schema_version", "run_id", "span_id", "phase", "skill", "status", "decision_status", "architecture_quality", "attempt", "input_artifacts", "output_artifacts", "validation", "requirements", "approval_gate", "invalidated"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "run_id": { "type": "string" },
+        "span_id": { "type": "string" },
+        "phase": { "type": "string" },
+        "skill": { "type": "string" },
+        "status": { "enum": ["pending", "running", "completed", "blocked", "failed", "deviated", "skipped", "waiting_user", "paused"] },
+        "decision_status": { "enum": ["confirmed", "assumed", "open", "rejected"] },
+        "architecture_quality": { "enum": ["PENDING", "PASS", "PASS_WITH_DEBT", "DEVIATED", "BLOCKED", "FAIL"] },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "input_artifacts": { "type": "array", "items": { "type": "string" } },
+        "output_artifacts": { "type": "array", "items": { "type": "string" } },
+        "validation": { "type": "array", "items": { "type": "object", "required": ["command", "result"] } },
+        "requirements": { "type": "array" },
+        "evidence": { "type": "array", "items": { "$ref": "delivery-evidence.schema.json" } },
+        "approval_gate": { "type": "object" },
+        "invalidated": { "type": "boolean" }
+      }
+    }
+  ]
+}

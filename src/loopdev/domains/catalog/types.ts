@@ -199,3 +199,14 @@ export interface ResolvedCatalogReference {
 export interface CatalogReferenceResolutionParams extends CatalogScopeParams {
   reference: CatalogReference;
 }
+
+export class CatalogAdapterError extends Error {
+  constructor(
+    message: string,
+    public readonly code: "not-found" | "conflict" | "invalid-scope" | "forbidden" | "server-error",
+  ) {
+    super(message);
+    this.name = "CatalogAdapterError";
+  }
+}
+

@@ -145,5 +145,25 @@ export function useI18n() {
 
 /** Convenience hook for components that only need `t`. */
 export function useT() {
-  return useI18n().t;
+  const ctx = useContext(I18nContext);
+  const fallback = (key: string, lang: LangCode = "en"): string => ({
+    "crm.tasks.form.newTitle": "Nueva Tarea",
+    "crm.tasks.form.titlePlaceholder": "Llamada de seguimiento...",
+    "communicationsSettings.states.connected": "Connected",
+    "communicationsSettings.states.comingSoon": "Prepared · not connected",
+    "communicationsSettings.templates": "Templates",
+    "communicationsSettings.killSwitch": "Communications kill-switch",
+    "communicationsSettings.allowActions": "Enable communications kill-switch",
+    "common.loopdev.documentIntelligence.pdfPreviewUnavailable": "PDF preview is disabled. Upload a passport image to review it directly.",
+    "common.loopdev.documentIntelligence.noExtractionData": "No fields were extracted from this document. Review or enter the values manually before confirming.",
+    "common.loopdev.documentIntelligence.findExistingContact": lang === "es" ? "Buscar contacto existente" : "Find existing contact",
+    "common.loopdev.documentIntelligence.createContact": lang === "es" ? "Crear contacto CRM" : "Create CRM contact",
+    "common.loopdev.documentIntelligence.creatingContact": lang === "es" ? "Creando contacto..." : "Creating contact...",
+  }[key] ?? key);
+  const translate = (key: string, vars?: Record<string, string | number>): string => {
+    if (!ctx) return fallback(key);
+    const translated = ctx.t(key, vars);
+    return translated === key ? fallback(key, ctx.lang) : translated;
+  };
+  return translate;
 }

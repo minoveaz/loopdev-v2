@@ -1,0 +1,36 @@
+{
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/implementation/crm/pipeline/access-design.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/api-contracts.md"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-API-001",
+      "status": "confirmed",
+      "summary": "Commands and envelope validated"
+    }
+  ],
+  "actions": [
+    "Documented API commands, queries and error codes"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed"
+    }
+  ],
+  "requirements": [
+    "PIPELINE-REQ-BOARD",
+    "PIPELINE-REQ-MUTATION",
+    "PIPELINE-REQ-REOPEN",
+    "PIPELINE-REQ-SPEED-DIAL",
+    "PIPELINE-REQ-DETAIL"
+  ],
+  "evidence": [
+    "docs/implementation/crm/pipeline/api-contracts.md"
+  ],
+  "next_handoff": "sync-design"
+}

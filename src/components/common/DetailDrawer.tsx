@@ -4,9 +4,11 @@ import { AppDrawer } from "@/components/platform";
 
 interface DetailDrawerProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange?: (open: boolean) => void;
+  onClose?: () => void;
   title: ReactNode;
   description?: ReactNode;
+  subtitle?: ReactNode;
   /** Optional banner content (e.g. avatar + name) shown under the title. */
   hero?: ReactNode;
   /** Sticky footer actions area. */
@@ -25,8 +27,10 @@ interface DetailDrawerProps {
 export function DetailDrawer({
   open,
   onOpenChange,
+  onClose,
   title,
   description,
+  subtitle,
   hero,
   footer,
   children,
@@ -34,12 +38,19 @@ export function DetailDrawer({
   size = "md",
   className,
 }: DetailDrawerProps) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange?.(nextOpen);
+    if (!nextOpen) {
+      onClose?.();
+    }
+  };
+
   return (
     <AppDrawer
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title={title}
-      description={description}
+      description={description || subtitle}
       footer={footer}
       side={side}
       size={size}

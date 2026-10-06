@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { catalogAdapter } from "@/loopdev/domains/catalog";
+import { localCatalogAdapter as catalogAdapter } from "@/loopdev/domains/catalog";
 import {
   localCatalogItemsStore,
   localCatalogOffersStore,

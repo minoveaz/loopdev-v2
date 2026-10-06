@@ -35,10 +35,10 @@ export function CRMRecordPicker({
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden p-0" align="start" sideOffset={6} collisionPadding={12}>
         <Command>
           <CommandInput placeholder={placeholder} />
-          <CommandList>
+          <CommandList className="h-[min(20rem,calc(100vh-16rem))] min-h-0 max-h-[min(20rem,calc(100vh-16rem))] overflow-y-scroll overscroll-contain scrollbar-thin">
             <CommandEmpty>No CRM records found.</CommandEmpty>
             {items.map((item) => {
               const itemValue = `${item.type}:${item.id}`;
@@ -50,6 +50,9 @@ export function CRMRecordPicker({
               );
             })}
           </CommandList>
+          <div className="border-t border-border/70 px-3 py-2 text-xs text-muted-foreground">
+            {items.length} {items.length === 1 ? "contact" : "contacts"} available
+          </div>
         </Command>
       </PopoverContent>
     </Popover>

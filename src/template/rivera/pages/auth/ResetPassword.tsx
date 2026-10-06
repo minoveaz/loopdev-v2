@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, Eye, EyeOff, Lock } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 import { AuthLayout } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ function strengthOf(pw: string): { score: number; label: string; tone: string } 
 }
 
 export default function ResetPassword() {
+  const { updatePassword } = useAuth();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -54,8 +56,9 @@ export default function ResetPassword() {
 
   const strength = strengthOf(password);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    toast.dismiss();
     const result = resetSchema.safeParse({ password, confirm });
     if (!result.success) {
       const next: typeof errors = {};
@@ -68,12 +71,14 @@ export default function ResetPassword() {
     }
     setErrors({});
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    const res = await updatePassword(result.data.password);
+    setSubmitting(false);
+    if (res.success) {
       setDone(true);
-      toast.success("Password updated", { description: "You can now sign in with your new password." });
       setTimeout(() => navigate("/pages/login", { replace: true }), 1600);
-    }, 700);
+    } else {
+      setErrors({ password: res.error || "Failed to update password. Please try again." });
+    }
   };
 
   const errorClass = "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30";
@@ -82,7 +87,7 @@ export default function ResetPassword() {
     <AuthLayout
       eyebrow="Reset password"
       title="Set a new password"
-      description="Choose a strong password to secure your Rivera account. (Mock — nothing is actually saved.)"
+      description="Choose a strong password to secure your LoopDev account."
       footer={
         <Link to="/pages/login" className="font-semibold text-primary transition-fast hover:underline">
           Back to sign in

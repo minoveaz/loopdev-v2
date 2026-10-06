@@ -529,6 +529,10 @@
 }
 
 /* Scrollbar polish */
+html {
+  scrollbar-gutter: stable;
+}
+
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: hsl(var(--border-strong)); border-radius: 8px; border: 2px solid hsl(var(--background)); }
@@ -778,4 +782,9 @@ html[data-sidebar-style="floating"] aside#app-sidebar {
   box-shadow: var(--shadow-modern);
   height: calc(100vh - 1.25rem);
   inset: 0.625rem auto 0.625rem 0.625rem;
+}
+
+@keyframes loopdev-infinity-flow {
+  from { stroke-dashoffset: 245; }
+  to { stroke-dashoffset: 0; }
 }

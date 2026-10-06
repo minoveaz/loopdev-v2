@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { RiveraShell } from "@/template/rivera/RiveraShell";
 import { LoopdevShell } from "@/loopdev/LoopdevShell";
 import { Topbar } from "./Topbar";
 import { AppFooter } from "./AppFooter";
-import { ThemeCustomizerFab } from "@/components/theme/ThemeCustomizer";
 import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/hooks/use-theme";
 import { useThemeConfig } from "@/hooks/useThemeConfig";
+import { RouteLoader } from "@/components/common/RouteLoader";
 
 export function AppShell() {
   const { collapsed, toggle } = useSidebarCollapsed();
@@ -101,8 +101,7 @@ export function AppShell() {
 
   return (
     <div className={cn(
-      "w-full bg-gradient-surface text-foreground",
-      isCommunicationsRoute ? "h-dvh overflow-hidden" : "min-h-screen",
+      "h-dvh w-full overflow-hidden bg-gradient-surface text-foreground",
     )}>
       <a
         href="#main-content"
@@ -127,8 +126,7 @@ export function AppShell() {
         data-app-content
         data-sidebar-collapsed={effectiveSidebarCollapsed ? "true" : "false"}
         className={cn(
-          "flex min-w-0 flex-col transition-[padding] duration-300",
-          isCommunicationsRoute ? "h-dvh min-h-0 overflow-hidden" : "min-h-screen",
+          "flex h-full min-w-0 flex-col transition-[padding] duration-300",
           // Forced mini (60px) between md (768px) and nav (1200px).
           "md:ps-[60px]",
           // Above the nav breakpoint, respect the user's collapsed choice.
@@ -151,22 +149,28 @@ export function AppShell() {
         }}
         sidebarCollapsed={effectiveSidebarCollapsed}
       />
-        <main
-          id="main-content"
-          tabIndex={-1}
-          key={isCommunicationsRoute ? undefined : pathname}
-          className={cn(
-            "flex-1 animate-fade-in",
-            isCommunicationsRoute
-              ? "min-h-0 overflow-hidden p-0"
-              : "px-3 py-5 sm:px-4 sm:py-6 md:px-6 md:py-7 lg:px-8 lg:py-8",
-          )}
-        >
-          <Outlet />
-        </main>
-        {!isCommunicationsRoute && <AppFooter />}
+        <div className={cn(
+          "min-h-0 flex-1 overflow-y-auto",
+          isCommunicationsRoute && "overflow-hidden",
+        )}>
+          <main
+            id="main-content"
+            tabIndex={-1}
+            key={isCommunicationsRoute ? undefined : pathname}
+            className={cn(
+              "min-h-full",
+              isCommunicationsRoute
+                ? "overflow-hidden p-0"
+                : "px-3 py-5 sm:px-4 sm:py-6 md:px-6 md:py-7 lg:px-8 lg:py-8",
+            )}
+          >
+            <Suspense fallback={<RouteLoader />}>
+              <Outlet />
+            </Suspense>
+          </main>
+          {!isCommunicationsRoute && <AppFooter />}
+        </div>
       </div>
-      {!pathname.startsWith("/launchpad") && !isCommunicationsRoute && <ThemeCustomizerFab />}
     </div>
   );
 }

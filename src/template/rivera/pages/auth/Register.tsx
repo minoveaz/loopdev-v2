@@ -23,10 +23,10 @@ const registerSchema = z.object({
     }),
 });
 
-const ACCOUNTS_KEY = "rivera:mock-accounts";
+const ACCOUNTS_KEY = "loopdev:auth-accounts";
 
 export default function Register() {
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -35,7 +35,7 @@ export default function Register() {
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const result = registerSchema.safeParse({ name, email, password });
     if (!result.success) {
@@ -49,30 +49,27 @@ export default function Register() {
     }
     setErrors({});
     setSubmitting(true);
-    setTimeout(() => {
-      try {
-        const existing = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) ?? "[]") as Array<{ name: string; email: string; createdAt: string }>;
-        const filtered = existing.filter((a) => a.email !== result.data.email);
-        filtered.push({ name: result.data.name, email: result.data.email, createdAt: new Date().toISOString() });
-        localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(filtered));
-      } catch { /* mock flow */ }
-      signIn(result.data.email, result.data.name);
-      toast.success("Account created", { description: "Welcome aboard — your workspace is ready." });
-      navigate("/", { replace: true });
-    }, 700);
+    
+    const res = await signUp(result.data.email, result.data.password, result.data.name);
+    setSubmitting(false);
+    if (res.success) {
+      navigate("/launchpad", { replace: true });
+    } else {
+      setErrors({ email: res.error || "Failed to create account. Please try again." });
+    }
   };
 
   const errorClass = "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30";
 
   return (
     <AuthLayout
-      eyebrow="Create account"
-      title="Join Rivera"
-      description="Set up your workspace in under a minute. No credit card required."
+      eyebrow="Get started"
+      title="Create your account"
+      description="Join LoopDev to build, operate, and collaborate with your team."
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/pages/login" className="font-semibold text-primary transition-fast hover:underline">
+          <Link to="/pages/login" className="font-semibold text-primary hover:underline">
             Sign in
           </Link>
         </>
@@ -140,7 +137,7 @@ export default function Register() {
           {submitting ? "Creating account…" : "Create account"}
         </Button>
         <p className="text-center text-[11px] text-muted-foreground">
-          By continuing you agree to Rivera's mock terms.
+          By continuing you agree to LoopDev's mock terms.
         </p>
       </form>
       <div className="mt-6">

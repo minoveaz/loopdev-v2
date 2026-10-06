@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { useRef, useState } from "react";
 import { describe, expect, it } from "vitest";
 import { AppDrawer } from "@/components/platform";
+import { I18nProvider } from "@/i18n";
 
 function TestDrawer({ dirty = false }: { dirty?: boolean }) {
   const [open, setOpen] = useState(true);
@@ -39,7 +40,7 @@ describe("AppDrawer", () => {
       );
     }
 
-    render(<Controlled />);
+    render(<I18nProvider><Controlled /></I18nProvider>);
     expect(screen.queryByRole("heading", { name: "Details" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Open" }));
     expect(screen.getByRole("heading", { name: "Details" })).toBeInTheDocument();
@@ -48,7 +49,7 @@ describe("AppDrawer", () => {
   });
 
   it("confirms a dirty close request", () => {
-    render(<TestDrawer dirty />);
+    render(<I18nProvider><TestDrawer dirty /></I18nProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     const dialog = screen.getByRole("alertdialog");
     expect(within(dialog).getByRole("heading", { name: "Discard changes?" })).toBeInTheDocument();

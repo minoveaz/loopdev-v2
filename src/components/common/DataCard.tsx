@@ -71,7 +71,7 @@ export function DataCard({
               <h3 className="font-display text-lg font-semibold tracking-tight text-foreground">{title}</h3>
             )}
             {description && (
-              <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+              <div className="mt-0.5 text-sm text-muted-foreground">{description}</div>
             )}
           </div>
           {headerContent && <div className="w-full min-w-0">{headerContent}</div>}

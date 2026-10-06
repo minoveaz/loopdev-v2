@@ -8,9 +8,11 @@ import { ThemeConfigProvider } from "@/providers/ThemeConfigProvider";
 import { ThemeConfigBridge } from "@/providers/ThemeConfigBridge";
 import { ThemeCustomizerProvider } from "@/components/theme/ThemeCustomizer";
 import { AuthProvider } from "@/hooks/use-auth";
+import { TenantContextProvider } from "@/hooks/use-tenant-context";
 import { AppRoutes } from "@/routes/AppRoutes";
 import { I18nProvider } from "@/i18n";
 import { wireActivityLogging } from "@/lib/activity-wiring";
+import { DocumentTitle } from "@/components/layout/DocumentTitle";
 
 wireActivityLogging();
 
@@ -23,15 +25,18 @@ const App = () => (
         <ThemeConfigBridge />
         <I18nProvider>
         <AuthProvider>
-          <TooltipProvider delayDuration={150}>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <ThemeCustomizerProvider>
-                <AppRoutes />
-              </ThemeCustomizerProvider>
-            </BrowserRouter>
-          </TooltipProvider>
+          <TenantContextProvider>
+            <TooltipProvider delayDuration={150}>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <DocumentTitle />
+                <ThemeCustomizerProvider>
+                  <AppRoutes />
+                </ThemeCustomizerProvider>
+              </BrowserRouter>
+            </TooltipProvider>
+          </TenantContextProvider>
         </AuthProvider>
         </I18nProvider>
       </ThemeConfigProvider>

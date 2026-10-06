@@ -1,0 +1,113 @@
+{
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:10-review",
+  "phase": "10-review",
+  "skill": "module-review",
+  "parent_span_id": "MOD-CRM-20260927-001:08-verify",
+  "module": "CRM Overview",
+  "status": "blocked",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "started_at": "2026-09-27T17:54:14+02:00",
+  "completed_at": "2026-09-27T18:02:00+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified",
+    "runtime_url": "http://127.0.0.1:8080",
+    "runtime_port": 8080,
+    "runtime_process": "node .../vite --host 127.0.0.1 --port 8080",
+    "runtime_pid": 13144
+  },
+  "input_artifacts": [
+    "README.md",
+    "architecture-design.md",
+    "implementation-plan.md",
+    "requirement-evidence-matrix.md",
+    "phase-evidence.md",
+    "runs/MOD-CRM-20260927-001/08-verify.json",
+    "runs/MOD-CRM-20260927-001/09-ovr-09.json"
+  ],
+  "decisions": [
+    {
+      "id": "OVR-10-DECISION",
+      "status": "confirmed",
+      "summary": "Classify release readiness as BLOCKED because runtime identity and required browser evidence are unresolved."
+    }
+  ],
+  "actions": [
+    "Verified the requested branch, HEAD, dirty worktree and actual Vite process.",
+    "Probed Overview, Tasks and a task-shaped deep link over the actual runtime.",
+    "Ran typecheck, lint, i18n check, focused tests, authenticated CRM smoke, build and diff check.",
+    "Recorded missing browser-authenticated evidence without fabricating results."
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/overview/README.md",
+    "docs/implementation/crm/overview/requirement-evidence-matrix.md",
+    "docs/implementation/crm/overview/phase-evidence.md",
+    "docs/implementation/crm/overview/runs/MOD-CRM-20260927-001/run.json",
+    "docs/implementation/crm/overview/runs/MOD-CRM-20260927-001/10-review.json"
+  ],
+  "validation": [
+    {
+      "command": "curl routes on http://127.0.0.1:8080",
+      "result": "passed",
+      "evidence": "HTTP 200 for overview, tasks and task-shaped deep link"
+    },
+    {
+      "command": "npm run typecheck && npm run i18n:check",
+      "result": "passed",
+      "evidence": "exit 0"
+    },
+    {
+      "command": "npx vitest run src/test/crm/overview src/test/platform/analytics.test.ts src/test/platform/platform-work.test.ts",
+      "result": "passed",
+      "evidence": "18 tests passed"
+    },
+    {
+      "command": "npm run smoke:crm-authenticated",
+      "result": "passed",
+      "evidence": "authenticated CRM organization/task/opportunity/timeline smoke and cleanup"
+    },
+    {
+      "command": "npm run lint && npm run build && git diff --check",
+      "result": "passed",
+      "evidence": "exit 0; production bundle built; no whitespace errors"
+    },
+    {
+      "command": "browser-level authenticated evidence",
+      "result": "not_available",
+      "evidence": "no browser automation/authenticated UI capture available in this environment"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "OVR-10",
+      "status": "PARTIAL",
+      "evidence": "Review verdict is BLOCKED: runtime declared 8081 but verified on 8080; browser state, responsive, i18n/RTL, authorization and cache-revocation evidence absent."
+    }
+  ],
+  "detected_failure": {
+    "code": "REVIEW-001",
+    "detected_by": "module-review",
+    "summary": "Release evidence cannot be attributed to the declared runtime and browser-authenticated evidence is absent."
+  },
+  "likely_failure_origin": {
+    "phase": "08-verify",
+    "skill": "module-verify",
+    "code": "VERIFY-002",
+    "confidence": 9
+  },
+  "next_handoff": "Correct runtime identity, capture browser-authenticated required flows, rerun OVR-10 and obtain final human release approval.",
+  "evidence_links": [],
+  "notes": [
+    "Dirty changes were preserved. No reset, revert, commit, push, PR or automation/enterprise phase was started.",
+    "Release classification is BLOCKED, not READY or READY_WITH_GAPS."
+  ],
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

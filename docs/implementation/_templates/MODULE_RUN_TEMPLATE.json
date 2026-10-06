@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "workflow_version": 1,
+  "run_id": "MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>",
+  "suite": "<suite>",
+  "module": "<Module name>",
+  "status": "pending",
+  "current_phase": "00-discovery",
+  "attempt": 1,
+  "started_at": "<RFC3339 timestamp>",
+  "updated_at": "<RFC3339 timestamp>",
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "fingerprints": {
+    "product": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+    "design": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+    "plan": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+    "contracts": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+    "code": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+    "tests": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6"
+  },
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "<absolute path when needed>",
+    "checkout_type": "branch",
+    "branch": "<branch>",
+    "base_branch": "develop",
+    "head_commit": "<commit>",
+    "working_tree": "clean",
+    "runtime_url": "<URL>",
+    "runtime_port": null
+  },
+  "approvals": {
+    "design": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "visual_design": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "plan": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "verification": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "release": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "push": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "pull_request": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    }
+  },
+  "platform_scope": [
+    "desktop_web",
+    "mobile_web",
+    "ios",
+    "android"
+  ],
+  "architecture_quality": "PENDING",
+  "approval_gates": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
+  "platform_impact": [
+    {
+      "capability": "<Notes|Files|Activity|Tasks|Relations|Document Intelligence>",
+      "decision": "REUSE",
+      "consumers": [],
+      "affected_tests": [],
+      "migration_required": false
+    }
+  ],
+  "checkpoint_paths": [],
+  "evidence_links": [],
+  "change_requests": [],
+  "blocked_by": [],
+  "resolved_blockers": [],
+  "handoffs": [],
+  "next_action": "Start phase 00-discovery.",
+  "commit": null,
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

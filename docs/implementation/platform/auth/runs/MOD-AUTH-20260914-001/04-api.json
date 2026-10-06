@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-AUTH-20260914-001",
+  "span_id": "MOD-AUTH-20260914-001:04-api",
+  "phase": "04-api",
+  "skill": "api-contracts",
+  "parent_span_id": null,
+  "module": "auth",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS",
+  "attempt": 1,
+  "started_at": "2026-09-14T15:24:31.929Z",
+  "completed_at": "2026-09-14T15:24:49.091Z",
+  "input_fingerprint": "sha256:c59c93405dc4df0d7603aa54dcc7f80bd2328d324f06c5bdaa10af39656aa7f7",
+  "environment": {
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": null,
+    "head_commit": "0423c81211993027f7ceb7894f8a7701edf5cfd1",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/platform/auth/architecture-design.md",
+    "docs/implementation/platform/auth/domain-model.md",
+    "docs/implementation/platform/auth/access-design.md",
+    "docs/implementation/platform/auth/HANDOFF.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/platform/auth/api-contracts.md"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-AUTH-API-001",
+      "statement": "Neutral AuthPort and TenantContextPort contracts defined in packages/contracts/src/auth-port.ts, decoupled from browser or DOM dependencies."
+    },
+    {
+      "id": "DEC-AUTH-API-002",
+      "statement": "PlatformAuthStorage abstraction enables neutral secure token storage across desktop web, mobile web, iOS, and Android."
+    },
+    {
+      "id": "DEC-AUTH-API-003",
+      "statement": "PasswordResetResult explicitly exposes deliveryChannel to accommodate dev environments lacking SMTP."
+    }
+  ],
+  "actions": [
+    "Created api-contracts.md detailing AuthPort, TenantContextPort, DTOs, Error Catalog, and PlatformAuthStorage boundary."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "pass"
+    },
+    {
+      "command": "test -f docs/implementation/platform/auth/api-contracts.md",
+      "result": "pass"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-AUTH-PORT",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-TENANT-CONTEXT",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-SUPABASE-ADAPTER",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-MOBILE-STORAGE",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-ISOLATION-CLEANUP",
+      "status": "pass"
+    }
+  ],
+  "evidence": [
+    {
+      "description": "API and Port contracts specification for Auth and Tenant Context",
+      "path": "docs/implementation/platform/auth/api-contracts.md"
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": null,
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

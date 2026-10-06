@@ -1,0 +1,894 @@
+{
+  "$schema": "../../_schemas/delivery-ledger.schema.json",
+  "schema_version": 1,
+  "suite": "crm",
+  "module": "pipeline",
+  "status": "blocked",
+  "approved_by": "user",
+  "approved_at": "2026-09-18T11:04:35.973Z",
+  "approval_source": "user approved implementation run",
+  "product_sources": [
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_UX_SPEC.md"
+  ],
+  "previous_ledger": null,
+  "requirements": [
+    {
+      "id": "PIPELINE-REQ-BOARD",
+      "title": "Visual Stage Kanban Board & Forecast Bar",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+      "platforms": [
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "acceptance_criteria": [
+        "Users can view opportunities grouped by stage with weighted total calculations on desktop and mobile"
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "PIPELINE-CAP-BOARD"
+      ]
+    },
+    {
+      "id": "PIPELINE-REQ-MUTATION",
+      "title": "Opportunity stage transition with optimistic locking",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+      "platforms": [
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "acceptance_criteria": [
+        "Users can advance or drag opportunities across stages with conflict prevention"
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "PIPELINE-CAP-MUTATION"
+      ]
+    },
+    {
+      "id": "PIPELINE-REQ-REOPEN",
+      "title": "Terminal Won/Lost protection and justified reopen workflow",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+      "platforms": [
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "acceptance_criteria": [
+        "Reopening a won or lost opportunity requires elevated permission and a mandatory non-empty reason"
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "PIPELINE-CAP-REOPEN"
+      ]
+    },
+    {
+      "id": "PIPELINE-REQ-SPEED-DIAL",
+      "title": "Mobile 1-Tap Commercial Speed Dial Actions",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/pipeline/CRM_PIPELINE_CONTRACT.md",
+      "platforms": [
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "acceptance_criteria": [
+        "Mobile sales reps can trigger phone call, email, and WhatsApp directly from deal cards"
+      ],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": [
+        "PIPELINE-CAP-SPEED-DIAL"
+      ]
+    },
+    {
+      "id": "PIPELINE-REQ-DETAIL",
+      "title": "Opportunity detail workstation and platform notes",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/pipeline/CRM_PIPELINE_UX_SPEC.md",
+      "platforms": [
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "acceptance_criteria": [
+        "Users can view full deal context, stage progress stepper, customer 360 link and add notes"
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "PIPELINE-CAP-DETAIL"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "PIPELINE-CAP-BOARD",
+      "name": "Pipeline Stage Kanban & Totals",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "PIPELINE-REQ-BOARD"
+      ],
+      "semantics": {
+        "operations": [
+          "listPipelineBoard",
+          "listOpportunities"
+        ],
+        "validation_contract": null,
+        "errors": [
+          "UNAUTHENTICATED",
+          "FORBIDDEN"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "kanban board",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "mobile pipeline screen",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "ios": {
+          "required": true,
+          "surface": "mobile pipeline screen",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "android": {
+          "required": true,
+          "surface": "mobile pipeline screen",
+          "route": "/app/sales-crm/pipeline"
+        }
+      },
+      "parity": {
+        "domain": "verified",
+        "renderer": "verified",
+        "operations": "verified"
+      },
+      "operation_coverage": [
+        {
+          "id": "listPipelineBoard",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        },
+        {
+          "id": "listOpportunities",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "success"
+      ],
+      "permissions": [
+        "crm.opportunities.read"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/pipeline-capability.ts"
+      ],
+      "task_ids": [
+        "PIPELINE-TASK-BOARD-DESKTOP",
+        "PIPELINE-TASK-BOARD-MOBILE"
+      ]
+    },
+    {
+      "id": "PIPELINE-CAP-MUTATION",
+      "name": "Opportunity Stage Movement & Creation",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "PIPELINE-REQ-MUTATION"
+      ],
+      "semantics": {
+        "operations": [
+          "moveOpportunityStage",
+          "createManualOpportunity",
+          "updateOpportunity"
+        ],
+        "validation_contract": null,
+        "errors": [
+          "UNAUTHENTICATED",
+          "FORBIDDEN",
+          "CONFLICT",
+          "INVALID_STAGE"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "kanban drag & edit modal",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "stage picker & create sheet",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "ios": {
+          "required": true,
+          "surface": "stage picker & create sheet",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "android": {
+          "required": true,
+          "surface": "stage picker & create sheet",
+          "route": "/app/sales-crm/pipeline"
+        }
+      },
+      "parity": {
+        "domain": "verified",
+        "renderer": "verified",
+        "operations": "verified"
+      },
+      "operation_coverage": [
+        {
+          "id": "moveOpportunityStage",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        },
+        {
+          "id": "createManualOpportunity",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        },
+        {
+          "id": "updateOpportunity",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "pending",
+        "error",
+        "forbidden",
+        "conflict",
+        "success"
+      ],
+      "permissions": [
+        "crm.opportunities.write"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/pipeline-capability.ts"
+      ],
+      "task_ids": [
+        "PIPELINE-TASK-MUTATION-DESKTOP",
+        "PIPELINE-TASK-MUTATION-MOBILE"
+      ]
+    },
+    {
+      "id": "PIPELINE-CAP-REOPEN",
+      "name": "Terminal Won/Lost Protection & Reopen Workflow",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "PIPELINE-REQ-REOPEN"
+      ],
+      "semantics": {
+        "operations": [
+          "reopenOpportunity"
+        ],
+        "validation_contract": null,
+        "errors": [
+          "UNAUTHENTICATED",
+          "FORBIDDEN",
+          "REOPEN_FORBIDDEN",
+          "REOPEN_REASON_REQUIRED"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "reopen dialog",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "reopen modal",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "ios": {
+          "required": true,
+          "surface": "reopen modal",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "android": {
+          "required": true,
+          "surface": "reopen modal",
+          "route": "/app/sales-crm/pipeline"
+        }
+      },
+      "parity": {
+        "domain": "verified",
+        "renderer": "verified",
+        "operations": "verified"
+      },
+      "operation_coverage": [
+        {
+          "id": "reopenOpportunity",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "pending",
+        "error",
+        "forbidden",
+        "success"
+      ],
+      "permissions": [
+        "crm.opportunities.reopen"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/pipeline-capability.ts"
+      ],
+      "task_ids": [
+        "PIPELINE-TASK-REOPEN-DESKTOP",
+        "PIPELINE-TASK-REOPEN-MOBILE"
+      ]
+    },
+    {
+      "id": "PIPELINE-CAP-SPEED-DIAL",
+      "name": "Mobile 1-Tap Speed Dial Actions",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "PIPELINE-REQ-SPEED-DIAL"
+      ],
+      "semantics": {
+        "operations": [
+          "callContact",
+          "emailContact",
+          "whatsappContact",
+          "viewOpportunity"
+        ],
+        "validation_contract": null,
+        "errors": [
+          "UNAUTHENTICATED",
+          "FORBIDDEN"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": false,
+          "surface": "card actions",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "deal card speed dial",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "ios": {
+          "required": true,
+          "surface": "deal card speed dial",
+          "route": "/app/sales-crm/pipeline"
+        },
+        "android": {
+          "required": true,
+          "surface": "deal card speed dial",
+          "route": "/app/sales-crm/pipeline"
+        }
+      },
+      "parity": {
+        "domain": "verified",
+        "renderer": "verified",
+        "operations": "verified"
+      },
+      "operation_coverage": [
+        {
+          "id": "callContact",
+          "desktop_web": "not_applicable",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        },
+        {
+          "id": "emailContact",
+          "desktop_web": "not_applicable",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        },
+        {
+          "id": "whatsappContact",
+          "desktop_web": "not_applicable",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        },
+        {
+          "id": "viewOpportunity",
+          "desktop_web": "not_applicable",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "error",
+        "forbidden",
+        "success"
+      ],
+      "permissions": [
+        "crm.opportunities.read"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/pipeline-capability.ts"
+      ],
+      "task_ids": [
+        "PIPELINE-TASK-SPEED-DIAL-MOBILE"
+      ]
+    },
+    {
+      "id": "PIPELINE-CAP-DETAIL",
+      "name": "Opportunity Detail & Platform Notes",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "PIPELINE-REQ-DETAIL"
+      ],
+      "semantics": {
+        "operations": [
+          "getOpportunity",
+          "addOpportunityNote"
+        ],
+        "validation_contract": null,
+        "errors": [
+          "UNAUTHENTICATED",
+          "FORBIDDEN",
+          "NOT_FOUND"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "opportunity detail page",
+          "route": "/app/sales-crm/opportunities/:opportunityId"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "mobile opportunity detail",
+          "route": "/app/sales-crm/opportunities/:opportunityId"
+        },
+        "ios": {
+          "required": true,
+          "surface": "mobile opportunity detail",
+          "route": "/app/sales-crm/opportunities/:opportunityId"
+        },
+        "android": {
+          "required": true,
+          "surface": "mobile opportunity detail",
+          "route": "/app/sales-crm/opportunities/:opportunityId"
+        }
+      },
+      "parity": {
+        "domain": "verified",
+        "renderer": "verified",
+        "operations": "verified"
+      },
+      "operation_coverage": [
+        {
+          "id": "getOpportunity",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        },
+        {
+          "id": "addOpportunityNote",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "error",
+        "forbidden",
+        "success"
+      ],
+      "permissions": [
+        "crm.opportunities.read",
+        "crm.opportunities.write"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/pipeline-capability.ts"
+      ],
+      "task_ids": [
+        "PIPELINE-TASK-DETAIL-DESKTOP",
+        "PIPELINE-TASK-DETAIL-MOBILE"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "PIPELINE-TASK-BOARD-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Verify desktop Pipeline Kanban board",
+      "requirement_ids": [
+        "PIPELINE-REQ-BOARD"
+      ],
+      "capability_ids": [
+        "PIPELINE-CAP-BOARD"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [],
+      "owner": "CRM Web",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Desktop pipeline renders Kanban columns with weighted sums"
+      ],
+      "validation": [
+        {
+          "command": "npx tsc -p tsconfig.app.json --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/crm/Pipeline.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/crm/Pipeline.tsx"
+      ]
+    },
+    {
+      "id": "PIPELINE-TASK-BOARD-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Implement mobile Pipeline screen with stage filters",
+      "requirement_ids": [
+        "PIPELINE-REQ-BOARD"
+      ],
+      "capability_ids": [
+        "PIPELINE-CAP-BOARD"
+      ],
+      "platforms": [
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [],
+      "owner": "CRM Mobile",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Mobile pipeline screen renders KPI ribbon, stage tabs and deal cards"
+      ],
+      "validation": [
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/components/MobilePipelineScreen.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "apps/mobile/components/MobilePipelineScreen.tsx"
+      ]
+    },
+    {
+      "id": "PIPELINE-TASK-MUTATION-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Verify desktop stage drag and drop",
+      "requirement_ids": [
+        "PIPELINE-REQ-MUTATION"
+      ],
+      "capability_ids": [
+        "PIPELINE-CAP-MUTATION"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "PIPELINE-TASK-BOARD-DESKTOP"
+      ],
+      "owner": "CRM Web",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Drag and drop updates opportunity stage"
+      ],
+      "validation": [
+        {
+          "command": "npx tsc -p tsconfig.app.json --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/crm/Pipeline.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/crm/Pipeline.tsx"
+      ]
+    },
+    {
+      "id": "PIPELINE-TASK-MUTATION-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Implement mobile stage movement picker",
+      "requirement_ids": [
+        "PIPELINE-REQ-MUTATION"
+      ],
+      "capability_ids": [
+        "PIPELINE-CAP-MUTATION"
+      ],
+      "platforms": [
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "PIPELINE-TASK-BOARD-MOBILE"
+      ],
+      "owner": "CRM Mobile",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Mobile stage movement picker triggers stage mutation"
+      ],
+      "validation": [
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/components/MobilePipelineScreen.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "apps/mobile/components/MobilePipelineScreen.tsx"
+      ]
+    },
+    {
+      "id": "PIPELINE-TASK-REOPEN-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Verify desktop reopen dialog with mandatory reason",
+      "requirement_ids": [
+        "PIPELINE-REQ-REOPEN"
+      ],
+      "capability_ids": [
+        "PIPELINE-CAP-REOPEN"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "PIPELINE-TASK-BOARD-DESKTOP"
+      ],
+      "owner": "CRM Web",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Desktop modal requires non-empty reopen reason"
+      ],
+      "validation": [
+        {
+          "command": "npx tsc -p tsconfig.app.json --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/crm/Pipeline.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/crm/Pipeline.tsx"
+      ]
+    },
+    {
+      "id": "PIPELINE-TASK-REOPEN-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Implement mobile reopen modal",
+      "requirement_ids": [
+        "PIPELINE-REQ-REOPEN"
+      ],
+      "capability_ids": [
+        "PIPELINE-CAP-REOPEN"
+      ],
+      "platforms": [
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "PIPELINE-TASK-BOARD-MOBILE"
+      ],
+      "owner": "CRM Mobile",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Mobile modal requires non-empty reason to reopen terminal deal"
+      ],
+      "validation": [
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/components/MobilePipelineScreen.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "apps/mobile/components/MobilePipelineScreen.tsx"
+      ]
+    },
+    {
+      "id": "PIPELINE-TASK-SPEED-DIAL-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "blocked",
+      "title": "Implement mobile 1-tap speed dial for pipeline cards",
+      "requirement_ids": [
+        "PIPELINE-REQ-SPEED-DIAL"
+      ],
+      "capability_ids": [
+        "PIPELINE-CAP-SPEED-DIAL"
+      ],
+      "platforms": [
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "PIPELINE-TASK-BOARD-MOBILE"
+      ],
+      "owner": "CRM Mobile",
+      "risk": "medium",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "1-tap phone, email, WhatsApp buttons open platform handlers"
+      ],
+      "validation": [
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/components/MobilePipelineScreen.tsx"
+      ],
+      "blocked_by": ["Structured E4 runtime evidence is required for the mobile phone, email, and WhatsApp handlers."],
+      "evidence_refs": [
+        "apps/mobile/components/MobilePipelineScreen.tsx"
+      ]
+    },
+    {
+      "id": "PIPELINE-TASK-DETAIL-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Verify desktop opportunity detail page",
+      "requirement_ids": [
+        "PIPELINE-REQ-DETAIL"
+      ],
+      "capability_ids": [
+        "PIPELINE-CAP-DETAIL"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "PIPELINE-TASK-BOARD-DESKTOP"
+      ],
+      "owner": "CRM Web",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Detail page displays deal fields, stage stepper and notes"
+      ],
+      "validation": [
+        {
+          "command": "npx tsc -p tsconfig.app.json --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/crm/OpportunityDetail.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/crm/OpportunityDetail.tsx"
+      ]
+    },
+    {
+      "id": "PIPELINE-TASK-DETAIL-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Implement mobile opportunity detail screen",
+      "requirement_ids": [
+        "PIPELINE-REQ-DETAIL"
+      ],
+      "capability_ids": [
+        "PIPELINE-CAP-DETAIL"
+      ],
+      "platforms": [
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "PIPELINE-TASK-BOARD-MOBILE"
+      ],
+      "owner": "CRM Mobile",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Mobile opportunity detail screen renders stage stepper, tabs and note composer"
+      ],
+      "validation": [
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/components/MobileOpportunityDetailScreen.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "apps/mobile/components/MobileOpportunityDetailScreen.tsx"
+      ]
+    }
+  ],
+  "change_requests": [],
+  "blockers": [
+    "PIPELINE-TASK-SPEED-DIAL-MOBILE: Structured E4 runtime evidence is required for mobile phone, email, and WhatsApp handlers."
+  ]
+}

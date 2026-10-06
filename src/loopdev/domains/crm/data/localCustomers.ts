@@ -1,4 +1,5 @@
 import { createLocalStore } from "@/lib/localStore";
+import { contactListFixtures } from "../../../../../packages/contracts/src/contact-fixtures";
 
 export interface LocalCustomer {
   id: string;
@@ -35,23 +36,18 @@ function ago(days: number): string {
   return new Date(Date.now() - days * 86400000).toISOString();
 }
 
-const NAMES = [
-  "Aria Blackwood", "Theo Marquez", "Indira Vasquez", "Kenji Watanabe", "Salma El-Amin",
-  "Joaquin Reyes", "Margot Lefevre", "Soren Hayes", "Lila Okonkwo", "Felix Brennan",
-  "Niamh O'Connor", "Hiroto Tanaka", "Beatriz Santos", "Ezra Klein", "Yuki Sato",
-  "Camille Dubois", "Mateo Rivas", "Ananya Iyer", "Oliver Pierce", "Zara Holloway",
-];
-const COUNTRIES = ["USA", "UK", "Spain", "Japan", "France", "Brazil", "Germany", "India"];
-const CITIES = ["NYC", "London", "Madrid", "Tokyo", "Paris", "Sao Paulo", "Berlin", "Mumbai"];
 const TIERS: LocalCustomer["tier"][] = ["lead", "standard", "vip", "wholesale"];
 
-const seed: LocalCustomer[] = NAMES.map((name, i) => ({
-  id: `crm_cust_${i + 1}`,
-  name,
-  email: `${name.toLowerCase().replace(/[^a-z]+/g, ".")}@example.com`,
-  phone: `+1 555 0${100 + i}`,
-  country: COUNTRIES[i % COUNTRIES.length],
-  city: CITIES[i % CITIES.length],
+const seed: LocalCustomer[] = contactListFixtures.map((contact, i) => ({
+  id: contact.id,
+  name: contact.name,
+  email: contact.email,
+  phone: contact.phone,
+  companyName: contact.companyName,
+  jobTitle: contact.jobTitle,
+  preferredChannel: contact.preferredChannel,
+  country: contact.country,
+  city: contact.city,
   documentType: i % 3 === 0 ? "PASSPORT" : i % 3 === 1 ? "DNI" : null,
   documentNumber: i % 3 === 0 ? `DOC-${1000 + i}` : i % 3 === 1 ? `DNI-${2000 + i}` : null,
   birthDate: i % 2 === 0 ? `198${i % 10}-0${(i % 8) + 1}-15` : null,
@@ -59,7 +55,7 @@ const seed: LocalCustomer[] = NAMES.map((name, i) => ({
   ordersCount: 1 + ((i * 5) % 24),
   tier: TIERS[i % TIERS.length],
   createdAt: ago(200 - i * 4),
-  updatedAt: ago(i),
+  updatedAt: new Date(`${contact.updatedAt}T12:00:00.000Z`).toISOString(),
 }));
 
 export const crmCustomersStore = createLocalStore<LocalCustomer>({

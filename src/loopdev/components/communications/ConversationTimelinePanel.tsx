@@ -34,14 +34,17 @@ function useDesktopLayout() {
 
   return desktop;
 }
+import { useT } from "@/i18n";
 
 function TimelineBody({ messages, onOpenChange, contextView, onContextViewChange }: Omit<ConversationTimelinePanelProps, "open">) {
+  const t = useT();
+  const locale = typeof document !== "undefined" && document.documentElement.lang === "es" ? "es" : "en";
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<TimelineCategory>("all");
-  const markers = buildConversationTimelineMarkers(messages);
+  const markers = buildConversationTimelineMarkers(messages, locale);
   const categoryMatches = (type: string) => (
     category === "all"
-    || (category === "files" && type === "document")
+    || (category === "files" && ["document", "catalog_item"].includes(type))
     || (category === "media" && ["audio", "image", "video"].includes(type))
     || (category === "links-places" && ["link", "location"].includes(type))
   );
@@ -51,7 +54,7 @@ function TimelineBody({ messages, onOpenChange, contextView, onContextViewChange
   ));
   const categoryCounts = {
     all: markers.length,
-    files: markers.filter((marker) => marker.type === "document").length,
+    files: markers.filter((marker) => ["document", "catalog_item"].includes(marker.type)).length,
     media: markers.filter((marker) => ["audio", "image", "video"].includes(marker.type)).length,
     "links-places": markers.filter((marker) => ["link", "location"].includes(marker.type)).length,
   };
@@ -68,17 +71,17 @@ function TimelineBody({ messages, onOpenChange, contextView, onContextViewChange
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card">
       <ConversationContextPanelHeader
         icon={<span aria-hidden="true">TL</span>}
-        title="Conversation Timeline"
-        subtitle="Important moments received from the customer"
+        title={t("crm.customer360.communications.timeline.title")}
+        subtitle={t("crm.customer360.communications.timeline.subtitle")}
       />
       <ConversationContextTabs active={contextView} onChange={onContextViewChange} />
       <div className="border-b border-border px-4 py-4">
-        <div className="mt-4 flex gap-1 overflow-x-auto pb-1" role="tablist" aria-label="Timeline categories">
+        <div className="mt-4 flex gap-1 overflow-x-auto pb-1" role="tablist" aria-label={t("crm.customer360.communications.timeline.categories")}>
           {([
-            ["all", "All"],
-            ["files", "Files"],
-            ["media", "Media"],
-            ["links-places", "Links & Places"],
+            ["all", t("crm.customer360.communications.timeline.all")],
+            ["files", t("crm.customer360.communications.timeline.files")],
+            ["media", t("crm.customer360.communications.timeline.media")],
+            ["links-places", t("crm.customer360.communications.timeline.linksPlaces")],
           ] as Array<[TimelineCategory, string]>).map(([value, label]) => (
             <Button
               key={value}
@@ -96,13 +99,13 @@ function TimelineBody({ messages, onOpenChange, contextView, onContextViewChange
         </div>
         <div className="relative mt-3">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input aria-label="Search conversation milestones" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search milestones" className="ps-9" />
+          <Input aria-label={t("crm.customer360.communications.timeline.search")} value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("crm.customer360.communications.timeline.search")} className="ps-9" />
         </div>
       </div>
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-3">
         {filteredMarkers.length === 0 ? (
           <p className="px-3 py-5 text-center text-sm text-muted-foreground">
-            {category === "files" ? "No files received in this conversation." : category === "media" ? "No media received in this conversation." : category === "links-places" ? "No links or places received in this conversation." : "No milestones match your search."}
+            {category === "files" ? t("crm.customer360.communications.timeline.noFiles") : category === "media" ? t("crm.customer360.communications.timeline.noMedia") : category === "links-places" ? t("crm.customer360.communications.timeline.noLinksPlaces") : t("crm.customer360.communications.timeline.noResults")}
           </p>
         ) : (
           <div className="space-y-4">
@@ -118,12 +121,12 @@ function TimelineBody({ messages, onOpenChange, contextView, onContextViewChange
                         </span>
                         <span className="min-w-0 max-w-full overflow-hidden">
                           <span className="block truncate text-xs font-semibold">{marker.label}</span>
-                          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{marker.detail || "No additional detail"}</span>
+                          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{marker.detail || t("crm.customer360.communications.timeline.noDetail")}</span>
                           <span className="mt-0.5 block text-[10px] text-muted-foreground">{formatDate(marker.occurredAt, "datetime")}</span>
                         </span>
                       </Button>
                       <button type="button" className="ms-12 mb-2 text-[10px] font-medium text-primary hover:underline" onClick={() => scrollToMarker(marker.messageId)}>
-                        Jump to message
+                         {t("crm.customer360.communications.timeline.jumpToMessage")}
                       </button>
                     </div>
                   ))}
@@ -138,6 +141,7 @@ function TimelineBody({ messages, onOpenChange, contextView, onContextViewChange
 }
 
 export function ConversationTimelinePanel({ messages, open, onOpenChange, contextView, onContextViewChange }: ConversationTimelinePanelProps) {
+  const t = useT();
   const desktop = useDesktopLayout();
   if (desktop) {
     return (
@@ -150,7 +154,7 @@ export function ConversationTimelinePanel({ messages, open, onOpenChange, contex
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent forceMount side="right" className="flex min-h-0 w-full max-w-none flex-col overflow-hidden p-0 sm:w-[min(92vw,480px)]">
-        <SheetHeader className="sr-only"><SheetTitle>Conversation timeline</SheetTitle><SheetDescription>Important moments from the selected conversation.</SheetDescription></SheetHeader>
+        <SheetHeader className="sr-only"><SheetTitle>{t("crm.customer360.communications.timeline.title")}</SheetTitle><SheetDescription>{t("crm.customer360.communications.timeline.subtitle")}</SheetDescription></SheetHeader>
         <TimelineBody messages={messages} onOpenChange={onOpenChange} contextView={contextView} onContextViewChange={onContextViewChange} />
       </SheetContent>
     </Sheet>

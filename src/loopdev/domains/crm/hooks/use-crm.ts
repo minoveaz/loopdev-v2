@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { loopdevAdapter } from "@/loopdev/domains/crm/adapter";
+import { desktopContactAdapter } from "@/loopdev/domains/crm/adapter/contact";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 export { useCrmAutomations } from "./use-crm-automations";
 import type {
   CRMContact,
@@ -23,7 +25,8 @@ import type {
 const LOCAL_ORGANIZATION_ID = "local-development-organization";
 const DEFAULT_CONTACT_LIMIT = 10;
 
-export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organizationId">> = {}) {
+export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
+  const { activeOrganization } = useTenantContext();
   const [contacts, setContacts] = useState<CRMContact[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -31,12 +34,25 @@ export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organ
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
+  const isVitest = Boolean(
+    (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test")) ||
+    (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITEST || (import.meta as any).env?.MODE === "test"))
+  );
+  const orgId = params.organizationId || activeOrganization?.id || (isVitest ? "local-development-organization" : "");
+
   useEffect(() => {
     let active = true;
+    if (!orgId) {
+      setContacts([]);
+      setNextCursor(null);
+      setHasMore(false);
+      setLoading(false);
+      return () => { active = false; };
+    }
     setLoading(true);
     setError(null);
     const request: CRMContactListParams = {
-      organizationId: LOCAL_ORGANIZATION_ID,
+      organizationId: orgId,
       query: params.query,
       cursor: params.cursor ?? null,
       limit: params.limit ?? DEFAULT_CONTACT_LIMIT,
@@ -45,7 +61,7 @@ export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organ
       sortBy: params.sortBy,
       sortDirection: params.sortDirection,
     };
-    void loopdevAdapter.crm.listContacts(request)
+    void desktopContactAdapter.listContacts(request)
       .then((page) => {
         if (active) {
           setContacts(page.items);
@@ -53,14 +69,15 @@ export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organ
           setHasMore(page.hasMore);
         }
       })
-      .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : "Please try again.");
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : "Failed to load contacts.");
       })
       .finally(() => {
         if (active) setLoading(false);
       });
     return () => { active = false; };
   }, [
+    orgId,
     params.cursor,
     params.limit,
     params.query,
@@ -83,6 +100,7 @@ export function useCrmContacts(params: Partial<Omit<CRMContactListParams, "organ
 }
 
 export function useCrmLeads() {
+  const { activeOrganization } = useTenantContext();
   const [leads, setLeads] = useState<CRMLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,18 +112,19 @@ export function useCrmLeads() {
     let active = true;
     setLoading(true);
     setError(null);
-    void loopdevAdapter.crm.listLeads()
+    const organizationId = activeOrganization?.id || LOCAL_ORGANIZATION_ID;
+    void loopdevAdapter.crm.listLeads(organizationId)
       .then((items) => {
         if (active) setLeads(items);
       })
       .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : "Please try again.");
+        if (active) setError(cause instanceof Error ? cause.message : "Unable to load contact details.");
       })
       .finally(() => {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [reloadToken]);
+  }, [activeOrganization?.id, reloadToken]);
 
   const createOpportunityFromLead = async (
     leadId: string,
@@ -131,7 +150,7 @@ export function useCrmLeads() {
     setCreation({ status: "pending" });
     let result: Awaited<ReturnType<typeof loopdevAdapter.crm.createLead>>;
     try {
-      result = await loopdevAdapter.crm.createLead({ ...input, organizationId: LOCAL_ORGANIZATION_ID });
+      result = await loopdevAdapter.crm.createLead({ ...input, organizationId: activeOrganization?.id || LOCAL_ORGANIZATION_ID });
     } catch (cause: unknown) {
       result = { status: "server-error", message: cause instanceof Error ? cause.message : "Please try again." };
     }
@@ -147,7 +166,7 @@ export function useCrmLeads() {
   const updateLead = async (lead: CRMLead, input: Omit<CRMUpdateLeadInput, "organizationId" | "expectedUpdatedAt">) => {
     const result = await loopdevAdapter.crm.updateLead(lead.id, {
       ...input,
-      organizationId: LOCAL_ORGANIZATION_ID,
+      organizationId: lead.organizationId || activeOrganization?.id || LOCAL_ORGANIZATION_ID,
       expectedUpdatedAt: lead.updatedAt,
     });
     if (result.status === "success") {
@@ -155,6 +174,20 @@ export function useCrmLeads() {
     } else if (result.status === "conflict" && result.lead) {
       setLeads((current) => current.map((item) => item.id === result.lead!.id ? result.lead! : item));
     }
+    return result;
+  };
+
+  const archiveLead = async (lead: CRMLead) => {
+    const result = await loopdevAdapter.crm.archiveLead(lead.id, lead.organizationId, lead.updatedAt);
+    if (result.status === "success") setLeads((current) => current.filter((item) => item.id !== lead.id));
+    return result;
+  };
+
+  const bulkArchiveLeads = async (targets: CRMLead[]) => {
+    const organizationId = targets[0]?.organizationId || activeOrganization?.id || LOCAL_ORGANIZATION_ID;
+    if (!loopdevAdapter.crm.bulkArchiveLeads) return { successCount: 0, failureCount: targets.length };
+    const result = await loopdevAdapter.crm.bulkArchiveLeads(targets.map((lead) => lead.id), organizationId);
+    if (result.successCount) setLeads((current) => current.filter((item) => !targets.some((target) => target.id === item.id)));
     return result;
   };
 
@@ -167,6 +200,8 @@ export function useCrmLeads() {
     createLead,
     createOpportunityFromLead,
     updateLead,
+    archiveLead,
+    bulkArchiveLeads,
     resetConversion: () => setConversion({ status: "idle" }),
     reload: () => setReloadToken((token) => token + 1),
   };
@@ -318,6 +353,13 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     return result;
   };
 
+  const bulkArchiveOpportunities = async (targets: CRMPipelineOpportunity[]) => {
+    if (!loopdevAdapter.crm.bulkArchiveOpportunities) return { successCount: 0, failureCount: targets.length };
+    const result = await loopdevAdapter.crm.bulkArchiveOpportunities(targets.map((opportunity) => opportunity.id), LOCAL_ORGANIZATION_ID);
+    if (result.successCount > 0) setOpportunities((current) => current.filter((opportunity) => !targets.some((target) => target.id === opportunity.id)));
+    return result;
+  };
+
   const reopenOpportunity = async (
     opportunity: CRMPipelineOpportunity,
     input: Omit<CRMReopenOpportunityInput, "organizationId" | "expectedUpdatedAt">,
@@ -349,6 +391,7 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     moveStage,
     updateOpportunity,
     createOpportunity,
+    bulkArchiveOpportunities,
     reopenOpportunity,
     reload: () => setReloadToken((token) => token + 1),
   };

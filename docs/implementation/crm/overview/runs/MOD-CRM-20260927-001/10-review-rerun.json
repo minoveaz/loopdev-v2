@@ -1,0 +1,144 @@
+{
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:10-review-rerun",
+  "phase": "10-review",
+  "skill": "module-review",
+  "parent_span_id": "MOD-CRM-20260927-001:10-review",
+  "module": "CRM Overview",
+  "status": "blocked",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "started_at": "2026-09-27T17:57:30+02:00",
+  "completed_at": "2026-09-27T17:58:22+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified",
+    "runtime_url": "http://127.0.0.1:8080",
+    "runtime_port": 8080,
+    "runtime_process": "node /Users/minoveaz/Documents/Proyectos/loopdev-v2/node_modules/.bin/vite --host 127.0.0.1 --port 8080",
+    "runtime_pid": 13144
+  },
+  "input_artifacts": [
+    "runs/MOD-CRM-20260927-001/run.json",
+    "runs/MOD-CRM-20260927-001/10-review.json",
+    "requirement-evidence-matrix.md",
+    "phase-evidence.md"
+  ],
+  "decisions": [
+    {
+      "id": "OVR-10-RERUN-001",
+      "status": "confirmed",
+      "summary": "Use the verified Vite process on 127.0.0.1:8080; the prior 8081 manifest mismatch is corrected."
+    },
+    {
+      "id": "OVR-10-RERUN-002",
+      "status": "confirmed",
+      "summary": "Do not infer browser behavior from source, tests or HTTP probes; classify release as BLOCKED while browser-level authenticated evidence is unavailable."
+    }
+  ],
+  "actions": [
+    "Inspected the actual process and listening socket; PID 13144 serves the requested checkout on 127.0.0.1:8080.",
+    "Probed /app/sales-crm/overview, /app/sales-crm/tasks and a task deep link; each returned HTTP 200.",
+    "Ran typecheck, lint, i18n check, focused tests, production build, git diff --check and authenticated CRM smoke from the requested checkout.",
+    "Checked for browser/canvas capability; no browser automation or authenticated browser capture was available, so no visual or responsive claims were made."
+  ],
+  "validation": [
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "exit 0"
+    },
+    {
+      "command": "npm run lint",
+      "result": "passed",
+      "evidence": "exit 0"
+    },
+    {
+      "command": "node scripts/check-loopdev-i18n.mjs",
+      "result": "passed",
+      "evidence": "0 real visible-text candidates"
+    },
+    {
+      "command": "npx vitest run src/test/crm/overview/dashboard.test.ts src/test/platform/platform-work.test.ts src/test/platform/analytics.test.ts",
+      "result": "passed",
+      "evidence": "3 files, 18 tests passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "evidence": "3865 modules transformed; production bundle emitted"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "no whitespace errors"
+    },
+    {
+      "command": "node scripts/smoke-crm-authenticated.mjs",
+      "result": "passed",
+      "evidence": "authenticated organization/task/opportunity/timeline smoke and cleanup"
+    },
+    {
+      "command": "curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/app/sales-crm/overview",
+      "result": "passed",
+      "evidence": "HTTP 200"
+    },
+    {
+      "command": "curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/app/sales-crm/tasks",
+      "result": "passed",
+      "evidence": "HTTP 200"
+    },
+    {
+      "command": "curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/app/sales-crm/tasks/task_ovr_001",
+      "result": "passed",
+      "evidence": "HTTP 200"
+    },
+    {
+      "command": "browser-level authenticated evidence",
+      "result": "not_available",
+      "evidence": "No browser automation or available canvas/runtime capability in this environment"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "OVR-10",
+      "status": "PARTIAL",
+      "evidence": "Runtime identity corrected and technical probes pass; authenticated browser, responsive/mobile, i18n/RTL rendering, tenant/team/brand isolation and cache revocation remain unobserved."
+    },
+    {
+      "id": "OVR-06",
+      "status": "PARTIAL",
+      "evidence": "Authenticated API smoke and code/tests pass; browser-level tenant/team/brand and direct URL authorization evidence unavailable."
+    },
+    {
+      "id": "OVR-09",
+      "status": "PARTIAL",
+      "evidence": "Cache policy is covered by code/tests and smoke; browser stale/offline/revocation behavior was not observed."
+    }
+  ],
+  "detected_failure": {
+    "code": "REVIEW-002",
+    "detected_by": "module-review",
+    "summary": "Required browser-authenticated release evidence remains unavailable after the runtime identity correction."
+  },
+  "likely_failure_origin": {
+    "phase": "environment",
+    "skill": "delivery",
+    "code": "ENV-001",
+    "confidence": 10
+  },
+  "next_handoff": "Provide an authenticated browser/canvas runtime, capture required state and scope evidence, then obtain final human release approval.",
+  "evidence_links": [],
+  "notes": [
+    "The previous 8081 mismatch is resolved in the run manifest and this checkpoint; verified runtime is 8080.",
+    "Responsive/mobile, i18n/RTL, loading/success/empty/error/forbidden/stale/offline UI, direct-link authorization, tenant/team/brand isolation and cache revocation are NOT_TESTED at browser level.",
+    "Dirty changes were preserved. No reset, revert, commit, push or PR was performed."
+  ],
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

@@ -1,8 +1,10 @@
 import { SuiteCatalog } from "@/loopdev/components";
 import { useAuth } from "@/hooks/use-auth";
+import { useT } from "@/i18n";
 
 export default function Launchpad() {
   const { session } = useAuth();
+  const t = useT();
   const displayName = session?.name ?? "Admin";
 
   return (
@@ -19,11 +21,11 @@ export default function Launchpad() {
         <header className="mx-auto mb-14 max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-            Loopdev / Workspace Launcher
+            {t("launchpad.eyebrow")}
           </div>
           <h1 className="font-display text-4xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl">
-            Welcome, <span className="font-black text-primary">{displayName}</span>
-            <span className="block">choose your next work context.</span>
+            {t("launchpad.welcome", { name: "" }).replace(/,\s*$/, "")}{" "}<span className="font-black text-primary">{displayName}</span>
+            <span className="block">{t("launchpad.chooseContext")}</span>
           </h1>
         </header>
         <section aria-labelledby="available-suites-heading">
@@ -32,7 +34,7 @@ export default function Launchpad() {
               id="available-suites-heading"
               className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground"
             >
-              Available suites
+              {t("launchpad.availableSuites")}
             </h2>
           </div>
           <SuiteCatalog />

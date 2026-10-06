@@ -1,0 +1,124 @@
+{
+  "status": "completed",
+  "decision_status": "approved",
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/implementation/platform/auth/architecture-design.md",
+    "docs/implementation/platform/auth/HANDOFF.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/platform/auth/visual-design.md",
+    "docs/implementation/platform/auth/wireframes/desktop-login.svg",
+    "docs/implementation/platform/auth/wireframes/desktop-forgot-password.svg",
+    "docs/implementation/platform/auth/wireframes/desktop-account-org-selector.svg",
+    "docs/implementation/platform/auth/wireframes/desktop-logout-confirmation.svg",
+    "docs/implementation/platform/auth/wireframes/mobile-login.svg",
+    "docs/implementation/platform/auth/wireframes/mobile-forgot-password.svg",
+    "docs/implementation/platform/auth/wireframes/mobile-account-sheet.svg"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-AUTH-VIS-001",
+      "statement": "Reuse and adapt Rivera template editorial styling for desktop login, password recovery and account menus."
+    },
+    {
+      "id": "DEC-AUTH-VIS-002",
+      "statement": "Embed organization switcher directly inside Topbar Account Dropdown on Desktop and MobileAccountSheet on Mobile."
+    },
+    {
+      "id": "DEC-AUTH-VIS-003",
+      "statement": "Visual styling for mobile surfaces strictly harmonized with Rivera dark luxury editorial theme."
+    }
+  ],
+  "actions": [
+    "Generated 7 SVG wireframe design assets covering login, recovery, org selector and logout on desktop and mobile.",
+    "Validated all SVG wireframes with xmllint ensuring 100% compliant XML syntax.",
+    "Created visual-design.md documentation mapping all components to Rivera design system."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "pass"
+    },
+    {
+      "command": "xmllint --noout docs/implementation/platform/auth/wireframes/*.svg",
+      "result": "pass"
+    },
+    {
+      "command": "test -f docs/implementation/platform/auth/visual-design.md",
+      "result": "pass"
+    },
+    {
+      "command": "test -f docs/implementation/platform/auth/wireframes/desktop-login.svg",
+      "result": "pass"
+    },
+    {
+      "command": "test -f docs/implementation/platform/auth/wireframes/desktop-forgot-password.svg",
+      "result": "pass"
+    },
+    {
+      "command": "test -f docs/implementation/platform/auth/wireframes/desktop-account-org-selector.svg",
+      "result": "pass"
+    },
+    {
+      "command": "test -f docs/implementation/platform/auth/wireframes/mobile-login.svg",
+      "result": "pass"
+    },
+    {
+      "command": "test -f docs/implementation/platform/auth/wireframes/mobile-forgot-password.svg",
+      "result": "pass"
+    },
+    {
+      "command": "test -f docs/implementation/platform/auth/wireframes/mobile-account-sheet.svg",
+      "result": "pass"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-AUTH-PORT",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-TENANT-CONTEXT",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-SUPABASE-ADAPTER",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-MOBILE-STORAGE",
+      "status": "pass"
+    },
+    {
+      "id": "REQ-AUTH-ISOLATION-CLEANUP",
+      "status": "pass"
+    }
+  ],
+  "evidence": [
+    {
+      "description": "Desktop login wireframe SVG",
+      "path": "docs/implementation/platform/auth/wireframes/desktop-login.svg"
+    },
+    {
+      "description": "Desktop recovery wireframe SVG",
+      "path": "docs/implementation/platform/auth/wireframes/desktop-forgot-password.svg"
+    },
+    {
+      "description": "Mobile recovery wireframe SVG",
+      "path": "docs/implementation/platform/auth/wireframes/mobile-forgot-password.svg"
+    },
+    {
+      "description": "Desktop account org selector wireframe SVG",
+      "path": "docs/implementation/platform/auth/wireframes/desktop-account-org-selector.svg"
+    },
+    {
+      "description": "Mobile login wireframe SVG",
+      "path": "docs/implementation/platform/auth/wireframes/mobile-login.svg"
+    },
+    {
+      "description": "Mobile account sheet wireframe SVG",
+      "path": "docs/implementation/platform/auth/wireframes/mobile-account-sheet.svg"
+    }
+  ]
+}

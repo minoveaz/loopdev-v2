@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-NOTES-20260914-001",
+  "span_id": "MOD-NOTES-20260914-001:07-build",
+  "phase": "07-build",
+  "skill": "module-build",
+  "parent_span_id": null,
+  "module": "notes",
+  "status": "blocked",
+  "decision_status": "open",
+  "architecture_quality": "PENDING",
+  "attempt": 4,
+  "started_at": "2026-09-14T13:59:29.202Z",
+  "completed_at": null,
+  "input_fingerprint": "sha256:391da82fe505a1782c362766a4741a892cef720c9477015ee1043f5f1043a625",
+  "environment": {
+    "repository_path": "/workspaces/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": null,
+    "head_commit": "7ee970db79438f96db160ab03ca5acb2074dc1a8",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [],
+  "output_artifacts": [],
+  "decisions": [],
+  "actions": [],
+  "validation": [],
+  "requirements": [],
+  "evidence": [],
+  "detected_failure": "Build implementation and runtime evidence refreshed after commit 68353fc: dependency installation, Expo Web export, Customer 360 route, Rich Note focus, visibility bottom sheet, desktop drawer wiring, adapters and multiplatform contracts pass. Remaining blockers are durable local-first sync semantics, focused Notes security/audit coverage, and dedicated mobile renderer/Customer 360 acceptance tests.",
+  "likely_failure_origin": "build-scope-evidence",
+  "next_handoff": null,
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

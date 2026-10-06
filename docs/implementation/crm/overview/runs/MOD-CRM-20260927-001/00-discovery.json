@@ -1,0 +1,60 @@
+{
+  "run_id": "MOD-CRM-20260927-001",
+  "span_id": "MOD-CRM-20260927-001:00-discovery",
+  "phase": "00-discovery",
+  "skill": "module-discovery",
+  "parent_span_id": null,
+  "module": "CRM Overview",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PENDING",
+  "attempt": 1,
+  "started_at": "2026-09-27T17:26:05+02:00",
+  "completed_at": "2026-09-27T17:26:05+02:00",
+  "environment": {
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "branch": "feature/crm-v2-foundation",
+    "head_commit": "e9ca052",
+    "working_tree": "modified"
+  },
+  "input_artifacts": [
+    "approved user discovery",
+    "docs/06-product/crm",
+    "active CRM track",
+    "current Overview.tsx",
+    "analytics implementation plan"
+  ],
+  "decisions": [
+    "Sales Operating Dashboard scope confirmed",
+    "Platform capabilities reused, not duplicated"
+  ],
+  "actions": [
+    "Audited current KPI, tasks, notes, timeline/activity, attachments, relations, tenant scope and i18n paths",
+    "Recorded benchmark and expected-versus-existing matrix"
+  ],
+  "output_artifacts": [
+    "discovery.md"
+  ],
+  "validation": [
+    {
+      "command": "git status --short --branch",
+      "result": "passed",
+      "evidence": "canonical checkout snapshot"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "DISC-SCOPE",
+      "status": "PASS",
+      "evidence": "discovery.md"
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "01-design",
+  "evidence_links": [
+    "discovery.md"
+  ],
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

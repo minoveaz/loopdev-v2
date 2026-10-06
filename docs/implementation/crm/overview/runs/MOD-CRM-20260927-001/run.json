@@ -1,0 +1,139 @@
+{
+  "schema_version": 0,
+  "workflow_version": 1,
+  "run_id": "MOD-CRM-20260927-001",
+  "suite": "crm",
+  "module": "overview",
+  "status": "blocked",
+  "current_phase": "OVR-10_RERUN_COMPLETE_BLOCKED_BROWSER_EVIDENCE",
+  "attempt": 4,
+  "started_at": "2026-09-27T17:26:05+02:00",
+  "updated_at": "2026-09-27T17:58:22+02:00",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "e9ca052069a5693412e1979adc17763a1c3300f2",
+    "working_tree": "modified",
+    "runtime_url": "http://127.0.0.1:8080",
+    "runtime_port": 8080,
+    "runtime_process": "node .../vite --host 127.0.0.1 --port 8080",
+    "runtime_pid": 13144
+  },
+  "approvals": {
+    "design": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-27T17:29:58+02:00"
+    },
+    "visual_design": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-27T17:34:17+02:00"
+    },
+    "plan": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-09-27T17:29:58+02:00"
+    }
+  },
+  "platform_scope": [
+    "desktop_web",
+    "mobile_web",
+    "ios",
+    "android"
+  ],
+  "architecture_quality": "PASS_WITH_DEBT",
+  "platform_impact": [
+    {
+      "capability": "Analytics",
+      "decision": "REUSE"
+    },
+    {
+      "capability": "Tasks",
+      "decision": "REUSE"
+    },
+    {
+      "capability": "Activity",
+      "decision": "REUSE"
+    },
+    {
+      "capability": "Notes",
+      "decision": "REUSE_CONTEXTUAL"
+    },
+    {
+      "capability": "Files",
+      "decision": "REUSE_CONTEXTUAL"
+    },
+    {
+      "capability": "Relations",
+      "decision": "REUSE_CONTEXTUAL"
+    },
+    {
+      "capability": "Document Intelligence",
+      "decision": "REUSE_OUT_OF_SCOPE"
+    }
+  ],
+  "checkpoint_paths": [
+    "runs/MOD-CRM-20260927-001/00-discovery.json",
+    "runs/MOD-CRM-20260927-001/01-design.json",
+    "runs/MOD-CRM-20260927-001/06-plan.json",
+    "runs/MOD-CRM-20260927-001/01-visual-design.json",
+    "runs/MOD-CRM-20260927-001/02-domain.json",
+    "runs/MOD-CRM-20260927-001/03-api.json",
+    "runs/MOD-CRM-20260927-001/04-access.json",
+    "runs/MOD-CRM-20260927-001/05-sync.json",
+    "runs/MOD-CRM-20260927-001/07-build.json",
+    "runs/MOD-CRM-20260927-001/08-verify.json",
+    "runs/MOD-CRM-20260927-001/09-ovr-09.json",
+    "runs/MOD-CRM-20260927-001/10-review.json",
+    "runs/MOD-CRM-20260927-001/10-review-rerun.json"
+  ],
+  "open_decisions": [
+    "Exact remote read-model implementation threshold",
+    "Native iOS/Android ownership"
+  ],
+  "validation_notes": [
+    {
+      "command": "npm run validate:module-runs",
+      "result": "failed",
+      "detected_by": "delivery",
+      "likely_origin": "pre-existing checkpoint-schema drift in other implementation runs",
+      "summary": "Repository-wide validator reported 679 errors outside this run; direct JSON parsing passed for this run's checkpoints."
+    }
+  ],
+  "next_action": "Obtain authenticated browser-level evidence with an available browser/canvas runtime, then request final human release approval. Do not begin automation or enterprise work.",
+  "release_readiness": {
+    "classification": "BLOCKED",
+    "human_release_approval_required": true,
+    "blocking_findings": [
+      "Required browser-authenticated state, responsive, i18n/RTL, deep-link authorization, scope and cache-revocation evidence unavailable."
+    ],
+    "rollback": "If approved validation later fails, restore the prior Overview composition with a new git revert; no git mutation was performed in OVR-10."
+  },
+  "decision_reconciliation": {
+    "status": "confirmed",
+    "recorded_at": "2026-09-27T18:10:00+02:00",
+    "source": "user",
+    "decisions": [
+      "KPI catalogue: open pipeline, open leads, open opportunities, overdue/today tasks",
+      "Freshness target 60 seconds; maximum 5 minutes",
+      "Selected-team aggregates are limited to RLS/membership-visible records with no cross-team data",
+      "Activity allowlist: calls, emails, meetings, notes, tasks, assignments, stage changes, conversions, closures; exclude Document Intelligence extraction and technical events by default",
+      "Overview Tasks summary is read-only with deep link; mutations stay in Tasks",
+      "Read cache 60 seconds with stale/offline state; no offline mutations; manual retry",
+      "Activate directly for all tenants after tests pass; rollback on validation failure; no feature-flag rollout",
+      "No export in MVP"
+    ]
+  },
+  "deviation": {
+    "status": "recorded",
+    "summary": "Earlier design artifacts allowed a feature-flag rollout and possible inline task transition; canonical artifacts now require direct activation after validation and Tasks-only mutation.",
+    "production_code_changed": false,
+    "detected_by": "delivery",
+    "likely_origin": "prior design checkpoint wording"
+  },
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

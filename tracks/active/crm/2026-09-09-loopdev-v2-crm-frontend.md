@@ -70,7 +70,7 @@ providers y permisos server-side no invalida el cierre local: pertenece a las fa
 ## Fase transversal siguiente
 
 La siguiente unidad transversal es el **Sistema global de formularios**. Su contrato y alcance
-viven en `docs/03-platform/LOOPDEV_GLOBAL_FORMS_PHASE.md`. Esta fase debe ejecutarse antes de
+viven en `docs/03-platform/frontend/LOOPDEV_GLOBAL_FORMS_PHASE.md`. Esta fase debe ejecutarse antes de
 seguir ampliando formularios de CRM o conectar nuevas superficies de persistencia, y aplica por
 igual a drawer, modal, página completa, wizard e inline edit. Rivera se utiliza como referencia
 visual auditada; `AppDrawer` y los primitives de `src/components/ui` son la base implementable
@@ -157,6 +157,29 @@ Implementado localmente en la Fase 4:
   evitar duplicar la superficie operativa del CRM.
 
 Supabase, Storage, RLS, Auth real y migraciones siguen pendientes de una fase de backend posterior.
+
+### CRM Overview OVR-10 release/readiness review
+
+**Estado:** bloqueada / no lista para release (`MOD-CRM-20260927-001:10-review`).
+
+La revisión verificó el checkout solicitado, la rama
+`feature/crm-v2-foundation`, HEAD `e9ca052069a5693412e1979adc17763a1c3300f2`,
+el árbol sucio preservado y el proceso Vite real en
+`http://127.0.0.1:8080` (PID 13144). Overview, Tasks y un deep link de Task
+responden HTTP 200; typecheck, lint, i18n, tests enfocados, smoke autenticado,
+build y `git diff --check` pasan. No se hicieron commits, push, PR, reset,
+revert ni fases de automatización/enterprise.
+
+El primer OVR-10 quedó bloqueado por el desfase 8081/8080 y por la ausencia de
+captura UI autenticada. En el rerun `MOD-CRM-20260927-001:10-review-rerun` se
+corrigió la identidad del manifiesto al proceso real en 8080 y volvieron a pasar
+typecheck, lint, i18n, 18 tests enfocados, smoke autenticado, build, diff check y
+las probes HTTP. El release sigue bloqueado porque este entorno no ofrece
+automatización de navegador ni canvas/runtime autenticado para probar
+loading/success/empty/error/forbidden/stale/offline, responsive mobile,
+i18n/RTL, autorización del deep link, aislamiento tenant/team/brand o
+revocación de caché. No se fabricó evidencia. La aprobación humana final de
+release sigue siendo necesaria.
 
 ## Alcance funcional del CRM
 

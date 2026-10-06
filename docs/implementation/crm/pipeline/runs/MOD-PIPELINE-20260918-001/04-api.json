@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-PIPELINE-20260918-001",
+  "span_id": "MOD-PIPELINE-20260918-001:04-api",
+  "phase": "04-api",
+  "skill": "api-contracts",
+  "parent_span_id": null,
+  "module": "pipeline",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS",
+  "attempt": 1,
+  "started_at": "2026-09-18T11:01:12.854Z",
+  "completed_at": "2026-09-18T11:01:12.882Z",
+  "input_fingerprint": "sha256:d201502834db08c94771c2e0edc1b12a27c711988be6219b0fbf3b4f57b39049",
+  "environment": {
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": null,
+    "head_commit": "915881383077b4294eeb18428568c6f5a22eb7f0",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/crm/pipeline/access-design.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/api-contracts.md"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-API-001",
+      "status": "confirmed",
+      "summary": "Commands and envelope validated"
+    }
+  ],
+  "actions": [
+    "Documented API commands, queries and error codes"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed"
+    }
+  ],
+  "requirements": [
+    "PIPELINE-REQ-BOARD",
+    "PIPELINE-REQ-MUTATION",
+    "PIPELINE-REQ-REOPEN",
+    "PIPELINE-REQ-SPEED-DIAL",
+    "PIPELINE-REQ-DETAIL"
+  ],
+  "evidence": [
+    "docs/implementation/crm/pipeline/api-contracts.md"
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "sync-design",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

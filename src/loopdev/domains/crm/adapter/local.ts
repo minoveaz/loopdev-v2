@@ -8,9 +8,9 @@ import {
 import { localCrmLeadsStore, type LocalLead } from "../data/localLeads";
 import { localCrmStageHistoryStore } from "../data/localStageHistory";
 import { localCustomerProductsStore } from "../data/localCustomerProducts";
-import { localReferenceDataAdapter } from "@/loopdev/domains/reference-data/adapter/local";
-import { catalogAdapter } from "@/loopdev/domains/catalog";
-import { platformAdapter } from "@/loopdev/domains/platform";
+import { localReferenceDataAdapter } from "../../reference-data/adapter/local";
+import { catalogAdapter } from "../../catalog";
+import { platformAdapter } from "../../platform";
 import type {
   Customer360View,
   CRMContact,
@@ -40,14 +40,18 @@ import type {
   CRMUpdateContactPatch,
   CRMCustomerProduct,
   CRMCreateCustomerProductInput,
+  CRMPotentialDuplicate,
+  CRMDuplicateReviewResult,
 } from "./types";
 import { contactName, CRMAdapterError, CRM_LEAD_STATUS_CODES, CRM_PIPELINE_STAGE_CODES } from "./types";
 import { localCrmOperationsAdapter } from "../operations/adapter/local";
 import { localCrmAutomationsAdapter } from "../automations";
-import { localCommunicationsAdapter } from "@/loopdev/domains/communications/adapter/local";
-import { localNotesAdapter, type GlobalNoteRecord, type NoteRelationRef } from "@/loopdev/domains/notes";
+import { localCommunicationsAdapter } from "../../communications/adapter/local";
+import { localNotesAdapter, type GlobalNoteRecord, type NoteRelationRef } from "../../notes";
+import { validateContactMutationInput } from "../../../../../packages/contracts/src/contact-port";
 
 const organizationId = "local-development-organization";
+const dismissedDuplicateReviews = new Set<string>();
 
 const PIPELINE_STAGE_LABELS: Record<CRMPipelineStageCode, string> = {
   prospecting: "Prospecting",
@@ -287,7 +291,7 @@ export const localLoopdevAdapter = {
         return { status: "forbidden", message: "You do not have permission to create contacts in this organization." };
       }
 
-      const validation = validateContactInput(input);
+      const validation = validateContactMutationInput(input);
       if (validation) return validation;
 
       const created = crmCustomersStore.create({
@@ -336,7 +340,7 @@ export const localLoopdevAdapter = {
         return { status: "conflict", message: "The contact changed before it could be updated.", contact: currentContact };
       }
 
-      const validation = validateContactInput({ ...currentContact, ...patch });
+      const validation = validateContactMutationInput({ ...currentContact, ...patch });
       if (validation) return validation;
 
       const firstName = patch.firstName ?? currentContact.firstName;
@@ -389,6 +393,43 @@ export const localLoopdevAdapter = {
       const archived = crmCustomersStore.update(contactId, { archivedAt: new Date().toISOString() });
       if (!archived) return { status: "server-error", message: "The contact could not be archived." };
       return { status: "success", contact: toContact(archived) };
+    },
+
+    async bulkArchiveContacts(contactIds: string[]): Promise<{ successCount: number; failureCount: number }> {
+      let successCount = 0;
+      let failureCount = 0;
+      const now = new Date().toISOString();
+      for (const id of contactIds) {
+        const current = crmCustomersStore.get(id);
+        if (current) {
+          crmCustomersStore.update(id, { archivedAt: now });
+          successCount++;
+        } else {
+          failureCount++;
+        }
+      }
+      return { successCount, failureCount };
+    },
+
+    async findPotentialDuplicates(contactId: string): Promise<CRMPotentialDuplicate[]> {
+      const source = crmCustomersStore.get(contactId);
+      if (!source) return [];
+      const contact = toContact(source);
+      return crmCustomersStore.list().filter((candidate) => candidate.id !== contactId && !candidate.archivedAt).map((candidate) => {
+        const other = toContact(candidate);
+        const reasons: string[] = [];
+        if (contact.email && other.email && contact.email.toLowerCase() === other.email.toLowerCase()) reasons.push("Same email address");
+        if (contact.phone && other.phone && contact.phone === other.phone) reasons.push("Same phone number");
+        if (`${contact.firstName} ${contact.lastName ?? ""}`.trim().toLowerCase() === `${other.firstName} ${other.lastName ?? ""}`.trim().toLowerCase()) reasons.push("Same name");
+        return { contact: other, score: Math.min(99, reasons.length * 35 + (reasons.length ? 10 : 0)), reasons };
+      }).filter((candidate) => candidate.reasons.length && !dismissedDuplicateReviews.has(`${contactId}:${candidate.contact.id}`));
+    },
+
+    async dismissDuplicateReview(contactId: string, candidateId: string, confirmation: string): Promise<CRMDuplicateReviewResult> {
+      if (confirmation !== "DISMISS_DUPLICATE_REVIEW") return { status: "server-error", message: "Audit confirmation is required." };
+      if (!crmCustomersStore.get(contactId) || !crmCustomersStore.get(candidateId)) return { status: "not-found", message: "The duplicate review contact could not be found." };
+      dismissedDuplicateReviews.add(`${contactId}:${candidateId}`);
+      return { status: "success", reviewId: `${contactId}:${candidateId}`, dismissedAt: new Date().toISOString() };
     },
 
     async listLeads(): Promise<CRMLead[]> {
@@ -519,6 +560,20 @@ export const localLoopdevAdapter = {
           return sortDirection === "asc" ? result : -result;
         })
         .map(toPipelineOpportunity);
+    },
+
+    async bulkArchiveOpportunities(opportunityIds: string[], requestedOrganizationId: string) {
+      if (requestedOrganizationId !== organizationId) return { successCount: 0, failureCount: opportunityIds.length };
+      const now = new Date().toISOString();
+      let successCount = 0;
+      opportunityIds.forEach((opportunityId) => {
+        const current = localCrmOpportunitiesStore.get(opportunityId);
+        if (current && current.organizationId === requestedOrganizationId && !current.archivedAt) {
+          localCrmOpportunitiesStore.update(opportunityId, { archivedAt: now });
+          successCount += 1;
+        }
+      });
+      return { successCount, failureCount: opportunityIds.length - successCount };
     },
 
     async moveOpportunityStage(
@@ -884,11 +939,80 @@ export const localLoopdevAdapter = {
 
     async getCustomer360(contactId: string): Promise<Customer360View | null> {
       const contact = crmCustomersStore.get(contactId);
-      if (!contact) return null;
+      let resolvedContact: CRMContact | null = contact ? toContact(contact) : null;
+
+      if (!resolvedContact) {
+        try {
+          const { DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY, defaultWebAuthAdapter } = await import("@/loopdev/domains/platform/adapter/auth-supabase");
+          const session = await defaultWebAuthAdapter.getSession();
+          const headers: Record<string, string> = {
+            apikey: DEFAULT_SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+          };
+          if (session?.accessToken) {
+            headers.Authorization = `Bearer ${session.accessToken}`;
+          } else {
+            headers.Authorization = `Bearer ${DEFAULT_SUPABASE_ANON_KEY}`;
+          }
+          const resp = await fetch(`${DEFAULT_SUPABASE_URL}/rest/v1/crm_contacts?id=eq.${encodeURIComponent(contactId)}&select=*`, {
+            method: "GET",
+            headers,
+          });
+          if (resp.ok) {
+            const rows = await resp.json();
+            if (Array.isArray(rows) && rows.length > 0) {
+              const row = rows[0];
+              let firstName = (row.first_name || "").trim();
+              let lastName = (row.last_name || "").trim() || null;
+              if (!firstName && row.name) {
+                const parts = row.name.trim().split(" ");
+                firstName = parts[0] || "Contacto";
+                lastName = parts.slice(1).join(" ") || null;
+              }
+              resolvedContact = {
+                id: row.id,
+                organizationId: row.organization_id || "80fce911-57c5-4a83-809f-78df6a3736f7",
+                firstName: firstName || "Contacto",
+                lastName,
+                secondLastName: row.second_last_name || null,
+                preferredName: row.preferred_name || null,
+                email: row.email || null,
+                secondaryEmail: row.secondary_email || null,
+                phone: row.phone || null,
+                secondaryPhone: row.secondary_phone || null,
+                preferredChannel: row.preferred_channel || "email",
+                preferredLanguage: row.preferred_language || "es",
+                documentType: row.document_type || null,
+                documentNumber: row.document_number || null,
+                birthDate: row.birth_date || null,
+                gender: row.gender || null,
+                addressLine1: row.address_line1 || null,
+                addressLine2: row.address_line2 || null,
+                city: row.city || "",
+                stateProvince: row.state_province || null,
+                postalCode: row.postal_code || null,
+                country: row.country || "",
+                companyName: row.company_name || null,
+                jobTitle: row.job_title || null,
+                department: row.department || null,
+                attributes: row.attributes || {},
+                identityStatus: row.identity_status || "verified",
+                createdAt: row.created_at || new Date().toISOString(),
+                updatedAt: row.updated_at || new Date().toISOString(),
+                archivedAt: row.archived_at || null,
+              };
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to fetch remote contact for Customer360:", err);
+        }
+      }
+
+      if (!resolvedContact) return null;
 
       const leads = localCrmLeadsStore.list().filter((lead) => lead.contactId === contactId).map(toLead);
       const opportunities: CRMOpportunity[] = localCrmOpportunitiesStore.list()
-        .filter((opportunity) => opportunity.organizationId === organizationId && opportunity.contactId === contactId && !opportunity.archivedAt)
+        .filter((opportunity) => (opportunity.organizationId === organizationId || opportunity.organizationId === resolvedContact!.organizationId) && opportunity.contactId === contactId && !opportunity.archivedAt)
         .map((opportunity) => ({
           id: opportunity.id,
           organizationId: opportunity.organizationId,
@@ -916,15 +1040,16 @@ export const localLoopdevAdapter = {
         { id: "local-task-1", title: "Review renewal requirements", status: "open", priority: "high", dueAt: new Date().toISOString(), relationId: contactId },
         { id: "local-task-2", title: "Schedule technical follow-up", status: "open", priority: "medium", dueAt: new Date(Date.now() + 86400000).toISOString(), relationId: contactId },
       ];
-      const relation = { type: "contact" as const, id: contactId, label: contact.name };
-      const legacyCreatedAt = localActivities[2]?.occurredAt ?? contact.updatedAt;
+      const contactNameLabel = [resolvedContact.preferredName || resolvedContact.firstName, resolvedContact.lastName].filter(Boolean).join(" ");
+      const relation = { type: "contact" as const, id: contactId, label: contactNameLabel };
+      const legacyCreatedAt = localActivities[2]?.occurredAt ?? resolvedContact.updatedAt;
       // Import legacy CRM data into the global adapter before reading Customer 360 notes.
-      await localNotesAdapter.seed([legacyCustomerNote(contactId, contact.name, legacyCreatedAt)]);
+      await localNotesAdapter.seed([legacyCustomerNote(contactId, contactNameLabel, legacyCreatedAt)]);
       const notes = await localNotesAdapter.list(relation);
       const state = { profile: "fresh", leads: "fresh", opportunities: "fresh", tasks: "fresh", notes: "fresh", timeline: "fresh" } as const;
 
       return {
-        contact: toContact(contact),
+        contact: resolvedContact,
         leads,
         opportunities,
         tasks,
@@ -959,19 +1084,3 @@ export const localLoopdevAdapter = {
     },
   },
 } as const;
-
-function validateContactInput(input: {
-  firstName?: string | null;
-  email?: string | null;
-  phone?: string | null;
-}): Extract<CRMContactMutationResult, { status: "validation-error" }> | null {
-  const fieldErrors: Record<string, string> = {};
-  if (!input.firstName?.trim()) fieldErrors.firstName = "First name is required.";
-  if (!input.email?.trim() && !input.phone?.trim()) {
-    fieldErrors.email = "Email or phone is required.";
-    fieldErrors.phone = "Email or phone is required.";
-  }
-  return Object.keys(fieldErrors).length
-    ? { status: "validation-error", message: "Check the contact details and try again.", fieldErrors }
-    : null;
-}

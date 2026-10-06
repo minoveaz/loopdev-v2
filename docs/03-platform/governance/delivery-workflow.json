@@ -1,0 +1,44 @@
+{
+  "$schema": "../../implementation/_schemas/delivery-workflow.schema.json",
+  "schema_version": 1,
+  "initial_phase": "00-discovery",
+  "terminal_phase": "10-git",
+  "architecture_completion_states": ["PASS", "PASS_WITH_DEBT"],
+  "blocking_statuses": ["blocked", "failed", "deviated", "waiting_user", "paused"],
+  "phases": [
+    { "id": "00-discovery", "skill": "module-discovery", "predecessors": [], "required_gate": null },
+    { "id": "01-design", "skill": "module-design", "predecessors": ["00-discovery"], "required_gate": null },
+    { "id": "01-visual-design", "skill": "module-visual-design", "predecessors": ["01-design"], "required_gate": "design" },
+    { "id": "02-domain", "skill": "domain-model", "predecessors": ["01-visual-design"], "required_gate": "visual_design" },
+    { "id": "03-access", "skill": "access-design", "predecessors": ["01-visual-design"], "required_gate": "visual_design" },
+    { "id": "04-api", "skill": "api-contracts", "predecessors": ["02-domain", "03-access"], "required_gate": "visual_design" },
+    { "id": "05-sync", "skill": "sync-design", "predecessors": ["04-api"], "required_gate": "visual_design" },
+    { "id": "06-plan", "skill": "module-plan", "predecessors": ["02-domain", "03-access", "04-api", "05-sync"], "required_gate": "visual_design" },
+    { "id": "07-build", "skill": "module-build", "predecessors": ["06-plan"], "required_gate": "plan" },
+    { "id": "08-verify", "skill": "module-verify", "predecessors": ["07-build"], "required_gate": null },
+    { "id": "09-review", "skill": "module-review", "predecessors": ["08-verify"], "required_gate": "verification" },
+    { "id": "10-git", "skill": "git-workflow", "predecessors": ["09-review"], "required_gate": "release" }
+  ],
+  "gates": ["design", "visual_design", "plan", "verification", "release", "push", "pull_request"],
+  "required_workspace_files": [
+    "README.md",
+    "discovery.md",
+    "architecture-design.md",
+    "implementation-plan.md",
+    "requirement-evidence-matrix.md",
+    "platform-scope.md",
+    "platform-evidence-matrix.md"
+  ],
+  "required_schema_v1_files": [
+    "delivery-ledger.json"
+  ],
+  "fingerprint_invalidation": {
+    "product": ["00-discovery", "01-design", "01-visual-design", "02-domain", "03-access", "04-api", "05-sync", "06-plan", "07-build", "08-verify", "09-review", "10-git"],
+    "scope": ["00-discovery", "01-design", "01-visual-design", "02-domain", "03-access", "04-api", "05-sync", "06-plan", "07-build", "08-verify", "09-review", "10-git"],
+    "design": ["01-design", "01-visual-design", "02-domain", "03-access", "04-api", "05-sync", "06-plan", "07-build", "08-verify", "09-review", "10-git"],
+    "plan": ["06-plan", "07-build", "08-verify", "09-review", "10-git"],
+    "contracts": ["02-domain", "03-access", "04-api", "05-sync", "06-plan", "07-build", "08-verify", "09-review", "10-git"],
+    "code": ["07-build", "08-verify", "09-review", "10-git"],
+    "tests": ["08-verify", "09-review", "10-git"]
+  }
+}

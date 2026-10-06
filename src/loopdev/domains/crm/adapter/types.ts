@@ -78,6 +78,7 @@ export interface CRMCreateContactInput {
   documentNumber?: string | null;
   birthDate?: string | null;
   gender?: string | null;
+  attributes?: Record<string, unknown>;
 }
 
 export interface CRMUpdateContactPatch {
@@ -105,6 +106,7 @@ export interface CRMUpdateContactPatch {
   documentNumber?: string | null;
   birthDate?: string | null;
   gender?: string | null;
+  attributes?: Record<string, unknown>;
 }
 
 export type CRMContactMutationResult =
@@ -113,6 +115,16 @@ export type CRMContactMutationResult =
   | { status: "forbidden"; message: string }
   | { status: "conflict"; message: string; contact: CRMContact }
   | { status: "server-error"; message: string };
+
+export interface CRMPotentialDuplicate {
+  contact: CRMContact;
+  score: number;
+  reasons: string[];
+}
+
+export type CRMDuplicateReviewResult =
+  | { status: "success"; reviewId: string; dismissedAt: string }
+  | { status: "forbidden" | "not-found" | "server-error"; message: string };
 
 export interface CRMLead {
   id: string;
@@ -131,6 +143,7 @@ export interface CRMLead {
   lastActivityAt?: string | null;
   nextActivityAt?: string | null;
   duplicateReviewId?: string | null;
+  archivedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

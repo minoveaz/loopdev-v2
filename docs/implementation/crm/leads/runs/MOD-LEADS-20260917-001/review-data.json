@@ -1,0 +1,29 @@
+{
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/implementation/crm/leads/platform-evidence-matrix.md",
+    "docs/implementation/crm/leads/requirement-evidence-matrix.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/leads/README.md"
+  ],
+  "decisions": [
+    {
+      "id": "REV-LEADS-001",
+      "status": "confirmed",
+      "summary": "Full CRM Leads module release approved across desktop and mobile platforms"
+    }
+  ],
+  "actions": [
+    "Completed functional review and verified multiplatform parity"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed (5 ledgers checked)"
+    }
+  ],
+  "requirements": ["LEADS-REQ-LIST", "LEADS-REQ-PREVIEW", "LEADS-REQ-SPEED-DIAL", "LEADS-REQ-QUALIFICATION", "LEADS-REQ-CONVERT"],
+  "evidence": ["docs/implementation/crm/leads/README.md"],
+  "next_handoff": "git-workflow"
+}

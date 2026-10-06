@@ -1,0 +1,125 @@
+{
+  "run_id": "MOD-CRM-PIPELINE-20260913-002",
+  "span_id": "MOD-CRM-PIPELINE-20260913-002:01-visual-design",
+  "phase": "01-visual-design",
+  "skill": "module-visual-design",
+  "parent_span_id": "MOD-CRM-PIPELINE-20260913-002:01-design",
+  "module": "CRM Pipeline",
+  "status": "blocked",
+  "decision_status": "open",
+  "architecture_quality": "PENDING",
+  "attempt": 1,
+  "started_at": "2026-09-13T12:31:00+02:00",
+  "completed_at": null,
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/Documents/Proyectos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/crm-v2-foundation",
+    "base_branch": "develop",
+    "head_commit": "c03a5d812fb72a97b4e0d90866d0415cef7395de",
+    "working_tree": "modified by documentation run",
+    "runtime_url": "http://localhost:8081/app/sales-crm/pipeline",
+    "runtime_port": 8081,
+    "runtime_status": "running"
+  },
+  "input_artifacts": [
+    "docs/implementation/crm/pipeline/discovery.md",
+    "docs/implementation/crm/pipeline/architecture-design.md",
+    "docs/implementation/crm/pipeline/implementation-plan.md",
+    "docs/06-product/crm/pipeline/CRM_PIPELINE_UX_SPEC.md"
+  ],
+  "decisions": [
+    {
+      "id": "VD-PIPE-REUSE-001",
+      "status": "confirmed",
+      "summary": "Reuse Rivera template, shared LoopDev primitives and Platform surfaces; legacy view docs are informational only."
+    },
+    {
+      "id": "VD-PIPE-APPROVAL-001",
+      "status": "open",
+      "summary": "Visual source and evidence require explicit human approval before specialized analysis and plan approval."
+    }
+  ],
+  "actions": [
+    "Created normative visual-design.md and view-state-matrix.md.",
+    "Created structural and Rivera-styled diffable SVG evidence for Kanban/card and table/detail/create surfaces.",
+    "Recorded Rivera/LoopDev baseline inventory, explicit zone reuse matrix and responsive/accessibility/state requirements.",
+    "Separated conceptual approval from post-implementation runtime comparison; runtime comparison remains NOT_RUN.",
+    "Preserved existing specialized analysis artifacts without claiming visual approval."
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/pipeline/visual-design.md",
+    "docs/implementation/crm/pipeline/view-state-matrix.md",
+    "docs/implementation/crm/pipeline/wireframes/pipeline-kanban.svg",
+    "docs/implementation/crm/pipeline/wireframes/pipeline-surfaces.svg",
+    "docs/implementation/crm/pipeline/wireframes/pipeline-kanban-rivera.svg",
+    "docs/implementation/crm/pipeline/wireframes/pipeline-surfaces-rivera.svg"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-module-runs.mjs",
+      "result": "passed",
+      "evidence": "10 checkpoint files parsed successfully"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "Documentation diff has no whitespace errors; all four Pipeline SVGs parse as XML"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "VIS-PIPE-001",
+      "status": "PASS",
+      "evidence": "Normative Markdown source covers Kanban, card, table, detail, manual creation and required states."
+    },
+    {
+      "id": "VIS-PIPE-002",
+      "status": "PASS",
+      "evidence": "Styled SVGs use realistic data, desktop/mobile compositions and non-color state cues; structural SVGs are retained."
+    },
+    {
+      "id": "VIS-PIPE-003",
+      "status": "PASS",
+      "evidence": "Rivera/LoopDev baseline inventory and explicit zone reuse matrix classify primitive, shared, CRM, EXTEND_PLATFORM and MODULE_SPECIFIC zones."
+    },
+    {
+      "id": "VIS-PIPE-004",
+      "status": "PARTIAL",
+      "evidence": "Conceptual approval is pending and runtime comparison is NOT_RUN until implementation; gate remains WAITING_VISUAL_DESIGN_APPROVAL."
+    }
+  ],
+  "detected_failure": {
+    "code": "DOCUMENTATION_GOVERNANCE_PAUSE",
+    "message": "Run is PAUSED pending documentation governance review; existing visual-design gate is preserved."
+  },
+  "likely_failure_origin": null,
+  "next_handoff": "PAUSED_DOCUMENTATION_GOVERNANCE: review source-of-truth and legacy mapping before resuming; visual approval remains pending.",
+  "evidence_links": [
+    "docs/implementation/crm/pipeline/visual-design.md",
+    "docs/implementation/crm/pipeline/view-state-matrix.md",
+    "docs/implementation/crm/pipeline/wireframes/pipeline-kanban.svg",
+    "docs/implementation/crm/pipeline/wireframes/pipeline-surfaces.svg",
+    "docs/implementation/crm/pipeline/wireframes/pipeline-kanban-rivera.svg",
+    "docs/implementation/crm/pipeline/wireframes/pipeline-surfaces-rivera.svg"
+  ],
+  "notes": [
+    "Do not mark completed or continue to specialized analysis until explicit conceptual visual approval is recorded; runtime comparison remains a later validation level."
+  ],
+  "pause": {
+    "status": "PAUSED",
+    "reason": "Documentation governance must be reviewed before resuming delivery.",
+    "preserved_gate": "WAITING_VISUAL_DESIGN_APPROVAL",
+    "visual_design_approval": "pending"
+  },
+  "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false,
+  "schema_version": 0,
+  "legacy_schema_reason": "Archived legacy record: the original artifact lacks enough provenance to populate schema v1 fingerprints, approvals, or canonical phase metadata without inference. Preserve its evidence and create a schema v1 run for current work."
+}

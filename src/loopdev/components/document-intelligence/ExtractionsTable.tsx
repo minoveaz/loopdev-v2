@@ -1,0 +1,199 @@
+import { ArrowRight, FileText, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog, StatusBadge, EmptyState } from "@/components/common";
+import { formatDate } from "@/lib/formatters";
+import type { ExtractionRecord } from "@/loopdev/domains/document-intelligence";
+import { useT } from "@/i18n";
+import { useState } from "react";
+
+interface ExtractionsTableProps {
+  extractions: ExtractionRecord[];
+  loading?: boolean;
+  onDelete?: (id: string) => void | Promise<void>;
+}
+
+const statusToneMap: Record<ExtractionRecord["status"], "success" | "warning" | "neutral" | "info"> = {
+  completed: "success",
+  review: "warning",
+  draft: "neutral",
+  processing: "info",
+  rejected: "neutral",
+  failed: "neutral",
+};
+
+export function ExtractionsTable({ extractions, loading, onDelete }: ExtractionsTableProps) {
+  const t = useT();
+  const [deleteTarget, setDeleteTarget] = useState<ExtractionRecord | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const statusLabelMap: Record<ExtractionRecord["status"], string> = {
+    completed: t("documentIntelligenceOverview.completedStatus"),
+    review: t("documentIntelligenceOverview.reviewStatus"),
+    draft: t("documentIntelligenceOverview.draftStatus"),
+    processing: t("documentIntelligenceOverview.processingStatus"),
+    rejected: t("documentIntelligenceOverview.rejectedStatus"),
+    failed: t("documentIntelligenceOverview.failedStatus"),
+  };
+  const suiteLabels: Record<ExtractionRecord["sourceSuite"], string> = {
+    standalone: "Document Intelligence", crm: "CRM", communications: "Communications", files: "Files Platform",
+  };
+  if (!loading && extractions.length === 0) {
+    return (
+      <EmptyState
+        title={t("documentIntelligenceOverview.noExtractions")}
+        description={t("documentIntelligenceOverview.noExtractionsDescription")}
+        icon={FileText}
+      />
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("documentIntelligenceOverview.documentTitle")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.detectedType")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.origin")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.confidence")}</TableHead>
+            <TableHead>Precisión validada</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.date")}</TableHead>
+            <TableHead>{t("documentIntelligenceOverview.status")}</TableHead>
+            <TableHead className="text-right">{t("documentIntelligenceOverview.actions")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {extractions.map((extraction) => {
+            const confPercent = Math.round(extraction.overallConfidence * 100);
+            return (
+              <TableRow key={extraction.id} className="group">
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="text-foreground">{extraction.title}</div>
+                      <div className="text-xs text-muted-foreground font-mono">{extraction.id}</div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="capitalize text-xs font-mono">
+                  {extraction.documentType.replace("-", " ")}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  <span className="inline-flex rounded-md bg-secondary/80 px-2 py-0.5 font-medium text-secondary-foreground">
+                    {suiteLabels[extraction.sourceSuite]}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`font-mono text-xs font-semibold ${
+                      confPercent >= 90
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : confPercent >= 75
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-amber-600 dark:text-amber-400"
+                    }`}
+                  >
+                    {confPercent}%
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    {extraction.validatedAccuracy == null
+                      ? "Pendiente"
+                      : `${Math.round(extraction.validatedAccuracy * 100)}%`}
+                  </span>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {formatDate(extraction.createdAt)}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge dot tone={statusToneMap[extraction.status]}>
+                    {statusLabelMap[extraction.status]}
+                  </StatusBadge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    {onDelete && (
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        title={t("documentIntelligenceOverview.deleteRecord")}
+                        onClick={() => {
+                          setDeleteError(null);
+                          setDeleteTarget(extraction);
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 gap-1 text-xs font-medium text-primary hover:text-primary"
+                      asChild
+                    >
+                      <Link to={`/app/tools/document-intelligence/${extraction.id}`}>
+                        {t("documentIntelligenceOverview.open")}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !deleteLoading) setDeleteTarget(null);
+        }}
+        title="¿Eliminar esta extracción?"
+        description={deleteTarget ? `${deleteTarget.title} y sus archivos asociados se eliminarán definitivamente.` : undefined}
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        tone="destructive"
+        loading={deleteLoading}
+        onConfirm={async () => {
+          if (!deleteTarget || !onDelete) return;
+          setDeleteLoading(true);
+          setDeleteError(null);
+          try {
+            await onDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          } catch (error) {
+            const message = error instanceof Error
+              ? error.message
+              : typeof error === "object" && error !== null && "message" in error && typeof error.message === "string"
+                ? error.message
+                : "No se pudo eliminar la extracción.";
+            setDeleteError(message);
+          } finally {
+            setDeleteLoading(false);
+          }
+        }}
+      >
+        {deleteError && (
+          <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {deleteError}
+          </p>
+        )}
+      </ConfirmDialog>
+    </div>
+  );
+}

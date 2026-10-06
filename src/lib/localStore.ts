@@ -105,12 +105,14 @@ export function createLocalStore<T extends Entity>({ key, seed, idPrefix = key }
       const items = read();
       const idx = items.findIndex((it) => it.id === id);
       if (idx === -1) return undefined;
+      const previousTimestamp = Date.parse(items[idx].updatedAt);
+      const updatedAt = new Date(Math.max(Date.now(), Number.isFinite(previousTimestamp) ? previousTimestamp + 1 : 0)).toISOString();
       const next = {
         ...items[idx],
         ...(patch as object),
         id: items[idx].id,
         createdAt: items[idx].createdAt,
-        updatedAt: new Date().toISOString(),
+        updatedAt,
       } as T;
       const copy = [...items];
       copy[idx] = next;

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Archive, AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Archive, AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckSquare, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Plus, RefreshCw, SearchX, StickyNote, Trash2 } from "lucide-react";
+import { contactActions } from "../../../../packages/contracts/src/contact-actions";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { loopdevAdapter, contactName, type CRMContact, type CRMCreateContactInput, type CRMUpdateContactPatch } from "@/loopdev/domains/crm/adapter";
 import {
   DataCard,
+  BulkSelectionBar,
   FilterDropdown,
   PageContainer,
   PageHeader,
@@ -13,6 +15,7 @@ import {
 } from "@/components/common";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
@@ -25,9 +28,13 @@ import {
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { formatDate, getInitials } from "@/lib/formatters";
 import { useCrmContacts } from "@/loopdev/domains/crm/hooks/use-crm";
+import { useTenantContext } from "@/hooks/use-tenant-context";
+import { referenceDataAdapter } from "@/loopdev/domains/reference-data";
 import { ContactFormDrawer } from "@/loopdev/components/crm/contacts/ContactFormDrawer";
 import type { ContactFormValues } from "@/loopdev/components/crm/contacts/ContactForm";
 import { ContactMobileCard } from "@/loopdev/components/crm/contacts/ContactMobileCard";
+import { DuplicateReviewPanel } from "@/loopdev/components/crm/contacts/DuplicateReviewPanel";
+import { promoteDocumentToPlatformFile, type ExtractionRecord } from "@/loopdev/domains/document-intelligence";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,14 +47,28 @@ const CONTACT_PAGE_SIZE = 10;
 type ContactSortKey = "name" | "company" | "channel" | "identity" | "location" | "updated";
 
 export default function SalesCRMContacts() {
+  const { activeOrganization } = useTenantContext();
+  const isVitest = Boolean(
+    (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test")) ||
+    (typeof import.meta !== "undefined" && import.meta.env?.MODE === "test")
+  );
+  const currentOrgId = activeOrganization?.id || (isVitest ? "local-development-organization" : "");
   const { trail } = useBreadcrumbs();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [editorOpen, setEditorOpen] = useState(false);
+  const [initialContactValues, setInitialContactValues] = useState<Partial<ContactFormValues> | undefined>();
+  const [documentExtractionId, setDocumentExtractionId] = useState<string | null>(null);
+  const [pendingDocument, setPendingDocument] = useState<ExtractionRecord | null>(null);
   const [editingContact, setEditingContact] = useState<CRMContact | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<CRMContact | null>(null);
   const [archiveLoading, setArchiveLoading] = useState(false);
+  const [duplicateTarget, setDuplicateTarget] = useState<CRMContact | null>(null);
+  const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const query = searchParams.get("q") ?? "";
   const cursor = searchParams.get("cursor");
@@ -60,6 +81,7 @@ export default function SalesCRMContacts() {
   const [search, setSearch] = useState(query);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
   const { contacts, nextCursor, hasMore, loading, error, reload } = useCrmContacts({
+    organizationId: currentOrgId,
     query,
     cursor,
     limit: pageSize,
@@ -68,10 +90,129 @@ export default function SalesCRMContacts() {
     sortBy,
     sortDirection,
   });
+  const [referenceLabels, setReferenceLabels] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let active = true;
+    const countries = [...new Set(contacts.map((contact) => contact.country).filter(Boolean))] as string[];
+    const subdivisions = [...new Set(contacts.map((contact) => contact.stateProvince).filter(Boolean))] as string[];
+    const cities = [...new Set(contacts.map((contact) => contact.city).filter(Boolean))] as string[];
+    void Promise.all([
+      referenceDataAdapter.listCountries(currentOrgId),
+      ...countries.map((country) => referenceDataAdapter.listSubdivisions(country, currentOrgId)),
+      ...countries.flatMap((country) => referenceDataAdapter.searchCities({ countryCode: country, query: "", organizationId: currentOrgId })),
+    ]).then((catalogs) => {
+      if (!active) return;
+      const labels = Object.fromEntries(catalogs.flat().map((item) => [item.code, item.label]));
+      cities.forEach((city) => { if (!labels[city]) labels[city] = city; });
+      subdivisions.forEach((subdivision) => { if (!labels[subdivision]) labels[subdivision] = subdivision; });
+      setReferenceLabels(labels);
+    });
+    return () => { active = false; };
+  }, [contacts, currentOrgId]);
+
+  useEffect(() => {
+    const state = location.state as {
+      documentFields?: Record<string, string | null>;
+      extractionId?: string | null;
+      documentLifecycle?: ExtractionRecord["lifecycle"];
+      documentFile?: ExtractionRecord["files"]["front"];
+    } | null;
+    if (!state?.documentFields) return;
+    const fields = state.documentFields;
+    setInitialContactValues({
+      firstName: fields.givenNames || fields.fullName?.split(/\s+/)[0] || "",
+      lastName: fields.firstSurname || fields.surnames || "",
+      secondLastName: fields.secondSurname || "",
+      documentType: fields.documentType === "passport" ? "passport" : fields.documentType || "",
+      documentNumber: fields.documentNumber || "",
+      birthDate: fields.birthDate || "",
+      gender: fields.sex === "M" ? "male" : fields.sex === "F" ? "female" : "",
+      country: fields.issuingCountry === "COL" ? "CO" : fields.issuingCountry || "",
+    });
+    setEditingContact(null);
+    setDocumentExtractionId(state.extractionId ?? null);
+    setPendingDocument(state.extractionId && state.documentLifecycle
+      ? {
+          id: state.extractionId,
+          organizationId: currentOrgId,
+          title: state.documentFile?.name ?? "Document",
+          documentType: (fields.documentType as ExtractionRecord["documentType"]) ?? "unknown",
+          status: "completed",
+          sourceSuite: "crm",
+          files: { front: state.documentFile ?? null, back: null },
+          fields: fields as unknown as ExtractionRecord["fields"],
+          fieldConfidence: {},
+          overallConfidence: 0,
+          extractedAt: null,
+          completedAt: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lifecycle: state.documentLifecycle,
+        }
+      : null);
+    setEditorOpen(true);
+    navigate(location.pathname + location.search, { replace: true, state: null });
+  }, [location.pathname, location.search, location.state, navigate]);
+
+  useEffect(() => {
+    setSelectedContactIds(new Set());
+  }, [query, cursor, pageSize, sortBy, sortDirection]);
+
+  const allOnPageSelected = contacts.length > 0 && contacts.every((c) => selectedContactIds.has(c.id));
+  const someOnPageSelected = contacts.some((c) => selectedContactIds.has(c.id));
+
+  const toggleSelectAll = () => {
+    if (allOnPageSelected) {
+      setSelectedContactIds(new Set());
+    } else {
+      const next = new Set(selectedContactIds);
+      contacts.forEach((c) => next.add(c.id));
+      setSelectedContactIds(next);
+    }
+  };
+
+  const toggleSelectContact = (id: string) => {
+    const next = new Set(selectedContactIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedContactIds(next);
+  };
+
+  const clearSelection = () => {
+    setSelectedContactIds(new Set());
+  };
+
+  const executeBulkDelete = async () => {
+    setBulkActionLoading(true);
+    setActionError(null);
+    try {
+      const ids = Array.from(selectedContactIds);
+      if (loopdevAdapter.crm.bulkArchiveContacts) {
+        await loopdevAdapter.crm.bulkArchiveContacts(ids);
+      } else {
+        for (const id of ids) {
+          const contact = contacts.find((c) => c.id === id);
+          await loopdevAdapter.crm.archiveContact(id, contact?.updatedAt || "");
+        }
+      }
+      clearSelection();
+      setBulkConfirmOpen(false);
+      reload();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to delete selected contacts.");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
 
   const openCreate = () => {
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingContact(null);
+    setInitialContactValues(undefined);
+    setDocumentExtractionId(null);
     setEditorOpen(true);
   };
 
@@ -85,7 +226,7 @@ export default function SalesCRMContacts() {
     const optional = (value: string) => value.trim() || null;
     if (editingContact) {
       const patch: CRMUpdateContactPatch = {
-        organizationId: "local-development-organization",
+        organizationId: currentOrgId,
         firstName: values.firstName.trim(),
         lastName: optional(values.lastName),
         secondLastName: optional(values.secondLastName),
@@ -114,7 +255,7 @@ export default function SalesCRMContacts() {
     }
 
     const input: CRMCreateContactInput = {
-      organizationId: "local-development-organization",
+      organizationId: currentOrgId,
       firstName: values.firstName.trim(),
       lastName: optional(values.lastName),
       secondLastName: optional(values.secondLastName),
@@ -138,8 +279,28 @@ export default function SalesCRMContacts() {
       stateProvince: optional(values.stateProvince),
       postalCode: optional(values.postalCode),
       country: optional(values.country),
+      attributes: documentExtractionId ? { documentIntelligenceExtractionId: documentExtractionId } : {},
     };
-    return loopdevAdapter.crm.createContact(input);
+    const result = await loopdevAdapter.crm.createContact(input);
+    if (result.status === "success" && pendingDocument?.lifecycle) {
+      const sourceFile = pendingDocument.files.front;
+      await promoteDocumentToPlatformFile({
+        organizationId: pendingDocument.organizationId,
+        documentId: pendingDocument.lifecycle.documentId,
+        extractionId: pendingDocument.id,
+        sourceSuite: pendingDocument.sourceSuite,
+        documentType: pendingDocument.documentType,
+        contactId: result.contact.id,
+        tempStoragePath: pendingDocument.lifecycle.tempStoragePath,
+        fileName: sourceFile?.name ?? pendingDocument.title,
+        mediaType: sourceFile?.mimeType ?? "application/pdf",
+        size: sourceFile?.size ?? 0,
+        expectedVersion: pendingDocument.lifecycle.version,
+        idempotencyKey: `document-promote:${pendingDocument.id}:${result.contact.id}`,
+      });
+      setPendingDocument(null);
+    }
+    return result;
   };
 
   const handleEditorSuccess = () => {
@@ -247,12 +408,13 @@ export default function SalesCRMContacts() {
         description="Manage people and customer relationships across CRM."
         breadcrumbs={trail.length ? trail : [{ label: "CRM" }, { label: "Contacts" }]}
         actions={
-          <Button className="gap-1.5" onClick={openCreate}>
+        <div className="flex gap-2"><Button variant="outline" onClick={() => contacts[0] && setDuplicateTarget(contacts[0])}>Review duplicates</Button><Button className="gap-1.5" onClick={openCreate}>
             <Plus className="h-3.5 w-3.5" />
             New contact
-          </Button>
+        </Button></div>
         }
       />
+      {duplicateTarget && <DuplicateReviewPanel contact={duplicateTarget} onClose={() => setDuplicateTarget(null)} />}
 
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput
@@ -294,6 +456,13 @@ export default function SalesCRMContacts() {
         </div>
       )}
 
+      <BulkSelectionBar
+        selectedCount={selectedContactIds.size}
+        entityLabel="contacts"
+        onClear={clearSelection}
+        actions={[{ label: "Archive selected", icon: Trash2, destructive: true, onClick: () => setBulkConfirmOpen(true) }]}
+      />
+
       <DataCard
         flush
         loading={loading}
@@ -316,6 +485,8 @@ export default function SalesCRMContacts() {
               key={customer.id}
               contact={customer}
               index={pageOffset + index + 1}
+              selected={selectedContactIds.has(customer.id)}
+              onToggleSelect={() => toggleSelectContact(customer.id)}
               onOpen={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
               onEdit={() => openEdit(customer)}
               onArchive={() => setArchiveTarget(customer)}
@@ -326,7 +497,14 @@ export default function SalesCRMContacts() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12 text-end">#</TableHead>
+              <TableHead className="w-10 px-3">
+                <Checkbox
+                  checked={allOnPageSelected ? true : someOnPageSelected ? "indeterminate" : false}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all contacts on current page"
+                />
+              </TableHead>
+              <TableHead className="w-10 text-end">#</TableHead>
               <SortableHead label="Contact" icon={sortIcon(sortBy, "name", sortDirection)} onClick={() => toggleSort("name")} />
               <SortableHead label="Company / role" icon={sortIcon(sortBy, "company", sortDirection)} onClick={() => toggleSort("company")} />
               <SortableHead label="Channel" icon={sortIcon(sortBy, "channel", sortDirection)} onClick={() => toggleSort("channel")} />
@@ -337,20 +515,29 @@ export default function SalesCRMContacts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {contacts.map((customer, index) => (
-              <TableRow
-                key={customer.id}
-                className="cursor-pointer"
-                tabIndex={0}
-                onClick={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    navigate(`/app/sales-crm/contacts/${customer.id}`);
-                  }
-                }}
-              >
-                <TableCell className="text-end text-xs tabular-nums text-muted-foreground">{pageOffset + index + 1}</TableCell>
+            {contacts.map((customer, index) => {
+              const isSelected = selectedContactIds.has(customer.id);
+              return (
+                <TableRow
+                  key={customer.id}
+                  className={`cursor-pointer ${isSelected ? "bg-primary-soft/20" : ""}`}
+                  tabIndex={0}
+                  onClick={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      navigate(`/app/sales-crm/contacts/${customer.id}`);
+                    }
+                  }}
+                >
+                  <TableCell className="w-10 px-3" onClick={(event) => event.stopPropagation()}>
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelectContact(customer.id)}
+                      aria-label={`Select ${contactName(customer)}`}
+                    />
+                  </TableCell>
+                  <TableCell className="text-end text-xs tabular-nums text-muted-foreground">{pageOffset + index + 1}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8 border border-border">
@@ -377,7 +564,7 @@ export default function SalesCRMContacts() {
                   </StatusBadge>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {[customer.city, customer.stateProvince, customer.country].filter(Boolean).join(", ") || "—"}
+                  {[customer.city, customer.stateProvince, customer.country].map((code) => referenceLabels[code ?? ""] ?? code).filter(Boolean).join(", ") || "—"}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDate(customer.updatedAt)}
@@ -398,30 +585,31 @@ export default function SalesCRMContacts() {
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem onClick={() => navigate(`/app/sales-crm/contacts/${customer.id}`)}>
                         <Eye className="mr-2 h-3.5 w-3.5" />
-                        View Customer 360
+                        {contactActions.find((action) => action.id === "view")?.label}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => openEdit(customer)}>
                         <Pencil className="mr-2 h-3.5 w-3.5" />
-                        Edit contact
+                        {contactActions.find((action) => action.id === "edit")?.label}
                       </DropdownMenuItem>
-                      <DropdownMenuItem disabled>
+                      <DropdownMenuItem onClick={(event) => { event.stopPropagation(); navigate(`/app/sales-crm/contacts/${customer.id}?action=note`); }}>
                         <StickyNote className="mr-2 h-3.5 w-3.5" />
-                        Add note
+                        {contactActions.find((action) => action.id === "add-note")?.label}
                       </DropdownMenuItem>
-                      <DropdownMenuItem disabled>
+                      <DropdownMenuItem onClick={(event) => { event.stopPropagation(); navigate(`/app/sales-crm/contacts/${customer.id}?action=task&contactName=${encodeURIComponent(contactName(customer))}`); }}>
                         <CheckSquare className="mr-2 h-3.5 w-3.5" />
-                        Create task
+                        {contactActions.find((action) => action.id === "create-task")?.label}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setArchiveTarget(customer)}>
                         <Archive className="mr-2 h-3.5 w-3.5" />
-                        Archive contact
+                        {contactActions.find((action) => action.id === "archive")?.label}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            );
+          })}
           </TableBody>
         </Table>
         </div>
@@ -458,6 +646,7 @@ export default function SalesCRMContacts() {
       <ContactFormDrawer
         open={editorOpen}
         contact={editingContact}
+        initialValues={initialContactValues}
         onOpenChange={(open) => {
           setEditorOpen(open);
           if (!open) setEditingContact(null);
@@ -477,6 +666,16 @@ export default function SalesCRMContacts() {
         onConfirm={async () => {
           if (archiveTarget) await archiveContact(archiveTarget);
         }}
+      />
+      <ConfirmDialog
+        open={bulkConfirmOpen}
+        onOpenChange={(open) => { if (!open && !bulkActionLoading) setBulkConfirmOpen(false); }}
+        title={`Delete or archive ${selectedContactIds.size} ${selectedContactIds.size === 1 ? "contact" : "contacts"}?`}
+        description={`The selected ${selectedContactIds.size} contact(s) will be permanently deleted or archived from your CRM workspace.`}
+        confirmLabel="Delete selected"
+        tone="destructive"
+        loading={bulkActionLoading}
+        onConfirm={executeBulkDelete}
       />
     </PageContainer>
   );

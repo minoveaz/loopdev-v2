@@ -1,0 +1,28 @@
+{
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/implementation/crm/leads/architecture-design.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/leads/platform-scope.md"
+  ],
+  "decisions": [
+    {
+      "id": "ACC-LEADS-001",
+      "status": "confirmed",
+      "summary": "Tenant and organization scoped authorization for CRM leads"
+    }
+  ],
+  "actions": [
+    "Confirmed permissions crm.leads.read and crm.leads.write"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed (5 ledgers checked)"
+    }
+  ],
+  "requirements": ["LEADS-REQ-LIST", "LEADS-REQ-QUALIFICATION", "LEADS-REQ-CONVERT"],
+  "evidence": ["docs/implementation/crm/leads/platform-scope.md"],
+  "next_handoff": "api-contracts"
+}

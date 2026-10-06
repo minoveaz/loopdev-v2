@@ -1,0 +1,30 @@
+{
+  "architecture_quality": "PASS",
+  "input_artifacts": [
+    "docs/implementation/crm/leads/architecture-design.md",
+    "docs/06-product/crm/leads/CRM_LEADS_UX_SPEC.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/crm/leads/platform-scope.md"
+  ],
+  "decisions": [
+    {
+      "id": "VIS-LEADS-001",
+      "status": "confirmed",
+      "summary": "Implement heat badges (Flame and Zap) and 1-tap speed dial visual layout"
+    }
+  ],
+  "actions": [
+    "Reviewed desktop Kanban cards and mobile speed dial layouts",
+    "Verified color palette, typography and responsive breakpoints"
+  ],
+  "validation": [
+    {
+      "command": "node scripts/validate-delivery-ledgers.mjs",
+      "result": "passed (5 ledgers checked)"
+    }
+  ],
+  "requirements": ["LEADS-REQ-LIST", "LEADS-REQ-PREVIEW", "LEADS-REQ-SPEED-DIAL"],
+  "evidence": ["docs/implementation/crm/leads/platform-scope.md"],
+  "next_handoff": "domain-model"
+}

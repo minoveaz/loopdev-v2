@@ -1,6 +1,7 @@
 import { Building2, Calendar, Mail, MapPin, MoreHorizontal, Pencil, Phone, Archive, Eye } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/common";
 import {
   DropdownMenu,
@@ -11,10 +12,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDate, getInitials } from "@/lib/formatters";
 import { contactName, type CRMContact } from "@/loopdev/domains/crm/adapter";
+import { contactActions } from "../../../../../packages/contracts/src/contact-actions";
 
 interface ContactMobileCardProps {
   contact: CRMContact;
   index: number;
+  selected?: boolean;
+  onToggleSelect?: () => void;
   onOpen: () => void;
   onEdit: () => void;
   onArchive: () => void;
@@ -23,6 +27,8 @@ interface ContactMobileCardProps {
 export function ContactMobileCard({
   contact,
   index,
+  selected = false,
+  onToggleSelect,
   onOpen,
   onEdit,
   onArchive,
@@ -31,7 +37,7 @@ export function ContactMobileCard({
 
   return (
     <article
-      className="surface-card-interactive p-4"
+      className={`surface-card-interactive p-4 transition-colors ${selected ? "border-primary/40 bg-primary-soft/20" : ""}`}
       onClick={onOpen}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -44,6 +50,15 @@ export function ContactMobileCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
+          {onToggleSelect && (
+            <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+              <Checkbox
+                checked={selected}
+                onCheckedChange={() => onToggleSelect()}
+                aria-label={`Select ${name}`}
+              />
+            </div>
+          )}
           <Avatar className="h-11 w-11 shrink-0 border border-border">
             <AvatarFallback className="bg-primary-soft text-xs font-semibold text-primary">
               {getInitials(name)}
@@ -69,11 +84,11 @@ export function ContactMobileCard({
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={(event) => { event.stopPropagation(); onOpen(); }}>
               <Eye className="mr-2 h-3.5 w-3.5" />
-              View Customer 360
+              {contactActions.find((action) => action.id === "view")?.label}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={(event) => { event.stopPropagation(); onEdit(); }}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
-              Edit contact
+              {contactActions.find((action) => action.id === "edit")?.label}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -81,7 +96,7 @@ export function ContactMobileCard({
               onClick={(event) => { event.stopPropagation(); onArchive(); }}
             >
               <Archive className="mr-2 h-3.5 w-3.5" />
-              Archive contact
+              {contactActions.find((action) => action.id === "archive")?.label}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

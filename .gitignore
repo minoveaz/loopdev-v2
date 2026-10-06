@@ -27,3 +27,10 @@ out
 *.njsproj
 *.sln
 *.sw?
+
+.tmp
+.tmp/*
+
+# Local workflow and Supabase CLI state
+.resume-*.json
+supabase/.temp/

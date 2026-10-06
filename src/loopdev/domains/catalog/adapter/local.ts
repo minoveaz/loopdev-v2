@@ -26,7 +26,8 @@ import type {
   PriceEntry,
   ResolvedCatalogReference,
 } from "../types";
-import { CatalogAdapterError, type CatalogAdapter } from "./index";
+import { CatalogAdapterError } from "../types";
+import type { CatalogAdapter } from "./index";
 
 function scopeFor(params: CatalogScopeParams) {
   return { organizationId: params.organizationId, workspaceId: params.workspaceId ?? null };
@@ -67,7 +68,7 @@ function assertWrite(params: CatalogScopeParams): void {
   }
 }
 
-function assertOwned<T extends { id: string; organizationId: string; workspaceId: string | null }>(store: { get(id: string): T | null }, id: string, params: CatalogScopeParams): T {
+function assertOwned<T extends { id: string; organizationId: string; workspaceId: string | null }>(store: { get(id: string): T | null | undefined }, id: string, params: CatalogScopeParams): T {
   const current = store.get(id);
   if (!current || current.organizationId !== params.organizationId || (params.workspaceId !== undefined && current.workspaceId !== params.workspaceId)) {
     throw new CatalogAdapterError("Catalog record not found in this scope.", "server-error");

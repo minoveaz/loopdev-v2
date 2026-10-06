@@ -1,0 +1,390 @@
+{
+  "$schema": "../../_schemas/delivery-ledger.schema.json",
+  "schema_version": 1,
+  "suite": "crm",
+  "module": "leads",
+  "status": "blocked",
+  "approved_by": "user",
+  "approved_at": "2026-09-17T20:00:00+02:00",
+  "approval_source": "user approval during leads delivery run",
+  "product_sources": [
+    "docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md",
+    "docs/06-product/crm/leads/CRM_LEADS_UI_CONTRACT.md"
+  ],
+  "previous_ledger": null,
+  "requirements": [
+    {
+      "id": "LEADS-REQ-LIST",
+      "title": "Authorized lead listing and dual-mode table/kanban view",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web", "ios", "android"],
+      "acceptance_criteria": [
+        "Users can switch between table and kanban view on desktop, and view mobile optimized lead list"
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": ["LEADS-CAP-LIST", "LEADS-CAP-KANBAN"]
+    },
+    {
+      "id": "LEADS-REQ-PREVIEW",
+      "title": "Quick preview drawer without full page navigation",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/leads/CRM_LEADS_UI_CONTRACT.md",
+      "platforms": ["desktop_web"],
+      "acceptance_criteria": [
+        "Clicking a lead opens a slide-over AppDrawer showing contact, BANT score, and actions"
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": ["LEADS-CAP-PREVIEW"]
+    },
+    {
+      "id": "LEADS-REQ-SPEED-DIAL",
+      "title": "Mobile 1-tap speed dial actions",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md",
+      "platforms": ["mobile_web", "ios", "android"],
+      "acceptance_criteria": [
+        "Mobile reps can trigger call, email, whatsapp, and view actions directly from cards"
+      ],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["LEADS-CAP-SPEED-DIAL"]
+    },
+    {
+      "id": "LEADS-REQ-QUALIFICATION",
+      "title": "BANT Qualification criteria and interactive stage stepper",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web", "ios", "android"],
+      "acceptance_criteria": [
+        "Leads track estimated value, timeline, need, and advance through stages"
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": ["LEADS-CAP-QUALIFICATION"]
+    },
+    {
+      "id": "LEADS-REQ-CONVERT",
+      "title": "Convert qualified lead to commercial deal / opportunity",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md",
+      "platforms": ["desktop_web", "mobile_web", "ios", "android"],
+      "acceptance_criteria": [
+        "Qualified leads can be converted into opportunities with amount and name"
+      ],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["LEADS-CAP-CONVERT"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "LEADS-CAP-LIST",
+      "name": "Lead list and search",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["LEADS-REQ-LIST"],
+      "semantics": { "operations": ["listLeads", "searchLeads"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "leads table / kanban", "route": "/app/sales-crm/leads" },
+        "mobile_web": { "required": true, "surface": "mobile leads screen", "route": "/app/sales-crm/leads" },
+        "ios": { "required": true, "surface": "mobile leads screen", "route": "/app/sales-crm/leads" },
+        "android": { "required": true, "surface": "mobile leads screen", "route": "/app/sales-crm/leads" }
+      },
+      "parity": { "domain": "verified", "renderer": "verified", "operations": "verified" },
+      "operation_coverage": [
+        { "id": "listLeads", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "implemented", "android": "implemented", "adaptation_ref": null },
+        { "id": "searchLeads", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "implemented", "android": "implemented", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "success"],
+      "permissions": ["crm.leads.read"],
+      "contract_refs": ["docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md"],
+      "task_ids": ["LEADS-TASK-LIST-DESKTOP", "LEADS-TASK-LIST-MOBILE"]
+    },
+    {
+      "id": "LEADS-CAP-KANBAN",
+      "name": "Visual Stage Kanban Board",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["LEADS-REQ-LIST"],
+      "semantics": { "operations": ["viewKanban", "moveStage"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "kanban board", "route": "/app/sales-crm/leads" },
+        "mobile_web": { "required": false, "surface": "stage filter pills", "route": "/app/sales-crm/leads" },
+        "ios": { "required": false, "surface": "stage filter pills", "route": "/app/sales-crm/leads" },
+        "android": { "required": false, "surface": "stage filter pills", "route": "/app/sales-crm/leads" }
+      },
+      "parity": { "domain": "verified", "renderer": "verified", "operations": "verified" },
+      "operation_coverage": [
+        { "id": "viewKanban", "desktop_web": "implemented", "mobile_web": "not_applicable", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "moveStage", "desktop_web": "implemented", "mobile_web": "not_applicable", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "success"],
+      "permissions": ["crm.leads.read"],
+      "contract_refs": ["docs/06-product/crm/leads/CRM_LEADS_UI_CONTRACT.md"],
+      "task_ids": ["LEADS-TASK-KANBAN-DESKTOP"]
+    },
+    {
+      "id": "LEADS-CAP-PREVIEW",
+      "name": "Slide-out Quick Preview Drawer",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["LEADS-REQ-PREVIEW"],
+      "semantics": { "operations": ["previewLead"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN", "NOT_FOUND"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "preview drawer", "route": "/app/sales-crm/leads" },
+        "mobile_web": { "required": false, "surface": "detail screen", "route": "/app/sales-crm/leads/:leadId" },
+        "ios": { "required": false, "surface": "detail screen", "route": "/app/sales-crm/leads/:leadId" },
+        "android": { "required": false, "surface": "detail screen", "route": "/app/sales-crm/leads/:leadId" }
+      },
+      "parity": { "domain": "verified", "renderer": "verified", "operations": "verified" },
+      "operation_coverage": [
+        { "id": "previewLead", "desktop_web": "implemented", "mobile_web": "not_applicable", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "error", "forbidden", "success"],
+      "permissions": ["crm.leads.read"],
+      "contract_refs": ["docs/06-product/crm/leads/CRM_LEADS_UI_CONTRACT.md"],
+      "task_ids": ["LEADS-TASK-PREVIEW-DESKTOP"]
+    },
+    {
+      "id": "LEADS-CAP-SPEED-DIAL",
+      "name": "Mobile 1-Tap Speed Dial Actions",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["LEADS-REQ-SPEED-DIAL"],
+      "semantics": { "operations": ["callLead", "emailLead", "whatsappLead", "viewLead"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN"] },
+      "platforms": {
+        "desktop_web": { "required": false, "surface": "table actions", "route": "/app/sales-crm/leads" },
+        "mobile_web": { "required": true, "surface": "lead card speed dial", "route": "/app/sales-crm/leads" },
+        "ios": { "required": true, "surface": "lead card speed dial", "route": "/app/sales-crm/leads" },
+        "android": { "required": true, "surface": "lead card speed dial", "route": "/app/sales-crm/leads" }
+      },
+      "parity": { "domain": "verified", "renderer": "verified", "operations": "verified" },
+      "operation_coverage": [
+        { "id": "callLead", "desktop_web": "not_applicable", "mobile_web": "implemented", "ios": "implemented", "android": "implemented", "adaptation_ref": null },
+        { "id": "emailLead", "desktop_web": "not_applicable", "mobile_web": "implemented", "ios": "implemented", "android": "implemented", "adaptation_ref": null },
+        { "id": "whatsappLead", "desktop_web": "not_applicable", "mobile_web": "implemented", "ios": "implemented", "android": "implemented", "adaptation_ref": null },
+        { "id": "viewLead", "desktop_web": "not_applicable", "mobile_web": "implemented", "ios": "implemented", "android": "implemented", "adaptation_ref": null }
+      ],
+      "states": ["loading", "error", "forbidden", "success"],
+      "permissions": ["crm.leads.read"],
+      "contract_refs": ["docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md"],
+      "task_ids": ["LEADS-TASK-SPEED-DIAL-MOBILE"]
+    },
+    {
+      "id": "LEADS-CAP-QUALIFICATION",
+      "name": "BANT Qualification & Stage Stepper",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["LEADS-REQ-QUALIFICATION"],
+      "semantics": { "operations": ["updateLeadQualification", "advanceStage"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN", "CONFLICT"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "preview drawer & detail", "route": "/app/sales-crm/leads/:leadId" },
+        "mobile_web": { "required": true, "surface": "detail stage stepper", "route": "/app/sales-crm/leads/:leadId" },
+        "ios": { "required": true, "surface": "detail stage stepper", "route": "/app/sales-crm/leads/:leadId" },
+        "android": { "required": true, "surface": "detail stage stepper", "route": "/app/sales-crm/leads/:leadId" }
+      },
+      "parity": { "domain": "verified", "renderer": "verified", "operations": "verified" },
+      "operation_coverage": [
+        { "id": "updateLeadQualification", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "implemented", "android": "implemented", "adaptation_ref": null },
+        { "id": "advanceStage", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "implemented", "android": "implemented", "adaptation_ref": null }
+      ],
+      "states": ["loading", "pending", "error", "forbidden", "conflict", "success"],
+      "permissions": ["crm.leads.write"],
+      "contract_refs": ["docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md"],
+      "task_ids": ["LEADS-TASK-QUALIFICATION-DESKTOP", "LEADS-TASK-QUALIFICATION-MOBILE"]
+    },
+    {
+      "id": "LEADS-CAP-CONVERT",
+      "name": "Opportunity Conversion",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["LEADS-REQ-CONVERT"],
+      "semantics": { "operations": ["convertLeadToOpportunity"], "validation_contract": null, "errors": ["UNAUTHENTICATED", "FORBIDDEN", "VALIDATION_ERROR"] },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "conversion dialog", "route": "/app/sales-crm/leads" },
+        "mobile_web": { "required": true, "surface": "native conversion modal", "route": "/app/sales-crm/leads/:leadId" },
+        "ios": { "required": true, "surface": "native conversion modal", "route": "/app/sales-crm/leads/:leadId" },
+        "android": { "required": true, "surface": "native conversion modal", "route": "/app/sales-crm/leads/:leadId" }
+      },
+      "parity": { "domain": "verified", "renderer": "verified", "operations": "verified" },
+      "operation_coverage": [
+        { "id": "convertLeadToOpportunity", "desktop_web": "implemented", "mobile_web": "implemented", "ios": "implemented", "android": "implemented", "adaptation_ref": null }
+      ],
+      "states": ["loading", "pending", "error", "forbidden", "success"],
+      "permissions": ["crm.leads.write", "crm.opportunities.write"],
+      "contract_refs": ["docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md"],
+      "task_ids": ["LEADS-TASK-CONVERT-DESKTOP", "LEADS-TASK-CONVERT-MOBILE"]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "LEADS-TASK-LIST-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Implement desktop table and view switcher",
+      "requirement_ids": ["LEADS-REQ-LIST"],
+      "capability_ids": ["LEADS-CAP-LIST"],
+      "platforms": ["desktop_web"],
+      "dependencies": [],
+      "owner": "CRM Web",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": ["Desktop leads page supports table and kanban view toggle"],
+      "validation": [{ "command": "npx tsc -p tsconfig.app.json --noEmit", "required": true }],
+      "files": ["src/loopdev/pages/crm/Leads.tsx"],
+      "blocked_by": [],
+      "evidence_refs": ["src/loopdev/pages/crm/Leads.tsx"]
+    },
+    {
+      "id": "LEADS-TASK-KANBAN-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Implement desktop stage Kanban board",
+      "requirement_ids": ["LEADS-REQ-LIST"],
+      "capability_ids": ["LEADS-CAP-KANBAN"],
+      "platforms": ["desktop_web"],
+      "dependencies": ["LEADS-TASK-LIST-DESKTOP"],
+      "owner": "CRM Web",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": ["Kanban renders columns by stage with sum amounts and card actions"],
+      "validation": [{ "command": "npx tsc -p tsconfig.app.json --noEmit", "required": true }],
+      "files": ["src/loopdev/components/crm/LeadKanbanBoard.tsx"],
+      "blocked_by": [],
+      "evidence_refs": ["src/loopdev/components/crm/LeadKanbanBoard.tsx"]
+    },
+    {
+      "id": "LEADS-TASK-PREVIEW-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Implement desktop quick preview drawer",
+      "requirement_ids": ["LEADS-REQ-PREVIEW"],
+      "capability_ids": ["LEADS-CAP-PREVIEW"],
+      "platforms": ["desktop_web"],
+      "dependencies": ["LEADS-TASK-LIST-DESKTOP"],
+      "owner": "CRM Web",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": ["Row or card click opens slide-over drawer with BANT and actions"],
+      "validation": [{ "command": "npx tsc -p tsconfig.app.json --noEmit", "required": true }],
+      "files": ["src/loopdev/components/crm/LeadQuickPreviewDrawer.tsx"],
+      "blocked_by": [],
+      "evidence_refs": ["src/loopdev/components/crm/LeadQuickPreviewDrawer.tsx"]
+    },
+    {
+      "id": "LEADS-TASK-LIST-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Implement mobile leads screen with KPI ribbon",
+      "requirement_ids": ["LEADS-REQ-LIST"],
+      "capability_ids": ["LEADS-CAP-LIST"],
+      "platforms": ["mobile_web", "ios", "android"],
+      "dependencies": [],
+      "owner": "CRM Mobile",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": ["Mobile leads screen renders KPIs, search, stage filters and lead cards"],
+      "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }],
+      "files": ["apps/mobile/components/MobileLeadsScreen.tsx"],
+      "blocked_by": [],
+      "evidence_refs": ["apps/mobile/components/MobileLeadsScreen.tsx"]
+    },
+    {
+      "id": "LEADS-TASK-SPEED-DIAL-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "blocked",
+      "title": "Implement mobile 1-tap speed dial",
+      "requirement_ids": ["LEADS-REQ-SPEED-DIAL"],
+      "capability_ids": ["LEADS-CAP-SPEED-DIAL"],
+      "platforms": ["mobile_web", "ios", "android"],
+      "dependencies": ["LEADS-TASK-LIST-MOBILE"],
+      "owner": "CRM Mobile",
+      "risk": "medium",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": ["1-tap phone, email, messaging triggers platform native handlers"],
+      "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }],
+      "files": ["apps/mobile/components/MobileLeadsScreen.tsx"],
+      "blocked_by": ["Structured E4 runtime evidence is required for the mobile native phone, email, and messaging handlers."],
+      "evidence_refs": ["apps/mobile/components/MobileLeadsScreen.tsx"]
+    },
+    {
+      "id": "LEADS-TASK-QUALIFICATION-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Verify desktop lead qualification display",
+      "requirement_ids": ["LEADS-REQ-QUALIFICATION"],
+      "capability_ids": ["LEADS-CAP-QUALIFICATION"],
+      "platforms": ["desktop_web"],
+      "dependencies": ["LEADS-TASK-PREVIEW-DESKTOP"],
+      "owner": "CRM Web",
+      "risk": "low",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": ["Desktop displays BANT fields and status accurately"],
+      "validation": [{ "command": "npx tsc -p tsconfig.app.json --noEmit", "required": true }],
+      "files": ["src/loopdev/pages/crm/LeadDetail.tsx"],
+      "blocked_by": [],
+      "evidence_refs": ["src/loopdev/pages/crm/LeadDetail.tsx"]
+    },
+    {
+      "id": "LEADS-TASK-QUALIFICATION-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Implement mobile stage stepper and detail screen",
+      "requirement_ids": ["LEADS-REQ-QUALIFICATION"],
+      "capability_ids": ["LEADS-CAP-QUALIFICATION"],
+      "platforms": ["mobile_web", "ios", "android"],
+      "dependencies": ["LEADS-TASK-LIST-MOBILE"],
+      "owner": "CRM Mobile",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": ["Interactive stage stepper advances status and edit modal updates BANT"],
+      "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }],
+      "files": ["apps/mobile/components/MobileLeadDetailScreen.tsx"],
+      "blocked_by": [],
+      "evidence_refs": ["apps/mobile/components/MobileLeadDetailScreen.tsx"]
+    },
+    {
+      "id": "LEADS-TASK-CONVERT-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "blocked",
+      "title": "Verify desktop lead conversion dialog",
+      "requirement_ids": ["LEADS-REQ-CONVERT"],
+      "capability_ids": ["LEADS-CAP-CONVERT"],
+      "platforms": ["desktop_web"],
+      "dependencies": ["LEADS-TASK-LIST-DESKTOP"],
+      "owner": "CRM Web",
+      "risk": "medium",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": ["Desktop conversion dialog creates opportunity and marks lead converted"],
+      "validation": [{ "command": "npx tsc -p tsconfig.app.json --noEmit", "required": true }],
+      "files": ["src/loopdev/pages/crm/Leads.tsx"],
+      "blocked_by": ["Structured E4 desktop journey evidence is required for lead-to-opportunity conversion."],
+      "evidence_refs": ["src/loopdev/pages/crm/Leads.tsx"]
+    },
+    {
+      "id": "LEADS-TASK-CONVERT-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "blocked",
+      "title": "Implement mobile opportunity conversion modal",
+      "requirement_ids": ["LEADS-REQ-CONVERT"],
+      "capability_ids": ["LEADS-CAP-CONVERT"],
+      "platforms": ["mobile_web", "ios", "android"],
+      "dependencies": ["LEADS-TASK-QUALIFICATION-MOBILE"],
+      "owner": "CRM Mobile",
+      "risk": "high",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": ["Mobile conversion modal creates opportunity and updates state"],
+      "validation": [{ "command": "cd apps/mobile && npx tsc --noEmit", "required": true }],
+      "files": ["apps/mobile/components/MobileLeadDetailScreen.tsx", "apps/mobile/adapters/crm.ts"],
+      "blocked_by": ["Structured E4 mobile journey evidence is required for lead-to-opportunity conversion."],
+      "evidence_refs": ["apps/mobile/components/MobileLeadDetailScreen.tsx"]
+    }
+  ],
+  "change_requests": [],
+  "blockers": [
+    "LEADS-TASK-SPEED-DIAL-MOBILE: Structured E4 mobile journey evidence is required for native phone, email, and messaging handlers.",
+    "LEADS-TASK-CONVERT-DESKTOP: Structured E4 desktop journey evidence is required for lead-to-opportunity conversion.",
+    "LEADS-TASK-CONVERT-MOBILE: Structured E4 mobile journey evidence is required for lead-to-opportunity conversion."
+  ]
+}

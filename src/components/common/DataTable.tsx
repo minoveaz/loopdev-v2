@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, X, type LucideIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,6 +13,8 @@ import {
 import { EmptyState } from "./EmptyState";
 import { TablePagination } from "./TablePagination";
 import { TableSkeleton } from "./TableSkeleton";
+import { BulkSelectionBar } from "./BulkSelectionBar";
+import { useT } from "@/i18n";
 
 /**
  * Column definition for {@link DataTable}.
@@ -120,6 +122,7 @@ export function DataTable<T extends { id: string }>({
   striped = false,
   className,
 }: DataTableProps<T>) {
+  const t = useT();
   const [sortKey, setSortKey] = useState<string | null>(initialSort?.key ?? null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">(initialSort?.dir ?? "asc");
   const [page, setPage] = useState(1);
@@ -201,55 +204,22 @@ export function DataTable<T extends { id: string }>({
 
   return (
     <div className={cn("flex flex-col", className)}>
-      {(toolbar || (showBulk && selected.size > 0)) && (
-        <div
-          className={cn(
-            "flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between",
-            showBulk && selected.size > 0
-              ? "bg-primary-soft/40"
-              : "bg-card-muted/40",
-          )}
-        >
-          {showBulk && selected.size > 0 ? (
-            <>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                  {selected.size} selected
-                </span>
-                <button
-                  type="button"
-                  onClick={clearSelection}
-                  className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground transition-fast hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                >
-                  <X className="h-3 w-3" />
-                  Clear
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {bulkActions!.map((a) => {
-                  const Icon = a.icon;
-                  return (
-                    <Button
-                      key={a.label}
-                      size="sm"
-                      variant={a.destructive ? "destructive" : "outline"}
-                      onClick={() => {
-                        a.onClick(selectedRows);
-                      }}
-                      className="h-8 gap-1.5"
-                    >
-                      {Icon && <Icon className="h-3.5 w-3.5" />}
-                      {a.label}
-                    </Button>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            toolbar
-          )}
+      {showBulk && selected.size > 0 ? (
+        <BulkSelectionBar
+          selectedCount={selected.size}
+          onClear={clearSelection}
+          actions={bulkActions!.map((action) => ({
+            label: action.label,
+            icon: action.icon,
+            destructive: action.destructive,
+            onClick: () => action.onClick(selectedRows),
+          }))}
+        />
+      ) : toolbar ? (
+        <div className="flex flex-col gap-3 border-b border-border bg-card-muted/40 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          {toolbar}
         </div>
-      )}
+      ) : null}
 
       {loading ? (
         <div className="p-6">
@@ -273,7 +243,7 @@ export function DataTable<T extends { id: string }>({
                 {showBulk && (
                   <th className={cn("w-10", headPad)}>
                     <Checkbox
-                      aria-label="Select page"
+                      aria-label={t("common.pagination.selectPage")}
                       checked={allSelected ? true : someSelected ? "indeterminate" : false}
                       onCheckedChange={(v) => togglePageSelection(!!v)}
                     />
@@ -319,7 +289,7 @@ export function DataTable<T extends { id: string }>({
                 })}
                 {rowActions?.length ? (
                   <th className={cn("w-12 text-right", headPad)}>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t("common.pagination.actions")}</span>
                   </th>
                 ) : null}
               </tr>
@@ -356,7 +326,7 @@ export function DataTable<T extends { id: string }>({
                     {showBulk && (
                       <td className={rowPad} onClick={(e) => e.stopPropagation()}>
                         <Checkbox
-                          aria-label="Select row"
+                          aria-label={t("common.pagination.selectRow")}
                           checked={isSelected}
                           onCheckedChange={(v) => toggleRow(row.id, !!v)}
                         />
@@ -387,7 +357,7 @@ export function DataTable<T extends { id: string }>({
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 rounded-lg text-muted-foreground opacity-70 transition-fast hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100 group-hover/row:opacity-100 data-[state=open]:bg-muted data-[state=open]:text-foreground data-[state=open]:opacity-100"
-                              aria-label="Row actions"
+                              aria-label={t("common.pagination.rowActions")}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>

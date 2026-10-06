@@ -1,0 +1,685 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import {
+  Building2,
+  Calendar,
+  DollarSign,
+  ExternalLink,
+  Mail,
+  MapPin,
+  MessageSquarePlus,
+  Phone,
+  RotateCcw,
+  Sparkles,
+  TrendingUp,
+  User,
+  XCircle,
+  FileText,
+} from "lucide-react-native";
+import { mobileCrmAdapter, type CRMOpportunity } from "../adapters/crm";
+import { createMobileQuote } from "../adapters/quotes";
+import { mobileContactAdapter } from "../adapters/contact";
+import type { ContactRecord } from "../../../packages/contracts/src/contact-port";
+import { type PipelineStageId } from "../../../packages/contracts/src/pipeline-capability";
+import {
+  MobilePageContainer,
+  MobilePageHeader,
+  MobileCard,
+  MobileStepper,
+  MobileProgressBar,
+  MobileMetricGrid,
+  MobileSpeedDialBar,
+  MobilePageTabs,
+  MobileButton,
+  MobileConfirmDialog,
+  MobileLoadingState,
+  MobileEmptyState,
+  MobileStatusBadge,
+  MobileBackLink,
+} from "./ui";
+import { useT } from "../i18n";
+
+interface Props {
+  opportunityId: string;
+  onBack: () => void;
+  onNavigateToContact?: (contactId: string) => void;
+}
+
+const STAGE_KEYS: Array<{ key: PipelineStageId; step: number; prob: number }> = [
+  { key: "prospecting", step: 1, prob: 15 },
+  { key: "qualified", step: 2, prob: 40 },
+  { key: "proposal", step: 3, prob: 65 },
+  { key: "negotiation", step: 4, prob: 80 },
+  { key: "won", step: 5, prob: 100 },
+];
+
+export function MobileOpportunityDetailScreen({
+  opportunityId,
+  onBack,
+  onNavigateToContact,
+}: Props) {
+  const t = useT();
+  const stageLabel = (stage: PipelineStageId) => t(`crm.pipeline.stages.${stage}`);
+  const stages = STAGE_KEYS.map((stage) => ({ ...stage, label: stageLabel(stage.key) }));
+  const [opportunity, setOpportunity] = useState<CRMOpportunity | null>(null);
+  const [contact, setContact] = useState<ContactRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>("summary");
+
+  // Reopen modal
+  const [reopenModalOpen, setReopenModalOpen] = useState(false);
+  const [reopenReason, setReopenReason] = useState("");
+
+  // Notes state
+  const [notes, setNotes] = useState<Array<{ id: string; text: string; date: string }>>([
+    { id: "1", text: "Reunión de alineación comercial realizada. Cliente confirma interés.", date: "Hoy, 11:00" },
+  ]);
+  const [newNoteText, setNewNoteText] = useState("");
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const opp = await mobileCrmAdapter.getOpportunity(opportunityId);
+      if (opp) {
+        setOpportunity(opp);
+        if (opp.contactId) {
+          try {
+            const found = await mobileContactAdapter.getCustomer360(opp.contactId);
+            if (found?.contact) setContact(found.contact);
+          } catch {
+            // noop
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error loading opportunity:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [opportunityId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const currentStep = useMemo(() => {
+    if (!opportunity) return 1;
+    if (opportunity.stageKey === "lost") return 6;
+    const found = stages.find((s) => s.key === opportunity.stageKey);
+    return found ? found.step : 1;
+  }, [opportunity]);
+
+  const handleStageClick = async (targetKey: PipelineStageId) => {
+    if (!opportunity) return;
+    if (opportunity.stageKey === targetKey) return;
+
+    if (opportunity.stageKey === "won" || opportunity.stageKey === "lost") {
+      setReopenModalOpen(true);
+      return;
+    }
+
+    try {
+      const updated = await mobileCrmAdapter.moveOpportunityStage(opportunity.id, targetKey, undefined, opportunity.updatedAt);
+      setOpportunity(updated);
+    } catch (err: any) {
+      Alert.alert(t("crm.common.error"), err?.message || t("crm.pipeline.errors.stageUpdate"));
+    }
+  };
+
+  const handleReopenSubmit = async () => {
+    if (!opportunity || !reopenReason.trim()) {
+      Alert.alert(t("crm.pipeline.errors.reasonRequired"), t("crm.pipeline.errors.reopenReason"));
+      return;
+    }
+
+    try {
+      const updated = await mobileCrmAdapter.reopenOpportunity(opportunity.id, reopenReason);
+      setOpportunity(updated);
+      setReopenModalOpen(false);
+      setReopenReason("");
+    } catch (err: any) {
+      Alert.alert(t("crm.common.error"), err?.message || t("crm.pipeline.errors.reopenFailed"));
+    }
+  };
+
+  const handleAddNote = () => {
+    if (!newNoteText.trim()) return;
+    const item = {
+      id: String(Date.now()),
+      text: newNoteText.trim(),
+      date: "Ahora mismo",
+    };
+    setNotes([item, ...notes]);
+    setNewNoteText("");
+  };
+
+  const handleCreateQuote = async () => {
+    if (!opportunity) return;
+    const lines = (opportunity.lines ?? []).filter((line: any) => line.unitAmount != null).map((line: any) => ({ catalogItemId: line.catalogItemId ?? null, productKey: line.productKey ?? null, label: line.label || line.productKey || "Product line", quantity: line.quantity, unitAmount: line.unitAmount }));
+    if (!lines.length) {
+      Alert.alert("Cotización", "Añade una línea con importe antes de crear la cotización.");
+      return;
+    }
+    try {
+      await createMobileQuote({ organizationId: opportunity.organizationId, opportunityId: opportunity.id, currency: opportunity.currency || "EUR", lines });
+      Alert.alert("Cotización", "Cotización creada correctamente.");
+    } catch (cause) {
+      Alert.alert("Cotización", cause instanceof Error ? cause.message : "No se pudo crear la cotización.");
+    }
+  };
+
+  const openPhone = (phone?: string) => {
+    if (!phone) {
+      Alert.alert(t("crm.pipeline.errors.noPhone"), t("crm.opportunity.noPhone"));
+      return;
+    }
+    Linking.openURL(`tel:${phone}`);
+  };
+
+  const openWhatsApp = (phone?: string) => {
+    if (!phone) {
+      Alert.alert(t("crm.pipeline.errors.noPhone"), t("crm.opportunity.noPhone"));
+      return;
+    }
+    const cleanNumber = phone.replace(/[^\d+]/g, "");
+    Linking.openURL(`https://wa.me/${cleanNumber}`);
+  };
+
+  const openEmail = (email?: string) => {
+    if (!email) {
+      Alert.alert(t("crm.pipeline.errors.noEmail"), t("crm.opportunity.noEmail"));
+      return;
+    }
+    Linking.openURL(`mailto:${email}`);
+  };
+
+  const formatCurrency = (amt: number | null, curr: string = "USD") => {
+    if (amt === null || amt === undefined) return "$0";
+    return `$${amt.toLocaleString("en-US")} ${curr}`;
+  };
+
+  if (loading) {
+    return (
+      <MobilePageContainer>
+        <MobileBackLink label={t("crm.pipeline.back", "Volver al pipeline")} onPress={onBack} />
+        <MobileLoadingState message={t("crm.opportunity.loading")} />
+      </MobilePageContainer>
+    );
+  }
+
+  if (!opportunity) {
+    return (
+      <MobilePageContainer>
+        <MobileBackLink label={t("crm.pipeline.back", "Volver al pipeline")} onPress={onBack} />
+        <MobileEmptyState
+          title={t("crm.opportunity.notFound")}
+          description={t("crm.opportunity.notFoundDescription")}
+          actionLabel={t("crm.pipeline.back", "Volver al pipeline")}
+          onAction={onBack}
+        />
+      </MobilePageContainer>
+    );
+  }
+
+  const probPct =
+    opportunity.probability !== undefined
+      ? Math.round(opportunity.probability * 100)
+      : opportunity.stageKey === "won"
+      ? 100
+      : opportunity.stageKey === "lost"
+      ? 0
+      : 50;
+  const weightedValue = Math.round((opportunity.amount || 0) * (probPct / 100));
+
+  const stepperSteps = stages.map((s) => ({
+    key: s.key,
+    label: s.label,
+    stepNumber: s.step,
+  }));
+
+  const detailTabs = [
+    { id: "summary", label: t("crm.opportunity.tabs.summary") },
+    { id: "contact", label: t("crm.opportunity.tabs.contact") },
+    { id: "notes", label: t("crm.opportunity.tabs.notes"), count: notes.length },
+  ];
+
+  return (
+    <MobilePageContainer>
+      {/* Canonical Back Link */}
+      <MobileBackLink label={t("crm.pipeline.back", "Volver al pipeline")} onPress={onBack} />
+
+      {/* Opportunity Hero Header Card */}
+      <MobileCard style={styles.heroCard}>
+        <View style={styles.heroTopRow}>
+          <View style={{ flex: 1, paddingRight: 8 }}>
+            <Text style={styles.heroTitle} numberOfLines={2}>
+              {opportunity.name}
+            </Text>
+            <Text style={styles.heroSubtitle} numberOfLines={1}>
+              {`${contact ? `${contact.givenName} ${contact.familyName}` : t("crm.pipeline.b2bContact")} · ${
+                contact?.organizationName || t("crm.pipeline.defaultCompany")
+              }`}
+            </Text>
+          </View>
+          <MobileStatusBadge
+            status={
+              opportunity.stageKey === "won"
+                ? "success"
+                : opportunity.stageKey === "lost"
+                ? "destructive"
+                : opportunity.stageKey === "negotiation"
+                ? "warning"
+                : "info"
+            }
+            label={stageLabel(opportunity.stageKey) || opportunity.stageKey}
+            size="sm"
+          />
+        </View>
+      </MobileCard>
+        {/* Stepper Card */}
+        <MobileCard style={styles.cardSpacing}>
+          <View style={styles.stepperHeader}>
+            <Text style={styles.sectionHeading}>{t("crm.opportunity.stage")}</Text>
+            <Text style={styles.probBadgeText}>{t("crm.opportunity.probability", { percent: probPct })}</Text>
+          </View>
+          <MobileStepper
+            steps={stepperSteps}
+            currentStep={opportunity.stageKey}
+            onStepSelect={(key) => handleStageClick(key as PipelineStageId)}
+          />
+
+          {/* Lost Stage Quick Option */}
+          <View style={styles.lostRow}>
+            <MobileButton
+              variant={opportunity.stageKey === "lost" ? "destructive" : "outline"}
+              size="sm"
+              icon={XCircle}
+              label={opportunity.stageKey === "lost" ? t("crm.opportunity.lost") : t("crm.opportunity.markLost")}
+              onPress={() => handleStageClick("lost")}
+              minHeight={44}
+            />
+          </View>
+        </MobileCard>
+
+        {/* Commercial KPIs Grid */}
+        <View style={styles.metricsWrapper}>
+          <MobileMetricGrid
+            columns={2}
+            metrics={[
+              {
+                id: "amount",
+                label: t("crm.opportunity.totalValue"),
+                value: formatCurrency(opportunity.amount, opportunity.currency),
+                subtext: t("crm.pipeline.metrics.nominal"),
+                status: "info",
+                icon: DollarSign,
+              },
+              {
+                id: "weighted",
+                label: t("crm.pipeline.metrics.forecast"),
+                value: formatCurrency(weightedValue, opportunity.currency),
+                subtext: t("crm.opportunity.weighted", { percent: probPct }),
+                status: "success",
+                icon: Sparkles,
+              },
+            ]}
+          />
+        </View>
+
+        <MobileCard style={styles.cardSpacing}>
+          <MobileButton variant="primary" size="sm" icon={FileText} onPress={() => void handleCreateQuote()} minHeight={44}>
+            Crear cotización
+          </MobileButton>
+        </MobileCard>
+
+        {/* Direct Communication Bar */}
+        <MobileCard style={styles.cardSpacing}>
+          <Text style={styles.sectionHeading}>{t("crm.opportunity.directActions")}</Text>
+          <View style={styles.actionsRow}>
+            <MobileSpeedDialBar
+              phone={contact?.phone}
+              email={contact?.email}
+              onCall={() => openPhone(contact?.phone ?? undefined)}
+              onWhatsApp={() => openWhatsApp(contact?.phone ?? undefined)}
+              onEmail={() => openEmail(contact?.email ?? undefined)}
+            />
+            {contact && onNavigateToContact && (
+              <MobileButton
+                variant="secondary"
+                size="sm"
+                icon={ExternalLink}
+                onPress={() => onNavigateToContact(contact.id)}
+                minHeight={44}
+              >
+                {t("crm.opportunity.view360")}
+              </MobileButton>
+            )}
+          </View>
+        </MobileCard>
+
+        {/* Canonical Horizontal Tabs (NO PILLS) */}
+        <MobilePageTabs
+          tabs={detailTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+
+        {/* TAB CONTENT */}
+        <View style={styles.tabContentContainer}>
+          {activeTab === "summary" && (
+            <MobileCard style={styles.detailCard}>
+              <Text style={styles.detailCardTitle}>{t("crm.opportunity.agreementDetails")}</Text>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>{t("crm.common.origin")}</Text>
+                <Text style={styles.infoValue}>
+                  {opportunity.origin === "lead_conversion" ? t("crm.opportunity.leadConversion") : t("crm.opportunity.manualCreation")}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>{t("crm.opportunity.owner")}</Text>
+                <Text style={styles.infoValue}>{opportunity.ownerName || "Maya Chen"}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>{t("crm.opportunity.expectedClose")}</Text>
+                <Text style={styles.infoValue}>
+                  {opportunity.expectedCloseAt
+                    ? new Date(opportunity.expectedCloseAt).toLocaleDateString("es-ES", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : t("crm.opportunity.notDefined")}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>{t("crm.opportunity.id")}</Text>
+                <Text style={[styles.infoValue, styles.monospace]}>{opportunity.id}</Text>
+              </View>
+
+              {opportunity.lossReason && (
+                <View style={styles.lossNotice}>
+                  <Text style={styles.lossTitle}>{t("crm.opportunity.lossReason")}</Text>
+                  <Text style={styles.lossDesc}>{opportunity.lossReason}</Text>
+                </View>
+              )}
+            </MobileCard>
+          )}
+
+          {activeTab === "contact" && (
+            <MobileCard style={styles.detailCard}>
+              <Text style={styles.detailCardTitle}>{t("crm.opportunity.primaryContact")}</Text>
+              {contact ? (
+                <>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.name")}</Text>
+                    <Text style={styles.infoValue}>
+                      {contact.givenName} {contact.familyName}
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.company")}</Text>
+                    <Text style={styles.infoValue}>{contact.organizationName || t("crm.opportunity.notProvided")}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.email")}</Text>
+                    <Text style={styles.infoValue}>{contact.email || t("crm.opportunity.notRegistered")}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.phone")}</Text>
+                    <Text style={styles.infoValue}>{contact.phone || t("crm.opportunity.notRegistered")}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>{t("crm.opportunity.country")}</Text>
+                    <Text style={styles.infoValue}>{contact.country || t("crm.opportunity.defaultCountry")}</Text>
+                  </View>
+                </>
+              ) : (
+                <Text style={styles.noContactText}>{t("crm.opportunity.noContact")}</Text>
+              )}
+            </MobileCard>
+          )}
+
+          {activeTab === "notes" && (
+            <View style={styles.notesContainer}>
+              <MobileCard style={styles.newNoteCard}>
+                <Text style={styles.detailCardTitle}>{t("crm.opportunity.addNote")}</Text>
+                <TextInput
+                  placeholder={t("crm.opportunity.notePlaceholder")}
+                  placeholderTextColor="#94a3b8"
+                  value={newNoteText}
+                  onChangeText={setNewNoteText}
+                  multiline
+                  numberOfLines={3}
+                  style={styles.noteInput}
+                />
+                <View style={styles.noteBtnWrap}>
+                  <MobileButton
+                    variant="primary"
+                    size="sm"
+                    onPress={handleAddNote}
+                    minHeight={44}
+                  >
+                    {t("crm.opportunity.saveNote")}
+                  </MobileButton>
+                </View>
+              </MobileCard>
+
+              {notes.map((n) => (
+                <MobileCard key={n.id} style={styles.noteCard}>
+                  <View style={styles.noteHeader}>
+                    <Text style={styles.noteAuthor}>{t("crm.opportunity.internalNote")}</Text>
+                    <Text style={styles.noteDate}>{n.date}</Text>
+                  </View>
+                  <Text style={styles.noteBody}>{n.text}</Text>
+                </MobileCard>
+              ))}
+            </View>
+          )}
+        </View>
+
+      {/* Reopen Dialog */}
+      <MobileConfirmDialog
+        visible={reopenModalOpen}
+        title={t("crm.pipeline.reopenTitle")}
+        message={t("crm.opportunity.reopenMessage", { stage: stageLabel(opportunity.stageKey) })}
+        confirmLabel={t("crm.opportunity.confirmReopen")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={handleReopenSubmit}
+        onCancel={() => {
+          setReopenModalOpen(false);
+          setReopenReason("");
+        }}
+      >
+        <TextInput
+          placeholder={t("crm.opportunity.reopenPlaceholder")}
+          placeholderTextColor="#94a3b8"
+          value={reopenReason}
+          onChangeText={setReopenReason}
+          multiline
+          numberOfLines={3}
+          style={styles.reopenTextInput}
+        />
+      </MobileConfirmDialog>
+    </MobilePageContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  heroCard: {
+    padding: 16,
+    marginBottom: 8,
+  },
+  heroTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  heroTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0f172a",
+    marginBottom: 4,
+  },
+  heroSubtitle: {
+    fontSize: 13,
+    color: "#64748b",
+  },
+  cardSpacing: {
+    marginTop: 12,
+    padding: 16,
+  },
+  metricsWrapper: {
+    marginTop: 12,
+  },
+  stepperHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  sectionHeading: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#64748b",
+    letterSpacing: 0.8,
+  },
+  probBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#135bec",
+  },
+  lostRow: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f1f5f9",
+    paddingTop: 10,
+    alignItems: "flex-end",
+  },
+  actionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  tabContentContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  detailCard: {
+    padding: 16,
+  },
+  detailCardTitle: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#475569",
+    letterSpacing: 0.8,
+    marginBottom: 14,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: "#64748b",
+  },
+  infoValue: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#0f172a",
+  },
+  monospace: {
+    fontFamily: "monospace",
+    fontSize: 12,
+    color: "#64748b",
+  },
+  lossNotice: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
+  },
+  lossTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#b91c1c",
+    marginBottom: 2,
+  },
+  lossDesc: {
+    fontSize: 13,
+    color: "#7f1d1d",
+  },
+  noContactText: {
+    fontSize: 13,
+    color: "#94a3b8",
+    fontStyle: "italic",
+    paddingVertical: 8,
+  },
+  notesContainer: {
+    gap: 12,
+  },
+  newNoteCard: {
+    padding: 16,
+  },
+  noteInput: {
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 13,
+    color: "#0f172a",
+    minHeight: 70,
+    textAlignVertical: "top",
+  },
+  noteBtnWrap: {
+    marginTop: 10,
+    alignItems: "flex-end",
+  },
+  noteCard: {
+    padding: 14,
+  },
+  noteHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  noteAuthor: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#334155",
+  },
+  noteDate: {
+    fontSize: 11,
+    color: "#94a3b8",
+  },
+  noteBody: {
+    fontSize: 13,
+    color: "#1e293b",
+    lineHeight: 18,
+  },
+  reopenTextInput: {
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 13,
+    color: "#0f172a",
+    marginTop: 12,
+    minHeight: 70,
+    textAlignVertical: "top",
+  },
+});

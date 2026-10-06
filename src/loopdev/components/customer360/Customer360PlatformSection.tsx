@@ -33,6 +33,7 @@ export function Customer360PlatformSection({ contactId }: { contactId: string })
           error={notes.error}
           forbidden={notes.forbidden}
           relation={relation}
+          onDelete={(noteId, expectedVersion) => platformAdapter.work.deleteNote(noteId, expectedVersion, { scope: relation.scope })}
           attachments={attachments.attachments}
           onAttachmentUpload={(file) => attachments.createAttachment({
             relation,

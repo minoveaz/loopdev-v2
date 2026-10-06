@@ -1,0 +1,1 @@
+export { desktopContactAdapter, createDesktopContactAdapter } from "./supabase";

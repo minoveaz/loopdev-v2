@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Platform Notes desktop composition</title>
+  <desc id="desc">Rivera-style Customer 360 page with contact context, Notes list and editor drawer.</desc>
+  <rect width="1200" height="760" fill="#f8fafc"/>
+  <rect width="1200" height="64" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="36" y="39" font-family="sans-serif" font-size="20" font-weight="700" fill="#0f172a">Customer 360 / Acme Contact</text>
+  <text x="1030" y="39" font-family="sans-serif" font-size="13" fill="#475569">Back to contacts</text>
+  <rect x="36" y="96" width="760" height="116" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <circle cx="88" cy="154" r="30" fill="#dbeafe"/>
+  <text x="73" y="161" font-family="sans-serif" font-size="18" font-weight="700" fill="#1d4ed8">JD</text>
+  <text x="142" y="135" font-family="sans-serif" font-size="12" fill="#64748b">CONTACT · CRM_CUST_1</text>
+  <text x="142" y="164" font-family="sans-serif" font-size="24" font-weight="700" fill="#0f172a">Jordan Davis</text>
+  <text x="142" y="190" font-family="sans-serif" font-size="14" fill="#475569">Acme Corporation · Verified identity</text>
+  <rect x="824" y="96" width="340" height="116" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="848" y="130" font-family="sans-serif" font-size="13" font-weight="700" fill="#334155">Contact context</text>
+  <text x="848" y="158" font-family="sans-serif" font-size="13" fill="#64748b">Owner</text><text x="1065" y="158" font-family="sans-serif" font-size="13" fill="#0f172a">Sales team</text>
+  <text x="848" y="184" font-family="sans-serif" font-size="13" fill="#64748b">Permission</text><text x="1065" y="184" font-family="sans-serif" font-size="13" fill="#166534">Can edit</text>
+  <rect x="36" y="240" width="760" height="470" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="64" y="278" font-family="sans-serif" font-size="20" font-weight="700" fill="#0f172a">Notes</text>
+  <text x="64" y="302" font-family="sans-serif" font-size="13" fill="#64748b">Shared Platform notes related to this contact</text>
+  <rect x="650" y="263" width="116" height="36" rx="6" fill="#2563eb"/><text x="671" y="286" font-family="sans-serif" font-size="13" font-weight="700" fill="#ffffff">+ New note</text>
+  <line x1="64" y1="326" x2="768" y2="326" stroke="#e2e8f0"/>
+  <rect x="64" y="348" width="704" height="94" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="84" y="375" font-family="sans-serif" font-size="15" font-weight="700" fill="#0f172a">Renewal conversation</text><text x="650" y="375" font-family="sans-serif" font-size="12" fill="#475569">Team</text>
+  <text x="84" y="401" font-family="sans-serif" font-size="13" fill="#475569">Jordan asked for a proposal before Friday.</text><text x="84" y="424" font-family="sans-serif" font-size="12" fill="#64748b">Maya Chen · Updated today</text>
+  <rect x="64" y="458" width="704" height="94" rx="6" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="84" y="485" font-family="sans-serif" font-size="15" font-weight="700" fill="#0f172a">Private follow-up</text><text x="650" y="485" font-family="sans-serif" font-size="12" fill="#475569">Private</text>
+  <text x="84" y="511" font-family="sans-serif" font-size="13" fill="#475569">Confirm procurement timeline with the account owner.</text><text x="84" y="534" font-family="sans-serif" font-size="12" fill="#64748b">You · Updated yesterday</text>
+  <rect x="824" y="240" width="340" height="470" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="850" y="280" font-family="sans-serif" font-size="18" font-weight="700" fill="#0f172a">Edit note</text><text x="1115" y="280" font-family="sans-serif" font-size="18" fill="#64748b">×</text>
+  <text x="850" y="320" font-family="sans-serif" font-size="12" font-weight="700" fill="#475569">Title</text><rect x="850" y="332" width="288" height="38" rx="5" fill="#ffffff" stroke="#94a3b8"/><text x="864" y="356" font-family="sans-serif" font-size="13" fill="#0f172a">Renewal conversation</text>
+  <text x="850" y="404" font-family="sans-serif" font-size="12" font-weight="700" fill="#475569">Content</text><rect x="850" y="416" width="288" height="116" rx="5" fill="#ffffff" stroke="#94a3b8"/><text x="864" y="443" font-family="sans-serif" font-size="13" fill="#334155">Jordan asked for a proposal</text><text x="864" y="464" font-family="sans-serif" font-size="13" fill="#334155">before Friday.</text>
+  <text x="850" y="565" font-family="sans-serif" font-size="12" font-weight="700" fill="#475569">Visibility</text><rect x="850" y="577" width="138" height="34" rx="5" fill="#f8fafc" stroke="#94a3b8"/><text x="866" y="599" font-family="sans-serif" font-size="13" fill="#0f172a">Team ▾</text>
+  <rect x="1000" y="654" width="138" height="36" rx="6" fill="#2563eb"/><text x="1032" y="677" font-family="sans-serif" font-size="13" font-weight="700" fill="#ffffff">Save changes</text>
+</svg>

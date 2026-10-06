@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "delivery-ledger.schema.json",
+  "type": "object",
+  "required": ["schema_version", "suite", "module", "status", "product_sources", "previous_ledger", "requirements", "capabilities", "tasks", "change_requests", "blockers"],
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "approved" } } },
+      "then": {
+        "properties": {
+          "requirements": { "minItems": 1 },
+          "capabilities": { "minItems": 1 },
+          "tasks": { "minItems": 1 }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "suite": { "type": "string", "minLength": 1 },
+    "module": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["draft", "blocked", "approved"] },
+    "approved_by": { "type": ["string", "null"] },
+    "approved_at": { "type": ["string", "null"], "format": "date-time" },
+    "approval_source": { "type": ["string", "null"] },
+    "product_sources": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+    "previous_ledger": { "type": ["string", "null"] },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "classification", "source", "platforms", "acceptance_criteria", "evidence_level", "capability_ids"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9-]+$" },
+          "title": { "type": "string", "minLength": 1 },
+          "classification": { "enum": ["REQUIRED_MVP", "REQUIRED_FOLLOW_UP", "PLATFORM_REUSE", "OUT_OF_SCOPE"] },
+          "source": { "type": "string", "minLength": 1 },
+          "platforms": { "type": "array", "items": { "enum": ["shared", "desktop_web", "mobile_web", "ios", "android"] }, "minItems": 1, "uniqueItems": true },
+          "acceptance_criteria": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+          "evidence_level": { "enum": ["E0_PRESENT", "E1_LINT", "E2_UNIT", "E3_COMPONENT", "E4_JOURNEY", "E5_DEVICE"] },
+          "capability_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "classification", "requirement_ids", "semantics", "platforms", "parity", "operation_coverage", "states", "permissions", "contract_refs", "task_ids"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9-]+$" },
+          "name": { "type": "string", "minLength": 1 },
+          "classification": { "enum": ["REQUIRED_MVP", "REQUIRED_FOLLOW_UP", "PLATFORM_REUSE", "PLATFORM_EXTENSION", "MODULE_SPECIFIC", "OUT_OF_SCOPE", "OPEN_DECISION"] },
+          "requirement_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+          "semantics": {
+            "type": "object",
+            "required": ["operations", "errors"],
+            "properties": {
+              "operations": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+              "validation_contract": { "type": ["string", "null"] },
+              "errors": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+            }
+          },
+          "platforms": {
+            "type": "object",
+            "required": ["desktop_web", "mobile_web", "ios", "android"],
+            "additionalProperties": {
+              "type": "object",
+              "required": ["required", "surface"],
+              "properties": {
+                "required": { "type": "boolean" },
+                "surface": { "type": "string" },
+                "route": { "type": ["string", "null"] }
+              }
+            }
+          },
+          "parity": {
+            "type": "object",
+            "required": ["domain", "renderer", "operations"],
+            "properties": {
+              "domain": { "enum": ["verified", "partial", "not_tested", "not_applicable"] },
+              "renderer": { "enum": ["verified", "partial", "not_tested", "not_applicable"] },
+              "operations": { "enum": ["verified", "partial", "not_tested", "not_applicable"] }
+            }
+          },
+          "operation_coverage": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["id", "desktop_web", "mobile_web", "ios", "android"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "desktop_web": { "enum": ["implemented", "adapted", "missing", "not_applicable"] },
+                "mobile_web": { "enum": ["implemented", "adapted", "missing", "not_applicable"] },
+                "ios": { "enum": ["implemented", "adapted", "missing", "not_applicable"] },
+                "android": { "enum": ["implemented", "adapted", "missing", "not_applicable"] },
+                "adaptation_ref": { "type": ["string", "null"] }
+              }
+            }
+          },
+          "states": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+          "permissions": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+          "contract_refs": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+          "task_ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+        }
+      }
+    },
+    "tasks": { "type": "array", "items": { "$ref": "delivery-task.schema.json" } },
+    "change_requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "removed_requirement_ids", "removed_capability_ids", "approved_by", "approved_at", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["pending", "approved", "rejected"] },
+          "removed_requirement_ids": { "type": "array", "items": { "type": "string" } },
+          "removed_capability_ids": { "type": "array", "items": { "type": "string" } },
+          "approved_by": { "type": ["string", "null"] },
+          "approved_at": { "type": ["string", "null"] },
+          "source": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "blockers": { "type": "array", "items": { "type": "string" } }
+  }
+}

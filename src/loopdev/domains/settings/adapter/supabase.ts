@@ -105,7 +105,7 @@ export const supabaseSettingsAdapter: SettingsAdapter = {
     });
     if (error) throw mapError(error);
     if (!data?.user) throw new SettingsAdapterError("The invitation response was invalid.", "invalid");
-    return mapMember(data.user as MemberRow);
+    return { ...mapMember(data.user as MemberRow), activationUrl: data.activationUrl };
   },
 
   async updateUserRole(organizationId, userId, role) {

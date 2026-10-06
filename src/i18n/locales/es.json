@@ -61,6 +61,21 @@
       "confirm": "Confirmar"
     }
   },
+  "invitationActivation": {
+    "eyebrow": "Invitación de organización",
+    "title": "Activa tu cuenta",
+    "description": "Define una contraseña para activar tu invitación. Después podrás iniciar sesión normalmente.",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "requirements": "Usa al menos 8 caracteres, incluyendo una letra y un número.",
+    "activate": "Activar cuenta",
+    "success": "Tu cuenta está activa. Te llevamos a iniciar sesión…",
+    "invalidForm": "Introduce contraseñas iguales con al menos 8 caracteres, una letra y un número.",
+    "unavailable": "La activación no está disponible en este momento.",
+    "backToLogin": "Volver a iniciar sesión",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
+  },
   "documentIntelligenceOverview": {
     "title": "Inteligencia Documental",
     "overviewDescription": "Centro operativo y registro histórico de extracción neuronal de documentos para todo LoopDev.",
@@ -135,6 +150,7 @@
       "singleEntry": "Settings es el único punto de entrada de organización."
     },
     "users": {
+      "activationUrl": "URL de activación",
       "title": "Usuarios del tenant",
       "description": "Invita y administra miembros sin exponer usuarios de otra organización.",
       "name": "Nombre completo",

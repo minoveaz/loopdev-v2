@@ -237,6 +237,7 @@ function DrawerShell({ children, ...props }: React.ComponentProps<typeof AppDraw
   return <AppDrawer {...props} size="lg" layoutMode="expanded" responsive="auto" confirmOnClose>{children}</AppDrawer>;
 }
 function CatalogItemDetailDrawer({ item, onOpenChange }: { item: CatalogItem | null; onOpenChange: (open: boolean) => void }) {
+  const t = useT();
   const [managementOpen, setManagementOpen] = useState(false);
   const [roles, setRoles] = useState<ProductPartyRole[]>([]);
   const [availability, setAvailability] = useState<CatalogAvailability[]>([]);
@@ -263,7 +264,6 @@ function CatalogItemDetailDrawer({ item, onOpenChange }: { item: CatalogItem | n
     });
   }, [item]);
   if (!item) return null;
-  const t = useT();
   return <DrawerShell open={Boolean(item)} onOpenChange={onOpenChange} title={item.name} eyebrow="Catalog detail" mode="Editing" headerMeta={<StatusBadge tone={item.status === "active" ? "success" : item.status === "draft" ? "warning" : "neutral"} dot>{item.status}</StatusBadge>} description={item.description ?? "Catalog item details and commercial context."} dirty={false} footer={<div className="flex justify-end"><Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button></div>}>
     <div className="space-y-6">
       <section className="rounded-xl border border-border-strong/70 bg-card/70 p-4"><FormSectionHeader eyebrow="Identity" title="Catalog identity" description="Stable references used by downstream ERP and CRM consumers." mode="expanded" responsive="auto" /><dl className="mt-4 grid gap-4 sm:grid-cols-2 text-sm"><div><dt className="text-muted-foreground">Key</dt><dd className="mt-1 font-mono">{item.key}</dd></div><div><dt className="text-muted-foreground">SKU</dt><dd className="mt-1 font-mono">{item.sku || "Not applicable"}</dd></div><div><dt className="text-muted-foreground">Type</dt><dd className="mt-1">{t(`common.erpForm.item.${itemTypeTranslationKeys[item.type]}`)}</dd></div><div><dt className="text-muted-foreground">Category</dt><dd className="mt-1">{item.categoryKey ?? "Uncategorized"}</dd></div></dl></section>

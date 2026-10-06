@@ -61,6 +61,21 @@
       "confirm": "Confirm"
     }
   },
+  "invitationActivation": {
+    "eyebrow": "Organization invitation",
+    "title": "Activate your account",
+    "description": "Set a password to activate your invitation. You can then sign in normally.",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "requirements": "Use at least 8 characters, including a letter and a number.",
+    "activate": "Activate account",
+    "success": "Your account is active. Redirecting you to sign in…",
+    "invalidForm": "Enter matching passwords with at least 8 characters, a letter, and a number.",
+    "unavailable": "Activation is currently unavailable.",
+    "backToLogin": "Back to sign in",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
   "documentIntelligenceOverview": {
     "title": "Document Intelligence",
     "overviewDescription": "Operational center and historical register of neural document extraction for all LoopDev.",
@@ -135,6 +150,7 @@
       "singleEntry": "Settings is the single organization entry point."
     },
     "users": {
+      "activationUrl": "Activation URL",
       "title": "Tenant users",
       "description": "Invite and manage members without exposing users from another organization.",
       "name": "Full name",

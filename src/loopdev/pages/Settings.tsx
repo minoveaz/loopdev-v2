@@ -46,6 +46,7 @@ export default function Settings() {
   const [error, setError] = useState<SettingsAdapterError | null>(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [activationUrl, setActivationUrl] = useState<string | null>(null);
   const [form, setForm] = useState<OrganizationSettings | null>(null);
   const [invite, setInvite] = useState({ name: "", email: "", role: "viewer" as "viewer" | "agent" | "admin" });
   const [removingUser, setRemovingUser] = useState<SettingsUser | null>(null);
@@ -127,6 +128,7 @@ export default function Settings() {
     setNotice(null);
     try {
       const user = await settingsAdapter.inviteUser(organizationId, invite);
+      setActivationUrl(user.activationUrl ?? null);
       setSnapshot((current) => current ? { ...current, users: [...current.users, user] } : current);
       setInvite({ name: "", email: "", role: "viewer" });
       setNotice(t("settings.users.invited"));
@@ -168,7 +170,7 @@ export default function Settings() {
     <PageContainer width="wide">
       <PageHeader title={t("settings.title")} description={t("settings.description")} breadcrumbs={trail.length ? trail : [{ label: t("settings.title") }]} />
       <div className="space-y-6">
-        {notice && <div role="status" className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm"><CheckCircle2 className="h-4 w-4 text-emerald-600" />{notice}</div>}
+        {notice && <div role="status" className="space-y-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm"><div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" />{notice}</div>{activationUrl && <div className="flex gap-2"><Input readOnly value={activationUrl} aria-label={t("settings.users.activationUrl")} /><Button variant="outline" onClick={() => void navigator.clipboard.writeText(activationUrl)}>{t("common.copy")}</Button></div>}</div>}
         {error && <div role="alert" className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm"><span>{error.message}</span><Button size="sm" variant="ghost" onClick={() => setError(null)}>{t("common.close")}</Button></div>}
         <Tabs defaultValue="organization" className="w-full">
           <TabsList className="mb-6 flex w-full flex-wrap justify-start gap-1 bg-card-muted p-1">

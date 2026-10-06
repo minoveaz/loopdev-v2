@@ -30,32 +30,45 @@ Deno.serve(async (request) => {
     const { data: actor, error: actorError } = await admin.auth.getUser(token);
     if (actorError || !actor.user) return json({ error: 'Authentication required.' }, 401);
 
-    const { data: membership } = await admin
+    const { data: actorMembership } = await admin
       .from('organization_memberships')
       .select('role')
       .eq('organization_id', organizationId)
       .eq('user_id', actor.user.id)
       .eq('status', 'active')
       .maybeSingle();
-    if (!membership) return json({ error: 'You do not have permission to invite members.' }, 403);
+    if (!actorMembership) return json({ error: 'You do not have permission to invite members.' }, 403);
     const { data: permission } = await admin
       .from('role_permissions')
       .select('permission_key')
-      .eq('role', membership.role)
+      .eq('role', actorMembership?.role)
       .eq('permission_key', 'members.manage')
       .maybeSingle();
     if (!permission) return json({ error: 'You do not have permission to invite members.' }, 403);
 
-    const { data: invitation, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: { full_name: name },
+    const { data: created, error: inviteError } = await admin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: { full_name: name },
     });
-    if (inviteError || !invitation.user) return json({ error: inviteError?.message || 'Invitation failed.' }, 400);
+    if (inviteError || !created.user) return json({ error: inviteError?.message || 'Invitation failed.' }, 400);
 
-    const { data: membership, error: membershipError } = await admin
+    const rawToken = crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
+    const tokenHash = await sha256(rawToken);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const { error: tokenError } = await admin.from('organization_invitation_tokens').insert({
+      organization_id: organizationId,
+      user_id: created.user.id,
+      token_hash: tokenHash,
+      expires_at: expiresAt,
+    });
+    if (tokenError) return json({ error: tokenError.message }, 400);
+
+    const { data: createdMembership, error: membershipError } = await admin
       .from('organization_memberships')
       .upsert({
         organization_id: organizationId,
-        user_id: invitation.user.id,
+        user_id: created.user.id,
         role,
         status: 'pending',
         invited_at: new Date().toISOString(),
@@ -63,16 +76,25 @@ Deno.serve(async (request) => {
       .select('user_id, organization_id, role, status, created_at, invited_at, last_active_at')
       .single();
     if (membershipError) return json({ error: membershipError.message }, 400);
+    const appOrigin = request.headers.get('origin') || Deno.env.get('APP_URL') || Deno.env.get('SITE_URL') || 'http://localhost:5173';
     return json({
       user: {
-        ...membership,
+        ...createdMembership,
         full_name: name,
         email,
       },
+      activationToken: rawToken,
+      activationUrl: `${appOrigin.replace(/\/$/, '')}/pages/activate-invitation?token=${encodeURIComponent(rawToken)}`,
+      expiresAt,
     }, 200);
   } catch (error) {
     console.error('invite-organization-member failed', error);
     return json({ error: 'Unable to create the invitation.' }, 500);
+  }
+
+  async function sha256(value: string): Promise<string> {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
   }
 });
 

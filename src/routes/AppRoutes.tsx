@@ -51,6 +51,7 @@ const Login = lazy(() => import("@/template/rivera/pages/auth/Login"));
 const Register = lazy(() => import("@/template/rivera/pages/auth/Register"));
 const ForgotPassword = lazy(() => import("@/template/rivera/pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/template/rivera/pages/auth/ResetPassword"));
+const ActivateInvitation = lazy(() => import("@/template/rivera/pages/auth/ActivateInvitation"));
 const Error500 = lazy(() => import("@/template/rivera/pages/errors/Error500"));
 const Preview = lazy(() => import("@/template/rivera/pages/Preview"));
 const DataConsole = lazy(() => import("@/template/rivera/pages/dev/DataConsole"));
@@ -230,6 +231,7 @@ const PUBLIC_PATHS = new Set([
   "/pages/register",
   "/pages/forgot-password",
   "/pages/reset-password",
+  "/pages/activate-invitation",
   "/pages/404",
   "/pages/500",
 ]);
@@ -462,6 +464,7 @@ export function AppRoutes() {
       <Route path="/pages/register" element={<Register />} />
       <Route path="/pages/forgot-password" element={<ForgotPassword />} />
       <Route path="/pages/reset-password" element={<ResetPassword />} />
+      <Route path="/pages/activate-invitation" element={<ActivateInvitation />} />
       <Route path="/pages/404" element={<NotFound />} />
       <Route path="/pages/500" element={<Error500 />} />
 

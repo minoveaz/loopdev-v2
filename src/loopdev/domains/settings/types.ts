@@ -13,6 +13,7 @@ export interface SettingsUser {
   status: SettingsUserStatus;
   invitedAt: string | null;
   lastActiveAt: string | null;
+  activationUrl?: string;
 }
 
 export interface OrganizationSettings {

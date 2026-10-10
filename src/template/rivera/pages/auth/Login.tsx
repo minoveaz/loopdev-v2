@@ -22,8 +22,8 @@ export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("admin@loop.dev");
-  const [password, setPassword] = useState("loopdev");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [submitting, setSubmitting] = useState(false);
@@ -137,30 +137,6 @@ export default function Login() {
           <Link to="/pages/forgot-password" className="font-semibold text-primary transition-fast hover:underline">
             Forgot password?
           </Link>
-        </div>
-
-        {/* Quick Demo Accounts Selection */}
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1.5">
-          <div className="font-semibold text-foreground flex items-center justify-between">
-            <span>Demo Accounts (Supabase Live)</span>
-            <span className="text-[10px] text-primary uppercase font-bold tracking-wider">Multi-Tenant</span>
-          </div>
-          <div className="flex flex-wrap gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => { setEmail("admin@loop.dev"); setPassword("loopdev"); setErrors({}); setGlobalError(null); }}
-              className="rounded bg-background px-2.5 py-1 text-[11px] font-medium border border-border hover:border-primary/50 hover:bg-muted transition-colors cursor-pointer text-foreground"
-            >
-              admin@loop.dev (loopdev)
-            </button>
-            <button
-              type="button"
-              onClick={() => { setEmail("admin@localhost.com"); setPassword("password123"); setErrors({}); setGlobalError(null); }}
-              className="rounded bg-background px-2.5 py-1 text-[11px] font-medium border border-border hover:border-primary/50 hover:bg-muted transition-colors cursor-pointer text-foreground"
-            >
-              admin@localhost.com (password123)
-            </button>
-          </div>
         </div>
 
         <Button

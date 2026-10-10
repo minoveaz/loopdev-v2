@@ -12,6 +12,8 @@ export type LaunchpadIllustrationKey =
 
 export type LaunchpadSuite = {
   id: string;
+  title: string;
+  description: string;
   version: string;
   status: LaunchpadSuiteStatus;
   illustration: LaunchpadIllustrationKey;
@@ -22,6 +24,8 @@ export type LaunchpadSuite = {
 export const launchpadSuites: LaunchpadSuite[] = [
   {
     id: "marketing-studio",
+    title: "Marketing Studio",
+    description: "Brand management and generative content tools for modern teams.",
     version: "1.0.4",
     status: "locked",
     illustration: "marketing",
@@ -29,6 +33,8 @@ export const launchpadSuites: LaunchpadSuite[] = [
   },
   {
     id: "sales-crm",
+    title: "Sales & CRM",
+    description: "Manage your sales pipeline and customer relationships with intelligent insights.",
     version: "0.8.2",
     status: "ready",
     illustration: "crm",
@@ -37,6 +43,8 @@ export const launchpadSuites: LaunchpadSuite[] = [
   },
   {
     id: "erp",
+    title: "ERP",
+    description: "Shared product and service catalogs for LoopDev operations.",
     version: "0.1.0",
     status: "ready",
     illustration: "erp",
@@ -45,6 +53,8 @@ export const launchpadSuites: LaunchpadSuite[] = [
   },
   {
     id: "financial-ops",
+    title: "Financial Ops",
+    description: "Automate billing, payroll, and fiscal compliance.",
     version: "0.5.0",
     status: "locked",
     illustration: "financial",
@@ -52,6 +62,8 @@ export const launchpadSuites: LaunchpadSuite[] = [
   },
   {
     id: "quant-ops",
+    title: "Quant Ops",
+    description: "Algorithmic trading and high-frequency execution tools.",
     version: "0.0.1",
     status: "lab",
     illustration: "quant",
@@ -59,6 +71,8 @@ export const launchpadSuites: LaunchpadSuite[] = [
   },
   {
     id: "health-os",
+    title: "Health OS",
+    description: "Clinical workflows, electronic health records, and medical scheduling for healthcare providers.",
     version: "0.1.0",
     status: "locked",
     illustration: "health",

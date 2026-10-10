@@ -455,7 +455,16 @@ const authGlobal = globalThis as typeof globalThis & {
   __loopdevDefaultWebAuthAdapter?: SupabaseAuthAdapter;
 };
 
+const deploymentSupabaseUrl =
+  typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL
+    ? import.meta.env.VITE_SUPABASE_URL
+    : DEFAULT_SUPABASE_URL;
+const deploymentSupabaseAnonKey =
+  typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY
+    ? import.meta.env.VITE_SUPABASE_ANON_KEY
+    : DEFAULT_SUPABASE_ANON_KEY;
+
 export const defaultWebAuthAdapter = authGlobal.__loopdevDefaultWebAuthAdapter ??= new SupabaseAuthAdapter({
-  supabaseUrl: DEFAULT_SUPABASE_URL,
-  supabaseAnonKey: DEFAULT_SUPABASE_ANON_KEY,
+  supabaseUrl: deploymentSupabaseUrl,
+  supabaseAnonKey: deploymentSupabaseAnonKey,
 });

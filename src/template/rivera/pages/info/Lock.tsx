@@ -22,7 +22,7 @@ export default function LockScreenPage() {
           <Avatar className="h-12 w-12 border border-border"><AvatarFallback className="bg-gradient-primary text-primary-foreground">{getInitials(name)}</AvatarFallback></Avatar>
           <div>
             <p className="font-medium">{name}</p>
-            <p className="text-xs text-muted-foreground">{session?.email ?? "admin@loop.dev"}</p>
+            {session?.email && <p className="text-xs text-muted-foreground">{session.email}</p>}
           </div>
         </div>
         <div className="space-y-1.5"><Label htmlFor="pw">Password</Label>

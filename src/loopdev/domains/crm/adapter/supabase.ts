@@ -57,28 +57,6 @@ function resolveOrgId(explicit?: string | null): string {
   return DEFAULT_ORG_ID;
 }
 
-let autoAuthPromise: Promise<any> | null = null;
-async function ensureAuthenticatedClient(client: any): Promise<any> {
-  if (!client) return null;
-  try {
-    const { data } = await client.auth.getSession();
-    if (data?.session) return client;
-
-    if (!autoAuthPromise) {
-      autoAuthPromise = client.auth.signInWithPassword({
-        email: "admin@loop.dev",
-        password: "loopdev",
-      }).finally(() => {
-        autoAuthPromise = null;
-      });
-    }
-    await autoAuthPromise;
-  } catch {
-    // ignore
-  }
-  return client;
-}
-
 function mapRowToContact(row: any): ContactRecord {
   let firstName = (row.first_name || "").trim();
   let lastName = (row.last_name || "").trim() || null;
@@ -231,11 +209,10 @@ export function createDesktopContactAdapter(): ContactPort {
       if (!params.organizationId || !isUUID(params.organizationId)) {
         return localFallback.listContacts(params);
       }
-      let client = getClient();
+      const client = getClient();
       if (!client) {
         return localFallback.listContacts(params);
       }
-      client = (await ensureAuthenticatedClient(client)) as NonNullable<typeof client>;
       const activeOrgId = params.organizationId;
 
       try {
@@ -316,13 +293,11 @@ export function createDesktopContactAdapter(): ContactPort {
         const local = await localFallback.getCustomer360(contactId);
         return local ? toContactCustomer360View(local) : null;
       }
-      let client = getClient();
+      const client = getClient();
       if (!client) {
         const local = await localFallback.getCustomer360(contactId);
         return local ? toContactCustomer360View(local) : null;
       }
-      client = (await ensureAuthenticatedClient(client)) as NonNullable<typeof client>;
-
       try {
         const { data: rows, error } = await client
           .from("crm_contacts")
@@ -415,11 +390,10 @@ export function createDesktopContactAdapter(): ContactPort {
         return localFallback.createContact(input);
       }
 
-      let client = getClient();
+      const client = getClient();
       if (!client) {
         return { status: "server-error", message: "Supabase is not configured." };
       }
-      client = (await ensureAuthenticatedClient(client)) as NonNullable<typeof client>;
       const orgId = input.organizationId;
 
       try {
@@ -527,12 +501,10 @@ export function createDesktopContactAdapter(): ContactPort {
     },
 
     async updateContact(contactId: string, patch: UpdateContactPatch, _expectedUpdatedAt: string): Promise<ContactMutationResult> {
-      let client = getClient();
+      const client = getClient();
       if (!client || !contactId || !isUUID(contactId)) {
         return localFallback.updateContact(contactId, patch, _expectedUpdatedAt);
       }
-      client = (await ensureAuthenticatedClient(client)) as NonNullable<typeof client>;
-
       try {
         const { data: current, error: readError } = await client.from("crm_contacts").select("*").eq("id", contactId).eq("organization_id", patch.organizationId).single();
         if (readError || !current) return { status: "server-error", message: "The contact could not be found." };
@@ -597,11 +569,10 @@ export function createDesktopContactAdapter(): ContactPort {
     },
 
     async archiveContact(contactId: string, _expectedUpdatedAt: string): Promise<ContactMutationResult> {
-      let client = getClient();
+      const client = getClient();
       if (!client || !contactId || !isUUID(contactId)) {
         return localFallback.archiveContact(contactId, _expectedUpdatedAt);
       }
-      client = (await ensureAuthenticatedClient(client)) as NonNullable<typeof client>;
       try {
         const { data, error } = await client.from("crm_contacts").update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", contactId).eq("updated_at", _expectedUpdatedAt).select().single();
         if (error || !data) return { status: "server-error", message: error?.message ?? "The contact could not be archived." };
@@ -654,7 +625,7 @@ export function createDesktopContactAdapter(): ContactPort {
     },
 
     async bulkArchiveContacts(contactIds: string[]): Promise<{ successCount: number; failureCount: number }> {
-      let client = getClient();
+      const client = getClient();
       if (!client) {
         let success = 0;
         for (const id of contactIds) {
@@ -663,8 +634,6 @@ export function createDesktopContactAdapter(): ContactPort {
         }
         return { successCount: success, failureCount: contactIds.length - success };
       }
-      client = (await ensureAuthenticatedClient(client)) as NonNullable<typeof client>;
-
       const uuidIds = contactIds.filter(isUUID);
       const localIds = contactIds.filter((id) => !isUUID(id));
 

@@ -36,7 +36,7 @@ interface AuthContextValue {
   session: LegacyCompatSession | null;
   authSession: SharedAuthSession | null;
   isLoading: boolean;
-  signIn: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<{ sent: boolean; message: string }>;
@@ -171,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     toast.success(`Cambiado a ${target?.name ?? "organización"}`);
   };
 
-  const signIn = async (email: string, password: string = "loopdev"): Promise<{ success: boolean; error?: string }> => {
+  const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     toast.dismiss();
     const result = await defaultWebAuthAdapter.signInWithPassword({ email, password });
     if (result.success) {
@@ -274,27 +274,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-const fallbackOrg = DEFAULT_LOCAL_ORGS[0];
-
 const fallbackAuthContext: AuthContextValue = {
-  session: {
-    userId: "local-development-user",
-    email: "admin@loop.dev",
-    name: "Alex Morgan",
-    role: "admin",
-    signedInAt: new Date().toISOString(),
-    organizations: DEFAULT_LOCAL_ORGS,
-    activeOrganizationId: fallbackOrg.id,
-  },
+  session: null,
   authSession: null,
   isLoading: false,
-  signIn: async () => ({ success: true }),
-  signUp: async () => ({ success: true }),
+  signIn: async () => ({ success: false, error: "Authentication provider is unavailable." }),
+  signUp: async () => ({ success: false, error: "Authentication provider is unavailable." }),
   signOut: async () => {},
-  requestPasswordReset: async () => ({ sent: true, message: "OK" }),
-  updatePassword: async () => ({ success: true }),
-  organizations: DEFAULT_LOCAL_ORGS,
-  activeOrganization: fallbackOrg,
+  requestPasswordReset: async () => ({ sent: false, message: "Authentication provider is unavailable." }),
+  updatePassword: async () => ({ success: false, error: "Authentication provider is unavailable." }),
+  organizations: [],
+  activeOrganization: null,
   selectOrganization: () => {},
 };
 
@@ -302,4 +292,3 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   return ctx ?? fallbackAuthContext;
 }
-

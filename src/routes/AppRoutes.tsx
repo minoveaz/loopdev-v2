@@ -485,7 +485,7 @@ export function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<Navigate to="/template" replace />} />
+        <Route path="/" element={<Navigate to="/launchpad" replace />} />
         <Route path="/template" element={<Dashboard />} />
         {loopdevRouteElements}
         <Route path="/dashboard/analytics" element={<AnalyticsDashboard />} />

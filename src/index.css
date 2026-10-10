@@ -224,6 +224,12 @@
   }
 }
 
+/* Keep viewport width stable when route content adds/removes a vertical
+   scrollbar, so fixed right-side chrome does not shift between screens. */
+html {
+  scrollbar-gutter: stable;
+}
+
 @layer base {
   * {
     @apply border-border;

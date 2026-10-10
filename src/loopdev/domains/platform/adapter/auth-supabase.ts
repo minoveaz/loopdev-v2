@@ -455,7 +455,4 @@ const authGlobal = globalThis as typeof globalThis & {
   __loopdevDefaultWebAuthAdapter?: SupabaseAuthAdapter;
 };
 
-export const defaultWebAuthAdapter = authGlobal.__loopdevDefaultWebAuthAdapter ??= new SupabaseAuthAdapter({
-  supabaseUrl: DEFAULT_SUPABASE_URL,
-  supabaseAnonKey: DEFAULT_SUPABASE_ANON_KEY,
-});
+export const defaultWebAuthAdapter = authGlobal.__loopdevDefaultWebAuthAdapter ??= new SupabaseAuthAdapter();

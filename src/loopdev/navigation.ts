@@ -46,30 +46,10 @@ export const loopdevNavigation: NavSection[] = [
   },
   {
     label: "Workspace",
-    items: [
-      {
-        label: loopdevNavigationContract.groups[3].label,
-        to: loopdevNavigationContract.groups[3].items[0].path,
-        icon: Settings,
-      },
-      {
-        label: "ERP",
-        icon: Boxes,
-        children: [
-          { label: "Overview", to: "/app/erp/overview" },
-          { label: "Product Catalog", to: "/app/erp/product-catalog" },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Workspace",
-    items: [
-      {
-        label: "Settings",
-        to: "/app/settings",
-        icon: Settings,
-      },
-    ],
+    items: loopdevNavigationContract.groups[3].items.map((item) => ({
+      label: item.label,
+      to: item.path,
+      icon: Settings,
+    })),
   },
 ];

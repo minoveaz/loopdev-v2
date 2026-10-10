@@ -25,6 +25,14 @@ import type {
 const LOCAL_ORGANIZATION_ID = "local-development-organization";
 const DEFAULT_CONTACT_LIMIT = 10;
 
+function getOrganizationId(activeOrganizationId?: string | null): string {
+  const isVitest = Boolean(
+    (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test")) ||
+    (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITEST || (import.meta as any).env?.MODE === "test"))
+  );
+  return activeOrganizationId || (isVitest ? LOCAL_ORGANIZATION_ID : "");
+}
+
 export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
   const { activeOrganization } = useTenantContext();
   const [contacts, setContacts] = useState<CRMContact[]>([]);
@@ -34,11 +42,7 @@ export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
-  const isVitest = Boolean(
-    (typeof process !== "undefined" && (process.env?.VITEST || process.env?.NODE_ENV === "test")) ||
-    (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITEST || (import.meta as any).env?.MODE === "test"))
-  );
-  const orgId = params.organizationId || activeOrganization?.id || (isVitest ? "local-development-organization" : "");
+  const orgId = params.organizationId || getOrganizationId(activeOrganization?.id);
 
   useEffect(() => {
     let active = true;
@@ -101,6 +105,7 @@ export function useCrmContacts(params: Partial<CRMContactListParams> = {}) {
 
 export function useCrmLeads() {
   const { activeOrganization } = useTenantContext();
+  const organizationId = getOrganizationId(activeOrganization?.id);
   const [leads, setLeads] = useState<CRMLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +117,11 @@ export function useCrmLeads() {
     let active = true;
     setLoading(true);
     setError(null);
-    const organizationId = activeOrganization?.id || LOCAL_ORGANIZATION_ID;
+    setLeads([]);
+    if (!organizationId) {
+      setLoading(false);
+      return () => { active = false; };
+    }
     void loopdevAdapter.crm.listLeads(organizationId)
       .then((items) => {
         if (active) setLeads(items);
@@ -147,10 +156,15 @@ export function useCrmLeads() {
   };
 
   const createLead = async (input: Omit<CRMCreateLeadInput, "organizationId">) => {
+    if (!organizationId) {
+      const result = { status: "server-error" as const, message: "Select an organization before managing CRM data." };
+      setCreation({ status: result.status, message: result.message });
+      return result;
+    }
     setCreation({ status: "pending" });
     let result: Awaited<ReturnType<typeof loopdevAdapter.crm.createLead>>;
     try {
-      result = await loopdevAdapter.crm.createLead({ ...input, organizationId: activeOrganization?.id || LOCAL_ORGANIZATION_ID });
+      result = await loopdevAdapter.crm.createLead({ ...input, organizationId });
     } catch (cause: unknown) {
       result = { status: "server-error", message: cause instanceof Error ? cause.message : "Please try again." };
     }
@@ -164,9 +178,13 @@ export function useCrmLeads() {
   };
 
   const updateLead = async (lead: CRMLead, input: Omit<CRMUpdateLeadInput, "organizationId" | "expectedUpdatedAt">) => {
+    const targetOrganizationId = lead.organizationId || organizationId;
+    if (!targetOrganizationId) {
+      return { status: "server-error" as const, message: "Select an organization before managing CRM data." };
+    }
     const result = await loopdevAdapter.crm.updateLead(lead.id, {
       ...input,
-      organizationId: lead.organizationId || activeOrganization?.id || LOCAL_ORGANIZATION_ID,
+      organizationId: targetOrganizationId,
       expectedUpdatedAt: lead.updatedAt,
     });
     if (result.status === "success") {
@@ -178,15 +196,19 @@ export function useCrmLeads() {
   };
 
   const archiveLead = async (lead: CRMLead) => {
-    const result = await loopdevAdapter.crm.archiveLead(lead.id, lead.organizationId, lead.updatedAt);
+    if (!lead.organizationId && !organizationId) {
+      return { status: "server-error" as const, message: "Select an organization before managing CRM data." };
+    }
+    const result = await loopdevAdapter.crm.archiveLead(lead.id, lead.organizationId || organizationId, lead.updatedAt);
     if (result.status === "success") setLeads((current) => current.filter((item) => item.id !== lead.id));
     return result;
   };
 
   const bulkArchiveLeads = async (targets: CRMLead[]) => {
-    const organizationId = targets[0]?.organizationId || activeOrganization?.id || LOCAL_ORGANIZATION_ID;
+    const targetOrganizationId = targets[0]?.organizationId || organizationId;
     if (!loopdevAdapter.crm.bulkArchiveLeads) return { successCount: 0, failureCount: targets.length };
-    const result = await loopdevAdapter.crm.bulkArchiveLeads(targets.map((lead) => lead.id), organizationId);
+    if (!targetOrganizationId) return { successCount: 0, failureCount: targets.length };
+    const result = await loopdevAdapter.crm.bulkArchiveLeads(targets.map((lead) => lead.id), targetOrganizationId);
     if (result.successCount) setLeads((current) => current.filter((item) => !targets.some((target) => target.id === item.id)));
     return result;
   };
@@ -239,6 +261,8 @@ export interface UseCrmPipelineParams {
 }
 
 export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
+  const { activeOrganization } = useTenantContext();
+  const organizationId = getOrganizationId(activeOrganization?.id);
   const [opportunities, setOpportunities] = useState<CRMPipelineOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -256,8 +280,13 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     setLoading(true);
     setError(null);
     setForbidden(false);
+    setOpportunities([]);
+    if (!organizationId) {
+      setLoading(false);
+      return () => { active = false; };
+    }
     const request: CRMOpportunityListParams = {
-      organizationId: LOCAL_ORGANIZATION_ID,
+      organizationId,
       query: params.query,
       stageCodes: stageCodesKey ? stageCodesKey.split(",") as CRMPipelineStageCode[] : undefined,
       ownerIds: ownerIdsKey ? ownerIdsKey.split(",") : undefined,
@@ -284,11 +313,16 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [params.query, stageCodesKey, ownerIdsKey, productKeysKey, catalogItemIdsKey, originsKey, params.sortBy, params.sortDirection, reloadToken]);
+  }, [organizationId, params.query, stageCodesKey, ownerIdsKey, productKeysKey, catalogItemIdsKey, originsKey, params.sortBy, params.sortDirection, reloadToken]);
 
   const moveStage = async (opportunity: CRMPipelineOpportunity, stageCode: CRMPipelineStageCode) => {
+    if (!organizationId) {
+      const result: CRMOpportunityMutationResult = { status: "server-error", message: "Select an organization before managing CRM data." };
+      setMutation({ status: result.status, message: result.message });
+      return result;
+    }
     const input: CRMMoveOpportunityStageInput = {
-      organizationId: LOCAL_ORGANIZATION_ID,
+      organizationId,
       stageCode,
       expectedUpdatedAt: opportunity.updatedAt,
     };
@@ -315,9 +349,14 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     opportunity: CRMPipelineOpportunity,
     input: Omit<CRMUpdateOpportunityInput, "organizationId" | "expectedUpdatedAt">,
   ) => {
+    if (!organizationId) {
+      const result: CRMOpportunityMutationResult = { status: "server-error", message: "Select an organization before managing CRM data." };
+      setMutation({ status: result.status, message: result.message });
+      return result;
+    }
     const result = await loopdevAdapter.crm.updateOpportunity(opportunity.id, {
       ...input,
-      organizationId: LOCAL_ORGANIZATION_ID,
+      organizationId,
       expectedUpdatedAt: opportunity.updatedAt,
     });
     if (result.status === "success") {
@@ -337,10 +376,15 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
   };
 
   const createOpportunity = async (input: Omit<CRMCreateOpportunityInput, "organizationId">) => {
+    if (!organizationId) {
+      const result: CRMOpportunityMutationResult = { status: "server-error", message: "Select an organization before managing CRM data." };
+      setMutation({ status: result.status, message: result.message });
+      return result;
+    }
     setMutation({ status: "pending", opportunityId: "new" });
     let result: CRMOpportunityMutationResult;
     try {
-      result = await loopdevAdapter.crm.createOpportunity({ ...input, organizationId: LOCAL_ORGANIZATION_ID });
+      result = await loopdevAdapter.crm.createOpportunity({ ...input, organizationId });
     } catch (cause: unknown) {
       result = { status: "server-error", message: cause instanceof Error ? cause.message : "Please try again." };
     }
@@ -355,7 +399,8 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
 
   const bulkArchiveOpportunities = async (targets: CRMPipelineOpportunity[]) => {
     if (!loopdevAdapter.crm.bulkArchiveOpportunities) return { successCount: 0, failureCount: targets.length };
-    const result = await loopdevAdapter.crm.bulkArchiveOpportunities(targets.map((opportunity) => opportunity.id), LOCAL_ORGANIZATION_ID);
+    if (!organizationId) return { successCount: 0, failureCount: targets.length };
+    const result = await loopdevAdapter.crm.bulkArchiveOpportunities(targets.map((opportunity) => opportunity.id), organizationId);
     if (result.successCount > 0) setOpportunities((current) => current.filter((opportunity) => !targets.some((target) => target.id === opportunity.id)));
     return result;
   };
@@ -364,10 +409,15 @@ export function useCrmPipeline(params: UseCrmPipelineParams = {}) {
     opportunity: CRMPipelineOpportunity,
     input: Omit<CRMReopenOpportunityInput, "organizationId" | "expectedUpdatedAt">,
   ) => {
+    if (!organizationId) {
+      const result: CRMOpportunityMutationResult = { status: "server-error", message: "Select an organization before managing CRM data." };
+      setMutation({ status: result.status, message: result.message });
+      return result;
+    }
     setMutation({ status: "pending", opportunityId: opportunity.id });
     const result = await loopdevAdapter.crm.reopenOpportunity(opportunity.id, {
       ...input,
-      organizationId: LOCAL_ORGANIZATION_ID,
+      organizationId,
       expectedUpdatedAt: opportunity.updatedAt,
     });
     if (result.status === "success") {

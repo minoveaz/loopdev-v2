@@ -11,6 +11,8 @@ import type {
   AuthChangeEvent,
   PlatformAuthStorage,
   Workspace,
+  WorkspaceStatus,
+  WorkspaceSuiteKey,
 } from "@contracts/auth-port";
 
 export class BrowserLocalStorageAdapter implements PlatformAuthStorage {
@@ -53,6 +55,25 @@ export interface SupabaseAuthAdapterConfig {
 
 export const DEFAULT_SUPABASE_URL = "https://sukjcsylkljiyvfklxvj.supabase.co";
 export const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_y7LKtWICauXvyWo6Aa9pSA_ylMUg845";
+
+const WORKSPACE_SUITE_KEYS: readonly WorkspaceSuiteKey[] = [
+  "marketing",
+  "crm",
+  "operations",
+  "communications",
+  "health",
+  "quant",
+  "finance",
+];
+const WORKSPACE_STATUSES: readonly WorkspaceStatus[] = ["active", "disabled", "archived"];
+
+function isWorkspaceSuiteKey(value: unknown): value is WorkspaceSuiteKey {
+  return typeof value === "string" && (WORKSPACE_SUITE_KEYS as readonly string[]).includes(value);
+}
+
+function isWorkspaceStatus(value: unknown): value is WorkspaceStatus {
+  return typeof value === "string" && (WORKSPACE_STATUSES as readonly string[]).includes(value);
+}
 
 export class SupabaseAuthAdapter implements AuthPort {
   private client: SupabaseClient | null = null;
@@ -146,21 +167,28 @@ export class SupabaseAuthAdapter implements AuthPort {
 
     const { data, error } = await this.client
       .from("workspaces")
-      .select("id, organization_id, slug, name, is_default, created_at")
+      .select("id, organization_id, suite_key, status, slug, name, created_at")
       .eq("organization_id", organizationId)
-      .order("is_default", { ascending: false })
       .order("name");
 
-    if (error || !Array.isArray(data)) return [];
+    if (error) throw new Error(`Unable to load organization workspaces: ${error.message}`);
+    if (!Array.isArray(data)) throw new Error("Unable to load organization workspaces: invalid response.");
 
-    return data.map((workspace) => ({
-      id: workspace.id,
-      organizationId: workspace.organization_id,
-      slug: workspace.slug,
-      name: workspace.name,
-      isDefault: Boolean(workspace.is_default),
-      createdAt: workspace.created_at,
-    }));
+    return data.map((workspace) => {
+      if (!isWorkspaceSuiteKey(workspace.suite_key) || !isWorkspaceStatus(workspace.status)) {
+        throw new Error(`Organization workspace ${workspace.id} has an unsupported suite or status.`);
+      }
+
+      return {
+        id: workspace.id,
+        organizationId: workspace.organization_id,
+        suiteKey: workspace.suite_key,
+        status: workspace.status,
+        slug: workspace.slug,
+        name: workspace.name,
+        createdAt: workspace.created_at,
+      };
+    });
   }
 
   private mapSupabaseEvent(event: SupabaseAuthChangeEvent): AuthChangeEvent {

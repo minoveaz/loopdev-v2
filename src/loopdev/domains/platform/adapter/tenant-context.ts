@@ -58,9 +58,10 @@ const PLATFORM_WORKSPACES: Record<string, Workspace[]> = {
     {
       id: "ws_loopdev_main",
       organizationId: "80fce911-57c5-4a83-809f-78df6a3736f7",
+      suiteKey: "crm",
+      status: "active",
       slug: "main",
       name: "Main Workspace",
-      isDefault: true,
       createdAt: "2026-09-14T10:00:00.000Z",
     },
   ],
@@ -68,9 +69,10 @@ const PLATFORM_WORKSPACES: Record<string, Workspace[]> = {
     {
       id: "ws_estarprotegidos_main",
       organizationId: "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+      suiteKey: "crm",
+      status: "active",
       slug: "main",
       name: "Main Workspace",
-      isDefault: true,
       createdAt: "2026-09-14T10:00:00.000Z",
     },
   ],
@@ -78,17 +80,19 @@ const PLATFORM_WORKSPACES: Record<string, Workspace[]> = {
     {
       id: "ws_acme_sales",
       organizationId: "org_acme_corp",
+      suiteKey: "crm",
+      status: "active",
       slug: "sales",
       name: "Sales & CRM",
-      isDefault: true,
       createdAt: "2026-01-15T10:05:00.000Z",
     },
     {
       id: "ws_acme_ops",
       organizationId: "org_acme_corp",
+      suiteKey: "operations",
+      status: "active",
       slug: "operations",
       name: "Operations & Logistics",
-      isDefault: false,
       createdAt: "2026-01-15T10:10:00.000Z",
     },
   ],
@@ -96,9 +100,10 @@ const PLATFORM_WORKSPACES: Record<string, Workspace[]> = {
     {
       id: "ws_starlight_main",
       organizationId: "org_starlight",
+      suiteKey: "crm",
+      status: "active",
       slug: "default",
       name: "Main Workspace",
-      isDefault: true,
       createdAt: "2026-02-20T11:35:00.000Z",
     },
   ],
@@ -106,9 +111,10 @@ const PLATFORM_WORKSPACES: Record<string, Workspace[]> = {
     {
       id: "ws_nexus_clinical",
       organizationId: "org_nexus_health",
+      suiteKey: "health",
+      status: "active",
       slug: "clinical",
       name: "Clinical Trials",
-      isDefault: true,
       createdAt: "2026-03-05T09:20:00.000Z",
     },
   ],
@@ -290,7 +296,17 @@ export class TenantContextAdapter implements TenantContextPort {
       getUserWorkspaces?: (userId: string, targetOrganizationId: string) => Promise<Workspace[]>;
     };
     if (session && remoteWorkspaceLoader.getUserWorkspaces) {
-      return { success: true, data: await remoteWorkspaceLoader.getUserWorkspaces(session.user.id, organizationId) };
+      try {
+        return { success: true, data: await remoteWorkspaceLoader.getUserWorkspaces(session.user.id, organizationId) };
+      } catch (error) {
+        return {
+          success: false,
+          error: {
+            code: "AUTH_NETWORK_ERROR",
+            message: error instanceof Error ? error.message : "Unable to load organization workspaces.",
+          },
+        };
+      }
     }
 
     const wsList = PLATFORM_WORKSPACES[organizationId] ?? [];

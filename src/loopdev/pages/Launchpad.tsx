@@ -5,7 +5,7 @@ import { useT } from "@/i18n";
 export default function Launchpad() {
   const { session } = useAuth();
   const t = useT();
-  const displayName = session?.name ?? "Admin";
+  const displayName = session?.name ?? t("common.guest");
 
   return (
     <div className="relative isolate -mx-3 -my-5 min-h-[calc(100vh-4rem)] overflow-hidden bg-background sm:-mx-4 sm:-my-6 md:-mx-6 md:-my-7 lg:-mx-8 lg:-my-8">
@@ -21,12 +21,14 @@ export default function Launchpad() {
         <header className="mx-auto mb-14 max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-            {t("launchpad.eyebrow")}
+            {t("common.loopdev.launchpad.eyebrow")}
           </div>
           <h1 className="font-display text-4xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl">
-            {t("launchpad.welcome", { name: "" }).replace(/,\s*$/, "")}{" "}<span className="font-black text-primary">{displayName}</span>
-            <span className="block">{t("launchpad.chooseContext")}</span>
+            {t("common.loopdev.launchpad.welcome", { name: displayName })}
           </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
+            {t("common.loopdev.launchpad.chooseContext")}
+          </p>
         </header>
         <section aria-labelledby="available-suites-heading">
           <div className="mb-5 flex items-center justify-between gap-4">
@@ -34,7 +36,7 @@ export default function Launchpad() {
               id="available-suites-heading"
               className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground"
             >
-              {t("launchpad.availableSuites")}
+              {t("common.loopdev.launchpad.availableSuites")}
             </h2>
           </div>
           <SuiteCatalog />

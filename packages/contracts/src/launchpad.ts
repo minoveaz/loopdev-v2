@@ -15,9 +15,7 @@ export type LaunchpadSuite = {
   version: string;
   status: LaunchpadSuiteStatus;
   illustration: LaunchpadIllustrationKey;
-  availability:
-    | { kind: "workspace"; suiteKey: WorkspaceSuiteKey }
-    | { kind: "organization-tool" };
+  availability: { kind: "workspace"; suiteKey: WorkspaceSuiteKey };
   entryPath?: string;
 };
 
@@ -36,14 +34,6 @@ export const launchpadSuites: LaunchpadSuite[] = [
     illustration: "crm",
     availability: { kind: "workspace", suiteKey: "crm" },
     entryPath: "/app/sales-crm/overview",
-  },
-  {
-    id: "document-intelligence",
-    version: "1.0.0",
-    status: "ready",
-    illustration: "crm",
-    availability: { kind: "organization-tool" },
-    entryPath: "/app/tools/document-intelligence",
   },
   {
     id: "erp",
@@ -83,7 +73,6 @@ export function getAvailableLaunchpadSuites(workspaces: readonly Workspace[]): L
 
   return launchpadSuites.filter((suite) => {
     if (suite.status !== "ready") return false;
-    if (suite.availability.kind === "organization-tool") return true;
     return activeSuiteKeys.has(suite.availability.suiteKey);
   });
 }

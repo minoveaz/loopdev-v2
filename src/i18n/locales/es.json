@@ -55,10 +55,6 @@
             "title": "Ventas y CRM",
             "description": "Gestiona tu embudo de ventas y las relaciones con clientes con información inteligente."
           },
-          "document-intelligence": {
-            "title": "Inteligencia documental",
-            "description": "Extrae y clasifica datos de identidad de documentos mediante OCR."
-          },
           "erp": {
             "title": "ERP",
             "description": "Catálogos compartidos de productos y servicios para las operaciones de LoopDev."

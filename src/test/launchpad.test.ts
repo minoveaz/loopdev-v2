@@ -21,7 +21,7 @@ function workspace(suiteKey: Workspace["suiteKey"], status: Workspace["status"] 
 }
 
 describe("Launchpad suite availability", () => {
-  it("shows only ready suites enabled for the active organization and its tools", () => {
+  it("shows only ready suites enabled for the active organization", () => {
     const suites = getAvailableLaunchpadSuites([
       workspace("crm"),
       workspace("operations"),
@@ -30,7 +30,6 @@ describe("Launchpad suite availability", () => {
 
     expect(suites.map((suite) => suite.id)).toEqual([
       "sales-crm",
-      "document-intelligence",
       "erp",
     ]);
   });
@@ -42,7 +41,6 @@ describe("Launchpad suite availability", () => {
     ]);
 
     expect(suites.map((suite) => suite.id)).toEqual([
-      "document-intelligence",
       "erp",
     ]);
   });
@@ -55,13 +53,14 @@ describe("Launchpad suite availability", () => {
       workspace("health"),
     ]);
 
-    expect(suites.map((suite) => suite.id)).toEqual(["document-intelligence"]);
+    expect(suites).toEqual([]);
   });
 
   it("shows the full catalog for LoopDev without unlocking locked or lab suites", () => {
     const suites = getLaunchpadSuitesForOrganization("loopdev", []);
 
     expect(suites).toEqual(launchpadSuites);
+    expect(suites.map((suite) => suite.id)).not.toContain("document-intelligence");
     expect(suites.filter((suite) => suite.status === "locked")).toHaveLength(3);
     expect(suites.filter((suite) => suite.status === "lab")).toHaveLength(1);
   });
@@ -75,7 +74,6 @@ describe("Launchpad suite availability", () => {
 
     expect(suites.map((suite) => suite.id)).toEqual([
       "sales-crm",
-      "document-intelligence",
       "erp",
     ]);
   });
@@ -91,8 +89,8 @@ describe("Launchpad translations", () => {
     expect(Object.keys(spanish.suites).sort()).toEqual(suiteIds);
     expect(english.welcome).toBe("Welcome, {{name}}");
     expect(spanish.welcome).toBe("Hola, {{name}}");
-    expect(english.suites["document-intelligence"].description).not.toBe(
-      spanish.suites["document-intelligence"].description,
+    expect(english.suites["sales-crm"].description).not.toBe(
+      spanish.suites["sales-crm"].description,
     );
   });
 });

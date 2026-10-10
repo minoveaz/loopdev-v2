@@ -55,10 +55,6 @@
             "title": "Sales & CRM",
             "description": "Manage your sales pipeline and customer relationships with intelligent insights."
           },
-          "document-intelligence": {
-            "title": "Document Intelligence",
-            "description": "Extract and classify identity information from documents using OCR."
-          },
           "erp": {
             "title": "ERP",
             "description": "Shared product and service catalogs for LoopDev operations."

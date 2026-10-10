@@ -1,6 +1,6 @@
 begin;
 
-select plan(8);
+select plan(11);
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at)
 values
@@ -71,8 +71,38 @@ $$, 'organization member can upload an own document object');
 select is(
   (select count(*)::integer from storage.objects),
   1,
-  'document owner can read the uploaded object'
+  'document owner can read the uploaded PNG'
 );
+
+select lives_ok($$
+  insert into storage.objects (bucket_id, name, owner, owner_id, metadata, version)
+  values (
+    'document-intelligence-temp',
+    'organizations/00000000-0000-4b00-9500-000000000001/00000000-0000-4b00-8400-000000000001/00000000-0000-4b00-8600-000000000002.pdf',
+    '00000000-0000-4b00-8400-000000000001',
+    '00000000-0000-4b00-8400-000000000001',
+    '{}'::jsonb,
+    'document-intelligence-pdf-test'
+  )
+$$, 'organization member can upload an own PDF object');
+
+select is(
+  (select count(*)::integer from storage.objects),
+  2,
+  'document owner can read both valid objects'
+);
+
+select throws_ok($$
+  insert into storage.objects (bucket_id, name, owner, owner_id, metadata, version)
+  values (
+    'document-intelligence-temp',
+    'organizations/00000000-0000-4b00-9500-000000000001/00000000-0000-4b00-8400-000000000001/00000000-0000-4b00-8600-000000000003.txt',
+    '00000000-0000-4b00-8400-000000000001',
+    '00000000-0000-4b00-8400-000000000001',
+    '{}'::jsonb,
+    'document-intelligence-invalid-extension-test'
+  )
+$$, 'new row violates row-level security policy for table "objects"', 'unsupported document extension is rejected');
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4b00-8400-000000000002', true);
 

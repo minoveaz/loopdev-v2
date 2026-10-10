@@ -74,9 +74,10 @@ function buildMobileSnapshot(): TenantContextSnapshot | null {
     workspace: {
       id: "default",
       organizationId: org.id,
+      suiteKey: "crm",
+      status: "active",
       slug: "default",
       name: "Main Workspace",
-      isDefault: true,
       createdAt: new Date().toISOString(),
     },
     userRole: role,
@@ -317,9 +318,10 @@ export const mobileTenantContextAdapter: TenantContextPort = {
         {
           id: "default",
           organizationId,
+          suiteKey: "crm",
+          status: "active",
           slug: "default",
           name: "Main Workspace",
-          isDefault: true,
           createdAt: new Date().toISOString(),
         },
       ],

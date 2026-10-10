@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 export interface SuiteCardProps {
   title: string;
@@ -25,11 +26,12 @@ export function SuiteCard({
   className,
 }: SuiteCardProps) {
   const navigate = useNavigate();
+  const t = useT();
   const isNavigable = Boolean(to && !isLocked);
 
   return (
     <article
-      aria-label={isNavigable ? `Open ${title}` : undefined}
+      aria-label={isNavigable ? t("common.loopdev.launchpad.openSuite", { suite: title }) : undefined}
       role={isNavigable ? "link" : undefined}
       tabIndex={isNavigable ? 0 : undefined}
       onClick={isNavigable ? () => navigate(to!) : undefined}
@@ -54,11 +56,11 @@ export function SuiteCard({
           </span>
           {isLocked ? (
             <span className="rounded-md border border-border/70 px-2 py-1 font-mono text-[10px] text-muted-foreground/70">
-              {"{ LOCKED }"}
+              {t("common.loopdev.launchpad.status.locked")}
             </span>
           ) : (
             <span className="rounded-md bg-primary/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-primary">
-              {status === "lab" ? "Lab" : "Ready"}
+              {t(status === "lab" ? "common.loopdev.launchpad.status.lab" : "common.loopdev.launchpad.status.ready")}
             </span>
           )}
         </div>
@@ -83,7 +85,7 @@ export function SuiteCard({
               )}
             />
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              {isLocked ? "Auth_Required" : "System_Ready"}
+              {t(isLocked ? "common.loopdev.launchpad.status.accessRestricted" : "common.loopdev.launchpad.status.systemReady")}
             </span>
           </div>
           {!isLocked && (

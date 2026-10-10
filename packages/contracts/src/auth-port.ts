@@ -26,12 +26,24 @@ export interface Organization {
   createdAt: string;
 }
 
+export type WorkspaceSuiteKey =
+  | "marketing"
+  | "crm"
+  | "operations"
+  | "communications"
+  | "health"
+  | "quant"
+  | "finance";
+
+export type WorkspaceStatus = "active" | "disabled" | "archived";
+
 export interface Workspace {
   id: string;
   organizationId: string;
+  suiteKey: WorkspaceSuiteKey;
+  status: WorkspaceStatus;
   slug: string;
   name: string;
-  isDefault: boolean;
   createdAt: string;
 }
 

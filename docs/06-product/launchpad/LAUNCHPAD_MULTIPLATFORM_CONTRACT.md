@@ -92,6 +92,9 @@ Rules:
 - `entryPath` is resolved by the client router and must not bypass authorization.
 - `coming_soon` and `disabled` entries may be shown only when product explicitly
   approves discoverability for that suite.
+- In the current web catalog, Document Intelligence is a platform tool, not a
+  suite. Keep it accessible through Tools and do not render it as a Launchpad
+  suite card.
 - The server remains authoritative for availability and permissions.
 
 ### 4.3 Read contract

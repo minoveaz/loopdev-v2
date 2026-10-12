@@ -62,7 +62,7 @@ This track is based on the historical audit of `MOD-LEADS-20260917-001` and `MOD
 ## Delivery sequence
 
 1. **P0 — Gate correctness:** state-machine invariants and ledger eligibility are implemented for workflow version 2; cross-artifact validation is enabled for new runs. Regression coverage and validation are pending.
-2. **P0 — Evidence provenance:** immutable source snapshot, command/runtime evidence schema, validator enforcement.
+2. **P0 — Evidence provenance:** verification now pins the source commit and ledger fingerprint, rejects dirty source changes outside run records, and requires command exit codes plus source_commit references; structured runtime evidence schema/validator enforcement remains.
 3. **P1 — Approval integrity:** artifact digest verification and actor/gate binding.
 4. **P1 — Platform acceptance:** explicit mobile checks and required E4 journey records.
 5. **P1 — Reconciliation:** canonical record alignment and evidence-backed dispositions for the two audited runs.
@@ -73,7 +73,8 @@ Dependencies: Workstream 1 precedes safe release adoption. Workstreams 2 and 3 e
 ## Track-level acceptance
 
 - [x] Delivery validation rejects a blocked ledger at verification/release for workflow version 2.
-- Completed phase evidence is attributable to a clean, immutable source snapshot.
+- [x] Verification pins a clean, immutable source snapshot and ledger fingerprint.
+- [ ] All command and runtime evidence is machine-readable and independently validated.
 - Approval fingerprints are computed and verified against the approved artifact.
 - Required platform checks and E4 journeys are machine-verifiable.
 - Manifest, checkpoint, ledger, README, and evidence matrices do not contradict one another.

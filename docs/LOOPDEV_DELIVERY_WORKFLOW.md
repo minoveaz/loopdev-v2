@@ -353,7 +353,11 @@ Desde la version 2 del workflow, iniciar o completar `08-verify`, `09-review` o
 y con sus referencias de evidencia presentes en el checkout. Aprobar los gates
 `verification` y `release` vuelve a comprobar estas condiciones y exige los
 checkpoints correspondientes; release tambien requiere verification aprobada.
-Los runs de workflow version 1 conservan su comportamiento historico.
+Al iniciar `08-verify`, el run fija el commit HEAD y el fingerprint del ledger;
+el cierre falla si cambia cualquiera de los dos o si queda codigo sin commit
+fuera de los registros del run. Cada validacion debe registrar `exit_code: 0` y
+el `source_commit` fijado. Los runs de workflow version 1 conservan su
+comportamiento historico.
 
 El fingerprint es importante: si cambia un contrato compartido, el resume
 marca la fase afectada para revalidacion en vez de reutilizar evidencia vieja.

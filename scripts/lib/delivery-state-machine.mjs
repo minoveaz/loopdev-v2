@@ -161,6 +161,36 @@ export class DeliveryStateMachine {
     return typeof approval === "string" ? approval : approval?.status;
   }
 
+  captureVerificationSnapshot(suite, moduleName) {
+    const headCommit = git(this.root, ["rev-parse", "HEAD"]);
+    if (!headCommit) throw new Error("Cannot verify without a committed source snapshot");
+    const dirtySource = git(this.root, ["status", "--porcelain", "--untracked-files=all", "--",
+      ".", ":(exclude,glob)docs/implementation/**/runs/**", ":(exclude,glob)docs/06-product/**/runs/**",
+      ":(exclude,glob)docs/implementation/**/delivery-ledger.json"], "");
+    if (dirtySource) throw new Error(`Verification requires committed source changes; uncommitted files remain:\n${dirtySource}`);
+    const ledgerFile = join(this.workspace(suite, moduleName), "delivery-ledger.json");
+    if (!existsSync(ledgerFile)) throw new Error(`Verification requires delivery ledger: ${relative(this.root, ledgerFile)}`);
+    return {
+      commit: headCommit,
+      ledger_fingerprint: sha256(readFileSync(ledgerFile)),
+      captured_at: this.now(),
+      worktree: "clean_except_delivery_records",
+    };
+  }
+
+  assertVerificationSnapshot(suite, moduleName, manifest, checkpoint) {
+    const snapshot = manifest.environment?.verification_snapshot;
+    if (!snapshot?.commit || !snapshot?.ledger_fingerprint) throw new Error("Verification requires a pinned source snapshot");
+    const current = this.captureVerificationSnapshot(suite, moduleName);
+    if (current.commit !== snapshot.commit) throw new Error(`Source HEAD changed during verification (${snapshot.commit} -> ${current.commit})`);
+    if (current.ledger_fingerprint !== snapshot.ledger_fingerprint) throw new Error("Delivery ledger changed during verification");
+    for (const validation of checkpoint.validation ?? []) {
+      if (!Number.isInteger(validation.exit_code)) throw new Error("Verification validation entries require an integer exit_code");
+      if (validation.exit_code !== 0) throw new Error(`Verification command failed with exit_code ${validation.exit_code}: ${validation.command}`);
+      if (validation.source_commit !== snapshot.commit) throw new Error(`Verification validation must reference source_commit ${snapshot.commit}: ${validation.command}`);
+    }
+  }
+
   assertLedgerReady(suite, moduleName, context) {
     const ledgerFile = join(this.workspace(suite, moduleName), "delivery-ledger.json");
     const ledgerErrors = validateFinalDeliveryGate(this.root, ledgerFile, context);
@@ -186,6 +216,9 @@ export class DeliveryStateMachine {
     const { file, manifest } = this.loadRun(suite, moduleName, runId);
     const checkpoints = this.checkpoints(suite, moduleName, runId);
     this.assertCanStart(manifest, checkpoints, phaseId, skill, suite, moduleName);
+    if (manifest.workflow_version >= 2 && phaseId === "08-verify") {
+      manifest.environment.verification_snapshot = this.captureVerificationSnapshot(suite, moduleName);
+    }
     const checkpoint = {
       schema_version: 1, run_id: runId, span_id: `${runId}:${phaseId}`, phase: phaseId, skill,
       parent_span_id: null, module: moduleName, status: "running", decision_status: "open",
@@ -243,6 +276,9 @@ export class DeliveryStateMachine {
     }
     if (manifest.workflow_version >= 2 && ["08-verify", "09-review", "10-git"].includes(phaseId)) {
       this.assertLedgerReady(suite, moduleName, `phase ${phaseId}`);
+    }
+    if (manifest.workflow_version >= 2 && phaseId === "08-verify") {
+      this.assertVerificationSnapshot(suite, moduleName, manifest, checkpoint);
     }
     checkpoint.status = "completed";
     checkpoint.decision_status = "confirmed";

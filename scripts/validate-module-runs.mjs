@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { validateFinalDeliveryGate } from "./lib/delivery-ledger.mjs";
@@ -276,6 +277,23 @@ function validateManifest(file) {
       addError(file, `completed manifest requires completed terminal phase "${workflow.terminal_phase}"`);
     }
     const ledgerFile = join(workspace, "delivery-ledger.json");
+    const verification = checkpoints.get("08-verify");
+    if (verification?.status === "completed" && !verification.invalidated) {
+      const snapshot = manifest.environment?.verification_snapshot;
+      if (!snapshot?.commit || !/^sha256:[a-f0-9]{64}$/.test(snapshot.ledger_fingerprint ?? "")) {
+        addError(file, "completed verification requires a pinned commit and ledger fingerprint");
+      } else {
+        const currentLedgerFingerprint = `sha256:${createHash("sha256").update(readFileSync(ledgerFile)).digest("hex")}`;
+        if (snapshot.ledger_fingerprint !== currentLedgerFingerprint) addError(file, "delivery ledger changed after the verification snapshot");
+      }
+      if (verification.environment?.verification_snapshot?.commit !== snapshot?.commit) {
+        addError(file, "verification checkpoint source snapshot does not match the run manifest");
+      }
+      for (const validation of verification.validation ?? []) {
+        if (validation.exit_code !== 0) addError(file, `verification command must have exit_code 0: ${validation.command ?? "missing command"}`);
+        if (validation.source_commit !== snapshot?.commit) addError(file, `verification command must reference pinned source_commit: ${validation.command ?? "missing command"}`);
+      }
+    }
     for (const gate of ["verification", "release"]) {
       const approval = manifest.approvals?.[gate];
       const approvalStatus = typeof approval === "string" ? approval : approval?.status;

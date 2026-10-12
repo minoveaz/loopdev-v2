@@ -348,6 +348,13 @@ sin tarea, dependencias ciclicas, tareas sin criterios/comandos y eliminaciones
 de scope sin change request aprobado. Discovery y design completan el alcance y
 la semantica; plan agrega tareas y solo puede cerrar con el ledger aprobado.
 
+Desde la version 2 del workflow, iniciar o completar `08-verify`, `09-review` o
+`10-git` exige un ledger aprobado, sin blockers, con todas las tareas en `done`
+y con sus referencias de evidencia presentes en el checkout. Aprobar los gates
+`verification` y `release` vuelve a comprobar estas condiciones y exige los
+checkpoints correspondientes; release tambien requiere verification aprobada.
+Los runs de workflow version 1 conservan su comportamiento historico.
+
 El fingerprint es importante: si cambia un contrato compartido, el resume
 marca la fase afectada para revalidacion en vez de reutilizar evidencia vieja.
 

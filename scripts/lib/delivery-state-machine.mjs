@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import { validateLedgerFile } from "./delivery-ledger.mjs";
+import { validateFinalDeliveryGate, validateLedgerFile } from "./delivery-ledger.mjs";
 
 const sha256 = (value) => `sha256:${createHash("sha256").update(value).digest("hex")}`;
 const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -161,7 +161,13 @@ export class DeliveryStateMachine {
     return typeof approval === "string" ? approval : approval?.status;
   }
 
-  assertCanStart(manifest, checkpoints, phaseId, skill) {
+  assertLedgerReady(suite, moduleName, context) {
+    const ledgerFile = join(this.workspace(suite, moduleName), "delivery-ledger.json");
+    const ledgerErrors = validateFinalDeliveryGate(this.root, ledgerFile, context);
+    if (ledgerErrors.length) throw new Error(`Delivery ledger is invalid for ${context}:\n${ledgerErrors.join("\n")}`);
+  }
+
+  assertCanStart(manifest, checkpoints, phaseId, skill, suite, moduleName) {
     const phase = this.phaseById.get(phaseId);
     if (!phase) throw new Error(`Unknown phase: ${phaseId}`);
     if (skill !== phase.skill) throw new Error(`Phase ${phaseId} must be owned by ${phase.skill}`);
@@ -171,12 +177,15 @@ export class DeliveryStateMachine {
       if (checkpoint?.status !== "completed" || checkpoint.invalidated) throw new Error(`Phase ${phaseId} requires completed predecessor ${predecessor}`);
     }
     if (phase.required_gate && this.approvalStatus(manifest, phase.required_gate) !== "approved") throw new Error(`Phase ${phaseId} requires approved gate ${phase.required_gate}`);
+    if (manifest.workflow_version >= 2 && ["08-verify", "09-review", "10-git"].includes(phaseId)) {
+      this.assertLedgerReady(suite, moduleName, `phase ${phaseId}`);
+    }
   }
 
   startPhase({ suite, moduleName, runId, phaseId, skill }) {
     const { file, manifest } = this.loadRun(suite, moduleName, runId);
     const checkpoints = this.checkpoints(suite, moduleName, runId);
-    this.assertCanStart(manifest, checkpoints, phaseId, skill);
+    this.assertCanStart(manifest, checkpoints, phaseId, skill, suite, moduleName);
     const checkpoint = {
       schema_version: 1, run_id: runId, span_id: `${runId}:${phaseId}`, phase: phaseId, skill,
       parent_span_id: null, module: moduleName, status: "running", decision_status: "open",
@@ -232,6 +241,9 @@ export class DeliveryStateMachine {
       if (ledger.status === "blocked") throw new Error(`Delivery ledger is blocked: ${(ledger.blockers ?? []).join("; ")}`);
       if (phaseId === "06-plan" && ledger.status !== "approved") throw new Error("Plan completion requires an approved delivery ledger");
     }
+    if (manifest.workflow_version >= 2 && ["08-verify", "09-review", "10-git"].includes(phaseId)) {
+      this.assertLedgerReady(suite, moduleName, `phase ${phaseId}`);
+    }
     checkpoint.status = "completed";
     checkpoint.decision_status = "confirmed";
     checkpoint.completed_at = this.now();
@@ -264,6 +276,17 @@ export class DeliveryStateMachine {
     if (!this.workflow.gates.includes(gate)) throw new Error(`Unknown approval gate: ${gate}`);
     if (!approvedBy || !role || !artifact || !artifactFingerprint || !source) throw new Error("Approval requires --by, --role, --artifact, --fingerprint and --source");
     if (!/^sha256:[a-f0-9]{64}$/.test(artifactFingerprint)) throw new Error("Approval fingerprint must be sha256:<64 hex>");
+    if (manifest.workflow_version >= 2 && ["verification", "release"].includes(gate)) {
+      this.assertLedgerReady(suite, moduleName, `approval gate ${gate}`);
+      const requiredPhase = gate === "verification" ? "08-verify" : "09-review";
+      const checkpoint = this.checkpoints(suite, moduleName, runId).get(requiredPhase)?.checkpoint;
+      if (checkpoint?.status !== "completed" || checkpoint.invalidated) {
+        throw new Error(`Approval gate ${gate} requires a completed, valid ${requiredPhase} checkpoint`);
+      }
+      if (gate === "release" && this.approvalStatus(manifest, "verification") !== "approved") {
+        throw new Error("Approval gate release requires approved verification");
+      }
+    }
     manifest.approvals[gate] = { status: "approved", approved_by: approvedBy, approved_at: this.now(), role,
       artifact, artifact_fingerprint: artifactFingerprint, source };
     manifest.approval_gates = [...new Set([...(manifest.approval_gates ?? []), gate])];
@@ -278,7 +301,7 @@ export class DeliveryStateMachine {
     if (checkpoints.get(from)?.checkpoint.status !== "completed") throw new Error(`Cannot hand off incomplete phase ${from}`);
     const target = this.phaseById.get(to);
     if (!target) throw new Error(`Unknown handoff target: ${to}`);
-    this.assertCanStart(manifest, checkpoints, to, target.skill);
+    this.assertCanStart(manifest, checkpoints, to, target.skill, suite, moduleName);
     const handoff = { from, to, owner, at: this.now(), input_fingerprint: manifest.input_fingerprint };
     manifest.handoffs = [...(manifest.handoffs ?? []), handoff];
     manifest.current_phase = to;

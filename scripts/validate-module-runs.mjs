@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
+import { validateFinalDeliveryGate } from "./lib/delivery-ledger.mjs";
 
 const root = process.cwd();
 const workflow = JSON.parse(readFileSync(join(root, "docs", "03-platform", "governance", "delivery-workflow.json"), "utf8"));
@@ -261,6 +262,36 @@ function validateManifest(file) {
       const approval = manifest.approvals?.[phase.required_gate];
       const approvalStatus = typeof approval === "string" ? approval : approval?.status;
       if (approvalStatus !== "approved") addError(file, `completed phase "${phaseId}" requires approved gate "${phase.required_gate}"`);
+    }
+  }
+  if (manifest.workflow_version >= 2) {
+    const blockedCheckpoint = [...checkpoints.entries()].find(([, checkpoint]) => checkpoint.status === "blocked");
+    if (blockedCheckpoint && manifest.status !== "blocked") {
+      addError(file, `blocked phase "${blockedCheckpoint[0]}" requires manifest status blocked`);
+    }
+    if (manifest.status === "blocked" && !(manifest.blocked_by ?? []).length) {
+      addError(file, "blocked manifest requires at least one blocked_by reason");
+    }
+    if (manifest.status === "completed" && checkpoints.get(workflow.terminal_phase)?.checkpoint.status !== "completed") {
+      addError(file, `completed manifest requires completed terminal phase "${workflow.terminal_phase}"`);
+    }
+    const ledgerFile = join(workspace, "delivery-ledger.json");
+    for (const gate of ["verification", "release"]) {
+      const approval = manifest.approvals?.[gate];
+      const approvalStatus = typeof approval === "string" ? approval : approval?.status;
+      if (approvalStatus !== "approved") continue;
+      const gateErrors = validateFinalDeliveryGate(root, ledgerFile, `approval gate ${gate}`);
+      for (const error of gateErrors) addError(file, error.replace(`${relative(root, ledgerFile)}: `, ""));
+      const requiredPhase = gate === "verification" ? "08-verify" : "09-review";
+      const checkpoint = checkpoints.get(requiredPhase);
+      if (checkpoint?.status !== "completed" || checkpoint.invalidated) {
+        addError(file, `approved gate "${gate}" requires completed, valid phase "${requiredPhase}"`);
+      }
+      if (gate === "release") {
+        const verification = manifest.approvals?.verification;
+        const verificationStatus = typeof verification === "string" ? verification : verification?.status;
+        if (verificationStatus !== "approved") addError(file, "approved release gate requires approved verification gate");
+      }
     }
   }
 }

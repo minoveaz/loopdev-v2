@@ -210,3 +210,25 @@ export function validateLedgerFile(root, ledgerFile, options = {}) {
     return [`${relative(root, ledgerFile)}: invalid JSON (${error.message})`];
   }
 }
+
+export function validateFinalDeliveryGate(root, ledgerFile, context = "final delivery gate") {
+  const errors = validateLedgerFile(root, ledgerFile, { stage: "plan" });
+  if (errors.length) return errors;
+  try {
+    const ledger = JSON.parse(readFileSync(ledgerFile, "utf8"));
+    if (ledger.status === "blocked" || (ledger.blockers ?? []).length) {
+      errors.push(`${relative(root, ledgerFile)}: blocked ledger cannot pass ${context}`);
+    } else if (ledger.status !== "approved") {
+      errors.push(`${relative(root, ledgerFile)}: ledger must be approved before ${context}`);
+    }
+    for (const task of ledger.tasks ?? []) {
+      if (task.status !== "done") errors.push(`${relative(root, ledgerFile)}: task ${task.id} is ${task.status}; all tasks must be done before ${context}`);
+      for (const reference of task.evidence_refs ?? []) {
+        if (!existsSync(join(root, reference))) errors.push(`${relative(root, ledgerFile)}: task ${task.id} evidence reference does not exist: ${reference}`);
+      }
+    }
+    return errors;
+  } catch (error) {
+    return [`${relative(root, ledgerFile)}: invalid JSON (${error.message})`];
+  }
+}

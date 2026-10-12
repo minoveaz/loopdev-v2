@@ -1,6 +1,6 @@
 {
   "$schema": "../../implementation/_schemas/delivery-workflow.schema.json",
-  "schema_version": 1,
+  "schema_version": 2,
   "initial_phase": "00-discovery",
   "terminal_phase": "10-git",
   "architecture_completion_states": ["PASS", "PASS_WITH_DEBT"],

@@ -339,7 +339,11 @@ export class DeliveryStateMachine {
       if (checkpoint?.status !== "completed" || checkpoint.invalidated) {
         throw new Error(`Approval gate ${gate} requires a completed, valid ${requiredPhase} checkpoint`);
       }
-      this.assertStructuredEvidence(suite, moduleName, checkpoint.evidence, manifest.environment.verification_snapshot?.commit);
+      const verificationCheckpoint = this.checkpoints(suite, moduleName, runId).get("08-verify")?.checkpoint;
+      if (gate === "release" && (verificationCheckpoint?.status !== "completed" || verificationCheckpoint.invalidated)) {
+        throw new Error("Approval gate release requires a completed, valid 08-verify checkpoint");
+      }
+      this.assertStructuredEvidence(suite, moduleName, verificationCheckpoint?.evidence, manifest.environment.verification_snapshot?.commit);
       if (gate === "release" && this.approvalStatus(manifest, "verification") !== "approved") {
         throw new Error("Approval gate release requires approved verification");
       }

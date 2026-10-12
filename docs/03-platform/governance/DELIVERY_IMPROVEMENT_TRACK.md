@@ -61,8 +61,8 @@ This track is based on the historical audit of `MOD-LEADS-20260917-001` and `MOD
 
 ## Delivery sequence
 
-1. **P0 — Gate correctness:** state-machine invariants and ledger eligibility are implemented for workflow version 2; cross-artifact validation is enabled for new runs. Regression coverage and validation are pending.
-2. **P0 — Evidence provenance:** verification pins the source commit and ledger fingerprint, validates command exit codes/source_commit, and requires structured E4/E5 journey evidence per requirement and platform. Device evidence is required for E5. End-to-end adoption remains.
+1. **P0 — Gate correctness:** state-machine invariants and ledger eligibility are implemented for workflow version 2; cross-artifact validation is enabled for new runs. Regression coverage passes, including blocked/incomplete ledgers and conflicting verification state.
+2. **P0 — Evidence provenance:** verification pins the source commit and ledger fingerprint, validates command exit codes/source_commit, and requires structured E4/E5 journey evidence per requirement and platform. Device evidence is required for E5. State-machine end-to-end coverage passes; adoption in a pilot delivery run remains in P2.
 3. **P1 — Approval integrity:** artifact digest verification and actor/gate binding.
 4. **P1 — Platform acceptance:** explicit mobile checks and required E4 journey records.
 5. **P1 — Reconciliation:** canonical record alignment and evidence-backed dispositions for the two audited runs.

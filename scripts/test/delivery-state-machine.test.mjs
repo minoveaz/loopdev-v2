@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { DeliveryStateMachine } from "../lib/delivery-state-machine.mjs";
 import { validateLedger } from "../lib/delivery-ledger.mjs";
+import { checksum } from "../lib/delivery-evidence.mjs";
 
-const repositoryRoot = new URL("../..", import.meta.url).pathname;
+const repositoryRoot = fileURLToPath(new URL("../..", import.meta.url));
 const fixedClock = () => new Date("2026-09-14T12:00:00.000Z");
 const validFingerprint = `sha256:${"a".repeat(64)}`;
 
@@ -100,6 +103,52 @@ function approve(machine, runId, gate) {
     artifact: `docs/${gate}.md`, artifactFingerprint: validFingerprint,
     source: `https://github.test/issues/1#${gate}`,
   });
+}
+
+function readyForVerification(current, { taskStatus = "done", blocked = false } = {}) {
+  const ledgerFile = join(current.root, "docs/implementation/crm/contacts/delivery-ledger.json");
+  const ledger = JSON.parse(readFileSync(ledgerFile, "utf8"));
+  ledger.status = blocked ? "blocked" : "approved";
+  ledger.approved_by = blocked ? null : "owner@example.com";
+  ledger.approved_at = blocked ? null : fixedClock().toISOString();
+  ledger.approval_source = blocked ? null : "https://github.test/issues/1";
+  ledger.blockers = blocked ? ["Missing required journey"] : [];
+  ledger.tasks[0].status = blocked ? "blocked" : taskStatus;
+  ledger.tasks[0].blocked_by = blocked ? ["Missing required journey"] : [];
+  ledger.tasks[0].evidence_refs = taskStatus === "done" && !blocked ? ["src/contact.ts"] : [];
+  write(ledgerFile, `${JSON.stringify(ledger, null, 2)}\n`);
+
+  execFileSync("git", ["init", "-b", "main"], { cwd: current.root, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "delivery-test@example.com"], { cwd: current.root });
+  execFileSync("git", ["config", "user.name", "Delivery Test"], { cwd: current.root });
+  execFileSync("git", ["add", "-A"], { cwd: current.root });
+  execFileSync("git", ["reset", "--quiet", "--", "docs/implementation/crm/contacts/runs"], { cwd: current.root });
+  execFileSync("git", ["commit", "-m", "fixture source snapshot"], { cwd: current.root, stdio: "ignore" });
+}
+
+function writeBuildCheckpoint(current) {
+  const checkpoint = { phase: "07-build", run_id: current.runId, status: "completed", invalidated: false };
+  write(join(current.machine.runDirectory("crm", "Contacts", current.runId), "07-build.json"), `${JSON.stringify(checkpoint)}\n`);
+}
+
+function verificationData(current, sourceCommit, { evidence = null } = {}) {
+  const report = `docs/implementation/crm/contacts/runs/${current.runId}/verification-summary.md`;
+  write(join(current.root, report), "Verification summary\n");
+  const evidenceRecords = evidence ?? ["shared", "desktop_web", "mobile_web"].map((platform) => {
+    const artifact = `docs/implementation/crm/contacts/runs/${current.runId}/evidence/${platform}.log`;
+    write(join(current.root, artifact), `Journey passed on ${platform}\n`);
+    return {
+      type: "runtime_journey", created_at: fixedClock().toISOString(), commit: sourceCommit,
+      platform, requirement_id: "CONTACTS-REQ-LIST", task_id: "CONTACTS-TASK-LIST",
+      journey: "contacts-list-visible", result: "passed", environment: "test server",
+      url: "http://localhost:8080/contacts", path: artifact, checksum: checksum(join(current.root, artifact)),
+    };
+  });
+  return {
+    architecture_quality: "PASS", output_artifacts: [report],
+    validation: [{ command: "npm run validate:contacts", result: "passed", exit_code: 0, source_commit: sourceCommit }],
+    evidence: evidenceRecords,
+  };
 }
 
 test("init materializes the required workspace and starts at discovery", (context) => {
@@ -216,6 +265,97 @@ test("block persists a blocker and resume records its explicit resolution", (con
   const resumed = current.machine.resume({ suite: "crm", moduleName: "Contacts", runId: current.runId, reason: "Product owner supplied the decision" });
   assert.deepEqual(resumed.blockers, []);
   assert.equal(resumed.next_phase, "00-discovery");
+});
+
+test("workflow v2 refuses verification for blocked or incomplete delivery tasks", (context) => {
+  const blocked = fixture();
+  context.after(blocked.cleanup);
+  readyForVerification(blocked, { blocked: true });
+  writeBuildCheckpoint(blocked);
+  assert.throws(() => blocked.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: blocked.runId, phaseId: "08-verify", skill: "module-verify" }), /blocked ledger/);
+
+  const incomplete = fixture();
+  context.after(incomplete.cleanup);
+  readyForVerification(incomplete, { taskStatus: "ready" });
+  writeBuildCheckpoint(incomplete);
+  assert.throws(() => incomplete.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: incomplete.runId, phaseId: "08-verify", skill: "module-verify" }), /must be done before phase 08-verify/);
+});
+
+test("workflow v2 rejects verification if source changes after the snapshot", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  readyForVerification(current);
+  writeBuildCheckpoint(current);
+  current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "08-verify", skill: "module-verify" });
+  const snapshot = JSON.parse(readFileSync(current.machine.manifestFile("crm", "Contacts", current.runId))).environment.verification_snapshot;
+  write(join(current.root, "src/contact.ts"), "export const changedDuringVerification = true;\n");
+  assert.throws(() => current.machine.completePhase({
+    suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "08-verify",
+    data: verificationData(current, snapshot.commit),
+  }), /uncommitted files remain/);
+});
+
+test("workflow v2 requires platform-specific E4 journeys before verification and release", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  readyForVerification(current);
+  writeBuildCheckpoint(current);
+  current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "08-verify", skill: "module-verify" });
+  const manifest = JSON.parse(readFileSync(current.machine.manifestFile("crm", "Contacts", current.runId)));
+  const sourceCommit = manifest.environment.verification_snapshot.commit;
+  assert.throws(() => current.machine.completePhase({
+    suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "08-verify",
+    data: verificationData(current, sourceCommit, { evidence: [] }),
+  }), /requires structured E4_JOURNEY evidence/);
+
+  const completed = current.machine.completePhase({
+    suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "08-verify",
+    data: verificationData(current, sourceCommit),
+  });
+  assert.equal(completed.status, "completed");
+  current.machine.approve({ suite: "crm", moduleName: "Contacts", runId: current.runId, gate: "verification",
+    approvedBy: "owner@example.com", role: "qa", artifact: "docs/verification.md", artifactFingerprint: validFingerprint, source: "https://github.test/issues/1" });
+
+  const reviewOutput = `docs/implementation/crm/contacts/runs/${current.runId}/review.md`;
+  write(join(current.root, reviewOutput), "Review passed\n");
+  current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "09-review", skill: "module-review" });
+  current.machine.completePhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "09-review",
+    data: { architecture_quality: "PASS", output_artifacts: [reviewOutput], validation: [{ command: "review", result: "passed" }] } });
+  const release = current.machine.approve({ suite: "crm", moduleName: "Contacts", runId: current.runId, gate: "release",
+    approvedBy: "owner@example.com", role: "release_manager", artifact: reviewOutput, artifactFingerprint: validFingerprint, source: "https://github.test/issues/1" });
+  assert.equal(release.status, "approved");
+});
+
+test("module-run validator rejects verification approval against a blocked ledger", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const ledgerFile = join(current.root, "docs/implementation/crm/contacts/delivery-ledger.json");
+  const ledger = JSON.parse(readFileSync(ledgerFile, "utf8"));
+  ledger.status = "blocked";
+  ledger.blockers = ["Required journey evidence is missing"];
+  ledger.tasks[0].status = "blocked";
+  ledger.tasks[0].blocked_by = ["Required journey evidence is missing"];
+  write(ledgerFile, `${JSON.stringify(ledger, null, 2)}\n`);
+
+  const manifestFile = current.machine.manifestFile("crm", "Contacts", current.runId);
+  const manifest = JSON.parse(readFileSync(manifestFile, "utf8"));
+  manifest.approvals.verification = { status: "approved", approved_by: "owner@example.com", approved_at: fixedClock().toISOString() };
+  const checkpointPath = `docs/implementation/crm/contacts/runs/${current.runId}/08-verify.json`;
+  manifest.checkpoint_paths = [checkpointPath];
+  write(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
+  write(join(current.root, checkpointPath), `${JSON.stringify({
+    schema_version: 1, run_id: current.runId, span_id: `${current.runId}:08-verify`, phase: "08-verify",
+    skill: "module-verify", status: "running", decision_status: "open", architecture_quality: "PENDING",
+    attempt: 1, started_at: fixedClock().toISOString(), completed_at: null,
+    input_fingerprint: manifest.input_fingerprint, environment: manifest.environment,
+    input_artifacts: [], output_artifacts: [], decisions: [], actions: [], validation: [], requirements: [], evidence: [],
+    detected_failure: null, likely_failure_origin: null, next_handoff: null,
+    approval_gate: { status: "not_required", approved_by: null, approved_at: null }, invalidated: false,
+  })}\n`);
+
+  assert.throws(() => execFileSync(process.execPath, [join(repositoryRoot, "scripts/validate-module-runs.mjs")], {
+    cwd: current.root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+  }), (error) => /blocked ledger cannot pass approval gate verification/.test(String(error.stderr)));
 });
 
 test("all delivery schemas and the canonical workflow are valid JSON", () => {

@@ -138,7 +138,7 @@ function writeBuildCheckpoint(current) {
   write(join(current.machine.runDirectory("crm", "Contacts", current.runId), "07-build.json"), `${JSON.stringify(checkpoint)}\n`);
 }
 
-function verificationData(current, sourceCommit, { evidence = null } = {}) {
+function verificationData(current, sourceCommit, { evidence = null, omitMobileChecks = false } = {}) {
   const report = `docs/implementation/crm/contacts/runs/${current.runId}/verification-summary.md`;
   write(join(current.root, report), "Verification summary\n");
   const evidenceRecords = evidence ?? ["shared", "desktop_web", "mobile_web"].map((platform) => {
@@ -153,7 +153,13 @@ function verificationData(current, sourceCommit, { evidence = null } = {}) {
   });
   return {
     architecture_quality: "PASS", output_artifacts: [report],
-    validation: [{ command: "npm run validate:contacts", result: "passed", exit_code: 0, source_commit: sourceCommit }],
+    validation: [
+      { command: "npm run validate:contacts", result: "passed", exit_code: 0, source_commit: sourceCommit },
+      ...(!omitMobileChecks ? [
+        { command: "cd apps/mobile && npx tsc --noEmit", result: "passed", exit_code: 0, source_commit: sourceCommit },
+        { command: "npm test -- --run src/test/crm/contacts", result: "passed", exit_code: 0, source_commit: sourceCommit },
+      ] : []),
+    ],
     evidence: evidenceRecords,
   };
 }
@@ -312,6 +318,10 @@ test("workflow v2 requires platform-specific E4 journeys before verification and
   const sourceCommit = manifest.environment.verification_snapshot.commit;
   assert.throws(() => current.machine.completePhase({
     suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "08-verify",
+    data: verificationData(current, sourceCommit, { omitMobileChecks: true }),
+  }), /mobile scope requires a passing apps\/mobile TypeScript check/);
+  assert.throws(() => current.machine.completePhase({
+    suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "08-verify",
     data: verificationData(current, sourceCommit, { evidence: [] }),
   }), /requires structured E4_JOURNEY evidence/);
 
@@ -320,6 +330,17 @@ test("workflow v2 requires platform-specific E4 journeys before verification and
     data: verificationData(current, sourceCommit),
   });
   assert.equal(completed.status, "completed");
+  const verifyFile = join(current.machine.runDirectory("crm", "Contacts", current.runId), "08-verify.json");
+  const savedVerification = JSON.parse(readFileSync(verifyFile, "utf8"));
+  const validPlatformCommands = savedVerification.validation;
+  savedVerification.validation = validPlatformCommands.filter((validation) => validation.command === "npm run validate:contacts");
+  write(verifyFile, `${JSON.stringify(savedVerification, null, 2)}\n`);
+  assert.throws(() => execFileSync(process.execPath, [join(repositoryRoot, "scripts/validate-module-runs.mjs")], {
+    cwd: current.root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+  }), (error) => /mobile scope requires a passing apps\/mobile TypeScript check/.test(String(error.stderr)));
+  savedVerification.validation = validPlatformCommands;
+  write(verifyFile, `${JSON.stringify(savedVerification, null, 2)}\n`);
+
   write(join(current.root, "docs/verification.md"), "Verification passed\n");
   current.machine.approve({ suite: "crm", moduleName: "Contacts", runId: current.runId, gate: "verification",
     approvedBy: "owner@example.com", role: "qa", artifact: "docs/verification.md", artifactFingerprint: checksum(join(current.root, "docs/verification.md")), source: "https://github.test/issues/1" });

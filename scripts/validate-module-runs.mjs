@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { validateFinalDeliveryGate } from "./lib/delivery-ledger.mjs";
-import { validateEvidenceRecords } from "./lib/delivery-evidence.mjs";
+import { validateEvidenceRecords, validatePlatformVerificationCommands } from "./lib/delivery-evidence.mjs";
 
 const root = process.cwd();
 const workflow = JSON.parse(readFileSync(join(root, "docs", "03-platform", "governance", "delivery-workflow.json"), "utf8"));
@@ -350,6 +350,7 @@ function validateManifest(file) {
         if (validation.exit_code !== 0) addError(file, `verification command must have exit_code 0: ${validation.command ?? "missing command"}`);
         if (validation.source_commit !== snapshot?.commit) addError(file, `verification command must reference pinned source_commit: ${validation.command ?? "missing command"}`);
       }
+      for (const error of validatePlatformVerificationCommands(ledger, verification.validation, snapshot?.commit)) addError(file, error);
     }
     for (const gate of ["verification", "release"]) {
       const approval = manifest.approvals?.[gate];

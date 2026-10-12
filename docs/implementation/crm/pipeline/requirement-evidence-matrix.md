@@ -1,16 +1,26 @@
 # CRM Pipeline Requirement Evidence Matrix
 
-| Requirement ID | Product definition reference | Implementation evidence | Test/evidence link | Status | Gap/next action |
+The delivery ledger is canonical for requirement IDs. Evidence classifications
+below describe the current historical record and do not convert its run-level
+approval claims into verified acceptance.
+
+| Requirement ID | Product definition | Implementation references | Historical evidence | Status | Gap/next action |
 |---|---|---|---|---|---|
-| PIPELINE-VISUAL-GATE | `docs/06-product/crm/pipeline/` | Visual artifacts exist | `runs/MOD-CRM-PIPELINE-20260913-002/01-visual-design.json` | `PARTIAL` | Obtain explicit visual approval |
-| PIPELINE-SPECIALIZED | Approved visual design | Historical helper artifacts exist | Checkpoints `02-domain` through `05-sync` | `FAIL` | Revalidate after visual approval |
-| PIPELINE-PLAN | Valid specialized handoffs | Historical plan exists | `runs/MOD-CRM-PIPELINE-20260913-002/06-plan.json` | `FAIL` | Regenerate or revalidate after predecessors pass |
+| `PIPELINE-REQ-BOARD` | Stage board and forecast totals | `src/loopdev/pages/crm/Pipeline.tsx` | Historical run reports broad tests; no pinned per-platform evidence | `PARTIAL` | Record platform-scoped tests and journeys against an approved source snapshot |
+| `PIPELINE-REQ-MUTATION` | Stage transition with optimistic locking | `src/loopdev/pages/crm/Pipeline.tsx`; `src/loopdev/domains/crm/adapter/local.ts` | Historical run reports broad tests; no requirement/platform evidence records | `PARTIAL` | Record concurrency and mutation results for each required platform |
+| `PIPELINE-REQ-REOPEN` | Protected terminal-stage reopen with reason | `src/loopdev/pages/crm/Pipeline.tsx` | No linked machine-readable result | `NOT_TESTED` | Add required authorization/reason tests and platform evidence |
+| `PIPELINE-REQ-SPEED-DIAL` | Mobile 1-tap commercial speed dial | Mobile Pipeline renderer in `apps/mobile/` | E4 task is blocked; no structured journeys | `NOT_TESTED` | Capture a passed journey on mobile_web, iOS and Android, or approve a scope change |
+| `PIPELINE-REQ-DETAIL` | Opportunity detail workstation and notes | `src/loopdev/pages/crm/Pipeline.tsx`; `apps/mobile/components/MobileOpportunityDetailScreen.tsx` | Historical run reports broad tests; no pinned per-platform evidence | `PARTIAL` | Record detail, notes and navigation results against the source snapshot |
 
-## Release blockers
+## Historical phase-gate discrepancy
 
-- Visual design is not approved.
-- Specialized analysis and plan were produced outside the canonical phase order.
+`runs/MOD-CRM-PIPELINE-20260913-002/` is the coherent phase record and pauses at
+`WAITING_VISUAL_DESIGN_APPROVAL`; its visual-design checkpoint says approval is
+pending. The later `runs/MOD-PIPELINE-20260918-001/` manifest reports
+verification/release approvals, while the current ledger is blocked on the
+speed-dial E4 journey and the contemporaneous platform scope marks iOS/Android
+as planned. The later run therefore remains `UNVERIFIED`; it does not supersede
+the earlier visual-design gate or authorize resuming implementation.
 
-## Known deviations
-
-- Historical downstream artifacts are retained but their checkpoints are marked `deviated`.
+See [`DELIVERY_HISTORICAL_RUN_DISPOSITIONS.md`](../../../03-platform/governance/DELIVERY_HISTORICAL_RUN_DISPOSITIONS.md)
+for the evidence-backed disposition and preserved-record policy.

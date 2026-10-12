@@ -64,8 +64,8 @@ This track is based on the historical audit of `MOD-LEADS-20260917-001` and `MOD
 1. **P0 — Gate correctness:** state-machine invariants and ledger eligibility are implemented for workflow version 2; cross-artifact validation is enabled for new runs. Regression coverage passes, including blocked/incomplete ledgers and conflicting verification state.
 2. **P0 — Evidence provenance:** verification pins the source commit and ledger fingerprint, validates command exit codes/source_commit, and requires structured E4/E5 journey evidence per requirement and platform. Device evidence is required for E5. State-machine end-to-end coverage passes; adoption in a pilot delivery run remains in P2.
 3. **P1 — Approval integrity:** implemented artifact byte hashing at approval time, later digest verification, and a fingerprint binding the gate, artifact, actor, timestamp, source, and source snapshot. Regression coverage confirms artifact or approval-field tampering fails validation.
-4. **P1 — Platform acceptance:** explicit mobile checks and required E4 journey records.
-5. **P1 — Reconciliation:** canonical record alignment and evidence-backed dispositions for the two audited runs.
+4. **P1 — Platform acceptance:** workflow v2 derives mobile scope from completed ledger tasks and requires a pinned mobile typecheck and mobile behavioral test command; E4/E5 journey coverage is checked per requirement and platform.
+5. **P1 — Reconciliation:** canonical Leads/Pipeline requirement IDs, historical evidence matrices, and evidence-backed run dispositions are recorded without changing the original checkpoints.
 6. **P2 — Adoption:** update delivery workflow documentation/templates and run the workflow on one pilot module.
 
 Dependencies: Workstream 1 precedes safe release adoption. Workstreams 2 and 3 establish provenance/integrity. Workstream 4 depends on agreeing the required platform matrix. Historical reconciliation must follow those schema decisions and must preserve original run data.
@@ -76,9 +76,9 @@ Dependencies: Workstream 1 precedes safe release adoption. Workstreams 2 and 3 e
 - [x] Verification pins a clean, immutable source snapshot and ledger fingerprint.
 - [x] E4/E5 runtime evidence is machine-readable, snapshot-bound, checksummed, and validated for requirement/platform coverage.
 - [x] Approval and artifact fingerprints are computed at approval time and verified later; approvals bind actor, gate, artifact path, and source snapshot.
-- Required platform checks and E4 journeys are machine-verifiable.
-- Manifest, checkpoint, ledger, README, and evidence matrices do not contradict one another.
-- Leads and Pipeline historical records have documented dispositions based only on preserved evidence.
+- [x] Required mobile verification commands and E4/E5 journeys are machine-verifiable against ledger scope.
+- [x] Historical disagreements between manifests, checkpoints, ledgers, READMEs and evidence matrices have explicit dispositions; the preserved run files remain unchanged.
+- [x] Leads and Pipeline historical records have evidence-backed dispositions without rewriting their run records.
 - Documentation describes the implemented gates and a pilot run demonstrates the lifecycle end to end.
 
 ## Audit references

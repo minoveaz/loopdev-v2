@@ -121,6 +121,23 @@ export function validateEvidenceRecords(root, records, options = {}) {
   return { errors, evidencedTaskIds: new Set(evidenced.keys()) };
 }
 
+export function validatePlatformVerificationCommands(ledger, validations, sourceCommit) {
+  const errors = [];
+  const mobileTasks = (ledger.tasks ?? []).filter((task) => task.status === "done"
+    && (task.platforms ?? []).some((platform) => ["mobile_web", "ios", "android"].includes(platform)));
+  if (!mobileTasks.length) return errors;
+  const passed = (validation) => validation?.exit_code === 0 && validation.source_commit === sourceCommit;
+  if (!(validations ?? []).some((validation) => passed(validation)
+    && /(?:apps\/mobile.*\btsc\b|npm --prefix apps\/mobile .*\btsc\b)/i.test(validation.command ?? ""))) {
+    errors.push("mobile scope requires a passing apps/mobile TypeScript check pinned to the verification commit");
+  }
+  if (!(validations ?? []).some((validation) => passed(validation)
+    && /(?:test:multiplatform|(?:\btest\b|vitest)[^\n]*(?:apps\/mobile|src\/test\/crm)|(?:apps\/mobile|src\/test\/crm)[^\n]*(?:\btest\b|vitest))/i.test(validation.command ?? ""))) {
+    errors.push("mobile scope requires a passing mobile behavioral test command pinned to the verification commit");
+  }
+  return errors;
+}
+
 export function validateEvidence(root, options = {}) {
   const errors = [];
   const head = options.head ?? git(root, ["rev-parse", "HEAD"]);

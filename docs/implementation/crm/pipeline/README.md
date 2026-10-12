@@ -68,6 +68,12 @@ and must not be marked approved. Read
 `docs/03-platform/governance/LEGACY_TO_V2_DOCUMENTATION_MAP.md` before resuming. Proposed `SAAS_*` documents
 are non-runtime references only.
 
+The later `MOD-PIPELINE-20260918-001` record claims verification and release but
+is `UNVERIFIED`: its ledger is blocked, it lacks snapshot-bound command and
+journey evidence, and its artifact fingerprints do not match current files. It
+does not supersede this paused visual-approval gate. See
+[`DELIVERY_HISTORICAL_RUN_DISPOSITIONS.md`](../../../03-platform/governance/DELIVERY_HISTORICAL_RUN_DISPOSITIONS.md).
+
 ## Decisions and blockers
 
 | ID | Type | Decision/blocker | Status | Evidence |

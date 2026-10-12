@@ -370,6 +370,12 @@ validador exige cobertura de cada requisito/plataforma para todas las tareas
 E4/E5 completadas. Los runs de workflow version 1 conservan su comportamiento
 historico.
 
+Si el ledger incluye tareas completadas para `mobile_web`, `ios` o `android`,
+`08-verify` tambien exige un typecheck ejecutado desde `apps/mobile` y una
+suite de pruebas de CRM que cubra el módulo (`src/test/crm/...` o
+`test:multiplatform-contracts`); ambos comandos deben terminar con codigo 0 y
+apuntar al commit fijado. La matriz del ledger determina cuándo aplica este gate.
+
 El fingerprint es importante: si cambia un contrato compartido, el resume
 marca la fase afectada para revalidacion en vez de reutilizar evidencia vieja.
 

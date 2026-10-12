@@ -16,11 +16,17 @@
 
 | Field | Value |
 |---|---|
-| Status | `in_progress` |
-| Current phase | `07-build` / `08-verify` |
+| Status | `UNVERIFIED` — historical run disposition |
+| Recorded phase | `09-review` (`MOD-LEADS-20260917-001` remains `running`) |
 | Branch | `feature/crm-v2-foundation` |
 | Base branch | `develop` |
 | Multiplatform scope | Desktop Web, Mobile Web, iOS, Android |
+
+The historical manifest records verification and release approval, but the
+current ledger is blocked on missing E4 journeys and the approval artifact
+fingerprints do not match the current files. Do not treat that run as released;
+start a fresh workflow v2 run after resolving its ledger blockers. See
+[`DELIVERY_HISTORICAL_RUN_DISPOSITIONS.md`](../../../03-platform/governance/DELIVERY_HISTORICAL_RUN_DISPOSITIONS.md).
 
 ## Scope
 

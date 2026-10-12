@@ -1,27 +1,24 @@
 # Platform evidence matrix — CRM Leads
 
+Status describes preserved evidence only. Source files and free-form historical
+test claims do not count as platform runtime acceptance evidence.
+
 | Requirement | Desktop web evidence | Mobile web evidence | Shared contract | Status | Owner | Gap/next action |
 |---|---|---|---|---|---|---|
-| Lead listing and search | `src/loopdev/pages/crm/Leads.tsx` | `apps/mobile/components/MobileLeadsScreen.tsx` | `docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md` | PARTIAL | CRM Delivery | Capture authenticated desktop and mobile journeys, including loading, empty, error, and tenant-scoped states. |
-| Pipeline stage browsing | `src/loopdev/components/crm/LeadKanbanBoard.tsx` | `apps/mobile/components/MobileLeadsScreen.tsx` stage filters | `docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md` | PARTIAL | CRM Delivery | Verify stage parity and update behavior in an authenticated runtime journey. |
-| Lead quick inspection | `src/loopdev/components/crm/LeadQuickPreviewDrawer.tsx` | `apps/mobile/components/MobileLeadDetailScreen.tsx` | `docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md` | PARTIAL | CRM Delivery | Record responsive and direct-route behavior with tenant authorization evidence. |
-| Speed-dial actions | `src/loopdev/pages/crm/LeadDetail.tsx` | `apps/mobile/components/MobileLeadDetailScreen.tsx` | `docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md` | NOT_TESTED | CRM Delivery | Capture actual `tel:` and `mailto:` action journeys on supported desktop and mobile browsers. |
-| Lead conversion | `src/loopdev/pages/crm/LeadDetail.tsx` conversion action | `apps/mobile/components/MobileLeadDetailScreen.tsx` conversion action | `docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md` | NOT_TESTED | CRM Delivery | Supply the blocked E4 conversion journey and verify resulting customer/deal relations. |
-| Lead creation | `src/loopdev/pages/crm/Leads.tsx` | `apps/mobile/components/MobileCreateLeadScreen.tsx` | `docs/06-product/crm/CRM_MULTIPLATFORM_PARITY_ROADMAP.md` | NOT_TESTED | CRM Delivery | Capture the blocked E4 creation journey, validation errors, and persisted tenant-scoped record. |
+| `LEADS-REQ-LIST` — authorized listing, search and views | `src/loopdev/pages/crm/Leads.tsx` exists; no pinned journey | `apps/mobile/components/MobileLeadsScreen.tsx` exists; no pinned journey | `docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md` | PARTIAL | CRM Delivery | Capture authenticated journeys for every required platform against one source snapshot. |
+| `LEADS-REQ-PREVIEW` — quick preview | `src/loopdev/components/crm/LeadQuickPreviewDrawer.tsx`; no requirement-level runtime result | Not required by ledger | `docs/06-product/crm/leads/CRM_LEADS_UI_CONTRACT.md` | PARTIAL | CRM Delivery | Add a desktop component or runtime result to the next verified run. |
+| `LEADS-REQ-SPEED-DIAL` — mobile actions | Not required by ledger | Mobile renderer exists; no E4 runtime journey | `docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md` | NOT_TESTED | CRM Delivery | Supply E4 journeys on mobile_web, iOS and Android, or approve a scope change. |
+| `LEADS-REQ-QUALIFICATION` — BANT and stage stepper | `src/loopdev/pages/crm/Leads.tsx`; no pinned journey | `apps/mobile/components/MobileLeadDetailScreen.tsx`; no pinned journey | `docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md` | PARTIAL | CRM Delivery | Capture state and mutation behavior on every required platform. |
+| `LEADS-REQ-CONVERT` — convert qualified lead | `src/loopdev/pages/crm/Leads.tsx`; E4 task blocked | `apps/mobile/components/MobileLeadDetailScreen.tsx`; E4 task blocked | `docs/06-product/crm/leads/CRM_LEAD_CONTRACT.md` | NOT_TESTED | CRM Delivery | Supply E4 conversion journeys on desktop_web, mobile_web, iOS and Android. |
 
 ## Runtime snapshot
 
 | Field | Value |
 |---|---|
-| Repository path | `/Users/minoveaz/Documents/Proyectos/loopdev-v2` |
-| Checkout type | `branch` |
-| Branch and HEAD | `feature/crm-v2-foundation` at `b04b36e` |
-| Desktop URL/port | Not started for this validation |
-| Mobile URL/port | Not started for this validation |
-| Validation timestamp | `2026-10-06T19:52:46Z` |
+| Run | `MOD-LEADS-20260917-001` (`UNVERIFIED`) |
+| Recorded branch and commit | `feature/crm-v2-foundation` at `8b4d87f` |
+| Runtime evidence | No URL or port recorded in the verification checkpoint |
+| Validation timestamp | `2026-09-17T20:09:31Z` |
 
-## Validation commands
-
-| Command | Result | Evidence | Notes |
-|---|---|---|---|
-| `npm run validate:mobile-boundaries` | PASS | Successful local run at `2026-10-06T19:52:46Z` | Repository boundary check; it does not substitute for the pending UI journeys above. |
+The run's current disposition and limits are documented in
+[`DELIVERY_HISTORICAL_RUN_DISPOSITIONS.md`](../../../03-platform/governance/DELIVERY_HISTORICAL_RUN_DISPOSITIONS.md).

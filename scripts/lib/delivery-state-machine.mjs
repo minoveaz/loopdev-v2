@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { validateFinalDeliveryGate, validateLedgerFile } from "./delivery-ledger.mjs";
-import { validateEvidenceRecords } from "./delivery-evidence.mjs";
+import { validateEvidenceRecords, validatePlatformVerificationCommands } from "./delivery-evidence.mjs";
 
 const sha256 = (value) => `sha256:${createHash("sha256").update(value).digest("hex")}`;
 const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -191,6 +191,9 @@ export class DeliveryStateMachine {
       if (validation.exit_code !== 0) throw new Error(`Verification command failed with exit_code ${validation.exit_code}: ${validation.command}`);
       if (validation.source_commit !== snapshot.commit) throw new Error(`Verification validation must reference source_commit ${snapshot.commit}: ${validation.command}`);
     }
+    const ledger = readJson(join(this.workspace(suite, moduleName), "delivery-ledger.json"));
+    const platformErrors = validatePlatformVerificationCommands(ledger, checkpoint.validation, snapshot.commit);
+    if (platformErrors.length) throw new Error(platformErrors.join("\n"));
   }
 
   assertStructuredEvidence(suite, moduleName, records, sourceCommit) {

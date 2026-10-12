@@ -356,8 +356,13 @@ checkpoints correspondientes; release tambien requiere verification aprobada.
 Al iniciar `08-verify`, el run fija el commit HEAD y el fingerprint del ledger;
 el cierre falla si cambia cualquiera de los dos o si queda codigo sin commit
 fuera de los registros del run. Cada validacion debe registrar `exit_code: 0` y
-el `source_commit` fijado. Los runs de workflow version 1 conservan su
-comportamiento historico.
+el `source_commit` fijado. La evidencia E4/E5 se guarda como objetos estructurados
+en `evidence` del checkpoint `08-verify`; cada recorrido debe indicar tarea,
+requisito, plataforma, entorno, URL, resultado, artefacto y checksum, con el
+commit del snapshot. E5 requiere ademas captura y datos del dispositivo. El
+validador exige cobertura de cada requisito/plataforma para todas las tareas
+E4/E5 completadas. Los runs de workflow version 1 conservan su comportamiento
+historico.
 
 El fingerprint es importante: si cambia un contrato compartido, el resume
 marca la fase afectada para revalidacion en vez de reutilizar evidencia vieja.

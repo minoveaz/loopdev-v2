@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { validateFinalDeliveryGate, validateLedgerFile } from "./delivery-ledger.mjs";
+import { validateEvidenceRecords } from "./delivery-evidence.mjs";
 
 const sha256 = (value) => `sha256:${createHash("sha256").update(value).digest("hex")}`;
 const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -191,6 +192,24 @@ export class DeliveryStateMachine {
     }
   }
 
+  assertStructuredEvidence(suite, moduleName, records, sourceCommit) {
+    const ledger = readJson(join(this.workspace(suite, moduleName), "delivery-ledger.json"));
+    const tasks = new Map((ledger.tasks ?? []).map((task) => [task.id, task]));
+    const requirementIds = new Set((ledger.requirements ?? []).map((requirement) => requirement.id));
+    const requiredTaskIds = [...tasks.values()]
+      .filter((task) => task.status === "done" && ["E4_JOURNEY", "E5_DEVICE"].includes(task.evidence_level))
+      .map((task) => task.id);
+    const result = validateEvidenceRecords(this.root, records, {
+      head: sourceCommit,
+      tasks,
+      requirementIds,
+      requiredTaskIds,
+      strict: true,
+      label: "verification evidence",
+    });
+    if (result.errors.length) throw new Error(`Verification evidence is invalid:\n${result.errors.join("\n")}`);
+  }
+
   assertLedgerReady(suite, moduleName, context) {
     const ledgerFile = join(this.workspace(suite, moduleName), "delivery-ledger.json");
     const ledgerErrors = validateFinalDeliveryGate(this.root, ledgerFile, context);
@@ -279,6 +298,7 @@ export class DeliveryStateMachine {
     }
     if (manifest.workflow_version >= 2 && phaseId === "08-verify") {
       this.assertVerificationSnapshot(suite, moduleName, manifest, checkpoint);
+      this.assertStructuredEvidence(suite, moduleName, checkpoint.evidence, manifest.environment.verification_snapshot.commit);
     }
     checkpoint.status = "completed";
     checkpoint.decision_status = "confirmed";
@@ -319,6 +339,7 @@ export class DeliveryStateMachine {
       if (checkpoint?.status !== "completed" || checkpoint.invalidated) {
         throw new Error(`Approval gate ${gate} requires a completed, valid ${requiredPhase} checkpoint`);
       }
+      this.assertStructuredEvidence(suite, moduleName, checkpoint.evidence, manifest.environment.verification_snapshot?.commit);
       if (gate === "release" && this.approvalStatus(manifest, "verification") !== "approved") {
         throw new Error("Approval gate release requires approved verification");
       }

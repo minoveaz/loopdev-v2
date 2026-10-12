@@ -7,6 +7,18 @@
     "type": { "enum": ["command_result", "test_result", "runtime_journey", "screenshot", "manual_approval"] },
     "path": { "type": "string" },
     "url": { "type": "string" },
+    "journey": { "type": "string", "minLength": 1 },
+    "result": { "enum": ["passed", "failed"] },
+    "environment": { "type": "string", "minLength": 1 },
+    "device": {
+      "type": "object",
+      "required": ["name", "os_version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "os_version": { "type": "string", "minLength": 1 },
+        "browser": { "type": "string" }
+      }
+    },
     "command": { "type": "string" },
     "exit_code": { "type": "integer" },
     "created_at": { "type": "string", "format": "date-time" },
@@ -16,5 +28,9 @@
     "task_id": { "type": "string", "minLength": 1 },
     "checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
   },
-  "anyOf": [{ "required": ["path"] }, { "required": ["url"] }, { "required": ["command", "exit_code"] }]
+  "anyOf": [{ "required": ["path"] }, { "required": ["url"] }, { "required": ["command", "exit_code"] }],
+  "allOf": [{
+    "if": { "properties": { "type": { "const": "runtime_journey" } }, "required": ["type"] },
+    "then": { "required": ["journey", "result", "environment", "url", "path"] }
+  }]
 }

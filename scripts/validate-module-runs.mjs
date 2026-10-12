@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { validateFinalDeliveryGate } from "./lib/delivery-ledger.mjs";
+import { validateEvidenceRecords } from "./lib/delivery-evidence.mjs";
 
 const root = process.cwd();
 const workflow = JSON.parse(readFileSync(join(root, "docs", "03-platform", "governance", "delivery-workflow.json"), "utf8"));
@@ -289,6 +290,16 @@ function validateManifest(file) {
       if (verification.environment?.verification_snapshot?.commit !== snapshot?.commit) {
         addError(file, "verification checkpoint source snapshot does not match the run manifest");
       }
+      const ledger = JSON.parse(readFileSync(ledgerFile, "utf8"));
+      const evidenceResult = validateEvidenceRecords(root, verification.evidence, {
+        head: snapshot?.commit,
+        requirementIds: new Set((ledger.requirements ?? []).map((requirement) => requirement.id)),
+        tasks: new Map((ledger.tasks ?? []).map((task) => [task.id, task])),
+        requiredTaskIds: (ledger.tasks ?? []).filter((task) => task.status === "done" && ["E4_JOURNEY", "E5_DEVICE"].includes(task.evidence_level)).map((task) => task.id),
+        strict: true,
+        label: "verification evidence",
+      });
+      for (const error of evidenceResult.errors) addError(file, error);
       for (const validation of verification.validation ?? []) {
         if (validation.exit_code !== 0) addError(file, `verification command must have exit_code 0: ${validation.command ?? "missing command"}`);
         if (validation.source_commit !== snapshot?.commit) addError(file, `verification command must reference pinned source_commit: ${validation.command ?? "missing command"}`);

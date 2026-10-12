@@ -322,7 +322,7 @@ npm run delivery:approve -- --suite crm --module Contacts \
   --run MOD-CONTACTS-YYYYMMDD-001 --gate design \
   --by owner@example.com --role product_owner \
   --artifact docs/implementation/crm/contacts/architecture-design.md \
-  --fingerprint sha256:<64-hex> --source https://github.com/org/repo/issues/123
+  --source https://github.com/org/repo/issues/123
 npm run delivery:handoff -- --suite crm --module Contacts \
   --run MOD-CONTACTS-YYYYMMDD-001 --from 00-discovery --to 01-design
 npm run delivery:resume -- --suite crm --module Contacts \
@@ -334,6 +334,12 @@ npm run test:multiplatform-contracts
 npm run validate:mobile-boundaries
 npm run delivery:report
 ```
+
+The approval command hashes the artifact bytes and records the gate, approver,
+timestamp, and source commit automatically. `--fingerprint` is optional; when
+provided, it must match the artifact's current bytes. Later delivery validation
+recomputes both the artifact and approval fingerprints and rejects changed files
+or approval fields.
 
 `delivery-run.mjs` automatiza la creacion del `run_id`, la secuencia diaria, el
 workspace desde templates, el manifest `run.json`, transiciones de fase,

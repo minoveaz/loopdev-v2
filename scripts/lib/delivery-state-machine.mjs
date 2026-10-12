@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { validateFinalDeliveryGate, validateLedgerFile } from "./delivery-ledger.mjs";
 import { validateEvidenceRecords } from "./delivery-evidence.mjs";
 
@@ -125,7 +125,8 @@ export class DeliveryStateMachine {
     mkdirSync(directory, { recursive: true });
     const approvals = Object.fromEntries(this.workflow.gates.map((gate) => [gate, {
       status: "pending", approved_by: null, approved_at: null, role: null,
-      artifact: null, artifact_fingerprint: null, source: null,
+      gate, artifact: null, artifact_fingerprint: null, approval_fingerprint: null,
+      source_snapshot: null, source: null,
     }]));
     const fingerprints = this.fingerprints(suite, moduleName);
     const manifest = {
@@ -330,8 +331,15 @@ export class DeliveryStateMachine {
   approve({ suite, moduleName, runId, gate, approvedBy, role, artifact, artifactFingerprint, source }) {
     const { file, manifest } = this.loadRun(suite, moduleName, runId);
     if (!this.workflow.gates.includes(gate)) throw new Error(`Unknown approval gate: ${gate}`);
-    if (!approvedBy || !role || !artifact || !artifactFingerprint || !source) throw new Error("Approval requires --by, --role, --artifact, --fingerprint and --source");
-    if (!/^sha256:[a-f0-9]{64}$/.test(artifactFingerprint)) throw new Error("Approval fingerprint must be sha256:<64 hex>");
+    if (!approvedBy || !role || !artifact || !source) throw new Error("Approval requires --by, --role, --artifact and --source");
+    if (artifactFingerprint && !/^sha256:[a-f0-9]{64}$/.test(artifactFingerprint)) throw new Error("Approval fingerprint must be sha256:<64 hex>");
+    if (isAbsolute(artifact)) throw new Error("Approval artifact must be a repository-relative path");
+    const artifactPath = resolve(this.root, artifact);
+    const artifactRelative = relative(this.root, artifactPath);
+    if (!artifactRelative || artifactRelative === ".." || artifactRelative.startsWith(`..${sep}`)) throw new Error("Approval artifact must stay inside the repository");
+    if (!existsSync(artifactPath) || !statSync(artifactPath).isFile()) throw new Error(`Approval artifact does not exist: ${artifact}`);
+    const actualArtifactFingerprint = sha256(readFileSync(artifactPath));
+    if (artifactFingerprint && artifactFingerprint !== actualArtifactFingerprint) throw new Error(`Approval artifact fingerprint does not match file bytes: ${artifact}`);
     if (manifest.workflow_version >= 2 && ["verification", "release"].includes(gate)) {
       this.assertLedgerReady(suite, moduleName, `approval gate ${gate}`);
       const requiredPhase = gate === "verification" ? "08-verify" : "09-review";
@@ -348,8 +356,18 @@ export class DeliveryStateMachine {
         throw new Error("Approval gate release requires approved verification");
       }
     }
-    manifest.approvals[gate] = { status: "approved", approved_by: approvedBy, approved_at: this.now(), role,
-      artifact, artifact_fingerprint: artifactFingerprint, source };
+    const sourceSnapshot = {
+      commit: manifest.environment.verification_snapshot?.commit ?? git(this.root, ["rev-parse", "HEAD"]),
+      input_fingerprint: manifest.input_fingerprint,
+    };
+    if (!sourceSnapshot.commit || !/^sha256:[a-f0-9]{64}$/.test(sourceSnapshot.input_fingerprint ?? "")) {
+      throw new Error("Approval requires a pinned source commit and input fingerprint");
+    }
+    const approvedAt = this.now();
+    const approval = { gate, artifact: artifactRelative, artifact_fingerprint: actualArtifactFingerprint,
+      approved_by: approvedBy, approved_at: approvedAt, role, source, source_snapshot: sourceSnapshot };
+    const approvalFingerprint = sha256(JSON.stringify(approval));
+    manifest.approvals[gate] = { status: "approved", ...approval, approval_fingerprint: approvalFingerprint };
     manifest.approval_gates = [...new Set([...(manifest.approval_gates ?? []), gate])];
     manifest.updated_at = this.now();
     writeJson(file, manifest);

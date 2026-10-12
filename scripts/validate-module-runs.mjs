@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { basename, dirname, join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { validateFinalDeliveryGate } from "./lib/delivery-ledger.mjs";
 import { validateEvidenceRecords } from "./lib/delivery-evidence.mjs";
 
@@ -223,6 +223,52 @@ function validateManifest(file) {
     if (approval.status === "approved" && (!approval.approved_by || !approval.approved_at)) addError(file, `approved "${gate}" requires approved_by and approved_at`);
   }
   const workspace = dirname(dirname(dirname(file)));
+  if (manifest.workflow_version >= 2) {
+    const seenApprovalFingerprints = new Set();
+    for (const [gate, approval] of Object.entries(manifest.approvals ?? {})) {
+      if (!approval || typeof approval !== "object" || approval.status !== "approved") continue;
+      if (approval.gate !== gate) addError(file, `approved gate "${gate}" must bind gate name in approval record`);
+      if (!approval.approved_by || !approval.approved_at || !approval.role || !approval.source) {
+        addError(file, `approved gate "${gate}" requires approver, timestamp, role and source`);
+      }
+      if (!approval.artifact || !/^sha256:[a-f0-9]{64}$/.test(approval.artifact_fingerprint ?? "")) {
+        addError(file, `approved gate "${gate}" requires an artifact path and sha256 fingerprint`);
+      } else {
+        const artifactPath = resolve(root, approval.artifact);
+        const artifactRelative = relative(root, artifactPath);
+        if (!artifactRelative || artifactRelative === ".." || artifactRelative.startsWith(`..${sep}`)) {
+          addError(file, `approved gate "${gate}" artifact must stay inside the repository`);
+        } else if (!existsSync(artifactPath)) {
+          addError(file, `approved gate "${gate}" artifact does not exist: ${approval.artifact}`);
+        } else {
+          const actualFingerprint = `sha256:${createHash("sha256").update(readFileSync(artifactPath)).digest("hex")}`;
+          if (actualFingerprint !== approval.artifact_fingerprint) addError(file, `approved gate "${gate}" artifact fingerprint does not match its current bytes`);
+        }
+      }
+      const snapshot = approval.source_snapshot;
+      if (!snapshot?.commit || !/^sha256:[a-f0-9]{64}$/.test(snapshot.input_fingerprint ?? "")) {
+        addError(file, `approved gate "${gate}" requires a source snapshot with commit and input fingerprint`);
+      }
+      if (["verification", "release"].includes(gate)
+        && snapshot?.commit !== manifest.environment?.verification_snapshot?.commit) {
+        addError(file, `approved gate "${gate}" source snapshot does not match the verified source commit`);
+      }
+      const approvalPayload = {
+        gate: approval.gate,
+        artifact: approval.artifact,
+        artifact_fingerprint: approval.artifact_fingerprint,
+        approved_by: approval.approved_by,
+        approved_at: approval.approved_at,
+        role: approval.role,
+        source: approval.source,
+        source_snapshot: approval.source_snapshot,
+      };
+      const expectedApprovalFingerprint = `sha256:${createHash("sha256").update(JSON.stringify(approvalPayload)).digest("hex")}`;
+      if (approval.approval_fingerprint !== expectedApprovalFingerprint) addError(file, `approved gate "${gate}" approval fingerprint does not match its binding fields`);
+      if (seenApprovalFingerprints.has(approval.approval_fingerprint)) addError(file, `approved gate "${gate}" reuses another gate's approval fingerprint`);
+      seenApprovalFingerprints.add(approval.approval_fingerprint);
+    }
+  }
   if (manifest.schema_version === 1) {
     for (const field of ["workflow_version", "suite", "platform_scope", "fingerprints", "handoffs"]) {
       if (!(field in manifest)) addError(file, `schema v1 manifest is missing "${field}"`);

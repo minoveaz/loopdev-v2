@@ -2,14 +2,30 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "delivery-approval.schema.json",
   "type": "object",
-  "required": ["status", "approved_by", "approved_at", "role", "artifact", "artifact_fingerprint", "source"],
+  "required": ["status", "approved_by", "approved_at", "role", "gate", "artifact", "artifact_fingerprint", "approval_fingerprint", "source_snapshot", "source"],
   "properties": {
     "status": { "enum": ["pending", "approved", "rejected"] },
     "approved_by": { "type": ["string", "null"] },
     "approved_at": { "type": ["string", "null"], "format": "date-time" },
     "role": { "type": ["string", "null"] },
+    "gate": { "type": ["string", "null"] },
     "artifact": { "type": ["string", "null"] },
     "artifact_fingerprint": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+    "approval_fingerprint": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+    "source_snapshot": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["commit", "input_fingerprint"],
+          "properties": {
+            "commit": { "type": "string", "minLength": 7 },
+            "input_fingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "source": { "type": ["string", "null"] },
     "invalidated_at": { "type": "string", "format": "date-time" },
     "invalidation_reason": { "type": "string" }

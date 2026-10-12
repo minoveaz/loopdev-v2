@@ -35,8 +35,11 @@
       "approved_by": null,
       "approved_at": null,
       "role": null,
+      "gate": "design",
       "artifact": null,
       "artifact_fingerprint": null,
+      "approval_fingerprint": null,
+      "source_snapshot": null,
       "source": null
     },
     "visual_design": {
@@ -44,8 +47,11 @@
       "approved_by": null,
       "approved_at": null,
       "role": null,
+      "gate": "visual_design",
       "artifact": null,
       "artifact_fingerprint": null,
+      "approval_fingerprint": null,
+      "source_snapshot": null,
       "source": null
     },
     "plan": {
@@ -53,8 +59,11 @@
       "approved_by": null,
       "approved_at": null,
       "role": null,
+      "gate": "plan",
       "artifact": null,
       "artifact_fingerprint": null,
+      "approval_fingerprint": null,
+      "source_snapshot": null,
       "source": null
     },
     "verification": {
@@ -62,8 +71,11 @@
       "approved_by": null,
       "approved_at": null,
       "role": null,
+      "gate": "verification",
       "artifact": null,
       "artifact_fingerprint": null,
+      "approval_fingerprint": null,
+      "source_snapshot": null,
       "source": null
     },
     "release": {
@@ -71,8 +83,11 @@
       "approved_by": null,
       "approved_at": null,
       "role": null,
+      "gate": "release",
       "artifact": null,
       "artifact_fingerprint": null,
+      "approval_fingerprint": null,
+      "source_snapshot": null,
       "source": null
     },
     "push": {
@@ -80,8 +95,11 @@
       "approved_by": null,
       "approved_at": null,
       "role": null,
+      "gate": "push",
       "artifact": null,
       "artifact_fingerprint": null,
+      "approval_fingerprint": null,
+      "source_snapshot": null,
       "source": null
     },
     "pull_request": {
@@ -89,8 +107,11 @@
       "approved_by": null,
       "approved_at": null,
       "role": null,
+      "gate": "pull_request",
       "artifact": null,
       "artifact_fingerprint": null,
+      "approval_fingerprint": null,
+      "source_snapshot": null,
       "source": null
     }
   },

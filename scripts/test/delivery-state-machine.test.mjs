@@ -77,6 +77,11 @@ function fixture() {
   write(join(root, "src/contact.ts"), "export const contact = true;\n");
   write(join(root, "src/test/contact.test.ts"), "// test\n");
   write(join(root, "docs/implementation/crm/contacts/delivery-ledger.json"), `${JSON.stringify(validLedger(), null, 2)}\n`);
+  execFileSync("git", ["init", "-b", "main"], { cwd: root, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "delivery-test@example.com"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "Delivery Test"], { cwd: root });
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-m", "fixture source snapshot"], { cwd: root, stdio: "ignore" });
   const machine = new DeliveryStateMachine(root, fixedClock);
   const initialized = machine.initialize({ suite: "crm", moduleName: "Contacts" });
   return { root, machine, runId: initialized.run_id, initialized, cleanup: () => rmSync(root, { recursive: true, force: true }) };
@@ -97,10 +102,12 @@ function complete(machine, runId, phaseId, skill) {
 }
 
 function approve(machine, runId, gate) {
+  const artifact = `docs/${gate}.md`;
+  write(join(machine.root, artifact), `# ${gate} approval artifact\n`);
   return machine.approve({
     suite: "crm", moduleName: "Contacts", runId, gate,
     approvedBy: "owner@example.com", role: "product_owner",
-    artifact: `docs/${gate}.md`, artifactFingerprint: validFingerprint,
+    artifact, artifactFingerprint: checksum(join(machine.root, artifact)),
     source: `https://github.test/issues/1#${gate}`,
   });
 }
@@ -313,8 +320,9 @@ test("workflow v2 requires platform-specific E4 journeys before verification and
     data: verificationData(current, sourceCommit),
   });
   assert.equal(completed.status, "completed");
+  write(join(current.root, "docs/verification.md"), "Verification passed\n");
   current.machine.approve({ suite: "crm", moduleName: "Contacts", runId: current.runId, gate: "verification",
-    approvedBy: "owner@example.com", role: "qa", artifact: "docs/verification.md", artifactFingerprint: validFingerprint, source: "https://github.test/issues/1" });
+    approvedBy: "owner@example.com", role: "qa", artifact: "docs/verification.md", artifactFingerprint: checksum(join(current.root, "docs/verification.md")), source: "https://github.test/issues/1" });
 
   const reviewOutput = `docs/implementation/crm/contacts/runs/${current.runId}/review.md`;
   write(join(current.root, reviewOutput), "Review passed\n");
@@ -322,8 +330,48 @@ test("workflow v2 requires platform-specific E4 journeys before verification and
   current.machine.completePhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "09-review",
     data: { architecture_quality: "PASS", output_artifacts: [reviewOutput], validation: [{ command: "review", result: "passed" }] } });
   const release = current.machine.approve({ suite: "crm", moduleName: "Contacts", runId: current.runId, gate: "release",
-    approvedBy: "owner@example.com", role: "release_manager", artifact: reviewOutput, artifactFingerprint: validFingerprint, source: "https://github.test/issues/1" });
+    approvedBy: "owner@example.com", role: "release_manager", artifact: reviewOutput, artifactFingerprint: checksum(join(current.root, reviewOutput)), source: "https://github.test/issues/1" });
   assert.equal(release.status, "approved");
+});
+
+test("approval requires the fingerprint of an existing repository artifact", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  write(join(current.root, "docs/design.md"), "Approved design\n");
+  assert.throws(() => current.machine.approve({ suite: "crm", moduleName: "Contacts", runId: current.runId, gate: "design",
+    approvedBy: "owner@example.com", role: "product_owner", artifact: "docs/design.md", artifactFingerprint: validFingerprint,
+    source: "https://github.test/issues/1" }), /fingerprint does not match file bytes/);
+  assert.throws(() => current.machine.approve({ suite: "crm", moduleName: "Contacts", runId: current.runId, gate: "design",
+    approvedBy: "owner@example.com", role: "product_owner", artifact: "../outside.md", artifactFingerprint: validFingerprint,
+    source: "https://github.test/issues/1" }), /stay inside the repository/);
+});
+
+test("approval record binds gate, artifact bytes, approver and source snapshot", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const approval = approve(current.machine, current.runId, "design");
+  assert.equal(approval.gate, "design");
+  assert.equal(approval.artifact_fingerprint, checksum(join(current.root, approval.artifact)));
+  assert.equal(approval.source_snapshot.commit, execFileSync("git", ["rev-parse", "HEAD"], { cwd: current.root, encoding: "utf8" }).trim());
+  assert.match(approval.approval_fingerprint, /^sha256:[a-f0-9]{64}$/);
+});
+
+test("module-run validator rejects an approved artifact changed after approval", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const approval = approve(current.machine, current.runId, "design");
+  write(join(current.root, approval.artifact), "Changed after approval\n");
+  assert.throws(() => execFileSync(process.execPath, [join(repositoryRoot, "scripts/validate-module-runs.mjs")], {
+    cwd: current.root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+  }), (error) => /approved gate "design" artifact fingerprint does not match its current bytes/.test(String(error.stderr)));
+  write(join(current.root, approval.artifact), "# design approval artifact\n");
+  const manifestFile = current.machine.manifestFile("crm", "Contacts", current.runId);
+  const manifest = JSON.parse(readFileSync(manifestFile, "utf8"));
+  manifest.approvals.design.approved_by = "different@example.com";
+  write(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
+  assert.throws(() => execFileSync(process.execPath, [join(repositoryRoot, "scripts/validate-module-runs.mjs")], {
+    cwd: current.root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+  }), (error) => /approved gate "design" approval fingerprint does not match its binding fields/.test(String(error.stderr)));
 });
 
 test("module-run validator rejects verification approval against a blocked ledger", (context) => {

@@ -110,8 +110,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/mobile/package-lock.json
 
       - name: Install dependencies
+        run: npm ci
+
+      - name: Install mobile dependencies
+        working-directory: apps/mobile
         run: npm ci
 
       - name: Revisar reglas de escritura con ESLint

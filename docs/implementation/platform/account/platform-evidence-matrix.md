@@ -161,3 +161,10 @@ the Expo Web bundle exports. These are build and component-test results only;
 they do not establish iOS/Android device behavior or operation parity. The
 user's device-test deferral and the existing native acceptance gaps remain
 unchanged.
+
+The follow-up to that checkpoint is committed as
+`bde345bb834a5fe14861f64ccb6df9e5cea324d2`. npm 10.9.4 now completes a clean
+mobile install from the lockfile, and the code-quality workflow installs
+mobile dependencies before root typecheck. Local tests, lint, typechecks,
+Expo Doctor and Expo Web export pass. The GitHub rerun for this latest commit
+is pending; this does not change native device acceptance status.

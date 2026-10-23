@@ -18,7 +18,7 @@
     "checkout_type": "branch",
     "branch": "feature/platform-account-pages",
     "base_branch": "develop",
-    "head_commit": "ef85eb13e8e0db084f390b27749729f8f20773d3",
+    "head_commit": "bde345bb834a5fe14861f64ccb6df9e5cea324d2",
     "working_tree": "modified",
     "runtime_url": "http://127.0.0.1:8080/app/account/settings",
     "runtime_port": 8080
@@ -137,7 +137,8 @@
     "src/test/platform/account/profile-adapter.test.ts",
     "src/test/platform/account/stubs/lucide-react-native.tsx",
     "vitest.config.ts",
-    "docs/implementation/platform/account/platform-evidence-matrix.md"
+    "docs/implementation/platform/account/platform-evidence-matrix.md",
+    ".github/workflows/ci.yml"
   ],
   "decisions": [
     {
@@ -688,6 +689,26 @@
     {
       "command": "git diff --cached --check",
       "result": "passed before commit ef85eb13e8e0db084f390b27749729f8f20773d3"
+    },
+    {
+      "command": "GitHub Actions run 40022170267 after 90e2670",
+      "result": "failed: root typecheck lacked mobile dependencies; npm 10 rejected missing @floating-ui/dom@1.8.0; component tests and desktop build passed"
+    },
+    {
+      "command": "cd apps/mobile && npx --yes npm@10.9.4 ci",
+      "result": "passed: clean install with CI-compatible npm"
+    },
+    {
+      "command": "npm run test:quality && npm run test:multiplatform-contracts",
+      "result": "passed: 96 files/531 tests and 1 file/10 tests"
+    },
+    {
+      "command": "npm run lint && npm run typecheck",
+      "result": "passed with mobile dependencies installed"
+    },
+    {
+      "command": "cd apps/mobile && npx tsc --noEmit && npx expo-doctor && npx expo export --platform web --output-dir /tmp/loopdev-mobile-web",
+      "result": "passed: mobile types, Expo Doctor 21/21 and Web export"
     }
   ],
   "requirements": [
@@ -895,7 +916,7 @@
     "confidence": 10,
     "summary": "Function parameters/locals shared names with SQL columns; the runtime ambiguity was revealed by the database tests and corrected before task completion."
   },
-  "next_handoff": "The Account CI corrections are committed locally as ef85eb13e8e0db084f390b27749729f8f20773d3 and pass the recorded local checks; publish the commit and inspect the PR CI rerun. The 07-build phase remains open: run the updated 18-assertion pgTAP suite against an isolated local database when Docker is available, do not run it against shared Dev, and complete the other outstanding verification/review gates. Billing remains disabled until provider/commercial/server readiness is approved. Keep ACCOUNT-PREFS-NATIVE in_progress until the user-approved iOS/Android device journeys become scheduled and are completed; no device parity is claimed. Preserve separate native Profile/Security device evidence."
+  "next_handoff": "The Account CI corrections are committed locally as bde345bb834a5fe14861f64ccb6df9e5cea324d2 and pass the recorded local checks; publish the commits and inspect the PR CI rerun. The 07-build phase remains open: run the updated 18-assertion pgTAP suite against an isolated local database when Docker is available, do not run it against shared Dev, and complete the other outstanding verification/review gates. Billing remains disabled until provider/commercial/server readiness is approved. Keep ACCOUNT-PREFS-NATIVE in_progress until the user-approved iOS/Android device journeys become scheduled and are completed; no device parity is claimed. Preserve separate native Profile/Security device evidence."
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,

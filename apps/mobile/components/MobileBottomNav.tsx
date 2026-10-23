@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { getBottomNavigationItems, type BottomNavigationContext } from "../../../packages/contracts/src/navigation";
 import { BrandInfinityIcon } from "./BrandMark";
 
-import { useMobileI18n } from "../i18n";
+import { useMobileI18n, type MobileLangCode } from "../i18n";
+import { mobileTheme } from "../theme/tokens";
 
 export type MobileTab = "launchpad" | "conversations" | "copilot" | "crm" | "erp" | "more";
 
@@ -26,7 +27,7 @@ const icons: Record<string, BottomNavIcon> = {
   copilot: BrandInfinityIcon,
 };
 
-const BOTTOM_LABELS: Record<"es" | "en", Record<string, string>> = {
+const BOTTOM_LABELS: Partial<Record<MobileLangCode, Record<string, string>>> = {
   es: {
     launchpad: "Inicio",
     conversations: "Mensajes",
@@ -67,7 +68,7 @@ export function MobileBottomNav({ context, activeTab, onTabPress, onActionPress 
             style={styles.navItem}
           >
             <Icon
-              color={active ? "#135bec" : "#94a3b8"}
+              color={active ? mobileTheme.colors.primary : mobileTheme.colors.textSubtle}
               size={21}
               strokeWidth={isCopilot ? 10 : active ? 2.5 : 2}
             />
@@ -81,7 +82,7 @@ export function MobileBottomNav({ context, activeTab, onTabPress, onActionPress 
         onPress={onActionPress}
         style={styles.actionButton}
       >
-        <Plus color="#ffffff" size={26} strokeWidth={2.5} />
+        <Plus color={mobileTheme.colors.textInverse} size={26} strokeWidth={2.5} />
       </Pressable>
     </View>
   );
@@ -90,8 +91,8 @@ export function MobileBottomNav({ context, activeTab, onTabPress, onActionPress 
 const styles = StyleSheet.create({
   bottomNav: {
     alignItems: "flex-start",
-    backgroundColor: "#ffffff",
-    borderTopColor: "#e5e7eb",
+    backgroundColor: mobileTheme.colors.surface,
+    borderTopColor: mobileTheme.colors.border,
     borderTopWidth: 1,
     flexDirection: "row",
     justifyContent: "space-around",
@@ -102,8 +103,8 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     alignItems: "center",
-    backgroundColor: "#135bec",
-    borderColor: "#ffffff",
+    backgroundColor: mobileTheme.colors.primary,
+    borderColor: mobileTheme.colors.surface,
     borderRadius: 28,
     borderWidth: 4,
     elevation: 8,
@@ -117,6 +118,6 @@ const styles = StyleSheet.create({
     width: 56,
   },
   navItem: { alignItems: "center", gap: 4, minWidth: 68, paddingHorizontal: 8 },
-  navLabel: { color: "#64748b", fontSize: 10, fontWeight: "600" },
-  activeNavLabel: { color: "#135bec", fontWeight: "800" },
+  navLabel: { color: mobileTheme.colors.textMuted, fontSize: 10, fontWeight: "600" },
+  activeNavLabel: { color: mobileTheme.colors.primary, fontWeight: "800" },
 });

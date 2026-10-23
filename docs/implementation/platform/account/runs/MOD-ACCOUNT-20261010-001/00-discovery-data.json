@@ -1,0 +1,104 @@
+{
+  "architecture_quality": "PASS_WITH_DEBT",
+  "input_artifacts": [
+    "User-approved scope decisions in conversation on 2026-10-10",
+    "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
+    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+    "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+    "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md",
+    "docs/implementation/platform/settings/SETTINGS_MVP_DELIVERY.md",
+    "docs/implementation/platform/auth/HANDOFF.md",
+    "src/routes/AppRoutes.tsx",
+    "src/components/layout/Topbar.tsx",
+    "src/template/rivera/pages/account/",
+    "apps/mobile/components/MobileAccountSheet.tsx",
+    "apps/mobile/components/MobileAccountScreen.tsx",
+    "apps/mobile/LoopdevRoutes.tsx"
+  ],
+  "output_artifacts": [
+    "docs/implementation/platform/account/discovery.md",
+    "docs/implementation/platform/account/delivery-ledger.json",
+    "docs/implementation/platform/account/platform-scope.md",
+    "docs/implementation/platform/account/platform-evidence-matrix.md",
+    "docs/implementation/platform/account/requirement-evidence-matrix.md",
+    "docs/implementation/platform/account/README.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/00-discovery-data.json"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-ACCOUNT-001",
+      "status": "confirmed",
+      "summary": "All four requested areas are MVP capabilities with separate responsibilities: personal Profile, personal preferences, Auth Security and organization Billing."
+    },
+    {
+      "id": "DEC-ACCOUNT-002",
+      "status": "confirmed",
+      "summary": "Account Settings contains personal preferences; organization settings remain in /app/settings."
+    },
+    {
+      "id": "DEC-ACCOUNT-003",
+      "status": "confirmed",
+      "summary": "Profile is global to the user and includes display name and avatar; credentials belong in Security."
+    },
+    {
+      "id": "DEC-ACCOUNT-004",
+      "status": "confirmed",
+      "summary": "Security covers personal password/email, MFA and session/device review and revocation; account deletion is excluded."
+    },
+    {
+      "id": "DEC-ACCOUNT-005",
+      "status": "confirmed",
+      "summary": "Billing belongs to the active organization; only Owner/Admin may view or manage plan, invoices, payment methods, upgrades, downgrades and cancellation."
+    },
+    {
+      "id": "DEC-ACCOUNT-006",
+      "status": "confirmed",
+      "summary": "Desktop web, mobile web, iOS and Android must provide the same operations with platform-adapted UX."
+    },
+    {
+      "id": "DEC-ACCOUNT-007",
+      "status": "confirmed",
+      "summary": "Language, timezone and notifications sync by user; appearance may adapt per device."
+    },
+    {
+      "id": "DEC-ACCOUNT-008",
+      "status": "open",
+      "summary": "Billing provider comparison is deferred to module-design; no provider is selected."
+    },
+    {
+      "id": "DEC-ACCOUNT-009",
+      "status": "open",
+      "summary": "Module-design must verify Auth provider support for MFA and session/device operations across all platforms."
+    },
+    {
+      "id": "DEC-ACCOUNT-010",
+      "status": "open",
+      "summary": "Detailed lifecycle, persistence, cancellation, entitlements, conflicts/offline behavior and capability ownership are design inputs."
+    }
+  ],
+  "actions": [
+    "Recorded the user's explicit product decisions in the canonical discovery and delivery ledger.",
+    "Declared desktop web, mobile web, iOS and Android as required platforms with shared operation semantics and adapted renderers.",
+    "Updated the operation-level evidence matrix; all account operations remain missing on all platforms, and no parity is claimed.",
+    "Kept billing provider selection and Auth provider feasibility as explicit module-design work.",
+    "Did not create issues, implementation tasks, production code, commits or pull requests."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed (7 ledgers checked)"
+    },
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed (87 checkpoint files checked)"
+    }
+  ],
+  "requirements": [
+    "REQ-ACCOUNT-PROFILE-DESTINATION",
+    "REQ-ACCOUNT-PREFERENCES-DESTINATION",
+    "REQ-ACCOUNT-SECURITY-DESTINATION",
+    "REQ-ACCOUNT-BILLING-DESTINATION"
+  ],
+  "evidence": [],
+  "next_handoff": "module-design"
+}

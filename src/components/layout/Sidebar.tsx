@@ -625,6 +625,44 @@ function SidebarNode({
   }
 
   // Leaf
+  if (node.disabled) {
+    return (
+      <li role="none">
+        <div
+          ref={(el) => controller.registerRef(itemKey, el)}
+          role="treeitem"
+          aria-level={ariaLevel}
+          aria-disabled="true"
+          tabIndex={tabIndex}
+          onFocus={handleFocus}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") event.preventDefault();
+            handleKeyDown(event);
+          }}
+          data-sidebar-item
+          className={cn(
+            "group relative flex cursor-not-allowed items-center gap-3 rounded-lg text-sidebar-foreground/45",
+            isRoot
+              ? "px-3 py-2 text-sm font-medium"
+              : "px-2.5 py-1.5 text-[13px] font-medium",
+            collapsed && isRoot && "h-10 w-10 justify-center gap-0 rounded-lg px-0 py-0 mx-auto",
+          )}
+        >
+          {Icon && (
+            <Icon
+              aria-hidden="true"
+              className={cn(
+                "shrink-0 text-sidebar-foreground/35",
+                collapsed && isRoot ? "h-5 w-5" : "h-[18px] w-[18px]",
+              )}
+            />
+          )}
+          {!(collapsed && isRoot) && <span className="flex-1 truncate">{label}</span>}
+        </div>
+      </li>
+    );
+  }
+
   const link = (
     <NavLink
       ref={(el) => controller.registerRef(itemKey, el)}

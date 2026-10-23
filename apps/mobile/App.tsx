@@ -1,4 +1,4 @@
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEffect, useMemo, useState } from "react";
 import {
   getBottomNavigationItems,
@@ -40,28 +40,46 @@ import { MobileCrmOperationsScreen } from "./components/MobileCrmOperationsScree
 import { MobileProductCatalogScreen } from "./components/MobileProductCatalogScreen";
 import { MobileCommunicationsScreen } from "./components/communications/MobileCommunicationsScreen";
 import { MobileConversationScreen } from "./components/communications/MobileConversationScreen";
+import { MobileSecurityScreen } from "./components/MobileSecurityScreen";
+import { MobilePreferencesScreen } from "./components/MobilePreferencesScreen";
+import { MobileProfileScreen } from "./components/MobileProfileScreen";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "./adapters/auth";
 import type { AuthSession, TenantContextSnapshot } from "../../packages/contracts/src/auth-port";
+import { accountDestinations } from "../../packages/contracts/src/account-navigation";
 import type { MobileNoteDraft } from "./components/MobileNoteEditor";
 import { MobileI18nProvider, useMobileI18n } from "./i18n";
+import { MobileThemeProvider } from "./theme/MobileThemeProvider";
 
 const launchpadPath = loopdevNavigationContract.launchpad.path;
 const morePath = getBottomNavigationItems().find((item) => item.slot === "more")!.path;
-const initialPath = typeof window !== "undefined" && window.location.pathname.startsWith("/app/")
-  ? window.location.pathname
-  : launchpadPath;
+const legacyProfilePath = accountDestinations.profile.legacyPaths[0];
+const legacySecurityPath = accountDestinations.security.legacyPaths[0];
+const legacySettingsPath = accountDestinations.settings.legacyPaths[0];
+const initialLocationPath = typeof window !== "undefined" ? window.location.pathname : launchpadPath;
+const initialPath = initialLocationPath === legacyProfilePath
+  ? accountDestinations.profile.path
+  : initialLocationPath === legacySecurityPath
+    ? accountDestinations.security.path
+    : initialLocationPath === legacySettingsPath
+      ? accountDestinations.settings.path
+      : initialLocationPath.startsWith("/app/")
+        ? initialLocationPath
+        : launchpadPath;
 
 export default function App() {
   return (
-    <MobileI18nProvider initialLang="es">
-      <AppInner />
-    </MobileI18nProvider>
+    <MobileThemeProvider>
+      <MobileI18nProvider initialLang="es">
+        <AppInner />
+      </MobileI18nProvider>
+    </MobileThemeProvider>
   );
 }
 
 function AppInner() {
   const { lang } = useMobileI18n();
   const [currentPath, setCurrentPath] = useState(initialPath);
+  const [accountReturnPath, setAccountReturnPath] = useState(launchpadPath);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [actionsSheetOpen, setActionsSheetOpen] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
@@ -71,6 +89,7 @@ function AppInner() {
   );
   const [authMode, setAuthMode] = useState<"login" | "forgot_password">("login");
   const [authChecked, setAuthChecked] = useState(false);
+  const [authInitializationError, setAuthInitializationError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
   const [switchingOrg, setSwitchingOrg] = useState<{ isSwitching: boolean; orgName: string } | null>(null);
@@ -84,9 +103,55 @@ function AppInner() {
   const [mobileNotesLoading, setMobileNotesLoading] = useState(false);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncPath = () => {
+      const path = window.location.pathname;
+      if (path === legacyProfilePath || path === legacySecurityPath || path === legacySettingsPath) {
+        const canonicalPath = path === legacyProfilePath
+          ? accountDestinations.profile.path
+          : path === legacySecurityPath
+            ? accountDestinations.security.path
+            : accountDestinations.settings.path;
+        window.history.replaceState({}, "", canonicalPath);
+        setCurrentPath(canonicalPath);
+      } else if (path.startsWith("/app/") || path === launchpadPath || path === morePath) {
+        setCurrentPath(path);
+      } else {
+        setCurrentPath(launchpadPath);
+      }
+    };
+    if (window.location.pathname === legacyProfilePath || window.location.pathname === legacySecurityPath || window.location.pathname === legacySettingsPath) {
+      const canonicalPath = window.location.pathname === legacyProfilePath
+        ? accountDestinations.profile.path
+        : window.location.pathname === legacySecurityPath
+          ? accountDestinations.security.path
+          : accountDestinations.settings.path;
+      window.history.replaceState({}, "", canonicalPath);
+    }
+    window.addEventListener("popstate", syncPath);
+    return () => window.removeEventListener("popstate", syncPath);
+  }, []);
+
+  useEffect(() => {
+    if (
+      currentPath !== accountDestinations.security.path
+      && currentPath !== accountDestinations.settings.path
+      && currentPath !== accountDestinations.profile.path
+    ) return;
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      navigate(accountReturnPath);
+      return true;
+    });
+    return () => subscription.remove();
+  }, [accountReturnPath, currentPath]);
+
+  useEffect(() => {
     void mobileAuthAdapter.getSession().then((sess) => {
       setSession(sess);
       setTenantContext(mobileTenantContextAdapter.getTenantContext());
+      setAuthChecked(true);
+    }).catch((error: unknown) => {
+      setAuthInitializationError(error instanceof Error ? error.message : "Unable to restore the authentication session.");
       setAuthChecked(true);
     });
     const unsubAuth = mobileAuthAdapter.onAuthStateChange((event, nextSession) => {
@@ -99,6 +164,7 @@ function AppInner() {
           setAuthChecked(true);
         }, 650);
       } else if (event === "SIGNED_IN") {
+        setAuthInitializationError(null);
         setSigningIn(true);
         setTimeout(() => {
           setSession(nextSession);
@@ -220,6 +286,14 @@ function AppInner() {
   const actionContext = currentPath.startsWith("/app/conversations") ? "conversations" : context;
 
   function navigate(path: string) {
+    const accountPaths = new Set<string>([
+      accountDestinations.profile.path,
+      accountDestinations.settings.path,
+      accountDestinations.security.path,
+    ]);
+    if (accountPaths.has(path) && !accountPaths.has(currentPath)) {
+      setAccountReturnPath(currentPath);
+    }
     setCurrentPath(path);
     if (typeof window !== "undefined" && window.location.pathname !== path) {
       window.history.pushState({}, "", path);
@@ -240,7 +314,16 @@ function AppInner() {
   }
 
   function renderContent() {
-    if (currentPath === morePath) return <MobileAccountScreen />;
+    if (currentPath === morePath) return <MobileAccountScreen onNavigate={navigate} />;
+    if (currentPath === accountDestinations.profile.path) {
+      return <MobileProfileScreen onBack={() => navigate(accountReturnPath)} />;
+    }
+    if (currentPath === accountDestinations.security.path) {
+      return <MobileSecurityScreen onBack={() => navigate(accountReturnPath)} />;
+    }
+    if (currentPath === accountDestinations.settings.path) {
+      return <MobilePreferencesScreen onBack={() => navigate(accountReturnPath)} />;
+    }
     if (currentPath === contactNavigationRoutes.list) return <MobileContactsScreen contacts={contacts} onCreate={() => { setEditingContact(null); navigate(contactNavigationRoutes.create); }} onView={(contact) => { void mobileContactAdapter.getCustomer360(contact.id).then(setCustomer360); loadMobileNotes(contact.id); navigate(contactNavigationRoutes.detail.replace(":contactId", encodeURIComponent(contact.id))); }} onEdit={(contact) => { setEditingContact(contact); navigate(contactNavigationRoutes.edit.replace(":contactId", encodeURIComponent(contact.id))); }} onDuplicates={() => { const source = contacts[0]; if (!source) return; setDuplicateContact(source); void mobileContactAdapter.findPotentialDuplicates(source.id).then(setDuplicateCandidates); navigate(contactNavigationRoutes.duplicates.replace(":contactId", encodeURIComponent(source.id))); }} onArchive={async (contact) => { const result = await mobileContactAdapter.archiveContact(contact.id, contact.updatedAt); if (result.status === "success") setContacts((current) => current.filter((item) => item.id !== contact.id)); }} />;
     if (currentPath === contactNavigationRoutes.create) return <MobileCreateContactScreen onCancel={() => navigate(contactNavigationRoutes.list)} onCreated={(contact) => { setContacts((current) => [...current, contact]); navigate(contactNavigationRoutes.list); }} />;
     const editMatch = matchContactRoute(contactNavigationRoutes.edit, currentPath);
@@ -489,8 +572,9 @@ function AppInner() {
     return (
       <MobileAppShell>
         <MobileLoginScreen
+          sessionError={authInitializationError ?? undefined}
           onLoginSuccess={() => {
-            navigate(launchpadPath);
+          navigate(initialPath);
           }}
           onForgotPassword={() => setAuthMode("forgot_password")}
         />
@@ -518,6 +602,10 @@ function AppInner() {
       )}
       <MobileAccountSheet
         onClose={() => setAccountSheetOpen(false)}
+        onNavigate={(path) => {
+          setAccountReturnPath(currentPath);
+          navigate(path);
+        }}
         onSwitchOrg={(orgName) => {
           setAccountSheetOpen(false);
           setSwitchingOrg({ isSwitching: true, orgName });

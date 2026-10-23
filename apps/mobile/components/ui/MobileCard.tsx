@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   selected: {
     borderColor: mobileTheme.colors.primary,
-    backgroundColor: "#f8faff",
+    backgroundColor: mobileTheme.colors.primarySoft,
   },
   pressed: {
     opacity: 0.9,

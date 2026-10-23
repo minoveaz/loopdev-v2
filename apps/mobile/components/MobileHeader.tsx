@@ -2,6 +2,7 @@ import { Bell, Menu, Search } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { BrandMark } from "./BrandMark";
+import { mobileTheme } from "../theme/tokens";
 
 type MobileHeaderProps = {
   onAccountPress?: () => void;
@@ -27,7 +28,7 @@ export function MobileHeader({
           onPress={onMenuPress}
           style={styles.topBarButton}
         >
-          <Menu color="#64748b" size={20} strokeWidth={2.2} />
+          <Menu color={mobileTheme.colors.textMuted} size={20} strokeWidth={2.2} />
         </Pressable>
         {leading}
         <Pressable
@@ -48,7 +49,7 @@ export function MobileHeader({
               onPress={() => Alert.alert("Búsqueda", "La búsqueda global estará disponible aquí.")}
               style={styles.topBarButton}
             >
-              <Search color="#64748b" size={18} strokeWidth={2.2} />
+              <Search color={mobileTheme.colors.textMuted} size={18} strokeWidth={2.2} />
             </Pressable>
             <Pressable
               accessibilityLabel="Notificaciones"
@@ -56,7 +57,7 @@ export function MobileHeader({
               onPress={() => Alert.alert("Notificaciones", "No tienes notificaciones pendientes.")}
               style={styles.topBarButton}
             >
-              <Bell color="#64748b" size={18} strokeWidth={2.2} />
+              <Bell color={mobileTheme.colors.textMuted} size={18} strokeWidth={2.2} />
             </Pressable>
           </>
         )}
@@ -76,8 +77,8 @@ export function MobileHeader({
 const styles = StyleSheet.create({
   topBar: {
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderBottomColor: "#e5e7eb",
+    backgroundColor: mobileTheme.colors.surface,
+    borderBottomColor: mobileTheme.colors.border,
     borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -88,8 +89,8 @@ const styles = StyleSheet.create({
   topBarActions: { alignItems: "center", flexDirection: "row", gap: 10 },
   topBarButton: {
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderColor: "#e5e7eb",
+    backgroundColor: mobileTheme.colors.surface,
+    borderColor: mobileTheme.colors.border,
     borderRadius: 18,
     height: 36,
     justifyContent: "center",
@@ -97,11 +98,11 @@ const styles = StyleSheet.create({
   },
   avatar: {
     alignItems: "center",
-    backgroundColor: "#135bec",
+    backgroundColor: mobileTheme.colors.primary,
     borderRadius: 18,
     height: 36,
     justifyContent: "center",
     width: 36,
   },
-  avatarText: { color: "#ffffff", fontSize: 11, fontWeight: "800" },
+  avatarText: { color: mobileTheme.colors.textInverse, fontSize: 11, fontWeight: "800" },
 });

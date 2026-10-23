@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-ACCOUNT-20261010-001",
+  "span_id": "MOD-ACCOUNT-20261010-001:04-api",
+  "phase": "04-api",
+  "skill": "api-contracts",
+  "parent_span_id": "MOD-ACCOUNT-20261010-001:03-access",
+  "module": "Account",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-10-10T16:24:41Z",
+  "completed_at": "2026-10-10T16:24:41Z",
+  "input_fingerprint": "sha256:ef51d61ae53b9d921679b9b5fed57b3bd36b580438172d9ff4813eefbfc257cd",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/platform-account-pages",
+    "base_branch": "develop",
+    "head_commit": "af5e511506339ef1f96e85e9248fe0feee427516",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/platform/account/discovery.md",
+    "docs/implementation/platform/account/design.md",
+    "docs/implementation/platform/account/domain-model.md",
+    "docs/implementation/platform/account/access-design.md",
+    "packages/contracts/src/auth-port.ts",
+    "packages/contracts/src/index.ts",
+    "src/loopdev/domains/platform/adapter/auth-supabase.ts",
+    "src/loopdev/domains/settings/types.ts",
+    "docs/implementation/platform/auth/api-contracts.md",
+    "docs/implementation/platform/notes/api-contracts.md"
+  ],
+  "decisions": [
+    {
+      "id": "API-ACCOUNT-SHARED-CONTRACT",
+      "status": "confirmed",
+      "summary": "Reuse PlatformUser.fullName/avatarUrl as canonical fields and propose a shared Auth/Profile update operation; do not create a parallel profile authority."
+    },
+    {
+      "id": "API-ACCOUNT-SCOPE",
+      "status": "confirmed",
+      "summary": "Derive user scope from Auth and Billing organization scope from server-verified tenant context; all platforms share semantic operation IDs and errors."
+    },
+    {
+      "id": "API-ACCOUNT-PROVIDERS",
+      "status": "open",
+      "summary": "Auth operation support, Billing provider/seller, webhook envelope and provider-specific concurrency/idempotency remain open."
+    }
+  ],
+  "actions": [
+    "Compared discovery operations with existing AuthPort/PlatformUser, Supabase Auth adapter, Platform Settings and shared API contract patterns.",
+    "Defined command/query catalog and proposed DTO semantics for profile, preferences, security and organization billing.",
+    "Recorded semantic errors, retryability, pagination, conditional versioning, idempotency and event/reconciliation boundaries.",
+    "Specified shared web/native contract behavior and provider-specific open decisions without choosing transport or infrastructure."
+  ],
+  "output_artifacts": [
+    "docs/implementation/platform/account/api-contracts.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/04-api-evidence.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/04-api.json"
+  ],
+  "validation": [
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run validation passed after Account API checkpoint updates."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed",
+      "evidence": "All module run checkpoints parsed and validated."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "API-ACCOUNT-OPERATIONS",
+      "status": "PASS",
+      "evidence": "api-contracts.md defines queries and commands for profile, preferences, security and organization Billing, with explicit gaps for provider-dependent operations."
+    },
+    {
+      "id": "API-ACCOUNT-DTOS-ERRORS",
+      "status": "PASS",
+      "evidence": "api-contracts.md constrains DTO fields, identities, tenant scopes, semantic errors and pagination."
+    },
+    {
+      "id": "API-ACCOUNT-CONSISTENCY-EVENTS",
+      "status": "PASS",
+      "evidence": "api-contracts.md defines idempotency, version checks, provider reconciliation, events and webhook responsibilities."
+    },
+    {
+      "id": "API-ACCOUNT-OPEN-PROVIDERS",
+      "status": "PARTIAL",
+      "evidence": "Provider capability, billing provider/seller, avatar policy, preferences and transport standards remain open and are assigned to owners."
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "05-sync",
+  "evidence_links": [
+    "docs/implementation/platform/account/api-contracts.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/04-api-evidence.md"
+  ],
+  "notes": [
+    "Current AuthPort includes PlatformUser fields and password update but no profile update, shared Preferences, MFA/session inventory or Billing operations.",
+    "No concrete endpoint path or production contract was implemented; the provider-neutral API semantics are design candidates for the approved downstream plan.",
+    "No production code, adapter, API DTO, database object, fixture or migration was changed."
+  ],
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

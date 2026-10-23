@@ -7,7 +7,12 @@ const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 const desktopRoutes = ["AppRoutes.tsx", "LoopdevRoutes.tsx"]
   .map((file) => readFileSync(join(root, "src", "routes", file), "utf8")).join("\n");
 const mobileRoutes = readFileSync(join(root, "apps", "mobile", "App.tsx"), "utf8");
-const sharedRoutes = readFileSync(join(root, "packages", "contracts", "src", "contact-capability.ts"), "utf8");
+const sharedRoutes = [
+  "contact-capability.ts",
+  "account-navigation.ts",
+]
+  .map((file) => readFileSync(join(root, "packages", "contracts", "src", file), "utf8"))
+  .join("\n");
 const errors = [];
 function matchesTemplate(template, example) {
   const pattern = template.split("/").map((segment) => segment.startsWith(":") ? "[^/]+" : segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("/");
@@ -17,7 +22,9 @@ for (const surface of ["desktop_web", "mobile_web"]) {
   if (!manifest[surface]?.routes?.length) errors.push(`${surface} requires routes`);
   for (const route of manifest[surface]?.routes ?? []) {
     if (!route.path.startsWith("/")) errors.push(`${surface}: route must be absolute: ${route.path}`);
-    const routeSource = surface === "desktop_web" ? desktopRoutes : `${mobileRoutes}\n${sharedRoutes}`;
+    const routeSource = surface === "desktop_web"
+      ? `${desktopRoutes}\n${sharedRoutes}`
+      : `${mobileRoutes}\n${sharedRoutes}`;
     if (!routeSource.includes(route.path) && !routeSource.includes(route.path.replace(/:[^/]+/g, "([^/]+)"))) errors.push(`${surface}: ${route.path} is not registered in its router`);
     if (route.path.includes(":")) {
       if (!route.example || !matchesTemplate(route.path, route.example)) errors.push(`${surface}: ${route.path} requires a matching concrete example`);

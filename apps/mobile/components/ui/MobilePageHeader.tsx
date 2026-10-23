@@ -18,6 +18,7 @@ interface MobilePageHeaderProps {
   };
   rightAction?: React.ReactNode;
   onBack?: () => void;
+  backLabel?: string;
 }
 
 export function MobilePageHeader({
@@ -28,11 +29,12 @@ export function MobilePageHeader({
   primaryAction,
   onBack,
   rightAction,
+  backLabel = "Back",
 }: MobilePageHeaderProps) {
   const action = actionButton ?? primaryAction;
   return (
     <View style={styles.heading}>
-      {onBack ? <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack}><Text style={styles.back}>‹</Text></Pressable> : null}
+      {onBack ? <Pressable accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack}><Text style={styles.back}>‹</Text></Pressable> : null}
       <View style={styles.textColumn}>
         {eyebrow ? (
           <View style={styles.eyebrowRow}>
@@ -40,7 +42,7 @@ export function MobilePageHeader({
             <Text style={styles.eyebrow}>{eyebrow}</Text>
           </View>
         ) : null}
-        <Text style={styles.title}>{title}</Text>
+        <Text accessibilityRole="header" style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
       {rightAction ?? (action ? (

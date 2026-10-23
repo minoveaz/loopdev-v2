@@ -1,8 +1,12 @@
 import { Fragment, lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
+import { accountDestinations } from "../../packages/contracts/src/account-navigation";
 
 const Launchpad = lazy(() => import("@/loopdev/pages/Launchpad"));
 const Settings = lazy(() => import("@/loopdev/pages/Settings"));
+const AccountProfile = lazy(() => import("@/loopdev/pages/account/Profile"));
+const AccountSettings = lazy(() => import("@/loopdev/pages/account/Settings"));
+const AccountSecurity = lazy(() => import("@/loopdev/pages/account/Security"));
 const CommunicationsSettings = lazy(() => import("@/loopdev/pages/settings/Communications"));
 const DocumentRetentionSettings = lazy(() => import("@/loopdev/pages/settings/DocumentRetention"));
 const SalesCRM = lazy(() => import("@/loopdev/pages/crm/Overview"));
@@ -29,6 +33,9 @@ export const loopdevRouteElements = (
   <Fragment>
     <Route path="/launchpad" element={<Launchpad />} />
     <Route path="/app/settings" element={<Settings />} />
+    <Route path={accountDestinations.profile.path} element={<AccountProfile />} />
+    <Route path={accountDestinations.settings.path} element={<AccountSettings />} />
+    <Route path={accountDestinations.security.path} element={<AccountSecurity />} />
     <Route path="/app/settings/communications" element={<CommunicationsSettings />} />
     <Route path="/app/settings/document-retention" element={<DocumentRetentionSettings />} />
     <Route path="/app/settings/crm/operations" element={<SalesCRMOperations />} />

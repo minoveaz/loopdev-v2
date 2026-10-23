@@ -13,10 +13,9 @@ function getValue(dict: Record<string, unknown>, path: string): string | undefin
   return typeof cur === "string" ? cur : undefined;
 }
 
-describe("mobile i18n bilingual support", () => {
-  it("exports both Spanish and English supported languages", () => {
-    expect(MOBILE_LANGUAGES).toHaveLength(2);
-    expect(MOBILE_LANGUAGES.map((l) => l.code)).toEqual(["es", "en"]);
+describe("mobile i18n language support", () => {
+  it("exports all six supported languages", () => {
+    expect(MOBILE_LANGUAGES.map((l) => l.code)).toEqual(["es", "en", "fr", "de", "ar", "he"]);
     expect(MOBILE_LANGUAGES.find((l) => l.code === "es")?.label).toBe("Español");
     expect(MOBILE_LANGUAGES.find((l) => l.code === "en")?.label).toBe("English");
   });

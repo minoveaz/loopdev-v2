@@ -1,4 +1,12 @@
-export type PlatformRole = "owner" | "admin" | "editor" | "viewer";
+import type { UpdatePlatformProfileInput } from "./account-profile";
+export {
+  createPlatformAvatarReference,
+  getPlatformAvatarFileId,
+  isPlatformAvatarReference,
+} from "./account-profile";
+export type { UpdatePlatformProfileInput } from "./account-profile";
+
+export type PlatformRole = "owner" | "admin" | "agent" | "editor" | "viewer";
 
 export interface PlatformUser {
   id: string;
@@ -59,7 +67,7 @@ export interface TenantContextSnapshot {
 
 export interface PasswordResetResult {
   sent: boolean;
-  deliveryChannel: "smtp" | "inbucket_dev" | "admin_cli_bypass";
+  deliveryChannel: "provider" | "smtp" | "inbucket_dev" | "admin_cli_bypass";
   message: string;
 }
 
@@ -73,7 +81,12 @@ export type AuthErrorCode =
   | "TENANT_ACCESS_DENIED"
   | "TENANT_SUSPENDED"
   | "AUTH_STORAGE_ERROR"
-  | "AUTH_NETWORK_ERROR";
+  | "AUTH_NETWORK_ERROR"
+  | "AUTH_OPERATION_UNSUPPORTED"
+  | "AUTH_VALIDATION_ERROR"
+  | "AUTH_VERSION_CONFLICT"
+  | "AUTH_REAUTH_REQUIRED"
+  | "AUTH_MFA_FACTOR_NOT_FOUND";
 
 export interface AuthError {
   code: AuthErrorCode;
@@ -105,6 +118,63 @@ export interface UpdatePasswordInput {
   newPassword: string;
 }
 
+export type AuthAssuranceLevel = "aal1" | "aal2" | null;
+export type AuthMfaFactorStatus = "verified" | "unverified";
+
+export function isAuthAssuranceLevel(value: unknown): value is AuthAssuranceLevel {
+  return value === null || value === "aal1" || value === "aal2";
+}
+
+export interface AuthMfaFactor {
+  id: string;
+  type: "totp";
+  status: AuthMfaFactorStatus;
+  friendlyName: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface AuthSecurityStatus {
+  userId: string;
+  email: string;
+  emailVerified: boolean;
+  pendingEmailChange: string | null;
+  mfaFactors: AuthMfaFactor[];
+  currentAssuranceLevel: AuthAssuranceLevel;
+  nextAssuranceLevel: AuthAssuranceLevel;
+  signOutOtherSessionsAvailable: boolean;
+}
+
+export interface RequestEmailChangeInput {
+  newEmail: string;
+}
+
+export interface RequestEmailChangeResult {
+  currentEmail: string;
+  newEmail: string;
+  status: "pending_confirmation";
+}
+
+export interface BeginTotpEnrollmentInput {
+  friendlyName?: string;
+}
+
+export interface TotpEnrollment {
+  factorId: string;
+  qrCode: string;
+  secret: string;
+  uri: string;
+}
+
+export interface VerifyTotpInput {
+  factorId: string;
+  code: string;
+}
+
+export interface RemoveTotpFactorInput {
+  factorId: string;
+}
+
 export type AuthChangeEvent = "SIGNED_IN" | "SIGNED_OUT" | "TOKEN_REFRESHED" | "USER_UPDATED";
 
 export interface PlatformAuthStorage {
@@ -119,8 +189,15 @@ export interface AuthPort {
   signInWithPassword(credentials: SignInWithPasswordInput): Promise<AuthResult<AuthSession>>;
   signUpWithPassword(credentials: SignUpWithPasswordInput): Promise<AuthResult<AuthSession>>;
   signOut(): Promise<AuthResult<void>>;
+  signOutOtherSessions(): Promise<AuthResult<void>>;
   requestPasswordReset(input: PasswordResetInput): Promise<AuthResult<PasswordResetResult>>;
   updatePassword(input: UpdatePasswordInput): Promise<AuthResult<void>>;
+  getSecurityStatus(): Promise<AuthResult<AuthSecurityStatus>>;
+  requestEmailChange(input: RequestEmailChangeInput): Promise<AuthResult<RequestEmailChangeResult>>;
+  beginTotpEnrollment(input?: BeginTotpEnrollmentInput): Promise<AuthResult<TotpEnrollment>>;
+  verifyTotp(input: VerifyTotpInput): Promise<AuthResult<void>>;
+  removeTotpFactor(input: RemoveTotpFactorInput): Promise<AuthResult<void>>;
+  updateProfile(input: UpdatePlatformProfileInput): Promise<AuthResult<PlatformUser>>;
 }
 
 export interface TenantContextPort {

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Account preferences wireframe: desktop and mobile</title>
+  <desc id="desc">Personal preferences with synced settings distinguished from device-local appearance.</desc>
+  <defs><style>
+    text{font-family:Geist,Inter,system-ui,sans-serif;fill:#202536}.muted{fill:#6c7280}.tiny{font-size:11px}.small{font-size:13px}.body{font-size:14px}.label{font-size:12px;font-weight:600}.head{font-size:25px;font-weight:650;letter-spacing:-.5px}.subhead{font-size:16px;font-weight:650}.card{fill:#fff;stroke:#dfe2ea}.field{fill:#fff;stroke:#dfe2ea}.soft{fill:#f0f1ff;stroke:#e0e2ff}.primary{fill:#414bd2}.line{stroke:#e6e8ef}.switch{fill:#414bd2}
+  </style></defs>
+  <rect width="1200" height="760" fill="#f8f9fc"/><text x="36" y="28" class="tiny muted">ACCOUNT · PREFERENCES — CONCEPTUAL WIREFRAME / ILLUSTRATIVE COPY</text>
+  <rect x="28" y="48" width="748" height="680" rx="12" fill="#f8f9fc" stroke="#dfe2ea"/><rect x="28" y="48" width="748" height="44" rx="12" fill="#fff"/>
+  <text x="50" y="76" class="small">LoopDev</text><text x="115" y="76" class="tiny muted">Workspace / Account</text>
+  <rect x="43" y="112" width="118" height="586" rx="8" fill="#fff" stroke="#e6e8ef"/><text x="59" y="143" class="tiny muted">WORKSPACE</text>
+  <text x="59" y="177" class="small muted">Overview</text><text x="59" y="210" class="small muted">CRM</text>
+  <rect x="54" y="228" width="96" height="34" rx="7" class="soft"/><text x="66" y="250" class="small">Account</text>
+  <text x="181" y="131" class="tiny muted">Account / Settings</text><text x="181" y="167" class="head">Account settings</text>
+  <text x="181" y="191" class="small muted">Personal preferences for your LoopDev experience.</text>
+  <rect x="181" y="214" width="560" height="152" rx="11" class="card"/>
+  <text x="202" y="245" class="subhead">Language and time</text><text x="202" y="266" class="small muted">Synced to your account on your devices.</text>
+  <text x="202" y="303" class="label">Language</text><rect x="202" y="313" width="238" height="38" rx="7" class="field"/><text x="216" y="337" class="small">Choose language  ▾</text>
+  <text x="460" y="303" class="label">Time zone</text><rect x="460" y="313" width="260" height="38" rx="7" class="field"/><text x="474" y="337" class="small">Search time zones  ▾</text>
+  <rect x="181" y="382" width="560" height="160" rx="11" class="card"/>
+  <text x="202" y="414" class="subhead">Appearance</text><text x="202" y="436" class="small muted">Applies on this device. Other devices can differ.</text>
+  <rect x="202" y="454" width="160" height="68" rx="9" class="soft"/><text x="218" y="481" class="label">System</text><text x="218" y="503" class="tiny muted">Selected</text>
+  <rect x="370" y="454" width="160" height="68" rx="9" fill="#fff" stroke="#dfe2ea"/><text x="386" y="481" class="label">Light</text><text x="386" y="503" class="tiny muted">This device</text>
+  <rect x="538" y="454" width="182" height="68" rx="9" fill="#fff" stroke="#dfe2ea"/><text x="554" y="481" class="label">Dark</text><text x="554" y="503" class="tiny muted">This device</text>
+  <rect x="181" y="558" width="560" height="116" rx="11" class="card"/>
+  <text x="202" y="590" class="subhead">Personal notifications</text><text x="202" y="612" class="small muted">Synced to your account.</text>
+  <text x="202" y="650" class="body">Security alerts</text><rect x="676" y="628" width="44" height="24" rx="12" class="switch"/><circle cx="708" cy="640" r="8" fill="#fff"/>
+  <text x="181" y="701" class="tiny muted">Desktop web · single-column settings groups · sync scope stated in copy</text>
+  <rect x="812" y="48" width="360" height="680" rx="28" fill="#fff" stroke="#cfd3dd" stroke-width="2"/><rect x="820" y="58" width="344" height="660" rx="22" fill="#f8f9fc"/>
+  <rect x="820" y="58" width="344" height="52" rx="22" fill="#fff"/><text x="842" y="91" class="small">‹  Account</text><text x="1003" y="91" class="small">Settings</text>
+  <text x="842" y="143" class="tiny muted">ACCOUNT / SETTINGS</text><text x="842" y="177" class="head">Preferences</text>
+  <text x="842" y="200" class="tiny muted">Personal settings; organization settings</text><text x="842" y="216" class="tiny muted">stay in Workspace Settings.</text>
+  <rect x="840" y="232" width="304" height="218" rx="12" class="card"/><text x="858" y="263" class="subhead">Language and time</text><text x="858" y="284" class="tiny muted">Synced to your account</text>
+  <text x="858" y="317" class="label">Language</text>  <rect x="858" y="326" width="268" height="44" rx="7" class="field"/><text x="872" y="353" class="tiny">Choose language  ▾</text>
+  <text x="858" y="394" class="label">Time zone</text><rect x="858" y="403" width="268" height="44" rx="7" class="field"/><text x="872" y="430" class="tiny">Search time zones  ▾</text>
+  <rect x="840" y="460" width="304" height="222" rx="12" class="card"/><text x="858" y="491" class="subhead">Appearance</text><text x="858" y="512" class="tiny muted">Only on this device</text>
+  <rect x="858" y="523" width="268" height="44" rx="8" class="soft"/><text x="874" y="550" class="label">System  ·  selected</text>
+  <rect x="858" y="575" width="268" height="44" rx="8" fill="#fff" stroke="#dfe2ea"/><text x="874" y="602" class="label">Light</text>
+  <rect x="858" y="627" width="268" height="44" rx="8" fill="#fff" stroke="#dfe2ea"/><text x="874" y="654" class="label">Dark</text>
+  <text x="842" y="704" class="tiny muted">Mobile web · scroll for notifications · ThemeOptionCard</text>
+</svg>

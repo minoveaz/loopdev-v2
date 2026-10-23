@@ -24,7 +24,7 @@ export interface TimelineMarker {
   direction: "inbound" | "outbound" | "internal";
 }
 
-const contentLabels: Record<MobileLangCode, Record<NonNullable<CommunicationMessage["contentType"]>, string>> = {
+const contentLabels: Partial<Record<MobileLangCode, Record<NonNullable<CommunicationMessage["contentType"]>, string>>> = {
   es: {
     text: "Mensaje",
     document: "Documento adjunto",
@@ -119,7 +119,7 @@ export function buildConversationTimelineMarkers(
 
     // 2. Rich content milestones
     if (message.contentType && message.contentType !== "text") {
-      const label = `${contentLabels[lang][message.contentType]} · ${formatRelativeTime(message.occurredAt, lang)}`;
+      const label = `${contentLabels[lang]?.[message.contentType] ?? contentLabels.en![message.contentType]} · ${formatRelativeTime(message.occurredAt, lang)}`;
       const detailParts = [
         message.contentMetadata?.name,
         message.contentMetadata?.url,

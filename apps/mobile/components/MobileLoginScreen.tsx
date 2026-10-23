@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -15,18 +15,24 @@ import { MobileLogoSpinner } from "./MobileLogoSpinner";
 type MobileLoginScreenProps = {
   onLoginSuccess: () => void;
   onForgotPassword: () => void;
+  sessionError?: string;
 };
 
 export function MobileLoginScreen({
   onLoginSuccess,
   onForgotPassword,
+  sessionError,
 }: MobileLoginScreenProps) {
   const [email, setEmail] = useState("admin@loop.dev");
   const [password, setPassword] = useState("loopdev");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(sessionError ?? null);
+
+  useEffect(() => {
+    if (sessionError) setErrorMessage(sessionError);
+  }, [sessionError]);
 
   const fillDemo = (demoEmail: string) => {
     setEmail(demoEmail);

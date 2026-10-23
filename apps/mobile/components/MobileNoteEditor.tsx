@@ -23,11 +23,11 @@ type Props = {
 };
 
 const visibilityOptions: NoteVisibility[] = ["private", "team", "organization"];
-const visibilityLabels: Record<MobileLangCode, Record<NoteVisibility, string>> = {
+const visibilityLabels: Partial<Record<MobileLangCode, Record<NoteVisibility, string>>> = {
   es: { private: "Privada", team: "Equipo", organization: "Organización" },
   en: { private: "Private", team: "Team", organization: "Organization" },
 };
-const visibilityDescriptions: Record<MobileLangCode, Record<NoteVisibility, string>> = {
+const visibilityDescriptions: Partial<Record<MobileLangCode, Record<NoteVisibility, string>>> = {
   es: { private: "Solo tú", team: "Miembros de tu equipo", organization: "Todos en la organización" },
   en: { private: "Only you", team: "Team members", organization: "Everyone in the organization" },
 };
@@ -79,12 +79,12 @@ export function MobileNoteEditor({ initialNote, relationLabel, onCancel, onSave 
     </View>
     <Text style={styles.label}>{lang === "es" ? "Título (opcional)" : "Title (optional)"}</Text><TextInput value={title} onChangeText={setTitle} placeholder={lang === "es" ? "Asigna un título útil a esta nota" : "Give this note a helpful title"} style={styles.input} />
     <Text style={styles.label}>{lang === "es" ? "Contenido" : "Content"}</Text>{mode === "rich" ? <MobileRichNoteEditor key={initialNote?.id ?? "new-note"} initialContent={richContent} onChange={({ content, plainTextPreview }) => { setRichContent(content); setBody(plainTextPreview); }} /> : <TextInput multiline value={body} onChangeText={setBody} placeholder={lang === "es" ? "Escribe una nota rápida..." : "Write a quick note..."} textAlignVertical="top" style={styles.editor} />}
-    <View style={visibilityStyles.field}><Text style={styles.label}>{lang === "es" ? "Visibilidad" : "Visibility"}</Text><Pressable accessibilityLabel={lang === "es" ? "Visibilidad" : "Visibility"} accessibilityRole="button" accessibilityState={{ expanded: visibilityOpen }} onPress={() => setVisibilityOpen(true)} style={visibilityStyles.trigger}><Text style={visibilityStyles.value}>{visibilityLabels[lang][visibility]}</Text><ChevronDown size={16} color="#64748b" /></Pressable></View>
+    <View style={visibilityStyles.field}><Text style={styles.label}>{lang === "es" ? "Visibilidad" : "Visibility"}</Text><Pressable accessibilityLabel={lang === "es" ? "Visibilidad" : "Visibility"} accessibilityRole="button" accessibilityState={{ expanded: visibilityOpen }} onPress={() => setVisibilityOpen(true)} style={visibilityStyles.trigger}><Text style={visibilityStyles.value}>{visibilityLabels[lang]?.[visibility] ?? visibilityLabels.en![visibility]}</Text><ChevronDown size={16} color="#64748b" /></Pressable></View>
     <View style={styles.footer}><Pressable onPress={onCancel} style={styles.cancel}><Text style={styles.cancelText}>{lang === "es" ? "Cancelar" : "Cancel"}</Text></Pressable><Pressable disabled={saving} onPress={() => void save()} style={styles.save}><Text style={styles.saveText}>{saving ? (lang === "es" ? "Guardando..." : "Saving...") : (lang === "es" ? "Guardar nota" : "Save note")}</Text></Pressable></View>
     {error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
     <MobileModalSheet visible={visibilityOpen} onClose={() => setVisibilityOpen(false)} title={lang === "es" ? "Visibilidad de la nota" : "Note visibility"}>
       <Text style={visibilityStyles.sheetDescription}>{lang === "es" ? "Elige quién puede acceder a esta nota." : "Choose who can access this note."}</Text>
-      {visibilityOptions.map((option) => <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected: option === visibility }} onPress={() => { setVisibility(option); setVisibilityOpen(false); }} style={[visibilityStyles.sheetOption, option === visibility && visibilityStyles.sheetOptionSelected]}><View><Text style={[visibilityStyles.optionText, option === visibility && visibilityStyles.selectedOptionText]}>{visibilityLabels[lang][option]}</Text><Text style={visibilityStyles.optionDescription}>{visibilityDescriptions[lang][option]}</Text></View>{option === visibility ? <Check size={18} color={mobileTheme.colors.primary} /> : null}</Pressable>)}
+      {visibilityOptions.map((option) => <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected: option === visibility }} onPress={() => { setVisibility(option); setVisibilityOpen(false); }} style={[visibilityStyles.sheetOption, option === visibility && visibilityStyles.sheetOptionSelected]}><View><Text style={[visibilityStyles.optionText, option === visibility && visibilityStyles.selectedOptionText]}>{visibilityLabels[lang]?.[option] ?? visibilityLabels.en![option]}</Text><Text style={visibilityStyles.optionDescription}>{visibilityDescriptions[lang]?.[option] ?? visibilityDescriptions.en![option]}</Text></View>{option === visibility ? <Check size={18} color={mobileTheme.colors.primary} /> : null}</Pressable>)}
     </MobileModalSheet>
   </ScrollView>;
 }

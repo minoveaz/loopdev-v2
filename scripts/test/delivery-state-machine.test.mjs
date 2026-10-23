@@ -253,14 +253,106 @@ test("ledger rejects a capability without operation-level platform coverage", (c
   assert.ok(errors.some((error) => error.includes("operation listContacts has no platform coverage decision")));
 });
 
-test("approved ledger rejects an operation missing from a required platform", (context) => {
+test("plan approval requires an explicit task for each missing required operation and platform", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const ledger = validLedger();
+  ledger.capabilities[0].operation_coverage[0].mobile_web = "missing";
+  let errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"), { stage: "plan" });
+  assert.ok(errors.some((error) => error.includes("without an operation-level task")));
+  ledger.tasks[0].operation_ids = ["listContacts"];
+  errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"), { stage: "plan" });
+  assert.deepEqual(errors, []);
+});
+
+test("approved plan may preserve missing operation status when an explicit task is blocked", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const ledger = validLedger({ status: "approved", approved_by: "owner@example.com", approved_at: "2026-09-14T12:00:00.000Z", approval_source: "https://github.test/issues/1", blockers: [] });
+  ledger.tasks[0].status = "blocked";
+  ledger.tasks[0].blocked_by = ["PLATFORM-OWNER-APPROVAL"];
+  ledger.tasks[0].operation_ids = ["listContacts"];
+  ledger.capabilities[0].operation_coverage[0].mobile_web = "missing";
+  const errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"));
+  assert.deepEqual(errors, []);
+});
+
+test("implementation and verification gates reject missing operations even when planned", (context) => {
   const current = fixture();
   context.after(current.cleanup);
   const ledger = validLedger({ status: "approved", approved_by: "owner@example.com", approved_at: "2026-09-14T12:00:00.000Z", approval_source: "https://github.test/issues/1", blockers: [] });
   ledger.tasks[0].status = "ready";
+  ledger.tasks[0].operation_ids = ["listContacts"];
   ledger.capabilities[0].operation_coverage[0].mobile_web = "missing";
-  const errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"));
+  const errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"), { stage: "implementation" });
   assert.ok(errors.some((error) => error.includes("operation listContacts is missing on required platform mobile_web")));
+  ledger.capabilities[0].operation_coverage[0].mobile_web = "adapted";
+  ledger.capabilities[0].operation_coverage[0].adaptation_ref = "PLATFORM-MOBILE-ADAPTATION-001";
+  const adaptedErrors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"), { stage: "verification" });
+  assert.deepEqual(adaptedErrors, []);
+  const releaseErrors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"), { stage: "release" });
+  assert.deepEqual(releaseErrors, []);
+});
+
+test("verification cannot start while a required operation is still missing", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const ledger = validLedger({
+    status: "approved",
+    approved_by: "owner@example.com",
+    approved_at: "2026-09-14T12:00:00.000Z",
+    approval_source: "https://github.test/issues/1",
+    blockers: [],
+  });
+  ledger.tasks[0].status = "ready";
+  ledger.tasks[0].operation_ids = ["listContacts"];
+  ledger.capabilities[0].operation_coverage[0].mobile_web = "missing";
+  write(join(current.machine.workspace("crm", "Contacts"), "delivery-ledger.json"), `${JSON.stringify(ledger, null, 2)}\n`);
+
+  const predecessorPhases = ["00-discovery", "01-design", "01-visual-design", "02-domain", "03-access", "04-api", "05-sync", "06-plan", "07-build"];
+  const runDirectory = current.machine.runDirectory("crm", "Contacts", current.runId);
+  for (const phase of predecessorPhases) {
+    write(join(runDirectory, `${phase}.json`), JSON.stringify({ phase, status: "completed", invalidated: false }));
+  }
+
+  assert.throws(
+    () => current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "08-verify", skill: "module-verify" }),
+    /Operation parity gate failed:[\s\S]*missing on required platform mobile_web/,
+  );
+});
+
+test("build cannot complete while a required operation is still missing", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const ledger = validLedger({
+    status: "approved",
+    approved_by: "owner@example.com",
+    approved_at: "2026-09-14T12:00:00.000Z",
+    approval_source: "https://github.test/issues/1",
+    blockers: [],
+  });
+  ledger.tasks[0].status = "done";
+  ledger.tasks[0].operation_ids = ["listContacts"];
+  ledger.tasks[0].evidence_refs = ["test evidence"];
+  ledger.capabilities[0].operation_coverage[0].mobile_web = "missing";
+  write(join(current.machine.workspace("crm", "Contacts"), "delivery-ledger.json"), `${JSON.stringify(ledger, null, 2)}\n`);
+  write(join(current.machine.runDirectory("crm", "Contacts", current.runId), "06-plan.json"), JSON.stringify({ phase: "06-plan", status: "completed", invalidated: false }));
+  current.machine.approve({
+    suite: "crm", moduleName: "Contacts", runId: current.runId, gate: "plan",
+    approvedBy: "owner@example.com", role: "product_owner", artifact: "docs/implementation/crm/contacts/delivery-ledger.json",
+    artifactFingerprint: validFingerprint, source: "https://github.test/issues/1",
+  });
+  current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "07-build", skill: "module-build" });
+  const output = "docs/implementation/crm/contacts/build-evidence.md";
+  write(join(current.root, output), "# Build evidence\n");
+
+  assert.throws(
+    () => current.machine.completePhase({
+      suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "07-build",
+      data: { architecture_quality: "PASS", output_artifacts: [output], validation: [{ command: "test", result: "passed" }] },
+    }),
+    /operation listContacts is missing on required platform mobile_web/,
+  );
 });
 
 test("ledger rejects scope drop without an approved change request", (context) => {
@@ -303,12 +395,16 @@ test("discovery can complete before implementation tasks exist", (context) => {
   assert.equal(checkpoint.status, "completed");
 });
 
-test("approved ledger requires all tasks to be ready or done", (context) => {
+test("approved ledger allows in-progress tasks but rejects pending tasks", (context) => {
   const current = fixture();
   context.after(current.cleanup);
   const ledger = validLedger({ status: "approved", approved_by: "owner@example.com", approved_at: "2026-09-14T12:00:00.000Z", approval_source: "https://github.test/issues/1", blockers: [] });
-  const errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"));
-  assert.ok(errors.some((error) => error.includes("must be ready or done")));
+  ledger.tasks[0].status = "in_progress";
+  let errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"));
+  assert.ok(!errors.some((error) => error.includes("approved ledger task")));
+  ledger.tasks[0].status = "pending";
+  errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"));
+  assert.ok(errors.some((error) => error.includes("must be ready, in_progress, done or explicitly blocked")));
 });
 
 test("ledger rejects task dependency cycles", (context) => {

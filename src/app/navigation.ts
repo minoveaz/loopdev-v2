@@ -36,6 +36,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { NavNode, NavSection } from "./nav-types";
+import { accountDestinations } from "../../packages/contracts/src/account-navigation";
 export type { NavChild, NavItem, NavNode, NavSection } from "./nav-types";
 
 export const navigation: NavSection[] = [
@@ -408,12 +409,16 @@ export const navigation: NavSection[] = [
         label: "Account Settings",
         icon: Shield,
         children: [
-          { label: "Account", to: "/account/profile" },
+          { label: "Account", to: "/app/account/profile" },
           { label: "Settings", to: "/account/settings" },
           { label: "Security", to: "/account/security" },
           { label: "Appearance", to: "/account-settings/appearance" },
           { label: "Notifications", to: "/account/notifications" },
-          { label: "Plan & Billing", to: "/account/billing" },
+          {
+            label: "Plan & Billing",
+            to: accountDestinations.billing.path,
+            disabled: !accountDestinations.billing.enabled,
+          },
           { label: "Integrations", to: "/account/integrations" },
         ],
       },
@@ -627,7 +632,7 @@ export const routeMeta: Record<string, RouteMeta> = (() => {
     rootIcon?: LucideIcon,
   ) => {
     const icon = rootIcon ?? node.icon;
-    if (node.to && !map[node.to]) {
+    if (node.to && !node.disabled && !map[node.to]) {
       map[node.to] = {
         path: node.to,
         label: node.label,

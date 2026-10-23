@@ -5,34 +5,50 @@ import { MobileBottomSheet } from "./MobileBottomSheet";
 import { MobileConfirmDialog } from "./MobileModal";
 import { mobileAuthAdapter, mobileTenantContextAdapter } from "../adapters/auth";
 import type { AuthSession, Organization, TenantContextSnapshot } from "../../../packages/contracts/src/auth-port";
-import { MOBILE_LANGUAGES, useMobileI18n, type MobileLangCode } from "../i18n";
+import { accountDestinations } from "../../../packages/contracts/src/account-navigation";
+import { useMobileI18n } from "../i18n";
+import { mobileTheme } from "../theme/tokens";
 
 type MobileAccountSheetProps = {
   visible: boolean;
   onClose: () => void;
   onSwitchOrg?: (orgName: string) => void;
+  onNavigate?: (path: string) => void;
 };
 
-export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAccountSheetProps) {
-  const { lang, setLang, t } = useMobileI18n();
+export function MobileAccountSheet({ visible, onClose, onSwitchOrg, onNavigate }: MobileAccountSheetProps) {
+  const { t } = useMobileI18n();
   const [context, setContext] = useState<TenantContextSnapshot | null>(() =>
     mobileTenantContextAdapter.getTenantContext(),
   );
   const [session, setSession] = useState<AuthSession | null>(null);
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    void mobileAuthAdapter.getSession().then(setSession);
+    void mobileAuthAdapter.getSession().then(setSession).catch((error: unknown) => {
+      setAuthError(error instanceof Error ? error.message : "Unable to load the authentication session.");
+    });
     const unsubAuth = mobileAuthAdapter.onAuthStateChange((_, s) => setSession(s));
     const unsubTenant = mobileTenantContextAdapter.onTenantContextChange((next) => {
       setContext(next);
       void mobileTenantContextAdapter.listOrganizations().then((res) => {
-        if (res.success) setOrgs(res.data);
+        if (res.success === true) {
+          setOrgs(res.data);
+          setAuthError(null);
+        } else {
+          setAuthError(res.error.message);
+        }
       });
     });
     void mobileTenantContextAdapter.listOrganizations().then((res) => {
-      if (res.success) setOrgs(res.data);
+      if (res.success === true) {
+        setOrgs(res.data);
+        setAuthError(null);
+      } else {
+        setAuthError(res.error.message);
+      }
     });
     return () => {
       unsubAuth();
@@ -45,7 +61,12 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
       onClose();
       return;
     }
-    await mobileTenantContextAdapter.selectOrganization(orgId);
+    const result = await mobileTenantContextAdapter.selectOrganization(orgId);
+    if (result.success === false) {
+      setAuthError(result.error.message);
+      return;
+    }
+    setAuthError(null);
     if (onSwitchOrg) {
       onSwitchOrg(orgName);
     } else {
@@ -54,9 +75,14 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
   };
 
   const handleExecuteSignOut = async () => {
+    const result = await mobileAuthAdapter.signOut();
     setConfirmSignOut(false);
+    if (result.success === false) {
+      setAuthError(result.error.message);
+      return;
+    }
+    setAuthError(null);
     onClose();
-    await mobileAuthAdapter.signOut();
   };
 
   const activeOrgId = context?.activeOrganizationId ?? orgs[0]?.id;
@@ -65,10 +91,15 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
   const initials = (session?.user.fullName ? session.user.fullName.split(" ").map((p: string) => p[0]).join("") : userName.slice(0, 2)).toUpperCase().slice(0, 2);
 
   const menuItems = [
-    { label: t("common.profile"), icon: UserRound },
-    { label: t("common.accountSettings"), icon: Settings },
-    { label: t("common.security"), icon: ShieldCheck },
-    { label: t("common.billing"), icon: CreditCard },
+    { label: t("common.profile"), icon: UserRound, path: accountDestinations.profile.path },
+    { label: t("common.accountSettings"), icon: Settings, path: accountDestinations.settings.path },
+    { label: t("common.security"), icon: ShieldCheck, path: accountDestinations.security.path },
+    {
+      label: t("common.billing"),
+      icon: CreditCard,
+      path: accountDestinations.billing.enabled ? accountDestinations.billing.path : undefined,
+      disabled: !accountDestinations.billing.enabled,
+    },
   ];
 
   return (
@@ -77,6 +108,11 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials || "AD"}</Text>
         </View>
+        {authError && (
+          <Text accessibilityRole="alert" style={styles.authError}>
+            {authError}
+          </Text>
+        )}
         <View style={styles.profileMeta}>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{userName}</Text>
@@ -89,39 +125,6 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
             )}
           </View>
           <Text style={styles.email}>{userEmail}</Text>
-        </View>
-      </View>
-
-      <View style={styles.separator} />
-
-      {/* Language Switcher Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          {t("common.interfaceLanguage")}
-        </Text>
-        <View style={styles.langList}>
-          {MOBILE_LANGUAGES.map((item) => {
-            const isSelected = item.code === lang;
-            return (
-              <Pressable
-                key={item.code}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: isSelected }}
-                onPress={() => setLang(item.code)}
-                style={[styles.langCard, isSelected && styles.activeLangCard]}
-              >
-                <Text style={styles.langFlag}>{item.flag}</Text>
-                <Text style={[styles.langName, isSelected && styles.activeLangName]}>{item.label}</Text>
-                {isSelected ? (
-                  <View style={styles.activeCheck}>
-                    <Check color="#ffffff" size={14} strokeWidth={3} />
-                  </View>
-                ) : (
-                  <View style={styles.emptyCheck} />
-                )}
-              </Pressable>
-            );
-          })}
         </View>
       </View>
 
@@ -154,10 +157,10 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
                 </View>
                 {isActive ? (
                   <View style={styles.activeCheck}>
-                    <Check color="#ffffff" size={14} strokeWidth={3} />
+                    <Check color={mobileTheme.colors.textInverse} size={14} strokeWidth={3} />
                   </View>
                 ) : (
-                  <ChevronRight color="#94a3b8" size={18} />
+                  <ChevronRight color={mobileTheme.colors.textSubtle} size={18} />
                 )}
               </Pressable>
             );
@@ -168,10 +171,26 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
       <View style={styles.separator} />
 
       <View style={styles.items}>
-        {menuItems.map(({ label, icon: Icon }) => (
-          <Pressable key={label} onPress={onClose} style={styles.item}>
-            <Icon color="#1f2937" size={22} strokeWidth={2} />
-            <Text style={styles.itemLabel}>{label}</Text>
+        {menuItems.map(({ label, icon: Icon, path, disabled = false }) => (
+          <Pressable
+            key={label}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={() => {
+              if (disabled) return;
+              if (path) onNavigate?.(path);
+              onClose();
+            }}
+            style={[styles.item, disabled && styles.disabledItem]}
+          >
+            <Icon
+              color={disabled ? mobileTheme.colors.textSubtle : mobileTheme.colors.textHeading}
+              size={22}
+              strokeWidth={2}
+            />
+            <Text style={[styles.itemLabel, disabled && styles.disabledItemLabel]}>{label}</Text>
           </Pressable>
         ))}
       </View>
@@ -179,7 +198,7 @@ export function MobileAccountSheet({ visible, onClose, onSwitchOrg }: MobileAcco
       <View style={styles.separator} />
 
       <Pressable onPress={() => setConfirmSignOut(true)} style={styles.item}>
-        <LogOut color="#ef334e" size={22} strokeWidth={2} />
+        <LogOut color={mobileTheme.colors.destructive} size={22} strokeWidth={2} />
         <Text style={styles.signOut}>{t("common.signOut")}</Text>
       </Pressable>
 
@@ -207,12 +226,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#135bec",
+    backgroundColor: mobileTheme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: {
-    color: "#ffffff",
+    color: mobileTheme.colors.textInverse,
     fontSize: 16,
     fontWeight: "700",
   },
@@ -224,27 +243,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  name: { color: "#111827", fontSize: 18, fontWeight: "800" },
+  name: { color: mobileTheme.colors.textHeading, fontSize: 18, fontWeight: "800" },
   superBadge: {
-    backgroundColor: "#eff6ff",
-    borderColor: "#bfdbfe",
+    backgroundColor: mobileTheme.colors.primarySoft,
+    borderColor: mobileTheme.colors.primaryBorder,
     borderWidth: 1,
     borderRadius: 99,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
   superBadgeText: {
-    color: "#135bec",
+    color: mobileTheme.colors.primary,
     fontSize: 9,
     fontWeight: "800",
   },
-  email: { color: "#64748b", fontSize: 13, marginTop: 2 },
-  separator: { backgroundColor: "#e5e7eb", height: 1, marginVertical: 14 },
+  email: { color: mobileTheme.colors.textMuted, fontSize: 13, marginTop: 2 },
+  separator: { backgroundColor: mobileTheme.colors.border, height: 1, marginVertical: 14 },
   section: {
     marginVertical: 4,
   },
   sectionTitle: {
-    color: "#135bec",
+    color: mobileTheme.colors.primary,
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.5,
@@ -259,23 +278,23 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: mobileTheme.colors.border,
+    backgroundColor: mobileTheme.colors.surface,
   },
   activeOrgCard: {
-    borderColor: "#135bec",
-    backgroundColor: "#eff6ff",
+    borderColor: mobileTheme.colors.primary,
+    backgroundColor: mobileTheme.colors.primarySoft,
   },
   orgIcon: {
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: "#135bec",
+    backgroundColor: mobileTheme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   orgIconText: {
-    color: "#ffffff",
+    color: mobileTheme.colors.textInverse,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -284,70 +303,29 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   orgName: {
-    color: "#111827",
+    color: mobileTheme.colors.textHeading,
     fontSize: 14,
     fontWeight: "600",
   },
   activeOrgName: {
-    color: "#135bec",
+    color: mobileTheme.colors.primary,
     fontWeight: "700",
   },
   orgDetail: {
-    color: "#64748b",
+    color: mobileTheme.colors.textMuted,
     fontSize: 11,
   },
   activeCheck: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#135bec",
+    backgroundColor: mobileTheme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   orgArrow: {
-    color: "#94a3b8",
+    color: mobileTheme.colors.textSubtle,
     fontSize: 16,
-  },
-  langList: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  langCard: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
-    minHeight: 44,
-  },
-  activeLangCard: {
-    borderColor: "#135bec",
-    backgroundColor: "#eff6ff",
-  },
-  langFlag: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  langName: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  activeLangName: {
-    color: "#135bec",
-    fontWeight: "700",
-  },
-  emptyCheck: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#cbd5e1",
   },
   items: { gap: 2 },
   item: {
@@ -356,6 +334,13 @@ const styles = StyleSheet.create({
     minHeight: 46,
     paddingVertical: 4,
   },
-  itemLabel: { color: "#1f2937", fontSize: 16, marginLeft: 16 },
-  signOut: { color: "#ef334e", fontSize: 16, marginLeft: 16, fontWeight: "600" },
+  disabledItem: { opacity: 0.55 },
+  itemLabel: { color: mobileTheme.colors.textHeading, fontSize: 16, marginLeft: 16 },
+  disabledItemLabel: { color: mobileTheme.colors.textSubtle },
+  signOut: { color: mobileTheme.colors.destructive, fontSize: 16, marginLeft: 16, fontWeight: "600" },
+  authError: {
+    color: mobileTheme.colors.danger,
+    fontSize: 13,
+    marginTop: 10,
+  },
 });

@@ -10,7 +10,8 @@ branch: feature/platform-account-pages
 branches:
   - feature/platform-account-pages
 phase: 7
-pull_requests: []
+pull_requests:
+  - 35
 issues:
   - 32
   - 33
@@ -52,6 +53,11 @@ not been recorded. `07-build` is active: the ledger currently records 22 done,
 have component-level operations and Web/iOS/Android bundle evidence, but their
 per-OS device acceptance is outstanding. The current phase issue is #33; #32
 tracks the completed plan.
+
+On 2026-10-23, the user requested delivery of the current branch. Commit
+`a4705d70ca4cd31c381d1409044a96210bbea64a` was pushed and a draft PR was
+opened for review. This does not complete `07-build` or satisfy the
+verification/release gates; keep the PR in draft while the run remains blocked.
 
 On 2026-10-23, the user deferred iOS/Android device acceptance and prioritized
 desktop development. This is a scheduling decision, not a scope waiver:

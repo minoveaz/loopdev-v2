@@ -22,9 +22,9 @@
 | Current skill | `module-build` |
 | Current issue | [#33](https://github.com/minoveaz/loopdev-v2/issues/33) tracks build; [#32](https://github.com/minoveaz/loopdev-v2/issues/32) tracks the completed plan |
 | Branch | `feature/platform-account-pages` (based on `develop`) |
-| Commit | `af5e511506339ef1f96e85e9248fe0feee427516` at run initialization |
-| Pull request | None |
-| Last evidence | `runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md`; Account suite, typechecks, Expo Doctor, Web/iOS/Android exports and route smoke checks (2026-10-11) |
+| Implementation commit | `a4705d70ca4cd31c381d1409044a96210bbea64a` |
+| Pull request | Draft: [#35](https://github.com/minoveaz/loopdev-v2/pull/35) |
+| Last evidence | `runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md` and `runs/MOD-ACCOUNT-20261010-001/10-git.json` (2026-10-23) |
 | Architecture quality | `PASS_WITH_DEBT` — proposed boundaries; billing provider, MFA details and avatar resolution remain open |
 
 ## Scope
@@ -136,6 +136,7 @@
 | 2026-10-11 | Recorded user approval, completed `06-plan`, and prepared the `07-build` issue/handoff without starting implementation | `MOD-ACCOUNT-20261010-001`, `06-plan` → `07-build` | User |
 | 2026-10-11 | Implemented and validated the shared Account navigation contract and mobile Auth hardening; kept all 25 blocked tasks and operation-parity claims unchanged | `MOD-ACCOUNT-20261010-001`, `07-build` | User-approved build scope |
 | 2026-10-11 | Implemented native Profile route, profile/avatar actions and account navigation; recorded operation-level test/export evidence while keeping the task in progress until iOS/Android device acceptance | `MOD-ACCOUNT-20261010-001`, `07-build` | User-approved build scope |
+| 2026-10-23 | Committed and pushed the Account implementation; opened a draft PR at the user's request while `07-build` remains blocked and review gates remain incomplete | `a4705d70ca4cd31c381d1409044a96210bbea64a`, `10-git` | User |
 
 ## Platform impact
 

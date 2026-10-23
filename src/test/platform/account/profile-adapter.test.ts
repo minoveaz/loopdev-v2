@@ -150,6 +150,11 @@ describe("user-owned profile avatar Files adapter", () => {
       content: pngBlob(),
     })).toContain("valid file name");
     expect(await validateProfileAvatarUpload({
+      fileName: "avatar\u0000.png",
+      mediaType: "image/png",
+      content: pngBlob(),
+    })).toContain("valid file name");
+    expect(await validateProfileAvatarUpload({
       fileName: "avatar.svg",
       mediaType: "image/svg+xml",
       content: new Blob(["<svg/>"], { type: "image/svg+xml" }),

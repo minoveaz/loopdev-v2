@@ -55,10 +55,14 @@ export async function validateProfileAvatarUpload(
 ): Promise<string | null> {
   const fileName = input.fileName.trim();
   const mediaType = input.mediaType.trim().toLowerCase();
+  const hasInvalidFileNameCharacter = [...fileName].some((character) => {
+    const code = character.charCodeAt(0);
+    return character === "\\" || character === "/" || code <= 0x1f || code === 0x7f;
+  });
   if (
     !fileName ||
     fileName.length > 120 ||
-    /[\\/\u0000-\u001f\u007f]/.test(fileName)
+    hasInvalidFileNameCharacter
   ) {
     return "Choose an image with a valid file name.";
   }

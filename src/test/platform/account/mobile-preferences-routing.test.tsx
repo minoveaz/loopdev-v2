@@ -45,20 +45,6 @@ vi.mock("../../../../apps/mobile/theme/tokens", () => ({
   mobileTheme: { colors: { primary: "", textHeading: "", textMuted: "", textSubtle: "", destructive: "", danger: "", textInverse: "", primarySoft: "", primaryBorder: "", border: "" } },
 }));
 
-vi.mock("../../../../apps/mobile/node_modules/lucide-react-native/dist/esm/lucide-react-native.mjs", () => {
-  const Icon = () => null;
-  return {
-    Check: Icon,
-    ChevronRight: Icon,
-    CreditCard: Icon,
-    Globe: Icon,
-    LogOut: Icon,
-    Settings: Icon,
-    ShieldCheck: Icon,
-    UserRound: Icon,
-  };
-});
-
 describe("Native Account Preferences navigation", () => {
   beforeEach(() => {
     vi.clearAllMocks();

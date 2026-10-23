@@ -166,5 +166,6 @@ The follow-up to that checkpoint is committed as
 `bde345bb834a5fe14861f64ccb6df9e5cea324d2`. npm 10.9.4 now completes a clean
 mobile install from the lockfile, and the code-quality workflow installs
 mobile dependencies before root typecheck. Local tests, lint, typechecks,
-Expo Doctor and Expo Web export pass. The GitHub rerun for this latest commit
-is pending; this does not change native device acceptance status.
+Expo Doctor and Expo Web export pass. GitHub Actions run `40023190783` passed
+on PR head `a9ecf9b5bac1ac6f2d9d7218e031da753153b503`; this does not change
+native device acceptance status.

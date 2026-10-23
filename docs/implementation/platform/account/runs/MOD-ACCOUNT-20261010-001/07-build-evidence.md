@@ -634,6 +634,8 @@ with npm 10.9.4. These corrections are committed as
 | `npm run lint && npm run typecheck` | Passed with mobile dependencies installed |
 | `cd apps/mobile && npx tsc --noEmit && npx expo-doctor && npx expo export --platform web --output-dir /tmp/loopdev-mobile-web` | Passed: mobile types, Expo Doctor 21/21 and Web export |
 
-The corrected commits have not yet been pushed for another GitHub run. Keep
-the PR in draft until remote checks and the existing Account verification
-gates are satisfied; native device testing remains deferred.
+The corrected commits have since been pushed. GitHub Actions run
+`40023190783` passed the build, code-quality, quick-test, mobile-quality and
+traceability jobs, and the protected-branch policy run passed. The PR remains
+a draft because the broader Account build/verification/review gates are still
+open; native device testing remains deferred as directed.

@@ -18,7 +18,7 @@
     "checkout_type": "branch",
     "branch": "feature/platform-account-pages",
     "base_branch": "develop",
-    "head_commit": "bde345bb834a5fe14861f64ccb6df9e5cea324d2",
+    "head_commit": "a9ecf9b5bac1ac6f2d9d7218e031da753153b503",
     "working_tree": "modified",
     "runtime_url": "http://127.0.0.1:8080/app/account/settings",
     "runtime_port": 8080
@@ -709,6 +709,14 @@
     {
       "command": "cd apps/mobile && npx tsc --noEmit && npx expo-doctor && npx expo export --platform web --output-dir /tmp/loopdev-mobile-web",
       "result": "passed: mobile types, Expo Doctor 21/21 and Web export"
+    },
+    {
+      "command": "GitHub Actions CI run 40023190783 on PR head a9ecf9b5bac1ac6f2d9d7218e031da753153b503",
+      "result": "passed: application build, code quality, component/contracts tests, mobile quality and traceability"
+    },
+    {
+      "command": "GitHub Actions Main branch policy run 40023190782",
+      "result": "passed"
     }
   ],
   "requirements": [
@@ -916,7 +924,7 @@
     "confidence": 10,
     "summary": "Function parameters/locals shared names with SQL columns; the runtime ambiguity was revealed by the database tests and corrected before task completion."
   },
-  "next_handoff": "The Account CI corrections are committed locally as bde345bb834a5fe14861f64ccb6df9e5cea324d2 and pass the recorded local checks; publish the commits and inspect the PR CI rerun. The 07-build phase remains open: run the updated 18-assertion pgTAP suite against an isolated local database when Docker is available, do not run it against shared Dev, and complete the other outstanding verification/review gates. Billing remains disabled until provider/commercial/server readiness is approved. Keep ACCOUNT-PREFS-NATIVE in_progress until the user-approved iOS/Android device journeys become scheduled and are completed; no device parity is claimed. Preserve separate native Profile/Security device evidence."
+  "next_handoff": "GitHub Actions CI run 40023190783 and Main branch policy run 40023190782 passed on PR head a9ecf9b5bac1ac6f2d9d7218e031da753153b503. PR #35 remains a draft while the 07-build and later verification/review gates are open. Run the updated 18-assertion pgTAP suite against an isolated local database when Docker is available, never against shared Dev. Billing remains disabled until provider/commercial/server readiness is approved. Keep ACCOUNT-PREFS-NATIVE in_progress; iOS/Android device acceptance remains deferred by the user, and no device parity is claimed. Preserve separate native Profile/Security device evidence."
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,

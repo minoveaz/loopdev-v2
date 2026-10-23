@@ -583,3 +583,34 @@ write-before-locale behavior is covered by a component test; a live click was
 not exercised because the selector is hidden at the browser canvas's narrow
 viewport. Do not claim the new SQL suite passed; it has not been run against
 an isolated database.
+
+## PR #35 CI corrections — 2026-10-23
+
+Commit `ef85eb13e8e0db084f390b27749729f8f20773d3` corrects the failing
+lint, quick-test and mobile-quality checks without including the separate
+local CRM/Tasks work. Filename validation still rejects path separators and
+ASCII control characters, now without `no-control-regex`; a NUL filename
+regression is covered. The mobile locale test expects all six supported
+languages. Root Vitest resolves `lucide-react-native` to a test-only icon stub,
+so the root test job does not depend on the mobile installation layout. The
+mobile Expo SDK was aligned to `~57.0.31` as required by Expo Doctor.
+
+| Command or runtime check | Result |
+|---|---|
+| `npm test -- src/test/platform/account/profile-adapter.test.ts src/test/mobile/mobile-i18n.test.ts src/test/platform/account/mobile-preferences-routing.test.tsx` | Passed: 3 files, 18 tests |
+| `npm run test:quality` | Passed: 96 files, 531 tests |
+| `npm run lint` | Passed |
+| `npm run typecheck` | Passed |
+| `npm run build` | Passed |
+| `npm run test:multiplatform-contracts` | Passed: 1 file, 10 tests |
+| `cd apps/mobile && npm ci` | Passed: 576 packages installed; npm reported 6 audit advisories (5 high, 1 critical), not addressed in this CI repair |
+| `cd apps/mobile && npx tsc --noEmit` | Passed |
+| `cd apps/mobile && npx expo-doctor` | Passed: 21/21 checks |
+| `cd apps/mobile && npx expo export --platform web --output-dir /tmp/loopdev-mobile-web` | Passed: Web bundle exported |
+| `npm run validate:mobile-boundaries && npm run validate:contracts && npm run validate:multiplatform && npm run i18n:check && npm run validate:delivery-ledgers && npm run validate:module-runs` | Passed: all six validators |
+| `http://127.0.0.1:8080/app/account/settings` | Passed: local route returned HTTP 200 |
+| `git diff --cached --check` | Passed before commit |
+
+The run remains open and the PR remains a draft: local checks pass, but the
+remote CI rerun must be inspected after publishing this correction. This is
+not iOS/Android device acceptance; those tests remain deferred as directed.

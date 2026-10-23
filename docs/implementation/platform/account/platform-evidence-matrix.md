@@ -149,3 +149,15 @@ previous behavior, the initial Spanish-locale seed path was not reproduced
 end-to-end with a clean browser/account. The updated pgTAP suite was not run:
 local Supabase still requires Docker. iOS/Android device acceptance remains
 deferred as directed.
+
+## CI correction checkpoint — 2026-10-23
+
+The Account CI correction is committed as
+`ef85eb13e8e0db084f390b27749729f8f20773d3` on
+`feature/platform-account-pages`. The desktop Account Settings route returned
+HTTP 200 at `http://127.0.0.1:8080/app/account/settings`. The mobile package
+installs cleanly, Expo Doctor passes 21/21 checks, mobile TypeScript passes and
+the Expo Web bundle exports. These are build and component-test results only;
+they do not establish iOS/Android device behavior or operation parity. The
+user's device-test deferral and the existing native acceptance gaps remain
+unchanged.

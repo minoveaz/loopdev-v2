@@ -18,7 +18,7 @@
     "checkout_type": "branch",
     "branch": "feature/platform-account-pages",
     "base_branch": "develop",
-    "head_commit": "af5e511506339ef1f96e85e9248fe0feee427516",
+    "head_commit": "ef85eb13e8e0db084f390b27749729f8f20773d3",
     "working_tree": "modified",
     "runtime_url": "http://127.0.0.1:8080/app/account/settings",
     "runtime_port": 8080
@@ -128,7 +128,16 @@
     "supabase/migrations/20261023100000_platform_user_preferences_initial_language.sql",
     "supabase/tests/database/013_platform_user_preferences.sql",
     "src/test/platform/account/preferences-page.test.tsx",
-    "src/test/platform/account/preferences-sync.test.ts"
+    "src/test/platform/account/preferences-sync.test.ts",
+    "apps/mobile/package.json",
+    "apps/mobile/package-lock.json",
+    "packages/contracts/src/private-user-files.ts",
+    "src/test/mobile/mobile-i18n.test.ts",
+    "src/test/platform/account/mobile-preferences-routing.test.tsx",
+    "src/test/platform/account/profile-adapter.test.ts",
+    "src/test/platform/account/stubs/lucide-react-native.tsx",
+    "vitest.config.ts",
+    "docs/implementation/platform/account/platform-evidence-matrix.md"
   ],
   "decisions": [
     {
@@ -635,6 +644,50 @@
     {
       "command": "Global Topbar language selector live interaction",
       "result": "not exercised in browser: selector is hidden at the browser canvas viewport; component regression covers persistence ordering"
+    },
+    {
+      "command": "npm test -- src/test/platform/account/profile-adapter.test.ts src/test/mobile/mobile-i18n.test.ts src/test/platform/account/mobile-preferences-routing.test.tsx",
+      "result": "passed: 3 files, 18 tests"
+    },
+    {
+      "command": "npm run test:quality",
+      "result": "passed: 96 files, 531 tests"
+    },
+    {
+      "command": "npm run lint",
+      "result": "passed"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed"
+    },
+    {
+      "command": "cd apps/mobile && npm ci",
+      "result": "passed: 576 packages installed; npm reported 6 audit advisories (5 high, 1 critical)"
+    },
+    {
+      "command": "cd apps/mobile && npx tsc --noEmit && npx expo-doctor",
+      "result": "passed: TypeScript and 21/21 Expo checks"
+    },
+    {
+      "command": "cd apps/mobile && npx expo export --platform web --output-dir /tmp/loopdev-mobile-web",
+      "result": "passed: Expo Web bundle exported"
+    },
+    {
+      "command": "npm run test:multiplatform-contracts",
+      "result": "passed: 1 file, 10 tests"
+    },
+    {
+      "command": "npm run validate:mobile-boundaries && npm run validate:contracts && npm run validate:multiplatform && npm run i18n:check && npm run validate:delivery-ledgers && npm run validate:module-runs",
+      "result": "passed: all six validators"
+    },
+    {
+      "command": "git diff --cached --check",
+      "result": "passed before commit ef85eb13e8e0db084f390b27749729f8f20773d3"
     }
   ],
   "requirements": [
@@ -842,7 +895,7 @@
     "confidence": 10,
     "summary": "Function parameters/locals shared names with SQL columns; the runtime ambiguity was revealed by the database tests and corrected before task completion."
   },
-  "next_handoff": "The Preferences locale migration is applied to linked Dev and explicit Spanish remains selected after an authenticated route reload. Run the updated 18-assertion pgTAP suite against an isolated local database when Docker is available; do not run it against the shared Dev database. Billing remains explicitly disabled and has no route until provider/commercial/server readiness is approved; its implementation tasks remain blocked. ACCOUNT-PREFS-NATIVE renderer and component coverage are implemented, but keep the task in_progress until iOS and Android device journeys prove identity-bound restart recovery, safe area, system back, touch and locale changes. This host has neither simctl nor adb. Preserve separate native Profile/Security device evidence; do not claim Account operation parity.",
+  "next_handoff": "The Account CI corrections are committed locally as ef85eb13e8e0db084f390b27749729f8f20773d3 and pass the recorded local checks; publish the commit and inspect the PR CI rerun. The 07-build phase remains open: run the updated 18-assertion pgTAP suite against an isolated local database when Docker is available, do not run it against shared Dev, and complete the other outstanding verification/review gates. Billing remains disabled until provider/commercial/server readiness is approved. Keep ACCOUNT-PREFS-NATIVE in_progress until the user-approved iOS/Android device journeys become scheduled and are completed; no device parity is claimed. Preserve separate native Profile/Security device evidence."
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,

@@ -130,7 +130,20 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
         const status = coverage[platform];
         if (!operationStatuses.has(status)) errors.push(`${label} operation ${operation} has invalid ${platform} status "${status ?? "missing"}"`);
         if (status === "adapted" && !coverage.adaptation_ref) errors.push(`${label} operation ${operation} adapted on ${platform} requires adaptation_ref`);
-        if (ledger.status === "approved" && capability.platforms?.[platform]?.required && !["implemented", "adapted"].includes(status)) errors.push(`${label} operation ${operation} is ${status} on required platform ${platform}`);
+        const platformRequired = capability.platforms?.[platform]?.required;
+        if ((stage === "plan" || ledger.status === "approved") && platformRequired && status === "not_applicable") {
+          errors.push(`${label} operation ${operation} cannot be not_applicable on required platform ${platform}`);
+        }
+        if ((stage === "plan" || ledger.status === "approved") && platformRequired && status === "missing") {
+          const planned = (capability.task_ids ?? []).some((taskId) => {
+            const task = taskById.get(taskId);
+            return task?.operation_ids?.includes(operation) && task.platforms?.includes(platform);
+          });
+          if (!planned) errors.push(`${label} operation ${operation} is missing on required platform ${platform} without an operation-level task`);
+        }
+        if (["implementation", "verification", "release"].includes(stage) && platformRequired && !["implemented", "adapted"].includes(status)) {
+          errors.push(`${label} operation ${operation} is ${status} on required platform ${platform}`);
+        }
       }
     }
     for (const coverage of operationCoverage) if (!operations.includes(coverage?.id)) errors.push(`${label} coverage references unknown operation ${coverage?.id ?? "missing"}`);
@@ -159,6 +172,11 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
     if (validations.some((validation) => !validation?.command || validation.required !== true)) errors.push(`${label} validations require command and required=true`);
     const taskPlatforms = requireArray(errors, task.platforms, `${label}.platforms`);
     for (const platform of taskPlatforms) if (!platforms.has(platform)) errors.push(`${label} has invalid platform "${platform}"`);
+    const operationIds = requireArray(errors, task.operation_ids ?? [], `${label}.operation_ids`, { nonEmpty: false });
+    for (const operationId of operationIds) {
+      const linked = (task.capability_ids ?? []).some((capabilityId) => capabilityById.get(capabilityId)?.semantics?.operations?.includes(operationId));
+      if (!linked) errors.push(`${label} operation ${operationId} is not declared by a linked capability`);
+    }
     for (const requirementId of requireArray(errors, task.requirement_ids, `${label}.requirement_ids`)) {
       if (!requirementById.has(requirementId)) errors.push(`${label} references unknown requirement ${requirementId}`);
     }
@@ -186,7 +204,7 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
   if (ledger.status === "approved") {
     if (!ledger.approved_by || !ledger.approved_at || !ledger.approval_source) errors.push("approved ledger requires approved_by, approved_at and approval_source");
     if (blockers.length) errors.push("approved ledger cannot contain blockers");
-    for (const task of tasks) if (!["ready", "done"].includes(task.status)) errors.push(`approved ledger task ${task.id} must be ready or done`);
+    for (const task of tasks) if (!["ready", "in_progress", "done", "blocked"].includes(task.status)) errors.push(`approved ledger task ${task.id} must be ready, in_progress, done or explicitly blocked`);
   }
 
   if (ledger.previous_ledger) {

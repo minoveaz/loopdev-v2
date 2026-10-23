@@ -67,10 +67,10 @@ export function MobileButton({
               variant === "outline" || variant === "ghost"
                 ? mobileTheme.colors.primary
                 : variant === "destructive"
-                ? "#dc2626"
+                ? mobileTheme.colors.danger
                 : variant === "secondary"
-                ? "#334155"
-                : "#ffffff",
+                ? mobileTheme.colors.textHeading
+                : mobileTheme.colors.textInverse,
           })
       : null);
 
@@ -98,7 +98,7 @@ export function MobileButton({
           color={
             variant === "outline" || variant === "ghost"
               ? mobileTheme.colors.primary
-              : "#ffffff"
+              : mobileTheme.colors.textInverse
           }
         />
       ) : (
@@ -173,9 +173,9 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   destructive: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: mobileTheme.colors.dangerBg,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: mobileTheme.colors.dangerBorder,
   },
 
   // Sizes
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   primaryLabel: {
-    color: "#ffffff",
+    color: mobileTheme.colors.textInverse,
   },
   secondaryLabel: {
     color: mobileTheme.colors.textHeading,
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     color: mobileTheme.colors.primary,
   },
   destructiveLabel: {
-    color: "#dc2626",
+    color: mobileTheme.colors.danger,
   },
 
   smLabel: {

@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Image,
   StyleSheet,
   Text,
   View,
@@ -13,6 +14,7 @@ export type MobileAvatarSize = "xs" | "sm" | "md" | "lg";
 
 export interface MobileAvatarProps {
   name: string;
+  imageUri?: string | null;
   size?: MobileAvatarSize;
   badge?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -47,6 +49,7 @@ function getColor(name: string) {
 
 export function MobileAvatar({
   name,
+  imageUri,
   size = "md",
   badge,
   style,
@@ -57,9 +60,18 @@ export function MobileAvatar({
 
   return (
     <View style={[styles.container, styles[size], { backgroundColor: color.bg }, style]}>
-      <Text style={[styles.initials, styles[`${size}Text` as keyof typeof styles], { color: color.text }, textStyle]}>
-        {initials}
-      </Text>
+      {imageUri ? (
+        <Image
+          accessible={false}
+          source={{ uri: imageUri }}
+          resizeMode="cover"
+          style={styles.image}
+        />
+      ) : (
+        <Text style={[styles.initials, styles[`${size}Text` as keyof typeof styles], { color: color.text }, textStyle]}>
+          {initials}
+        </Text>
+      )}
       {badge ? <View style={styles.badgeWrap}>{badge}</View> : null}
     </View>
   );
@@ -73,6 +85,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: mobileTheme.colors.border,
     position: "relative",
+  },
+  image: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 999,
   },
   initials: {
     fontWeight: "700",

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { act, cleanup, fireEvent, render } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -169,6 +169,18 @@ describe("Sidebar mobile drawer — regression checks", () => {
     expect(aside.getAttribute("aria-modal")).toBeNull();
     expect(aside.getAttribute("aria-hidden")).toBeNull();
     expect(aside.className).toContain("md:translate-x-0");
+  });
+
+  it("shows Plan & Billing as disabled in the sidebar", () => {
+    setMatch("(min-width: 768px)", true);
+    setMatch("(min-width: 1200px)", true);
+    render(<Harness lang="en" />);
+
+    fireEvent.click(screen.getByRole("treeitem", { name: "Account Settings" }));
+    const billing = screen.getByRole("treeitem", { name: "Plan & Billing" });
+
+    expect(billing).toHaveAttribute("aria-disabled", "true");
+    expect(billing.tagName).not.toBe("A");
   });
 
   it("Resize while open: crossing into lg auto-closes the drawer", () => {

@@ -1,0 +1,852 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-ACCOUNT-20261010-001",
+  "span_id": "MOD-ACCOUNT-20261010-001:07-build",
+  "phase": "07-build",
+  "skill": "module-build",
+  "parent_span_id": null,
+  "module": "Account",
+  "status": "running",
+  "decision_status": "open",
+  "architecture_quality": "PENDING",
+  "attempt": 5,
+  "started_at": "2026-10-11T12:26:01.960Z",
+  "completed_at": null,
+  "input_fingerprint": "sha256:81535cca6f1857ea9fe6f7299b40245f01b7539a4779f586852c0a70143b5ba8",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/platform-account-pages",
+    "base_branch": "develop",
+    "head_commit": "af5e511506339ef1f96e85e9248fe0feee427516",
+    "working_tree": "modified",
+    "runtime_url": "http://127.0.0.1:8080/app/account/settings",
+    "runtime_port": 8080
+  },
+  "input_artifacts": [
+    "docs/implementation/platform/account/delivery-ledger.json",
+    "docs/implementation/platform/account/implementation-plan.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/06-plan.json"
+  ],
+  "output_artifacts": [
+    "packages/contracts/src/account-navigation.ts",
+    "packages/contracts/src/account-profile.ts",
+    "apps/mobile/adapters/auth.ts",
+    "apps/mobile/adapters/mobile-auth-storage.ts",
+    "apps/mobile/adapters/mobile-auth-storage.native.ts",
+    "apps/mobile/adapters/mobile-auth-storage-core.ts",
+    "packages/contracts/src/auth-port.ts",
+    "packages/contracts/src/index.ts",
+    "src/loopdev/domains/platform/adapter/auth-supabase.ts",
+    "src/test/platform/account/navigation-contract.test.ts",
+    "src/test/platform/account/profile-contract.test.ts",
+    "src/test/platform/account/auth-security-contract.test.ts",
+    "src/test/platform/account/mobile-auth.test.ts",
+    "src/loopdev/pages/account/Security.tsx",
+    "src/test/platform/account/security-page.test.tsx",
+    "apps/mobile/components/MobileSecurityScreen.tsx",
+    "apps/mobile/components/MobileAccountSheet.tsx",
+    "apps/mobile/components/ui/MobilePageHeader.tsx",
+    "src/test/platform/account/mobile-security-page.test.tsx",
+    "src/test/platform/account/stubs/react-native.tsx",
+    "src/test/platform/account/stubs/react-native-svg.tsx",
+    "vitest.config.ts",
+    "src/routes/LoopdevRoutes.tsx",
+    "src/routes/AppRoutes.tsx",
+    "src/components/layout/Topbar.tsx",
+    "src/components/layout/Sidebar.tsx",
+    "src/app/nav-types.ts",
+    "scripts/smoke-routes.json",
+    "scripts/smoke-routes.mjs",
+    "docs/implementation/platform/account/api-contracts.md",
+    "docs/implementation/platform/account/domain-model.md",
+    "docs/implementation/platform/account/design.md",
+    "docs/implementation/platform/account/delivery-ledger.json",
+    "docs/implementation/platform/account/platform-evidence-matrix.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md",
+    "packages/contracts/src/private-user-files.ts",
+    "packages/contracts/src/private-user-files-supabase.ts",
+    "packages/contracts/src/profile-avatar-adapter.ts",
+    "src/loopdev/domains/files/adapter/private-user-files-supabase.ts",
+    "src/loopdev/domains/platform/adapter/profile-avatar.ts",
+    "apps/mobile/adapters/private-user-files.ts",
+    "apps/mobile/adapters/profile-avatar.ts",
+    "src/test/platform/account/profile-adapter.test.ts",
+    "src/loopdev/pages/account/Profile.tsx",
+    "src/components/common/ConfirmDialog.tsx",
+    "src/test/platform/account/profile-page.test.tsx",
+    "src/test/platform/account/profile-routing.test.tsx",
+    "src/app/navigation.ts",
+    "src/components/layout/CommandMenu.tsx",
+    "src/i18n/locales/en.json",
+    "src/i18n/locales/es.json",
+    "src/i18n/locales/fr.json",
+    "src/i18n/locales/de.json",
+    "src/i18n/locales/ar.json",
+    "src/i18n/locales/he.json",
+    "supabase/migrations/20261011100000_platform_private_user_files.sql",
+    "supabase/tests/database/012_platform_private_user_files.sql",
+    "packages/contracts/src/user-preferences-sync.ts",
+    "src/loopdev/domains/platform/adapter/user-preferences.ts",
+    "apps/mobile/adapters/user-preferences.ts",
+    "supabase/migrations/20261012100000_platform_user_preferences.sql",
+    "supabase/tests/database/013_platform_user_preferences.sql",
+    "src/test/platform/account/preferences-sync.test.ts",
+    "docs/implementation/platform/account/sync-design.md",
+    "src/loopdev/pages/account/Settings.tsx",
+    "src/test/platform/account/preferences-page.test.tsx",
+    "src/test/platform/account/preferences-routing.test.tsx",
+    "apps/mobile/App.tsx",
+    "apps/mobile/app.json",
+    "apps/mobile/components/MobilePreferencesScreen.tsx",
+    "apps/mobile/components/MobileProfileScreen.tsx",
+    "apps/mobile/components/ui/MobileAvatar.tsx",
+    "apps/mobile/adapters/profile-image-picker.ts",
+    "apps/mobile/components/MobileAccountScreen.tsx",
+    "apps/mobile/components/MobileAccountSheet.tsx",
+    "apps/mobile/components/MobileThemeProvider.tsx",
+    "apps/mobile/theme/tokens.base.ts",
+    "apps/mobile/theme/tokens.native.ts",
+    "apps/mobile/i18n/index.tsx",
+    "apps/mobile/components/MobileAppShell.tsx",
+    "apps/mobile/components/MobileHeader.tsx",
+    "apps/mobile/components/MobileBottomNav.tsx",
+    "apps/mobile/components/MobileNavigationDrawer.tsx",
+    "apps/mobile/components/MobileModal.tsx",
+    "apps/mobile/components/MobileCommandPalette.tsx",
+    "apps/mobile/components/ui/MobileButton.tsx",
+    "apps/mobile/components/ui/MobileCard.tsx",
+    "src/test/platform/account/mobile-preferences-page.test.tsx",
+    "src/test/platform/account/mobile-preferences-routing.test.tsx",
+    "src/test/platform/account/mobile-profile-page.test.tsx",
+    "src/test/platform/account/mobile-theme.test.tsx",
+    "src/test/platform/account/mobile-i18n.test.tsx",
+    "src/test/sidebar-drawer.test.tsx",
+    "src/test/topbar-system-mode.test.tsx",
+    "src/test/platform/account/stubs/react-native.tsx",
+    "scripts/validate-mobile-boundaries.mjs",
+    "supabase/migrations/20261023100000_platform_user_preferences_initial_language.sql",
+    "supabase/tests/database/013_platform_user_preferences.sql",
+    "src/test/platform/account/preferences-page.test.tsx",
+    "src/test/platform/account/preferences-sync.test.ts"
+  ],
+  "decisions": [
+    {
+      "id": "ACCOUNT-BUILD-SCOPE",
+      "status": "confirmed",
+      "summary": "Profile Files and desktop/mobile-web Profile are complete; the native Profile renderer and component operations are implemented while iOS/Android device acceptance remains outstanding. Security renderers are present, while their ledger tasks remain ready until acceptance evidence satisfies their criteria."
+    },
+    {
+      "id": "ACCOUNT-NATIVE-SECURE-STORAGE",
+      "status": "confirmed",
+      "summary": "Use Metro's .native.ts resolution for Expo SecureStore so native builds use secure storage without importing React Native into root Vite tests."
+    },
+    {
+      "id": "DEC-ACCOUNT-009",
+      "status": "confirmed",
+      "summary": "User approved provider-backed sign-out of all other sessions; do not implement individual session inventory or per-session revocation."
+    },
+    {
+      "id": "DEC-ACCOUNT-011",
+      "status": "confirmed",
+      "summary": "User approved updating canonical PlatformUser.fullName and avatarUrl through Auth and reusing private user-owned Files for avatars; the shared adapter, migration and isolated local RLS tests are complete."
+    },
+    {
+      "id": "DEC-ACCOUNT-015",
+      "status": "confirmed",
+      "summary": "User selected TOTP authenticator apps as the initial MFA method; SMS MFA is excluded."
+    },
+    {
+      "id": "DEC-ACCOUNT-PREFS-QUEUE",
+      "status": "confirmed",
+      "summary": "User approved retaining pending preference changes against the original account and syncing only after that same account signs in again."
+    },
+    {
+      "id": "DEC-ACCOUNT-PREFS-LEGACY",
+      "status": "confirmed",
+      "summary": "User approved not importing existing local notification values; server/default preferences are authoritative."
+    },
+    {
+      "id": "DEC-ACCOUNT-PREFS-CONFLICT",
+      "status": "confirmed",
+      "summary": "User approved merging concurrent changes to different fields and surfacing a conflict when the same field changed."
+    },
+    {
+      "id": "DEC-ACCOUNT-NATIVE-APPEARANCE",
+      "status": "confirmed",
+      "summary": "User approved adapting the Expo app to light, dark and system appearance while retaining device-local appearance ownership."
+    },
+    {
+      "id": "DEC-ACCOUNT-BILLING-GATE",
+      "status": "confirmed",
+      "summary": "User decided Billing is not ready for use: keep its menu entry visible but disabled across desktop, sidebar, command palette and mobile, remove its routable page, and do not redirect to another destination until Billing provider/commercial readiness is approved."
+    }
+  ],
+  "actions": [
+    "Implemented the shared Account navigation contract with stable IDs, protected canonical paths and replace-style legacy redirects.",
+    "Hardened mobile Auth storage, provider operation results and server-authoritative membership/permission resolution.",
+    "Implemented canonical authenticated-user profile updates on desktop and mobile with opaque Files references, version conflict checks, provider errors and focused contract tests; Files upload and URL resolution remain out of scope.",
+    "Implemented private avatar Files adapters and migration; all 16 database RLS tests passed against an isolated local Supabase stack without modifying the existing local database.",
+    "Added regression tests for identity changes and membership lookup failures so stale tenant context is not retained.",
+    "Added provider-backed sign-out-other-sessions semantics to shared AuthPort and desktop/mobile adapters; current session remains active.",
+    "Added authenticated-subject security status, email-change, password and TOTP contracts/adapters; provider step-up failures remain explicit.",
+    "Recorded user-approved session scope and TOTP-only MFA; operation parity remains incomplete.",
+    "Implemented the desktop Security renderer, protected canonical route, legacy redirect and Topbar destination.",
+    "Implemented the Expo Security screen and account-sheet route for mobile web/iOS/Android using existing mobile primitives.",
+    "Added seven mobile Security component tests using Vitest-only React Native shims; production Metro resolution is unchanged.",
+    "Checked desktop route/refresh/legacy redirect and Expo Web navigation/refresh/legacy redirect/back/invalid-email behavior without submitting successful account mutations; native device runtime remains unavailable.",
+    "Implemented a shared private-user Files port and Supabase adapter for desktop and Expo, including upload validation, ownership, short-lived signed previews, soft deletion and physical orphan cleanup.",
+    "Added a shared profile-avatar orchestrator that updates only canonical Auth profile fields, compensates failed profile writes and reports cleanup failures.",
+    "Added migration and database RLS regression coverage for personal ownership and organization Files continuity; all 16 pgTAP tests passed on an isolated local Supabase stack without modifying the existing local database.",
+    "Implemented the desktop Profile renderer with authenticated reads, display-name updates, private avatar upload/preview/removal, conflict reload, canonical route and legacy replace redirect.",
+    "Implemented the Expo Profile screen and canonical account navigation from the account sheet and More surface; name, avatar selection/upload/signed preview/removal use shared Auth/Profile/Private Files adapters.",
+    "Added seven native Profile operation/state tests and isolated Expo Image Picker behind a mobile adapter; camera and microphone permissions remain disabled.",
+    "Updated Topbar, command menu and app navigation to the canonical Profile destination; added six-locale copy and route smoke coverage.",
+    "Adapted Profile controls for mobile web with 44px minimum touch targets, visible keyboard focus, RTL logical positioning, and matching confirmation actions.",
+    "Implemented shared versioned/idempotent Preferences RPC sync, per-user durable queue recovery for web and mobile, field-path merge/conflict handling, owner-only SQL RLS and pgTAP coverage.",
+    "Implemented the desktop Preferences renderer, canonical and legacy routes, account navigation, six-locale copy and honest sync/conflict/error feedback while preserving organization settings at /app/settings.",
+    "Disabled the Billing destination across the desktop account menu, sidebar, command palette and mobile account sheet, removed its mock page route, and added regressions proving disabled entries do not navigate and direct billing paths do not redirect.",
+    "Corrected Preferences language initialization so the current app locale seeds only an uninitialized server preference; explicit saved language remains authoritative.",
+    "Added desktop/shared-adapter regression tests and a database migration for language initialization; applied the migration to the linked Dev project and verified that the explicit Spanish preference survives an authenticated route reload.",
+    "Updated the authenticated global Topbar language selector to persist through the shared Preferences adapter before changing app i18n, preventing Account Settings from restoring a stale server language."
+  ],
+  "validation": [
+    {
+      "command": "npm run test:multiplatform-contracts",
+      "result": "failed: Vite could not parse import typeof from the statically imported React Native package",
+      "evidence": "Resolved by moving native SecureStore imports to mobile-auth-storage.native.ts; rerun passed."
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/navigation-contract.test.ts src/test/platform/account/mobile-auth.test.ts",
+      "result": "passed: 2 files, 13 tests"
+    },
+    {
+      "command": "npm run test:multiplatform-contracts",
+      "result": "passed: 1 file, 10 tests"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm run validate:mobile-boundaries && npm run validate:contracts && npm run validate:multiplatform",
+      "result": "passed: all three validators"
+    },
+    {
+      "command": "cd apps/mobile && npx tsc --noEmit",
+      "result": "passed"
+    },
+    {
+      "command": "cd apps/mobile && npx expo-doctor",
+      "result": "passed: 21/21 checks"
+    },
+    {
+      "command": "cd apps/mobile && npx expo export --platform web --output-dir /tmp/loopdev-account-build-07-20261011",
+      "result": "passed: Expo Web bundle exported"
+    },
+    {
+      "command": "cd apps/mobile && npx expo export --platform all --output-dir /tmp/loopdev-account-build-07-all-20261011",
+      "result": "passed: Expo Web, Android and iOS bundles exported"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:delivery",
+      "result": "passed: 27 tests"
+    },
+    {
+      "command": "npm run validate:delivery-ledgers && npm run validate:module-runs && npm run validate:contracts && npm run validate:mobile-boundaries",
+      "result": "passed: all four validators"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/mobile-auth.test.ts src/test/platform/auth-port.test.ts",
+      "result": "passed: 2 files, 19 tests"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed after sign-out-other-sessions adapter change"
+    },
+    {
+      "command": "cd apps/mobile && npx tsc --noEmit",
+      "result": "passed after sign-out-other-sessions adapter change"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/profile-contract.test.ts src/test/platform/account/mobile-auth.test.ts src/test/platform/auth-port.test.ts",
+      "result": "passed: 3 files, 23 tests"
+    },
+    {
+      "command": "npm run typecheck && cd apps/mobile && npx tsc --noEmit",
+      "result": "passed after profile contract and adapter changes"
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed: 7 ledgers checked after ACCOUNT-PROFILE-CONTRACT completion"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed after profile contract and adapter changes"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/auth-security-contract.test.ts src/test/platform/account/mobile-auth.test.ts src/test/platform/auth-port.test.ts",
+      "result": "passed: 3 files, 30 tests"
+    },
+    {
+      "command": "npm run typecheck && cd apps/mobile && npx tsc --noEmit",
+      "result": "passed after Auth security contract and adapter changes"
+    },
+    {
+      "command": "npm run validate:contracts && npm run validate:mobile-boundaries",
+      "result": "passed: both validators"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/security-page.test.tsx",
+      "result": "passed: 1 file, 9 tests"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/security-page.test.tsx src/test/platform/account/mobile-security-page.test.tsx",
+      "result": "passed: 2 files, 16 tests (9 desktop, 7 mobile)"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed after Security routes and desktop renderer"
+    },
+    {
+      "command": "cd apps/mobile && npx tsc --noEmit && npx expo-doctor",
+      "result": "passed: TypeScript and 21/21 Expo checks"
+    },
+    {
+      "command": "npm run smoke:routes && npm run validate:mobile-boundaries",
+      "result": "passed: 6 desktop and 6 mobile routes; mobile boundary validation passed"
+    },
+    {
+      "command": "cd apps/mobile && npx expo export --platform all --output-dir /tmp/loopdev-account-security-final-export",
+      "result": "passed: Web, iOS and Android bundles exported"
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed: 7 ledgers checked; Security renderer tasks remain ready pending acceptance evidence"
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed: 95 checkpoint files checked (36 archived legacy records)"
+    },
+    {
+      "command": "npm run validate:delivery-evidence",
+      "result": "passed: 0 structured evidence files checked; E4 evidence remains outstanding"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed after implementation and evidence edits"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/profile-adapter.test.ts",
+      "result": "passed: 1 file, 11 tests covering validation, ownership, signed previews, deletion, orphan cleanup and Auth compensation"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed after Profile Files and shared avatar adapter changes"
+    },
+    {
+      "command": "cd apps/mobile && npx tsc --noEmit",
+      "result": "passed after Profile Files and shared avatar adapter changes"
+    },
+    {
+      "command": "npm run validate:mobile-boundaries && npm run validate:contracts && npm run validate:multiplatform",
+      "result": "passed: all three validators"
+    },
+    {
+      "command": "cd apps/mobile && npx expo-doctor",
+      "result": "passed: 21/21 checks"
+    },
+    {
+      "command": "cd apps/mobile && npx expo export --platform all --output-dir /tmp/loopdev-private-avatar-export-final-20261011",
+      "result": "passed: Web, Android and iOS bundles exported; no native device runtime"
+    },
+    {
+      "command": "npx supabase test db supabase/tests/database/012_platform_private_user_files.sql --workdir /tmp/loopdev-private-files-test-20261011",
+      "result": "passed: 16 pgTAP tests on the isolated temporary Supabase project at /tmp/loopdev-private-files-test-20261011; existing local DB untouched"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/profile-page.test.tsx",
+      "result": "passed: 1 file, 8 desktop Profile operation/state tests"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/profile-routing.test.tsx",
+      "result": "passed: 2 tests for canonical direct route and protected legacy replace redirect"
+    },
+    {
+      "command": "npm run i18n:check",
+      "result": "passed"
+    },
+    {
+      "command": "npm run validate:mobile-boundaries && npm run validate:contracts && npm run validate:multiplatform",
+      "result": "passed: all three validators after desktop Profile changes"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/profile-page.test.tsx src/test/platform/account/profile-routing.test.tsx",
+      "result": "passed: 2 files, 13 tests (10 Profile operation/state tests and 3 direct/legacy/back-history route tests)"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed after mobile touch-target and focus/RTL changes"
+    },
+    {
+      "command": "npm run i18n:check",
+      "result": "passed"
+    },
+    {
+      "command": "npm run smoke:routes",
+      "result": "passed: 8 desktop and 6 mobile route registrations"
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed: 7 ledgers checked after ACCOUNT-PROFILE-MOBILE-WEB was marked done"
+    },
+    {
+      "command": "npm run validate:module-runs && npm run validate:delivery-evidence",
+      "result": "passed: 95 checkpoint files and 0 structured E4 evidence files; E4 remains outstanding for Security"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/preferences-sync.test.ts",
+      "result": "passed: 1 file, 6 sync/queue tests"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed after Preferences sync adapter changes"
+    },
+    {
+      "command": "cd apps/mobile && npx tsc --noEmit",
+      "result": "passed after mobile Preferences adapter changes"
+    },
+    {
+      "command": "npm run validate:mobile-boundaries && npm run validate:contracts",
+      "result": "passed: mobile boundary and 24 shared contract files"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed after Preferences sync changes"
+    },
+    {
+      "command": "npx supabase test db supabase/tests/database/013_platform_user_preferences.sql --workdir /tmp/loopdev-preferences-test-20261012",
+      "result": "initial attempt blocked by Docker project network setup; rerun used a fresh isolated Supabase project and passed 12 pgTAP tests after fixing two ambiguous PL/pgSQL references"
+    },
+    {
+      "command": "npx supabase start --workdir /tmp/loopdev-preferences-isolated-20261012 --exclude gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
+      "result": "passed: fresh isolated PostgreSQL service applied the repository migrations"
+    },
+    {
+      "command": "npx supabase db reset --workdir /tmp/loopdev-preferences-isolated-20261012 --no-seed",
+      "result": "passed: corrected Preferences migration applied to the isolated database"
+    },
+    {
+      "command": "npx supabase test db supabase/tests/database/013_platform_user_preferences.sql --workdir /tmp/loopdev-preferences-isolated-20261012",
+      "result": "passed: 12 pgTAP tests for ownership, idempotency, field merge/conflict, validation and write isolation"
+    },
+    {
+      "command": "npm run validate:delivery-ledgers && npm run validate:module-runs",
+      "result": "passed after ACCOUNT-PREFS-SYNC was marked done"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/preferences-page.test.tsx src/test/platform/account/preferences-routing.test.tsx src/test/platform/account/preferences-sync.test.ts src/test/platform/account/preferences-contract.test.ts",
+      "result": "passed: 4 files, 31 tests (12 page, 3 routing, 8 sync, 8 contract)"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed after the desktop Preferences renderer"
+    },
+    {
+      "command": "npm run i18n:check",
+      "result": "passed"
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed: 7 ledgers checked after ACCOUNT-PREFS-DESKTOP evidence was recorded"
+    },
+    {
+      "command": "npm run validate:contracts",
+      "result": "passed: 24 contract files, 2 stable IDs"
+    },
+    {
+      "command": "npm run smoke:routes",
+      "result": "passed: 10 desktop and 6 mobile routes in manifest"
+    },
+    {
+      "command": "curl -sS -o /tmp/account-settings-route.html -w '%{http_code} %{url_effective}\\n' -L http://127.0.0.1:5173/app/account/settings",
+      "result": "passed: HTTP 200; protected route redirects to login because no authenticated runtime session was available"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "cd apps/mobile && npm ci",
+      "result": "passed: installed 570 locked packages; npm reported 25 audit advisories (7 moderate, 17 high, 1 critical)"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account",
+      "result": "passed: 17 files, 115 tests"
+    },
+    {
+      "command": "npx vitest run src/test/platform/account/mobile-preferences-routing.test.tsx src/test/platform/account/mobile-preferences-page.test.tsx src/test/platform/account/mobile-theme.test.tsx src/test/platform/account/mobile-i18n.test.tsx",
+      "result": "passed: 4 files, 13 tests"
+    },
+    {
+      "command": "npm run typecheck && cd apps/mobile && npx tsc --noEmit",
+      "result": "passed"
+    },
+    {
+      "command": "cd apps/mobile && npx expo-doctor",
+      "result": "passed: 21/21 checks"
+    },
+    {
+      "command": "cd apps/mobile && npx expo export --platform all --output-dir /tmp/loopdev-account-preferences-final-export-20261012",
+      "result": "passed: Web, iOS and Android bundles exported; no native device runtime"
+    },
+    {
+      "command": "npm run validate:mobile-boundaries && npm run i18n:check",
+      "result": "passed: no executable src imports from mobile; locale check passed"
+    },
+    {
+      "command": "node --test scripts/test/delivery-state-machine.test.mjs",
+      "result": "passed: 24 tests"
+    },
+    {
+      "command": "npm run validate:delivery-ledgers && npm run validate:module-runs",
+      "result": "passed: 7 delivery ledgers and 95 checkpoint files checked"
+    },
+    {
+      "command": "xcrun simctl list devices booted",
+      "result": "not available: simctl developer tool is not installed on this host"
+    },
+    {
+      "command": "adb devices -l",
+      "result": "not available: adb is not installed on this host"
+    },
+    {
+      "command": "npx supabase db push --linked",
+      "result": "passed after explicit user approval: applied 20261010120000, 20261011100000 and 20261012100000 to authorized Dev project sukjcsylkljiyvfklxvj"
+    },
+    {
+      "command": "npx supabase migration list --linked",
+      "result": "passed: remote history records all three migrations as applied"
+    },
+    {
+      "command": "npx supabase db query --linked \"select to_regprocedure('public.get_user_preferences()') is not null as function_installed;\"",
+      "result": "passed: function_installed = true"
+    },
+    {
+      "command": "npx supabase db query --linked \"select pg_notify('pgrst', 'reload schema');\"",
+      "result": "passed: requested a PostgREST schema-cache reload after migration"
+    },
+    {
+      "command": "POST /rest/v1/rpc/get_user_preferences with the configured anonymous key and empty JSON body",
+      "result": "passed schema-cache check: HTTP 401 / PostgreSQL 42501 permission denied for function, not PGRST202; anonymous access remains denied as intended"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/navigation-contract.test.ts src/test/platform/account/preferences-routing.test.tsx src/test/platform/account/mobile-preferences-routing.test.tsx src/test/topbar-system-mode.test.tsx src/test/sidebar-drawer.test.tsx",
+      "result": "passed: 5 files, 23 tests for disabled desktop/menu/mobile behavior, non-routable navigation and direct paths staying on not-found"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed after Billing navigation gating"
+    },
+    {
+      "command": "cd apps/mobile && npx tsc --noEmit",
+      "result": "passed after Billing account-sheet gating"
+    },
+    {
+      "command": "npm run validate:mobile-boundaries",
+      "result": "passed after Billing account-sheet gating"
+    },
+    {
+      "command": "Browser runtime: GET /account/billing and /app/account/billing at http://127.0.0.1:8080",
+      "result": "passed: both direct paths render not-found without changing the requested URL or redirecting"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account",
+      "result": "passed: 18 files, 128 tests"
+    },
+    {
+      "command": "npm run typecheck && cd apps/mobile && npx tsc --noEmit",
+      "result": "passed"
+    },
+    {
+      "command": "cd apps/mobile && npx expo-doctor",
+      "result": "passed: 21/21 checks"
+    },
+    {
+      "command": "cd apps/mobile && npx expo export --platform all --output-dir /tmp/loopdev-account-profile-final-export-20261011",
+      "result": "passed: Web, iOS and Android bundles exported; no device runtime was exercised"
+    },
+    {
+      "command": "npm run validate:mobile-boundaries && npm run validate:delivery-ledgers && npm run validate:module-runs && npm run validate:contracts && npm run i18n:check && npm run smoke:routes && git diff --check",
+      "result": "passed: all checks"
+    },
+    {
+      "command": "GET http://127.0.0.1:8080/app/account/profile",
+      "result": "passed: HTTP 200 app shell; authenticated interaction was not tested"
+    },
+    {
+      "command": "xcrun simctl / adb device availability",
+      "result": "not available: simctl and adb are not installed on this host; native device acceptance remains outstanding"
+    },
+    {
+      "command": "npm run test -- src/test/platform/account/preferences-page.test.tsx src/test/platform/account/preferences-sync.test.ts",
+      "result": "passed: 2 files, 24 tests for the Preferences locale initialization regression"
+    },
+    {
+      "command": "npm run test -- src/test/topbar-system-mode.test.tsx src/test/platform/account/preferences-page.test.tsx",
+      "result": "passed: 2 files, 21 tests, including global language persistence before app locale change"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed after Preferences locale initialization changes"
+    },
+    {
+      "command": "cd apps/mobile && npx tsc --noEmit",
+      "result": "passed; no iOS/Android device tests were run"
+    },
+    {
+      "command": "npm run i18n:check",
+      "result": "passed: no visible-text candidates"
+    },
+    {
+      "command": "GET http://127.0.0.1:8080/app/account/settings",
+      "result": "HTTP 200 app shell only; authenticated page behavior not verified"
+    },
+    {
+      "command": "npx supabase migration list --linked",
+      "result": "blocked: database password authentication failed; remote migration status not verified and no migration applied"
+    },
+    {
+      "command": "Local Supabase pgTAP for 20261023100000_platform_user_preferences_initial_language.sql",
+      "result": "not run: Docker is unavailable on this host"
+    },
+    {
+      "command": "npx supabase migration up --linked",
+      "result": "passed: applied 20261023100000_platform_user_preferences_initial_language.sql to linked loopdev-platform-dev; staging was not selected"
+    },
+    {
+      "command": "Authenticated browser: GET/reload http://127.0.0.1:8080/app/account/settings",
+      "result": "passed: selected Español, preferences reported up to date, and the route remained in Spanish after reload"
+    },
+    {
+      "command": "Global Topbar language selector live interaction",
+      "result": "not exercised in browser: selector is hidden at the browser canvas viewport; component regression covers persistence ordering"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ACCOUNT-NAV-CONTRACT",
+      "status": "PASS",
+      "evidence": "Shared destination semantics and focused contract test are recorded in 07-build-evidence.md."
+    },
+    {
+      "id": "ACCOUNT-AUTH-HARDEN",
+      "status": "PASS",
+      "evidence": "Provider/storage/role behavior and focused tests are recorded in 07-build-evidence.md."
+    },
+    {
+      "id": "ACCOUNT-PROFILE-CONTRACT",
+      "status": "PASS",
+      "evidence": "Canonical authenticated-user profile update contract, web/mobile adapter behavior, private avatar reference validation, conflict handling and focused tests are recorded in 07-build-evidence.md; Files upload and signed URL resolution are tracked by ACCOUNT-PROFILE-FILES."
+    },
+    {
+      "id": "ACCOUNT-PROFILE-FILES",
+      "status": "PASS",
+      "evidence": "Shared Files/Auth avatar adapters, validation, signed previews, orphan compensation and deletion tests pass; all 16 self-only RLS and organization continuity tests passed on an isolated local Supabase stack. Desktop and mobile-web renderers now consume these adapters; native Profile remains outstanding."
+    },
+    {
+      "id": "ACCOUNT-PROFILE-DESKTOP",
+      "status": "PASS",
+      "evidence": "Desktop Profile uses Auth and private Files ports for read/name/avatar operations, includes conflict/error/loading/unauthenticated states, opens at the protected canonical route, and replaces the legacy route. Ten operation/state tests and three route/history tests pass; the browser confirmed authentication gating."
+    },
+    {
+      "id": "ACCOUNT-PROFILE-MOBILE-WEB",
+      "status": "PASS",
+      "evidence": "Responsive mobile-web Profile reuses shared Auth/Files operations; 44px minimum controls, RTL logical positioning, keyboard-visible focus, pending/error states and route history are covered by 10 component and 3 routing tests. No authenticated browser mutation or native parity is claimed."
+    },
+    {
+      "id": "ACCOUNT-PROFILE-NATIVE",
+      "status": "PARTIAL",
+      "evidence": "Native Expo Profile route and shared Auth/Files operations are implemented; 7 focused component/state tests pass, and Web/iOS/Android bundles export. OS-level navigation, safe area, keyboard, touch and image-picker permission behavior remain unverified, so the ledger task remains in_progress."
+    },
+    {
+      "id": "ACCOUNT-AUTH-CONTRACT",
+      "status": "PASS",
+      "evidence": "Provider-backed subject-scoped security status, email-change requests, password changes, TOTP lifecycle, explicit reauthentication errors and other-session sign-out pass focused desktop/mobile tests and validators."
+    },
+    {
+      "id": "ACCOUNT-AUTH-SESSIONS",
+      "status": "PASS",
+      "evidence": "Desktop and mobile use provider-scoped signOut({ scope: 'others' }), preserve the active session, and surface provider failures without fabricated device inventory."
+    },
+    {
+      "id": "ACCOUNT-PREFS-SYNC",
+      "status": "PASS",
+      "evidence": "Shared web/mobile adapter and identity-bound durable queue pass 7 focused adapter tests and 8 contract tests; web/mobile typechecks and boundary/contract validators pass. The migration was applied to a fresh isolated local Supabase project and all 12 pgTAP tests passed for subject ownership, direct-write isolation, idempotency, disjoint-field merge, same-field conflicts and validation. After explicit user approval, the preferences migration and two other pending migrations were applied to the authorized Dev project only; remote migration history and function registration were verified. No staging or production database was modified."
+    },
+    {
+      "id": "ACCOUNT-PREFS-DESKTOP",
+      "status": "PASS",
+      "evidence": "Desktop personal Preferences route, legacy replacement, navigation, remote language/timezone/notification mutations, local-only appearance and sync/error/conflict states pass 12 focused component tests and 3 route tests. A further 21-test focused run covers authenticated global Topbar language persistence before changing app i18n; root typecheck and six-locale validation pass. Authenticated browser confirms Español survives route reload; the global selector itself was not live-clicked because it is hidden at the browser canvas viewport. The updated 18-assertion pgTAP suite remains unrun because Docker is unavailable."
+    },
+    {
+      "id": "ACCOUNT-PREFS-NATIVE",
+      "status": "PARTIAL",
+      "evidence": "Expo Preferences screen and account/More destinations implement the shared operations; 13 focused route/preferences/theme/i18n tests, the 115-test Account suite, root/mobile typechecks, Expo Doctor 21/21 and Web/iOS/Android bundle export pass. iOS/Android runtime acceptance for restart recovery, identity binding, safe area, system back, touch and locale changes remains unverified because simctl and adb are unavailable; task remains in_progress."
+    },
+    {
+      "id": "ACCOUNT-OPERATION-PARITY",
+      "status": "PARTIAL",
+      "evidence": "Security renderers and desktop/mobile operation tests are present; Expo Web route journeys were checked without provider mutations. Structured E4 evidence and iOS/Android device journeys are outstanding; Profile native, native Preferences device acceptance and Billing remain incomplete. No multiplatform operation parity is claimed."
+    }
+  ],
+  "evidence": [
+    {
+      "artifact": "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md",
+      "description": "Build scope, completed tasks, Security renderer implementation and validation results, resolved failures, evidence gaps and remaining blockers."
+    },
+    {
+      "artifact": "docs/implementation/platform/account/platform-evidence-matrix.md",
+      "description": "Updated Profile responsive-web and Security renderer/runtime status across desktop web, Expo Web, iOS and Android."
+    },
+    {
+      "artifact": "src/test/platform/account/security-page.test.tsx",
+      "description": "Nine focused desktop Security operation and provider-outcome tests."
+    },
+    {
+      "artifact": "apps/mobile/components/MobileSecurityScreen.tsx",
+      "description": "Expo Security renderer; bundle export succeeded, but native runtime/device evidence is not available."
+    },
+    {
+      "artifact": "src/test/platform/account/mobile-security-page.test.tsx",
+      "description": "Seven focused mobile Security screen operation and provider-error tests."
+    },
+    {
+      "artifact": "src/test/platform/account/profile-adapter.test.ts",
+      "description": "Eleven focused tests for private avatar validation, ownership, signed preview, soft deletion, orphan cleanup and canonical Auth profile compensation."
+    },
+    {
+      "artifact": "src/loopdev/pages/account/Profile.tsx",
+      "description": "Desktop Profile renderer using authenticated Auth and private Files adapters."
+    },
+    {
+      "artifact": "src/test/platform/account/profile-page.test.tsx",
+      "description": "Ten desktop/mobile-web Profile operation/state tests, including pending upload, 44px touch targets, focus and RTL."
+    },
+    {
+      "artifact": "apps/mobile/components/MobileProfileScreen.tsx",
+      "description": "Native Profile renderer for authenticated name and avatar operations, signed private preview and confirmed removal."
+    },
+    {
+      "artifact": "apps/mobile/adapters/profile-image-picker.ts",
+      "description": "Expo image-library selection adapter; camera and microphone permissions are not requested."
+    },
+    {
+      "artifact": "src/test/platform/account/mobile-profile-page.test.tsx",
+      "description": "Seven focused native Profile tests for read, update, conflict, avatar upload/cancel/removal, cleanup error and unauthenticated state."
+    },
+    {
+      "artifact": "src/test/platform/account/mobile-preferences-routing.test.tsx",
+      "description": "Native account-sheet and More navigation tests for Profile."
+    },
+    {
+      "artifact": "src/test/platform/account/profile-routing.test.tsx",
+      "description": "Direct canonical route, protected legacy replace-redirect and browser-back history coverage."
+    },
+    {
+      "artifact": "src/components/common/ConfirmDialog.tsx",
+      "description": "Optional action/cancel classes let Profile meet mobile touch-target sizing without changing other consumers."
+    },
+    {
+      "artifact": "supabase/migrations/20261011100000_platform_private_user_files.sql",
+      "description": "Extends Platform Files ownership to authenticated users while retaining organization scope and storage policies."
+    },
+    {
+      "artifact": "supabase/tests/database/012_platform_private_user_files.sql",
+      "description": "Sixteen passing RLS regression tests for self-only user files, storage isolation and organization Files continuity on an isolated local Supabase stack."
+    },
+    {
+      "artifact": "src/test/platform/account/preferences-sync.test.ts",
+      "description": "Seven unit tests for accepted writes, offline queueing, durable retry, user isolation, conflict and malformed queue recovery."
+    },
+    {
+      "artifact": "supabase/migrations/20261012100000_platform_user_preferences.sql",
+      "description": "User-owned Preferences schema, RLS policies and versioned/idempotent patch RPC; verified on an isolated local Supabase project and later applied to the explicitly authorized Dev project, not staging or production."
+    },
+    {
+      "artifact": "supabase/tests/database/013_platform_user_preferences.sql",
+      "description": "Twelve passing pgTAP assertions for subject ownership, idempotency, field-level merge/conflict, validation and write isolation on the isolated local Supabase project."
+    },
+    {
+      "artifact": "src/loopdev/pages/account/Settings.tsx",
+      "description": "Desktop personal Preferences renderer, with account-scoped fields and device-local appearance."
+    },
+    {
+      "artifact": "src/test/platform/account/preferences-page.test.tsx",
+      "description": "Twelve operation/state tests for reads, preference mutations, offline/pending recovery, discard and conflicts."
+    },
+    {
+      "artifact": "src/test/platform/account/preferences-routing.test.tsx",
+      "description": "Direct canonical and legacy redirects plus regression coverage for the separate organization /app/settings route."
+    },
+    {
+      "artifact": "apps/mobile/components/MobilePreferencesScreen.tsx",
+      "description": "Expo Preferences renderer for language, time zone, local appearance, personal notifications and synchronization states."
+    },
+    {
+      "artifact": "src/test/platform/account/mobile-preferences-routing.test.tsx",
+      "description": "Account-sheet and More-screen navigation to the canonical native Preferences destination, with the legacy quick-language control absent."
+    },
+    {
+      "artifact": "src/test/platform/account/mobile-theme.test.tsx",
+      "description": "Local appearance persistence, explicit/system modes and storage-error behavior."
+    },
+    {
+      "artifact": "docs/implementation/platform/account/platform-evidence-matrix.md",
+      "description": "Native Preferences operations are implemented at component level; iOS/Android device acceptance remains partial."
+    },
+    {
+      "artifact": "supabase/migrations/20261023100000_platform_user_preferences_initial_language.sql",
+      "description": "Seeds an uninitialized preference language from the app locale and preserves explicit choices; applied to linked loopdev-platform-dev, but not tested by the updated isolated pgTAP suite."
+    },
+    {
+      "artifact": "supabase/tests/database/013_platform_user_preferences.sql",
+      "description": "The suite now contains 18 assertions including locale initialization; the prior 12-assertion suite passed, but this updated version has not been run because Docker is unavailable."
+    },
+    {
+      "artifact": "src/test/platform/account/preferences-page.test.tsx",
+      "description": "Covers using the current Spanish app locale when initializing the Preferences page."
+    },
+    {
+      "artifact": "src/test/platform/account/preferences-sync.test.ts",
+      "description": "Covers forwarding the current app language to the shared read RPC."
+    },
+    {
+      "artifact": "https://github.com/minoveaz/loopdev-v2/issues/33",
+      "description": "Open 07-build issue; update it with this phase progress and evidence."
+    }
+  ],
+  "detected_failure": {
+    "code": "SQL-001",
+    "detected_by": "module-build",
+    "summary": "Initial isolated pgTAP execution found ambiguous PL/pgSQL references to mutation_id and changed_fields. The migration variables were disambiguated; the corrected migration and all 12 pgTAP tests passed."
+  },
+  "likely_failure_origin": {
+    "phase": "06-plan",
+    "skill": "module-plan",
+    "code": "SQL-001",
+    "confidence": 10,
+    "summary": "Function parameters/locals shared names with SQL columns; the runtime ambiguity was revealed by the database tests and corrected before task completion."
+  },
+  "next_handoff": "The Preferences locale migration is applied to linked Dev and explicit Spanish remains selected after an authenticated route reload. Run the updated 18-assertion pgTAP suite against an isolated local database when Docker is available; do not run it against the shared Dev database. Billing remains explicitly disabled and has no route until provider/commercial/server readiness is approved; its implementation tasks remain blocked. ACCOUNT-PREFS-NATIVE renderer and component coverage are implemented, but keep the task in_progress until iOS and Android device journeys prove identity-bound restart recovery, safe area, system back, touch and locale changes. This host has neither simctl nor adb. Preserve separate native Profile/Security device evidence; do not claim Account operation parity.",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

@@ -42,11 +42,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogoSpinner } from "@/loopdev/components";
 import { useI18n } from "@/i18n";
+import { getWebUserPreferencesAdapter } from "@/loopdev/domains/platform/adapter/user-preferences";
+import type { UserPreferencesSyncResult } from "../../../packages/contracts/src/user-preferences-sync";
 import type { Organization } from "@contracts/auth-port";
+import { accountDestinations } from "../../../packages/contracts/src/account-navigation";
 
 interface TopbarProps {
   onSidebarToggle: () => void;
   sidebarCollapsed: boolean;
+}
+
+function preferenceMutationId(): string {
+  return globalThis.crypto?.randomUUID?.()
+    ?? "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
+      const random = Math.floor(Math.random() * 16);
+      return (character === "x" ? random : (random & 0x3) | 0x8).toString(16);
+    });
 }
 
 export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
@@ -85,10 +96,67 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const pickLang = (code: typeof languages[number]["code"]) => {
-    setLang(code);
+  const pickLang = async (code: typeof languages[number]["code"]) => {
+    if (code === lang) return;
     const l = languages.find((x) => x.code === code);
-    toast.success(t("topbar.languageSet", { name: l?.label ?? code }));
+    const successMessage = t("topbar.languageSet", { name: l?.label ?? code });
+    if (!session) {
+      setLang(code);
+      toast.success(successMessage);
+      return;
+    }
+
+    try {
+      const adapter = getWebUserPreferencesAdapter();
+      const pending = await adapter.pendingForCurrentUser();
+      let current: UserPreferencesSyncResult | null = pending
+        ? await adapter.retryPending(lang)
+        : null;
+      if (!current) current = await adapter.read(lang);
+
+      if (current.success && current.state === "pending_sync") {
+        toast.error(t("common.accountPreferences.saveError"), {
+          description: current.message,
+        });
+        return;
+      }
+      if (current.success === false) {
+        toast.error(t("common.accountPreferences.saveError"), {
+          description: current.error.message,
+        });
+        return;
+      }
+
+      let result = await adapter.patch({
+        patch: { language: code },
+        expectedVersion: current.preferences.version,
+        mutationId: preferenceMutationId(),
+      });
+      if (!result.success && result.state === "conflict") {
+        result = await adapter.patch({
+          patch: { language: code },
+          expectedVersion: result.latest.version,
+          mutationId: preferenceMutationId(),
+        });
+      }
+      if (result.success === false) {
+        toast.error(t("common.accountPreferences.saveError"), {
+          description: result.error.message,
+        });
+        return;
+      }
+
+      setLang(code);
+      if (result.state === "pending_sync") {
+        toast(t("common.accountPreferences.pending"));
+      } else {
+        toast.success(successMessage);
+      }
+    } catch (cause) {
+      toast.error(t("common.accountPreferences.saveError"), {
+        description: cause instanceof Error ? cause.message : undefined,
+      });
+    }
   };
 
   const handleSignOut = () => {
@@ -279,29 +347,36 @@ export function Topbar({ onSidebarToggle, sidebarCollapsed }: TopbarProps) {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem asChild>
-              <Link to="/account/profile" className="gap-2">
+              <Link to={accountDestinations.profile.path} className="gap-2">
                 <User className="h-4 w-4" />
                 {t("common.profile")}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/account/settings" className="gap-2">
+              <Link to={accountDestinations.settings.path} className="gap-2">
                 <SettingsIcon className="h-4 w-4" />
                 {t("common.accountSettings")}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/account/security" className="gap-2">
+              <Link to={accountDestinations.security.path} className="gap-2">
                 <ShieldCheck className="h-4 w-4" />
                 {t("common.security")}
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/account/billing" className="gap-2">
+            {accountDestinations.billing.enabled ? (
+              <DropdownMenuItem asChild>
+                <Link to={accountDestinations.billing.path} className="gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  {t("common.billing")}
+                </Link>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem disabled className="gap-2">
                 <CreditCard className="h-4 w-4" />
                 {t("common.billing")}
-              </Link>
-            </DropdownMenuItem>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => setConfirmLogoutOpen(true)}

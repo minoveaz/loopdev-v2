@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Billing page wireframe: desktop and mobile</title>
+  <desc id="desc">Organization-scoped Billing screen with no fictitious plan, price, payment method or invoice values.</desc>
+  <defs><style>
+    text{font-family:Geist,Inter,system-ui,sans-serif;fill:#202536}.muted{fill:#6c7280}.tiny{font-size:11px}.small{font-size:13px}.body{font-size:14px}.label{font-size:12px;font-weight:600}.head{font-size:25px;font-weight:650;letter-spacing:-.5px}.subhead{font-size:16px;font-weight:650}.card{fill:#fff;stroke:#dfe2ea}.outline{fill:#fff;stroke:#dfe2ea}.soft{fill:#f0f1ff;stroke:#e0e2ff}.warn{fill:#fff8e9;stroke:#f1d28b}.primary{fill:#414bd2}.primaryText{fill:#fff;font-size:12px;font-weight:600}.line{stroke:#e6e8ef}
+  </style></defs>
+  <rect width="1200" height="760" fill="#f8f9fc"/><text x="36" y="28" class="tiny muted">ACCOUNT · BILLING — CONCEPTUAL WIREFRAME / PROVIDER-NEUTRAL · NO SAMPLE BILLING DATA</text>
+  <rect x="28" y="48" width="748" height="680" rx="12" fill="#f8f9fc" stroke="#dfe2ea"/><rect x="28" y="48" width="748" height="44" rx="12" fill="#fff"/>
+  <text x="50" y="76" class="small">LoopDev</text><text x="115" y="76" class="tiny muted">Workspace / Account</text>
+  <rect x="43" y="112" width="118" height="586" rx="8" fill="#fff" stroke="#e6e8ef"/><text x="59" y="143" class="tiny muted">WORKSPACE</text><text x="59" y="177" class="small muted">Overview</text><text x="59" y="210" class="small muted">CRM</text><rect x="54" y="228" width="96" height="34" rx="7" class="soft"/><text x="66" y="250" class="small">Account</text>
+  <text x="181" y="131" class="tiny muted">Account / Billing</text><text x="181" y="167" class="head">Billing</text>
+  <text x="181" y="191" class="small muted">Subscription and invoices for the active organization.</text>
+  <rect x="181" y="212" width="560" height="56" rx="10" class="soft"/><text x="201" y="237" class="label">Organization</text><text x="201" y="256" class="small">Active organization name</text><text x="676" y="246" class="tiny muted">Change</text>
+  <rect x="181" y="282" width="560" height="142" rx="11" class="card"/><text x="202" y="314" class="subhead">Current plan</text><text x="202" y="341" class="body">Billing information is not connected.</text><text x="202" y="365" class="small muted">No plan, price or renewal date is available yet.</text><rect x="202" y="381" width="176" height="30" rx="7" class="outline"/><text x="222" y="401" class="tiny">Billing setup unavailable</text>
+  <rect x="181" y="438" width="560" height="88" rx="11" class="card"/><text x="202" y="470" class="subhead">Payment method</text><text x="202" y="496" class="small muted">No payment details are displayed until the provider is connected.</text>
+  <rect x="181" y="540" width="560" height="132" rx="11" class="card"/><text x="202" y="572" class="subhead">Invoices</text><line x1="202" y1="587" x2="720" y2="587" class="line"/><text x="202" y="616" class="body">No invoice data available</text><text x="202" y="641" class="small muted">Invoices will appear here when provided by the billing service.</text>
+  <text x="181" y="701" class="tiny muted">Owner/Admin only · server rechecks organization membership on every action</text>
+  <rect x="812" y="48" width="360" height="680" rx="28" fill="#fff" stroke="#cfd3dd" stroke-width="2"/><rect x="820" y="58" width="344" height="660" rx="22" fill="#f8f9fc"/>
+  <rect x="820" y="58" width="344" height="52" rx="22" fill="#fff"/><text x="842" y="91" class="small">‹  Account</text><text x="1020" y="91" class="small">Billing</text>
+  <text x="842" y="143" class="tiny muted">ACCOUNT / BILLING</text><text x="842" y="177" class="head">Billing</text>
+  <text x="842" y="200" class="tiny muted">For the active organization</text>
+  <rect x="840" y="218" width="304" height="64" rx="10" class="soft"/><text x="858" y="243" class="label">Organization</text><text x="858" y="264" class="small">Active organization name</text>
+  <rect x="840" y="294" width="304" height="145" rx="12" class="card"/><text x="858" y="325" class="subhead">Current plan</text><text x="858" y="352" class="small">Billing not connected</text><text x="858" y="376" class="tiny muted">No plan, price or renewal data.</text><text x="858" y="400" class="tiny muted">Setup unavailable.</text>
+  <rect x="840" y="451" width="304" height="91" rx="12" class="card"/><text x="858" y="482" class="subhead">Payment method</text><text x="858" y="508" class="tiny muted">No provider data displayed.</text>
+  <rect x="840" y="554" width="304" height="124" rx="12" class="card"/><text x="858" y="585" class="subhead">Invoices</text><text x="858" y="613" class="small">No invoice data available</text><text x="858" y="638" class="tiny muted">Verified invoices will appear here.</text>
+  <text x="842" y="704" class="tiny muted">Owner/Admin · same org scope · no fake records</text>
+</svg>

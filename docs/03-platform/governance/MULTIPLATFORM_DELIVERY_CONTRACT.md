@@ -96,10 +96,22 @@ reviews must name the level being claimed:
 Every capability ledger entry must list every operation and classify it on
 desktop, mobile web, iOS and Android as `implemented`, `adapted`, `missing` or
 `not_applicable`. An `adapted` operation requires a decision reference that
-preserves the semantic ID and accessibility meaning. A ledger cannot be
-approved if an operation is `missing` or `not_applicable` on a required
-platform. Split broad capabilities into operation-level work when that is the
-smallest unit that can be implemented and verified.
+preserves the semantic ID and accessibility meaning. Plan approval approves
+scope and sequencing; it does not claim operation parity. A required operation
+may remain `missing` at plan approval only when an operation-level build task
+explicitly names that operation and platform and includes owner, dependencies,
+acceptance criteria and validation. A required operation cannot be
+`not_applicable` at plan approval. Open decisions must be represented as
+task-level blockers with an accountable owner; a blocked task does not block
+approval of the rest of a complete plan.
+
+Keep `missing` until implementation evidence exists; do not call planned work
+`implemented` or `adapted`. Before `07-build` completes and before
+`08-verify` or publication starts, every operation on every required platform
+must be `implemented` or have an explicitly approved `adapted` decision. The
+strict parity gate is evaluated separately from plan approval. Split broad
+capabilities into operation-level work when that is the smallest unit that
+can be implemented and verified.
 
 ## Definition of Ready
 

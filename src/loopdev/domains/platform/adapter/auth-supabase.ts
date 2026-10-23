@@ -3,10 +3,23 @@ import type {
   AuthPort,
   AuthSession,
   AuthResult,
+  AuthError,
+  AuthErrorCode,
+  PlatformUser,
+  AuthAssuranceLevel,
+  AuthSecurityStatus,
+  AuthMfaFactor,
+  RequestEmailChangeInput,
+  RequestEmailChangeResult,
+  BeginTotpEnrollmentInput,
+  TotpEnrollment,
+  VerifyTotpInput,
+  RemoveTotpFactorInput,
   SignInWithPasswordInput,
   SignUpWithPasswordInput,
   PasswordResetInput,
   UpdatePasswordInput,
+  UpdatePlatformProfileInput,
   PasswordResetResult,
   AuthChangeEvent,
   PlatformAuthStorage,
@@ -14,6 +27,26 @@ import type {
   WorkspaceStatus,
   WorkspaceSuiteKey,
 } from "@contracts/auth-port";
+import { isPlatformAvatarReference } from "../../../../../packages/contracts/src/account-profile";
+import { isAuthAssuranceLevel } from "../../../../../packages/contracts/src/auth-port";
+
+function mapSupabaseAuthError(error: unknown, fallback: AuthErrorCode): AuthError {
+  const details = typeof error === "object" && error !== null ? error as Record<string, unknown> : {};
+  const providerCode = typeof details.code === "string" ? details.code : "";
+  const code: AuthErrorCode =
+    ["insufficient_aal", "mfa_verification_required", "reauthentication_needed"].includes(providerCode)
+      ? "AUTH_REAUTH_REQUIRED"
+      : providerCode === "mfa_factor_not_found"
+        ? "AUTH_MFA_FACTOR_NOT_FOUND"
+        : fallback;
+  const message = typeof details.message === "string" ? details.message : "Authentication provider request failed.";
+  const status = typeof details.status === "number" ? details.status : undefined;
+  return { code, message, ...(status === undefined ? {} : { status }) };
+}
+
+function authFailure<T>(code: AuthErrorCode, message: string): AuthResult<T> {
+  return { success: false, error: { code, message } };
+}
 
 export class BrowserLocalStorageAdapter implements PlatformAuthStorage {
   async getItem(key: string): Promise<string | null> {
@@ -207,26 +240,35 @@ export class SupabaseAuthAdapter implements AuthPort {
   }
 
   private mapSession(session: Session): AuthSession {
-    const isSuperAdmin = Boolean(
-      session.user.app_metadata?.is_super_admin ||
-      session.user.app_metadata?.role === "owner" ||
-      session.user.user_metadata?.is_super_admin
-    );
-
     return {
       accessToken: session.access_token,
       refreshToken: session.refresh_token,
       expiresAt: session.expires_at ? session.expires_at * 1000 : Date.now() + 3600 * 1000,
-      user: {
-        id: session.user.id,
-        email: session.user.email ?? "",
-        fullName: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
-        avatarUrl: session.user.user_metadata?.avatar_url ?? null,
-        isSuperAdmin,
-        createdAt: session.user.created_at,
-        updatedAt: session.user.updated_at ?? session.user.created_at,
-      },
+      user: this.mapUser(session.user),
     };
+  }
+
+  private mapUser(user: Session["user"]): PlatformUser {
+    const isSuperAdmin = Boolean(
+      user.app_metadata?.is_super_admin ||
+      user.app_metadata?.role === "owner" ||
+      user.user_metadata?.is_super_admin
+    );
+    const avatarUrl = user.user_metadata?.avatar_url;
+
+    return {
+      id: user.id,
+      email: user.email ?? "",
+      fullName: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+      avatarUrl: isPlatformAvatarReference(avatarUrl) ? avatarUrl : null,
+      isSuperAdmin,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at ?? user.created_at,
+    };
+  }
+
+  private profileError(code: AuthError["code"], message: string): AuthResult<PlatformUser> {
+    return { success: false, error: { code, message } };
   }
 
   async getSession(): Promise<AuthSession | null> {
@@ -417,6 +459,42 @@ export class SupabaseAuthAdapter implements AuthPort {
     return { success: true, data: undefined };
   }
 
+  async signOutOtherSessions(): Promise<AuthResult<void>> {
+    if (!this.client) {
+      return {
+        success: false,
+        error: {
+          code: "AUTH_OPERATION_UNSUPPORTED",
+          message: "Signing out other sessions requires an authentication provider.",
+        },
+      };
+    }
+
+    const { data, error: sessionError } = await this.client.auth.getSession();
+    if (sessionError || !data.session) {
+      return {
+        success: false,
+        error: {
+          code: "AUTH_SESSION_EXPIRED",
+          message: sessionError?.message ?? "An active session is required.",
+        },
+      };
+    }
+
+    const { error } = await this.client.auth.signOut({ scope: "others" });
+    if (error) {
+      return {
+        success: false,
+        error: {
+          code: "AUTH_NETWORK_ERROR",
+          message: error.message,
+        },
+      };
+    }
+
+    return { success: true, data: undefined };
+  }
+
   async requestPasswordReset(input: PasswordResetInput): Promise<AuthResult<PasswordResetResult>> {
     if (this.client) {
       const { error } = await this.client.auth.resetPasswordForEmail(input.email);
@@ -453,30 +531,254 @@ export class SupabaseAuthAdapter implements AuthPort {
 
   async updatePassword(input: UpdatePasswordInput): Promise<AuthResult<void>> {
     if (input.newPassword.length < 6) {
-      return {
-        success: false,
-        error: {
-          code: "AUTH_WEAK_PASSWORD",
-          message: "Password must be at least 6 characters.",
-        },
-      };
+      return authFailure("AUTH_WEAK_PASSWORD", "Password must be at least 6 characters.");
     }
 
-    if (this.client) {
+    if (!this.client) {
+      return authFailure("AUTH_OPERATION_UNSUPPORTED", "Password updates require an authentication provider.");
+    }
+
+    try {
+      const { data: current, error: readError } = await this.client.auth.getUser();
+      if (readError || !current.user) {
+        return authFailure("AUTH_SESSION_EXPIRED", readError?.message ?? "An active session is required.");
+      }
       const { error } = await this.client.auth.updateUser({ password: input.newPassword });
       if (error) {
-        return {
-          success: false,
-          error: {
-            code: "AUTH_SESSION_EXPIRED",
-            message: error.message,
-          },
-        };
+        return { success: false, error: mapSupabaseAuthError(error, "AUTH_SESSION_EXPIRED") };
       }
+    } catch (error) {
+      return { success: false, error: mapSupabaseAuthError(error, "AUTH_NETWORK_ERROR") };
     }
 
     return { success: true, data: undefined };
   }
+
+  async getSecurityStatus(): Promise<AuthResult<AuthSecurityStatus>> {
+    if (!this.client) {
+      return authFailure("AUTH_OPERATION_UNSUPPORTED", "Security status requires an authentication provider.");
+    }
+    try {
+      const { data: userData, error: userError } = await this.client.auth.getUser();
+      if (userError || !userData.user) {
+        return authFailure("AUTH_SESSION_EXPIRED", userError?.message ?? "An active session is required.");
+      }
+
+      const [factorResult, assuranceResult] = await Promise.all([
+        this.client.auth.mfa.listFactors(),
+        this.client.auth.mfa.getAuthenticatorAssuranceLevel(),
+      ]);
+      if (factorResult.error) return { success: false, error: mapSupabaseAuthError(factorResult.error, "AUTH_NETWORK_ERROR") };
+      if (assuranceResult.error) return { success: false, error: mapSupabaseAuthError(assuranceResult.error, "AUTH_NETWORK_ERROR") };
+      if (!factorResult.data || !assuranceResult.data) {
+        return authFailure("AUTH_NETWORK_ERROR", "The provider returned incomplete security status.");
+      }
+
+      const currentLevel = assuranceResult.data.currentLevel;
+      const nextLevel = assuranceResult.data.nextLevel;
+      if (!isAuthAssuranceLevel(currentLevel) || !isAuthAssuranceLevel(nextLevel)) {
+        return authFailure("AUTH_NETWORK_ERROR", "The provider returned an unsupported assurance level.");
+      }
+
+      const mfaFactors: AuthMfaFactor[] = factorResult.data.all
+        .filter((factor) => factor.factor_type === "totp")
+        .map((factor) => ({
+          id: factor.id,
+          type: "totp",
+          status: factor.status,
+          friendlyName: factor.friendly_name ?? null,
+          createdAt: factor.created_at ?? null,
+          updatedAt: factor.updated_at ?? null,
+        }));
+
+      return {
+        success: true,
+        data: {
+          userId: userData.user.id,
+          email: userData.user.email ?? "",
+          emailVerified: Boolean(userData.user.email_confirmed_at),
+          pendingEmailChange: userData.user.new_email ?? null,
+          mfaFactors,
+          currentAssuranceLevel: currentLevel,
+          nextAssuranceLevel: nextLevel,
+          signOutOtherSessionsAvailable: true,
+        },
+      };
+    } catch (error) {
+      return { success: false, error: mapSupabaseAuthError(error, "AUTH_NETWORK_ERROR") };
+    }
+  }
+
+  async requestEmailChange(input: RequestEmailChangeInput): Promise<AuthResult<RequestEmailChangeResult>> {
+    const newEmail = input.newEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      return authFailure("AUTH_VALIDATION_ERROR", "Enter a valid email address.");
+    }
+    if (!this.client) {
+      return authFailure("AUTH_OPERATION_UNSUPPORTED", "Email changes require an authentication provider.");
+    }
+
+    try {
+      const { data: current, error: readError } = await this.client.auth.getUser();
+      if (readError || !current.user) {
+        return authFailure("AUTH_SESSION_EXPIRED", readError?.message ?? "An active session is required.");
+      }
+      const { data, error } = await this.client.auth.updateUser({ email: newEmail });
+      if (error) return { success: false, error: mapSupabaseAuthError(error, "AUTH_NETWORK_ERROR") };
+      if (!data.user || data.user.id !== current.user.id) {
+        return authFailure("AUTH_SESSION_EXPIRED", "The active user changed during the email update.");
+      }
+      return {
+        success: true,
+        data: {
+          currentEmail: data.user.email ?? current.user.email ?? "",
+          newEmail: data.user.new_email ?? newEmail,
+          status: "pending_confirmation",
+        },
+      };
+    } catch (error) {
+      return { success: false, error: mapSupabaseAuthError(error, "AUTH_NETWORK_ERROR") };
+    }
+  }
+
+  async beginTotpEnrollment(input: BeginTotpEnrollmentInput = {}): Promise<AuthResult<TotpEnrollment>> {
+    const friendlyName = input.friendlyName?.trim();
+    if (friendlyName && friendlyName.length > 64) {
+      return authFailure("AUTH_VALIDATION_ERROR", "Authenticator name must be 64 characters or fewer.");
+    }
+    if (!this.client) {
+      return authFailure("AUTH_OPERATION_UNSUPPORTED", "MFA enrollment requires an authentication provider.");
+    }
+
+    try {
+      const { data: current, error: readError } = await this.client.auth.getUser();
+      if (readError || !current.user) {
+        return authFailure("AUTH_SESSION_EXPIRED", readError?.message ?? "An active session is required.");
+      }
+      const { data, error } = await this.client.auth.mfa.enroll({
+        factorType: "totp",
+        ...(friendlyName ? { friendlyName } : {}),
+      });
+      if (error) return { success: false, error: mapSupabaseAuthError(error, "AUTH_NETWORK_ERROR") };
+      if (data.type !== "totp" || !data.totp.qr_code || !data.totp.secret || !data.totp.uri) {
+        return authFailure("AUTH_NETWORK_ERROR", "The provider returned incomplete TOTP enrollment data.");
+      }
+      return {
+        success: true,
+        data: {
+          factorId: data.id,
+          qrCode: data.totp.qr_code,
+          secret: data.totp.secret,
+          uri: data.totp.uri,
+        },
+      };
+    } catch (error) {
+      return { success: false, error: mapSupabaseAuthError(error, "AUTH_NETWORK_ERROR") };
+    }
+  }
+
+  async verifyTotp(input: VerifyTotpInput): Promise<AuthResult<void>> {
+    if (!input.factorId.trim() || !/^\d{6}$/.test(input.code.trim())) {
+      return authFailure("AUTH_VALIDATION_ERROR", "A TOTP factor and six-digit code are required.");
+    }
+    if (!this.client) {
+      return authFailure("AUTH_OPERATION_UNSUPPORTED", "MFA verification requires an authentication provider.");
+    }
+
+    try {
+      const { data: current, error: readError } = await this.client.auth.getUser();
+      if (readError || !current.user) {
+        return authFailure("AUTH_SESSION_EXPIRED", readError?.message ?? "An active session is required.");
+      }
+      const { data: factors, error: factorsError } = await this.client.auth.mfa.listFactors();
+      if (factorsError) return { success: false, error: mapSupabaseAuthError(factorsError, "AUTH_NETWORK_ERROR") };
+      if (!factors?.all.some((factor) => factor.id === input.factorId && factor.factor_type === "totp")) {
+        return authFailure("AUTH_MFA_FACTOR_NOT_FOUND", "The TOTP factor is not available to the authenticated user.");
+      }
+
+      const { error } = await this.client.auth.mfa.challengeAndVerify({
+        factorId: input.factorId,
+        code: input.code.trim(),
+      });
+      if (error) return { success: false, error: mapSupabaseAuthError(error, "AUTH_VALIDATION_ERROR") };
+      return { success: true, data: undefined };
+    } catch (error) {
+      return { success: false, error: mapSupabaseAuthError(error, "AUTH_NETWORK_ERROR") };
+    }
+  }
+
+  async removeTotpFactor(input: RemoveTotpFactorInput): Promise<AuthResult<void>> {
+    if (!input.factorId.trim()) {
+      return authFailure("AUTH_VALIDATION_ERROR", "A TOTP factor is required.");
+    }
+    if (!this.client) {
+      return authFailure("AUTH_OPERATION_UNSUPPORTED", "MFA management requires an authentication provider.");
+    }
+
+    try {
+      const { data: current, error: readError } = await this.client.auth.getUser();
+      if (readError || !current.user) {
+        return authFailure("AUTH_SESSION_EXPIRED", readError?.message ?? "An active session is required.");
+      }
+      const { data: factors, error: factorsError } = await this.client.auth.mfa.listFactors();
+      if (factorsError) return { success: false, error: mapSupabaseAuthError(factorsError, "AUTH_NETWORK_ERROR") };
+      if (!factors?.all.some((factor) => factor.id === input.factorId && factor.factor_type === "totp")) {
+        return authFailure("AUTH_MFA_FACTOR_NOT_FOUND", "The TOTP factor is not available to the authenticated user.");
+      }
+
+      const { data, error } = await this.client.auth.mfa.unenroll({ factorId: input.factorId });
+      if (error) return { success: false, error: mapSupabaseAuthError(error, "AUTH_NETWORK_ERROR") };
+      if (data.id !== input.factorId) {
+        return authFailure("AUTH_NETWORK_ERROR", "The provider did not confirm the requested factor removal.");
+      }
+      return { success: true, data: undefined };
+    } catch (error) {
+      return { success: false, error: mapSupabaseAuthError(error, "AUTH_NETWORK_ERROR") };
+    }
+  }
+
+  async updateProfile(input: UpdatePlatformProfileInput): Promise<AuthResult<PlatformUser>> {
+    const allowedKeys = new Set(["fullName", "avatarUrl", "expectedUserUpdatedAt", "mutationId"]);
+    if (Object.keys(input).some((key) => !allowedKeys.has(key))) {
+      return this.profileError("AUTH_VALIDATION_ERROR", "The profile update contains unsupported fields.");
+    }
+
+    const updatesName = input.fullName !== undefined;
+    const updatesAvatar = input.avatarUrl !== undefined;
+    const fullName = input.fullName?.trim();
+    if (!input.mutationId.trim() || (!updatesName && !updatesAvatar)) {
+      return this.profileError("AUTH_VALIDATION_ERROR", "A mutation ID and at least one profile field are required.");
+    }
+    if (updatesName && (!fullName || fullName.length > 120)) {
+      return this.profileError("AUTH_VALIDATION_ERROR", "Name must contain between 1 and 120 characters.");
+    }
+    if (input.avatarUrl !== undefined && input.avatarUrl !== null && !isPlatformAvatarReference(input.avatarUrl)) {
+      return this.profileError("AUTH_VALIDATION_ERROR", "Avatar must reference a private Files asset.");
+    }
+    if (!this.client) {
+      return this.profileError("AUTH_OPERATION_UNSUPPORTED", "Profile updates require an authentication provider.");
+    }
+
+    const { data: current, error: readError } = await this.client.auth.getUser();
+    if (readError || !current.user) {
+      return this.profileError("AUTH_SESSION_EXPIRED", readError?.message ?? "An active session is required.");
+    }
+    if (input.expectedUserUpdatedAt && input.expectedUserUpdatedAt !== current.user.updated_at) {
+      return this.profileError("AUTH_VERSION_CONFLICT", "The profile changed since it was loaded. Refresh and try again.");
+    }
+
+    const userMetadata = { ...current.user.user_metadata };
+    if (updatesName) userMetadata.full_name = fullName;
+    if (updatesAvatar) userMetadata.avatar_url = input.avatarUrl;
+
+    const { data, error } = await this.client.auth.updateUser({ data: userMetadata });
+    if (error || !data.user) {
+      return this.profileError("AUTH_NETWORK_ERROR", error?.message ?? "The provider did not confirm the profile update.");
+    }
+
+    return { success: true, data: this.mapUser(data.user) };
+  }
+
 }
 
 const authGlobal = globalThis as typeof globalThis & {

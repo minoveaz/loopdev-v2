@@ -1,0 +1,2727 @@
+{
+  "$schema": "../../_schemas/delivery-ledger.schema.json",
+  "schema_version": 1,
+  "suite": "platform",
+  "module": "Account",
+  "status": "approved",
+  "approved_by": "user",
+  "approved_at": "2026-10-11T10:46:28Z",
+  "approval_source": "Explicit user approval in conversation on 2026-10-11; Account plan phase issue https://github.com/minoveaz/loopdev-v2/issues/32.",
+  "product_sources": [
+    "docs/implementation/platform/settings/SETTINGS_MVP_DELIVERY.md",
+    "docs/implementation/platform/auth/HANDOFF.md",
+    "tracks/active/platform/2026-09-09-loopdev-v2-monorepo-multitenancy.md",
+    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+    "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
+    "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+    "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md",
+    "docs/03-platform/governance/MULTIPLATFORM_COMPONENT_INVENTORY.md",
+    "docs/implementation/platform/account/discovery.md",
+    "docs/implementation/platform/account/design.md",
+    "docs/implementation/platform/account/visual-design.md",
+    "docs/implementation/platform/account/domain-model.md",
+    "docs/implementation/platform/account/access-design.md",
+    "docs/implementation/platform/account/api-contracts.md",
+    "docs/implementation/platform/account/sync-design.md",
+    "docs/implementation/platform/account/implementation-plan.md"
+  ],
+  "previous_ledger": null,
+  "requirements": [
+    {
+      "id": "REQ-ACCOUNT-PROFILE-DESTINATION",
+      "title": "Provide a LoopDev-native Profile destination",
+      "classification": "REQUIRED_MVP",
+      "source": "src/components/layout/Topbar.tsx",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "acceptance_criteria": [
+        "The signed-in Profile menu operation resolves to a LoopDev-native destination rather than the Rivera template/mock page.",
+        "The personal profile is global to the authenticated user and includes editable display name and avatar; authentication credentials remain in Security.",
+        "Desktop web, mobile web, iOS and Android support the same profile operations with platform-adapted interactions."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-PROFILE"
+      ]
+    },
+    {
+      "id": "REQ-ACCOUNT-PREFERENCES-DESTINATION",
+      "title": "Provide a LoopDev-native Account Settings destination",
+      "classification": "REQUIRED_MVP",
+      "source": "src/components/layout/Topbar.tsx",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "acceptance_criteria": [
+        "The signed-in Account Settings menu operation resolves to a LoopDev-native destination rather than the Rivera template/mock page.",
+        "Personal settings include language, timezone, appearance and personal notifications; language, timezone and notifications sync by user, while appearance may adapt per device.",
+        "Organization settings and membership remain in the existing tenant-scoped Platform Settings capability at /app/settings."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-PREFERENCES"
+      ]
+    },
+    {
+      "id": "REQ-ACCOUNT-SECURITY-DESTINATION",
+      "title": "Provide a LoopDev-native Security destination",
+      "classification": "REQUIRED_MVP",
+      "source": "src/components/layout/Topbar.tsx",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "acceptance_criteria": [
+        "The signed-in Security menu operation resolves to a LoopDev-native destination rather than the Rivera template/mock page.",
+        "Security operations cover password/email changes, MFA management and provider-backed sign-out of all other sessions; no individual device inventory is fabricated.",
+        "The same operations are available on desktop web, mobile web, iOS and Android; unsupported provider behavior is never represented as success."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-SECURITY"
+      ]
+    },
+    {
+      "id": "REQ-ACCOUNT-BILLING-DESTINATION",
+      "title": "Provide a LoopDev-native Billing destination",
+      "classification": "REQUIRED_MVP",
+      "source": "src/components/layout/Topbar.tsx",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "acceptance_criteria": [
+        "The signed-in Billing menu operation resolves to a LoopDev-native destination rather than the Rivera template/mock page.",
+        "Billing belongs to the active organization; only Owner/Admin users may view or manage plan, invoices, payment methods, upgrades, downgrades and cancellation.",
+        "The destination does not expose sample prices, sample payment details or mock invoices as authoritative LoopDev billing data; provider selection is a design decision."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-BILLING"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "CAP-ACCOUNT-NAVIGATION",
+      "name": "Signed-in Account menu destinations",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION",
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION",
+        "REQ-ACCOUNT-SECURITY-DESTINATION",
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "semantics": {
+        "operations": [
+          "open_profile_destination",
+          "open_account_settings_destination",
+          "open_security_destination",
+          "open_billing_destination"
+        ],
+        "validation_contract": "Account navigation requires an authenticated session; route-unavailable is explicit and legacy routes redirect to canonical LoopDev account paths.",
+        "errors": [
+          "unauthenticated",
+          "route_unavailable"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "Authenticated Topbar account menu",
+          "route": "/app/account/*"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive authenticated web Topbar and shared routes",
+          "route": "/app/account/*"
+        },
+        "ios": {
+          "required": true,
+          "surface": "Native account destinations with the same operations and adapted UX",
+          "route": null
+        },
+        "android": {
+          "required": true,
+          "surface": "Native account destinations with the same operations and adapted UX",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "partial",
+        "operations": "partial"
+      },
+      "operation_coverage": [
+        {
+          "id": "open_profile_destination",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": "apps/mobile/App.tsx; apps/mobile/components/MobileAccountSheet.tsx; apps/mobile/components/MobileAccountScreen.tsx; src/test/platform/account/mobile-preferences-routing.test.tsx"
+        },
+        {
+          "id": "open_account_settings_destination",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "open_security_destination",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "open_billing_destination",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "success",
+        "unauthenticated",
+        "route_unavailable"
+      ],
+      "permissions": [
+        "authenticated user"
+      ],
+      "contract_refs": [
+        "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+        "docs/implementation/platform/account/design.md"
+      ],
+      "task_ids": [
+        "ACCOUNT-NAV-CONTRACT",
+        "ACCOUNT-PROFILE-DESKTOP",
+        "ACCOUNT-PROFILE-MOBILE-WEB",
+        "ACCOUNT-PROFILE-NATIVE",
+        "ACCOUNT-PREFS-DESKTOP",
+        "ACCOUNT-PREFS-MOBILE-WEB",
+        "ACCOUNT-PREFS-NATIVE",
+        "ACCOUNT-SECURITY-DESKTOP",
+        "ACCOUNT-SECURITY-MOBILE-WEB",
+        "ACCOUNT-SECURITY-NATIVE",
+        "ACCOUNT-BILLING-DESKTOP",
+        "ACCOUNT-BILLING-MOBILE-WEB",
+        "ACCOUNT-BILLING-NATIVE",
+        "ACCOUNT-TEST-NAV",
+        "ACCOUNT-AUDIT-ENV",
+        "ACCOUNT-AUDIT-REUSE",
+        "ACCOUNT-AUDIT-LEGACY",
+        "ACCOUNT-AUDIT-ROUTES",
+        "ACCOUNT-AUDIT-STATES",
+        "ACCOUNT-AUDIT-A11Y",
+        "ACCOUNT-AUDIT-SECURITY",
+        "ACCOUNT-AUDIT-ARCH",
+        "ACCOUNT-AUDIT-RESP",
+        "ACCOUNT-AUDIT-REFACTOR"
+      ]
+    },
+    {
+      "id": "CAP-ACCOUNT-PROFILE",
+      "name": "Personal profile surface",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "semantics": {
+        "operations": [
+          "read_profile",
+          "update_display_name",
+          "change_avatar"
+        ],
+        "validation_contract": "Only the authenticated user's own global profile is mutable; display name and avatar reference are validated by the shared Profile contract; stale versions return save_conflict.",
+        "errors": [
+          "validation_error",
+          "forbidden",
+          "network_error",
+          "save_conflict"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "LoopDev-native Profile; global user-owned display name and avatar",
+          "route": "/app/account/profile"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive LoopDev-native Profile with the same operations",
+          "route": "/app/account/profile"
+        },
+        "ios": {
+          "required": true,
+          "surface": "Native Profile with the same operations and adapted UX",
+          "route": null
+        },
+        "android": {
+          "required": true,
+          "surface": "Native Profile with the same operations and adapted UX",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "partial",
+        "operations": "partial"
+      },
+      "operation_coverage": [
+        {
+          "id": "read_profile",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": "apps/mobile/components/MobileProfileScreen.tsx; apps/mobile/adapters/profile-avatar.ts; src/test/platform/account/mobile-profile-page.test.tsx"
+        },
+        {
+          "id": "update_display_name",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": "apps/mobile/components/MobileProfileScreen.tsx; apps/mobile/adapters/auth.ts; src/test/platform/account/mobile-profile-page.test.tsx"
+        },
+        {
+          "id": "change_avatar",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
+          "ios": "implemented",
+          "android": "implemented",
+          "adaptation_ref": "apps/mobile/adapters/profile-image-picker.ts; apps/mobile/adapters/profile-avatar.ts; src/test/platform/account/mobile-profile-page.test.tsx"
+        }
+      ],
+      "states": [
+        "loading",
+        "success",
+        "empty",
+        "validation_error",
+        "forbidden",
+        "network_error",
+        "save_conflict",
+        "offline",
+        "pending"
+      ],
+      "permissions": [
+        "authenticated user may manage their own global profile"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/auth-port.ts",
+        "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+        "docs/implementation/platform/account/design.md"
+      ],
+      "task_ids": [
+        "ACCOUNT-PROFILE-CONTRACT",
+        "ACCOUNT-PROFILE-FILES",
+        "ACCOUNT-PROFILE-DESKTOP",
+        "ACCOUNT-PROFILE-MOBILE-WEB",
+        "ACCOUNT-PROFILE-NATIVE",
+        "ACCOUNT-TEST-PROFILE"
+      ]
+    },
+    {
+      "id": "CAP-ACCOUNT-PREFERENCES",
+      "name": "Personal account preferences",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION"
+      ],
+      "semantics": {
+        "operations": [
+          "read_preferences",
+          "change_language",
+          "change_timezone",
+          "change_appearance",
+          "change_personal_notifications"
+        ],
+        "validation_contract": "Only the authenticated user's preferences are mutable; locale and IANA timezone are validated; language/timezone/notifications sync by user, appearance may be device-local; stale versions return save_conflict.",
+        "errors": [
+          "validation_error",
+          "forbidden",
+          "network_error",
+          "save_conflict"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "LoopDev-native personal preferences",
+          "route": "/app/account/settings"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive LoopDev-native personal preferences",
+          "route": "/app/account/settings"
+        },
+        "ios": {
+          "required": true,
+          "surface": "Native personal preferences with the same operations and adapted UX",
+          "route": null
+        },
+        "android": {
+          "required": true,
+          "surface": "Native personal preferences with the same operations and adapted UX",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "partial",
+        "operations": "partial"
+      },
+      "operation_coverage": [
+        {
+          "id": "read_preferences",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "change_language",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "change_timezone",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "change_appearance",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "change_personal_notifications",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "success",
+        "empty",
+        "validation_error",
+        "forbidden",
+        "network_error",
+        "save_conflict",
+        "offline",
+        "pending"
+      ],
+      "permissions": [
+        "authenticated user may manage their own synchronized preferences; appearance may be device-adapted"
+      ],
+      "contract_refs": [
+        "src/hooks/use-theme.tsx",
+        "src/hooks/use-notification-prefs.tsx",
+        "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+        "docs/implementation/platform/account/design.md"
+      ],
+      "task_ids": [
+        "ACCOUNT-PREFS-CONTRACT",
+        "ACCOUNT-PREFS-SYNC",
+        "ACCOUNT-PREFS-DESKTOP",
+        "ACCOUNT-PREFS-MOBILE-WEB",
+        "ACCOUNT-PREFS-NATIVE",
+        "ACCOUNT-TEST-PREFS"
+      ]
+    },
+    {
+      "id": "CAP-ACCOUNT-SECURITY",
+      "name": "Account security surface using shared authentication",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-ACCOUNT-SECURITY-DESTINATION"
+      ],
+      "semantics": {
+        "operations": [
+          "read_security_status",
+          "change_password",
+          "change_email",
+          "manage_mfa",
+          "sign_out_other_sessions"
+        ],
+        "validation_contract": "Sensitive operations require a live authenticated session and provider-required reauthentication/AAL; email remains pending until confirmed; unsupported provider operations must return operation_unsupported, never success.",
+        "errors": [
+          "invalid_credentials",
+          "session_expired",
+          "forbidden",
+          "provider_unavailable",
+          "operation_unsupported"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "LoopDev-native Security using authoritative AuthPort/provider operations",
+          "route": "/app/account/security"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive Security with shared AuthPort semantics",
+          "route": "/app/account/security"
+        },
+        "ios": {
+          "required": true,
+          "surface": "Native Security with the same operations and adapted provider flows",
+          "route": null
+        },
+        "android": {
+          "required": true,
+          "surface": "Native Security with the same operations and adapted provider flows",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "partial",
+        "renderer": "partial",
+        "operations": "partial"
+      },
+      "operation_coverage": [
+        {
+          "id": "read_security_status",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "change_password",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "change_email",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "manage_mfa",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "sign_out_other_sessions",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "success",
+        "forbidden",
+        "provider_unavailable",
+        "pending",
+        "operation_unsupported",
+        "network_error"
+      ],
+      "permissions": [
+        "authenticated user may manage their own security; reauthentication required for sensitive actions"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/auth-port.ts",
+        "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+        "docs/implementation/platform/account/design.md"
+      ],
+      "task_ids": [
+        "ACCOUNT-AUTH-CONTRACT",
+        "ACCOUNT-AUTH-HARDEN",
+        "ACCOUNT-AUTH-SESSIONS",
+        "ACCOUNT-SECURITY-DESKTOP",
+        "ACCOUNT-SECURITY-MOBILE-WEB",
+        "ACCOUNT-SECURITY-NATIVE",
+        "ACCOUNT-TEST-SECURITY"
+      ]
+    },
+    {
+      "id": "CAP-ACCOUNT-BILLING",
+      "name": "Customer subscription and billing surface",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "semantics": {
+        "operations": [
+          "read_subscription",
+          "change_plan",
+          "cancel_subscription",
+          "manage_payment_methods",
+          "view_invoice"
+        ],
+        "validation_contract": "Server derives the authenticated member and active organization, enforces Owner/Admin on each operation, verifies provider customer mapping, and returns only tenant-scoped summaries.",
+        "errors": [
+          "forbidden",
+          "customer_not_found",
+          "provider_unavailable",
+          "payment_failed",
+          "operation_unsupported"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "Organization Billing for authorized Owner/Admin users",
+          "route": "/app/account/billing"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive organization Billing with shared operations",
+          "route": "/app/account/billing"
+        },
+        "ios": {
+          "required": true,
+          "surface": "Native organization Billing with the same operations and adapted UX",
+          "route": null
+        },
+        "android": {
+          "required": true,
+          "surface": "Native organization Billing with the same operations and adapted UX",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "partial",
+        "operations": "partial"
+      },
+      "operation_coverage": [
+        {
+          "id": "read_subscription",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "change_plan",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "cancel_subscription",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "manage_payment_methods",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "view_invoice",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "success",
+        "empty",
+        "forbidden",
+        "provider_unavailable",
+        "payment_failed",
+        "pending",
+        "network_error"
+      ],
+      "permissions": [
+        "active organization Owner/Admin only; enforce on the server and in every client"
+      ],
+      "contract_refs": [
+        "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+        "docs/implementation/platform/account/design.md"
+      ],
+      "task_ids": [
+        "ACCOUNT-BILLING-CONTRACT",
+        "ACCOUNT-BILLING-SERVER",
+        "ACCOUNT-BILLING-DESKTOP",
+        "ACCOUNT-BILLING-MOBILE-WEB",
+        "ACCOUNT-BILLING-NATIVE",
+        "ACCOUNT-TEST-BILLING"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "ACCOUNT-AUDIT-ENV",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Record the Account implementation environment truth",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform Delivery",
+      "risk": "low",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Branch, HEAD, checkout type, working-tree changes and runtime status are recorded from direct environment evidence.",
+        "No runtime, test, or behavior claim is inferred from source presence."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        },
+        {
+          "command": "npm run delivery:validate -- --suite platform --module Account --run MOD-ACCOUNT-20261010-001",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/platform/account/implementation-plan.md",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/06-plan-evidence.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/implementation-plan.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUDIT-REUSE",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit shared Platform, UI and native component reuse",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform UI",
+      "risk": "medium",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Reuse decisions and actual source-backed consumers are listed for web and native controls.",
+        "No duplicate shell, select, uploader, queue, or cross-module contract is planned."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+        "docs/03-platform/governance/MULTIPLATFORM_COMPONENT_INVENTORY.md",
+        "docs/implementation/platform/account/implementation-plan.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/implementation-plan.md",
+        "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+        "docs/03-platform/governance/MULTIPLATFORM_COMPONENT_INVENTORY.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUDIT-LEGACY",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit existing mock flows and replacement boundaries",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform Delivery",
+      "risk": "high",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "The four web menu paths and their Rivera route targets are identified.",
+        "The four native menu rows are identified as non-navigating; Settings ownership remains outside Account."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/components/layout/Topbar.tsx",
+        "src/routes/AppRoutes.tsx",
+        "apps/mobile/components/MobileAccountSheet.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/implementation-plan.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUDIT-ROUTES",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit Account routes, shell selection and native navigation",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform Delivery",
+      "risk": "high",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Canonical and legacy route behavior is distinguished from current runtime behavior.",
+        "Web guard, direct route, refresh, back, native route and deep-link gaps are recorded."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/routes/AppRoutes.tsx",
+        "src/components/layout/AppShell.tsx",
+        "apps/mobile/App.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/implementation-plan.md",
+        "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUDIT-STATES",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit operation-level Account states",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform Delivery",
+      "risk": "medium",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Loading, empty, error, forbidden, conflict, offline, pending and success states are mapped to the approved state matrix.",
+        "Unsupported operations cannot be rendered as success or sample data."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/platform/account/view-state-matrix.md",
+        "docs/implementation/platform/account/implementation-plan.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/view-state-matrix.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUDIT-A11Y",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit accessibility, localization and renderer adaptations",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform UI",
+      "risk": "medium",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Keyboard, screen-reader announcements, touch targets, responsive behavior, safe areas, native back and RTL/i18n acceptance are planned.",
+        "Web and native controls remain renderer-specific with equivalent operation meaning."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/platform/account/visual-design.md",
+        "docs/implementation/platform/account/native-compositions.md",
+        "docs/implementation/platform/account/implementation-plan.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/visual-design.md",
+        "docs/implementation/platform/account/native-compositions.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUDIT-SECURITY",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit security boundaries and rollback safety",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform Auth + Billing",
+      "risk": "critical",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Self and tenant scopes, server authorization, sensitive-data exclusions, cache invalidation and offline eligibility are recorded.",
+        "Mobile Auth false successes, unscoped local queue and safe rollback constraints are identified."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/platform/account/access-design.md",
+        "docs/implementation/platform/account/sync-design.md",
+        "apps/mobile/adapters/auth.ts",
+        "apps/mobile/adapters/offlineQueue.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/access-design.md",
+        "docs/implementation/platform/account/sync-design.md",
+        "docs/implementation/platform/account/implementation-plan.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUDIT-ARCH",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit architecture boundaries and dependency direction",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform Architecture",
+      "risk": "high",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Account is limited to navigation/composition; Auth, Files, Preferences and Billing retain domain ownership.",
+        "Shared contracts precede adapters/renderers and no provider/storage imports are planned in components."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/platform/account/architecture-design.md",
+        "packages/contracts/src/auth-port.ts",
+        "src/loopdev/domains/platform/adapter"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/architecture-design.md",
+        "docs/implementation/platform/account/implementation-plan.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUDIT-RESP",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit capability ownership and responsibility separation",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform Architecture",
+      "risk": "medium",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Presentation, application, domain, adapter, persistence, authorization and synchronization owners are named.",
+        "No duplicate Settings, profile aggregate, mock billing store or Account audit store is planned."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/platform/account/architecture-design.md",
+        "docs/implementation/platform/account/domain-model.md",
+        "docs/implementation/platform/account/implementation-plan.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/architecture-design.md",
+        "docs/implementation/platform/account/domain-model.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUDIT-REFACTOR",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit refactor preservation, regression and rollback evidence",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Platform Delivery",
+      "risk": "high",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Existing auth protection and `/app/settings` behavior have explicit regression criteria.",
+        "Legacy account routes can redirect without returning users to mock success paths; rollback disables capability instead of restoring mock mutations."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/routes/AppRoutes.tsx",
+        "src/components/layout/Topbar.tsx",
+        "docs/implementation/platform/account/implementation-plan.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/implementation-plan.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-NAV-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "done",
+      "title": "Define shared Account destination and deep-link semantics",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION",
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION",
+        "REQ-ACCOUNT-SECURITY-DESTINATION",
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "ACCOUNT-AUDIT-ROUTES"
+      ],
+      "owner": "Platform",
+      "risk": "medium",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "All four destination operations have stable IDs, protected route meaning and explicit legacy redirect behavior.",
+        "Web and native routing consume the same semantics without importing renderer code into the contract."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/navigation-contract.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/account-navigation.ts",
+        "packages/contracts/src/index.ts",
+        "src/test/platform/account/navigation-contract.test.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/account-navigation.ts",
+        "src/test/platform/account/navigation-contract.test.ts",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-PROFILE-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "done",
+      "title": "Approve and define canonical PlatformUser profile updates",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-PROFILE"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "ACCOUNT-AUDIT-REUSE",
+        "ACCOUNT-AUDIT-ARCH"
+      ],
+      "owner": "Platform owner",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "The shared Auth/Profile contract updates only canonical `PlatformUser.fullName/avatarUrl` fields for the authenticated subject.",
+        "Consumer impact, versioning, errors, concurrency behavior and contract tests are approved before renderer work."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/profile-contract.test.ts src/test/platform/account/mobile-auth.test.ts src/test/platform/auth-port.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/account-profile.ts",
+        "packages/contracts/src/auth-port.ts",
+        "packages/contracts/src/index.ts",
+        "src/loopdev/domains/platform/adapter/auth-supabase.ts",
+        "apps/mobile/adapters/auth.ts",
+        "src/test/platform/account/profile-contract.test.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/account-profile.ts",
+        "packages/contracts/src/auth-port.ts",
+        "src/loopdev/domains/platform/adapter/auth-supabase.ts",
+        "apps/mobile/adapters/auth.ts",
+        "src/test/platform/account/profile-contract.test.ts",
+        "src/test/platform/account/mobile-auth.test.ts",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-PREFS-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "done",
+      "title": "Approve and define user-owned synchronized Preferences",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-PREFERENCES"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "ACCOUNT-AUDIT-REUSE",
+        "ACCOUNT-AUDIT-ARCH"
+      ],
+      "owner": "Platform owner",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Shared contract defines user-scoped language, timezone, notification preferences, device-local appearance, versions, conflicts and errors.",
+        "Web, mobile-web and native consumers use the same operation IDs and approved locale/timezone catalogs."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/preferences-contract.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/user-preferences.ts",
+        "packages/contracts/src/index.ts",
+        "src/test/platform/account/preferences-contract.test.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/user-preferences.ts",
+        "src/test/platform/account/preferences-contract.test.ts",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUTH-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "done",
+      "title": "Approve Auth-owned Account security operations",
+      "requirement_ids": [
+        "REQ-ACCOUNT-SECURITY-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-SECURITY"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "ACCOUNT-AUDIT-SECURITY",
+        "ACCOUNT-AUDIT-ARCH"
+      ],
+      "owner": "Platform Auth",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Password/email/MFA/security-state contracts enforce subject binding and provider-required reauthentication.",
+        "Sign-out-other-sessions uses the provider-supported scope operation; individual session inventory/revocation is out of scope and is not fabricated."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/auth-security-contract.test.ts src/test/platform/account/mobile-auth.test.ts src/test/platform/auth-port.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        },
+        {
+          "command": "npm run validate:contracts && npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/auth-port.ts",
+        "src/loopdev/domains/platform/adapter/auth-supabase.ts",
+        "apps/mobile/adapters/auth.ts",
+        "src/test/platform/account/auth-security-contract.test.ts",
+        "src/test/platform/account/mobile-auth.test.ts",
+        "src/test/platform/auth-port.test.ts",
+        "docs/implementation/platform/account/api-contracts.md",
+        "docs/implementation/platform/account/domain-model.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/auth-port.ts",
+        "src/loopdev/domains/platform/adapter/auth-supabase.ts",
+        "apps/mobile/adapters/auth.ts",
+        "src/test/platform/account/auth-security-contract.test.ts",
+        "src/test/platform/account/mobile-auth.test.ts",
+        "src/test/platform/auth-port.test.ts",
+        "docs/implementation/platform/account/api-contracts.md",
+        "docs/implementation/platform/account/domain-model.md",
+        "docs/implementation/platform/account/design.md",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-BILLING-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "blocked",
+      "title": "Approve provider-neutral organization Billing contract",
+      "requirement_ids": [
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-BILLING"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "ACCOUNT-AUDIT-SECURITY",
+        "ACCOUNT-AUDIT-ARCH"
+      ],
+      "owner": "Billing/Finance + Platform",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Shared operations define organization scope, Owner/Admin authorization, provider-confirmed outcomes and safe errors without provider-specific client types.",
+        "Finance and Platform approve terms, permission/audit ownership, consumer/version impact and contract tests."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/billing-contract.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/billing-port.ts",
+        "packages/contracts/src/index.ts",
+        "src/test/platform/account/billing-contract.test.ts"
+      ],
+      "blocked_by": [
+        "DEC-ACCOUNT-008",
+        "DEC-ACCOUNT-011"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "ACCOUNT-PROFILE-FILES",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "done",
+      "title": "Implement the approved user-owned avatar and profile adapter",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-PROFILE"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-PROFILE-CONTRACT"
+      ],
+      "owner": "Platform Profile + Files",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Profile adapter persists only the authenticated user's allowlisted canonical fields.",
+        "Avatar upload, ownership, validation, signed/public URL, orphan cleanup and deletion follow an approved Files policy; no Account-local uploader/queue is added."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/profile-adapter.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        },
+        {
+          "command": "npx supabase test db supabase/tests/database/012_platform_private_user_files.sql",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/private-user-files.ts",
+        "packages/contracts/src/private-user-files-supabase.ts",
+        "packages/contracts/src/profile-avatar-adapter.ts",
+        "src/loopdev/domains/platform/adapter/profile-avatar.ts",
+        "src/loopdev/domains/files/adapter/private-user-files-supabase.ts",
+        "apps/mobile/adapters/private-user-files.ts",
+        "apps/mobile/adapters/profile-avatar.ts",
+        "src/test/platform/account/profile-adapter.test.ts",
+        "supabase/migrations/20261011100000_platform_private_user_files.sql",
+        "supabase/tests/database/012_platform_private_user_files.sql"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/private-user-files.ts",
+        "packages/contracts/src/private-user-files-supabase.ts",
+        "packages/contracts/src/profile-avatar-adapter.ts",
+        "src/test/platform/account/profile-adapter.test.ts",
+        "supabase/migrations/20261011100000_platform_private_user_files.sql",
+        "supabase/tests/database/012_platform_private_user_files.sql",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-PREFS-SYNC",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "done",
+      "title": "Implement identity-bound Preferences persistence and recovery",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-PREFERENCES"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-PREFS-CONTRACT"
+      ],
+      "owner": "Platform Sync + Preferences",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Synced preferences use stable user identity, versioned/idempotent mutations, explicit conflict/retry states and reauthorization.",
+        "Offline queue storage, logout/restart recovery and legacy local-value migration have approved privacy-safe behavior; no replay crosses identity."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/preferences-sync.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        },
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/platform/adapter",
+        "apps/mobile/adapters",
+        "src/test/platform/account"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/user-preferences-sync.ts",
+        "src/loopdev/domains/platform/adapter/user-preferences.ts",
+        "apps/mobile/adapters/user-preferences.ts",
+        "supabase/migrations/20261012100000_platform_user_preferences.sql",
+        "supabase/tests/database/013_platform_user_preferences.sql",
+        "src/test/platform/account/preferences-sync.test.ts",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUTH-HARDEN",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "done",
+      "title": "Remove mobile Auth false success and unsafe session boundaries",
+      "requirement_ids": [
+        "REQ-ACCOUNT-SECURITY-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-SECURITY"
+      ],
+      "platforms": [
+        "shared",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-AUDIT-SECURITY"
+      ],
+      "owner": "Platform Auth + Mobile",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Password/reset/sign-out operations return provider-confirmed outcomes and surface remote failures; no no-op success or swallowed provider failure remains.",
+        "Native session storage and organization-role resolution use verified secure, server-authoritative sources; no localStorage/memory credential fallback or unsafe role mapping."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/mobile-auth.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        },
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/adapters/auth.ts",
+        "apps/mobile/adapters",
+        "packages/contracts/src/auth-port.ts",
+        "src/test/platform/account"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "apps/mobile/adapters/auth.ts",
+        "apps/mobile/adapters/mobile-auth-storage.native.ts",
+        "src/test/platform/account/mobile-auth.test.ts",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-AUTH-SESSIONS",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "done",
+      "title": "Implement provider-backed sign-out of other Auth sessions",
+      "requirement_ids": [
+        "REQ-ACCOUNT-SECURITY-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-SECURITY"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-AUTH-CONTRACT"
+      ],
+      "owner": "Platform Auth",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "The authenticated user can request provider-supported sign-out of all other sessions, with provider errors surfaced and no Auth internal-table writes.",
+        "No individual session/device inventory or per-session revocation is shown or claimed."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/auth-security-contract.test.ts src/test/platform/account/mobile-auth.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/auth-port.ts",
+        "src/loopdev/domains/platform/adapter/auth-supabase.ts",
+        "apps/mobile/adapters/auth.ts",
+        "src/test/platform/account/auth-security-contract.test.ts",
+        "src/test/platform/account/mobile-auth.test.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/domains/platform/adapter/auth-supabase.ts",
+        "apps/mobile/adapters/auth.ts",
+        "src/test/platform/account/auth-security-contract.test.ts",
+        "src/test/platform/account/mobile-auth.test.ts",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ]
+    },
+    {
+      "id": "ACCOUNT-BILLING-SERVER",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "blocked",
+      "title": "Implement organization-scoped Billing authority and provider integration",
+      "requirement_ids": [
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-BILLING"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "ACCOUNT-BILLING-CONTRACT"
+      ],
+      "owner": "Billing/Finance + Platform",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Server resolves authenticated actor, active organization and Owner/Admin role for every read/mutation; cross-tenant references and user-supplied customer IDs are rejected.",
+        "Provider result/webhook is signature-verified and idempotent; audit is shared/approved; provider recommendation, tax/invoice terms and entitlements are approved; no credentials or fictitious billing data reach clients."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/billing-server.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run test:quality",
+          "required": true
+        }
+      ],
+      "files": [
+        "supabase/functions",
+        "supabase/migrations",
+        "packages/contracts/src",
+        "src/test/platform/account"
+      ],
+      "blocked_by": [
+        "DEC-ACCOUNT-008",
+        "DEC-ACCOUNT-011",
+        "DEC-ACCOUNT-010"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "ACCOUNT-PROFILE-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Render Profile and account navigation on desktop web",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-PROFILE"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "ACCOUNT-NAV-CONTRACT",
+        "ACCOUNT-PROFILE-CONTRACT",
+        "ACCOUNT-PROFILE-FILES"
+      ],
+      "owner": "Platform Frontend",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Operation IDs open_profile_destination, read_profile, update_display_name, change_avatar are explicitly covered on desktop_web with operation-level acceptance evidence. Topbar opens the LoopDev Profile at `/app/account/profile`; existing `/account/profile` is a protected compatibility redirect and `/app/settings` is unchanged.",
+        "Profile read/name/avatar actions use shared ports, existing Rivera primitives, self-only scope and truthful loading/error/forbidden/conflict states."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/profile-page.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/routes/AppRoutes.tsx",
+        "src/components/layout/Topbar.tsx",
+        "src/loopdev/pages/account"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/account/Profile.tsx",
+        "src/test/platform/account/profile-page.test.tsx",
+        "src/test/platform/account/profile-routing.test.tsx",
+        "src/routes/AppRoutes.tsx",
+        "src/routes/LoopdevRoutes.tsx",
+        "src/components/layout/Topbar.tsx",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ],
+      "operation_ids": [
+        "open_profile_destination",
+        "read_profile",
+        "update_display_name",
+        "change_avatar"
+      ]
+    },
+    {
+      "id": "ACCOUNT-PROFILE-MOBILE-WEB",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Adapt Profile and account navigation for mobile web",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-PROFILE"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "ACCOUNT-PROFILE-DESKTOP"
+      ],
+      "owner": "Platform Frontend",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Operation IDs open_profile_destination, read_profile, update_display_name, change_avatar are explicitly covered on mobile_web with operation-level acceptance evidence. The same Profile operations and states work at narrow mobile-web viewports with touch targets of at least 44 CSS px and no hover-only action.",
+        "Direct route, refresh, back, keyboard/focus, RTL and file-upload errors are covered without changing shared semantics."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/profile-page.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run test -- src/test/platform/account/profile-routing.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run smoke:routes",
+          "required": true
+        },
+        {
+          "command": "npm run i18n:check",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/components/common/ConfirmDialog.tsx",
+        "src/loopdev/pages/account",
+        "src/test/platform/account"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/account/Profile.tsx",
+        "src/components/common/ConfirmDialog.tsx",
+        "src/test/platform/account/profile-page.test.tsx",
+        "src/test/platform/account/profile-routing.test.tsx",
+        "docs/implementation/platform/account/platform-evidence-matrix.md",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ],
+      "operation_ids": [
+        "open_profile_destination",
+        "read_profile",
+        "update_display_name",
+        "change_avatar"
+      ]
+    },
+    {
+      "id": "ACCOUNT-PROFILE-NATIVE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "in_progress",
+      "title": "Implement native Profile destinations for iOS and Android",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-PROFILE"
+      ],
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-PROFILE-CONTRACT",
+        "ACCOUNT-PROFILE-FILES",
+        "ACCOUNT-AUTH-HARDEN"
+      ],
+      "owner": "Mobile Platform",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Operation IDs open_profile_destination, read_profile, update_display_name, change_avatar are explicitly covered on ios and android with operation-level acceptance evidence. Both iOS and Android expose the same Profile operations through native routes and reuse native UI/tokens, not web/DOM controls.",
+        "System back, safe area, keyboard, touch accessibility, avatar permission and identity-switch cache clearing are verified on both platforms."
+      ],
+      "validation": [
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/App.tsx",
+        "apps/mobile/components/MobileProfileScreen.tsx",
+        "apps/mobile/components/MobileAccountScreen.tsx",
+        "apps/mobile/components/MobileAccountSheet.tsx",
+        "apps/mobile/components/ui/MobileAvatar.tsx",
+        "apps/mobile/adapters/profile-image-picker.ts",
+        "src/test/platform/account/mobile-profile-page.test.tsx",
+        "src/test/platform/account/mobile-preferences-routing.test.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "apps/mobile/components/MobileProfileScreen.tsx",
+        "apps/mobile/adapters/profile-image-picker.ts",
+        "src/test/platform/account/mobile-profile-page.test.tsx",
+        "src/test/platform/account/mobile-preferences-routing.test.tsx",
+        "docs/implementation/platform/account/platform-evidence-matrix.md",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ],
+      "operation_ids": [
+        "open_profile_destination",
+        "read_profile",
+        "update_display_name",
+        "change_avatar"
+      ]
+    },
+    {
+      "id": "ACCOUNT-PREFS-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "done",
+      "title": "Render personal Preferences on desktop web",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-PREFERENCES"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "ACCOUNT-NAV-CONTRACT",
+        "ACCOUNT-PREFS-CONTRACT",
+        "ACCOUNT-PREFS-SYNC"
+      ],
+      "owner": "Platform Frontend",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Operation IDs open_account_settings_destination, read_preferences, change_language, change_timezone, change_appearance, change_personal_notifications are explicitly covered on desktop_web with operation-level acceptance evidence. Language, timezone, appearance and personal notification operations use approved controls and shared preference semantics.",
+        "The page reports synced/pending/conflict/offline states truthfully and leaves organization preferences in `/app/settings`."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/preferences-page.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run i18n:check",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/routes/AppRoutes.tsx",
+        "src/routes/LoopdevRoutes.tsx",
+        "src/loopdev/pages/account/Settings.tsx",
+        "src/components/layout/Topbar.tsx",
+        "src/components/layout/CommandMenu.tsx",
+        "src/test/platform/account/preferences-page.test.tsx",
+        "src/test/platform/account/preferences-routing.test.tsx",
+        "src/i18n/locales",
+        "scripts/smoke-routes.json",
+        "docs/implementation/platform/account/platform-evidence-matrix.md",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md",
+        "src/hooks/use-theme.tsx",
+        "src/hooks/use-notification-prefs.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/account/Settings.tsx",
+        "src/test/platform/account/preferences-page.test.tsx",
+        "src/test/platform/account/preferences-routing.test.tsx",
+        "src/test/platform/account/preferences-sync.test.ts",
+        "src/test/platform/account/preferences-contract.test.ts",
+        "src/routes/AppRoutes.tsx",
+        "src/routes/LoopdevRoutes.tsx",
+        "src/components/layout/Topbar.tsx",
+        "src/components/layout/CommandMenu.tsx",
+        "src/i18n/locales/en.json",
+        "src/i18n/locales/es.json",
+        "src/i18n/locales/fr.json",
+        "src/i18n/locales/de.json",
+        "src/i18n/locales/ar.json",
+        "src/i18n/locales/he.json",
+        "scripts/smoke-routes.json",
+        "docs/implementation/platform/account/platform-evidence-matrix.md",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ],
+      "operation_ids": [
+        "open_account_settings_destination",
+        "read_preferences",
+        "change_language",
+        "change_timezone",
+        "change_appearance",
+        "change_personal_notifications"
+      ]
+    },
+    {
+      "id": "ACCOUNT-PREFS-MOBILE-WEB",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "done",
+      "title": "Adapt personal Preferences for mobile web",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-PREFERENCES"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "ACCOUNT-PREFS-DESKTOP"
+      ],
+      "owner": "Platform Frontend",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Operation IDs open_account_settings_destination, read_preferences, change_language, change_timezone, change_appearance, change_personal_notifications are explicitly covered on mobile_web with operation-level acceptance evidence. All five preference operations remain discoverable and operable at mobile-web widths using existing Select/Popover/Command or approved equivalent, not native HTML select.",
+        "Touch, keyboard, screen-reader, RTL and pending/conflict/offline feedback remain visible and accessible."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/preferences-page.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run i18n:check",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/account/Settings.tsx",
+        "src/test/platform/account/preferences-page.test.tsx",
+        "src/test/platform/account/preferences-routing.test.tsx",
+        "src/i18n/locales"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/account/Settings.tsx",
+        "src/test/platform/account/preferences-page.test.tsx",
+        "src/test/platform/account/preferences-routing.test.tsx",
+        "src/loopdev/domains/platform/adapter/user-preferences.ts",
+        "docs/implementation/platform/account/platform-evidence-matrix.md",
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+      ],
+      "operation_ids": [
+        "open_account_settings_destination",
+        "read_preferences",
+        "change_language",
+        "change_timezone",
+        "change_appearance",
+        "change_personal_notifications"
+      ]
+    },
+    {
+      "id": "ACCOUNT-PREFS-NATIVE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "in_progress",
+      "title": "Implement native Preferences destinations for iOS and Android",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-PREFERENCES"
+      ],
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-PREFS-CONTRACT",
+        "ACCOUNT-PREFS-SYNC"
+      ],
+      "owner": "Mobile Platform",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Operation IDs open_account_settings_destination, read_preferences, change_language, change_timezone, change_appearance, change_personal_notifications are explicitly covered on ios and android with operation-level acceptance evidence. Both OSes implement the same five preference operation IDs using native select sheets/switches and the shared persistence contract.",
+        "Offline pending, restart recovery, identity binding, safe area, system back, touch and locale changes are tested on each OS."
+      ],
+      "validation": [
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/App.tsx",
+        "apps/mobile/components/account",
+        "apps/mobile/components/ui"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md#account-preferences-native-renderer",
+        "docs/implementation/platform/account/platform-evidence-matrix.md"
+      ],
+      "operation_ids": [
+        "open_account_settings_destination",
+        "read_preferences",
+        "change_language",
+        "change_timezone",
+        "change_appearance",
+        "change_personal_notifications"
+      ]
+    },
+    {
+      "id": "ACCOUNT-SECURITY-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "ready",
+      "title": "Render provider-backed Security on desktop web",
+      "requirement_ids": [
+        "REQ-ACCOUNT-SECURITY-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-SECURITY"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "ACCOUNT-NAV-CONTRACT",
+        "ACCOUNT-AUTH-CONTRACT",
+        "ACCOUNT-AUTH-HARDEN",
+        "ACCOUNT-AUTH-SESSIONS"
+      ],
+      "owner": "Platform Frontend + Auth",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Operation IDs open_security_destination, read_security_status, change_password, change_email, manage_mfa, sign_out_other_sessions are explicitly covered on desktop_web with operation-level acceptance evidence. Password/email/MFA/session actions display only provider-confirmed results and enforce reauthentication/challenges.",
+        "No sample session/device, local mutation success or stale sensitive cache is rendered."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/security-page.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run smoke:routes",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/account",
+        "src/routes/AppRoutes.tsx",
+        "src/routes/LoopdevRoutes.tsx",
+        "src/components/layout/Topbar.tsx",
+        "src/i18n/locales",
+        "scripts/smoke-routes.json",
+        "src/test/platform/account"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/account/Security.tsx",
+        "src/test/platform/account/security-page.test.tsx",
+        "src/routes/AppRoutes.tsx",
+        "src/routes/LoopdevRoutes.tsx"
+      ],
+      "operation_ids": [
+        "open_security_destination",
+        "read_security_status",
+        "change_password",
+        "change_email",
+        "manage_mfa",
+        "sign_out_other_sessions"
+      ]
+    },
+    {
+      "id": "ACCOUNT-SECURITY-MOBILE-WEB",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "blocked",
+      "title": "Adapt provider-backed Security for mobile web",
+      "requirement_ids": [
+        "REQ-ACCOUNT-SECURITY-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-SECURITY"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "ACCOUNT-SECURITY-DESKTOP"
+      ],
+      "owner": "Platform Frontend + Auth",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Operation IDs open_security_destination, read_security_status, change_password, change_email, manage_mfa, sign_out_other_sessions are explicitly covered on mobile_web with operation-level acceptance evidence. The same Security operations, reauth states and explicit unsupported/error behavior work at mobile-web widths and touch targets.",
+        "Refresh, back, focus restoration, OTP alternatives, RTL and cache clearing after sign-out are covered."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/security-page.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run smoke:routes",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/account",
+        "src/test/platform/account"
+      ],
+      "blocked_by": [
+        "ACCOUNT-SECURITY-DESKTOP"
+      ],
+      "evidence_refs": [],
+      "operation_ids": [
+        "open_security_destination",
+        "read_security_status",
+        "change_password",
+        "change_email",
+        "manage_mfa",
+        "sign_out_other_sessions"
+      ]
+    },
+    {
+      "id": "ACCOUNT-SECURITY-NATIVE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "ready",
+      "title": "Implement native Security destinations for iOS and Android",
+      "requirement_ids": [
+        "REQ-ACCOUNT-SECURITY-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-SECURITY"
+      ],
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-AUTH-CONTRACT",
+        "ACCOUNT-AUTH-HARDEN",
+        "ACCOUNT-AUTH-SESSIONS"
+      ],
+      "owner": "Mobile Platform + Auth",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Operation IDs open_security_destination, read_security_status, change_password, change_email, manage_mfa, sign_out_other_sessions are explicitly covered on ios and android with operation-level acceptance evidence. Both OSes use secure Auth storage and provider-backed password/email/MFA/session operations.",
+        "Native reauthentication, OS back, keyboard/safe area, accessibility, session expiry and identity/cache purge are verified without secrets in storage or logs."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/mobile-security-page.test.tsx",
+          "required": true
+        },
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        },
+        {
+          "command": "cd apps/mobile && npx expo-doctor",
+          "required": true
+        },
+        {
+          "command": "cd apps/mobile && npx expo export --platform all --output-dir /tmp/loopdev-account-security-final-export",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/App.tsx",
+        "apps/mobile/components/MobileSecurityScreen.tsx",
+        "apps/mobile/components/MobileAccountSheet.tsx",
+        "apps/mobile/components/ui/MobilePageHeader.tsx",
+        "apps/mobile/adapters/auth.ts",
+        "src/test/platform/account/mobile-security-page.test.tsx",
+        "src/test/platform/account/stubs/react-native.tsx",
+        "src/test/platform/account/stubs/react-native-svg.tsx",
+        "vitest.config.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "apps/mobile/components/MobileSecurityScreen.tsx",
+        "apps/mobile/App.tsx",
+        "apps/mobile/adapters/auth.ts",
+        "src/test/platform/account/mobile-security-page.test.tsx",
+        "src/test/platform/account/mobile-auth.test.ts"
+      ],
+      "operation_ids": [
+        "open_security_destination",
+        "read_security_status",
+        "change_password",
+        "change_email",
+        "manage_mfa",
+        "sign_out_other_sessions"
+      ]
+    },
+    {
+      "id": "ACCOUNT-BILLING-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "blocked",
+      "title": "Render authorized organization Billing on desktop web",
+      "requirement_ids": [
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-BILLING"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "ACCOUNT-NAV-CONTRACT",
+        "ACCOUNT-BILLING-CONTRACT",
+        "ACCOUNT-BILLING-SERVER"
+      ],
+      "owner": "Platform Frontend + Billing",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Operation IDs open_billing_destination, read_subscription, change_plan, cancel_subscription, manage_payment_methods, view_invoice are explicitly covered on desktop_web with operation-level acceptance evidence. Subscription, invoice, payment-method, plan and cancellation operations use the active organization and server-enforced Owner/Admin policy.",
+        "No demo data or stale financial cache is shown; payment/portal handoff is short-lived and confirmed state is reread from the authority."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/billing-page.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run smoke:routes",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/account",
+        "src/routes/AppRoutes.tsx",
+        "src/test/platform/account"
+      ],
+      "blocked_by": [
+        "ACCOUNT-BILLING-CONTRACT",
+        "ACCOUNT-BILLING-SERVER"
+      ],
+      "evidence_refs": [],
+      "operation_ids": [
+        "open_billing_destination",
+        "read_subscription",
+        "change_plan",
+        "cancel_subscription",
+        "manage_payment_methods",
+        "view_invoice"
+      ]
+    },
+    {
+      "id": "ACCOUNT-BILLING-MOBILE-WEB",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "blocked",
+      "title": "Adapt authorized organization Billing for mobile web",
+      "requirement_ids": [
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-BILLING"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "ACCOUNT-BILLING-DESKTOP"
+      ],
+      "owner": "Platform Frontend + Billing",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Operation IDs open_billing_destination, read_subscription, change_plan, cancel_subscription, manage_payment_methods, view_invoice are explicitly covered on mobile_web with operation-level acceptance evidence. All Billing operations remain available with the same server authorization and pending/error outcomes at mobile-web sizes.",
+        "No offline invoice/portal cache; confirmation, touch, keyboard/back, RTL and active-organization change behavior are covered."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/billing-page.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run smoke:routes",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/account",
+        "src/test/platform/account"
+      ],
+      "blocked_by": [
+        "ACCOUNT-BILLING-DESKTOP"
+      ],
+      "evidence_refs": [],
+      "operation_ids": [
+        "open_billing_destination",
+        "read_subscription",
+        "change_plan",
+        "cancel_subscription",
+        "manage_payment_methods",
+        "view_invoice"
+      ]
+    },
+    {
+      "id": "ACCOUNT-BILLING-NATIVE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "blocked",
+      "title": "Implement authorized Billing destinations for iOS and Android",
+      "requirement_ids": [
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION",
+        "CAP-ACCOUNT-BILLING"
+      ],
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-BILLING-CONTRACT",
+        "ACCOUNT-BILLING-SERVER",
+        "ACCOUNT-AUTH-HARDEN"
+      ],
+      "owner": "Mobile Platform + Billing",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Operation IDs open_billing_destination, read_subscription, change_plan, cancel_subscription, manage_payment_methods, view_invoice are explicitly covered on ios and android with operation-level acceptance evidence. Both OSes enforce the same active-organization Owner/Admin operations and use only an approved secure provider handoff.",
+        "Native safe area, touch, back/return deep link, role loss, tenant switch and provider cancellation/failure are verified; no sensitive Billing data is persisted offline."
+      ],
+      "validation": [
+        {
+          "command": "cd apps/mobile && npx tsc --noEmit",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "apps/mobile/App.tsx",
+        "apps/mobile/components/account",
+        "apps/mobile/adapters"
+      ],
+      "blocked_by": [
+        "ACCOUNT-BILLING-CONTRACT",
+        "ACCOUNT-BILLING-SERVER"
+      ],
+      "evidence_refs": [],
+      "operation_ids": [
+        "open_billing_destination",
+        "read_subscription",
+        "change_plan",
+        "cancel_subscription",
+        "manage_payment_methods",
+        "view_invoice"
+      ]
+    },
+    {
+      "id": "ACCOUNT-TEST-NAV",
+      "phase": "07-build",
+      "type": "test",
+      "status": "blocked",
+      "title": "Verify all Account destination routes and navigation parity",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION",
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION",
+        "REQ-ACCOUNT-SECURITY-DESTINATION",
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-NAVIGATION"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-NAV-CONTRACT",
+        "ACCOUNT-PROFILE-DESKTOP",
+        "ACCOUNT-PROFILE-MOBILE-WEB",
+        "ACCOUNT-PROFILE-NATIVE",
+        "ACCOUNT-PREFS-DESKTOP",
+        "ACCOUNT-PREFS-MOBILE-WEB",
+        "ACCOUNT-PREFS-NATIVE",
+        "ACCOUNT-SECURITY-DESKTOP",
+        "ACCOUNT-SECURITY-MOBILE-WEB",
+        "ACCOUNT-SECURITY-NATIVE",
+        "ACCOUNT-BILLING-DESKTOP",
+        "ACCOUNT-BILLING-MOBILE-WEB",
+        "ACCOUNT-BILLING-NATIVE"
+      ],
+      "owner": "Platform Delivery",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Every destination opens by menu and direct URL/deep link, preserves auth guard, supports refresh/back, and redirects legacy web URLs without showing Rivera account mocks.",
+        "Desktop, mobile web, iOS and Android resolve the same destination meanings; `/app/settings` regression passes."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/navigation.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run smoke:routes",
+          "required": true
+        },
+        {
+          "command": "npm run validate:multiplatform",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/routes/AppRoutes.tsx",
+        "src/components/layout/Topbar.tsx",
+        "apps/mobile/App.tsx",
+        "src/test/platform/account"
+      ],
+      "blocked_by": [
+        "ACCOUNT-PROFILE-DESKTOP",
+        "ACCOUNT-PROFILE-MOBILE-WEB",
+        "ACCOUNT-PROFILE-NATIVE",
+        "ACCOUNT-PREFS-DESKTOP",
+        "ACCOUNT-PREFS-MOBILE-WEB",
+        "ACCOUNT-PREFS-NATIVE",
+        "ACCOUNT-SECURITY-DESKTOP",
+        "ACCOUNT-SECURITY-MOBILE-WEB",
+        "ACCOUNT-SECURITY-NATIVE",
+        "ACCOUNT-BILLING-DESKTOP",
+        "ACCOUNT-BILLING-MOBILE-WEB",
+        "ACCOUNT-BILLING-NATIVE"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "ACCOUNT-TEST-PROFILE",
+      "phase": "07-build",
+      "type": "test",
+      "status": "blocked",
+      "title": "Verify Profile operation results and self-scope",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PROFILE-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-PROFILE"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-PROFILE-FILES",
+        "ACCOUNT-PROFILE-DESKTOP",
+        "ACCOUNT-PROFILE-MOBILE-WEB",
+        "ACCOUNT-PROFILE-NATIVE"
+      ],
+      "owner": "Platform Profile + Delivery",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Read, display-name update and avatar actions have shared contract evidence and renderer action tests on every platform.",
+        "Cross-user update is rejected; upload/validation/version failure preserves canonical profile and never reports a false save."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/profile",
+          "required": true
+        },
+        {
+          "command": "npm run validate:multiplatform",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/test/platform/account",
+        "apps/mobile"
+      ],
+      "blocked_by": [
+        "ACCOUNT-PROFILE-FILES",
+        "ACCOUNT-PROFILE-DESKTOP",
+        "ACCOUNT-PROFILE-MOBILE-WEB",
+        "ACCOUNT-PROFILE-NATIVE"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "ACCOUNT-TEST-PREFS",
+      "phase": "07-build",
+      "type": "test",
+      "status": "blocked",
+      "title": "Verify Preferences sync, conflict and offline behavior",
+      "requirement_ids": [
+        "REQ-ACCOUNT-PREFERENCES-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-PREFERENCES"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-PREFS-SYNC",
+        "ACCOUNT-PREFS-DESKTOP",
+        "ACCOUNT-PREFS-MOBILE-WEB",
+        "ACCOUNT-PREFS-NATIVE"
+      ],
+      "owner": "Platform Sync + Delivery",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Same preference operations are tested through web/native adapters; local preference mutation remains visibly pending until authoritative acceptance.",
+        "Conflict, retry, logout/restart, user switch, organization switch, theme-local and legacy import rules pass without cross-identity replay."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/preferences",
+          "required": true
+        },
+        {
+          "command": "npm run validate:multiplatform",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/test/platform/account",
+        "apps/mobile"
+      ],
+      "blocked_by": [
+        "ACCOUNT-PREFS-SYNC",
+        "ACCOUNT-PREFS-DESKTOP",
+        "ACCOUNT-PREFS-MOBILE-WEB",
+        "ACCOUNT-PREFS-NATIVE"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "ACCOUNT-TEST-SECURITY",
+      "phase": "07-build",
+      "type": "test",
+      "status": "blocked",
+      "title": "Verify provider-confirmed Security operations",
+      "requirement_ids": [
+        "REQ-ACCOUNT-SECURITY-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-SECURITY"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-AUTH-HARDEN",
+        "ACCOUNT-AUTH-SESSIONS",
+        "ACCOUNT-SECURITY-DESKTOP",
+        "ACCOUNT-SECURITY-MOBILE-WEB",
+        "ACCOUNT-SECURITY-NATIVE"
+      ],
+      "owner": "Platform Auth + Delivery",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Password, email, MFA and supported session operations have provider-backed action evidence and step-up/unsupported/error coverage on all platforms.",
+        "No password, OTP, recovery secret or token is persisted/logged; expired/revoked sessions clear sensitive cache and no offline mutation succeeds."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/security",
+          "required": true
+        },
+        {
+          "command": "npm run validate:multiplatform",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/test/platform/account",
+        "apps/mobile/adapters/auth.ts"
+      ],
+      "blocked_by": [
+        "ACCOUNT-AUTH-SESSIONS",
+        "ACCOUNT-SECURITY-DESKTOP",
+        "ACCOUNT-SECURITY-MOBILE-WEB",
+        "ACCOUNT-SECURITY-NATIVE"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "ACCOUNT-TEST-BILLING",
+      "phase": "07-build",
+      "type": "test",
+      "status": "blocked",
+      "title": "Verify tenant isolation and provider-confirmed Billing operations",
+      "requirement_ids": [
+        "REQ-ACCOUNT-BILLING-DESTINATION"
+      ],
+      "capability_ids": [
+        "CAP-ACCOUNT-BILLING"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web",
+        "ios",
+        "android"
+      ],
+      "dependencies": [
+        "ACCOUNT-BILLING-SERVER",
+        "ACCOUNT-BILLING-DESKTOP",
+        "ACCOUNT-BILLING-MOBILE-WEB",
+        "ACCOUNT-BILLING-NATIVE"
+      ],
+      "owner": "Billing/Finance + Delivery",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Owner/Admin can access only the active organization's provider-backed operations; other roles and foreign organization/resource IDs are denied server-side.",
+        "Provider failures, webhook replay, pending cancellation/plan change, payment handoff expiry and role/tenant changes never grant entitlement or leak invoice/payment data."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/platform/account/billing",
+          "required": true
+        },
+        {
+          "command": "npm run validate:multiplatform",
+          "required": true
+        },
+        {
+          "command": "npm run test:quality",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/test/platform/account",
+        "supabase/functions",
+        "supabase/migrations"
+      ],
+      "blocked_by": [
+        "ACCOUNT-BILLING-SERVER",
+        "ACCOUNT-BILLING-DESKTOP",
+        "ACCOUNT-BILLING-MOBILE-WEB",
+        "ACCOUNT-BILLING-NATIVE"
+      ],
+      "evidence_refs": []
+    }
+  ],
+  "change_requests": [],
+  "blockers": []
+}

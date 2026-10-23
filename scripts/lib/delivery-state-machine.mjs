@@ -161,7 +161,7 @@ export class DeliveryStateMachine {
     return typeof approval === "string" ? approval : approval?.status;
   }
 
-  assertCanStart(manifest, checkpoints, phaseId, skill) {
+  assertCanStart(manifest, checkpoints, suite, moduleName, phaseId, skill) {
     const phase = this.phaseById.get(phaseId);
     if (!phase) throw new Error(`Unknown phase: ${phaseId}`);
     if (skill !== phase.skill) throw new Error(`Phase ${phaseId} must be owned by ${phase.skill}`);
@@ -171,12 +171,18 @@ export class DeliveryStateMachine {
       if (checkpoint?.status !== "completed" || checkpoint.invalidated) throw new Error(`Phase ${phaseId} requires completed predecessor ${predecessor}`);
     }
     if (phase.required_gate && this.approvalStatus(manifest, phase.required_gate) !== "approved") throw new Error(`Phase ${phaseId} requires approved gate ${phase.required_gate}`);
+    if (phaseId === "08-verify" || phaseId === "10-git") {
+      const ledgerFile = join(this.workspace(suite, moduleName), "delivery-ledger.json");
+      const stage = phaseId === "08-verify" ? "verification" : "release";
+      const ledgerErrors = validateLedgerFile(this.root, ledgerFile, { stage });
+      if (ledgerErrors.length) throw new Error(`Operation parity gate failed:\n${ledgerErrors.join("\n")}`);
+    }
   }
 
   startPhase({ suite, moduleName, runId, phaseId, skill }) {
     const { file, manifest } = this.loadRun(suite, moduleName, runId);
     const checkpoints = this.checkpoints(suite, moduleName, runId);
-    this.assertCanStart(manifest, checkpoints, phaseId, skill);
+    this.assertCanStart(manifest, checkpoints, suite, moduleName, phaseId, skill);
     const checkpoint = {
       schema_version: 1, run_id: runId, span_id: `${runId}:${phaseId}`, phase: phaseId, skill,
       parent_span_id: null, module: moduleName, status: "running", decision_status: "open",
@@ -223,14 +229,25 @@ export class DeliveryStateMachine {
     if (!checkpoint.validation?.length) throw new Error("Completion requires validation evidence");
     if (checkpoint.validation.some((validation) => !validation.command)) throw new Error("Every validation entry requires a command");
     if (checkpoint.validation.some((validation) => !/^(pass|passed)(\b|\s|\()/i.test(validation.result ?? ""))) throw new Error("Every validation result must pass before completion");
-    if (["00-discovery", "01-design", "06-plan"].includes(phaseId)) {
+    if (["00-discovery", "01-design", "06-plan", "07-build", "08-verify", "09-review", "10-git"].includes(phaseId)) {
       const ledgerFile = join(this.workspace(suite, moduleName), "delivery-ledger.json");
-      const stage = phaseId === "06-plan" ? "plan" : phaseId === "01-design" ? "design" : "discovery";
+      const stage = {
+        "00-discovery": "discovery",
+        "01-design": "design",
+        "06-plan": "plan",
+        "07-build": "implementation",
+        "08-verify": "verification",
+        "09-review": "release",
+        "10-git": "release",
+      }[phaseId];
       const ledgerErrors = validateLedgerFile(this.root, ledgerFile, { stage });
       if (ledgerErrors.length) throw new Error(`Delivery ledger is invalid:\n${ledgerErrors.join("\n")}`);
       const ledger = readJson(ledgerFile);
       if (ledger.status === "blocked") throw new Error(`Delivery ledger is blocked: ${(ledger.blockers ?? []).join("; ")}`);
       if (phaseId === "06-plan" && ledger.status !== "approved") throw new Error("Plan completion requires an approved delivery ledger");
+      if (phaseId === "07-build" && ledger.tasks.some((task) => task.status !== "done")) {
+        throw new Error("Build completion requires every ledger task to be done with evidence");
+      }
     }
     checkpoint.status = "completed";
     checkpoint.decision_status = "confirmed";
@@ -278,7 +295,7 @@ export class DeliveryStateMachine {
     if (checkpoints.get(from)?.checkpoint.status !== "completed") throw new Error(`Cannot hand off incomplete phase ${from}`);
     const target = this.phaseById.get(to);
     if (!target) throw new Error(`Unknown handoff target: ${to}`);
-    this.assertCanStart(manifest, checkpoints, to, target.skill);
+    this.assertCanStart(manifest, checkpoints, suite, moduleName, to, target.skill);
     const handoff = { from, to, owner, at: this.now(), input_fingerprint: manifest.input_fingerprint };
     manifest.handoffs = [...(manifest.handoffs ?? []), handoff];
     manifest.current_phase = to;

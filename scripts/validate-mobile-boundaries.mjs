@@ -4,6 +4,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 const root = process.cwd();
 const mobileRoot = join(root, "apps", "mobile");
 const webRoot = join(root, "src");
+const sharedLocaleDataRoot = join(webRoot, "i18n", "locales");
 const errors = [];
 
 function walk(directory) {
@@ -29,7 +30,10 @@ for (const file of walk(mobileRoot)) {
     const target = specifier.startsWith("@/")
       ? join(webRoot, specifier.slice(2))
       : specifier.startsWith(".") ? resolve(dirname(file), specifier) : null;
-    if (target && (target === webRoot || target.startsWith(`${webRoot}${sep}`))) {
+    // Locale JSON is shared content; mobile must not import executable src/ modules.
+    const isSharedLocaleData = target?.startsWith(`${sharedLocaleDataRoot}${sep}`)
+      && target.endsWith(".json");
+    if (target && !isSharedLocaleData && (target === webRoot || target.startsWith(`${webRoot}${sep}`))) {
       errors.push(`${relative(root, file)} imports desktop runtime ${specifier}`);
     }
   }

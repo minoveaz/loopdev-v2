@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-ACCOUNT-20261010-001",
+  "span_id": "MOD-ACCOUNT-20261010-001:05-sync",
+  "phase": "05-sync",
+  "skill": "sync-design",
+  "parent_span_id": "MOD-ACCOUNT-20261010-001:04-api",
+  "module": "Account",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-10-10T16:28:18Z",
+  "completed_at": "2026-10-10T16:29:06Z",
+  "input_fingerprint": "sha256:ef51d61ae53b9d921679b9b5fed57b3bd36b580438172d9ff4813eefbfc257cd",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/platform-account-pages",
+    "base_branch": "develop",
+    "head_commit": "af5e511506339ef1f96e85e9248fe0feee427516",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/platform/account/discovery.md",
+    "docs/implementation/platform/account/design.md",
+    "docs/implementation/platform/account/domain-model.md",
+    "docs/implementation/platform/account/access-design.md",
+    "docs/implementation/platform/account/api-contracts.md",
+    "docs/implementation/platform/auth/sync-design.md",
+    "src/loopdev/domains/settings/adapter/local.ts",
+    "src/loopdev/domains/settings/adapter/supabase.ts",
+    "src/hooks/use-notification-prefs.tsx",
+    "src/hooks/use-theme.tsx",
+    "apps/mobile/adapters/offlineQueue.ts"
+  ],
+  "decisions": [
+    {
+      "id": "SYNC-ACCOUNT-PREFERENCES",
+      "status": "confirmed",
+      "summary": "Preferences may queue offline mutations with a stable mutation ID and expected version, visibly pending until server confirmation."
+    },
+    {
+      "id": "SYNC-ACCOUNT-SECURITY-BILLING",
+      "status": "confirmed",
+      "summary": "Security and Billing mutations are online-only; neither may be queued or represented as locally successful."
+    },
+    {
+      "id": "SYNC-ACCOUNT-APPEARANCE",
+      "status": "confirmed",
+      "summary": "Appearance remains device-local and uses the existing theme capability."
+    },
+    {
+      "id": "SYNC-ACCOUNT-QUEUE-MIGRATION",
+      "status": "open",
+      "summary": "Shared queue storage/principal binding, unsynced preference sign-out policy, legacy notification import and native restart recovery need Platform/Product owner decisions."
+    },
+    {
+      "id": "SYNC-ACCOUNT-PROFILE-FILES",
+      "status": "open",
+      "summary": "Profile offline draft behavior is a safe assumption; provider concurrency and Files avatar upload/recovery need owner confirmation."
+    }
+  ],
+  "actions": [
+    "Separated connectivity, business state, entity sync state and mutation state.",
+    "Defined per-operation local/offline behavior for Profile, avatar, Preferences, appearance, Security, Billing and tenant/identity changes.",
+    "Inspected current local preferences/theme storage, Settings adapters, Auth sync policy and generic mobile mutation queue.",
+    "Specified retries, conflict resolution, migration, reconciliation, recovery and multiplatform sync test cases."
+  ],
+  "output_artifacts": [
+    "docs/implementation/platform/account/sync-design.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/05-sync-evidence.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/05-sync.json"
+  ],
+  "validation": [
+    {
+      "command": "Source and design evidence review",
+      "result": "passed",
+      "evidence": "Auth sync, local Settings/preferences/theme storage and offline queue were inspected; sync-design.md records their limits and the account-specific policy."
+    },
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run validation passed: 93 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed",
+      "evidence": "Module run validation passed: 93 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "SYNC-ACCOUNT-STATE-MODEL",
+      "status": "PASS",
+      "evidence": "sync-design.md separates connectivity, business, entity-sync and mutation state."
+    },
+    {
+      "id": "SYNC-ACCOUNT-OFFLINE-MATRIX",
+      "status": "PASS",
+      "evidence": "sync-design.md defines local/offline read and write behavior for each Account operation on all required platforms."
+    },
+    {
+      "id": "SYNC-ACCOUNT-RECOVERY",
+      "status": "PASS",
+      "evidence": "sync-design.md covers retry, conflict, identity/tenant switch, reload, reinstall, event reconciliation and rollback."
+    },
+    {
+      "id": "SYNC-ACCOUNT-OWNER-DECISIONS",
+      "status": "PARTIAL",
+      "evidence": "Queue storage/principal binding, pending preference handling, migration, avatar Files lifecycle and provider concurrency remain open with named owners."
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "WAITING_OWNER_DECISIONS_BEFORE_06_PLAN",
+  "evidence_links": [
+    "docs/implementation/platform/account/sync-design.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/05-sync-evidence.md"
+  ],
+  "notes": [
+    "The existing generic mobile offline queue uses web localStorage/process memory and is not yet safe for Account user-scoped mutations; it is recorded as a shared capability gap, not used or modified.",
+    "No Account-local queue, storage adapter, provider integration, endpoint or production code was created.",
+    "Open decisions must be resolved or explicitly deferred by their accountable owners before starting 06-plan under the traceability gate."
+  ],
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

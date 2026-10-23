@@ -23,6 +23,8 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   tone?: Tone;
   loading?: boolean;
+  confirmClassName?: string;
+  cancelClassName?: string;
   onConfirm: () => void | Promise<void>;
   /** Optional extra body slot (e.g., a typed-confirm input). */
   children?: ReactNode;
@@ -49,6 +51,8 @@ export function ConfirmDialog({
   cancelLabel = "Cancel",
   tone = "default",
   loading = false,
+  confirmClassName,
+  cancelClassName,
   onConfirm,
   children,
 }: ConfirmDialogProps) {
@@ -77,11 +81,11 @@ export function ConfirmDialog({
           {children && <div className="pt-2">{children}</div>}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading} className={cancelClassName}>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={loading}
-            className={cn("font-semibold", toneButton[tone])}
+            className={cn("font-semibold", toneButton[tone], confirmClassName)}
           >
             {loading ? "Working…" : confirmLabel}
           </AlertDialogAction>

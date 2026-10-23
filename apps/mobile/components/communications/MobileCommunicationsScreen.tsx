@@ -57,7 +57,7 @@ const CHANNEL_COLORS: Record<CommunicationChannel, string> = {
   livechat: "#0284c7",
 };
 
-const CHANNEL_LABELS: Record<MobileLangCode, Record<CommunicationChannel | "all", string>> = {
+const CHANNEL_LABELS: Partial<Record<MobileLangCode, Record<CommunicationChannel | "all", string>>> = {
   es: {
     all: "Todos los canales",
     whatsapp: "WhatsApp",
@@ -80,7 +80,7 @@ const CHANNEL_LABELS: Record<MobileLangCode, Record<CommunicationChannel | "all"
   },
 };
 
-const STATUS_OPTIONS: Record<MobileLangCode, Array<{ id: ConversationStatus | "all"; label: string }>> = {
+const STATUS_OPTIONS: Partial<Record<MobileLangCode, Array<{ id: ConversationStatus | "all"; label: string }>>> = {
   es: [
     { id: "all", label: "Todas" },
     { id: "open", label: "Abiertas" },
@@ -233,7 +233,7 @@ export function MobileCommunicationsScreen({
               <Text style={styles.channelSnippetLabel}>
                 {item.contact.identityStatus === "pending_identity_review"
                   ? (lang === "es" ? "Revisión identidad" : "Identity review")
-                  : CHANNEL_LABELS[lang][item.channel]}
+                  : CHANNEL_LABELS[lang]?.[item.channel] ?? CHANNEL_LABELS.en![item.channel]}
               </Text>
               <Text style={styles.bulletSeparator}>·</Text>
               <Text
@@ -335,7 +335,7 @@ export function MobileCommunicationsScreen({
                 <ChannelIcon channel={selectedChannel} size={13} />
               )}
               <Text style={styles.channelDropdownText} numberOfLines={1}>
-                {CHANNEL_LABELS[lang][selectedChannel]}
+                {CHANNEL_LABELS[lang]?.[selectedChannel] ?? CHANNEL_LABELS.en![selectedChannel]}
               </Text>
               {selectedChannel !== "all" && <View style={styles.channelActiveDot} />}
             </View>
@@ -385,7 +385,7 @@ export function MobileCommunicationsScreen({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.statusFiltersScroll}
         >
-          {STATUS_OPTIONS[lang].map((opt) => {
+          {(STATUS_OPTIONS[lang] ?? STATUS_OPTIONS.en!).map((opt) => {
             const isActive = selectedStatus === opt.id;
             return (
               <Pressable
@@ -610,7 +610,7 @@ export function MobileCommunicationsScreen({
                   <ChannelIcon channel={acc.channel} size={18} />
                   <View style={{ flex: 1, marginLeft: 8 }}>
                     <Text style={styles.modalOptionText}>
-                      {CHANNEL_LABELS[lang][acc.channel]}
+                      {CHANNEL_LABELS[lang]?.[acc.channel] ?? CHANNEL_LABELS.en![acc.channel]}
                     </Text>
                     <Text style={styles.modalOptionSub}>
                       {acc.state === "connected"

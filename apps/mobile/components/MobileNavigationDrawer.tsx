@@ -22,7 +22,8 @@ import {
 import type { LucideIcon } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { loopdevNavigationContract } from "../../../packages/contracts/src/navigation";
-import { useMobileI18n } from "../i18n";
+import { useMobileI18n, type MobileLangCode } from "../i18n";
+import { mobileTheme } from "../theme/tokens";
 
 type MobileNavigationDrawerProps = {
   visible: boolean;
@@ -48,36 +49,34 @@ const suiteThemes: Record<
   string,
   {
     bgActive: string;
-    bg?: string;
     textActive: string;
-    color?: string;
     borderActive: string;
     iconActive: string;
   }
 > = {
   crm: {
-    bgActive: "#eff6ff",
-    textActive: "#1d4ed8",
-    borderActive: "#bfdbfe",
-    iconActive: "#135bec",
+    bgActive: mobileTheme.colors.primarySoft,
+    textActive: mobileTheme.colors.info,
+    borderActive: mobileTheme.colors.primaryBorder,
+    iconActive: mobileTheme.colors.primary,
   },
   erp: {
-    bgActive: "#f0fdf4",
-    textActive: "#15803d",
-    borderActive: "#bbf7d0",
-    iconActive: "#16a34a",
+    bgActive: mobileTheme.colors.successBg,
+    textActive: mobileTheme.colors.success,
+    borderActive: mobileTheme.colors.successBorder,
+    iconActive: mobileTheme.colors.success,
   },
   tools: {
-    bgActive: "#fef3c7",
-    textActive: "#b45309",
-    borderActive: "#fde68a",
-    iconActive: "#d97706",
+    bgActive: mobileTheme.colors.warningBg,
+    textActive: mobileTheme.colors.warning,
+    borderActive: mobileTheme.colors.warningBorder,
+    iconActive: mobileTheme.colors.warning,
   },
   settings: {
-    bgActive: "#f8fafc",
-    textActive: "#334155",
-    borderActive: "#e2e8f0",
-    iconActive: "#64748b",
+    bgActive: mobileTheme.colors.surfaceMuted,
+    textActive: mobileTheme.colors.textMain,
+    borderActive: mobileTheme.colors.border,
+    iconActive: mobileTheme.colors.textMuted,
   },
 };
 
@@ -87,7 +86,7 @@ const sections = loopdevNavigationContract.groups.map((group) => ({
   theme: suiteThemes[group.id] || suiteThemes.settings,
 }));
 
-const DRAWER_LABELS: Record<"es" | "en", Record<string, string>> = {
+const DRAWER_LABELS: Partial<Record<MobileLangCode, Record<string, string>>> = {
   es: {
     CRM: "CRM",
     ERP: "ERP",
@@ -225,11 +224,11 @@ export function MobileNavigationDrawer({
             <View
               style={[
                 styles.iconBox,
-                { backgroundColor: isSectionActive ? theme.bg : "#f8fafc" },
+                { backgroundColor: isSectionActive ? theme.bgActive : mobileTheme.colors.surfaceMuted },
               ]}
             >
               <GroupIcon
-                color={isSectionActive ? theme.color : "#64748b"}
+                color={isSectionActive ? theme.iconActive : mobileTheme.colors.textMuted}
                 size={17}
                 strokeWidth={2.2}
               />
@@ -243,7 +242,7 @@ export function MobileNavigationDrawer({
               {DRAWER_LABELS[lang]?.[section.label] || section.label}
             </Text>
           </View>
-          <SectionIcon color="#94a3b8" size={16} strokeWidth={2.2} />
+          <SectionIcon color={mobileTheme.colors.textSubtle} size={16} strokeWidth={2.2} />
         </Pressable>
 
         {/* Child Items */}
@@ -332,7 +331,7 @@ export function MobileNavigationDrawer({
                 style={styles.closeButton}
                 hitSlop={8}
               >
-                <X size={16} color="#64748b" />
+                <X size={16} color={mobileTheme.colors.textMuted} />
               </Pressable>
             </View>
 
@@ -347,13 +346,13 @@ export function MobileNavigationDrawer({
               </View>
               <View style={styles.contextBody}>
                 <View style={styles.contextIconWrap}>
-                  <Sparkles size={16} color="#135bec" />
+                  <Sparkles size={16} color={mobileTheme.colors.primary} />
                 </View>
                 <View style={styles.contextTitleWrap}>
                   <Text style={styles.contextName}>{activeSuiteName}</Text>
                   <Text style={styles.contextHint}>{DRAWER_LABELS[lang]?.["Active Work Context"] || "Contexto de trabajo activo"}</Text>
                 </View>
-                <ChevronRight size={16} color="#94a3b8" />
+                <ChevronRight size={16} color={mobileTheme.colors.textSubtle} />
               </View>
             </View>
 
@@ -380,7 +379,7 @@ export function MobileNavigationDrawer({
                 ]}
               >
                 <House
-                  color={isLaunchpadActive ? "#ffffff" : "#475569"}
+                  color={isLaunchpadActive ? mobileTheme.colors.textInverse : mobileTheme.colors.textMain}
                   size={17}
                   strokeWidth={2.2}
                 />
@@ -441,7 +440,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   drawer: {
-    backgroundColor: "#ffffff",
+    backgroundColor: mobileTheme.colors.surface,
     elevation: 16,
     height: "100%",
     maxWidth: 340,
@@ -450,7 +449,7 @@ const styles = StyleSheet.create({
     width: "86%",
     zIndex: 2,
     borderRightWidth: 1,
-    borderRightColor: "#f1f5f9",
+    borderRightColor: mobileTheme.colors.borderLight,
     flexDirection: "column",
     justifyContent: "space-between",
   },
@@ -469,7 +468,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
+    borderBottomColor: mobileTheme.colors.borderLight,
   },
   profile: {
     alignItems: "center",
@@ -479,7 +478,7 @@ const styles = StyleSheet.create({
   },
   avatar: {
     alignItems: "center",
-    backgroundColor: "#135bec",
+    backgroundColor: mobileTheme.colors.primary,
     borderRadius: 22,
     height: 44,
     justifyContent: "center",
@@ -491,15 +490,15 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#22c55e",
+    backgroundColor: mobileTheme.colors.success,
     borderWidth: 2,
-    borderColor: "#ffffff",
+    borderColor: mobileTheme.colors.surface,
     position: "absolute",
     bottom: -1,
     right: -1,
   },
   avatarText: {
-    color: "#ffffff",
+    color: mobileTheme.colors.textInverse,
     fontSize: 14,
     fontWeight: "800",
   },
@@ -512,30 +511,30 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   profileName: {
-    color: "#0f172a",
+    color: mobileTheme.colors.textHeading,
     fontSize: 15,
     fontWeight: "800",
   },
   rolePill: {
-    backgroundColor: "#eff6ff",
+    backgroundColor: mobileTheme.colors.primarySoft,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 1.5,
   },
   rolePillText: {
-    color: "#135bec",
+    color: mobileTheme.colors.primary,
     fontSize: 10,
     fontWeight: "700",
   },
   profileEmail: {
-    color: "#64748b",
+    color: mobileTheme.colors.textMuted,
     fontSize: 12,
     marginTop: 2,
   },
   closeButton: {
     alignItems: "center",
-    backgroundColor: "#f8fafc",
-    borderColor: "#e2e8f0",
+    backgroundColor: mobileTheme.colors.surfaceMuted,
+    borderColor: mobileTheme.colors.border,
     borderRadius: 18,
     borderWidth: 1,
     height: 34,
@@ -543,8 +542,8 @@ const styles = StyleSheet.create({
     width: 34,
   },
   contextCard: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#e2e8f0",
+    backgroundColor: mobileTheme.colors.surfaceMuted,
+    borderColor: mobileTheme.colors.border,
     borderRadius: 14,
     borderWidth: 1,
     marginBottom: 22,
@@ -565,34 +564,34 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#135bec",
+    backgroundColor: mobileTheme.colors.primary,
   },
   contextLabel: {
-    color: "#64748b",
+    color: mobileTheme.colors.textMuted,
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 0.8,
   },
   contextSub: {
     fontSize: 11,
-    color: "#94a3b8",
+    color: mobileTheme.colors.textSubtle,
     fontWeight: "600",
   },
   contextBody: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#ffffff",
+    backgroundColor: mobileTheme.colors.surface,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: mobileTheme.colors.border,
     padding: 9,
   },
   contextIconWrap: {
     width: 30,
     height: 30,
     borderRadius: 8,
-    backgroundColor: "#eff6ff",
+    backgroundColor: mobileTheme.colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -600,16 +599,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contextName: {
-    color: "#0f172a",
+    color: mobileTheme.colors.textHeading,
     fontSize: 13,
     fontWeight: "700",
   },
   contextHint: {
-    color: "#64748b",
+    color: mobileTheme.colors.textMuted,
     fontSize: 11,
   },
   categoryTitle: {
-    color: "#94a3b8",
+    color: mobileTheme.colors.textSubtle,
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.2,
@@ -627,7 +626,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   navPillActive: {
-    backgroundColor: "#eff6ff",
+    backgroundColor: mobileTheme.colors.primarySoft,
   },
   iconBox: {
     width: 32,
@@ -637,26 +636,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconBoxDefault: {
-    backgroundColor: "#f1f5f9",
+    backgroundColor: mobileTheme.colors.surfaceMuted,
   },
   iconBoxActive: {
-    backgroundColor: "#135bec",
+    backgroundColor: mobileTheme.colors.primary,
   },
   navPillLabel: {
-    color: "#334155",
+    color: mobileTheme.colors.textMain,
     fontSize: 14,
     fontWeight: "600",
     flex: 1,
   },
   navPillLabelActive: {
-    color: "#135bec",
+    color: mobileTheme.colors.primary,
     fontWeight: "700",
   },
   activeIndicator: {
     width: 4,
     height: 16,
     borderRadius: 2,
-    backgroundColor: "#135bec",
+    backgroundColor: mobileTheme.colors.primary,
   },
   sectionContainer: {
     marginBottom: 4,
@@ -670,7 +669,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   sectionTriggerExpanded: {
-    backgroundColor: "#f8fafc",
+    backgroundColor: mobileTheme.colors.surfaceMuted,
   },
   sectionTitle: {
     flexDirection: "row",
@@ -679,12 +678,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionLabel: {
-    color: "#334155",
+    color: mobileTheme.colors.textMain,
     fontSize: 14,
     fontWeight: "600",
   },
   sectionLabelActive: {
-    color: "#0f172a",
+    color: mobileTheme.colors.textHeading,
     fontWeight: "700",
   },
   subItemsList: {
@@ -699,7 +698,7 @@ const styles = StyleSheet.create({
     top: 4,
     bottom: 12,
     width: 1.5,
-    backgroundColor: "#e2e8f0",
+    backgroundColor: mobileTheme.colors.border,
   },
   subItemsColumn: {
     gap: 2,
@@ -714,41 +713,41 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   subItemActive: {
-    backgroundColor: "#eff6ff",
+    backgroundColor: mobileTheme.colors.primarySoft,
   },
   subDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: "#cbd5e1",
+    backgroundColor: mobileTheme.colors.borderSubtle,
   },
   subDotActive: {
-    backgroundColor: "#135bec",
+    backgroundColor: mobileTheme.colors.primary,
   },
   subItemLabel: {
-    color: "#64748b",
+    color: mobileTheme.colors.textMuted,
     fontSize: 13,
     fontWeight: "500",
     flex: 1,
   },
   subItemLabelActive: {
-    color: "#135bec",
+    color: mobileTheme.colors.primary,
     fontWeight: "700",
   },
   pinnedFooter: {
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderTopWidth: 1,
-    borderTopColor: "#f1f5f9",
-    backgroundColor: "#ffffff",
+    borderTopColor: mobileTheme.colors.borderLight,
+    backgroundColor: mobileTheme.colors.surface,
     alignItems: "center",
   },
   footerPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#f8fafc",
-    borderColor: "#e2e8f0",
+    backgroundColor: mobileTheme.colors.surfaceMuted,
+    borderColor: mobileTheme.colors.border,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 10,
@@ -758,10 +757,10 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#10b981",
+    backgroundColor: mobileTheme.colors.success,
   },
   footerText: {
-    color: "#64748b",
+    color: mobileTheme.colors.textMuted,
     fontSize: 11,
     fontWeight: "600",
   },

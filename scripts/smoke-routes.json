@@ -2,13 +2,20 @@
   "desktop_web": {
     "runtime_dependent": true,
     "routes": [
+      { "path": "/app/account/profile", "surface": "Account Profile", "deep_link": true },
+      { "path": "/account/profile", "surface": "Legacy Profile redirect", "deep_link": true },
+      { "path": "/app/account/settings", "surface": "Personal Account Preferences", "deep_link": true },
+      { "path": "/account/settings", "surface": "Legacy personal settings redirect", "deep_link": true },
+      { "path": "/app/account/security", "surface": "Account Security", "deep_link": true },
+      { "path": "/account/security", "surface": "Legacy Security redirect", "deep_link": true },
       { "path": "/app/sales-crm/contacts", "surface": "Contacts list" },
       { "path": "/app/sales-crm/contacts/:contactId", "example": "/app/sales-crm/contacts/crm_cust_1", "surface": "Customer 360", "deep_link": true },
       { "path": "/app/sales-crm/contacts/:contactId/activity", "example": "/app/sales-crm/contacts/crm_cust_1/activity", "surface": "Contact activity", "deep_link": true },
       { "path": "/app/sales-crm/pipeline", "surface": "Pipeline" }
     ],
     "checks": [
-      { "kind": "route", "evidence": "AppRoutes.tsx and LoopdevRoutes.tsx route registration" },
+      { "kind": "route", "evidence": "AppRoutes.tsx legacy redirect and LoopdevRoutes.tsx canonical registration" },
+      { "kind": "navigation", "evidence": "Topbar profile, personal settings and security links target canonical Account destinations" },
       { "kind": "deep-link", "evidence": "Parameterized route registration and concrete manifest example" },
       { "kind": "refresh", "evidence": "Vite history fallback; verify with deployed host" },
       { "kind": "filter-reset", "evidence": "Contacts page filter and reset tests" },
@@ -19,6 +26,7 @@
   "mobile_web": {
     "runtime_dependent": true,
     "routes": [
+      { "path": "/app/account/security", "surface": "Mobile Account Security", "deep_link": true },
       { "path": "/app/sales-crm/contacts", "surface": "Mobile contacts" },
       { "path": "/app/sales-crm/contacts/new", "surface": "Mobile create contact", "deep_link": true },
       { "path": "/app/sales-crm/contacts/:contactId", "example": "/app/sales-crm/contacts/crm_cust_1", "surface": "Mobile Customer 360", "deep_link": true },
@@ -26,7 +34,8 @@
       { "path": "/app/sales-crm/contacts/:contactId/duplicates", "example": "/app/sales-crm/contacts/crm_cust_1/duplicates", "surface": "Mobile duplicate review", "deep_link": true }
     ],
     "checks": [
-      { "kind": "route", "evidence": "Expo App.tsx route matcher" },
+      { "kind": "route", "evidence": "Expo App.tsx canonical Account Security route matcher" },
+      { "kind": "navigation", "evidence": "Account sheet security action opens the shared destination contract" },
       { "kind": "deep-link", "evidence": "Parameterized route matcher and concrete manifest example" },
       { "kind": "refresh", "evidence": "Expo web runtime check required" },
       { "kind": "filter-reset", "evidence": "MobileContactsScreen filter controls" },

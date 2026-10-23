@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { mobileTheme } from "../theme/tokens";
 
 type MobileModalSheetProps = {
   visible: boolean;
@@ -74,22 +75,22 @@ export function MobileConfirmDialog({ visible, title, description, cancelLabel =
 const styles = StyleSheet.create({
   overlay: { backgroundColor: "rgba(15,23,42,0.42)", flex: 1, justifyContent: "flex-end" },
   backdrop: { ...StyleSheet.absoluteFill },
-  sheet: { backgroundColor: "#fff", borderTopLeftRadius: 22, borderTopRightRadius: 22, maxHeight: "90%", paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24, display: "flex", flexDirection: "column" },
+  sheet: { backgroundColor: mobileTheme.colors.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, maxHeight: "90%", paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24, display: "flex", flexDirection: "column" },
   fullHeight: { height: "92%" },
-  handle: { alignSelf: "center", backgroundColor: "#cbd5e1", borderRadius: 99, height: 4, marginBottom: 14, width: 38 },
-  title: { color: "#111827", fontSize: 18, fontWeight: "800", marginBottom: 12, textAlign: "center" },
+  handle: { alignSelf: "center", backgroundColor: mobileTheme.colors.borderSubtle, borderRadius: 99, height: 4, marginBottom: 14, width: 38 },
+  title: { color: mobileTheme.colors.textHeading, fontSize: 18, fontWeight: "800", marginBottom: 12, textAlign: "center" },
   body: { minHeight: 0 },
   scrollBody: { flexShrink: 1 },
   scrollBodyContent: { paddingBottom: 20 },
-  footer: { borderTopColor: "#e2e8f0", borderTopWidth: 1, marginTop: 16, paddingTop: 14 },
+  footer: { borderTopColor: mobileTheme.colors.border, borderTopWidth: 1, marginTop: 16, paddingTop: 14 },
   confirmOverlay: { alignItems: "center", backgroundColor: "rgba(15,23,42,0.5)", flex: 1, justifyContent: "center", padding: 22 },
-  confirmCard: { backgroundColor: "#fff", borderRadius: 16, maxWidth: 440, padding: 22, width: "100%" },
-  confirmTitle: { color: "#111827", fontSize: 19, fontWeight: "800" },
-  confirmDescription: { color: "#64748b", fontSize: 14, lineHeight: 21, marginTop: 8 },
+  confirmCard: { backgroundColor: mobileTheme.colors.surface, borderRadius: 16, maxWidth: 440, padding: 22, width: "100%" },
+  confirmTitle: { color: mobileTheme.colors.textHeading, fontSize: 19, fontWeight: "800" },
+  confirmDescription: { color: mobileTheme.colors.textMuted, fontSize: 14, lineHeight: 21, marginTop: 8 },
   confirmActions: { flexDirection: "row", gap: 10, justifyContent: "flex-end", marginTop: 22 },
-  cancelButton: { backgroundColor: "#e2e8f0", borderRadius: 9, paddingHorizontal: 16, paddingVertical: 12 },
-  cancelText: { color: "#334155", fontSize: 14, fontWeight: "700" },
-  confirmButton: { backgroundColor: "#135bec", borderRadius: 9, paddingHorizontal: 16, paddingVertical: 12 },
-  destructiveButton: { backgroundColor: "#dc2626" },
-  confirmText: { color: "#fff", fontSize: 14, fontWeight: "800" },
+  cancelButton: { backgroundColor: mobileTheme.colors.surfaceMuted, borderRadius: 9, paddingHorizontal: 16, paddingVertical: 12 },
+  cancelText: { color: mobileTheme.colors.textMain, fontSize: 14, fontWeight: "700" },
+  confirmButton: { backgroundColor: mobileTheme.colors.primary, borderRadius: 9, paddingHorizontal: 16, paddingVertical: 12 },
+  destructiveButton: { backgroundColor: mobileTheme.colors.danger },
+  confirmText: { color: mobileTheme.colors.textInverse, fontSize: 14, fontWeight: "800" },
 });

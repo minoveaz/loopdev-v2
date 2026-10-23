@@ -56,6 +56,15 @@ describe("AuthPort & TenantContextPort Platform Implementation", () => {
     expect(resetRes.data.deliveryChannel).toBe("inbucket_dev");
   });
 
+  it("does not fake provider-only sign-out-other-sessions in local development mode", async () => {
+    const adapter = new SupabaseAuthAdapter({ storage: new MemoryStorage() });
+
+    expect(await adapter.signOutOtherSessions()).toMatchObject({
+      success: false,
+      error: { code: "AUTH_OPERATION_UNSUPPORTED" },
+    });
+  });
+
   it("exposes all organizations for Super Admin / Owner and enforces tenant isolation", async () => {
     const storage = new MemoryStorage();
     const authAdapter = new SupabaseAuthAdapter({ storage });
@@ -79,7 +88,7 @@ describe("AuthPort & TenantContextPort Platform Implementation", () => {
     expect(tenantAdapter.getTenantContext()?.activeOrganizationId).toBe(targetOrg.id);
   });
 
-  it("handles signUp and updatePassword lifecycle cleanly", async () => {
+  it("does not fake security operations without an authentication provider", async () => {
     const storage = new MemoryStorage();
     const adapter = new SupabaseAuthAdapter({ storage });
 
@@ -94,9 +103,35 @@ describe("AuthPort & TenantContextPort Platform Implementation", () => {
     expect(signUpRes.data.user.fullName).toBe("New Developer");
 
     const updateRes = await adapter.updatePassword({ newPassword: "newpassword456" });
-    expect(updateRes.success).toBe(true);
+    expect(updateRes).toMatchObject({
+      success: false,
+      error: { code: "AUTH_OPERATION_UNSUPPORTED" },
+    });
 
     const weakUpdateRes = await adapter.updatePassword({ newPassword: "123" });
-    expect(weakUpdateRes.success).toBe(false);
+    expect(weakUpdateRes).toMatchObject({
+      success: false,
+      error: { code: "AUTH_WEAK_PASSWORD" },
+    });
+    expect(await adapter.getSecurityStatus()).toMatchObject({
+      success: false,
+      error: { code: "AUTH_OPERATION_UNSUPPORTED" },
+    });
+    expect(await adapter.requestEmailChange({ newEmail: "person@example.test" })).toMatchObject({
+      success: false,
+      error: { code: "AUTH_OPERATION_UNSUPPORTED" },
+    });
+    expect(await adapter.beginTotpEnrollment()).toMatchObject({
+      success: false,
+      error: { code: "AUTH_OPERATION_UNSUPPORTED" },
+    });
+    expect(await adapter.verifyTotp({ factorId: "factor-1", code: "123456" })).toMatchObject({
+      success: false,
+      error: { code: "AUTH_OPERATION_UNSUPPORTED" },
+    });
+    expect(await adapter.removeTotpFactor({ factorId: "factor-1" })).toMatchObject({
+      success: false,
+      error: { code: "AUTH_OPERATION_UNSUPPORTED" },
+    });
   });
 });

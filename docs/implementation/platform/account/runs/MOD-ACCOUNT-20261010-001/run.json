@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "workflow_version": 1,
+  "run_id": "MOD-ACCOUNT-20261010-001",
+  "suite": "platform",
+  "module": "Account",
+  "status": "blocked",
+  "current_phase": "07-build",
+  "attempt": 4,
+  "started_at": "2026-10-10T14:27:44.795Z",
+  "updated_at": "2026-10-11T12:42:35Z",
+  "input_fingerprint": "sha256:81535cca6f1857ea9fe6f7299b40245f01b7539a4779f586852c0a70143b5ba8",
+  "fingerprints": {
+    "product": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scope": "sha256:b51ac5865ef2102f7975367ef386efaaa6f24b6d06a9f4eab8c9d1eb744aaff6",
+    "design": "sha256:eb92d58c410637eb3bf90aceccd0a0da5a74c0cc7480252b9ddb2606838eee94",
+    "plan": "sha256:a9dd452400bee87b6f8c5a633baa7ee2f1a4ee9a1732b9fa6374b2b5606b359a",
+    "contracts": "sha256:fdcf3d8b79df828bf1c0a28296f675791012561bfb8b8933d51ad378ecd3e929",
+    "code": "sha256:f85c2809f37e3ab35e8e95c2e3cddcdf0cf58b17766b4171c46be43f8dc946cb",
+    "tests": "sha256:73f9509aeb83def1cc2fd5db6ffab7706d98c807507b1177b6216ee2096fbcdc"
+  },
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/platform-account-pages",
+    "base_branch": "develop",
+    "head_commit": "af5e511506339ef1f96e85e9248fe0feee427516",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "platform_scope": [
+    "desktop_web",
+    "mobile_web",
+    "ios",
+    "android"
+  ],
+  "approvals": {
+    "design": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-10-10T15:53:22Z",
+      "role": "product",
+      "artifact": "docs/implementation/platform/account/design.md",
+      "artifact_fingerprint": "sha256:eb92d58c410637eb3bf90aceccd0a0da5a74c0cc7480252b9ddb2606838eee94",
+      "source": "Explicit design approval in user conversation; the user subsequently resolved DEC-ACCOUNT-013 by approving the shared update contract for canonical PlatformUser.fullName/avatarUrl fields and DEC-ACCOUNT-014 by confirming LoopDev as the legal SaaS owner and seller operating initially from Spain. Provider selection remains open for Finance review."
+    },
+    "visual_design": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-10-10T16:11:29Z",
+      "role": "product",
+      "artifact": "docs/implementation/platform/account/visual-design.md and docs/implementation/platform/account/native-compositions.md",
+      "artifact_fingerprint": null,
+      "source": "Explicit user approval in conversation for the conceptual Profile, Preferences, Security and Billing visual package, including native compositions."
+    },
+    "plan": {
+      "status": "approved",
+      "approved_by": "user",
+      "approved_at": "2026-10-11T10:53:59.503Z",
+      "role": "product",
+      "artifact": "docs/implementation/platform/account/implementation-plan.md",
+      "artifact_fingerprint": "sha256:ff71b15658ba13e28df08e28746c11b4194b38ac42f6039f5853cd1e02eb83bd",
+      "source": "Explicit user approval of the Account implementation plan, followed by explicit authorization to implement the two 07-build tasks marked ready."
+    },
+    "verification": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "release": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "push": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "pull_request": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    }
+  },
+  "approval_gates": [
+    "plan"
+  ],
+  "architecture_quality": "PASS_WITH_DEBT",
+  "platform_impact": [
+    {
+      "capability": "PlatformUser / AuthPort profile fields",
+      "decision": "EXTEND_PLATFORM",
+      "consumers": [
+        "Authenticated web clients",
+        "iOS",
+        "Android",
+        "Shell and product identity consumers"
+      ],
+      "tests_affected": [
+        "Self-only profile access",
+        "Allowlisted fullName/avatarUrl update",
+        "Provider-managed identity restrictions"
+      ],
+      "migration": "No parallel UserProfile aggregate or backfill; exact shared update operation remains 04-api work."
+    },
+    {
+      "capability": "Organization authorization and Billing",
+      "decision": "MODULE_SPECIFIC",
+      "consumers": [
+        "Platform membership/permission helpers",
+        "Billing server and provider",
+        "Account clients"
+      ],
+      "tests_affected": [
+        "Active Owner/Admin-only Billing reads and mutations",
+        "Cross-organization IDOR denial",
+        "Permission/cache changes"
+      ],
+      "migration": "No Billing-specific permission key or Account RLS exists; Platform/Billing owners must approve catalog and persistence changes."
+    }
+  ],
+  "checkpoint_paths": [
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/00-discovery.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/01-design.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/01-visual-design.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/02-domain.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/03-access.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/04-api.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/05-sync.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/06-plan.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build.json"
+  ],
+  "evidence_links": [
+    "docs/implementation/platform/account/domain-model.md",
+    "docs/implementation/platform/account/access-design.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/02-domain-evidence.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/02-domain.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/03-access-evidence.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/03-access.json",
+    "docs/implementation/platform/account/api-contracts.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/04-api-evidence.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/04-api.json",
+    "docs/implementation/platform/account/sync-design.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/05-sync-evidence.md",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/05-sync.json",
+    "docs/implementation/platform/account/runs/MOD-ACCOUNT-20261010-001/07-build-evidence.md"
+  ],
+  "change_requests": [],
+  "invalidated_phases": [
+    "00-discovery",
+    "01-design",
+    "01-visual-design",
+    "02-domain",
+    "03-access",
+    "04-api",
+    "05-sync",
+    "06-plan",
+    "07-build",
+    "08-verify",
+    "09-review",
+    "10-git"
+  ],
+  "invalidation_reason": "Changed inputs: scope",
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
+  "blocked_by": [
+    {
+      "id": "DEC-ACCOUNT-008",
+      "owner": "Product / Finance",
+      "reason": "LoopDev is confirmed as seller operating initially from Spain; provider, precise legal domicile, tax/invoicing responsibility and provider commercial terms remain for Finance review."
+    },
+    {
+      "id": "DEC-ACCOUNT-009",
+      "owner": "Platform Auth",
+      "reason": "MFA, session listing/revocation, profile update concurrency and provider behavior require a capability decision."
+    },
+    {
+      "id": "DEC-ACCOUNT-010",
+      "owner": "Platform capability owners",
+      "reason": "Avatar lifecycle, preference catalogs/migration, cancellation timing, entitlement authority and audit retention remain open."
+    },
+    {
+      "id": "DEC-ACCOUNT-011",
+      "owner": "Platform owner",
+      "reason": "Shared Preferences/Auth operation extensions and billing permission/audit ownership require approval."
+    },
+    {
+      "id": "SYNC-ACCOUNT-QUEUE-MIGRATION",
+      "owner": "Platform Sync / Product",
+      "reason": "User-scoped queue storage, pending preference handling on sign-out/restart, and legacy local preference import remain undecided."
+    },
+    "Twenty-five ledger tasks remain blocked by their recorded dependencies and owner decisions; only the two authorized ready tasks have been completed."
+  ],
+  "decision_updates": [
+    {
+      "id": "DEC-ACCOUNT-014",
+      "status": "confirmed",
+      "decision": "LoopDev is the legal entity that owns the SaaS, is the seller for subscriptions and will initially operate from Spain.",
+      "owner": "User",
+      "source": "User conversation on 2026-10-11",
+      "recorded_at": "2026-10-11T10:09:50Z",
+      "remaining": [
+        "Provider selection",
+        "precise legal domicile",
+        "tax and invoicing responsibilities",
+        "provider commercial terms"
+      ]
+    },
+    {
+      "id": "DEC-ACCOUNT-012",
+      "status": "confirmed",
+      "decision": "Spain, the United States and Colombia are buyer markets initially considered; customers may also be in other countries.",
+      "owner": "User",
+      "source": "User conversation on 2026-10-11",
+      "recorded_at": "2026-10-11T10:09:50Z",
+      "remaining": [
+        "Finance to validate provider availability, fees and compliance for launch markets"
+      ]
+    },
+    {
+      "id": "PLAN-GATE-001",
+      "status": "confirmed",
+      "decision": "Plan approval may retain missing operation coverage when every required operation/platform pair maps to explicit tasks; strict parity is required before build completion, verification and publication.",
+      "owner": "User",
+      "source": "Explicit user choice in conversation on 2026-10-11",
+      "recorded_at": "2026-10-11T10:39:58Z",
+      "remaining": []
+    }
+  ],
+  "next_action": "Keep 07-build open; resolve remaining task dependencies and owner decisions before starting additional work.",
+  "handoffs": [
+    {
+      "from": "00-discovery",
+      "to": "01-design",
+      "owner": "delivery",
+      "at": "2026-10-10T14:56:32.200Z",
+      "input_fingerprint": "sha256:81535cca6f1857ea9fe6f7299b40245f01b7539a4779f586852c0a70143b5ba8"
+    },
+    {
+      "from": "01-design",
+      "to": "01-visual-design",
+      "owner": "module-visual-design",
+      "at": "2026-10-10T15:53:22Z",
+      "input_fingerprint": "sha256:81535cca6f1857ea9fe6f7299b40245f01b7539a4779f586852c0a70143b5ba8"
+    },
+    {
+      "from": "01-visual-design",
+      "to": "02-domain",
+      "owner": "module-design",
+      "at": "2026-10-10T16:11:29Z",
+      "input_fingerprint": "sha256:81535cca6f1857ea9fe6f7299b40245f01b7539a4779f586852c0a70143b5ba8"
+    },
+    {
+      "from": "02-domain",
+      "to": "03-access",
+      "owner": "domain-model",
+      "at": "2026-10-10T16:19:50Z",
+      "input_fingerprint": "sha256:ef51d61ae53b9d921679b9b5fed57b3bd36b580438172d9ff4813eefbfc257cd"
+    },
+    {
+      "from": "03-access",
+      "to": "04-api",
+      "owner": "access-design",
+      "at": "2026-10-10T16:21:39Z",
+      "input_fingerprint": "sha256:ef51d61ae53b9d921679b9b5fed57b3bd36b580438172d9ff4813eefbfc257cd"
+    },
+    {
+      "from": "04-api",
+      "to": "05-sync",
+      "owner": "api-contracts",
+      "at": "2026-10-10T16:24:41Z",
+      "input_fingerprint": "sha256:ef51d61ae53b9d921679b9b5fed57b3bd36b580438172d9ff4813eefbfc257cd"
+    },
+    {
+      "from": "06-plan",
+      "to": "07-build",
+      "owner": "module-build",
+      "at": "2026-10-11T10:55:21.732Z",
+      "input_fingerprint": "sha256:81535cca6f1857ea9fe6f7299b40245f01b7539a4779f586852c0a70143b5ba8"
+    }
+  ],
+  "commit": null,
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  },
+  "resolved_blockers": [
+    {
+      "blocker": "Approval gate unresolved: 23 required operations remain missing on all four platforms, and plan approval cannot precede implementation under the current coverage rule.",
+      "resolution": "User approved separating plan approval from implementation parity. Every missing operation/platform pair is now mapped to explicit renderer tasks; coverage remains missing until evidence, with strict gates before build completion, verification and publication.",
+      "resolved_at": "2026-10-11T10:39:58Z"
+    },
+    {
+      "blocker": "DISC-LEDGER-001: delivery-ledger contract_refs used .ts instead of existing .tsx path; detector module-discovery validator; next action correct path and resume same run.",
+      "resolution": "Resolved DISC-LEDGER-001 by correcting the contract_refs path to the existing .tsx file; validate:delivery-ledgers now passes (7 ledgers). Discovery artifact fingerprint changed; continue attempt 2 and stop for product/domain blockers.",
+      "resolved_at": "2026-10-10T14:32:51.284Z"
+    },
+    {
+      "blocker": "DISC-SCOPE-001: No approved Account product definition or accountable owner resolves personal profile/preferences, Auth-owned security, organization settings and customer billing boundaries; billing customer/payer/provider and native follow-up are also undecided. Discovery evidence is recorded; safe 01-design handoff is blocked.",
+      "resolution": "Resolved discovery scope with user-approved boundaries for profile, personal preferences, authentication security, organization billing, all four platforms and synchronized preferences; provider comparison is deferred to design.",
+      "resolved_at": "2026-10-10T14:53:57.290Z"
+    },
+    {
+      "blocker": "DEC-ACCOUNT-013: Canonical source for profile name/avatar was undecided.",
+      "resolution": "The user chose existing PlatformUser.fullName/avatarUrl as the sole canonical fields and approved extending the shared contract to edit them; no separate UserProfile aggregate will be created.",
+      "resolved_at": "2026-10-10T16:19:50Z"
+    }
+  ]
+}

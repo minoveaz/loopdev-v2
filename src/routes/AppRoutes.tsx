@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { collectNavRoutes } from "@/app/navigation";
 import { loopdevRouteElements } from "./LoopdevRoutes";
+import { accountDestinations } from "../../packages/contracts/src/account-navigation";
 
 // All page components are lazy-loaded so each route ships as its own chunk
 // and the initial bundle stays small. React.lazy + <Suspense> handles the
@@ -42,10 +43,6 @@ const ModalsKit = lazy(() => import("@/template/rivera/pages/ui-kit/Modals"));
 const AlertsKit = lazy(() => import("@/template/rivera/pages/ui-kit/Alerts"));
 const TypographyKit = lazy(() => import("@/template/rivera/pages/ui-kit/Typography"));
 const MonoExamplesKit = lazy(() => import("@/template/rivera/pages/ui-kit/MonoExamples"));
-const ProfilePage = lazy(() => import("@/template/rivera/pages/account/Profile"));
-const SettingsPage = lazy(() => import("@/template/rivera/pages/account/Settings"));
-const SecurityPage = lazy(() => import("@/template/rivera/pages/account/Security"));
-const BillingPage = lazy(() => import("@/template/rivera/pages/account/Billing"));
 const AppearancePage = lazy(() => import("@/template/rivera/pages/account-settings/AppearancePage"));
 const Login = lazy(() => import("@/template/rivera/pages/auth/Login"));
 const Register = lazy(() => import("@/template/rivera/pages/auth/Register"));
@@ -283,9 +280,9 @@ export function AppRoutes() {
     "/ui-kit/typography",
     "/ui-kit/mono-examples",
     "/account/profile",
+    "/app/account/profile",
     "/account/settings",
     "/account/security",
-    "/account/billing",
     "/account-settings/appearance",
     "/dev/data-console",
     "/dev/card-variants",
@@ -520,10 +517,9 @@ export function AppRoutes() {
         <Route path="/ui-kit/alerts" element={<AlertsKit />} />
         <Route path="/ui-kit/typography" element={<TypographyKit />} />
         <Route path="/ui-kit/mono-examples" element={<MonoExamplesKit />} />
-        <Route path="/account/profile" element={<ProfilePage />} />
-        <Route path="/account/settings" element={<SettingsPage />} />
-        <Route path="/account/security" element={<SecurityPage />} />
-        <Route path="/account/billing" element={<BillingPage />} />
+        <Route path={accountDestinations.profile.legacyPaths[0]} element={<Navigate to={accountDestinations.profile.path} replace />} />
+        <Route path={accountDestinations.settings.legacyPaths[0]} element={<Navigate to={accountDestinations.settings.path} replace />} />
+        <Route path={accountDestinations.security.legacyPaths[0]} element={<Navigate to={accountDestinations.security.path} replace />} />
         <Route path="/account-settings/appearance" element={<AppearancePage />} />
         <Route path="/dev/data-console" element={<DataConsole />} />
         <Route path="/dev/card-variants" element={<CardVariants />} />

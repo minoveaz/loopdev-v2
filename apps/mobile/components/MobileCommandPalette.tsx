@@ -17,7 +17,8 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-nativ
 import type { ContextualActionContext, SharedContextualAction } from "../../../packages/contracts/src/navigation";
 import { getContextualActions } from "../../../packages/contracts/src/navigation";
 
-import { useMobileI18n } from "../i18n";
+import { useMobileI18n, type MobileLangCode } from "../i18n";
+import { mobileTheme } from "../theme/tokens";
 
 type MobileCommandPaletteProps = {
   context: ContextualActionContext;
@@ -37,7 +38,7 @@ const icons: Record<string, LucideIcon> = {
   product: PackagePlus,
 };
 
-const ACTION_TRANSLATIONS: Record<"es" | "en", Record<string, { label: string; description: string }>> = {
+const ACTION_TRANSLATIONS: Partial<Record<MobileLangCode, Record<string, { label: string; description: string }>>> = {
   es: {
     "open-crm": { label: "Abrir CRM", description: "Continuar trabajando con clientes y pipeline." },
     "open-erp": { label: "Abrir ERP", description: "Continuar trabajando con productos y operaciones." },
@@ -60,7 +61,7 @@ const ACTION_TRANSLATIONS: Record<"es" | "en", Record<string, { label: string; d
   },
 };
 
-const CONTEXT_LABELS: Record<"es" | "en", Record<string, string>> = {
+const CONTEXT_LABELS: Partial<Record<MobileLangCode, Record<string, string>>> = {
   es: { launchpad: "INICIO", crm: "CRM", erp: "ERP", conversations: "MENSAJES" },
   en: { launchpad: "LAUNCHPAD", crm: "CRM", erp: "ERP", conversations: "MESSAGES" },
 };
@@ -111,16 +112,16 @@ export function MobileCommandPalette({
               onPress={close}
               style={styles.close}
             >
-              <X color="#64748b" size={18} />
+              <X color={mobileTheme.colors.textMuted} size={18} />
             </Pressable>
           </View>
           <View style={styles.searchRow}>
-            <Search color="#64748b" size={18} strokeWidth={2.2} />
+            <Search color={mobileTheme.colors.textMuted} size={18} strokeWidth={2.2} />
             <TextInput
               accessibilityLabel={lang === "es" ? "Buscar acciones contextuales" : "Search contextual actions"}
               onChangeText={setQuery}
               placeholder={lang === "es" ? "Buscar acciones..." : "Search actions..."}
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={mobileTheme.colors.textSubtle}
               style={styles.input}
               value={query}
             />
@@ -145,9 +146,9 @@ function ActionRow({ action, onPress }: { action: SharedContextualAction; onPres
   const Icon = icons[action.iconKey] ?? MessageCircle;
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.action}>
-      <View style={styles.icon}><Icon color="#135bec" size={19} strokeWidth={2.1} /></View>
+      <View style={styles.icon}><Icon color={mobileTheme.colors.primary} size={19} strokeWidth={2.1} /></View>
       <View style={styles.copy}><Text style={styles.label}>{action.label}</Text><Text style={styles.description}>{action.description}</Text></View>
-      <CornerDownLeft color="#94a3b8" size={16} />
+      <CornerDownLeft color={mobileTheme.colors.textSubtle} size={16} />
     </Pressable>
   );
 }
@@ -155,22 +156,22 @@ function ActionRow({ action, onPress }: { action: SharedContextualAction; onPres
 const styles = StyleSheet.create({
   overlay: { alignItems: "center", flex: 1, justifyContent: "center", paddingHorizontal: 22 },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(15,23,42,0.42)" },
-  palette: { backgroundColor: "#ffffff", borderColor: "#e5e7eb", borderRadius: 18, borderWidth: 1, boxShadow: "0px 8px 24px rgba(15,23,42,0.22)", elevation: 18, maxWidth: 420, padding: 16, width: "100%" },
+  palette: { backgroundColor: mobileTheme.colors.surface, borderColor: mobileTheme.colors.border, borderRadius: 18, borderWidth: 1, boxShadow: "0px 8px 24px rgba(15,23,42,0.22)", elevation: 18, maxWidth: 420, padding: 16, width: "100%" },
   header: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
   heading: { flex: 1 },
-  title: { color: "#111827", fontSize: 17, fontWeight: "800" },
-  context: { color: "#64748b", fontSize: 9, fontWeight: "800", letterSpacing: 1.5, marginTop: 3 },
-  close: { alignItems: "center", borderColor: "#e5e7eb", borderRadius: 15, borderWidth: 1, height: 30, justifyContent: "center", width: 30 },
-  searchRow: { alignItems: "center", backgroundColor: "#f8fafc", borderColor: "#e5e7eb", borderRadius: 10, borderWidth: 1, flexDirection: "row", gap: 9, minHeight: 46, paddingHorizontal: 12 },
-  input: { color: "#111827", flex: 1, fontSize: 14, minHeight: 42 },
-  sectionLabel: { color: "#64748b", fontSize: 9, fontWeight: "800", letterSpacing: 1.5, marginBottom: 5, marginTop: 18 },
+  title: { color: mobileTheme.colors.textHeading, fontSize: 17, fontWeight: "800" },
+  context: { color: mobileTheme.colors.textMuted, fontSize: 9, fontWeight: "800", letterSpacing: 1.5, marginTop: 3 },
+  close: { alignItems: "center", borderColor: mobileTheme.colors.border, borderRadius: 15, borderWidth: 1, height: 30, justifyContent: "center", width: 30 },
+  searchRow: { alignItems: "center", backgroundColor: mobileTheme.colors.surfaceMuted, borderColor: mobileTheme.colors.border, borderRadius: 10, borderWidth: 1, flexDirection: "row", gap: 9, minHeight: 46, paddingHorizontal: 12 },
+  input: { color: mobileTheme.colors.textHeading, flex: 1, fontSize: 14, minHeight: 42 },
+  sectionLabel: { color: mobileTheme.colors.textMuted, fontSize: 9, fontWeight: "800", letterSpacing: 1.5, marginBottom: 5, marginTop: 18 },
   actionList: { gap: 3 },
   action: { alignItems: "center", borderRadius: 10, flexDirection: "row", minHeight: 58, paddingHorizontal: 5 },
-  icon: { alignItems: "center", backgroundColor: "#eff6ff", borderRadius: 9, height: 36, justifyContent: "center", marginRight: 11, width: 36 },
+  icon: { alignItems: "center", backgroundColor: mobileTheme.colors.primarySoft, borderRadius: 9, height: 36, justifyContent: "center", marginRight: 11, width: 36 },
   copy: { flex: 1, paddingRight: 8 },
-  label: { color: "#111827", fontSize: 14, fontWeight: "700", marginBottom: 2 },
-  description: { color: "#64748b", fontSize: 11, lineHeight: 16 },
-  arrow: { color: "#135bec", fontSize: 19, fontWeight: "700", paddingHorizontal: 5 },
-  empty: { color: "#64748b", fontSize: 13, paddingVertical: 18, textAlign: "center" },
-  hint: { borderTopColor: "#e5e7eb", borderTopWidth: 1, color: "#94a3b8", fontSize: 10, marginTop: 10, paddingTop: 10 },
+  label: { color: mobileTheme.colors.textHeading, fontSize: 14, fontWeight: "700", marginBottom: 2 },
+  description: { color: mobileTheme.colors.textMuted, fontSize: 11, lineHeight: 16 },
+  arrow: { color: mobileTheme.colors.primary, fontSize: 19, fontWeight: "700", paddingHorizontal: 5 },
+  empty: { color: mobileTheme.colors.textMuted, fontSize: 13, paddingVertical: 18, textAlign: "center" },
+  hint: { borderTopColor: mobileTheme.colors.border, borderTopWidth: 1, color: mobileTheme.colors.textSubtle, fontSize: 10, marginTop: 10, paddingTop: 10 },
 });

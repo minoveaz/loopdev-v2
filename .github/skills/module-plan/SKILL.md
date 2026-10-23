@@ -98,15 +98,24 @@ risk, dependencies, files/areas, acceptance criteria, validation commands and
 minimum evidence level. Shared-contract work must precede renderer tasks.
 Every required platform for every capability needs at least one task. Run
 `npm run validate:delivery-ledgers` before requesting plan approval. Set the
-ledger to `approved` and tasks to `ready` only after recording approver,
-timestamp and approval source; Markdown plan completion alone is insufficient.
+ledger to `approved` and unblocked tasks to `ready` only after recording
+approver, timestamp and approval source; preserve unresolved owner-dependent
+tasks as explicitly `blocked`. Markdown plan completion alone is insufficient.
 
 For every declared operation, populate `operation_coverage` with a decision for
 each platform and keep `domain`, `renderer` and `operations` parity separate.
 Create platform tasks and measurable acceptance criteria at operation level
 when a renderer can expose data without providing the action. A required
-platform may be `adapted` only with an approved adaptation reference; it cannot
-be `missing` at plan approval. Plan focused component tests for changed
+operation may remain `missing` at plan approval only when a task explicitly
+maps that operation to each missing required platform using `operation_ids`,
+with owner, dependencies, acceptance criteria and validation. A required
+platform may be `adapted` only with an approved adaptation reference and may
+not be `not_applicable` at plan approval. Plan approval approves the scope and
+sequence, not implementation parity; unresolved decisions stay as
+accountable task-level blockers. Keep unimplemented operations `missing` until
+implementation evidence exists. Require every required operation to be
+`implemented` or approved `adapted` before completing `07-build`, starting
+`08-verify`, or publishing. Plan focused component tests for changed
 operations. Browser journeys are only planned for E4, high-risk or release
 work and are not synonymous with Playwright.
 

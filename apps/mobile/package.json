@@ -15,6 +15,8 @@
     "@tiptap/react": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
     "expo": "~57.0.27",
+    "expo-image-picker": "~57.0.20",
+    "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
     "lucide-react-native": "^1.45.0",
     "react": "19.2.3",

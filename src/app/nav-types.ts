@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 export interface NavNode {
   label: string;
   to?: string;
+  disabled?: boolean;
   icon?: LucideIcon;
   badge?: string;
   description?: string;

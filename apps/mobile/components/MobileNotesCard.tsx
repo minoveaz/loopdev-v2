@@ -10,7 +10,7 @@ type Props = {
   onActions: () => void;
 };
 
-const VISIBILITY_LABELS: Record<MobileLangCode, Record<string, string>> = {
+const VISIBILITY_LABELS: Partial<Record<MobileLangCode, Record<string, string>>> = {
   es: {
     private: "Privada",
     team: "Equipo",

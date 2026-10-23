@@ -29,6 +29,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { navigation } from "@/app/navigation";
+import { accountDestinations } from "../../../packages/contracts/src/account-navigation";
 import {
   mockUsers,
   mockProjects,
@@ -107,6 +108,7 @@ interface FlatRoute {
   to: string;
   breadcrumb: string;
   group: RouteGroup;
+  disabled: boolean;
 }
 
 export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
@@ -134,6 +136,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
             to: n.to,
             breadcrumb: trail.join(" › "),
             group: classifyRoute(n.to),
+            disabled: !!n.disabled,
           });
         }
         if (n.children?.length) walk(n.children, nextTrail);
@@ -260,9 +263,12 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                 const Icon = GROUP_ICON[group] ?? ArrowRight;
                 return (
                   <CommandItem
-                    key={item.to}
+                    key={item.to || `${group}-${item.label}`}
                     value={`${group} ${item.breadcrumb} ${item.label} ${item.to}`}
-                    onSelect={() => go(item.to)}
+                    disabled={item.disabled}
+                    onSelect={() => {
+                      if (!item.disabled) go(item.to);
+                    }}
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted/70 text-muted-foreground ring-1 ring-inset ring-border/60">
                       <Icon className="h-3.5 w-3.5" />
@@ -397,8 +403,8 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
 
         <CommandGroup heading="Quick actions">
           {[
-            { v: "settings general", to: "/account/settings", icon: Settings, label: "Open settings" },
-            { v: "profile account", to: "/account/profile", icon: UserCircle, label: "View profile" },
+            { v: "settings general", to: accountDestinations.settings.path, icon: Settings, label: "Open settings" },
+            { v: "profile account", to: "/app/account/profile", icon: UserCircle, label: "View profile" },
             { v: "reports activity", to: "/reports/activity", icon: BarChart3, label: "Activity logs" },
             { v: "pages 404 errors", to: "/pages/404", icon: FileCode, label: "Sample pages" },
             { v: "ui kit components", to: "/ui-kit/buttons", icon: Sparkles, label: "Browse UI kit" },

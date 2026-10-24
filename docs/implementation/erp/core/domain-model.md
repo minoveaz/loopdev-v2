@@ -16,6 +16,11 @@ It does not define screens, authorization, API DTOs, synchronization policy or
 implementation tasks. Open decisions are explicit; current source is baseline
 evidence, not the target contract.
 
+> **Invalidated for updated scope:** `CR-ERP-PRODUCT-EDITOR-COST-REFERENCE`
+> adds a non-accounting purchase-cost reference and structured physical fields.
+> Revisit cost ownership/currency/inheritance and product-versus-SKU attribute
+> ownership before treating this domain analysis as plan-ready.
+
 ## Decision status
 
 | ID | Rule | Status | Classification | Evidence / consequence |
@@ -34,10 +39,13 @@ evidence, not the target contract.
 | `DOM-ERP-012` | Finished products support buy/make/both; raw materials/components support buy only for now; services have no sourcing value. | `confirmed` | Domain rule | User confirmed these class-specific rules; reconsider raw-material sourcing in future Manufacturing discovery. `make` remains intent only, not manufacturing execution. |
 | `DOM-ERP-013` | `OrganizationCatalog` is migration-only and is not a target business entity or product-ownership boundary. | `confirmed` | Ownership/migration rule | User chose to retire the grouping as a business entity while preserving it as legacy migration input. |
 | `DOM-ERP-014` | Commercial price currency is owned by each `PriceBook`; migrate the legacy `OrganizationCatalog` currency into the applicable price books. | `confirmed` | Ownership/migration rule | User decision: “En cada PriceBook”. Reconcile legacy `Offer.currency`; `PriceEntry` inherits the book currency and legacy mismatches require explicit migration handling. |
-| `DOM-ERP-015` | Define how legacy `categoryKey` references map to organization-scoped `ProductCategory` keys. | `open` | Migration rule | Preserve source references; do not infer a target category when the mapping is ambiguous. |
-| `DOM-ERP-016` | Assign target-domain owners and migration mappings for locale and channel fields formerly held by `OrganizationCatalog`. | `open` | Ownership/migration rule | The grouping is migration-only; locale and channel destination owners remain unassigned. |
+| `DOM-ERP-015` | Preserve each legacy `categoryKey` as migration provenance; do not auto-assign a target category. Produce a mapping review from actual records, and keep unmapped products/SKUs in draft until an authorized category assignment is made. | `assumed` | Migration rule | Safe planning rule; exact source values and mappings require a reviewed data inventory before migration. |
+| `DOM-ERP-016` | Locale and channel fields from `OrganizationCatalog` are not Products fields in the first release. Preserve them as migration provenance and defer ownership to future localization/channel work. | `confirmed` | Ownership/scope rule | User approved Products and categories only for this release, deferring Shopify, Inhand and other modules. |
 | `DOM-ERP-017` | Each `PriceEntry` uses its `PriceBook` currency and cannot have a different currency. | `confirmed` | Commercial data invariant | User decision: “la entrada hereda la moneda del PriceBook”. Legacy entry currency is compatibility/migration evidence, not an independent target value. |
 | `DOM-ERP-018` | `Offer` has no independent currency; any offer price uses the currency of the associated `PriceBook`. | `confirmed` | Commercial data invariant | User decision: Offer uses the PriceBook currency; currency belongs to books and their price entries, not to Offer. |
+| `DOM-ERP-019` | Products and categories are organization-wide. During migration, set target `workspace_id` to null and retain the legacy workspace ID only as provenance; require a dry-run report before applying the visibility expansion. | `confirmed` | Ownership/migration rule | Organization-wide visibility was user-approved; production data and the migration report have not been inspected. |
+| `DOM-ERP-020` | Products, variants, offers, price books, price entries and categories are archive-only; permanent deletion is not exposed in this release. | `confirmed` | Lifecycle invariant | User approved no permanent deletion across the module; category archival rules remain as specified in `DOM-ERP-011`. |
+| `DOM-ERP-021` | Restoring an archived product or SKU always returns it to `draft`; restoring never reactivates it, and activation guards must pass again. | `confirmed` | Lifecycle invariant | Product Owner selected “Volver siempre a borrador” during blocker resolution. |
 
 ## Entities and relationships
 
@@ -67,9 +75,9 @@ contract.
 | `Product` | Reuse `localCatalogItemsStore` as legacy local baseline; migrate fixture shape only after class mapping is approved. | Preserve `erp_catalog_items.id`; map `category_key` only after reviewing actual data. | Organization-wide target; decide how to migrate legacy non-null workspace IDs. | Archive should preserve references; restore destination/revalidation and hard-delete policy remain open. | Proposed `erp.product.*` events; consumers are approved projections/references only. |
 | `ProductCategory` | No category store or fixture exists; add after key-scope and authorization decisions. | New stable category ID/table required; legacy `category_key` is an opaque value, not a category identity. | Organization-wide, confirmed by `DOM-ERP-007`; categories can be assigned to product bases and variants. | Archive preserves current assignments and prohibits new ones; permanent deletion is prohibited; restore requires an active parent; reparent moves the subtree; archiving is blocked while active children remain. | Proposed category-change event for Products projections; no current event implementation. |
 | `ProductVariant` | Reuse `localCatalogVariantsStore` as legacy local baseline. | Preserve `erp_catalog_variants.id`; do not infer variant IDs from product attributes. | Inherit the parent product's organization scope; migrate legacy workspace IDs explicitly. | Current physical delete/cascade is legacy behavior; target archive/restore and parent-archive constraints remain open. | Proposed `erp.product-variant.changed`; inventory consumers are future/approval-gated. |
-| `Offer` | Reuse `localCatalogOffersStore` as legacy baseline. | Preserve `erp_catalog_offers.id`. | Same organization/workspace as its product. | Current adapter supports physical delete and SQL cascades from product; target policy must preserve published transaction snapshots. | Proposed product-commercial change notification; exact event boundary and consumers remain open. |
-| `PriceBook` | Reuse `localCatalogPriceBooksStore` as legacy baseline. | Preserve `erp_price_books.id`. | Organization and optional workspace, matching current schema. | Status supports archive; hard-delete/reference behavior and restore rules are not approved. | No current cross-module event contract; future Sales/Commerce consumers require approval. |
-| `PriceEntry` | Reuse `localCatalogPriceEntriesStore` as legacy baseline. | Preserve `erp_price_entries.id`; retain references only after validation of legacy combinations. | Same scope as its price book and referenced records. | Current SQL cascades on referenced product/offer/variant/book deletion; target must protect historical transaction snapshots. | No current event contract; consumers must not treat it as a transaction snapshot without an approved contract. |
+| `Offer` | Reuse `localCatalogOffersStore` as legacy baseline. | Preserve `erp_catalog_offers.id`. | Organization-wide with its product. | Archive/restore only; no permanent delete in this release. | No cross-module event publication is required for this release. |
+| `PriceBook` | Reuse `localCatalogPriceBooksStore` as legacy baseline. | Preserve `erp_price_books.id`. | Organization-wide. | Archive/restore only; no permanent delete in this release. | No cross-module event publication is required for this release. |
+| `PriceEntry` | Reuse `localCatalogPriceEntriesStore` as legacy baseline. | Preserve `erp_price_entries.id`; retain references only after validation of legacy combinations. | Organization-wide and consistent with its price book and referenced records. | Archive/restore only; no permanent delete in this release. | No cross-module event publication is required for this release. |
 | `OrganizationCatalog` | Read legacy `localOrganizationCatalogsStore` only for migration; do not add a target domain store. | Preserve `erp_catalogs.id` as migration evidence until source records and fields are mapped. | Legacy organization/workspace values are provenance only; products remain organization-scoped. | Legacy status/delete behavior is not target lifecycle policy; migrate required data before retiring the source. | No target event; currency moves to PriceBooks while locale/channel ownership remains open in `DOM-ERP-016`. |
 | CRM `Contact` | Reuse CRM-owned fixtures and adapters. | Preserve CRM contact identity; no ERP-owned copy or migration. | CRM/Platform scope. | CRM owns retention and deletion; ERP retains only policy-approved references/snapshots. | Consume CRM identity/reference events where contracted; ERP must not emit contact-master events. |
 | `ProductPartyRole` | Local store exists in catalog fixtures. | No table was found in the reviewed foundation migration; remote identity/migration is unresolved. | Current type carries organization/workspace; role/party ownership is unresolved. | Current target lifecycle and retention are not established; do not treat adapter CRUD as policy. | No approved event; out of approved scope until owner/consumer is decided. |
@@ -106,8 +114,8 @@ machine; the following target transitions are proposals, not runtime behavior.
 | Product | new → `draft` | `assumed` | Current local adapter defaults new items to draft; remote SQL also defaults to draft. |
 | Product | `draft` → `active` | `assumed` | Required identity, class, general category and valid operational configuration; category may be omitted in draft but is required before activation. Other activation guards remain open. |
 | Product | `draft` / `active` → `archived` | `assumed` | Archive must not delete historical references or published transaction snapshots. |
-| Product | `archived` → `draft` / `active` | `open` | Existing tests restore to draft; target restore destination and revalidation rules need approval. |
-| Variant | `draft` ↔ `active` → `archived` | `assumed` | Variant remains subordinate to its product; activation requires its own category and a usable parent. Other transition guards remain open. |
+| Product | `archived` → `draft` | `confirmed` | Product Owner decision: restore always returns to draft; activation guards must pass again before it can become active. |
+| Variant | `draft` ↔ `active` → `archived`; `archived` → `draft` | `confirmed` | Product Owner decision: restore always returns the SKU to draft; its category, parent and activation guards must pass again before activation. |
 | Category | new → `active` | `assumed` | Proposed category lifecycle uses `active` and `archived`; draft categories are not yet specified. |
 | Category | `active` → `archived` | `confirmed` | Archiving preserves existing product/SKU assignments; reject new assignments to the archived category and block archiving while active child categories remain. |
 | Category | `archived` → `active` | `confirmed` | Restore re-enables new assignments if the category's parent is active; root categories have no parent guard. |
@@ -189,33 +197,29 @@ implemented.
 
 ## Open questions and risks
 
-1. Decide how to migrate legacy non-null workspace IDs and assign owners for
-   legacy `OrganizationCatalog` locale and channel fields
-   (`DOM-ERP-007`, `DOM-ERP-016`).
-2. Define how legacy `categoryKey` references map to organization-scoped
-   `ProductCategory` keys; do not infer a target category when the mapping is
-   ambiguous (`DOM-ERP-015`).
-3. Define the version/audit envelope before remote concurrent edits; current
-   SQL cascade behavior is a data-loss risk if treated as the target.
-4. Review any mismatched legacy `PriceEntry.currency` without silently
+1. Define whether the approved purchase-cost reference belongs to a standalone
+   product or to each separately managed SKU, whether a product value is a
+   default for new SKUs, its currency/source/history, and its value object.
+2. Define ownership and inheritance of physical weight/dimensions between
+   product and SKU, including supported units and validation.
+3. Decide whether brands and tags are controlled organization-scoped reference
+   entities or free-form values; current strings do not establish a target
+   contract.
+4. Review actual legacy `category_key` values and approve their target
+   category mapping before migration; unmapped records remain drafts
+   (`DOM-ERP-015`).
+5. Verify the migration's deployed state before applying a forward migration;
+   the remote connection could not be authenticated during this blocker review.
+6. Review any mismatched legacy `PriceEntry.currency` without silently
    converting values; target entries use their `PriceBook` currency
    (`DOM-ERP-017`).
 
 ## Handoff
 
-**Status: `partial`.** Confirmed product-class, independent-use, sourcing,
-variant-identity, category ownership, activation-category requirement,
-class-specific sourcing, product/variant/category key generation and scope, SKU
-uniqueness/comparison, the safe legacy type mapping policy, `PriceBook`
-currency ownership, `PriceEntry` currency inheritance and migration-only
-`OrganizationCatalog` treatment and the absence of independent currency on
-offers are captured. Legacy category-key mapping, locale/channel ownership
-and version/audit rules remain explicit decisions.
-Organization-wide product and category scope is
-confirmed; migration treatment for legacy workspace IDs is
-still open. No production code, schema,
-test, permission or API contract was changed. Safe follow-up: use these
-decisions in `03-access` and `04-api`; do not create category persistence or
-migrate existing `categoryKey` data until the listed domain questions have
-owners and resolution. The access, API and sync phases consumed these
-constraints; they remain prerequisites for `06-plan`.
+**Status: `partial; invalidated by approved scope change`.** Product and category rules, archive-only lifecycle,
+organization-wide target scope, legacy provenance handling, and the approved
+Products release boundary are captured, but cost reference and physical-field
+ownership need a domain rerun. Exact category mappings and legacy currency
+mismatches still require a reviewed data inventory; no production data should
+be migrated before that dry run. No production code, schema or test was
+changed in this domain phase.

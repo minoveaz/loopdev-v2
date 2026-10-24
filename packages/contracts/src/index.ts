@@ -14,6 +14,7 @@ export * from "./quotes";
 export * from "./activity-timeline";
 export * from "./communications";
 export * from "./communications-adapter";
+export * from "./erp-products-capability";
 export * from "./account-navigation";
 export * from "./account-profile";
 export * from "./private-user-files";

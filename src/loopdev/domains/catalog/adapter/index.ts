@@ -21,6 +21,11 @@ import type {
   CatalogVariantCreateInput,
   CatalogPriceBookCreateInput,
   CatalogPriceEntryCreateInput,
+  ProductCostReference,
+  ProductCostReferenceInput,
+  ProductReference,
+  ProductReferenceCreateInput,
+  ProductReferenceKind,
 } from "../types";
 
 export interface CatalogAdapter {
@@ -51,6 +56,10 @@ deleteCatalogItem(id: string, params: CatalogScopeParams): Promise<void>;
   listProductPartyRoles(params: CatalogListParams & { catalogItemId?: string; role?: ProductPartyRole["role"] }): Promise<ProductPartyRole[]>;
   listAvailabilities(params: CatalogListParams & { catalogItemId?: string }): Promise<CatalogAvailability[]>;
   listEligibilities(params: CatalogListParams & { catalogItemId?: string }): Promise<CatalogEligibility[]>;
+  listProductReferences(params: CatalogScopeParams & { kind?: ProductReferenceKind }): Promise<ProductReference[]>;
+  createProductReference(input: ProductReferenceCreateInput): Promise<ProductReference>;
+  getProductCostReference(params: CatalogScopeParams & { catalogItemId: string; variantId?: string | null }): Promise<ProductCostReference | null>;
+  saveProductCostReference(input: ProductCostReferenceInput): Promise<ProductCostReference>;
   resolveReference(params: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null>;
 }
 
@@ -78,4 +87,4 @@ export { supabaseCatalogAdapter };
 
 export { CatalogAdapterError } from "../types";
 
-export type { CatalogCreateInput, CatalogItemCreateInput, CatalogItem, CatalogListParams, CatalogReference, CatalogReferenceResolutionParams, CatalogScopeParams, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole, CatalogAvailability, CatalogEligibility, ResolvedCatalogReference, CatalogOfferCreateInput, CatalogVariantCreateInput, CatalogPriceBookCreateInput, CatalogPriceEntryCreateInput };
+export type { CatalogCreateInput, CatalogItemCreateInput, CatalogItem, CatalogListParams, CatalogReference, CatalogReferenceResolutionParams, CatalogScopeParams, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole, CatalogAvailability, CatalogEligibility, ProductCostReference, ProductCostReferenceInput, ProductReference, ProductReferenceCreateInput, ProductReferenceKind, ResolvedCatalogReference, CatalogOfferCreateInput, CatalogVariantCreateInput, CatalogPriceBookCreateInput, CatalogPriceEntryCreateInput };

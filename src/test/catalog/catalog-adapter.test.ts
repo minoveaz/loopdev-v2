@@ -9,6 +9,8 @@ import {
   localCatalogPartyRolesStore,
   localCatalogAvailabilitiesStore,
   localCatalogEligibilitiesStore,
+  localProductCostReferencesStore,
+  localProductReferencesStore,
 } from "@/loopdev/domains/catalog/data/localCatalog";
 
 const organizationId = "local-development-organization";
@@ -23,6 +25,8 @@ describe("local Catalog adapter", () => {
     localCatalogPartyRolesStore.reset();
     localCatalogAvailabilitiesStore.reset();
     localCatalogEligibilitiesStore.reset();
+    localProductCostReferencesStore.reset();
+    localProductReferencesStore.reset();
   });
 
   it("lists shared catalog items and workspace-visible items", async () => {
@@ -139,5 +143,84 @@ describe("local Catalog adapter", () => {
     expect((await catalogAdapter.updatePriceEntry(entry.id, { organizationId }, { amount: 109 })).amount).toBe(109);
     await catalogAdapter.deletePriceEntry(entry.id, { organizationId });
     await catalogAdapter.deletePriceBook(book.id, { organizationId });
+  });
+
+  it("creates organization-scoped category, brand and tag references", async () => {
+    const parent = await catalogAdapter.createProductReference({
+      organizationId,
+      kind: "category",
+      key: "pet-care",
+      name: "Pet care",
+      parentId: null,
+    });
+    const child = await catalogAdapter.createProductReference({
+      organizationId,
+      kind: "category",
+      key: "toys",
+      name: "Toys",
+      parentId: parent.id,
+    });
+    const brand = await catalogAdapter.createProductReference({
+      organizationId,
+      kind: "brand",
+      key: "miaucraft",
+      name: "MiauCraft",
+      parentId: null,
+    });
+    const tag = await catalogAdapter.createProductReference({
+      organizationId,
+      kind: "tag",
+      key: "new-arrival",
+      name: "New arrival",
+      parentId: null,
+    });
+
+    expect(await catalogAdapter.listProductReferences({ organizationId, kind: "category" })).toContainEqual(
+      expect.objectContaining({ id: child.id, key: "toys", parentId: parent.id }),
+    );
+    expect(await catalogAdapter.listProductReferences({ organizationId, kind: "brand" })).toContainEqual(
+      expect.objectContaining({ id: brand.id, name: "MiauCraft" }),
+    );
+    expect(await catalogAdapter.listProductReferences({ organizationId, kind: "tag" })).toContainEqual(
+      expect.objectContaining({ id: tag.id, key: "new-arrival" }),
+    );
+    await expect(catalogAdapter.createProductReference({
+      organizationId, kind: "brand", key: "miaucraft", name: "Duplicate brand", parentId: null,
+    })).rejects.toMatchObject({ code: "conflict" });
+  });
+
+  it("keeps purchase cost separate and limits cost reads to product writers", async () => {
+    const item = await catalogAdapter.createCatalogItem({
+      organizationId,
+      catalogId: "catalog_products",
+      key: "cost-test-product",
+      sku: "COST-001",
+      name: "Cost test product",
+      type: "physical_product",
+      status: "draft",
+    });
+
+    const cost = await catalogAdapter.saveProductCostReference({
+      organizationId,
+      catalogItemId: item.id,
+      variantId: null,
+      amount: 12.5,
+      currency: "EUR",
+    });
+
+    expect(cost).toMatchObject({ catalogItemId: item.id, amount: 12.5, currency: "EUR" });
+    await expect(catalogAdapter.getProductCostReference({ organizationId, catalogItemId: item.id }))
+      .resolves.toMatchObject({ id: cost.id, amount: 12.5 });
+    await expect(catalogAdapter.saveProductCostReference({
+      organizationId,
+      catalogItemId: item.id,
+      variantId: null,
+      amount: -1,
+      currency: "EUR",
+    })).rejects.toMatchObject({ code: "server-error" });
+    await expect(catalogAdapter.getProductCostReference({
+      organizationId: "other-development-organization",
+      catalogItemId: item.id,
+    })).rejects.toMatchObject({ code: "forbidden" });
   });
 });

@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">ERP Products — página completa de producto</title>
+  <desc id="desc">Composición desktop y mobile web para crear o editar un producto en una página completa. Incluye clasificación, referencia de compra y atributos físicos estructurados.</desc>
+  <defs>
+    <style>
+      :root {
+        --background: hsl(220 30% 98.8%);
+        --foreground: hsl(222 32% 11%);
+        --card: hsl(0 0% 100%);
+        --card-muted: hsl(220 26% 97.6%);
+        --primary: hsl(234 80% 58%);
+        --muted-foreground: hsl(222 12% 46%);
+        --border: hsl(220 22% 92%);
+        --border-strong: hsl(220 20% 85%);
+        --sidebar-background: hsl(0 0% 100%);
+        --sidebar-foreground: hsl(222 18% 32%);
+        --sidebar-accent: hsl(220 22% 96%);
+        --sidebar-accent-foreground: hsl(222 28% 16%);
+        --sidebar-border: hsl(220 18% 92%);
+      }
+      text { font-family: Inter, Arial, sans-serif; fill: var(--foreground); }
+      .mono { font-family: "JetBrains Mono", monospace; }
+      .muted { fill: var(--muted-foreground); }
+      .tiny { font-size: 11px; }
+      .small { font-size: 13px; }
+      .label { font-size: 12px; font-weight: 600; }
+      .input { fill: var(--card); stroke: var(--border-strong); }
+      .card { fill: var(--card); stroke: var(--border); }
+      .primary { fill: var(--primary); }
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="var(--background)"/>
+  <text x="28" y="38" font-size="18" font-weight="700">Crear / editar producto · VIS-ERP-FLOW-04</text>
+  <text x="28" y="59" class="small muted">Página completa · campos auxiliares con alta rápida en drawer · costes de compra de referencia</text>
+  <text x="30" y="87" class="tiny muted" font-weight="700" letter-spacing="1.2">DESKTOP WEB · PÁGINA EN APP SHELL</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="var(--card)" stroke="var(--border-strong)"/>
+  <rect x="25" y="101" width="198" height="848" rx="15" fill="var(--sidebar-background)" stroke="var(--sidebar-border)"/>
+  <text x="47" y="137" font-size="17" font-weight="700">LoopDev</text>
+  <text x="47" y="180" class="tiny muted">LAUNCHPAD</text>
+  <text x="57" y="208" class="small" fill="var(--sidebar-foreground)">⌂  Launchpad</text>
+  <text x="47" y="250" class="tiny muted">SUITES</text>
+  <rect x="39" y="264" width="169" height="32" rx="8" fill="var(--sidebar-accent)"/>
+  <text x="57" y="286" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">▦  ERP  ⌄</text>
+  <rect x="51" y="304" width="156" height="28" rx="7" fill="var(--sidebar-accent)"/>
+  <text x="70" y="323" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">Productos</text>
+  <text x="250" y="137" class="tiny muted">ERP / PRODUCTOS / NUEVO</text>
+  <text x="250" y="174" font-size="22" font-weight="700">Nuevo producto</text>
+  <text x="250" y="197" class="small muted">Borrador · los cambios aún no se han guardado</text>
+  <rect x="792" y="146" width="100" height="36" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="820" y="169" class="small" font-weight="600">Cancelar</text>
+  <rect x="902" y="146" width="118" height="36" rx="8" class="primary"/>
+  <text x="923" y="169" class="small" fill="white" font-weight="700">Guardar draft</text>
+  <line x1="250" y1="214" x2="1020" y2="214" stroke="var(--border)"/>
+  <text x="250" y="246" class="tiny" fill="var(--primary)" font-weight="700">SECCIONES</text>
+  <text x="250" y="277" class="small" fill="var(--primary)" font-weight="700">Datos generales</text>
+  <text x="250" y="308" class="small muted">Clasificación</text>
+  <text x="250" y="339" class="small muted">Coste de compra</text>
+  <text x="250" y="370" class="small muted">Datos físicos</text>
+  <text x="250" y="401" class="small muted">SKUs</text>
+  <rect x="430" y="230" width="590" height="218" rx="12" class="card"/>
+  <text x="450" y="258" class="tiny" fill="var(--primary)" font-weight="700">DATOS GENERALES</text>
+  <text x="450" y="283" font-size="16" font-weight="700">Identidad del producto</text>
+  <text x="450" y="313" class="label">Nombre *</text>
+  <rect x="450" y="321" width="270" height="36" rx="7" class="input"/>
+  <text x="463" y="344" class="small">Arnés Trail</text>
+  <text x="735" y="313" class="label">Clave interna</text>
+  <rect x="735" y="321" width="265" height="36" rx="7" class="input"/>
+  <text x="748" y="344" class="small mono muted">Generada por LoopDev</text>
+  <text x="450" y="382" class="label">Categoría principal</text>
+  <rect x="450" y="390" width="270" height="36" rx="7" class="input"/>
+  <text x="463" y="413" class="small">Arneses  ▾</text>
+  <text x="735" y="382" class="label">Marca</text>
+  <rect x="735" y="390" width="265" height="36" rx="7" class="input"/>
+  <text x="748" y="413" class="small">Seleccionar marca  ▾   +</text>
+  <rect x="430" y="462" width="590" height="172" rx="12" class="card"/>
+  <text x="450" y="490" class="tiny" fill="var(--primary)" font-weight="700">CLASIFICACIÓN Y OPERACIÓN</text>
+  <text x="450" y="515" class="small" font-weight="700">Producto terminado</text>
+  <text x="450" y="542" class="label">Usos</text>
+  <rect x="450" y="553" width="13" height="13" rx="2" class="primary"/><text x="452" y="564" class="tiny" fill="white">✓</text>
+  <text x="470" y="564" class="small">Compra</text>
+  <rect x="548" y="553" width="13" height="13" rx="2" class="primary"/><text x="550" y="564" class="tiny" fill="white">✓</text>
+  <text x="568" y="564" class="small">Venta</text>
+  <rect x="645" y="553" width="13" height="13" rx="2" class="primary"/><text x="647" y="564" class="tiny" fill="white">✓</text>
+  <text x="665" y="564" class="small">Inventario</text>
+  <text x="450" y="598" class="label">Abastecimiento</text>
+  <rect x="570" y="578" width="210" height="36" rx="7" class="input"/>
+  <text x="584" y="601" class="small">Comprar  ▾</text>
+  <text x="797" y="601" class="tiny muted">Los SKUs heredan esta regla.</text>
+  <rect x="430" y="648" width="590" height="122" rx="12" class="card"/>
+  <text x="450" y="676" class="tiny" fill="var(--primary)" font-weight="700">COSTE DE COMPRA DE REFERENCIA</text>
+  <text x="450" y="701" class="small">Estimación unitaria; no es valoración contable ni calcula márgenes.</text>
+  <text x="450" y="730" class="label">Importe por unidad</text>
+  <rect x="450" y="738" width="300" height="24" rx="6" class="input"/>
+  <text x="463" y="755" class="small">12,50</text>
+  <text x="770" y="730" class="label">Moneda</text>
+  <rect x="770" y="738" width="95" height="24" rx="6" class="input"/>
+  <text x="783" y="755" class="small">EUR  ▾</text>
+  <text x="875" y="755" class="tiny muted">Permiso pendiente</text>
+  <rect x="430" y="784" width="590" height="136" rx="12" class="card"/>
+  <text x="450" y="812" class="tiny" fill="var(--primary)" font-weight="700">DATOS FÍSICOS · SOLO PRODUCTOS FÍSICOS</text>
+  <text x="450" y="840" class="label">Peso</text><rect x="450" y="848" width="110" height="32" rx="7" class="input"/><text x="463" y="869" class="small">0,80</text>
+  <rect x="568" y="848" width="80" height="32" rx="7" class="input"/><text x="580" y="869" class="small">kg  ▾</text>
+  <text x="668" y="840" class="label">Largo × ancho × alto</text>
+  <rect x="668" y="848" width="275" height="32" rx="7" class="input"/><text x="681" y="869" class="small">32 × 18 × 8 cm</text>
+  <text x="450" y="904" class="tiny muted">Los detalles que varían se registran en el SKU correspondiente.</text>
+  <rect x="1168" y="100" width="390" height="850" rx="24" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="1190" y="136" class="small" font-weight="700">‹  Productos</text>
+  <text x="1190" y="177" class="tiny muted">ERP / PRODUCTOS / NUEVO</text>
+  <text x="1190" y="208" font-size="20" font-weight="700">Nuevo producto</text>
+  <text x="1190" y="231" class="tiny muted">Borrador · sin guardar</text>
+  <line x1="1169" y1="250" x2="1557" y2="250" stroke="var(--border)"/>
+  <text x="1190" y="279" class="tiny" fill="var(--primary)" font-weight="700">DATOS GENERALES</text>
+  <text x="1190" y="308" class="label">Nombre *</text><rect x="1190" y="316" width="346" height="40" rx="8" class="input"/><text x="1205" y="342" class="small">Arnés Trail</text>
+  <text x="1190" y="383" class="label">Categoría principal</text><rect x="1190" y="391" width="346" height="40" rx="8" class="input"/><text x="1205" y="417" class="small">Arneses  ▾</text>
+  <text x="1190" y="458" class="label">Marca</text><rect x="1190" y="466" width="346" height="40" rx="8" class="input"/><text x="1205" y="492" class="small">Seleccionar marca  ▾   + Añadir</text>
+  <rect x="1190" y="526" width="346" height="116" rx="10" class="card"/>
+  <text x="1206" y="552" class="tiny" fill="var(--primary)" font-weight="700">COSTE DE COMPRA DE REFERENCIA</text>
+  <text x="1206" y="576" class="tiny muted">No contable · sin cálculo de margen</text>
+  <rect x="1206" y="588" width="200" height="38" rx="8" class="input"/><text x="1220" y="613" class="small">12,50</text>
+  <rect x="1414" y="588" width="106" height="38" rx="8" class="input"/><text x="1427" y="613" class="small">EUR  ▾</text>
+  <rect x="1190" y="658" width="346" height="142" rx="10" class="card"/>
+  <text x="1206" y="684" class="tiny" fill="var(--primary)" font-weight="700">DATOS FÍSICOS</text>
+  <text x="1206" y="710" class="label">Peso</text><rect x="1206" y="718" width="168" height="38" rx="8" class="input"/><text x="1220" y="743" class="small">0,80 kg</text>
+  <text x="1388" y="710" class="label">Dimensiones</text><rect x="1388" y="718" width="132" height="38" rx="8" class="input"/><text x="1397" y="743" class="tiny">32×18×8 cm</text>
+  <text x="1206" y="783" class="tiny muted">Los detalles variables van en cada SKU.</text>
+  <rect x="1169" y="832" width="388" height="1" fill="var(--border)"/>
+  <rect x="1185" y="852" width="126" height="48" rx="8" fill="var(--card)" stroke="var(--border-strong)"/><text x="1223" y="882" class="small" font-weight="600">Cancelar</text>
+  <rect x="1321" y="852" width="220" height="48" rx="8" class="primary"/><text x="1378" y="882" class="small" fill="white" font-weight="700">Guardar borrador</text>
+  <text x="30" y="981" class="tiny muted" font-weight="700" letter-spacing="1.2">MOBILE WEB · PÁGINA COMPLETA · FOOTER STICKY · TARGETS ≥44 PX</text>
+</svg>

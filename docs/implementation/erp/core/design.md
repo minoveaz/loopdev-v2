@@ -4,51 +4,53 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | `aprobado con enmiendas de módulo; gate visual conceptual aprobado; análisis de dominio en curso` |
+| Estado | `scope de Products aprobado; gate visual conceptual aprobado; plan de implementación pendiente de aprobación` |
 | Suite / módulo | ERP / Core capability map |
 | Run | `MOD-CORE-20261024-001` |
 | Discovery | `discovery.md` (attempt 2, partial) |
 | Ledger | `delivery-ledger.json` (draft) |
 | Mercado confirmado | Pymes de distintos sectores |
-| Prioridad de clientes | MiauCraft primero; Inhand después |
+| Primer release | Products, categorías y coste de compra unitario de referencia; clientes e integraciones quedan para follow-up |
 
 Este diseño propone una suite ERP modular y sector-neutral. No aprueba un ERP
-completo ni convierte todos los módulos candidatos en el primer MVP. Las
-decisiones de dominio, acceso, API y sincronización son intencionalmente
-preliminares: sus contratos detallados pertenecen a las fases especializadas
-posteriores al gate visual.
+completo ni convierte todos los módulos candidatos en el primer release.
+Discovery y los análisis de dominio, acceso, API y sincronización registran
+las decisiones aprobadas y sus gaps de evidencia; la implementación queda
+condicionada a un plan completo y explícitamente aprobado.
 
 ### 1. Resumen del módulo
 
-- **Propósito:** dar a las pymes una fuente operativa coherente para productos
-  o servicios, proveedores, ventas, compras, inventario, finanzas y reporting,
-  activando únicamente los módulos que necesiten.
+- **Propósito:** establecer una base operativa modular para pymes de distintos
+  sectores; el primer release se limita a Products y categorías.
 - **Problema de negocio:** LoopDev tiene una implementación parcial de
   productos y servicios, expuesta hoy como catálogo ERP, y casos
   comerciales distintos, pero carece de un mapa aprobado que conecte datos
-  maestros, procesos y responsabilidades sin duplicar CRM o Platform.
-- **Actores:** propietario/admin de organización; manager; operador de ventas;
-  responsable de proveedores; compras; inventario; finanzas; lectura/auditoría;
-  responsables de canales externos; cliente público de un storefront (fuera
-  del ERP autenticado).
-- **Incluido como dirección de producto:** mapa transversal de capacidades,
-  límites entre suites, módulos opcionales y una secuencia que empieza por el
-  caso Shopify de MiauCraft. Productos sustituye Catálogo como módulo visible
-  y conserva su implementación actual como base técnica;
-  Proveedores es un módulo independiente cuya prioridad y fecha de entrega
-  siguen abiertas.
-- **Fuera de alcance de este diseño:** construir ahora todas las áreas;
-  reemplazar Shopify; storefront genérico; contabilidad estatutaria sin país
-  definido; procesamiento de tarjetas; fabricación en el roadmap actual,
-  nóminas y WMS avanzado. Fabricación requerirá discovery y aprobación futuros.
+  maestros, procesos y responsabilidades sin duplicar CRM o Platform. La
+  primera entrega validada será el maestro Products y su taxonomía.
+- **Actores:** owner/admin y operadores con `catalog.read` o `catalog.write`;
+  otros roles y usuarios de ventas, proveedores, compras, inventario, finanzas
+  y canales externos pertenecen a follow-up. El cliente público de storefront
+  queda fuera del ERP autenticado.
+- **Incluido en el primer release:** Products y categorías, variantes/SKUs,
+  ofertas, listas y entradas de precio, coste de compra unitario de referencia
+  por producto/SKU y atributos físicos estructurados para artículos físicos,
+  en web escritorio y móvil. La ficha completa de producto/SKU usa páginas;
+  los drawers quedan para altas/ediciones rápidas de datos auxiliares. Productos
+  sustituye Catálogo como módulo visible y conserva la implementación actual
+  como compatibilidad técnica.
+- **Fuera de alcance de este release:** Shopify, storefront/pedidos Inhand,
+  Proveedores, Ventas, Compras, Inventario, Finanzas, Reporting, iOS/Android,
+  caché/cola offline remota, exportación, valoración contable/de inventario,
+  coste de fabricación, cálculo de márgenes y borrado permanente. El coste
+  aprobado es solo una referencia unitaria de compra, no un dato contable.
+  Fabricación, nóminas y WMS avanzado requieren discovery y aprobación futuros.
 - **Supuestos:** el tenant canónico es una organización; CRM sigue siendo
   propietario de la relación e historial del cliente; algunas pymes no
   gestionan inventario físico; canales externos pueden seguir siendo sistemas
   de registro.
-- **Preguntas abiertas:** módulos del primer release; prioridad y alcance
-  inicial de Proveedores; países y obligaciones fiscales; ventas B2B/B2C;
-  productos frente a servicios; compras y fulfillment; propiedad por entidad
-  en Shopify; modelo de permisos; aplicabilidad de iOS/Android y responsable.
+- **Dependencias abiertas:** inventario autorizado de datos legados y
+  aprobación del contrato de auditoría por Platform. País, impuestos, Shopify,
+  Inhand y otros módulos se resolverán en follow-up.
 
 ### 2. Benchmark de mercado
 
@@ -105,10 +107,10 @@ Fuentes: [Odoo Sales](https://www.odoo.com/documentation/19.0/applications/sales
 | Document Intelligence Core | `REUSE` | Contrato Core aprobado; composición cross-suite existente como intención | Extracción/revisión de facturas o documentos solo si se aprueba el caso de uso | No en ERP; posible extensión Core vía aprobación | Sí: extractor, lifecycle o historial documental |
 | Rivera UI / navegación | `REUSE` | `PageContainer`, `PageHeader`, `DataTable`, common states, Shell y sidebar | Renderers desktop/mobile consumen significado compartido | Extender Platform solo con gap cross-suite aprobado | Sí: design system, shell o selector nativo |
 | ERP Products | `REUSE` con reconciliación | `CatalogAdapter`, tipos, ruta y migración legacy existentes (paridad parcial) | ERP posee identidad de producto/servicio; CRM/canales referencian IDs | Contrato/capacidad pendiente de auditoría | Sí: duplicar maestros por canal |
-| ERP Suppliers | `MODULE_SPECIFIC`; módulo independiente confirmado, prioridad y fecha abiertas | No hay contrato funcional aprobado | ERP posee la ficha/rol de proveedor; Compras referencia su ID estable; relaciones con CRM por resolver | No antes de identificar gap transversal | Sí: duplicar el maestro de proveedor dentro de Compras |
+| ERP Suppliers | `MODULE_SPECIFIC`; módulo independiente confirmado y diferido | No hay contrato funcional aprobado | Futuro: ERP posee la ficha; Compras referencia su ID estable; relaciones con CRM por resolver | No antes de identificar gap transversal | Sí: duplicar el maestro de proveedor dentro de Compras |
 | Ventas, compras, inventario, finanzas, reporting | `MODULE_SPECIFIC` como dominios; alcance `BLOCKED` para primer release | No hay contratos funcionales aprobados | Contextos separados conectados por referencias y eventos versionados | No antes de identificar gap transversal | Sí: reglas en páginas o adapter de otro módulo |
-| Conexión Shopify | `MODULE_SPECIFIC` sobre boundary de integración compartido | No existe conector verificado | Adapter por proveedor y política por entidad | Contrato compartido solo si aplica a otros proveedores | Sí: clonar el dominio ERP para Shopify |
-| Storefront Inhand | `MODULE_SPECIFIC` canal público independiente | No existe backend de pedidos/storefront verificado | API pública restringida a catálogo publicado y comandos de checkout | Platform/API pública requiere diseño de seguridad propio | Sí: reglas de stock/precio/pedido en el renderer |
+| Conexión Shopify | `MODULE_SPECIFIC` follow-up sobre boundary compartido | No existe conector verificado | Futuro: adapter por proveedor y política por entidad | Contrato compartido solo si aplica a otros proveedores | Sí: clonar el dominio ERP para Shopify |
+| Storefront Inhand | `MODULE_SPECIFIC` follow-up de canal público independiente | No existe backend de pedidos/storefront verificado | Futuro: API pública restringida a catálogo publicado y comandos de checkout | Platform/API pública requiere diseño de seguridad propio | Sí: reglas de stock/precio/pedido en el renderer |
 
 | Módulo origen | Módulo destino | Interacción | Trigger | Datos compartidos | Permisos |
 |---|---|---|---|---|---|
@@ -125,9 +127,8 @@ Fuentes: [Odoo Sales](https://www.odoo.com/documentation/19.0/applications/sales
 
 Vistas candidatas, no wireframes aprobados:
 
-- **Overview:** actividad y métricas autorizadas, alertas de integración y
-  enlaces a módulos habilitados; sin asumir que todos los datos tienen una
-  fuente LoopDev.
+- **Overview:** existe como superficie actual, pero su rediseño no forma parte
+  del primer release salvo que una dependencia de navegación lo requiera.
 - **Productos:** lista unificada como entrada directa del módulo; distingue
   productos terminados, materias primas/componentes y servicios, con filtros
   por clase y categoría. El árbol de categorías también se administra dentro
@@ -137,30 +138,39 @@ Vistas candidatas, no wireframes aprobados:
   abastece comprándolo, fabricándolo o por ambos medios; sus variantes heredan
   esa regla. No se muestra un índice separado de catálogos. La agrupación
   técnica existente puede conservarse internamente hasta resolver su destino.
+  Cada variante/SKU tiene su propia categoría; el producto base conserva una
+  categoría general. El detalle y la creación/edición de productos y SKUs usan
+  páginas completas con secciones para identidad, clasificación, coste de
+  compra de referencia y atributos físicos. Un producto sin SKUs administra
+  su coste de referencia; cuando hay SKUs, cada SKU puede mostrar su propio
+  coste. Categoría y marca admiten alta rápida en drawer sin perder el draft;
+  la gestión jerárquica completa de categorías permanece en una vista dedicada.
+  Las reglas de herencia de coste/atributos, la administración completa de
+  marcas/etiquetas y sus permisos requieren análisis antes de implementar.
   Los semielaborados quedan fuera hasta descubrir Fabricación.
-- **Proveedores:** espacio separado para consultar y gestionar proveedores;
+- **Proveedores (follow-up):** espacio separado para consultar y gestionar proveedores;
   alcance de ficha, contactos, estados y acciones por definir antes del diseño
   de sus vistas.
-- **Ventas:** bandeja de cotizaciones/pedidos si el alcance se aprueba; detalle
+- **Ventas (follow-up):** bandeja de cotizaciones/pedidos si el alcance se aprueba; detalle
   con cliente, líneas versionadas, historial y acciones autorizadas.
-- **Compras:** órdenes y recepción enlazada a proveedor; políticas y roles por
+- **Compras (follow-up):** órdenes y recepción enlazada a proveedor; políticas y roles por
   definir.
-- **Inventario:** saldos por ubicación, movimientos y reservas; no presentar
+- **Inventario (follow-up):** saldos por ubicación, movimientos y reservas; no presentar
   disponibilidad como stock físico si solo proviene del canal.
-- **Finanzas:** facturas/reconciliación únicamente tras definir país, proveedor
+- **Finanzas (follow-up):** facturas/reconciliación únicamente tras definir país, proveedor
   y frontera con contabilidad.
-- **Integraciones:** conexión, permisos, salud, estado por entidad, reintento
+- **Integraciones (follow-up):** conexión, permisos, salud, estado por entidad, reintento
   seguro y reconciliación; secretos solo en backend.
-- **Reporting:** filtros, periodos, exportación permitida y trazabilidad de
+- **Reporting (follow-up):** filtros, periodos, exportación permitida y trazabilidad de
   origen.
 
 Flujos de creación, aprobación, bulk actions, exportación y cierre dependen de
-la aprobación de cada módulo. Las vistas deben cubrir loading, empty, error,
-forbidden, conflict, offline, pending y success. En móvil web, las operaciones
-se adaptan al mismo contrato; navegación directa, refresh, back y focus deben
-conservar el significado. Desktop/mobile requeridos; iOS/Android quedan
-planificados, sin alegar paridad. Visuales, density y composición quedan para
-`01-visual-design`.
+la aprobación de cada módulo. Products requiere loading, empty, error,
+forbidden, conflict, offline, pending y success; en remoto, offline significa
+servicio no disponible y no lectura cacheada. Desktop y mobile web consumen el
+mismo catálogo de operaciones; navegación directa, refresh, back, touch y focus
+deben conservar el significado. iOS/Android quedan diferidos. El gate visual
+conceptual ya está aprobado; runtime evidence queda para verificación.
 
 ### 5. Máquina de estados y ciclo de vida
 
@@ -211,7 +221,7 @@ aprobada.
 | Entidad | Owner propuesto | Relaciones/invariantes |
 |---|---|---|
 | `Organization` | Platform | Organización canónica; la UI no decide el tenant |
-| `CatalogItem` (modelo técnico actual; maestro conceptual de producto), `ProductCategory` (propuesta), `Variant`, `Offer`, `PriceBook` | ERP Products | El maestro tiene una clase (terminado, materia prima/componente o servicio), usos independientes (comprable, vendible, inventariable), una categoría principal jerárquica y una regla de abastecimiento. Una variante se gestiona/vende por separado y tiene SKU propio; hereda la regla de abastecimiento. Atributos descriptivos por sí solos no crean variantes. `OrganizationCatalog` es legado de migración, no una relación del modelo objetivo; la moneda comercial pertenece a cada `PriceBook`; los owners de locale y canales siguen abiertos. |
+| `CatalogItem` (modelo técnico actual; maestro conceptual de producto), `ProductCategory` (propuesta), `Variant`, `Offer`, `PriceBook` | ERP Products | El maestro tiene una clase (terminado, materia prima/componente o servicio), usos independientes (comprable, vendible, inventariable), una categoría general y una regla de abastecimiento. Cada SKU variante tiene categoría propia; hereda el abastecimiento. `OrganizationCatalog` es solo origen de migración; moneda pertenece a `PriceBook`; locale/canales se preservan como provenance y quedan diferidos. |
 | `PartyRef` | CRM para clientes/contactos; ERP Suppliers para el rol de proveedor | Referencias por ID; no duplica el historial de relación ni identidad de cliente de CRM |
 | `Supplier` | ERP Suppliers | Perfil de proveedor independiente; scope, campos, lifecycle y relación con contactos CRM quedan para discovery de dominio |
 | `SalesDocument` / `SalesLine` | ERP Sales o canal externo según ownership | Cabecera 1:N líneas; líneas referencian ID/version de item y snapshot de cantidad/precio/impuestos |
@@ -233,27 +243,28 @@ representación remota y constraints/RLS se especificarán tras el gate visual.
 Complejidad `S/M/L/XL` es relativa a un módulo local-first y no equivale a una
 estimación de calendario. Los IDs `CAP-*` se conservan del ledger.
 
-#### Nivel 1 — Core Operativo / MVP candidato
+#### Nivel 1 — Core Operativo / MVP aprobado
 
-Este nivel es una recomendación para definir slices, no una aprobación de que
-todos deban entregarse simultáneamente.
+Solo Products y categorías están aprobados para este release. Las demás filas
+son capacidades de follow-up preservadas en el ledger; no forman parte del
+alcance de implementación actual.
 
 | ID | Capacidad | Prioridad | Dependencias | Complejidad | Criterio de aceptación |
 |---|---|---|---|---|---|
-| `CAP-ERP-CATALOG` | Módulo Productos: maestro unificado de terminados, materias primas/componentes y servicios; categoría jerárquica, usos independientes, abastecimiento y variantes con SKU (ID histórico conservado) | P0 foundation | Permisos/tenant; auditoría de adapter remoto; resolver agrupación por catálogo; análisis de dominio tras el gate visual | M | Un maestro permite combinar clase, compra/venta/control de inventario y abastecimiento; cada producto tiene una categoría principal; variantes separadas tienen SKU y heredan abastecimiento; la lista de Productos es la entrada directa |
-| `CAP-ERP-PRODUCT-CATEGORIES` | Administrar dentro de Productos el árbol jerárquico de categorías y asignar una categoría principal por producto | P0 foundation | Productos; permisos y tenancy; lifecycle de categorías pendiente de `02-domain` | M | Operadores autorizados pueden consultar y administrar el árbol desde Productos; cada producto mantiene una categoría principal; clase y abastecimiento no se derivan de la categoría |
-| `CAP-MIAUCRAFT-SHOPIFY` | Primer slice cliente: conectar Shopify sin reemplazarlo | P1 first client slice; follow-up, no baseline genérico | Mapeo por entidad, credenciales backend, idempotencia | L/XL | Propiedad/operaciones aprobadas por MiauCraft; sync inicial segura, observable y recuperable |
-| `CAP-ERP-SALES` | Documentos de venta y ciclo de pedido | P1 candidate | Productos, CRM identity, reglas fiscales | L | Cotización/pedido trazable con snapshots; transiciones y permisos validados |
-| `CAP-ERP-INVENTORY` | Inventario opcional para bienes físicos | P1 candidate | Productos, ventas y recepción | L | Movimientos auditables; disponibilidad y reserva concurrente nunca sobre-venden |
-| `CAP-ERP-PROCUREMENT` | Compras y recepciones | P2 candidate | Proveedores, Productos, inventario | L | Orden aprobada y recibo parcial actualizan referencias y cantidades de manera idempotente |
-| `CAP-ERP-FINANCE` | Facturación y conciliación de pagos, no ledger completo | P2 / jurisdiction blocker | Ventas/compras, país, proveedor | XL | No se emite ni reconcilia sin reglas fiscales y ownership aprobados |
-| `CAP-ERP-REPORTING` | Consultas operativas autorizadas | P2 candidate | Read models, tenant/RBAC, paginación | M | Filtros/exportaciones muestran solo datos permitidos y registran export |
+| `CAP-ERP-CATALOG` | Products: maestro de items, variantes/SKUs, ofertas, libros/precios, coste unitario de compra de referencia y atributos físicos; categorías vinculadas | P0 approved | Permisos/tenant; permiso sensible de coste; Platform audit; RLS/adapter; migration dry-run | M/L | Acciones aprobadas operan sobre un único organization-scoped master, con generated keys, clases/usos/sourcing, coste no contable explícitamente autorizado, atributos físicos y archivo/restauración |
+| `CAP-ERP-PRODUCT-CATEGORIES` | Árbol jerárquico dentro de Products; categoría general en producto y asignación independiente por SKU | P0 approved | Products contract; permissions; category persistence and migration | M | Usuarios autorizados listan, crean, mueven, archivan y restauran categorías sin ciclos ni borrado permanente; mobile y desktop comparten operaciones |
+| `CAP-MIAUCRAFT-SHOPIFY` | Conectar Shopify sin reemplazarlo | Follow-up; not in this release | Descubrimiento de cliente, mapeo por entidad, credenciales backend, idempotencia | L/XL | Propiedad/operaciones aprobadas por MiauCraft; sync segura, observable y recuperable |
+| `CAP-ERP-SALES` | Documentos de venta y ciclo de pedido | Follow-up | Productos, CRM identity, reglas fiscales | L | Cotización/pedido trazable con snapshots; transiciones y permisos validados |
+| `CAP-ERP-INVENTORY` | Inventario opcional para bienes físicos | Follow-up | Productos, ventas y recepción | L | Movimientos auditables; disponibilidad y reserva concurrente nunca sobre-venden |
+| `CAP-ERP-PROCUREMENT` | Compras y recepciones | Follow-up | Proveedores, Productos, inventario | L | Orden aprobada y recibo parcial actualizan referencias y cantidades de manera idempotente |
+| `CAP-ERP-FINANCE` | Facturación y conciliación de pagos, no ledger completo | Follow-up; jurisdiction blocker | Ventas/compras, país, proveedor | XL | No se emite ni reconcilia sin reglas fiscales y ownership aprobados |
+| `CAP-ERP-REPORTING` | Consultas operativas autorizadas | Follow-up | Read models, tenant/RBAC, paginación | M | Filtros/exportaciones muestran solo datos permitidos y registran export |
 
 #### Módulo independiente con prioridad abierta
 
 | ID | Capacidad | Prioridad | Dependencias | Complejidad | Criterio de aceptación |
 |---|---|---|---|---|---|
-| `CAP-ERP-SUPPLIERS` | Gestión independiente de proveedores | Separación confirmada; nivel, prioridad y fecha abiertos | Organization scope; límites CRM; Compras cuando se habilite | TBD | Proveedor tiene identidad ERP propia; Compras lo referencia sin duplicar su perfil; alcance funcional queda aprobado antes de implementación |
+| `CAP-ERP-SUPPLIERS` | Gestión independiente de proveedores | Separación confirmada; diferido | Organization scope; límites CRM; Compras cuando se habilite | TBD | Proveedor tiene identidad ERP propia; Compras lo referencia sin duplicar su perfil; alcance funcional queda aprobado antes de implementación |
 
 #### Nivel 2 — Automatización y colaboración
 
@@ -276,17 +287,19 @@ todos deban entregarse simultáneamente.
 
 ### 8. API, eventos y backend
 
-Propuesta de límites, pendiente de `04-api`; no son endpoints existentes ni
-contratos aprobados.
+`api-contracts.md` es el contrato lógico aprobado para planificar Products;
+no representa rutas HTTP ni implementación. Las operaciones de ventas,
+proveedores, compras, inventario, finanzas, canales y reporting son solo
+referencias de follow-up, no contratos del primer release.
 
 - **Servicios/casos de uso:** `ProductsService` (propuesto; el adapter técnico
   actual sigue llamándose `CatalogAdapter`), `SalesDocumentService`,
   `SupplierService`, `ProcurementService`, `InventoryService`, `FinanceService`,
   `ChannelSyncService`, `ReportingQueryService`; separarlos por ownership,
   evitar un ERP mega-service.
-- **Comandos/queries candidatos:** conservar `catalog.list/manage` como IDs de
-  compatibilidad actuales hasta que `04-api`/`03-access` aprueben su mapeo al
-  módulo Productos;
+- **Comandos/queries Products:** conservar `catalog.list/manage` como IDs de
+  compatibilidad y usar `catalog.write` como permiso canónico para mutaciones;
+  los contratos detallados están en `api-contracts.md`;
   `sales.document.list/create`, `sales.order.transition`,
   `supplier.list/manage`,
   `procurement.purchase_order.create`, `procurement.receipt.record`,
@@ -307,18 +320,21 @@ contratos aprobados.
 - **Idempotencia/retry:** clave por operación/proveedor, outbox/inbox si se
   aprueba backend; retries con backoff y dead-letter visible; no repetir
   posting por reintento.
-- **Transporte:** API remota futura detrás de ports/adapters; paginación
-  cursor-based para transacciones; límites por tenant; cache de lectura
-  invalidada por versión. No ejecutar trabajos de sincronización dentro del
-  renderer.
+- **Transporte:** mantener Supabase detrás del adapter existente; paginación
+  cursor-based; límites por organización; no cachear datos remotos para uso
+  offline. No ejecutar trabajos de sincronización dentro del renderer.
 - **Observabilidad:** correlation ID, métricas de duración/errores/retries,
   logs redactados y auditoría de mutaciones. No exponer secretos ni cuerpos
   completos de proveedores.
 
 ### 9. Matriz RBAC y reglas de negocio
 
-Roles son perfiles propuestos; autorización real debe ser por permisos,
-organization scope, asignación y server enforcement, no por nombre de rol.
+La tabla describe perfiles futuros y no sustituye el contrato de permisos
+actual. Para este release aplican las decisiones y acciones de
+`access-model.md`: `catalog.read` ve productos/precios; `catalog.write`
+gestiona y archiva/restaura; delete/export, valoración contable y márgenes no
+están disponibles. El coste de compra de referencia requiere autorización
+explícita separada antes de mostrarse; `catalog.read` no lo concede por defecto.
 
 | Acción | Admin | Manager | Usuario | Solo lectura |
 |---|---:|---:|---:|---:|
@@ -353,9 +369,11 @@ organization scope, asignación y server enforcement, no por nombre de rol.
   reporting e integraciones son propuestas hasta aprobar scopes.
 - **Composición:** LoopDev AppShell + rutas definidas en
   `src/routes/LoopdevRoutes.tsx`; `PageContainer`, `PageHeader`, `PageTabs`,
-  `DataTable`, `EmptyState`, `LoadingState`, `DetailDrawer`, `ConfirmDialog`
-  y primitivas `src/components/ui/*` como reuse candidates verificados en la
-  referencia Platform.
+  `DataTable`, `EmptyState`, `LoadingState`, `FormSection`, `FormSectionNav`,
+  `ConfirmDialog` y primitivas `src/components/ui/*` como reuse candidates
+  verificados en la referencia Platform. Producto/SKU se muestran y editan en
+  páginas completas; `AppDrawer` se reserva para altas/ediciones rápidas de
+  datos auxiliares y preview breve, no para sustituir la ficha.
 - **Dominios/hook/adapter:** página → hook/caso de uso → contrato de dominio →
   port → adapter local o remoto. Los componentes no contienen reglas, SQL,
   política de canal ni lógica de permisos. Interfaces propuestas: `Erp*`,
@@ -374,49 +392,51 @@ organization scope, asignación y server enforcement, no por nombre de rol.
   navegación y deep links; responsive/accessibility; visuales solo tras aprobar
   `visual-design.md`. Ninguna ruta candidata cuenta como implementada.
 
-### 11. Arquitectura local-first y sincronización
+### 11. Persistence and synchronization
 
-El módulo Products usa actualmente adapters local y Supabase con nombres
-legacy de catálogo, pero la paridad remota/deployment no está probada. No se
-extrapola esa situación a futuros módulos.
+Products has two explicit, non-fallback modes:
 
-- Persistir borradores y lecturas cacheadas mediante adapter; no almacenar
-  tokens de proveedor ni datos de tarjeta.
-- Para escrituras offline, diferenciar `pending`, `synced`, `conflict`,
-  `rejected` y `retryable`; solo permitirlas donde las invariantes toleren
-  retraso. No permitir postear pagos, emitir facturas o reservar stock offline
-  hasta aprobar política.
-- Cada comando lleva operation ID/idempotency key, organization, actor,
-  expected version y origen; adapter server vuelve a validar scope/permisos.
-- `05-sync` define orden, reintento, conflicto y compensación. Prioridad
-  propuesta: merge de campos independientes; conflicto explícito si cambia
-  precio, cantidad, estado, stock o propiedad de canal.
-- Migración: versión local schema; export/backup; dry-run de mapping; carga
-  idempotente; comparación de conteos/IDs; mantener fallback de lectura;
-  desactivar escritura local cuando remoto se active; rollback por feature
-  flag, sin borrar datos sin aprobación.
-- Feedback visible: pendiente vs confirmado; fecha de última sync; error
-  accionable con correlation ID; reintento seguro; no reportar éxito antes de
-  confirmación remota cuando la operación es irreversible.
+- `local_demo`: seeded local-only data for demo use; storage read/write errors
+  must be visible and cannot be reported as successful saves.
+- `supabase`: organization-scoped remote source of truth; reads and mutations
+  require an online server response. No remote read cache, offline mutation
+  queue or fallback to demo fixtures is permitted in this release.
 
-### 12. Plan de implementación por fases
+Adapter selection must come from explicit runtime configuration and fail
+closed when missing or invalid; organization ID shape is not a mode selector.
+Remote mutations require server authorization, `expectedVersion`, idempotency
+for creates, operation-specific RLS and an append-only shared Platform audit
+record in the same transaction. A failed audit write fails the mutation.
+Storage/deployment parity, version fields, category persistence and the
+forward migration must be verified before remote writes are enabled.
 
-Secuencia de referencia; no es el plan aprobado y no autoriza build.
+The migration process is dry-run first: obtain an authorized source inventory,
+preserve legacy IDs/values as provenance, report duplicate keys/SKUs,
+workspace visibility expansion, category mapping gaps and currency
+mismatches, then require review before any cutover. No automatic class/category
+mapping, workspace-wide data rewrite or destructive migration is permitted.
+The UI distinguishes online/unavailable from business status and never labels
+local demo data as remotely saved.
+
+### 12. Implementation sequence
+
+This is the proposed sequence for the approved Products/categories release.
+It does not authorize build; `implementation-plan.md` and the ledger must be
+approved first.
 
 | Fase | Objetivo | Frontend | Backend | Datos/Sync | Validación |
 |---|---|---|---|---|---|
-| 1. Discovery/decisiones/contratos | Cerrar primer slice, clientes, jurisdictions y ownership | Flujos y roles objetivos | Elegir local-only vs remote slice | Identidad, source-of-truth, idempotencia | Discovery aprobado; matriz CAP y decisiones con owner |
-| 2. UX/frontend local-first | Validar una experiencia completa sobre shell Rivera | Vistas/estados desktop y mobile | Sin requisito de backend real | Fixtures/adapters existentes, no mocks Rivera | Visual approval; tests de acciones/estados y a11y |
-| 3. Adapter local/persistencia/eventos | Probar reglas y recuperación en local | Feedback pending/conflict | Use cases/ports y storage local | Persistencia, versión, events local | Unit/integration, reload y migration tests |
-| 4. Backend/API/auth/RLS | Exponer contratos remotos aprobados | API adapter | Auth, commands, constraints, audit | RLS negativa entre organizations | Contract, RLS/isolation, idempotencia |
-| 5. Sync/migración | Operar local + remote sin pérdida | Estado/recovery UI | Worker/outbox y reconciliation | Dual-read/safe cutover | Duplicate/out-of-order/offline/recovery tests |
-| 6. Automatizaciones/integraciones | MiauCraft Shopify, luego otras | Admin de conexión/sync | Provider adapter, secrets, webhooks/jobs | Mapping por entidad y replay | Sandbox/provider contract, fault injection |
-| 7. Enterprise/analítica/IA | Añadir capacidades por demanda | Dashboards y admin avanzados | Warehouse/analytics/AI providers | Retención, lineage, multi-company | Privacy, accuracy, usage/cost, rollback |
+| 1. Pre-build audits and shared contracts | Complete environment, Platform reuse, architecture, responsibility, legacy, route, state, operation, accessibility and security audits | No renderer implementation | Confirm audit owner and API/persistence boundaries | Explicit mode, online-only, archive-only, migration dry-run contract | Audits and shared Product/category contract accepted |
+| 2. Platform audit capability | Implement the approved append-only audit contract before consumer writes | No Products mutation UI enabled | Shared audit adapter/schema and atomic persistence | Forward migration and rollback plan | Platform contract approval, tests, transaction failure rollback |
+| 3. Products persistence and security | Explicit adapter mode, surfaced demo storage failures, version/idempotency, operation-specific RLS and `catalog.write` | Existing flows remain disabled from remote mutation until gates pass | Supabase mapping and permission parity | Forward-only migration, no DELETE, shared audit | RLS, adapter-contract, idempotency and cross-tenant tests |
+| 4. Product/category domain | Implement approved classes, SKU/key/category/sourcing/currency/archive rules | Shared action contract, forms/list/detail and category view | Domain/use cases and category data access | Dry-run legacy mapping; no guessed class/category assignment | Domain and migration tests; mapped records reviewed |
+| 5. Desktop and mobile web | Complete parity for every approved operation using same semantic contract | Rivera-based desktop/mobile interactions, routes and states | No renderer-owned domain behavior | No offline remote cache/queue | Focused component tests, a11y/i18n/responsive tests and route evidence |
+| 6. Verification and rollout | Verify remote state, runtime, rollback and acceptance evidence | Direct-route/runtime screenshots after implementation | Tenant isolation and audit evidence | Authorized migration preflight; no deployment without approval | Requirement matrix, desktop/mobile verdicts, release decision |
 
 Cada fase necesita issues con propietario, dependencias reales, criterios de
 aceptación y comandos de validación antes de `module-plan`.
 
-### 13. Estrategia de pruebas y criterios de aceptación
+### 13. Test strategy and acceptance criteria
 
 No se afirma cobertura funcional de módulos candidatos. Los tipos de prueba
 son gates futuros:
@@ -468,6 +488,9 @@ caminos activos sin una decisión de migración.
 - Minimizar PII; pagos por proveedor externo, sin datos de tarjeta en LoopDev;
   región, retención, facturación y obligaciones legales quedan bloqueadas por
   jurisdicción.
+- El coste de compra de referencia no hereda automáticamente
+  `catalog.read`; definir permiso, visibilidad y auditoría específicos antes
+  de implementar o habilitar escrituras remotas.
 - Métricas: tiempos de ciclo, errores de dominio, sync lag, retry/DLQ, stock
   discrepancy y export counts. Logs con correlation ID y sin secrets/PII.
 - Rollout por capability/tenant flag; feature kill switch para escrituras y
@@ -482,8 +505,18 @@ caminos activos sin una decisión de migración.
 
 - ERP se dirige a pymes de distintos sectores; modularidad y sector-neutralidad
   son objetivos de producto.
-- MiauCraft conserva Shopify y es el primer caso cliente; Inhand será posterior
-  con backend LoopDev, bienes físicos, un almacén y proveedor de pago externo.
+- El primer release es Products y categorías en escritorio/móvil web, con coste
+  de compra unitario de referencia y atributos físicos estructurados. Shopify,
+  Inhand, Proveedores y los demás módulos quedan diferidos.
+- Datos remotos Products son online-only: no hay cache offline ni cola de
+  mutaciones; `local_demo` es un modo explícito y separado, no un fallback.
+- Products y categorías son organization-wide y archive/restore-only. Los
+  precios/ofertas siguen la decisión vigente de `catalog.read`; el coste de
+  compra de referencia no es valoración contable ni margen y requiere una
+  decisión de permiso separado antes de hacerse visible.
+- Las mutaciones remotas no se habilitan hasta contar con autorización RLS
+  correcta, `catalog.write`, versionado e idempotencia y auditoría Platform
+  append-only atómica.
 - `ERP-DEC-005` / `CR-ERP-PRODUCT-MASTER-MODEL`: Productos mantiene un maestro
   único con clases de producto terminado, materia prima/componente y servicio;
   los semielaborados esperan a Fabricación. Clase y usos (comprable, vendible,
@@ -492,50 +525,64 @@ caminos activos sin una decisión de migración.
   el producto y se hereda por variantes. Solo se crea una variante cuando se
   gestiona o vende por separado, con SKU propio; los demás atributos son
   descriptivos.
-- Proveedores será un módulo independiente de Compras; su prioridad y fecha de
-  entrega permanecen abiertas. Fabricación se deja fuera del roadmap actual y
-  requerirá una decisión/discovery futura.
+- Proveedores será un módulo independiente de Compras, diferido de este
+  release. Fabricación se deja fuera del roadmap actual y requerirá una
+  decisión/discovery futura.
 - El módulo se denomina **Productos** y la lista de productos/servicios es su
   entrada principal; se conserva `CAP-ERP-CATALOG` y el contrato técnico
   `catalog.*` para no romper trazabilidad ni compatibilidad.
+- `CR-ERP-PRODUCT-EDITOR-COST-REFERENCE` (aprobada por @loopdev-io el
+  2026-10-24): producto y SKU usan páginas completas; los drawers sirven para
+  alta/edición rápida de referencias auxiliares. Se incluye coste unitario de
+  compra de referencia por producto/SKU, no contable, sin valoración de
+  inventario ni cálculo de margen.
 - No duplicar CRM, Platform o reglas de negocio en canales públicos.
 
 **Supuestos y decisiones abiertas**
 
-- El primer release puede empezar con Productos + ventas/órdenes, pero el alcance
-  debe validarse; compras, inventario, finanzas y reporting son candidatos,
-  no compromiso de MVP.
-- Proveedores es un bounded context independiente, pero su alcance funcional
-  y entrada en el roadmap de MiauCraft no están aprobados.
-- `OrganizationCatalog` queda como legado de migración, no como entidad de
-  negocio. Su moneda se migra a los `PriceBook` aplicables; faltan owners para
-  locale y canales. Las entradas de precio heredan la moneda del `PriceBook`,
-  y `Offer` no tiene moneda independiente; retirar/migrar el campo legacy de
-  `Offer`. Preservar los datos hasta resolver esas fronteras en
-  `02-domain`/`04-api`.
+- La aprobación del contrato de auditoría compartida pertenece al owner de
+  Platform; remote writes siguen bloqueadas hasta implementación y verificación.
+- La información remota real no está disponible en este checkout; requiere
+  inventario autorizado y dry-run antes de mapear categoría, workspace o moneda.
+- `OrganizationCatalog` queda como legado de migración; preservar locale/canal
+  como provenance y diferir sus owners. La moneda se migra a `PriceBook`;
+  `PriceEntry` la hereda y `Offer` no tiene moneda independiente.
 - `ERP-DEC-006`: el producto base tiene una categoría general y cada variante/SKU
   tiene una categoría propia, que puede diferir de la del producto base y de
   otras variantes; la categoría no se hereda. Los borradores pueden no tener
   categoría, pero es obligatoria antes de activar. El sourcing sí se hereda,
   excepto que los servicios no tienen sourcing. Los productos terminados
   permiten buy/make/both; materias primas/componentes, solo buy por ahora.
-- `ERP-DEC-007`: el SKU es único en toda la organización; queda por definir la
-  normalización de SKU y las reglas de claves de productos/categorías.
+- `ERP-DEC-007`: el SKU es único en toda la organización tras recortar
+  espacios externos y comparar sin distinción de mayúsculas; conserva el caso
+  ingresado. Las claves internas de productos, variantes y categorías son
+  generadas, inmutables y únicas por organización.
 - País, impuestos, facturas legales, moneda, B2B/B2C y fuente de pago están
   abiertos.
+- La visibilidad del coste, su moneda/default, si el coste del producto base
+  actúa como valor inicial de SKUs y el tratamiento de su historial/fuente
+  siguen abiertos. El dato no se expondrá a `catalog.read` por defecto.
+- La ubicación/herencia de peso y dimensiones entre producto base y SKU sigue
+  abierta; los campos deben ser estructurados y limitados a artículos físicos,
+  no texto libre ni atributos contables/de almacén.
+- La administración de marcas y etiquetas como referencias controladas frente
+  a texto libre, y si requiere una vista completa además de drawers rápidos,
+  sigue abierta.
 - MiauCraft debe definir entidades Shopify visibles, fuente por campo,
   direccionalidad y operaciones de escritura; default seguro: lectura hasta
   aprobación.
 - Inhand requiere después especificar fulfillment, envío, devolución, reserva,
   reembolso y políticas de publicación.
-- Native iOS/Android: owner y applicability pendientes.
+- Al restaurar un producto o SKU archivado, siempre vuelve a `draft`; para
+  volver a `active` debe superar de nuevo las validaciones de activación.
 
 **Riesgos y dependencias**
 
-- Los documentos del catálogo técnico contradicen adapter/migración;
-  `catalog.write` vs
-  `catalog.manage`; remoto no probado. Resolver antes de ampliar permisos o
-  conectores.
+- El runtime técnico sigue usando `catalog.manage` en RLS aunque la decisión
+  canónica es `catalog.write`; requiere migración forward y verificación.
+- El adapter sigue seleccionando local/remoto por forma del ID, y el storage
+  local suprime fallos; ambos comportamientos deben corregirse antes de confiar
+  en modo demo o escritura remota.
 - Una arquitectura "para todos los sectores" puede convertirse en ERP sin
   límites; cada módulo necesita validación y release separado.
 - Duplicar clientes, notas, tareas, documentos o reglas en ERP genera
@@ -544,20 +591,18 @@ caminos activos sin una decisión de migración.
   explícito causa sobreescrituras, pedidos duplicados y errores de stock.
 - Finanzas y datos fiscales requieren país, asesoría y provider; un payment
   status no es contabilidad.
-- iOS/Android, extensiones Platform, entitlements y operación remota tienen
-  owner/dependencias sin confirmar.
+- La extensión de auditoría Platform y el inventario de datos remoto son
+  dependencias de aprobación/acceso; no se resuelven por inferencia.
 
-**Roadmap propuesto:** reconciliar el modelo técnico de catálogo con el módulo
-Productos y sus capability permissions; asegurar que los formularios permitan
-categoría propia por SKU; migrar `OrganizationCatalog` solo como fuente legada
-y asignar destino a sus campos; aprobar
-un primer slice cross-sector basado en entrevistas; diseñar UX/gate visual;
-realizar análisis domain/access/API/sync; planificar MiauCraft connector; pilotar
-y medir antes de Inhand; abrir módulos enterprise solo con evidencia de demanda.
+**Roadmap aprobado para este run:** cerrar los audits y contrato compartido;
+aprobar e implementar Platform Audit; implementar RLS/adapter/modelo de
+Products y categorías; completar desktop y mobile web; ejecutar dry-run y
+verificación. Shopify, Inhand y otros módulos requieren nuevos runs.
 
-**Gate actual:** diseño aprobado con las enmiendas `CR-ERP-PRODUCTS-MODULE` y
-`CR-ERP-PRODUCT-MASTER-MODEL`. El Product Owner aprobó explícitamente el gate
-visual conceptual el 2026-10-24; la comparación visual de runtime queda para
-después de la implementación. El análisis especializado está activo en
-`02-domain`; no iniciar `module-plan` hasta completar dominio, acceso, API y
-sync. Estado del análisis de dominio: `partial`.
+**Gate actual:** el diseño anterior recibió un cambio aprobado
+`CR-ERP-PRODUCT-EDITOR-COST-REFERENCE`; su revisión visual está en curso y el
+gate visual de esta revisión aún requiere aprobación explícita. Las decisiones
+de interfaz y coste están registradas, pero domain/access/API/sync deben
+reconciliarse con el nuevo coste sensible y las reglas abiertas de atributos.
+El plan y su ledger necesitan actualizarse y aprobarse antes de iniciar
+`07-build`; runtime comparison queda después de implementar el diseño aprobado.

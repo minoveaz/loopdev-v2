@@ -1,61 +1,212 @@
-# <Module> Implementation Plan
+# ERP Products and Categories — Implementation Plan
 
-## Inputs
+## Inputs and approval
 
-- Product definition:
-- Design run:
-- Track:
-- Main issue:
-- Approved by:
-- Approval date:
+| Field | Value |
+|---|---|
+| Product definition | `docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md`; scope amendment in issue #36 |
+| Design run | `MOD-CORE-20261024-001` |
+| Track | Issue #36; implementation phase issues are created from `.github/ISSUE_TEMPLATE/module-phase.md` after plan approval and before execution |
+| Main issue | [minoveaz/loopdev-v2#36](https://github.com/minoveaz/loopdev-v2/issues/36) |
+| Plan status | Complete for approval; approval not yet recorded |
+| Approved by / date | Pending explicit Product Owner approval |
+| Design / visual approval | Design scope approved; all six conceptual visual compositions approved on 2026-10-24 |
+
+This plan authorizes no production changes. Plan approval accepts the scope and
+sequence only; it does not authorize remote data cutover, deployment, or claim
+operation parity.
+
+## Scope and assumptions
+
+- **Included:** Products and hierarchical categories, variants/SKUs, offers,
+  PriceBooks and PriceEntries; organization-wide; archive/restore only;
+  desktop and mobile web.
+- **Confirmed:** SKU uniqueness is organization-wide after trimming outer
+  whitespace and case-insensitive comparison while preserving entered case;
+  product/SKU/category keys are LoopDev-generated, immutable and
+  organization-unique; each SKU has its own category; sourcing is inherited;
+  restoring a product/SKU always returns it to `draft`.
+- **Access:** `catalog.read` reads Products and sales prices;
+  `catalog.write` mutates. No cost/margin fields, exports, permanent deletion,
+  offline remote cache, offline mutation queue, Shopify, Inhand, Suppliers or
+  other ERP modules.
+- **Modes:** `supabase` is remote and online-only; `local_demo` is explicitly
+  selected, local-only and never a remote fallback. Missing/invalid mode fails
+  closed.
+- **Assumptions:** keep current legacy route and entity references compatible
+  while `/app/erp/products` becomes canonical. Do not migrate production data
+  until an authorized inventory and reviewed dry-run exist.
+- **Open external prerequisites:** Platform must assign an owner and approve
+  the append-only audit contract; Platform must decide how to reconcile the
+  approved Inter/JetBrains Mono baseline with the Geist runtime; authorized
+  database access is needed to inspect deployed RLS and legacy records.
 
 ## Environment baseline
 
 | Field | Value |
 |---|---|
-| Repository path | |
-| Checkout type | |
-| Branch | |
-| Base branch | |
-| HEAD | |
-| Runtime URL | |
-| Runtime port | |
-| Working tree | |
+| Repository path | `/Users/minoveaz/.copilot/repos/loopdev-v2` |
+| Checkout type | In-place branch checkout |
+| Branch | `feature/erp-core-capabilities` |
+| Base branch | `develop` |
+| HEAD | `0024978c4c92097cf295313864e4eadb4e810aba` |
+| Runtime URL / port | Not started; no runtime evidence |
+| Working tree | Documentation-only changes; no production code or SQL changes |
+
+## Current-state inventory
+
+| Area | Evidence and finding | Planning consequence |
+|---|---|---|
+| Routes | `src/routes/LoopdevRoutes.tsx` exposes `/app/erp/products` as the direct organization-wide Products view and retains legacy `/app/erp/product-catalog[/:catalogId]`. | Preserve legacy deep links and verify authenticated direct-route behavior on desktop and mobile. |
+| Domain and adapters | `src/loopdev/domains/catalog/` has catalog types, local and Supabase adapters; category tree is absent. `adapter/index.ts` chooses local vs Supabase from organization-ID shape. | Preserve the adapter boundary; add explicit runtime mode and category contract before renderer work. |
+| Local persistence | `src/lib/storage.ts` silently falls back on read errors and ignores write errors. | The explicitly selected demo adapter must surface persistence failures; audit shared-helper consumers before extending it. |
+| Remote persistence/security | `supabase/migrations/20260928160000_erp_catalog_foundation.sql` creates six tables; the current all-operation RLS policy uses `catalog.read` in `USING`, grants DELETE, and uses `catalog.manage` for writes. Deployment state is unknown. | Forward-only permission/RLS migration, no DELETE policy/grant, authorized deployed-state verification; keep remote mutations disabled until Platform audit is atomic. |
+| Shared UI/shell | Reusable `PageContainer`, `PageHeader`, `DataTable`, `TablePagination`, `EmptyState`, `LoadingState`, `SearchInput`, `Select`, `FormSection`, `AppDrawer`, `DetailDrawer`, `ConfirmDialog` and shared shell are documented in the current UI/shell references. | Reuse current LoopDev/Rivera patterns; no native `<select>`, parallel shell, or module-local design system. |
+| Shared capabilities | Current contracts/consumers include `EntityRef` and Platform scope; `packages/contracts/src/notes.ts`, `activity-timeline.ts`, `tasks.ts`; `src/loopdev/components/platform/`; and `src/loopdev/components/files/`. Document Intelligence Core has its own approved shared contract. | Reuse applicable Platform contracts; do not create ERP Notes, Files, Tasks, Relations, timeline, document extraction or sync implementations. None of those capabilities is added to the MVP UI without an approved use case. |
+| Audit | No generic append-only Platform audit contract was found; the Document Intelligence audit migration is module-specific and cannot substitute for it. | `EXTEND_PLATFORM` is a prerequisite. Platform owner approval is a task-level blocker. |
+| Legacy data | Real category keys, workspace IDs and currencies are not available in the checkout. | Preserve provenance, run read-only inventory and dry-run, and require review before cutover; no inferred mapping. |
+
+## Target architecture and reuse classification
+
+`Presentation → Application → Domain → Ports ← Adapters` remains the target
+dependency direction. Keep `catalog.*` names and CRM `catalog_item`
+references compatible until a separate migration decision. The candidate
+shared Products contract is `packages/contracts/src/erp-products-capability.ts`; it must
+be verified against the existing `packages/contracts/src/index.ts` export and
+contract-test conventions before implementation.
+
+| Capability | Classification | Consumers / decision |
+|---|---|---|
+| Organization, membership, permission, `EntityRef` | `REUSE` | Use Platform organization context and authorization; Products is organization-wide and must not add a tenant model. |
+| Rivera/LoopDev UI, shell, forms, `Select`, drawer and feedback | `REUSE` | Use current source-backed primitives and approved visual source; no native controls or copied Rivera page logic. |
+| Notes, Files, Activity/Timeline, Tasks and Relations | `REUSE` | Consume existing shared contracts/components only where an approved Products interaction requires them; no module-local duplicate. |
+| Document Intelligence | `REUSE` | Cross-suite Core remains the owner. No extraction workflow is in this Products release. |
+| Products and category capability contract | `MODULE_SPECIFIC` | ERP Products owns product, SKU, category, offer and price semantics; desktop/mobile consume one shared contract. |
+| Append-only mutation audit | `EXTEND_PLATFORM` | No generic contract was found. Platform approval and implementation must precede any remote Products write. |
+| Storage error propagation for `local_demo` | `EXTEND_PLATFORM` if shared helper changes; otherwise explicit adapter-local strict API | Reuse shared storage conventions without changing unrelated consumers; the audit chooses the narrowest safe seam. |
+| Shopify, Inhand commerce, Suppliers and other ERP modules | `BLOCKED` for this release / follow-up | Explicitly deferred; no implementation tasks in this ledger. |
+
+## Suite interaction matrix
+
+| Source → consumer | Trigger | Shared data/contract | Permission boundary | Validation evidence |
+|---|---|---|---|---|
+| Products → CRM | CRM displays an existing product reference | Stable legacy `catalog_item` ID/key and version; Products remains master | `catalog.read` plus CRM record permission | Existing CRM reference regression tests; no duplicate CRM product master |
+| Products → Platform Notes/Files/Tasks/Relations/Activity | User opens an approved collaboration affordance on a Products record, if included | Platform `EntityRef`/scope and existing capability ports | Platform permission plus parent Products record access | Shared contract tests and consumer regression tests; no local duplicate |
+| Products → Document Intelligence Core | No first-release trigger | No document workflow in this scope | Core authorization stays Platform-owned | Explicitly `N/A` for MVP; future workflow requires separate discovery |
+| Products → public channels | None in this release | Shopify and Inhand contracts deferred | No public API or channel credential in Products | No channel implementation; keep those capabilities outside the ledger's MVP task set |
 
 ## Ordered work breakdown
 
-| ID | Phase | Issue | Type | Task | Dependencies | Files/areas | Validation | Definition of done |
-|---|---|---:|---|---|---|---|---|---|
-| | | # | | | | | | |
+Issue IDs for executable work items are pending plan approval. Before each
+work item starts, create/update its issue using the module-phase template,
+include the run/span ID and acceptance criteria, and record the issue link in
+the ledger/checkpoint. Unblocked tasks remain `pending` until plan approval;
+external dependencies remain `blocked`.
 
-## Mandatory audits
-
-- [ ] Environment truth audit.
-- [ ] Platform reuse audit.
-- [ ] Legacy-flow audit.
-- [ ] Route and runtime audit.
-- [ ] Surface-state audit.
-- [ ] Operation-parity audit: compare every user operation by platform; record
-	`implemented`, `adapted`, `missing` or `not_applicable`, and link every
-	adaptation to its approved decision.
-- [ ] Renderer-action test audit: define focused component tests for every
-	changed user operation; reserve browser journeys for high-risk or E4 tasks.
-- [ ] Accessibility and i18n audit.
-- [ ] Security and rollback audit.
-- [ ] Visual design approval (`01-visual-design`) recorded before specialized analysis and plan approval.
-
-## Issue execution policy
-
-Each issue must contain a measurable acceptance checklist, evidence links and
-the run/span ID. An issue is closed only after its definition of done passes.
+| ID | Phase | Issue | Type / platforms | Task | Dependencies | Files / areas | Risk | Validation | Definition of done |
+|---|---|---|---|---|---|---|---|---|---|
+| `AUDIT-ENV-001` | 07-build | #36 / child TBD | audit · shared, desktop_web, mobile_web | Environment truth and first planning audit: record repository/branch/HEAD/tree/runtime, read V2 source-of-truth, multiplatform contract, current UI/shell references and inspect Notes, Files, Activity/Timeline, Tasks, Relations and Document Intelligence contracts/consumers. | — | `run.json`, platform references, current source/tests | medium | `npm run delivery:validate` | Environment snapshot and verified reuse inventory are linked; no proposed capability is marked implemented from document presence alone. |
+| `AUDIT-REUSE-001` | 07-build | #36 / child TBD | audit · shared | Classify every proposed cross-module capability as `REUSE`, `EXTEND_PLATFORM`, `MODULE_SPECIFIC` or `BLOCKED`; identify consumers, duplicate risks, contract path/version impact and tests. | `AUDIT-ENV-001` | `architecture-design.md`, `packages/contracts/src/`, Platform components/domains | high | `npm run validate:contracts`; `npm run test:multiplatform-contracts` | Signed-off reuse matrix names current consumers and identifies generic Platform audit as absent; no module-local clone is planned. |
+| `AUDIT-LEGACY-001` | 07-build | #36 / child TBD | audit · shared | Map current Catalog screens/actions, IDs, route behavior, CRM references and persistence before replacement; identify legacy flows to preserve or retire. | `AUDIT-ENV-001` | `ProductCatalog.tsx`, catalog domain/adapters, CRM reference tests, route source | high | `npm run test -- src/test/catalog/catalog-adapter.test.ts` | Before-state behavior and compatibility/redirect expectations are documented and testable. |
+| `AUDIT-ROUTE-001` | 07-build | #36 / child TBD | audit · desktop_web, mobile_web | Audit direct URLs, navigation, refresh, back, mobile sidebar, route guards and real runtime URL/port. | `AUDIT-ENV-001` | `LoopdevRoutes.tsx`, `LoopdevSidebar`, route smoke tests | high | `npm run smoke:routes` | Canonical route and legacy deep-link acceptance are explicit; no runtime is claimed until started on the intended checkout. |
+| `AUDIT-STATE-001` | 07-build | #36 / child TBD | audit · shared, desktop_web, mobile_web | Reconcile loading, empty, error, forbidden, conflict, offline, pending and success behavior against approved view-state matrix; remote offline is unavailable, not cached. | `AUDIT-ROUTE-001` | `view-state-matrix.md`, product/category wireframes, shared feedback controls | high | `npm run test -- src/test/catalog/catalog-adapter.test.ts` | Every in-scope view has state and recovery acceptance; demo storage failures and remote unavailability are distinct. |
+| `AUDIT-PARITY-001` | 07-build | #36 / child TBD | audit · shared, desktop_web, mobile_web | Audit every operation separately from domain and renderer parity; preserve `missing` until behavioral evidence exists. | `AUDIT-STATE-001`, `AUDIT-REUSE-001` | `delivery-ledger.json`, `platform-evidence-matrix.md`, operation contracts | high | `npm run validate:multiplatform` | Each required operation is mapped to desktop and mobile build tasks with operation IDs and tests. |
+| `AUDIT-ACTIONS-001` | 07-build | #36 / child TBD | audit · desktop_web, mobile_web | Define focused component/contract tests for each changed list, create/update, archive/restore, variant, offer, price and category action. | `AUDIT-PARITY-001` | `src/test/catalog/`, new Products/category tests | high | `npm run test:multiplatform-contracts` | Test cases cover shared semantics and each renderer action; browser journeys are reserved for high-risk route/release flows. |
+| `AUDIT-A11Y-001` | 07-build | #36 / child TBD | audit · desktop_web, mobile_web | Audit keyboard/focus, accessible names, screen-reader status, responsive breakpoints, 44px mobile targets, i18n and RTL. | `AUDIT-ROUTE-001` | Approved six wireframes, shared forms/drawers, i18n resources | high | `npm run i18n:check` | Each operation has accessible parity evidence and no renderer-local action semantics. |
+| `AUDIT-SECURITY-001` | 07-build | #36 / child TBD | audit · shared | Audit tenant isolation, permission checks, sensitive fields, audit transaction boundary, feature flags and rollback. | `AUDIT-REUSE-001`, `AUDIT-LEGACY-001` | Access/API/sync models, RLS migrations, runtime access path | critical | `npm run test -- src/test/catalog/catalog-adapter.test.ts` | Threat/rollback matrix assigns evidence and owners; remote writes remain disabled until server and audit gates pass. |
+| `AUDIT-ARCH-001` | 07-build | #36 / child TBD | audit · shared | Verify target/current layers, boundaries, public contracts, imports and forbidden dependencies before implementation. | `AUDIT-REUSE-001` | `architecture-design.md`, catalog domain and adapters, package contracts | high | `npm run validate:contracts`; `npm run validate:mobile-boundaries` | Architecture-boundary audit names exact modules/consumers and approved deviations or confirms none. |
+| `AUDIT-RESP-001` | 07-build | #36 / child TBD | audit · shared | Assign UI/application/domain/port/adapter/authorization/sync ownership; check SRP, cohesion, coupling and duplication. | `AUDIT-ARCH-001` | `architecture-design.md`, Products/domain/adapters, Platform APIs | high | `npm run typecheck` | Responsibility matrix gives each rule one owner and prohibits renderer/domain persistence shortcuts. |
+| `AUDIT-REFACTOR-001` | 07-build | #36 / child TBD | audit · shared | Define before/after behavior evidence, regression suites, route compatibility, migration rollback and residual-debt owner. | `AUDIT-ARCH-001`, `AUDIT-LEGACY-001` | Existing route/adapters/tests and migration plan | high | `npm run test:quality` | Every significant refactor has preserved behavior, consumers, rollback and measurable evidence. |
+| `PLATFORM-AUDIT-001` | 07-build | #36 / child TBD | shared_contract · shared | Obtain an assigned Platform owner and approve the shared append-only audit event contract, redaction, atomic transaction, failure semantics and retention boundary; then implement/test it before Products remote writes. | `AUDIT-SECURITY-001`, `AUDIT-REUSE-001` | Platform audit contract/adapter/migration/tests (path selected by Platform owner) | critical | `npm run test:multiplatform-contracts`; `npm run validate:contracts` | Platform owner approval is recorded; audit is append-only and same-transaction; audit failure aborts the mutation; two-tenant negative tests pass. |
+| `PLATFORM-TYPOGRAPHY-001` | 07-build | #36 / child TBD | audit · shared | Resolve approved Inter/JetBrains Mono design baseline vs current Geist runtime globally or approve a documented deviation; never apply ERP-only fonts. | `AUDIT-REUSE-001` | `index.html`, `src/index.css`, `tailwind.config.ts`, Platform visual reference | high | `npm run build` | Platform decision is recorded and renderer implementation can match the approved visual source without a local design-system fork. |
+| `PRODUCT-CONTRACT-001` | 07-build | #36 / child TBD | shared_contract · shared | Define versioned Products/category operation catalog, DTOs, lifecycle, validation, permissions, state/action semantics, error codes, navigation and platform adaptations. | `AUDIT-PARITY-001`, `AUDIT-ARCH-001`, `AUDIT-RESP-001` | `packages/contracts/src/erp-products-capability.ts`, `packages/contracts/src/index.ts`, `src/test/erp/products-capability.test.ts` | high | `npm run validate:contracts`; `npm run test -- src/test/erp/products-capability.test.ts` | One contract covers product, SKU, category, offer, PriceBook and PriceEntry operations; desktop/mobile consumers and CRM compatibility are documented. |
+| `ADAPTER-MODE-001` | 07-build | #36 / child TBD | backend · shared | Replace ID-shape adapter selection with explicit `local_demo`/`supabase` config; fail closed for missing/invalid mode; surface local demo read/write failures without changing unrelated storage behavior. | `AUDIT-REUSE-001`, `AUDIT-RESP-001` | `catalog/adapter/index.ts`, `catalog/adapter/local.ts`, `src/lib/storage.ts` only if approved by audit, adapter tests | high | `npm run test -- src/test/catalog/catalog-adapter.test.ts` | Local demo is isolated from remote organizations; storage failure never returns success; remote failure never falls back to fixtures. |
+| `RLS-MIGRATION-001` | 07-build | #36 / child TBD | migration · shared | Add a forward-only migration for `catalog.write`, operation-specific SELECT/INSERT/UPDATE RLS, revoked DELETE and no DELETE policy; preserve existing role grants unless an approved permission decision changes them. | `PLATFORM-AUDIT-001`, `AUDIT-SECURITY-001` | New `supabase/migrations/*` forward migration, SQL/RLS tests | critical | `npm run test -- src/test/catalog/catalog-adapter.test.ts` | Read-only roles cannot write/delete; authorized writers cannot cross organizations; migration never edits the existing deployed migration. |
+| `REMOTE-STATE-001` | 07-build | #36 / child TBD | audit · shared | Verify deployed schema, migration version and RLS with authorized read-only access; record actual project/environment and evidence. | `AUDIT-SECURITY-001` | Supabase project metadata, migration history, RLS policies | critical | `npm run supabase:check` | Environment evidence is authorized and read-only; any unknown state is reported as blocked, not assumed deployed. |
+| `PRODUCT-DATA-001` | 07-build | #36 / child TBD | migration · shared | Implement target product/SKU/category/commercial schema and constraints for generated keys, organization-unique normalized SKU, category tree, `PriceBook` currency, version and idempotency. | `PRODUCT-CONTRACT-001`, `PLATFORM-AUDIT-001`, `AUDIT-SECURITY-001` | New forward migrations, Supabase adapter/schema tests | critical | `npm run test -- src/test/catalog/catalog-adapter.test.ts` | Constraints enforce tenant equality, no category cycles, unique keys/SKUs, version checks and no physical deletion; rollback/forward recovery is documented. |
+| `DATA-INVENTORY-001` | 07-build | #36 / child TBD | migration · shared | Produce authorized read-only inventory/dry-run for legacy category keys, catalog grouping, type values, workspace IDs, currencies, duplicates and mapping gaps; require Product/Platform review before cutover. | `AUDIT-LEGACY-001`, `REMOTE-STATE-001` | Authorized data export and dry-run report under approved retention | critical | `npm run test -- src/test/catalog/catalog-adapter.test.ts` | Report preserves provenance, makes no guessed class/category mapping, surfaces visibility/currency conflicts and is approved by the accountable data owner. |
+| `PRODUCT-ADAPTER-001` | 07-build | #36 / child TBD | backend · shared | Implement shared domain/use-case and local/Supabase adapter semantics for products, SKUs, categories and commercial records; apply restore-to-draft and expected-version/idempotency rules. | `PRODUCT-CONTRACT-001`, `ADAPTER-MODE-001`, `PRODUCT-DATA-001`, `RLS-MIGRATION-001` | `src/loopdev/domains/catalog/`, new focused tests | critical | `npm run test -- src/test/catalog/catalog-adapter.test.ts` | Adapter contract tests match local demo and remote semantics, report errors explicitly, retain stable CRM references and expose no delete. |
+| `PRODUCT-DESKTOP-001` | 07-build | #36 / child TBD | desktop_renderer · desktop_web | Deliver direct Products list/detail/forms, SKU and commercial management with shared actions and states. | `PRODUCT-CONTRACT-001`, `PRODUCT-ADAPTER-001`, `PLATFORM-TYPOGRAPHY-001`, `AUDIT-A11Y-001` | `src/loopdev/pages/erp/`, shared UI components only by reuse | high | `npm run test -- src/test/catalog/catalog-adapter.test.ts`; `npm run typecheck` | Implements `catalog.list`, `catalog.manage`, `catalog.variants.list/manage`, `catalog.offers.list/manage`, `catalog.price-books.list/manage`, `catalog.price-entries.list/manage`; focused component tests pass. |
+| `CATEGORY-DESKTOP-001` | 07-build | #36 / child TBD | desktop_renderer · desktop_web | Deliver dedicated category-tree view within Products, including create/rename/move/archive/restore and product/SKU assignment. | `PRODUCT-CONTRACT-001`, `PRODUCT-ADAPTER-001`, `PLATFORM-TYPOGRAPHY-001`, `AUDIT-A11Y-001` | `src/loopdev/pages/erp/`, category components/tests | high | `npm run test -- src/test/catalog/catalog-adapter.test.ts`; `npm run typecheck` | Implements `catalog.categories.list/manage`; cycle, parent, version and active-child guards pass; no nested drawer/delete. |
+| `PRODUCT-MOBILE-001` | 07-build | #36 / child TBD | mobile_renderer · mobile_web | Deliver responsive Product/SKU/commercial operations using the same shared action contract and validation as desktop. | `PRODUCT-CONTRACT-001`, `PRODUCT-ADAPTER-001`, `PLATFORM-TYPOGRAPHY-001`, `AUDIT-A11Y-001` | Same ERP routes/components with responsive cards/full-surface drawer | high | `npm run test:multiplatform-contracts`; `npm run validate:mobile-boundaries` | Implements the same eight Products/commercial operations as desktop; no horizontal action overflow; touch/focus/i18n evidence is recorded. |
+| `CATEGORY-MOBILE-001` | 07-build | #36 / child TBD | mobile_renderer · mobile_web | Deliver stacked category tree/detail and category operations with the same semantics as desktop. | `PRODUCT-CONTRACT-001`, `PRODUCT-ADAPTER-001`, `PLATFORM-TYPOGRAPHY-001`, `AUDIT-A11Y-001` | ERP category route/components and tests | high | `npm run test:multiplatform-contracts`; `npm run validate:mobile-boundaries` | Implements `catalog.categories.list/manage`; visible return path, touch/focus/accessibility and semantic parity pass. |
+| ACTION-TESTS-001 | 07-build | #36 / child TBD | test · desktop_web, mobile_web | Add focused contract/domain/adapter/renderer tests for every declared operation and state; include permissions, tenant isolation, version conflict, idempotency, restore-to-draft and demo storage failure. | `PRODUCT-DESKTOP-001`, `CATEGORY-DESKTOP-001`, `PRODUCT-MOBILE-001`, `CATEGORY-MOBILE-001` | `src/test/catalog/`, `src/test/erp/`, SQL policy tests | critical | `npm run test:multiplatform-contracts`; `npm run test:quality` | Every operation has focused behavioral evidence on both required web surfaces; remote writers cannot bypass audit/RLS; failed validation does not mutate. |
+| ROUTE-RUNTIME-001 | 07-build | #36 / child TBD | test · desktop_web, mobile_web | Verify canonical and legacy routes, direct/deep link, refresh/back, loading/empty/error/forbidden/conflict/offline states and responsive runtime. | `PRODUCT-DESKTOP-001`, `CATEGORY-DESKTOP-001`, `PRODUCT-MOBILE-001`, `CATEGORY-MOBILE-001` | Routes/navigation, authenticated runtime, screenshots and smoke tests | high | `npm run smoke:routes`; `npm run build` | Evidence identifies checkout, branch, commit, URL/port and desktop/mobile behavior; high-risk auth/route journey is covered without assuming Playwright. |
+| CUTOVER-ROLLBACK-001 | 07-build | #36 / child TBD | migration · shared | Execute only the approved migration dry-run/cutover, verify post-migration counts and access, feature flag/write kill switch, recovery and rollback/forward-recovery. | `DATA-INVENTORY-001`, `REMOTE-STATE-001`, `ACTION-TESTS-001`, `PLATFORM-AUDIT-001` | Deployment/migration runbook, authorized DB/runtime evidence | critical | `npm run validate:delivery-evidence` | Data owner approves dry-run; no unmapped record is coerced; rollback/recovery and audit evidence pass before writes are enabled. |
 
 ## Operation parity inventory
 
-| Capability | Operation | Desktop web | Mobile web | iOS | Android | Adaptation/decision | Task IDs | Test level |
+At plan time every target operation is `missing`; desktop/mobile implementation
+tasks below own the evidence. iOS/Android are explicitly outside this release.
+`not_applicable` for native therefore records approved scope, not an
+implementation claim.
+
+| Capability | Operation | Desktop web | Mobile web | iOS | Android | Adaptation / decision | Task IDs | Test level |
 |---|---|---|---|---|---|---|---|---|
-| | | `implemented/adapted/missing/not_applicable` | `implemented/adapted/missing/not_applicable` | | | | | `unit/component/journey/device` |
+| `CAP-ERP-CATALOG` | `catalog.list` | missing | missing | not_applicable | not_applicable | Same query semantics; desktop table/mobile cards | `PRODUCT-DESKTOP-001`, `PRODUCT-MOBILE-001` | component |
+| `CAP-ERP-CATALOG` | `catalog.manage` | missing | missing | not_applicable | not_applicable | Create/update/archive/restore; restore always to draft | `PRODUCT-DESKTOP-001`, `PRODUCT-MOBILE-001` | component |
+| `CAP-ERP-CATALOG` | `catalog.variants.list` | missing | missing | not_applicable | not_applicable | Same SKU list semantics | `PRODUCT-DESKTOP-001`, `PRODUCT-MOBILE-001` | component |
+| `CAP-ERP-CATALOG` | `catalog.variants.manage` | missing | missing | not_applicable | not_applicable | SKU has its own category; restore to draft | `PRODUCT-DESKTOP-001`, `PRODUCT-MOBILE-001` | component |
+| `CAP-ERP-CATALOG` | `catalog.offers.list/manage` | missing | missing | not_applicable | not_applicable | Prices inherit PriceBook currency; no cost/margin | `PRODUCT-DESKTOP-001`, `PRODUCT-MOBILE-001` | component |
+| `CAP-ERP-CATALOG` | `catalog.price-books.list/manage` | missing | missing | not_applicable | not_applicable | Book owns currency; archive/restore only | `PRODUCT-DESKTOP-001`, `PRODUCT-MOBILE-001` | component |
+| `CAP-ERP-CATALOG` | `catalog.price-entries.list/manage` | missing | missing | not_applicable | not_applicable | Entry inherits book currency; no cost/margin | `PRODUCT-DESKTOP-001`, `PRODUCT-MOBILE-001` | component |
+| `CAP-ERP-PRODUCT-CATEGORIES` | `catalog.categories.list` | missing | missing | not_applicable | not_applicable | Same tree semantics; desktop parallel, mobile stacked | `CATEGORY-DESKTOP-001`, `CATEGORY-MOBILE-001` | component |
+| `CAP-ERP-PRODUCT-CATEGORIES` | `catalog.categories.manage` | missing | missing | not_applicable | not_applicable | Create/rename/move/archive/restore; no cycles/delete | `CATEGORY-DESKTOP-001`, `CATEGORY-MOBILE-001` | component |
+
+## Acceptance evidence plan
+
+- **Shared/domain:** capability contract tests cover lifecycle, keys/SKU,
+  categories, PriceBook currency, explicit adapter modes, idempotency,
+  optimistic version conflict and `draft` restore.
+- **Persistence/security:** forward migration tests cover operation-specific
+  RLS, revoked DELETE, tenant isolation and atomic Platform audit; deployed
+  state requires authorized read-only verification.
+- **Renderers:** focused component tests for each changed operation on desktop
+  and mobile web; status feedback, direct route, actions and access denial are
+  observable, not inferred from source presence.
+- **Accessibility/i18n:** keyboard/focus, screen-reader labels/status,
+  44×44px mobile targets, responsive layouts, i18n/RTL and no native `<select>`.
+- **Runtime/release:** direct-route and high-risk authenticated journey,
+  desktop/mobile screenshots against approved visual source, migration dry-run,
+  feature flag/kill switch and rollback/forward-recovery evidence.
+- **Plan validation before approval:** `npm run validate:delivery-ledgers`,
+  `npm run validate:multiplatform`, `npm run delivery:validate`,
+  `npm run test:delivery`, plus JSON/SVG/link consistency checks.
+
+## Mandatory audits
+
+- [x] Environment truth audit and current source/reference baseline captured;
+  executable audit task: `AUDIT-ENV-001`.
+- [ ] Platform reuse audit: `AUDIT-REUSE-001`.
+- [ ] Legacy-flow audit: `AUDIT-LEGACY-001`.
+- [ ] Route and runtime audit: `AUDIT-ROUTE-001`.
+- [ ] Surface-state audit: `AUDIT-STATE-001`.
+- [ ] Operation-parity audit: `AUDIT-PARITY-001`.
+- [ ] Renderer-action test audit: `AUDIT-ACTIONS-001`.
+- [ ] Accessibility and i18n audit: `AUDIT-A11Y-001`.
+- [ ] Security and rollback audit: `AUDIT-SECURITY-001`.
+- [ ] Architecture-boundary audit: `AUDIT-ARCH-001`.
+- [ ] Responsibility audit: `AUDIT-RESP-001`.
+- [ ] Refactor-safety audit: `AUDIT-REFACTOR-001`.
+- [x] Conceptual visual approval is recorded in
+  `runs/MOD-CORE-20261024-001/01-visual-design.json`; runtime visual comparison
+  remains a later release verification gate.
 
 ## Risks and blockers
 
-| ID | Risk/blocker | Impact | Owner | Mitigation | Status |
+| ID | Blocker | Impact | Owner | Mitigation | Status |
 |---|---|---|---|---|---|
+| `ACC-ERP-011` | No assigned Platform owner has approved the generic append-only audit contract. | Critical: no remote mutation may be enabled. | Platform owner (assignment required) | Approve owner/contract and implement/test shared audit before Products remote writes. | Blocked task `PLATFORM-AUDIT-001` |
+| `VD-ERP-007` | Official Inter/JetBrains Mono baseline differs from Geist runtime. | Visual parity cannot be implemented safely as ERP-only styling. | Platform owner (assignment required) | Decide global reconciliation or approve a documented deviation. | Blocked task `PLATFORM-TYPOGRAPHY-001` |
+| `MIG-ERP-001` | No authorized legacy data inventory/dry-run. | Category, workspace and currency migration cannot be inferred. | Product Owner + Platform data owner | Provide approved read-only access and review a dry-run; preserve provenance meanwhile. | Blocked task `DATA-INVENTORY-001` |
+| `ERP-CF-001` | Deployed Supabase schema/RLS state is unverified. | Forward migration/deployment safety is unknown. | Platform DB owner (assignment/access required) | Authorized read-only state verification; do not infer from migration file presence. | Blocked task `REMOTE-STATE-001` |
+| `ERP-CF-002` | Legacy SQL uses `catalog.manage` and grants/deletes under broad policy. | Read-only users may gain destructive access; permission parity is false. | Platform access owner | Forward-only migration to `catalog.write`, operation-specific policies and negative tests. | Planned `RLS-MIGRATION-001`; blocked on audit dependency |
+| `ERP-PLAN-001` | Child phase issues are not created until plan approval. | No execution may start without acceptance checklist/issue. | Product Owner | After approval, create issues from module-phase template and link them to ledger/checkpoints. | Pending |
+
+## Approval gate
+
+The ledger is intentionally `draft`, with unblocked tasks `pending` and
+external dependencies `blocked`. The Product Owner must approve this exact
+scope/sequence before the ledger may become `approved`, tasks may become
+`ready`, or any build task/phase issue may start. Approval does not resolve
+the Platform-owner or data-access blockers.

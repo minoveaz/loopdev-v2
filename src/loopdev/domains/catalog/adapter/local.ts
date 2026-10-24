@@ -4,6 +4,8 @@ import {
   localCatalogItemsStore,
   localOrganizationCatalogsStore,
   localCatalogOffersStore,
+  localProductCostReferencesStore,
+  localProductReferencesStore,
   localCatalogPriceBooksStore,
   localCatalogPriceEntriesStore,
   localCatalogVariantsStore,
@@ -25,6 +27,9 @@ import type {
   PriceBook,
   PriceEntry,
   ResolvedCatalogReference,
+  ProductCostReferenceInput,
+  ProductReferenceCreateInput,
+  ProductReferenceKind,
 } from "../types";
 import { CatalogAdapterError } from "../types";
 import type { CatalogAdapter } from "./index";
@@ -259,6 +264,85 @@ export const localCatalogAdapter: CatalogAdapter = {
     assertRead(params);
     return visible(localCatalogEligibilitiesStore.list(), params)
       .filter((eligibility) => !params.catalogItemId || eligibility.catalogItemId === params.catalogItemId);
+  },
+
+  async listProductReferences(params) {
+    assertRead(params);
+    return localProductReferencesStore.list()
+      .filter((reference) => reference.organizationId === params.organizationId)
+      .filter((reference) => reference.status === "active")
+      .filter((reference) => !params.kind || reference.kind === params.kind);
+  },
+
+  async createProductReference(input: ProductReferenceCreateInput) {
+    assertWrite(input);
+    const normalizedKey = input.key.trim().toLocaleLowerCase().replace(/\s+/g, "-");
+    const name = input.name.trim();
+    if (!normalizedKey || !name) throw new CatalogAdapterError("Reference name and key are required.", "server-error");
+    if (localProductReferencesStore.list().some((reference) =>
+      reference.organizationId === input.organizationId
+      && reference.kind === input.kind
+      && reference.key.toLocaleLowerCase() === normalizedKey
+      && reference.status !== "archived")) {
+      throw new CatalogAdapterError("A reference with this name already exists.", "conflict");
+    }
+    if (input.parentId) {
+      const parent = localProductReferencesStore.get(input.parentId);
+      if (!parent || parent.organizationId !== input.organizationId || parent.kind !== "category" || parent.status !== "active") {
+        throw new CatalogAdapterError("The parent category is unavailable.", "invalid-scope");
+      }
+    }
+    return localProductReferencesStore.create({
+      ...input,
+      key: normalizedKey,
+      name,
+      parentId: input.kind === "category" ? input.parentId : null,
+      status: "active",
+    });
+  },
+
+  async getProductCostReference(params) {
+    assertWrite(params);
+    const item = localCatalogItemsStore.get(params.catalogItemId);
+    if (!item || item.organizationId !== params.organizationId) return null;
+    if (params.variantId) {
+      const variant = localCatalogVariantsStore.get(params.variantId);
+      if (!variant || variant.organizationId !== params.organizationId || variant.catalogItemId !== item.id) return null;
+    }
+    return localProductCostReferencesStore.list().find((cost) =>
+      cost.organizationId === params.organizationId
+      && cost.catalogItemId === params.catalogItemId
+      && cost.variantId === (params.variantId ?? null)) ?? null;
+  },
+
+  async saveProductCostReference(input: ProductCostReferenceInput) {
+    assertWrite(input);
+    if (input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0)) {
+      throw new CatalogAdapterError("Cost must be a non-negative amount.", "server-error");
+    }
+    if (!/^[A-Z]{3}$/.test(input.currency)) {
+      throw new CatalogAdapterError("Cost currency must be a three-letter ISO code.", "server-error");
+    }
+    const item = localCatalogItemsStore.get(input.catalogItemId);
+    if (!item || item.organizationId !== input.organizationId) {
+      throw new CatalogAdapterError("Catalog item not found in this organization.", "invalid-scope");
+    }
+    if (input.variantId) {
+      const variant = localCatalogVariantsStore.get(input.variantId);
+      if (!variant || variant.organizationId !== input.organizationId || variant.catalogItemId !== item.id) {
+        throw new CatalogAdapterError("SKU not found for this catalog item.", "invalid-scope");
+      }
+    }
+    const current = localProductCostReferencesStore.list().find((cost) =>
+      cost.organizationId === input.organizationId
+      && cost.catalogItemId === input.catalogItemId
+      && cost.variantId === (input.variantId ?? null));
+    if (current) {
+      const updated = localProductCostReferencesStore.update(current.id, input);
+      if (!updated) throw new CatalogAdapterError("Unable to update product cost reference.", "server-error");
+      return updated;
+    }
+    return localProductCostReferencesStore.create(input);
   },
 
   async resolveReference({ reference, ...params }: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null> {

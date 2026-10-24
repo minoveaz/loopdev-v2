@@ -22,14 +22,15 @@ adapters are evidence, not proof that the policy is deployed or safe.
 |---|---|---|---|---|
 | `ACC-ERP-001` | Organization membership and Platform permissions are the authorization source; only active memberships authorize organization access. | `confirmed` | Authorization rule | `has_organization_permission` checks active membership in the current replacement function. |
 | `ACC-ERP-002` | Existing organization roles are `owner`, `admin`, `agent` and `viewer`; use the existing permission catalog rather than new ERP roles. | `confirmed` | Authorization rule | `role_permissions` constrains these role names. Older tenancy prose uses a different role vocabulary and is not the current database contract. |
-| `ACC-ERP-003` | `catalog.read` allows organization-scoped read; `catalog.manage` is the canonical remote write permission, currently granted to owner/admin/agent. | `assumed` | Authorization rule | SQL migration uses `catalog.manage`; local adapter and Platform type use `catalog.write`. Resolve parity before implementation. |
+| `ACC-ERP-003` | `catalog.read` allows organization-scoped read; `catalog.write` is the canonical write permission and remains granted to owner/admin/agent, not viewer. | `confirmed` | Authorization rule | `PlatformPermission` and the local adapter use `catalog.write`; the remote migration must be aligned through a forward migration. |
 | `ACC-ERP-004` | Authorization is enforced server-side and at the database; hiding UI controls is never sufficient. | `confirmed` | Authorization invariant | Platform RLS guidance and current Supabase patterns. |
-| `ACC-ERP-005` | Organization is the only approved Products access boundary for the first domain contract. | `assumed` | Record scope | Domain model leaves organization/workspace taxonomy ownership open. Do not rely on a client-selected workspace as a security boundary. |
+| `ACC-ERP-005` | Organization is the only Products access boundary for this release; workspace does not restrict product visibility. | `confirmed` | Record scope | User confirmed organization-wide Products and category scope. Legacy workspace IDs are migration provenance only. |
 | `ACC-ERP-006` | Workspace-specific Products access requires an explicit Platform scope contract and same-organization workspace integrity checks. | `open` | Record scope | The workspace suite constraint excludes `erp`; catalog RLS checks only organization permission and the catalog schema has no workspace FK. |
 | `ACC-ERP-007` | Product data has no record assignee/team ACL; organization membership and module permission govern access. | `assumed` | Record scope / delegation | No assignee or team ACL is present in the current product model. Revisit only with approved domain requirements. |
-| `ACC-ERP-008` | Permanent deletion, export, cost/margin visibility and release of unpublished commercial terms need explicit policy; they are not implied by `catalog.manage`. | `open` | Sensitive action/field policy | These operations are not differentiated in the current permission set or product definition. |
+| `ACC-ERP-008` | Any `catalog.read` role may read Products, offers and sales prices. Cost, margin, supplier terms and exports are out of scope; permanent deletion is disabled for all Products entities in this release. | `confirmed` | Sensitive action/field policy | User approved sales-price visibility for all readers, excluded costs/margins, and chose archive-only lifecycle. |
 | `ACC-ERP-009` | Shared Notes, Files, Activity, Tasks, Relations and Document Intelligence reuse their Platform authorization contracts and inherit access to the referenced ERP record. | `confirmed` | Shared capability rule | Do not create parallel ERP collaboration permissions. A reference must not grant access beyond the referenced record. |
 | `ACC-ERP-010` | Membership changes and permission grants remain owned by Platform organization-management permissions, not Products. | `confirmed` | Authorization invariant | `organization.manage` is the existing membership-management boundary. |
+| `ACC-ERP-011` | Every successful remote Products mutation must create an immutable Platform audit event in the same transaction; if audit persistence fails, the mutation fails. | `confirmed` | Audit invariant | User approved extending the shared Platform audit capability before enabling remote writes. |
 
 ## Role, action and scope matrix
 
@@ -41,11 +42,12 @@ Product Owner approval.
 | Action | Owner | Admin | Agent | Viewer | Scope / status |
 |---|---|---|---|---|---|
 | Read Products, categories, variants, offers and price books/entries | `catalog.read` | `catalog.read` | `catalog.read` | `catalog.read` | Own organization; shared organization records visible to its workspaces. Role grants are current baseline. |
-| Create/update product, category, variant, offer or price entry | `catalog.manage` | `catalog.manage` | `catalog.manage` | Deny | Assumed target mapping; local/remote permission key mismatch must be resolved. |
-| Archive/restore a record | `catalog.manage` | `catalog.manage` | `catalog.manage` | Deny | Assumed; restore destination and revalidation are domain-open. |
-| Permanently delete a record | Deny by default | Deny by default | Deny | Deny | Open policy; no user-facing hard delete until retention, references and approval are defined. |
-| Export product or commercial data | Open | Open | Open | Open | No export permission or export contract exists; restrict until decided. |
-| Read cost, margin, supplier terms or unpublished prices | Open | Open | Open | Open | Sensitive field classes and role restrictions are not defined. |
+| Create/update product, category, variant, offer or price entry | `catalog.write` | `catalog.write` | `catalog.write` | Deny | Canonical Platform permission; preserve existing owner/admin/agent write grants. |
+| Archive/restore a record | `catalog.write` | `catalog.write` | `catalog.write` | Deny | Archive-only lifecycle for every Products entity; validate transitions and references. |
+| Permanently delete a record | Deny | Deny | Deny | Deny | Disabled for this release; use archive/restore. |
+| Export product or commercial data | Deny | Deny | Deny | Deny | Export is out of scope for this release. |
+| Read offers and sales prices | `catalog.read` | `catalog.read` | `catalog.read` | `catalog.read` | User approved current organization-wide read visibility. |
+| Read cost, margin or supplier commercial terms | Not in scope | Not in scope | Not in scope | Not in scope | These fields are excluded from this release, not merely hidden by UI. |
 | Change organization/workspace ownership or grant membership | Deny | Deny | Deny | Deny | Platform `organization.manage` only; Products cannot transfer tenant ownership or grant access. |
 | Bulk update/archive | Same permission as single-record action | Same | Same | Deny | Reauthorize every affected record and reject mixed/unauthorized scopes atomically. |
 
@@ -80,12 +82,11 @@ permission later; do not silently add or rename permissions in this phase.
 
 ## Sensitive data and audit
 
-- Product name, class, category and SKU are operational master data. SKU and
-  unpublished product details may still be commercially confidential.
-- Offer terms, price books and unpublished prices are potentially sensitive.
-  Cost, margin, supplier commercial terms and payment credentials are not
-  approved product fields. Do not place credentials, cardholder data or
-  unnecessary personal data in `metadata`.
+- Product name, class, category, SKU, offers and sales prices are readable by
+  every organization member with `catalog.read`, including viewer.
+- Cost, margin, supplier commercial terms, exports and payment credentials are
+  excluded from this release. Do not add them to `metadata`; never store
+  credentials, cardholder data or unnecessary personal data there.
 - `metadata` is arbitrary JSON in the current model and has no field-level
   access policy. Restrict future metadata to validated allowlisted business
   fields; it must not become a path around sensitive-field controls.
@@ -104,11 +105,10 @@ permission later; do not silently add or rename permissions in this phase.
 
 1. Enable RLS on every ERP Products table and expose no service-role bypass to
    client code.
-2. Use operation-specific `SELECT`, `INSERT`, `UPDATE` and `DELETE` policies.
-   `SELECT` checks `catalog.read`; all mutation `USING` and `WITH CHECK`
-   clauses check the appropriate manage permission and tenant/scope.
-   Category permanent deletion is prohibited; expose archive/restore lifecycle
-   commands instead of a category `DELETE` operation.
+2. Use operation-specific `SELECT`, `INSERT` and `UPDATE` policies.
+   `SELECT` checks `catalog.read`; `INSERT` and both sides of `UPDATE` check
+   `catalog.write` and organization scope. Revoke direct `DELETE` privileges
+   and create no `DELETE` policy for any Products table.
 3. For `UPDATE`, validate both the existing row and the resulting row so a
    caller cannot move a record to another organization or create target
    workspace-specific visibility.
@@ -131,8 +131,10 @@ table with `USING (catalog.read)` and `WITH CHECK (catalog.manage)`. PostgreSQL
 uses `USING` for `DELETE`, so a member with read permission can delete rows
 under this policy; deleting an item can also cascade to offers, variants and
 price entries. The migration's deployment status is unverified. Treat this as
-a release blocker: verify deployed policy state and replace it with
-operation-specific policies before enabling remote Products mutations.
+a release blocker: the implementation plan must add a forward migration with
+operation-specific policies, no hard deletes, and the shared audit contract.
+Remote writes remain disabled until that migration is applied and the deployed
+policy state is verified.
 
 ## Shared Platform capabilities
 
@@ -167,41 +169,32 @@ was run in this design phase.
 
 | Finding | Evidence | Required action |
 |---|---|---|
-| Local/remote write permission mismatch: local code checks `catalog.write`; migration grants and RLS use `catalog.manage`. | `src/loopdev/domains/catalog/adapter/local.ts`, `src/loopdev/domains/platform/types.ts`, `20260928160000_erp_catalog_foundation.sql` | Choose one canonical contract and add adapter/role parity tests before implementation. |
+| Local/remote write permission mismatch: local code checks `catalog.write`; migration grants and RLS use `catalog.manage`. | `src/loopdev/domains/catalog/adapter/local.ts`, `src/loopdev/domains/platform/types.ts`, `20260928160000_erp_catalog_foundation.sql` | Forward-migrate remote grants and RLS to canonical `catalog.write`; keep migration rollback documented and add adapter/role parity tests. |
 | Read permission is used in the `USING` clause of an all-operations policy, including deletes. | ERP foundation migration RLS generation | Verify deployment; replace with operation-specific policy and regression-test read-only delete. |
 | ERP workspace access is not part of the workspace suite allowlist; catalog policies do not enforce workspace membership/scope. | `20260811000000_platform_core_workspaces.sql`, ERP migration | Resolve domain scope and Platform support before workspace-scoped data is allowed. |
 | Catalog `workspace_id` is not constrained to a workspace in the same organization. | ERP foundation migration | Add tenant-consistent references/constraints if workspace scope is approved. |
 | `ProductPartyRole`, `CatalogAvailability` and `CatalogEligibility` are local-only in the current Supabase adapter and have no table in the reviewed migration. | Supabase adapter and migration | Keep out of remote access promises until their product scope and persistence are approved. |
 | RLS is organization-level, while current local visibility can include workspace-specific behavior. | Catalog adapters and `isScopeVisible` | Add contract tests to ensure no local/remote scope widening. |
-| Hard delete cascades through commercial children; no archive-specific permission/audit contract exists. | ERP migration and catalog tests | Resolve lifecycle and retention before enabling destructive operations. |
+| Hard delete cascades through commercial children; existing adapters expose physical deletes. | ERP migration and catalog tests | Remove delete actions from all adapters and deny SQL deletes; archive/restore only for this release. |
+| No generic Platform audit event contract exists in current source. | Platform backend docs/contracts and existing feature-specific audit records | Add and approve an append-only shared audit contract before enabling remote writes; do not substitute Activity. |
 | Old tenancy documentation and current permission migrations use different role vocabularies. | `MULTI_TENANCY_STRATEGY.md`, `20260807000000_platform_core_permissions.sql` | Treat current Platform permission contract as baseline; reconcile docs in the owning Platform work. |
 
 ## Open questions and risks
 
-1. Should `agent` retain full `catalog.manage`, especially for prices, bulk
-   operations, archive/restore and any future sensitive fields?
-2. How should legacy non-null `workspace_id` values be handled during
-   migration, given the confirmed organization-wide target scope?
-3. Which price, cost, margin, supplier-term and unpublished fields are
-   sensitive, and which roles may read/export them?
-4. Permanent category deletion is prohibited. Should permanent deletion be
-   permitted for any other Products entity, and under which role, retention,
-   reference and audit/recovery controls?
-5. What is the canonical local/remote permission ID (`catalog.write` or
-   `catalog.manage`), and how are older role names/documentation reconciled?
-6. What is the access policy for channel publication and the local-only
-   party-role/availability/eligibility records?
-7. Is a dedicated export permission needed, or should export remain disabled
-   until the data classification and audit requirements are approved?
-8. Verify whether the existing ERP migration was deployed; repository source
-   alone cannot establish current production RLS behavior.
+1. Platform owner must review and approve the shared append-only audit contract
+   before its implementation task begins.
+2. Verify the existing migration and forward-policy migration in the deployed
+   database; this review could not authenticate to the linked Supabase
+   database.
+3. Review actual legacy workspace/category data in a dry run before
+   organization-wide cutover; this repository contains no authorized
+   production data export.
 
 ## Handoff
 
-**Status: `partial`.** The role and organization boundary baseline, least
-privilege requirements, Platform reuse rules and test cases are documented.
-Do not implement remote mutations until the read-only delete policy gap is
-verified and fixed and the permission-key mismatch is resolved. Organization-
-wide scope is confirmed; legacy workspace values still need migration
-handling. The API and sync phases consumed these constraints; their remote
-mutation/replay paths remain gated on the remaining blockers.
+**Status: `partial`.** Product-owner decisions now define `catalog.write`,
+organization-wide scope, sales-price visibility, archive-only lifecycle and
+the shared audit requirement. Remote mutations remain blocked until the
+forward RLS/audit migrations are applied and verified. Legacy data still
+requires a dry-run review, and the Platform owner must approve the shared
+audit contract.

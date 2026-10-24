@@ -77,6 +77,10 @@ describe("Launchpad suite availability", () => {
       "erp",
     ]);
   });
+
+  it("opens ERP directly on Products from the Launchpad", () => {
+    expect(launchpadSuites.find((suite) => suite.id === "erp")?.entryPath).toBe("/app/erp/products");
+  });
 });
 
 describe("Launchpad translations", () => {

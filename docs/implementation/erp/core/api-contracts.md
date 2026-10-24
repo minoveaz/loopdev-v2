@@ -25,14 +25,14 @@ event bus or endpoint was implemented in this phase.
 | `API-ERP-001` | Products is the user-facing master; keep legacy catalog IDs and CRM entity references stable during migration. | `confirmed` | Approved product/module decisions and `resolveReference` implementation. |
 | `API-ERP-002` | Commands derive organization scope and actor from authenticated context; clients do not choose tenant authority. | `confirmed` | `access-model.md` and Platform RLS contract. |
 | `API-ERP-003` | Product/category/variant logical commands and DTOs use the approved conceptual model rather than exposing `CatalogItem.type` as the new product class. | `assumed` | `DOM-ERP-009` confirms only legacy `service` maps automatically; other legacy values remain drafts until explicit class review. |
-| `API-ERP-004` | Mutations carry optimistic concurrency version and create/retry idempotency metadata where duplicate effects are possible. | `assumed` | Domain expects concurrency/audit, but version fields are absent from current types/schema. |
-| `API-ERP-005` | Lists use bounded, stable pagination and client-neutral filters/sort. | `assumed` | Current adapter returns arrays and does not define pagination or sorting. |
+| `API-ERP-004` | Every update/archive/restore carries `expectedVersion`; creates carry an idempotency key; stale versions fail without mutation. | `confirmed` | Required by the approved online remote-write and shared-audit policy; fields are absent from current schema and must be implemented. |
+| `API-ERP-005` | Lists use cursor pagination with a default page size of 50, a maximum of 100 and stable `(created_at, id)` ordering. | `confirmed` | Current adapter returns arrays; pagination is a new, bounded contract for both web renderers. |
 | `API-ERP-006` | Category management is a first-class logical command/query surface within Products. | `confirmed` | User-approved category management and `REQ-ERP-PRODUCT-CATEGORIES`; persistence/transport remain undefined. |
-| `API-ERP-007` | Existing offer, price-book and price-entry operations remain supported only as compatibility contracts until their ownership and validation rules are approved. | `assumed` | Current adapter/schema exist; target transaction and sensitivity rules remain open. |
+| `API-ERP-007` | Offers, price books and price entries are in Products scope; every `catalog.read` role can read sales prices, and all mutations use `catalog.write`. | `confirmed` | User approved Products/categories as the first release and sales-price visibility for all readers; cost/margin fields and export are excluded. |
 | `API-ERP-008` | ProductPartyRole, availability and eligibility are not promised by the future remote API until their domain/persistence ownership is resolved. | `confirmed` | Local adapter returns or stores them, but Supabase adapter/migration have no remote tables. |
 | `API-ERP-009` | Domain events are proposed contracts only; publish only after actor/version/audit and consumer ownership are approved. | `confirmed` | No product/category events are implemented. |
-| `API-ERP-010` | Remote mutation delivery is blocked until the `catalog.read` DELETE RLS gap and `catalog.write`/`catalog.manage` mismatch are resolved. | `confirmed` | `access-model.md`; deployment status of the migration is unverified. |
-| `API-ERP-011` | API transport style and canonical routes are open; Products and categories use organization scope, not workspace scope. | `open` | User confirmed organization-wide product/category scope; do not infer routes from current adapter methods. |
+| `API-ERP-010` | Remote mutations require operation-specific RLS (`catalog.read` for SELECT, `catalog.write` for INSERT/UPDATE, no DELETE), explicit adapter mode, optimistic versions and an atomic Platform audit event. | `confirmed` | Policy is approved; the forward migration and deployed-state verification are not yet complete. |
+| `API-ERP-011` | Preserve the existing adapter boundary and Supabase persistence transport; use organization scope only and keep remote operations online-only. | `confirmed` | This avoids introducing a new HTTP API surface for the Products-only first release. |
 
 ## Command and query catalog
 
@@ -47,7 +47,7 @@ adapter call follow the same authorization and not-found masking behavior.
 | `FindProductByKey` | Query | Stable LoopDev-generated internal product key, distinct from SKU | Product or `NOT_FOUND` | Key is immutable and unique within the organization, independent of SKU. SKU uniqueness is organization-wide after trimming outer whitespace and comparing case-insensitively. |
 | `CreateProduct` | Command | Name, SKU, product class, independent uses, class-valid sourcing and optional draft category | Created product with generated key, ID, version and timestamps | LoopDev generates an immutable organization-unique key; clients cannot choose it. Finished products allow `buy`, `make` or `both`; raw materials/components allow `buy` only for now; services require null sourcing. `make` is intent only, not execution. Draft may omit category; require the general category before activation. Ambiguous legacy class mappings remain drafts until reviewed. |
 | `UpdateProduct` | Command | Product ID, allowed patch, `expectedVersion` | Updated product and new version | Reject immutable scope/ID fields and unrecognized metadata. |
-| `ChangeProductStatus` | Command | Product ID, target status, `expectedVersion` | Updated product state | Allowed transitions and archive/restore validation require domain decision. |
+| `ChangeProductStatus` | Command | Product ID, target status, `expectedVersion` | Updated product state | Restore always returns an archived product/SKU to `draft`; activating it again re-runs the applicable required-field, category and parent guards. |
 | `ListProductCategories` | Query | Parent/flat mode, status, cursor if needed | Scoped category nodes/tree | Tree serialization, pagination and empty/root representation remain open. |
 | `GetProductCategory` | Query | Category ID | Category or scoped `NOT_FOUND` | A category does not exist in current runtime. |
 | `CreateProductCategory` | Command | Name, optional parent category ID | Category with generated immutable organization-unique key, ID and version | LoopDev generates the key; validate parent scope and reject cycles. |
@@ -60,9 +60,10 @@ adapter call follow the same authorization and not-found masking behavior.
 | `ListPriceBooks` / `ListPriceEntries` and mutations | Query/command | Filters, book/product/offer/variant IDs, book currency, amount, validity, version | Scoped price records | Currency is owned by each PriceBook and inherited by entries; reconcile legacy Offer.currency and valid reference combinations before implementation. |
 | `ResolveProductReference` | Query | Product ID or legacy key plus optional offer/variant IDs | Product, optional offer/variant, shared entity reference | Preserve legacy `catalog_item` identity and return no cross-scope partial matches. |
 
-Physical delete, category merge, bulk import/update, export, party-role CRUD,
+Permanent delete, category merge, bulk import/update, export, party-role CRUD,
 availability/eligibility rule execution, channel sync, sales orders and
-inventory commands are not approved in this contract.
+inventory commands are not part of this release. Products records use
+archive/restore only.
 
 ## Request and response DTO boundaries
 
@@ -79,7 +80,7 @@ schemas remain for a later approved plan.
 | `MoveProductCategoryRequest` | Category ID, destination parent ID or root, `expectedVersion` | Resulting scope/version server-controlled | Reject self/descendant moves; define behavior for categories assigned to products before implementation. |
 | `ProductVariant` | `id`, `productId`, LoopDev-generated immutable organization-unique `key` distinct from `sku`, `sku`, `name`, attributes, category field, status | Scope, inherited sourcing, version and timestamps | Category is assigned independently and may differ from the product base or sibling variants; drafts may omit it, but activation requires it. Trim outer SKU whitespace on write, preserve entered case, and compare organization-wide without case sensitivity; attribute schema remains open. |
 | `Page<T>` | `items`, `nextCursor` | `totalCount` only if computed safely and needed | Cursor format is opaque; never expose tenant data in cursor contents. |
-| `DomainEventEnvelope` | `eventId`, `eventType`, aggregate ID/version, organization, occurred time | Actor reference and producer metadata | Version/audit/retention fields need approval; no secrets, raw PII or unrestricted metadata. |
+| `PlatformAuditEvent` | Event ID, organization, actor, entity type/ID, action, changed field names, entity version, timestamp and correlation ID | Server-derived tenant/actor/time; immutable append-only record | Persist in the same database transaction as the mutation; include no field values, secrets or unrestricted metadata. |
 
 Legacy inputs must use a named compatibility mapper. Unknown `CatalogItem.type`
 values must fail with `LEGACY_TYPE_UNMAPPED`; never silently coerce a
@@ -111,10 +112,9 @@ logging full sensitive payloads.
 
 - The current adapter returns whole arrays; no unbounded list is an approved
   future API behavior.
-- **Assumed target:** cursor pagination with opaque continuation tokens,
-  bounded page size and stable ordering by an allowlisted field plus ID as a
-  deterministic tiebreaker. The exact size, sort fields and cursor contract
-  remain open with Platform (`VD-ERP-004`).
+- Use opaque cursor tokens with page size default 50 and maximum 100. Default
+  ordering is `(created_at, id)`; any alternate sort field is allowlisted and
+  paired with `id` as a deterministic tiebreaker.
 - Filters are explicit and typed: status, product class, primary category,
   operational-use flags, sourcing and normalized text query. Archived records
   require an explicit authorized filter.
@@ -127,26 +127,28 @@ logging full sensitive payloads.
 
 ## Concurrency, idempotency and consistency
 
-- **Assumed:** updates and status/category moves include `expectedVersion`;
-  stale writes return `VERSION_CONFLICT` with no partial mutation.
-- **Assumed:** create commands, bulk effects and external side effects accept
-  an idempotency key scoped to organization and command. Replaying the same
-  key and same normalized payload returns the original result; a different
-  payload conflicts.
+- Updates, archive/restore and category moves include `expectedVersion`;
+  stale writes return `VERSION_CONFLICT` with no partial mutation. Increment
+  the version atomically with each successful change.
+- Create commands accept an idempotency key scoped to organization and
+  command. Replaying the same key and normalized payload returns the original
+  result; a different payload conflicts. There is no offline replay in this
+  release.
 - Create/update of one aggregate is atomic. Category move, cycle detection and
   assignment integrity are one consistency boundary. Cross-aggregate bulk
   operations are not in scope until explicit all-or-nothing/partial-result
   semantics are approved.
-- Never hard-delete a product/category with dependent records under this
-  contract. Archive/restore are commands and must preserve references.
+- Never hard-delete a Products entity. Archive/restore are commands and must
+  preserve references; direct SQL DELETE is denied for every Products table.
 - If events are published, state change and durable event publication must be
   consistent (transactional outbox or equivalent); mechanism is open.
 - No optimistic success, local fallback or silent retry after a remote
   authorization/validation error. Retry only transient failures with bounded
   backoff and idempotency.
-- Every mutation has a correlation/request ID, organization, actor, command,
-  outcome and audit link. Avoid full payload logging and sensitive-field
-  disclosure.
+- Every successful remote mutation writes an append-only Platform audit event
+  in the same transaction. Record organization, actor, entity, action,
+  changed field names, version, timestamp and correlation ID; omit field
+  values. If the audit write fails, roll back the business mutation.
 
 ## Domain events and consumers
 
@@ -170,6 +172,11 @@ audit records.
 
 ## Shared Platform and consumer impact
 
+- The user approved an append-only audit capability in Platform as a
+  prerequisite to remote Products writes. Platform must approve the shared
+  contract and owning migration before the Products implementation task can
+  consume it. Activity remains user-facing context and is not an audit log.
+
 - Continue to resolve existing CRM references using stable
   `EntityRef<"catalog_item">`; do not introduce `EntityRef<"product">` in this
   phase or break existing deep links.
@@ -189,36 +196,27 @@ audit records.
 |---|---|
 | Desktop web | Same commands, queries, error codes, cursor and version semantics; no assumption of client-only pagination. |
 | Mobile web | Same action catalog and authorization; bound response size and keep cursor/retry state across navigation. |
-| iOS / Android | Applicability is unapproved; if adopted, use the same DTOs/errors and platform auth tokens, safe-area/deep-link handling and offline replay rules. |
-| Offline | No permission bypass; queue only explicitly supported idempotent commands and reauthorize on replay. Conflict responses require user reconciliation. |
+| iOS / Android | Excluded from this first release by approved scope; future clients must consume the same DTOs and errors. |
+| Offline | Remote reads/writes are unavailable offline. Do not use a local fixture fallback, cached remote data or queued mutations. |
 
 ## Risks and open decisions
 
-1. Resolve locale/channel ownership for migration-only `OrganizationCatalog`
-   and reconcile legacy `Offer.currency` with `PriceBook`.
-2. Resolve the API transport and pagination contract with Platform; current
-   `DataTable` remote cursor support is open.
-3. Define and version entity `version`/actor/audit fields before enforcing
-   optimistic concurrency.
-4. Resolve `catalog.write` versus `catalog.manage`; remote writes remain
-   blocked by the existing read-only DELETE RLS gap and unverified migration
-   deployment.
-5. Decide category event cardinality and how to refresh product projections
-   without exposing private commercial values.
-6. Determine whether ProductPartyRole, availability and eligibility are
-   supported remote contracts or remain out of scope.
-7. Confirm event consumers, delivery/retry/order/retention guarantees before
-   channel integration; avoid premature webhooks.
-8. Decide whether platform events are sufficient for audit and user-visible
-   activity without duplicating the shared Platform model.
+1. Platform owner must approve the append-only audit contract and its
+   transaction/retention semantics.
+2. Apply and verify the forward RLS/permission migration; this review could
+   not authenticate to the linked Supabase database.
+3. Confirm existing remote migration state and actual data through an
+   authorized, read-only inventory before migration dry run.
+4. Review actual legacy category keys and currency mismatches before mapping;
+   no value conversion or category inference is permitted.
 
 ## Handoff
 
-**Status: `partial`.** Logical Products commands, DTO boundaries, errors,
-pagination, concurrency, events, consumer compatibility and multiplatform
-constraints are documented. DTO details and remote mutations remain gated by
-open domain/access decisions and the high-priority RLS gap. Safe follow-up:
-use these contracts in `05-sync`; do not create endpoints or events until the
-scope, legacy mapping and security blockers are resolved. The sync analysis is
+**Status: `partial`.** Products commands, version/idempotency rules,
+pagination, errors, archive-only lifecycle, price visibility, online-only
+behavior and shared audit requirements are defined. Implementation remains
+blocked on Platform approval/implementation of the audit contract, forward
+RLS migration and verification of deployed database state. Actual data must
+pass a category/workspace dry run before migration. The sync analysis is
 recorded in `sync-model.md`; `06-plan` remains gated by unresolved
 domain/access decisions.

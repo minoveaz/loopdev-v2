@@ -1,5 +1,5 @@
 import { createLocalStore } from "@/lib/localStore";
-import type { CatalogAvailability, CatalogEligibility, CatalogItem, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole } from "../types";
+import type { CatalogAvailability, CatalogEligibility, CatalogItem, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductCostReference, ProductPartyRole, ProductReference } from "../types";
 
 const localOrganizationId = "local-development-organization";
 const otherOrganizationId = "other-development-organization";
@@ -298,6 +298,22 @@ export const localCatalogPriceEntriesStore = createLocalStore<PriceEntry>({
       updatedAt: now,
     },
   ],
+});
+
+export const localProductReferencesStore = createLocalStore<ProductReference>({
+  key: "loopdev:catalog:product-references",
+  idPrefix: "product_reference",
+  seed: [
+    { id: "product_reference_category_commerce", organizationId: localOrganizationId, kind: "category", key: "commerce", name: "Commerce", parentId: null, status: "active", createdAt: now, updatedAt: now },
+    { id: "product_reference_category_software", organizationId: localOrganizationId, kind: "category", key: "software", name: "Software", parentId: null, status: "active", createdAt: now, updatedAt: now },
+    { id: "product_reference_category_services", organizationId: localOrganizationId, kind: "category", key: "services", name: "Services", parentId: null, status: "active", createdAt: now, updatedAt: now },
+  ],
+});
+
+export const localProductCostReferencesStore = createLocalStore<ProductCostReference>({
+  key: "loopdev:catalog:product-cost-references",
+  idPrefix: "product_cost",
+  seed: [],
 });
 
 export const LOCAL_CATALOG_ORGANIZATION_ID = localOrganizationId;

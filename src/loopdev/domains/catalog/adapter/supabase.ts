@@ -17,6 +17,11 @@ import type {
   Offer,
   PriceBook,
   PriceEntry,
+  ProductCostReference,
+  ProductCostReferenceInput,
+  ProductReference,
+  ProductReferenceCreateInput,
+  ProductReferenceKind,
   ProductPartyRole,
   ResolvedCatalogReference,
 } from "../types";
@@ -24,7 +29,7 @@ import { CatalogAdapterError } from "../types";
 import type { CatalogAdapter } from "./index";
 
 type Row = Record<string, unknown>;
-type TableName = "erp_catalogs" | "erp_catalog_items" | "erp_catalog_offers" | "erp_catalog_variants" | "erp_price_books" | "erp_price_entries";
+type TableName = "erp_catalogs" | "erp_catalog_items" | "erp_catalog_offers" | "erp_catalog_variants" | "erp_price_books" | "erp_price_entries" | "erp_product_references" | "erp_product_cost_references";
 
 function client(): SupabaseClient {
   const value = defaultWebAuthAdapter.getClient();
@@ -67,6 +72,14 @@ function mapPriceBook(row: Row): PriceBook {
 
 function mapPriceEntry(row: Row): PriceEntry {
   return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, priceBookId: String(row.price_book_id), catalogItemId: (row.catalog_item_id as string | null) ?? null, offerId: (row.offer_id as string | null) ?? null, variantId: (row.variant_id as string | null) ?? null, amount: Number(row.amount), currency: String(row.currency), unit: String(row.unit), status: row.status as PriceEntry["status"], minQuantity: row.min_quantity == null ? null : Number(row.min_quantity), maxQuantity: row.max_quantity == null ? null : Number(row.max_quantity), validFrom: (row.valid_from as string | null) ?? null, validTo: (row.valid_to as string | null) ?? null };
+}
+
+function mapProductReference(row: Row): ProductReference {
+  return { ...base(row), organizationId: String(row.organization_id), kind: row.kind as ProductReferenceKind, key: String(row.key), name: String(row.name), parentId: (row.parent_id as string | null) ?? null, status: row.status as ProductReference["status"] };
+}
+
+function mapProductCostReference(row: Row): ProductCostReference {
+  return { ...base(row), organizationId: String(row.organization_id), catalogItemId: String(row.catalog_item_id), variantId: (row.variant_id as string | null) ?? null, amount: row.amount == null ? null : Number(row.amount), currency: String(row.currency) };
 }
 
 async function listRows(table: TableName, params: CatalogListParams, filters: Record<string, string | undefined> = {}) {
@@ -129,6 +142,60 @@ export const supabaseCatalogAdapter: CatalogAdapter = {
   async listProductPartyRoles() { return [] as ProductPartyRole[]; },
   async listAvailabilities() { return [] as CatalogAvailability[]; },
   async listEligibilities() { return [] as CatalogEligibility[]; },
+  async listProductReferences(params: CatalogScopeParams & { kind?: ProductReferenceKind }) {
+    const rows = await listRows("erp_product_references", { ...params, includeArchived: false }, { kind: params.kind });
+    return rows.map(mapProductReference);
+  },
+  async createProductReference(input: ProductReferenceCreateInput) {
+    return mapProductReference(await insertRow("erp_product_references", {
+      organization_id: input.organizationId,
+      kind: input.kind,
+      key: input.key.trim().toLocaleLowerCase().replace(/\s+/g, "-"),
+      name: input.name.trim(),
+      parent_id: input.parentId,
+      status: "active",
+    }));
+  },
+  async getProductCostReference(params: CatalogScopeParams & { catalogItemId: string; variantId?: string | null }) {
+    let query = client().from("erp_product_cost_references").select("*")
+      .eq("organization_id", params.organizationId)
+      .eq("catalog_item_id", params.catalogItemId);
+    query = params.variantId ? query.eq("variant_id", params.variantId) : query.is("variant_id", null);
+    const { data, error } = await query.maybeSingle();
+    if (error) throw mapError(error);
+    return data ? mapProductCostReference(data as Row) : null;
+  },
+  async saveProductCostReference(input: ProductCostReferenceInput) {
+    if (input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0)) {
+      throw new CatalogAdapterError("Cost must be a non-negative amount.", "server-error");
+    }
+    if (!/^[A-Z]{3}$/.test(input.currency)) {
+      throw new CatalogAdapterError("Cost currency must be a three-letter ISO code.", "server-error");
+    }
+    let lookup = client().from("erp_product_cost_references").select("id")
+      .eq("organization_id", input.organizationId)
+      .eq("catalog_item_id", input.catalogItemId);
+    lookup = input.variantId ? lookup.eq("variant_id", input.variantId) : lookup.is("variant_id", null);
+    const { data: current, error: lookupError } = await lookup.maybeSingle();
+    if (lookupError) throw mapError(lookupError);
+    const payload = {
+      organization_id: input.organizationId,
+      catalog_item_id: input.catalogItemId,
+      variant_id: input.variantId,
+      amount: input.amount,
+      currency: input.currency,
+    };
+    if (current) {
+      const { data, error } = await client().from("erp_product_cost_references").update(payload)
+        .eq("id", String((current as Row).id))
+        .eq("organization_id", input.organizationId)
+        .select("*")
+        .single();
+      if (error) throw mapError(error);
+      return mapProductCostReference(data as Row);
+    }
+    return mapProductCostReference(await insertRow("erp_product_cost_references", payload));
+  },
   async resolveReference(params: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null> {
     const item = params.reference.catalogItemId ? await this.getCatalogItem(params.reference.catalogItemId, params) : params.reference.productKey ? await this.findCatalogItemByKey(params.reference.productKey, params) : null;
     if (!item) return null;

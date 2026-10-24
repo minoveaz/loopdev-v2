@@ -72,6 +72,21 @@
       "capability_ids": ["CAP-ERP-PRODUCT-CATEGORIES"]
     },
     {
+      "id": "REQ-ERP-COST-REFERENCE",
+      "title": "Maintain a non-accounting unit purchase-cost reference for Products",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/erp/core/design.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": [
+        "A product without separately managed SKUs or an individual SKU can carry a unit purchase-cost reference with an explicit currency.",
+        "The reference is not accounting/inventory valuation, manufacturing cost, sales price or margin; the product UI never derives or displays margin from it.",
+        "Cost values are not exposed by `catalog.read` by default; a separate visibility/management permission and audit policy must be approved before implementation.",
+        "Product/SKU ownership, default/inheritance behavior, currency defaults, source/history and migration are resolved in domain/access/API/sync tasks before the capability can be built."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": ["CAP-ERP-COST-REFERENCE"]
+    },
+    {
       "id": "REQ-ERP-CRM-BOUNDARY",
       "title": "Reuse CRM ownership for customer relationships",
       "classification": "PLATFORM_REUSE",
@@ -172,6 +187,37 @@
         "docs/implementation/erp/core/discovery.md",
         "docs/implementation/erp/core/visual-design.md",
         "docs/implementation/erp/core/view-state-matrix.md"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-ERP-COST-REFERENCE",
+      "name": "Non-accounting unit purchase-cost reference",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["REQ-ERP-COST-REFERENCE"],
+      "semantics": {
+        "operations": ["catalog.cost-reference.read", "catalog.cost-reference.manage"],
+        "validation_contract": null,
+        "errors": ["forbidden", "invalid-currency", "invalid-amount", "conflict", "server-error"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "Protected cost-reference section on full-page product/SKU record and editor", "route": "/app/erp/products" },
+        "mobile_web": { "required": true, "surface": "Protected cost-reference section on full-page product/SKU record and editor", "route": "/app/erp/products" },
+        "ios": { "required": false, "surface": "deferred; no native surface in this release", "route": null },
+        "android": { "required": false, "surface": "deferred; no native surface in this release", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "catalog.cost-reference.read", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "catalog.cost-reference.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["catalog.cost.read", "catalog.cost.manage"],
+      "contract_refs": [
+        "docs/implementation/erp/core/design.md",
+        "docs/implementation/erp/core/domain-model.md",
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/visual-design.md"
       ],
       "task_ids": []
     },
@@ -418,6 +464,15 @@
       "approved_by": "@loopdev-io",
       "approved_at": "2026-10-24T14:23:14Z",
       "source": "User-confirmed product decisions in this conversation: one Products master; classes for finished products, raw materials/components and services; semimanufactured items deferred until Manufacturing discovery; item class independent from purchasing, selling and inventory-tracking uses; the category tree is managed within Products and each product has one primary hierarchical category; finished products allow buy/make/both sourcing, raw materials/components are buy-only for now, services have no sourcing, and variants inherit product sourcing; separately managed/sold variants have their own SKU, while other attributes remain descriptive. OrganizationCatalog is migration-only, not a target business entity or product-ownership boundary; commercial price currency is owned by each PriceBook, PriceEntry inherits that currency, and Offer has no independent currency. No production code or runtime data changes are authorized."
+    },
+    {
+      "id": "CR-ERP-PRODUCT-EDITOR-COST-REFERENCE",
+      "status": "approved",
+      "removed_requirement_ids": [],
+      "removed_capability_ids": [],
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-24T17:47:04Z",
+      "source": "User approved full-page product/SKU record and create/edit pages with drawers for quick auxiliary-reference management, then selected: \"Coste de compra unitario de referencia por producto/SKU, no contable\". The reference is not accounting/inventory valuation or margin calculation. Brands/tags lifecycle, cost visibility/currency/inheritance and physical-field ownership remain open for specialized analysis."
     }
   ],
   "blockers": [

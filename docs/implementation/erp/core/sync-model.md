@@ -22,16 +22,16 @@ infrastructure, or authorize migration of real local data.
 | ID | Rule | Status | Evidence / consequence |
 |---|---|---|---|
 | `SYNC-ERP-001` | Synthetic/demo organizations use seeded local catalog stores; UUID organization IDs select the Supabase adapter. | `confirmed` | `CatalogAdapter` proxy chooses the adapter by ID shape, not by an explicit runtime mode. |
-| `SYNC-ERP-002` | Local catalog mutations persist through browser `localStorage`; this is demo/local persistence, not a secure or remote-synchronized source of truth. | `confirmed` | `createLocalStore` uses `storage`; storage silently falls back on read errors and ignores write/quota errors. |
+| `SYNC-ERP-002` | Local catalog data is available only in an explicitly selected demo mode; browser storage is not a secure or remote-synchronized source of truth, and storage failures must be surfaced rather than reported as saves. | `confirmed` | The user approved a separate local demo mode; current shared storage still hides failures and must be corrected for this adapter. |
 | `SYNC-ERP-003` | Remote Supabase reads/writes do not fall back to local fixtures when the remote service is unavailable. | `confirmed` | UUID-scoped calls use `supabaseCatalogAdapter`; errors are surfaced. |
 | `SYNC-ERP-004` | No offline queue or remote mutation replay exists for Products today. | `confirmed` | No queue, idempotency or version contract in the current catalog adapter/schema. |
-| `SYNC-ERP-005` | Real remote mutations require online authorization and server acknowledgement; do not queue them offline until access, version and idempotency contracts are implemented. | `assumed` | Safe default given unresolved policy gaps and no version field; offline write product policy remains open. |
-| `SYNC-ERP-006` | Offline remote reads may use a previously authorized cache only with explicit stale state and tenant/permission invalidation. | `open` | No remote catalog cache or staleness policy exists. |
+| `SYNC-ERP-005` | Remote Products reads and mutations require an online connection and authoritative server response; no offline write queue is provided in this release. | `confirmed` | User approved remote online-only behavior; an offline state is an explicit unavailable/error state, not a cached success. |
+| `SYNC-ERP-006` | Remote Products data is not cached for offline reads in this release. | `confirmed` | User approved no offline cache; local demo data is a separate runtime mode and is never a remote fallback. |
 | `SYNC-ERP-007` | Product business lifecycle (`draft`, `active`, `archived`), connectivity, entity sync state and mutation state are independent. | `confirmed` | Existing product status does not represent sync state. |
-| `SYNC-ERP-008` | Product/category changes use the API idempotency, optimistic-version and event contracts when approved; no last-write-wins for master data. | `assumed` | `API-ERP-004` remains assumed; actual fields and persistence are absent. |
+| `SYNC-ERP-008` | Product/category mutations require `expectedVersion`; stale updates return a conflict. Create retries use an idempotency key; master data never uses last-write-wins. | `confirmed` | User approved remote writes with shared audit; this contract is required before implementation and is not present in current schema. |
 | `SYNC-ERP-009` | Local fixture/demo data is never automatically uploaded or merged into an organization’s remote records. | `confirmed` | Current seeds are deterministic demo records and have no identity/migration protocol. |
 | `SYNC-ERP-010` | Notes, Files, Activity, Tasks, Relations and Document Intelligence use their shared Platform sync/persistence boundaries. | `confirmed` | Products stores only references and must not create parallel queues. |
-| `SYNC-ERP-011` | Adapter selection must ultimately be explicit runtime configuration, not inferred from organization ID shape. | `open` | Current proxy can route any non-UUID organization ID to local fixtures. |
+| `SYNC-ERP-011` | Adapter selection is explicit runtime configuration (`local_demo` or `supabase`), never inferred from organization ID shape; missing/invalid configuration fails closed. | `confirmed` | User approved a local demo mode separate from Supabase; current proxy uses ID shape and must be replaced. |
 | `SYNC-ERP-012` | Category synchronization and legacy `categoryKey` migration wait for category scope, identity and lifecycle decisions. | `confirmed` | No category entity/store/table or migration exists. |
 
 ## Current storage and adapter boundaries
@@ -39,9 +39,9 @@ infrastructure, or authorize migration of real local data.
 | Concern | Current behavior | Sync implication |
 |---|---|---|
 | Local product storage | `localCatalogItemsStore` uses `createLocalStore` with namespace `rivera:loopdev:catalog:items`; local catalogs, offers, variants and prices have separate namespaces. | Browser-local deterministic fixtures and mutations are separate from remote records. Each tab keeps its own in-memory store cache; there is no storage-event reconciliation, sync queue or server reconciliation. |
-| Local storage errors | `storage.get` catches errors and returns the seed; `storage.set` catches quota/storage errors and ignores them. | A mutation can appear successful in the current page while failing to survive reload. This is not durable-write evidence and must be fixed or surfaced before local-first production use. |
+| Local storage errors | `storage.get` catches errors and returns the seed; `storage.set` catches quota/storage errors and ignores them. | The demo adapter must surface read/write failures and never report a failed persistence operation as saved. This is not a production offline store. |
 | Local/demo authority | Store contains seeded organization/workspace data and filters by organization/workspace in adapter code. Browser storage is user-controlled and not an authorization boundary. | Never trust local visibility for tenant security; no local data should be treated as server-authoritative. |
-| Adapter selection | `catalogAdapter` selects local for any non-UUID organization ID and Supabase for UUIDs. | A real non-UUID ID could route to local data; selection must use explicit runtime configuration before migration/release. |
+| Adapter selection | `catalogAdapter` selects local for any non-UUID organization ID and Supabase for UUIDs. | A real non-UUID ID could route to local data; replace with explicit `local_demo`/`supabase` configuration and fail closed for missing or invalid mode. |
 | Remote storage | Supabase adapter maps six `erp_*` tables for UUID-scoped organizations. | Remote operations are direct; there is no offline cache, local outbox or retry queue. |
 | Remote failure | Supabase adapter maps authorization and service errors to `CatalogAdapterError`; it does not use local data as fallback. | Preserve visible errors; never convert a remote outage/denial into a local success. |
 | Category storage | No local category store, remote category table or category adapter methods. Product has nullable `categoryKey` string. | Category hierarchy cannot sync until identity, scope and migration decisions are approved. |
@@ -83,12 +83,12 @@ validation, scope and stale-version failures are not automatic retries.
 
 | Operation | Current local/demo behavior | Current remote behavior | Offline target proposal | State dimensions to show |
 |---|---|---|---|---|
-| List/get product | Reads localStorage-backed store/seed by synthetic organization | Queries Supabase for UUID organization | Allow last-authorized read-only snapshot only if a cache is later approved; clearly mark stale. | Business status + connectivity + entity `synced`/`local_only` |
-| Search/filter product | In-memory filtering of local records | Server query filters organization/workspace/status; array response, no cursor | Read only from available snapshot; never imply completeness if stale/partial. | Connectivity and snapshot freshness, separate from business status |
-| Create product | Writes local fixture store | Direct Supabase insert | Do not queue remote create until idempotency, class mapping, category rule and authorization are resolved. | Mutation `sending`/`acknowledged` or explicit `rejected`; current local-only remains marked |
-| Update product | Writes local fixture store with timestamp | Direct Supabase update without version check | Do not queue by default; a future offline edit must retain base version and conflict on stale write. | Mutation `retry_wait` only for transient failures; `conflict` on version mismatch |
-| Archive/restore | Local status patch; restore to draft is tested | Direct status update; no approved transition enforcement | Network required until transition policy and concurrency are implemented. | Business state separate from sync state |
-| Delete product/offer/variant/price | Physically removes local record | Physical remote delete; database cascades may remove children | Not an offline operation; target design prefers archive and blocks hard delete until retention is approved. | Mutation rejected/blocked, not a local tombstone masquerading as success |
+| List/get product | Reads localStorage-backed store/seed only in explicit `local_demo` mode | Online Supabase query only | No remote cache; offline returns explicit unavailable state. | Business status + connectivity + entity `synced`/`local_only` |
+| Search/filter product | In-memory filtering only in explicit demo mode | Bounded online query with stable cursor | No remote cache; never present demo fixtures as a remote fallback. | Connectivity and request state, separate from business status |
+| Create product | Writes demo fixture store and surfaces storage failure | Online command with permission, version/idempotency and audit enforcement | Remote mutation is disabled while offline; no queue. | Mutation `sending`/`acknowledged` or explicit `rejected`; no optimistic success |
+| Update product | Writes demo fixture store and surfaces storage failure | Online conditional update with `expectedVersion` | Remote mutation is disabled while offline; no queue. | Version conflict is explicit; no last-write-wins |
+| Archive/restore | Legacy local status patch; target restore always returns product/SKU to `draft` | Direct status update; target transition enforcement and versioning are missing | Online acknowledgement required; no queue or optimistic success. | Preserve business state separately from connectivity and mutation state |
+| Delete product/offer/variant/price | Legacy adapter physically removes local records | Legacy adapter issues physical delete; SQL cascades may remove children | No hard-delete operation in this release; archive/restore only on both adapters. | Not available |
 | Category list/create/move/archive | Not supported | Not supported | No local or remote category synchronization until category model and scope are approved. | Not applicable today; future state mirrors the independent dimensions above |
 | Resolve product reference | Looks up local product/offer/variant IDs or key | Resolves remote references | Offline resolution is only from a valid tenant-partitioned snapshot and may be stale. | Return explicit stale/not-found state; never guess a legacy mapping |
 | Shared Files/Notes/Tasks/Document Intelligence | Shared Platform adapters | Platform-owned remote contracts | Reuse Platform queues, permission checks and recovery; do not enqueue through Products. | Platform-owned state plus parent-record access |
@@ -144,13 +144,13 @@ No Products mutation queue exists. If a queue is approved later:
 
 ## Migration and reconciliation plan
 
-1. **Establish source of truth:** decide whether each organization uses
-   Supabase or an approved local-first mode. Replace ID-shape adapter
-   selection with explicit runtime configuration before enabling real tenant
-   data.
-2. **Inventory remote data:** snapshot the current catalog tables and scope;
-   preserve stable IDs. Verify which migrations are deployed and do not infer
-   production data from local fixtures.
+1. **Establish source of truth:** use explicit `local_demo` or `supabase`
+   runtime configuration. Missing or invalid configuration fails closed;
+   adapter selection never depends on ID shape.
+2. **Inventory remote data:** snapshot catalog tables and scope; preserve
+   stable IDs. The linked Supabase migration state could not be verified in
+   this review because authentication failed. Do not infer production data
+   from local fixtures.
 3. **Validate tenant and references:** detect cross-organization/workspace
    parent links, required-but-null `catalog_id`, duplicate keys/SKUs and
    unsupported references. Produce a review report before any write.
@@ -158,20 +158,24 @@ No Products mutation queue exists. If a queue is approved later:
    `CatalogItem.type`; do not guess ambiguous values. Keep unmapped records in
    draft with their original type available for review, and require an
    assigned class before activation.
-5. **Map categories:** review actual `category_key` values and obtain
-   approved category tree/IDs. Do not synthesize parent-child relationships
-   from strings. Backfill category IDs only after domain scope and FK policy
-   are approved.
-6. **Preserve commercial records:** validate offers, variants, books and
+5. **Map categories:** preserve every legacy `category_key` as provenance and
+   produce a dry-run mapping report from actual records. Do not synthesize
+   category trees or assign by guess. Unmapped records remain draft until an
+   authorized category is assigned; backfill only after owner review.
+6. **Normalize workspace scope:** target Products are organization-wide.
+   The dry run must show each legacy non-null workspace ID and resulting
+   visibility expansion. Preserve the legacy ID as provenance and set the
+   target workspace to null only after the report is approved.
+7. **Preserve commercial records:** validate offers, variants, books and
    entries; retain their IDs and references. Resolve physical delete/cascade
    and transaction snapshot policy before migration.
-7. **Reconcile in dry run:** compare counts, IDs, foreign keys, uniqueness,
+8. **Reconcile in dry run:** compare counts, IDs, foreign keys, uniqueness,
    status, scope and representative resolved CRM references. Require
    explicit mismatch reports and approval before cutover.
-8. **Cut over without dual-write:** use a single authoritative write path.
+9. **Cut over without dual-write:** use a single authoritative write path.
    Keep an immutable pre-migration snapshot and a documented rollback that
    restores the prior contract without deleting newly created records.
-9. **Verify after cutover:** re-run tenant isolation, CRUD/lifecycle,
+10. **Verify after cutover:** re-run tenant isolation, CRUD/lifecycle,
    category/reference parity, mobile query semantics and recovery tests.
    Remove compatibility mapping only after CRM/channel consumers are
    verified.
@@ -218,30 +222,22 @@ remote, browser-storage or mobile runtime tests.
 
 ## Risks and open decisions
 
-1. Choose product offline-read requirements and whether any remote mutations
-   may be queued. Default is no queued remote writes until access/version/
-   idempotency work is complete.
-2. Replace ID-shape adapter routing before a real organization can use local
-   fixtures by accident.
-3. Decide whether localStorage is acceptable for demo drafts and what failure
-   signal replaces the current swallowed storage errors.
-4. Resolve legacy type/category mapping, treatment of old non-null workspace
-   IDs and remote identity before migration; preserve the confirmed general
-   product-base category plus independently assigned variant/SKU categories.
-5. Resolve the RLS delete flaw and permission-key mismatch before remote
-   writes or replay.
-6. Define product/category versions, event durability and idempotency keys
-   before mutation queues or event consumers.
-7. Confirm offline behavior for desktop/mobile web and whether iOS/Android
-   remain deferred.
-8. Define data retention, cache invalidation, logout and reinstall recovery
-   for sensitive commercial data.
+1. Platform owner must approve the shared audit contract before remote
+   mutations are enabled.
+2. The forward permission/RLS migration must be applied and verified in the
+   deployed database; this review could not authenticate to the linked
+   Supabase project.
+3. Production category/workspace data must pass the dry-run mapping and
+   visibility review before migration.
+4. Remote mutation implementation must add expected-version checks,
+   idempotency and audit atomically; none exists in the current adapter/schema.
 
 ## Handoff
 
-**Status: `partial`.** The current split localStorage/Supabase behavior,
-missing queue/version/category contracts, operation matrix, conflict policy,
-migration steps and recovery tests are documented. There is no production
-offline synchronization guarantee today. Safe follow-up is to reconcile
-domain/access/API decisions before planning; do not implement a queue,
-category migration or remote mutation replay from this draft alone.
+**Status: `partial`.** The first-release sync policy is explicit: remote
+Products are online-only with no offline cache or mutation queue; local demo
+data is selected explicitly and is never a remote fallback. Runtime mode,
+storage error handling, versions, idempotency, audit, RLS and production
+migration remain implementation tasks. Do not enable remote writes until the
+forward migrations are applied and verified, and do not migrate categories or
+workspace scope before the approved dry run.

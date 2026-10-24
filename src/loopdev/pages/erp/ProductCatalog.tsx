@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { AlertTriangle, Archive, ArrowLeft, Boxes, Copy, Edit, Package, Plus, RefreshCw, RotateCcw, SlidersHorizontal, Trash2, Wrench, X } from "lucide-react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { AlertTriangle, Archive, ArrowDown, ArrowLeft, ArrowUp, ArrowUpDown, Boxes, Copy, Edit, MoreHorizontal, Package, Plus, RefreshCw, RotateCcw, SearchX, Trash2, Wrench, X } from "lucide-react";
 import { AppDrawer } from "@/components/platform";
-import { ConfirmDialog, DataCard, DataTable, EmptyState, FormSectionHeader, LoadingState, LocalizedDateField, PageContainer, PageHeader, SearchInput, StatusBadge, type DataTableColumn } from "@/components/common";
+import { ConfirmDialog, DataCard, EmptyState, FilterDropdown, FormSectionHeader, LoadingState, LocalizedDateField, PageContainer, PageHeader, SearchInput, StatusBadge } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { catalogAdapter as localCatalogAdapter } from "@/loopdev/domains/catalog/adapter";
 import type { CatalogAvailability, CatalogEligibility, CatalogItem, CatalogItemCreateInput, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole } from "@/loopdev/domains/catalog";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useT } from "@/i18n";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ProductConfigurationPage, ProductRecordPage } from "./ProductRecordPages";
 
 const itemTypeTranslationKeys: Record<CatalogItem["type"], string> = {
   physical_product: "physicalProduct", service: "service", subscription: "subscription",
@@ -20,35 +23,47 @@ const itemTypeTranslationKeys: Record<CatalogItem["type"], string> = {
 };
 const serviceItemTypes: CatalogItem["type"][] = ["service", "subscription", "coverage", "package", "fee"];
 const productItemTypes: CatalogItem["type"][] = ["physical_product", "digital_product", "package", "fee"];
+const allItemTypes = Array.from(new Set([...productItemTypes, ...serviceItemTypes]));
 const serviceChannels = ["Online", "Direct sales", "Partner / broker", "Branch / office", "Contact center"];
 const productChannels = ["Ecommerce", "Retail", "Marketplace", "Wholesale", "Direct sales", "Partner"];
 const catalogChannels = ["Online", "Direct sales", "Partner / broker", "Branch / office", "Contact center"];
 const currencies = ["EUR", "USD", "GBP"];
 const units = ["Unit", "Hour", "Month", "Year", "Treatment", "Policy"];
+const ORGANIZATION_PRODUCTS_VIEW_ID = "__organization-products__";
 
 type CatalogForm = { name: string; key: string; kind: OrganizationCatalog["kind"]; description: string; currency: string; locale: string; channels: string[] };
+type ProductCatalogView = OrganizationCatalog & { aggregateOrganizationProducts?: boolean };
+type ProductSortKey = "name" | "type" | "category" | "status";
 type ItemForm = { name: string; key: string; sku: string; type: CatalogItem["type"]; categoryKey: string; brand: string; description: string; shortDescription: string; provider: string; performer: string; manufacturer: string; barcode: string; material: string; color: string; size: string; weight: string; dimensions: string; currency: string; unit: string; duration: string; price: string; pricingModel: "fixed_reference" | "from_price" | "quote_required" | "calculated_at_checkout"; billingPeriod: "one_time" | "monthly" | "quarterly" | "annual"; priceNote: string; billingModel: "one_time" | "recurring" | "usage"; status: CatalogItem["status"]; channels: string[]; markets: string; eligibility: string; validFrom: string; validTo: string; tags: string };
 
 const emptyCatalogForm = (): CatalogForm => ({ name: "", key: "", kind: "products", description: "", currency: "EUR", locale: "es-ES", channels: ["Online", "Direct sales"] });
 const emptyItemForm = (): ItemForm => ({ name: "", key: "", sku: "", type: "physical_product", categoryKey: "", brand: "", description: "", shortDescription: "", provider: "", performer: "", manufacturer: "", barcode: "", material: "", color: "", size: "", weight: "", dimensions: "", currency: "EUR", unit: "Unit", duration: "", price: "", pricingModel: "fixed_reference", billingPeriod: "one_time", priceNote: "", billingModel: "one_time", status: "draft", channels: ["Online", "Direct sales"], markets: "Spain", eligibility: "", validFrom: "", validTo: "", tags: "" });
 const slugify = (value: string) => value.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const itemListParams = (organizationId: string, catalog: ProductCatalogView) => ({
+  organizationId,
+  includeArchived: true,
+  ...(catalog.aggregateOrganizationProducts ? {} : { catalogId: catalog.id }),
+});
 let LOCAL_CATALOG_ORGANIZATION_ID = "";
 
-export default function ProductCatalog() {
+export default function ProductCatalog({ productsOnly = false }: { productsOnly?: boolean }) {
   const { trail } = useBreadcrumbs();
   const t = useT();
   const formT = (key: string) => t(`common.erpForm.item.${key}`);
   const { activeOrganization } = useTenantContext();
   LOCAL_CATALOG_ORGANIZATION_ID = activeOrganization?.id ?? "";
   const navigate = useNavigate();
-  const { catalogId } = useParams<{ catalogId: string }>();
+  const location = useLocation();
+  const { catalogId, productId } = useParams<{ catalogId: string; productId: string }>();
   const [catalogs, setCatalogs] = useState<OrganizationCatalog[]>([]);
-  const [selectedCatalog, setSelectedCatalog] = useState<OrganizationCatalog | null>(null);
+  const [selectedCatalog, setSelectedCatalog] = useState<ProductCatalogView | null>(null);
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | CatalogItem["status"]>("all");
   const [typeFilter, setTypeFilter] = useState<"all" | CatalogItem["type"]>("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortKey, setSortKey] = useState<ProductSortKey>("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [catalogDrawerOpen, setCatalogDrawerOpen] = useState(false);
   const [catalogForm, setCatalogForm] = useState<CatalogForm>(emptyCatalogForm);
@@ -70,6 +85,26 @@ export default function ProductCatalog() {
       setCatalogsError("No active organization is available.");
       return;
     }
+    if (productsOnly) {
+      setCatalogs([]);
+      setSelectedCatalog({
+        id: ORGANIZATION_PRODUCTS_VIEW_ID,
+        organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
+        workspaceId: null,
+        key: "products",
+        name: t("common.loopdev.erp.products"),
+        description: null,
+        kind: "products",
+        status: "active",
+        metadata: {},
+        createdAt: "",
+        updatedAt: "",
+        aggregateOrganizationProducts: true,
+      });
+      setCatalogsLoading(false);
+      setCatalogsError(null);
+      return;
+    }
     setCatalogsLoading(true);
     setCatalogsError(null);
     void localCatalogAdapter.listCatalogs({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID }).then((loadedCatalogs) => {
@@ -77,32 +112,68 @@ export default function ProductCatalog() {
       setSelectedCatalog(catalogId ? loadedCatalogs.find((catalog) => catalog.id === catalogId) ?? null : null);
     }).catch((cause) => setCatalogsError(cause instanceof Error ? cause.message : "Unable to load catalogs.")).finally(() => setCatalogsLoading(false));
   };
-  useEffect(reloadCatalogs, [catalogId, LOCAL_CATALOG_ORGANIZATION_ID]);
+  useEffect(reloadCatalogs, [catalogId, LOCAL_CATALOG_ORGANIZATION_ID, productsOnly]);
   useEffect(() => {
     if (!selectedCatalog) return;
     setItemsLoading(true);
     setItemsError(null);
-    void localCatalogAdapter.listCatalogItems({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogId: selectedCatalog.id, includeArchived: true }).then(setItems).catch((cause) => setItemsError(cause instanceof Error ? cause.message : "Unable to load catalog items.")).finally(() => setItemsLoading(false));
-  }, [selectedCatalog]);
+    void localCatalogAdapter.listCatalogItems(itemListParams(LOCAL_CATALOG_ORGANIZATION_ID, selectedCatalog)).then(setItems).catch((cause) => setItemsError(cause instanceof Error ? cause.message : "Unable to load catalog items.")).finally(() => setItemsLoading(false));
+  }, [selectedCatalog, productsOnly]);
   const visibleItems = useMemo(() => items.filter((item) => {
     const matchesQuery = !query.trim() || `${item.name} ${item.sku} ${item.key}`.toLowerCase().includes(query.trim().toLowerCase());
     return matchesQuery && (status === "all" || item.status === status) && (typeFilter === "all" || item.type === typeFilter) && (categoryFilter === "all" || item.categoryKey === categoryFilter);
   }), [items, query, status, typeFilter, categoryFilter]);
   const categories = useMemo(() => Array.from(new Set(items.map((item) => item.categoryKey).filter((value): value is string => Boolean(value)))).sort(), [items]);
-  const availableTypes = selectedCatalog?.kind === "services" ? serviceItemTypes : productItemTypes;
+  const availableTypes = productsOnly ? allItemTypes : selectedCatalog?.kind === "services" ? serviceItemTypes : productItemTypes;
   const hasActiveFilters = Boolean(query.trim()) || status !== "all" || typeFilter !== "all" || categoryFilter !== "all";
+  const sortedItems = useMemo(() => [...visibleItems].sort((left, right) => {
+    const values: Record<ProductSortKey, string> = {
+      name: left.name,
+      type: left.type,
+      category: left.categoryKey ?? "",
+      status: left.status,
+    };
+    const rightValues: Record<ProductSortKey, string> = {
+      name: right.name,
+      type: right.type,
+      category: right.categoryKey ?? "",
+      status: right.status,
+    };
+    const comparison = values[sortKey].localeCompare(rightValues[sortKey], undefined, { numeric: true, sensitivity: "base" });
+    return sortDirection === "asc" ? comparison : -comparison;
+  }), [sortDirection, sortKey, visibleItems]);
   const clearFilters = () => {
     setQuery("");
     setStatus("all");
     setTypeFilter("all");
     setCategoryFilter("all");
   };
-  const columns: DataTableColumn<CatalogItem>[] = [
-    { key: "name", header: selectedCatalog?.kind === "services" ? "Service" : "Product", sortable: true, cell: (item) => <div><p className="font-medium text-foreground">{item.name}</p><p className="font-mono text-xs text-muted-foreground">{item.sku || item.key}</p></div> },
-    { key: "type", header: "Type", sortable: true, cell: (item) => t(`common.erpForm.item.${itemTypeTranslationKeys[item.type]}`) },
-    { key: "categoryKey", header: "Category", cell: (item) => item.categoryKey ?? "Uncategorized" },
-    { key: "status", header: "Status", sortable: true, cell: (item) => <StatusBadge tone={item.status === "active" ? "success" : item.status === "draft" ? "warning" : "neutral"} dot>{item.status}</StatusBadge> },
-  ];
+  const toggleSort = (key: ProductSortKey) => {
+    if (sortKey === key) setSortDirection((current) => current === "asc" ? "desc" : "asc");
+    else {
+      setSortKey(key);
+      setSortDirection("asc");
+    }
+  };
+  const sortHeader = (label: string, key: ProductSortKey) => {
+    const active = sortKey === key;
+    const icon = !active
+      ? <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
+      : sortDirection === "asc"
+        ? <ArrowUp className="h-3.5 w-3.5" />
+        : <ArrowDown className="h-3.5 w-3.5" />;
+    return (
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 hover:text-foreground"
+        onClick={() => toggleSort(key)}
+        aria-sort={active ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
+      >
+        {label}
+        {icon}
+      </button>
+    );
+  };
   const toggleChannel = (target: "catalog" | "item", channel: string) => {
     if (target === "catalog") setCatalogForm((current) => ({ ...current, channels: current.channels.includes(channel) ? current.channels.filter((value) => value !== channel) : [...current.channels, channel] }));
     else setForm((current) => ({ ...current, channels: current.channels.includes(channel) ? current.channels.filter((value) => value !== channel) : [...current.channels, channel] }));
@@ -118,7 +189,7 @@ export default function ProductCatalog() {
     try {
       const serviceKey = form.key.trim() || slugify(form.name);
       const input: CatalogItemCreateInput = {
-        organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogId: selectedCatalog.id, key: selectedCatalog.kind === "services" ? serviceKey : (form.key || form.name), sku: selectedCatalog.kind === "services" ? "" : form.sku, name: form.name,
+        organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogId: selectedCatalog.aggregateOrganizationProducts ? (editingItem?.catalogId ?? null) : selectedCatalog.id, key: selectedCatalog.kind === "services" ? serviceKey : (form.key || form.name), sku: selectedCatalog.kind === "services" ? "" : form.sku, name: form.name,
         type: form.type, status: form.status,
         description: form.description, categoryKey: form.categoryKey,
         metadata: { shortDescription: form.shortDescription, brand: form.brand, provider: form.provider, performer: form.performer, manufacturer: form.manufacturer, barcode: form.barcode, material: form.material, color: form.color, size: form.size, weight: form.weight || null, dimensions: form.dimensions, currency: form.currency, unit: form.unit, duration: form.duration || null, price: form.price ? Number(form.price) : null, pricingModel: form.pricingModel, billingPeriod: form.billingPeriod, priceNote: form.priceNote, billingModel: form.billingModel, status: form.status, channels: form.channels, markets: form.markets, eligibility: form.eligibility, validFrom: form.validFrom || null, validTo: form.validTo || null, tags: form.tags.split(",").map((tag) => tag.trim()).filter(Boolean) },
@@ -126,7 +197,7 @@ export default function ProductCatalog() {
       if (editingItem) await localCatalogAdapter.updateCatalogItem(editingItem.id, { organizationId: LOCAL_CATALOG_ORGANIZATION_ID }, input);
       else await localCatalogAdapter.createCatalogItem(input);
       setForm(emptyItemForm()); setEditingItem(null); setDrawerOpen(false);
-      void localCatalogAdapter.listCatalogItems({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogId: selectedCatalog.id, includeArchived: true }).then(setItems);
+      void localCatalogAdapter.listCatalogItems(itemListParams(LOCAL_CATALOG_ORGANIZATION_ID, selectedCatalog)).then(setItems);
     } catch (cause) {
       setItemError(cause instanceof Error ? cause.message : "Unable to save the service.");
     }
@@ -180,7 +251,7 @@ export default function ProductCatalog() {
   const archiveItem = async (item: CatalogItem) => {
     try {
       await localCatalogAdapter.updateCatalogItem(item.id, { organizationId: LOCAL_CATALOG_ORGANIZATION_ID }, { status: item.status === "archived" ? "draft" : "archived" });
-      if (selectedCatalog) void localCatalogAdapter.listCatalogItems({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogId: selectedCatalog.id, includeArchived: true }).then(setItems);
+      if (selectedCatalog) void localCatalogAdapter.listCatalogItems(itemListParams(LOCAL_CATALOG_ORGANIZATION_ID, selectedCatalog)).then(setItems);
     } catch (cause) {
       setActionError(cause instanceof Error ? cause.message : "Unable to update catalog item.");
     }
@@ -190,7 +261,7 @@ export default function ProductCatalog() {
     try {
       await localCatalogAdapter.deleteCatalogItem(deleteTarget.id, { organizationId: LOCAL_CATALOG_ORGANIZATION_ID });
       setDeleteTarget(null);
-      if (selectedCatalog) void localCatalogAdapter.listCatalogItems({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogId: selectedCatalog.id, includeArchived: true }).then(setItems);
+      if (selectedCatalog) void localCatalogAdapter.listCatalogItems(itemListParams(LOCAL_CATALOG_ORGANIZATION_ID, selectedCatalog)).then(setItems);
     } catch (cause) {
       setActionError(cause instanceof Error ? cause.message : "Unable to delete catalog item.");
     }
@@ -201,6 +272,14 @@ export default function ProductCatalog() {
     setDrawerOpen(true);
   };
 
+  const productPath = location.pathname.replace(/\/+$/, "");
+  if (productsOnly && productPath === "/app/erp/products/configuration") {
+    return <ProductConfigurationPage />;
+  }
+  if (productsOnly && (productId || productPath === "/app/erp/products/new")) {
+    const mode = productPath === "/app/erp/products/new" ? "create" : productPath.endsWith("/edit") ? "edit" : "view";
+    return <ProductRecordPage mode={mode} itemId={mode === "create" ? null : productId ?? null} />;
+  }
   if (catalogsLoading) return <PageContainer width="wide"><LoadingState label={t("common.erpCatalog.loading")} /></PageContainer>;
   if (catalogsError) return <PageContainer width="narrow"><EmptyState icon={AlertTriangle} title={t("common.erpCatalog.loadError")} description={catalogsError} action={<Button onClick={reloadCatalogs}><RefreshCw className="me-1.5 h-3.5 w-3.5" />{t("common.retry")}</Button>} /></PageContainer>;
   if (catalogId && !selectedCatalog) return <PageContainer width="narrow"><EmptyState icon={AlertTriangle} title={t("common.erpCatalog.notFound")} description={t("common.erpCatalog.notFoundDescription")} action={<Button asChild><Link to="/app/erp/product-catalog">{t("common.erpCatalog.backToCatalogs")}</Link></Button>} /></PageContainer>;
@@ -214,11 +293,166 @@ export default function ProductCatalog() {
   );
   return (
     <PageContainer width="wide">
-      <PageHeader title={selectedCatalog.name} description={selectedCatalog.description ?? (selectedCatalog.kind === "services" ? formT("useVariantsService") : formT("useVariantsProduct"))} breadcrumbs={trail.length ? [...trail, { label: selectedCatalog.name }] : [{ label: "ERP" }, { label: t("common.erpCatalog.title") }, { label: selectedCatalog.name }]} actions={<Button onClick={openItemDrawer}><Plus className="me-2 h-4 w-4" />{selectedCatalog.kind === "services" ? formT("newService") : formT("newProduct")}</Button>} />
-      <div className="mb-4 flex min-w-0 flex-row flex-nowrap items-center gap-2 overflow-x-auto pb-1"><Button variant="ghost" className="shrink-0" onClick={() => { setSelectedCatalog(null); navigate("/app/erp/product-catalog"); }}><ArrowLeft className="me-2 h-4 w-4" />{formT("allCatalogs")}</Button><div className="min-w-[240px] flex-1"><SearchInput value={query} onValueChange={setQuery} placeholder={selectedCatalog.kind === "services" ? formT("searchServices") : formT("searchProducts")} /></div><div className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground"><SlidersHorizontal className="h-3.5 w-3.5" /><span>{formT("filters")}</span></div><Select value={status} onValueChange={(value) => setStatus(value as typeof status)}><SelectTrigger aria-label={formT("allStatuses")} className="w-36 shrink-0"><SelectValue placeholder={formT("allStatuses")} /></SelectTrigger><SelectContent><SelectItem value="all">{formT("allStatuses")}</SelectItem><SelectItem value="active">{formT("active")}</SelectItem><SelectItem value="draft">{formT("draft")}</SelectItem><SelectItem value="archived">{formT("archived")}</SelectItem></SelectContent></Select><Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as typeof typeFilter)}><SelectTrigger aria-label={formT("allTypes")} className="w-40 shrink-0"><SelectValue placeholder={formT("allTypes")} /></SelectTrigger><SelectContent><SelectItem value="all">{formT("allTypes")}</SelectItem>{availableTypes.map((value) => <SelectItem key={value} value={value}>{t(`common.erpForm.item.${itemTypeTranslationKeys[value]}`)}</SelectItem>)}</SelectContent></Select><Select value={categoryFilter} onValueChange={setCategoryFilter}><SelectTrigger aria-label={formT("allCategories")} className="w-40 shrink-0"><SelectValue placeholder={formT("allCategories")} /></SelectTrigger><SelectContent><SelectItem value="all">{formT("allCategories")}</SelectItem>{categories.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select>{hasActiveFilters && <Button type="button" variant="ghost" size="sm" className="shrink-0 text-muted-foreground" onClick={clearFilters}><X className="me-1 h-3.5 w-3.5" />{formT("clear")}</Button>}</div>
-      {itemsError ? <div role="alert" className="mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive flex items-center justify-between">{itemsError}<Button size="sm" variant="outline" onClick={() => { setSelectedCatalog({ ...selectedCatalog }); }}>{t("common.retry")}</Button></div> : itemsLoading ? <LoadingState label={t("common.loading")} /> : <DataCard title={`${visibleItems.length} ${selectedCatalog.kind === "services" ? formT("servicesFound") : formT("productsFound")}`} description={selectedCatalog.kind === "services" ? formT("useVariantsService") : formT("useVariantsProduct")} flush><DataTable<CatalogItem> data={visibleItems} columns={columns} onRowClick={setDetailItem} rowActions={[{ label: t("common.edit"), icon: Edit, onClick: openItemEditor }, { label: "Duplicate", icon: Copy, onClick: duplicateItem }, { label: "Archive", icon: Archive, hidden: (item) => item.status === "archived", onClick: (item) => void archiveItem(item) }, { label: "Restore", icon: RotateCcw, hidden: (item) => item.status !== "archived", onClick: (item) => void archiveItem(item) }, { label: t("common.delete"), icon: Trash2, destructive: true, separator: true, onClick: (item) => setDeleteTarget(item) }]} initialSort={{ key: "name", dir: "asc" }} emptyTitle={selectedCatalog.kind === "services" ? formT("noServicesFound") : formT("noProductsFound")} emptyDescription={formT("createOrAdjust")} /></DataCard>}
-      <ItemDrawer open={drawerOpen} editingItem={editingItem} form={form} setForm={setForm} error={itemError} selectedCatalog={selectedCatalog} toggleChannel={(channel) => toggleChannel("item", channel)} onOpenChange={(open) => { setDrawerOpen(open); if (!open) { setItemError(null); setEditingItem(null); } }} onCreate={() => void createItem()} />
-      <CatalogItemDetailDrawer item={detailItem} onOpenChange={(open) => { if (!open) setDetailItem(null); }} />
+      <PageHeader title={selectedCatalog.name} description={selectedCatalog.description ?? (selectedCatalog.kind === "services" ? formT("useVariantsService") : formT("useVariantsProduct"))} breadcrumbs={trail.length ? [...trail, { label: selectedCatalog.name }] : productsOnly ? [{ label: "ERP" }, { label: selectedCatalog.name }] : [{ label: "ERP" }, { label: t("common.erpCatalog.title") }, { label: selectedCatalog.name }]} actions={productsOnly ? <div className="flex gap-2"><Button variant="outline" onClick={() => navigate("/app/erp/products/configuration")}>{t("common.erpProductRecord.configurationButton")}</Button><Button onClick={() => navigate("/app/erp/products/new")}><Plus className="me-2 h-4 w-4" />{formT("newProduct")}</Button></div> : <Button onClick={openItemDrawer}><Plus className="me-2 h-4 w-4" />{selectedCatalog.kind === "services" ? formT("newService") : formT("newProduct")}</Button>} />
+      <div className="flex flex-wrap items-center gap-2" aria-label="Product list controls">
+        {!productsOnly && (
+          <Button variant="ghost" onClick={() => { setSelectedCatalog(null); navigate("/app/erp/product-catalog"); }}>
+            <ArrowLeft className="me-2 h-4 w-4" />{formT("allCatalogs")}
+          </Button>
+        )}
+        <SearchInput
+          value={query}
+          onValueChange={setQuery}
+          placeholder={selectedCatalog.kind === "services" ? formT("searchServices") : formT("searchProducts")}
+          size="sm"
+          containerClassName="w-64"
+        />
+        <FilterDropdown
+          label="Status"
+          value={status}
+          onChange={(value) => setStatus(value as typeof status)}
+          options={[
+            { label: formT("allStatuses"), value: "all" },
+            { label: formT("active"), value: "active" },
+            { label: formT("draft"), value: "draft" },
+            { label: formT("archived"), value: "archived" },
+          ]}
+          size="sm"
+        />
+        <FilterDropdown
+          label="Type"
+          value={typeFilter}
+          onChange={(value) => setTypeFilter(value as typeof typeFilter)}
+          options={[
+            { label: formT("allTypes"), value: "all" },
+            ...availableTypes.map((value) => ({
+              label: t(`common.erpForm.item.${itemTypeTranslationKeys[value]}`),
+              value,
+            })),
+          ]}
+          size="sm"
+        />
+        <FilterDropdown
+          label="Category"
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+          options={[
+            { label: formT("allCategories"), value: "all" },
+            ...categories.map((category) => ({ label: category, value: category })),
+          ]}
+          size="sm"
+        />
+        {hasActiveFilters && (
+          <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={clearFilters}>
+            <X className="me-1 h-3.5 w-3.5" />{formT("clear")}
+          </Button>
+        )}
+      </div>
+      <DataCard
+        title={`${sortedItems.length} ${selectedCatalog.kind === "services" ? formT("servicesFound") : formT("productsFound")}`}
+        description={selectedCatalog.kind === "services" ? formT("useVariantsService") : formT("useVariantsProduct")}
+        flush
+        loading={itemsLoading}
+        error={itemsError ? (
+          <>
+            <span>{itemsError}</span>
+            <Button className="mt-3" size="sm" variant="outline" onClick={() => setSelectedCatalog({ ...selectedCatalog })}>
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />{t("common.retry")}
+            </Button>
+          </>
+        ) : undefined}
+        empty={!itemsLoading && !itemsError && sortedItems.length === 0}
+        emptyIcon={hasActiveFilters ? SearchX : AlertTriangle}
+        emptyTitle={selectedCatalog.kind === "services" ? formT("noServicesFound") : formT("noProductsFound")}
+        emptyDescription={formT("createOrAdjust")}
+      >
+        {!itemsLoading && !itemsError && sortedItems.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{sortHeader(selectedCatalog.kind === "services" ? "Service" : "Product", "name")}</TableHead>
+                <TableHead>{sortHeader("Type", "type")}</TableHead>
+                <TableHead>{sortHeader("Category", "category")}</TableHead>
+                <TableHead>{sortHeader("Status", "status")}</TableHead>
+                <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedItems.map((item) => (
+                <TableRow
+                  key={item.id}
+                  className="cursor-pointer"
+                  tabIndex={0}
+                  onClick={() => productsOnly ? navigate(`/app/erp/products/${item.id}`) : setDetailItem(item)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      if (productsOnly) navigate(`/app/erp/products/${item.id}`);
+                      else setDetailItem(item);
+                    }
+                  }}
+                >
+                  <TableCell>
+                    <div>
+                      <p className="font-medium text-foreground">{item.name}</p>
+                      <p className="font-mono text-xs text-muted-foreground">{item.sku || item.key}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{t(`common.erpForm.item.${itemTypeTranslationKeys[item.type]}`)}</TableCell>
+                  <TableCell>{item.categoryKey ?? "Uncategorized"}</TableCell>
+                  <TableCell>
+                    <StatusBadge tone={item.status === "active" ? "success" : item.status === "draft" ? "warning" : "neutral"} dot>
+                      {item.status}
+                    </StatusBadge>
+                  </TableCell>
+                  <TableCell onClick={(event) => event.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          aria-label={`Actions for ${item.name}`}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => productsOnly ? navigate(`/app/erp/products/${item.id}/edit`) : openItemEditor(item)}>
+                          <Edit className="mr-2 h-3.5 w-3.5" />{t("common.edit")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => duplicateItem(item)}>
+                          <Copy className="mr-2 h-3.5 w-3.5" />Duplicate
+                        </DropdownMenuItem>
+                        {item.status === "archived" ? (
+                          <DropdownMenuItem onClick={() => void archiveItem(item)}>
+                            <RotateCcw className="mr-2 h-3.5 w-3.5" />Restore
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={() => void archiveItem(item)}>
+                            <Archive className="mr-2 h-3.5 w-3.5" />Archive
+                          </DropdownMenuItem>
+                        )}
+                        {!productsOnly && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteTarget(item)}>
+                              <Trash2 className="mr-2 h-3.5 w-3.5" />{t("common.delete")}
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </DataCard>
+      {!productsOnly && <ItemDrawer open={drawerOpen} editingItem={editingItem} form={form} setForm={setForm} error={itemError} selectedCatalog={selectedCatalog} toggleChannel={(channel) => toggleChannel("item", channel)} onOpenChange={(open) => { setDrawerOpen(open); if (!open) { setItemError(null); setEditingItem(null); } }} onCreate={() => void createItem()} />}
+      {!productsOnly && <CatalogItemDetailDrawer item={detailItem} onOpenChange={(open) => { if (!open) setDetailItem(null); }} />}
       {actionError && <p role="alert" className="mt-3 rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{actionError}</p>}
       <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title="Delete catalog item?" description={deleteTarget ? `${deleteTarget.name} will be permanently removed from this local catalog.` : undefined} confirmLabel="Delete" tone="destructive" onConfirm={() => void deleteItem()} />
     </PageContainer>

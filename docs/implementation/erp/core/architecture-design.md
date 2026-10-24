@@ -7,20 +7,19 @@
 | Module | Cross-sector ERP Core capability map |
 | Product definition | `design.md`; `docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md` |
 | Run ID | `MOD-CORE-20261024-001` |
-| Track | Pending approved first-release scope |
+| Track | Products/categories first release approved; implementation track pending plan approval |
 | Design checkpoint | `runs/MOD-CORE-20261024-001/01-design.json` |
-| Owner | Product / ERP (individual pending) |
-| Status | `approved for visual-design; Products module and product-master amendments recorded in CR-ERP-PRODUCTS-MODULE and CR-ERP-PRODUCT-MASTER-MODEL` |
+| Owner | @loopdev-io (Product Owner); Platform audit owner pending assignment |
+| Status | `Products/categories plus non-accounting purchase-cost reference approved; updated domain/access/API/sync audits and plan approval required before build` |
 
 ## Target architecture
 
 ### Context and boundaries
 
 - **Suite and bounded context:** ERP suite. Products is the existing partial
-  context. Suppliers is a separate ERP bounded context, confirmed by the
-  product owner; its release priority and date remain open. Sales, Procurement,
-  Inventory, Finance and Reporting remain candidate contexts, not approved
-  first-release implementation scope.
+  context and the only first-release module. Suppliers is a separate ERP
+  context; Shopify, Inhand, Sales, Procurement, Inventory, Finance and
+  Reporting are deferred from this release.
 - **Owned responsibilities:** ERP-owned operational records and rules after
   each module is approved; source of truth must be declared per entity and
   channel.
@@ -37,6 +36,10 @@
 - **Consumed Platform capabilities:** organization/membership, authorization,
   Notes, Files, Tasks, Activity, Relations, Document Intelligence Core where
   approved, Rivera UI and shell.
+- **Products presentation:** the approved product/SKU record and create/edit
+  flows are full pages; AppDrawer is limited to quick auxiliary-reference
+  creation/preview. The purchase-cost reference is a separate sensitive
+  product capability, not a sales-price field.
 
 ### Layer map
 
@@ -82,7 +85,7 @@ Presentation → Application → Domain → Ports ← Adapters
 | Document Intelligence | `REUSE` | Approved Document Intelligence Core handoff | Future invoice/document workflows | Yes |
 | Suppliers | `MODULE_SPECIFIC` as an independent context; release priority open | No approved functional contract | Supplier profile is owned by ERP Suppliers; Procurement references its stable ID; CRM contact relationship requires domain review | Yes: do not embed supplier master data in Procurement |
 | Sales, Procurement, Inventory, Finance, Reporting | `MODULE_SPECIFIC` | No approved functional contracts | Cross-context contracts TBD | Yes: no UI-owned business rules |
-| Provider connection infrastructure | `BLOCKED` pending shared integration audit | No verified universal connection contract | Shopify first; future providers | Yes: no isolated core per connector |
+| Provider connection infrastructure | `REUSE`/deferred | No provider integration is in this release; shared boundary needs review before future work | Future Shopify and other providers | Yes: no isolated core per connector |
 
 ## Structural quality baseline
 
@@ -94,39 +97,44 @@ Presentation → Application → Domain → Ports ← Adapters
   relationship history.
 - [x] Public contract boundaries and dependency direction documented in
   `design.md`.
-- [ ] Duplicate implementation audit beyond discovery evidence remains a
-  design follow-up.
+- [ ] Mandatory architecture-boundary, responsibility, platform-reuse and
+  refactor-safety audits must close before the first implementation task.
 - [x] Domain/application behavior must be testable without React or Supabase.
 - [x] Tenant, authorization and synchronization ownership documented;
   detailed policies await specialized phases.
-- [x] Residual debt: Products remote parity and legacy catalog permission naming; owner
-  Platform/ERP, tracked by issue #36.
+- [x] Residual debt: Products remote parity, audit contract, adapter mode and
+  legacy permission naming; tracked under issue #36 and the approved plan.
 
 ## Refactoring records
 
 | ID | Reason | Behavior preserved | Files/consumers | Risk | Before evidence | After evidence | Rollback | Residual debt |
 |---|---|---|---|---|---|---|---|---|
-| ARCH-ERP-001 | Separate candidate ERP contexts | Keep modular ownership across a cross-sector product | ERP modules and channels | High if cross-context writes emerge | Discovery source audit | Design proposal only | Restrict writes to owning context; contract tests | First-release module boundaries open |
-| ARCH-ERP-002 | Reconcile Products compatibility/permission mismatch | Avoid local/remote behavior divergence | Products, CRM, Shopify | High | Adapter/migration evidence | Not implemented in this design | Keep connector scope blocked until reconciliation | `catalog.write` vs `catalog.manage` |
+| ARCH-ERP-001 | Separate candidate ERP contexts | Keep modular ownership across a cross-sector product | ERP modules and channels | High if cross-context writes emerge | Discovery source audit | Products/categories first-release scope approved; follow-ups excluded | Restrict writes to owning context; contract tests | Future ERP module boundaries require separate discovery |
+| ARCH-ERP-002 | Reconcile Products compatibility/permission mismatch | Avoid local/remote behavior divergence | Products and current CRM references | High | Adapter/migration evidence | Canonical permission decision is `catalog.write`; no implementation yet | Keep remote writes disabled until migration and deployed RLS verification | Forward migration and permission parity |
 | ARCH-ERP-003 | Define a sector-neutral Products master without merging operational uses into item class | Preserve one shared master for products, components and services | Products, CRM and future ERP/channel consumers | Medium | `discovery.md` and `CR-ERP-PRODUCT-MASTER-MODEL` | Approved conceptual model; field contracts not implemented | Keep existing catalog model unchanged until domain/API migration is approved | Resolve legacy grouping and map approved concepts in `02-domain` |
 
 ## Open decisions and deviations
 
 | ID | Decision or deviation | Status | Impact | Approver | Resolution/follow-up |
 |---|---|---|---|---|---|
-| ERP-OD-006 | First-release module set | Open | High | Product owner | Products is the named master-data module; first-release membership still requires approval before implementation |
+| ERP-OD-006 | First-release module set | Resolved | High | Product owner | Products/categories only; all other modules/integrations deferred (`CR-ERP-PRODUCTS-FIRST-RELEASE`) |
 | ERP-DEC-004 | The existing catalog-facing ERP module is renamed Products; product/service records become the direct list entry point while catalog-named IDs/contracts remain compatible | Confirmed | High | Product owner | CR-ERP-PRODUCTS-MODULE; visual source updated; runtime route migration remains unimplemented |
 | ERP-DEC-005 | One Products master distinguishes finished products, raw materials/components and services; operational uses are independent; the product base has a general category and separately managed variants/SKUs have independently assigned categories; finished products allow buy/make/both sourcing, raw materials/components buy only for now, and services have no sourcing; variants inherit the product's sourcing; semimanufactured items await Manufacturing discovery | Confirmed | High | Product owner | User-confirmed product model; revisit raw-material sourcing during Manufacturing discovery; no runtime field/model changes authorized |
 | ERP-DEC-006 | Each separately managed/sold variant is a specific SKU with its own primary category, which may differ from the product base and sibling variants; drafts may omit it, but activation requires it | Confirmed | High | Product owner | User decisions recorded in `domain-model.md`; no category inheritance or runtime field/model changes authorized |
 | ERP-DEC-007 | SKU is unique across the organization after trimming outer whitespace and comparing case-insensitively; stored SKU preserves entered case | Confirmed | High | Product owner | User decision recorded in `domain-model.md`; product, variant and category keys are generated, immutable and organization-unique |
 | ERP-DEC-008 | `OrganizationCatalog` is legacy migration input only, not a target business entity or Products ownership boundary | Confirmed | High | Product owner | User decision recorded in `domain-model.md`; preserve legacy records while mapping fields and references |
 | ERP-DEC-003 | Suppliers is a standalone ERP module, separate from Procurement; manufacturing remains for later discovery | Confirmed | High | Product owner | Supplier priority/date and functional scope remain open; manufacturing is outside the current roadmap |
-| ERP-OD-007 | Supplier module priority, release timing and functional scope | Open | High | Product owner | Define supplier lifecycle, CRM contact boundary, permissions and procurement integration before planning |
+| ERP-OD-007 | Supplier module priority, release timing and functional scope | Resolved for this release | Medium | Product owner | Suppliers remains separate but deferred; later scope is future discovery |
 | ERP-DEC-009 | Commercial price currency is owned by each `PriceBook`; migrate legacy `OrganizationCatalog` currency into applicable books | Confirmed | High | Product owner | User decision recorded in `domain-model.md`; reconcile legacy `Offer.currency` before implementation |
-| ERP-OD-008 | Where legacy OrganizationCatalog locale and channel fields belong | Open | High | Product owner + ERP/Platform | Currency is assigned to `PriceBook`; preserve locale/channel values until destination ownership is assigned in `02-domain`/`04-api` |
+| ERP-OD-008 | Where legacy OrganizationCatalog locale and channel fields belong | Resolved for this release | Low | Product owner | Preserve as migration provenance; defer destination ownership to localization/channel work |
 | ERP-DEC-010 | Each `PriceEntry` uses its `PriceBook` currency; it cannot override the book currency | Confirmed | High | Product owner | User decision recorded in `domain-model.md`; legacy entry-currency mismatches need explicit migration handling |
 | ERP-DEC-011 | `Offer` has no independent currency; offer prices use the currency of the associated `PriceBook` | Confirmed | High | Product owner | User decision recorded in `domain-model.md`; migrate/retire legacy `Offer.currency` |
-| ERP-CF-001 | Products data remote runtime/documentation | Open | High | ERP/Platform | Verify deployed migration and remote read/write parity for the existing catalog-named adapter |
-| ERP-CF-002 | Products permission compatibility | Open | High | Platform access owner | Select stable action IDs and add adapter/RLS parity tests without breaking existing `catalog.*` consumers |
+| CR-ERP-PRODUCT-EDITOR-COST-REFERENCE | Full-page product/SKU record and editor; non-accounting unit purchase-cost reference and physical attributes | Confirmed | High | Product owner | Approved 2026-10-24; update domain, access, API and sync contracts before plan/build |
+| VD-ERP-COST-002 | Cost visibility, currency, source/history and product-to-SKU default behavior | Open | High | Product owner + ERP/Platform | Default deny under `catalog.read`; define sensitive permission and audit semantics |
+| VD-ERP-DATA-002 | Full brand/tag reference-data lifecycle and navigation | Open | Medium | Product owner + ERP domain | Quick create is approved; decide controlled values and full manager surface |
+| ERP-CF-001 | Products data remote runtime/documentation | Execution gate | High | ERP/Platform | Read-only deployed-state check; reconcile docs/runtime; no remote writes until verified |
+| ERP-CF-002 | Products permission compatibility | Resolved decision; implementation pending | High | Platform access owner | Use `catalog.write`; forward-migrate remote grants/RLS and add parity tests |
+| ACC-ERP-011 | Shared append-only audit contract | Owner approval pending | Critical | Platform owner (unassigned) | Approve and implement shared contract before Products remote writes |
+| MIG-ERP-001 | Legacy data mapping | Data-access pending | High | Product owner + Platform data owner | Obtain authorized inventory and dry-run review before mapping/cutover |
 | ERP-OD-002 | MiauCraft Shopify ownership/sync | Open | High | MiauCraft + product owner | Client mapping discovery; default read-only |
 | ERP-OD-003 | Inhand market/tax/fulfillment/returns | Open | High | Inhand + product owner | Resolve before native commerce plan |

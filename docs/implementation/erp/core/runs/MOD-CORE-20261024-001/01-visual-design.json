@@ -9,9 +9,9 @@
   "status": "completed",
   "decision_status": "confirmed",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 5,
-  "started_at": "2026-10-24T14:42:11.317Z",
-  "completed_at": "2026-10-24T14:42:11.319Z",
+  "attempt": 6,
+  "started_at": "2026-10-24T17:06:17Z",
+  "completed_at": "2026-10-24T17:09:40Z",
   "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
@@ -49,6 +49,7 @@
     "docs/implementation/erp/core/wireframes/erp-products.svg",
     "docs/implementation/erp/core/wireframes/erp-product-categories.svg",
     "docs/implementation/erp/core/wireframes/erp-product-form.svg",
+    "docs/implementation/erp/core/wireframes/erp-variant-form.svg",
     "docs/implementation/erp/core/wireframes/erp-commercial-detail.svg",
     "docs/implementation/erp/core/platform-scope.md",
     "docs/implementation/erp/core/platform-evidence-matrix.md",
@@ -88,7 +89,7 @@
     {
       "id": "VD-ERP-SCOPE-001",
       "status": "confirmed",
-      "summary": "Visual scope is ERP Overview plus Products direct-list, form and detail flows; the first-release module set and sequence remain open."
+      "summary": "The first release is Products and categories on desktop/mobile web; Overview is navigation compatibility only."
     },
     {
       "id": "VD-ERP-APPROVAL-001",
@@ -102,8 +103,13 @@
     },
     {
       "id": "VD-ERP-MOBILE-001",
-      "status": "open",
-      "summary": "Approve the mobile item-card composition and resolve native iOS/Android applicability/ownership."
+      "status": "confirmed",
+      "summary": "Desktop and mobile web are required; native iOS/Android are deferred for this release."
+    },
+    {
+      "id": "VD-ERP-014",
+      "status": "confirmed",
+      "summary": "Product Owner approved the supplemental desktop/mobile SKU editor showing each SKU's own category separately from the product's general category."
     }
   ],
   "actions": [
@@ -112,39 +118,40 @@
     "Applied CR-ERP-PRODUCTS-MODULE: removed the standalone catalog index from the proposed flow, renamed the list/form/detail artifacts and made the unified product/service list the direct entry point.",
     "Applied CR-ERP-PRODUCT-MASTER-MODEL: revised list, form, detail, state matrix and documentation to show item classes, independent uses, primary categories and product-level sourcing; added an in-module category administration entry point.",
     "Applied the Product Owner's VD-ERP-013 choice: added a dedicated category-tree management composition for desktop and mobile web, with visible return navigation and no nested drawer.",
-    "Revised all five SVGs to use the exact light HSL token snapshot from src/index.css, the white shared sidebar and selected-route treatment from Sidebar.tsx, current LoopDev navigation labels and borderless SurfaceCard shadows.",
+    "Revised the original five SVGs to use the exact light HSL token snapshot from src/index.css, the white shared sidebar and selected-route treatment from Sidebar.tsx, current LoopDev navigation labels and borderless SurfaceCard shadows.",
+    "Added a sixth responsive SKU editor wireframe to close the evidence gap for each variant's independently assigned category; this addendum is awaiting explicit Product Owner approval.",
     "Previewed the revised standalone SVGs in the browser canvas; this is visual artifact review only, not application-runtime evidence.",
     "Recorded implementation/documentation drift: Geist runtime typography, current catalog form composition, native select, duplicated detail section, read-only drawer mode, nested drawers and Overview fetch states.",
     "Updated platform scope/evidence and workspace README without changing production code.",
-    "Separated conceptual approval from post-implementation runtime comparison; no application runtime was started."
+    "Recorded the original five-composition approval separately from the explicit approval of the SKU-category addendum; no application runtime was started."
   ],
   "validation": [
     {
       "command": "npm run delivery:validate",
-      "result": "passed",
-      "evidence": "Module run validation passed: 100 checkpoint file(s) checked (36 archived legacy record(s))."
+      "result": "not_run",
+      "evidence": "Re-run after plan and checkpoint reconciliation."
     },
     {
       "command": "npm run validate:delivery-ledgers",
-      "result": "passed",
-      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+      "result": "not_run",
+      "evidence": "Re-run after executable tasks are added."
     },
     {
       "command": "npm run validate:multiplatform",
-      "result": "passed",
-      "evidence": "Multiplatform delivery validation passed."
+      "result": "not_run",
+      "evidence": "Re-run after operation coverage is reconciled."
     },
     {
       "command": "Python inline ERP JSON/SVG/XML/Markdown-link check",
       "result": "passed",
-      "evidence": "Parsed 5 JSON files and 5 SVG files; all local Markdown links resolve."
+      "evidence": "All six ERP SVG wireframes parse as XML; the new SKU-category interaction is explicitly approved."
     }
   ],
   "requirements": [
     {
       "id": "VIS-ERP-001",
       "status": "PASS",
-      "evidence": "Normative visual-design.md, view-state-matrix.md and five desktop/mobile token-mapped SVGs cover Overview, Products list, dedicated category management, product form and commercial detail. Category management is conceptual and not implemented."
+      "evidence": "Six desktop/mobile compositions cover Overview compatibility, Products list, categories, product form, SKU-specific category assignment and commercial detail; all six are conceptually approved."
     },
     {
       "id": "VIS-ERP-002",
@@ -159,7 +166,7 @@
     {
       "id": "VIS-ERP-004",
       "status": "PASS",
-      "evidence": "The complete conceptual visual source was explicitly approved by @loopdev-io on 2026-10-24; runtime screenshot comparison is NOT_RUN until implementation."
+      "evidence": "The original five-composition visual source and the supplemental SKU-category composition were explicitly approved by @loopdev-io on 2026-10-24; runtime screenshot comparison is NOT_RUN until implementation."
     }
   ],
   "evidence": [
@@ -171,21 +178,38 @@
     {
       "type": "visual-artifact",
       "path": "docs/implementation/erp/core/wireframes/",
-      "result": "Five revised SVG wireframes parse as XML, use source-backed light-theme tokens and cover desktop/mobile web compositions; the Products list is the direct entry point and category management is a dedicated view within Products."
+      "result": "The original five approved SVGs plus the approved sixth SKU-category composition cover desktop/mobile web and use source-backed light-theme tokens."
     },
     {
       "type": "approval-state",
       "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/run.json",
-      "result": "Visual approval is recorded as approved; no runtime comparison is claimed."
+      "result": "The original approval and the later approval of the SKU-category addendum are both recorded; no runtime comparison is claimed."
     }
   ],
-  "detected_failure": null,
-  "likely_failure_origin": null,
-  "next_handoff": "SPECIALIZED_ANALYSIS",
+  "detected_failure": {
+    "code": "VIS-ERP-005",
+    "detected_by": "module-visual-design",
+    "summary": "The previous visual attempt omitted the independently assigned SKU category; the gap was corrected and approved in this attempt."
+  },
+  "likely_failure_origin": {
+    "phase": "01-visual-design",
+    "skill": "module-visual-design",
+    "code": "VIS-ERP-005",
+    "confidence": 9
+  },
+  "next_handoff": "SPECIALIZED_ANALYSIS_AND_PLAN",
   "approval_gate": {
     "status": "approved",
     "approved_by": "@loopdev-io",
-    "approved_at": "2026-10-24T14:42:11.307Z"
+    "approved_at": "2026-10-24T17:09:40Z",
+    "source": "Explicit user selection via ask_user: Aprobar el addendum visual (Recomendado).",
+    "previous_approval": {
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-24T14:42:11.307Z",
+      "artifact_fingerprint": "sha256:b9d6373e08a115a02eb5509fbc89b0a5fcc6079633fdca9886400303dc75ec8d",
+      "scope": "Original five visual compositions only"
+    },
+    "awaiting_approval_for": "Supplemental SKU editor and independent category assignment composition"
   },
   "invalidated": false
 }

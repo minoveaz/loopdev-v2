@@ -20,6 +20,9 @@ describe("LoopDev sidebar navigation", () => {
     const workspaceSections = loopdevNavigation.filter((section) => section.label === "Workspace");
 
     expect(suites?.items.map((item) => item.label)).toEqual(["CRM", "ERP"]);
+    const erp = suites?.items.find((item) => item.label === "ERP");
+    expect(erp?.children?.map((item) => item.label)).toEqual(["Overview", "Products"]);
+    expect(erp?.children?.[1].to).toBe("/app/erp/products");
     expect(workspaceSections).toHaveLength(1);
     expect(workspaceSections[0].items.map((item) => item.to)).toEqual(["/app/settings"]);
   });

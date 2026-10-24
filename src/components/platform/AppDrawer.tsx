@@ -22,7 +22,7 @@ export interface AppDrawerProps {
   title: ReactNode;
   description?: ReactNode;
   eyebrow?: ReactNode;
-  mode?: "New" | "Editing" | "Read-only" | "Duplicate";
+  mode?: ReactNode;
   headerMeta?: ReactNode;
   headerNav?: ReactNode;
   showDirtyState?: boolean;

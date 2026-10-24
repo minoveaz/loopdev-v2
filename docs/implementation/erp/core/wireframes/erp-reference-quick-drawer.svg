@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">ERP Products — alta rápida de datos auxiliares</title>
+  <desc id="desc">Drawers de alta rápida de categoría o marca desde la ficha de producto. La gestión completa del árbol de categorías permanece en su vista dedicada.</desc>
+  <defs>
+    <style>
+      :root {
+        --background: hsl(220 30% 98.8%);
+        --foreground: hsl(222 32% 11%);
+        --card: hsl(0 0% 100%);
+        --primary: hsl(234 80% 58%);
+        --muted-foreground: hsl(222 12% 46%);
+        --border: hsl(220 22% 92%);
+        --border-strong: hsl(220 20% 85%);
+        --sidebar-background: hsl(0 0% 100%);
+        --sidebar-foreground: hsl(222 18% 32%);
+        --sidebar-accent: hsl(220 22% 96%);
+        --sidebar-accent-foreground: hsl(222 28% 16%);
+        --sidebar-border: hsl(220 18% 92%);
+      }
+      text { font-family: Inter, Arial, sans-serif; fill: var(--foreground); }
+      .muted { fill: var(--muted-foreground); }
+      .tiny { font-size: 11px; }
+      .small { font-size: 13px; }
+      .label { font-size: 12px; font-weight: 600; }
+      .input { fill: var(--card); stroke: var(--border-strong); }
+      .primary { fill: var(--primary); }
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="var(--background)"/>
+  <text x="28" y="38" font-size="18" font-weight="700">Alta rápida de categoría o marca · VIS-ERP-FLOW-07</text>
+  <text x="28" y="59" class="small muted">Drawer pequeño para añadir una referencia sin perder el draft del producto</text>
+  <text x="30" y="87" class="tiny muted" font-weight="700" letter-spacing="1.2">DESKTOP WEB · APPDRAWER SOBRE PÁGINA COMPLETA</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="var(--card)" stroke="var(--border-strong)"/>
+  <rect x="25" y="101" width="198" height="848" rx="15" fill="var(--sidebar-background)" stroke="var(--sidebar-border)"/>
+  <text x="47" y="137" font-size="17" font-weight="700">LoopDev</text>
+  <text x="47" y="180" class="tiny muted">LAUNCHPAD</text>
+  <text x="57" y="208" class="small" fill="var(--sidebar-foreground)">⌂  Launchpad</text>
+  <text x="47" y="250" class="tiny muted">SUITES</text>
+  <rect x="39" y="264" width="169" height="32" rx="8" fill="var(--sidebar-accent)"/><text x="57" y="286" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">▦  ERP  ⌄</text>
+  <rect x="51" y="304" width="156" height="28" rx="7" fill="var(--sidebar-accent)"/><text x="70" y="323" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">Productos</text>
+  <text x="250" y="137" class="tiny muted">ERP / PRODUCTOS / NUEVO</text>
+  <text x="250" y="174" font-size="22" font-weight="700">Nuevo producto</text>
+  <text x="250" y="215" class="label">Categoría principal</text><rect x="250" y="225" width="375" height="42" rx="8" class="input"/><text x="266" y="252" class="small">Seleccionar categoría  ▾   + Añadir</text>
+  <text x="250" y="310" class="label">Marca</text><rect x="250" y="320" width="375" height="42" rx="8" class="input"/><text x="266" y="347" class="small">Seleccionar marca  ▾   + Añadir</text>
+  <text x="250" y="405" class="tiny muted">Nombre, SKU y demás cambios permanecen en el draft de producto.</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="black" opacity="0.65"/>
+  <rect x="660" y="101" width="384" height="848" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="684" y="137" class="tiny" fill="var(--primary)" font-weight="700">PRODUCTOS / NUEVO PRODUCTO</text>
+  <text x="684" y="173" font-size="20" font-weight="700">Crear categoría</text>
+  <text x="684" y="197" class="tiny muted">Añade y selecciona sin cerrar el producto.</text>
+  <line x1="660" y1="218" x2="1044" y2="218" stroke="var(--border)"/>
+  <text x="684" y="253" class="label">Nombre *</text><rect x="684" y="262" width="336" height="38" rx="8" class="input"/><text x="699" y="287" class="small">Arneses</text>
+  <text x="684" y="329" class="label">Categoría superior</text><rect x="684" y="338" width="336" height="38" rx="8" class="input"/><text x="699" y="363" class="small">Accesorios  ▾</text>
+  <text x="684" y="401" class="tiny muted">La clave interna se genera automáticamente.</text>
+  <text x="684" y="435" class="tiny" fill="var(--primary)" font-weight="700">¿NECESITAS REORDENAR EL ÁRBOL?</text>
+  <text x="684" y="457" class="tiny muted">Abrir la gestión completa de categorías</text>
+  <line x1="660" y1="758" x2="1044" y2="758" stroke="var(--border)"/>
+  <rect x="684" y="780" width="110" height="42" rx="8" fill="var(--card)" stroke="var(--border-strong)"/><text x="716" y="806" class="small" font-weight="600">Cancelar</text>
+  <rect x="804" y="780" width="216" height="42" rx="8" class="primary"/><text x="863" y="806" class="small" fill="white" font-weight="700">Crear y seleccionar</text>
+  <rect x="1168" y="100" width="390" height="850" rx="24" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="1190" y="136" class="small" font-weight="700">‹  Nuevo producto</text>
+  <text x="1190" y="177" class="tiny muted">CAMPO MARCA · ALTA RÁPIDA</text>
+  <text x="1190" y="208" font-size="20" font-weight="700">Crear marca</text>
+  <line x1="1169" y1="230" x2="1557" y2="230" stroke="var(--border)"/>
+  <text x="1190" y="271" class="label">Nombre *</text><rect x="1190" y="280" width="346" height="44" rx="8" class="input"/><text x="1206" y="308" class="small">MiauCraft</text>
+  <text x="1190" y="350" class="tiny muted">La referencia se guardará en la organización y se seleccionará en el draft.</text>
+  <text x="1190" y="406" class="tiny" fill="var(--primary)" font-weight="700">GESTIÓN COMPLETA</text>
+  <text x="1190" y="430" class="tiny muted">Las categorías mantienen su vista de árbol dedicada.</text>
+  <line x1="1169" y1="778" x2="1557" y2="778" stroke="var(--border)"/>
+  <rect x="1185" y="802" width="126" height="48" rx="8" fill="var(--card)" stroke="var(--border-strong)"/><text x="1223" y="832" class="small" font-weight="600">Cancelar</text>
+  <rect x="1321" y="802" width="220" height="48" rx="8" class="primary"/><text x="1372" y="832" class="small" fill="white" font-weight="700">Crear y seleccionar</text>
+  <text x="30" y="981" class="tiny muted" font-weight="700" letter-spacing="1.2">MOBILE WEB · DRAWER A PANTALLA COMPLETA · VOLVER CONSERVA EL DRAFT</text>
+</svg>

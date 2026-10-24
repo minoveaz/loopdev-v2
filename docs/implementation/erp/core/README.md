@@ -25,7 +25,7 @@
 | Current phase | `05-sync` completed with a partial handoff; do not start `06-plan` until open decisions and access blockers are resolved |
 | Current issue | #36 |
 | Branch | `feature/erp-core-capabilities` |
-| Commit | `cb2b35d` |
+| Commit | `8204d0b` |
 | Pull request | None |
 | Last evidence | Visual gate approved; domain, access, API and sync analyses are complete with documented partials and blockers, 2026-10-24 |
 
@@ -67,6 +67,7 @@
 | 03-access | #36 | `completed` (`partial` analysis) | `runs/MOD-CORE-20261024-001/03-access.json` | `access-model.md`, `runs/MOD-CORE-20261024-001/03-access.md` |
 | 04-api | #36 | `completed` (`partial` analysis) | `runs/MOD-CORE-20261024-001/04-api.json` | `api-contracts.md`, `runs/MOD-CORE-20261024-001/04-api.md` |
 | 05-sync | #36 | `completed` (`partial` analysis) | `runs/MOD-CORE-20261024-001/05-sync.json` | `sync-model.md`, `runs/MOD-CORE-20261024-001/05-sync.md` |
+| 10-git | #36 | `deviated` (local checkpoint only; release gate pending) | `runs/MOD-CORE-20261024-001/10-git.json` | `8204d0ba4211d3e37a5f048248f7c7b41de4dfec` |
 
 ## Visual gate
 

@@ -8,7 +8,7 @@
   "current_phase": "05-sync",
   "attempt": 5,
   "started_at": "2026-10-24T10:00:46.235Z",
-  "updated_at": "2026-10-24T14:55:23.816Z",
+  "updated_at": "2026-10-24T18:10:42+02:00",
   "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
   "fingerprints": {
     "product": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -24,8 +24,8 @@
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
-    "working_tree": "untracked ERP implementation docs; no production code changes",
+    "head_commit": "8204d0ba4211d3e37a5f048248f7c7b41de4dfec",
+    "working_tree": "clean after local ERP documentation commit; no production code changes",
     "runtime_url": null,
     "runtime_port": null
   },
@@ -113,7 +113,8 @@
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/02-domain.json",
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/03-access.json",
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/04-api.json",
-    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/05-sync.json"
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/05-sync.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/10-git.json"
   ],
   "evidence_links": [
     "docs/implementation/erp/core/visual-design.md",
@@ -218,7 +219,7 @@
       "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05"
     }
   ],
-  "commit": null,
+  "commit": "8204d0ba4211d3e37a5f048248f7c7b41de4dfec",
   "pull_request": null,
   "retention": {
     "contains_pii": false,

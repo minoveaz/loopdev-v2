@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:03-access",
+  "phase": "03-access",
+  "skill": "access-design",
+  "parent_span_id": "MOD-CORE-20261024-001:02-domain",
+  "module": "Core",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 5,
+  "started_at": "2026-10-24T14:48:19.088Z",
+  "completed_at": "2026-10-24T14:50:59.071Z",
+  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": "develop",
+    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
+    "working_tree": "untracked ERP implementation docs; no production code changes",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/domain-model.md",
+    "docs/implementation/erp/core/design.md",
+    "docs/implementation/erp/core/architecture-design.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/03-platform/backend/MULTI_TENANCY_STRATEGY.md",
+    "docs/03-platform/backend/DATABASE_SECURITY_RLS.md",
+    "docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md",
+    "supabase/migrations/20260807000000_platform_core_permissions.sql",
+    "supabase/migrations/20260811000000_platform_core_workspaces.sql",
+    "supabase/migrations/20260816000000_platform_core_membership_status.sql",
+    "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
+    "src/loopdev/domains/catalog/adapter/local.ts",
+    "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "src/loopdev/domains/platform/adapter/local.ts",
+    "src/test/catalog/catalog-adapter.test.ts"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/core/access-model.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/03-access.md"
+  ],
+  "decisions": [
+    {
+      "id": "ACC-ERP-001",
+      "status": "confirmed",
+      "summary": "Active organization membership and Platform permissions are the authorization source."
+    },
+    {
+      "id": "ACC-ERP-002",
+      "status": "confirmed",
+      "summary": "Use existing owner/admin/agent/viewer roles, not new ERP roles."
+    },
+    {
+      "id": "ACC-ERP-003",
+      "status": "assumed",
+      "summary": "catalog.read and catalog.manage are the target read/manage permissions; local catalog.write mismatch remains."
+    },
+    {
+      "id": "ACC-ERP-004",
+      "status": "confirmed",
+      "summary": "Enforce authorization server-side and through database policies, not UI visibility alone."
+    },
+    {
+      "id": "ACC-ERP-005",
+      "status": "assumed",
+      "summary": "Organization is the initial Products access boundary."
+    },
+    {
+      "id": "ACC-ERP-006",
+      "status": "confirmed",
+      "summary": "Products and categories are organization-wide; workspace-specific product authorization is outside the target scope."
+    },
+    {
+      "id": "ACC-ERP-007",
+      "status": "assumed",
+      "summary": "No record-assignee/team ACL exists in the current Products domain."
+    },
+    {
+      "id": "ACC-ERP-008",
+      "status": "open",
+      "summary": "Hard delete, exports and sensitive commercial fields need explicit policy."
+    },
+    {
+      "id": "ACC-ERP-009",
+      "status": "confirmed",
+      "summary": "Shared Platform collaboration and Document Intelligence permissions are reused and inherit referenced-record access."
+    },
+    {
+      "id": "ACC-ERP-010",
+      "status": "confirmed",
+      "summary": "Membership and role grants remain Platform organization-management actions."
+    }
+  ],
+  "actions": [
+    "Inspected organization role/permission grants and active-membership authorization.",
+    "Compared local catalog permission checks with Supabase migration permissions and RLS.",
+    "Reviewed organization/workspace policy patterns and legacy role-vocabulary drift.",
+    "Defined a role/action/scope matrix, sensitive-data policy, audit requirements and RLS requirements.",
+    "Enumerated required authorization, tenant-isolation, bulk, export, attachment and replay tests."
+  ],
+  "validation": [
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run validation passed: 102 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed."
+    },
+    {
+      "command": "npm run test:delivery",
+      "result": "passed (27 tests)",
+      "evidence": "Delivery state-machine and evidence tests passed."
+    },
+    {
+      "command": "python3 ERP JSON/SVG/Markdown-link check",
+      "result": "passed",
+      "evidence": "Parsed 7 JSON files and 5 SVG files; all local Markdown links resolve."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "status": "PARTIAL",
+      "evidence": "The permission-key mismatch and read-only delete policy gap must be resolved; deployment status is unverified."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "status": "PARTIAL",
+      "evidence": "Organization-wide scope is confirmed; category-specific permissions and legacy workspace-ID migration handling remain open."
+    },
+    {
+      "id": "REQ-ERP-CRM-BOUNDARY",
+      "status": "PASS",
+      "evidence": "CRM-owned identities remain under CRM/Platform authorization; ERP does not create duplicate customer permissions."
+    }
+  ],
+  "evidence": [
+    {
+      "type": "access-analysis",
+      "path": "docs/implementation/erp/core/access-model.md",
+      "result": "Defines current and target authorization decisions, matrix, scopes, RLS, audit, test cases, risks and open questions."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
+      "result": "The generated FOR ALL policy uses catalog.read in USING and catalog.manage in WITH CHECK; read-only delete is possible by policy semantics. Deployment status is unverified."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/adapter/local.ts",
+      "result": "The local adapter checks catalog.write while remote policy grants use catalog.manage."
+    }
+  ],
+  "detected_failure": {
+    "code": "ACCESS-001",
+    "detected_by": "access-design",
+    "summary": "The ERP catalog migration's all-operations policy allows catalog.read users to delete rows by USING semantics; production deployment is unverified."
+  },
+  "likely_failure_origin": {
+    "phase": "baseline",
+    "skill": "existing ERP catalog foundation migration",
+    "code": "ACCESS-001",
+    "confidence": 10
+  },
+  "next_handoff": "04-api",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

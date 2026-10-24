@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">ERP Overview — desktop y mobile</title>
+  <desc id="desc">Propuesta visual Rivera/LoopDev para el overview ERP: navegación lateral, tres KPIs y dos tarjetas de contenido en desktop; composición apilada en móvil.</desc>
+  <defs>
+    <style>
+      :root {
+        --background: hsl(220 30% 98.8%);
+        --foreground: hsl(222 32% 11%);
+        --card: hsl(0 0% 100%);
+        --card-muted: hsl(220 26% 97.6%);
+        --primary: hsl(234 80% 58%);
+        --primary-soft: hsl(234 92% 96.5%);
+        --muted: hsl(220 20% 96%);
+        --muted-foreground: hsl(222 12% 46%);
+        --accent: hsl(158 70% 42%);
+        --accent-soft: hsl(158 70% 95%);
+        --gold: hsl(38 92% 52%);
+        --success: hsl(158 70% 40%);
+        --success-soft: hsl(158 70% 94%);
+        --warning: hsl(36 96% 52%);
+        --warning-soft: hsl(36 96% 94%);
+        --info: hsl(210 92% 52%);
+        --info-soft: hsl(210 92% 96%);
+        --destructive: hsl(350 78% 56%);
+        --border: hsl(220 22% 92%);
+        --border-strong: hsl(220 20% 85%);
+        --sidebar-background: hsl(0 0% 100%);
+        --sidebar-foreground: hsl(222 18% 32%);
+        --sidebar-accent: hsl(220 22% 96%);
+        --sidebar-accent-foreground: hsl(222 28% 16%);
+        --sidebar-border: hsl(220 18% 92%);
+      }
+      text { font-family: Inter, Arial, sans-serif; fill: var(--foreground); }
+      .muted { fill: var(--muted-foreground); }
+      .tiny { font-size: 11px; }
+      .small { font-size: 13px; }
+      .body { font-size: 15px; }
+      .title { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+      .label { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; }
+      .card { fill: var(--card); stroke: none; filter: url(#surface-shadow); }
+      .soft { fill: var(--muted); }
+      .primary { fill: var(--primary); }
+      .white { fill: var(--card); }
+    </style>
+    <filter id="surface-shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="hsl(0 0% 0%)" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="var(--background)"/>
+  <text x="28" y="38" font-size="18" font-weight="700">ERP Overview · VIS-ERP-VIEW-01</text>
+  <text x="28" y="59" class="small muted">Propuesta conceptual · fixtures ficticios · no es captura de runtime</text>
+  <text x="30" y="87" class="label muted">DESKTOP WEB · 1440 PX</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="var(--card)" stroke="var(--border-strong)"/>
+  <rect x="25" y="101" width="198" height="848" rx="15" fill="var(--sidebar-background)" stroke="var(--sidebar-border)"/>
+  <text x="47" y="137" font-size="17" font-weight="700" fill="var(--foreground)">LoopDev</text>
+  <text x="47" y="180" class="tiny" fill="var(--sidebar-foreground)">LAUNCHPAD</text>
+  <text x="57" y="208" class="small" fill="var(--sidebar-foreground)">⌂  Launchpad</text>
+  <text x="47" y="250" class="tiny" fill="var(--sidebar-foreground)">SUITES</text>
+  <text x="57" y="281" class="small" fill="var(--sidebar-foreground)">CRM</text>
+  <rect x="39" y="294" width="169" height="32" rx="8" fill="var(--sidebar-accent)"/>
+  <text x="57" y="316" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">▦  ERP  ⌄</text>
+  <rect x="51" y="331" width="156" height="28" rx="7" fill="var(--sidebar-accent)"/>
+  <text x="70" y="350" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">Overview</text>
+  <text x="70" y="381" class="small" fill="var(--sidebar-foreground)">Productos</text>
+  <text x="47" y="433" class="tiny" fill="var(--sidebar-foreground)">TOOLS</text>
+  <text x="57" y="462" class="small" fill="var(--sidebar-foreground)">Document Intelligence</text>
+  <text x="47" y="520" class="tiny" fill="var(--sidebar-foreground)">WORKSPACE</text>
+  <text x="57" y="549" class="small" fill="var(--sidebar-foreground)">Settings</text>
+  <rect x="223" y="101" width="820" height="54" fill="var(--card)"/>
+  <circle cx="250" cy="128" r="9" fill="var(--muted)"/>
+  <rect x="276" y="120" width="188" height="15" rx="7" fill="var(--muted)"/>
+  <text x="947" y="133" class="small muted">ES  ·  Organización activa</text>
+  <text x="254" y="189" class="tiny muted">ERP  /  OVERVIEW</text>
+  <text x="254" y="222" class="title">Resumen ERP</text>
+  <text x="254" y="247" class="small muted">Administra productos y servicios de tu organización.</text>
+  <rect x="837" y="184" width="177" height="40" rx="9" class="primary"/>
+  <text x="858" y="209" class="small white" font-weight="700">＋  Gestionar productos</text>
+  <rect x="254" y="276" width="238" height="127" rx="12" class="card"/>
+  <text x="274" y="303" class="label muted">PRODUCTOS</text>
+  <text x="274" y="346" font-size="31" font-weight="700">28</text>
+  <text x="274" y="376" class="small muted">Productos registrados</text>
+  <circle cx="461" cy="306" r="17" fill="var(--primary-soft)"/>
+  <text x="454" y="312" class="body" fill="var(--primary)">▦</text>
+  <rect x="510" y="276" width="238" height="127" rx="12" class="card"/>
+  <text x="530" y="303" class="label muted">PRODUCTOS</text>
+  <text x="530" y="346" font-size="31" font-weight="700">4</text>
+  <text x="530" y="376" class="small muted">Servicios registrados</text>
+  <circle cx="717" cy="306" r="17" fill="var(--info-soft)"/>
+  <text x="710" y="312" class="body" fill="var(--info)">□</text>
+  <rect x="766" y="276" width="248" height="127" rx="12" class="card"/>
+  <text x="786" y="303" class="label muted">ACTIVOS</text>
+  <text x="786" y="346" font-size="31" font-weight="700">26</text>
+  <text x="786" y="376" class="small muted">Registros disponibles</text>
+  <circle cx="983" cy="306" r="17" fill="var(--warning-soft)"/>
+  <text x="976" y="312" class="body" fill="var(--gold)">◈</text>
+  <rect x="254" y="427" width="365" height="250" rx="12" class="card"/>
+  <text x="278" y="462" font-size="17" font-weight="700">Base de Productos</text>
+  <text x="278" y="485" class="small muted">Datos maestros compartidos de productos y servicios.</text>
+  <rect x="278" y="515" width="316" height="76" rx="9" class="soft"/>
+  <text x="296" y="542" class="small" font-weight="600">Producto y servicio</text>
+  <text x="296" y="565" class="tiny muted">Identidad estable y referencias reutilizables.</text>
+  <text x="278" y="633" class="small" fill="var(--primary)" font-weight="700">Abrir Productos  →</text>
+  <rect x="638" y="427" width="376" height="250" rx="12" class="card"/>
+  <text x="662" y="462" font-size="17" font-weight="700">Registros recientes</text>
+  <text x="662" y="485" class="small muted">Productos y servicios de esta organización.</text>
+  <rect x="662" y="516" width="328" height="42" rx="8" fill="var(--primary-soft)"/>
+  <text x="678" y="542" class="small" font-weight="600">Productos de tienda</text>
+  <text x="924" y="542" class="tiny muted">Productos</text>
+  <rect x="662" y="568" width="328" height="42" rx="8" fill="var(--card-muted)"/>
+  <text x="678" y="594" class="small" font-weight="600">Servicios y asesoría</text>
+  <text x="920" y="594" class="tiny muted">Servicios</text>
+  <text x="662" y="646" class="tiny muted">Los datos de este ejemplo son ficticios.</text>
+  <text x="30" y="981" class="label muted">MOBILE WEB · 390 PX · MISMAS ACCIONES, UNA COLUMNA</text>
+  <rect x="1168" y="100" width="390" height="850" rx="24" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="1169" y="101" width="388" height="54" rx="22" fill="var(--card)"/>
+  <text x="1190" y="135" class="body" font-weight="700">☰</text>
+  <text x="1230" y="135" class="body" font-weight="700">LoopDev</text>
+  <text x="1514" y="135" class="small muted">ES</text>
+  <text x="1190" y="187" class="tiny muted">ERP  /  OVERVIEW</text>
+  <text x="1190" y="218" font-size="22" font-weight="700">Resumen ERP</text>
+  <text x="1190" y="242" class="tiny muted">Productos y servicios de la organización</text>
+  <rect x="1190" y="260" width="346" height="42" rx="9" class="primary"/>
+  <text x="1270" y="286" class="small white" font-weight="700">＋  Gestionar productos</text>
+  <rect x="1190" y="319" width="346" height="96" rx="11" class="card"/>
+  <text x="1208" y="345" class="label muted">PRODUCTOS</text>
+  <text x="1208" y="380" font-size="27" font-weight="700">28</text>
+  <text x="1261" y="378" class="small muted">Productos registrados</text>
+  <rect x="1190" y="427" width="346" height="96" rx="11" class="card"/>
+  <text x="1208" y="453" class="label muted">PRODUCTOS</text>
+  <text x="1208" y="488" font-size="27" font-weight="700">4</text>
+  <text x="1261" y="486" class="small muted">Servicios registrados</text>
+  <rect x="1190" y="535" width="346" height="96" rx="11" class="card"/>
+  <text x="1208" y="561" class="label muted">ACTIVOS</text>
+  <text x="1208" y="596" font-size="27" font-weight="700">26</text>
+  <text x="1261" y="594" class="small muted">Registros disponibles</text>
+  <rect x="1190" y="643" width="346" height="139" rx="11" class="card"/>
+  <text x="1210" y="674" font-size="16" font-weight="700">Registros recientes</text>
+  <text x="1210" y="701" class="tiny muted">Productos y servicios de esta organización.</text>
+  <text x="1210" y="738" class="small" font-weight="600">Productos de tienda</text>
+  <text x="1210" y="763" class="small" fill="var(--primary)" font-weight="700">Ver productos  →</text>
+  <text x="1190" y="830" class="tiny muted">Estado, conteos y acciones también se expresan con texto.</text>
+</svg>

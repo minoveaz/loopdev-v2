@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:04-api",
+  "phase": "04-api",
+  "skill": "api-contracts",
+  "parent_span_id": "MOD-CORE-20261024-001:03-access",
+  "module": "Core",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 5,
+  "started_at": "2026-10-24T14:51:07.069Z",
+  "completed_at": "2026-10-24T14:52:44.630Z",
+  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": "develop",
+    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
+    "working_tree": "untracked ERP implementation docs; no production code changes",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/design.md",
+    "docs/implementation/erp/core/domain-model.md",
+    "docs/implementation/erp/core/access-model.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/implementation/erp/core/visual-design.md",
+    "src/loopdev/domains/catalog/adapter/index.ts",
+    "src/loopdev/domains/catalog/types.ts",
+    "src/loopdev/domains/catalog/adapter/local.ts",
+    "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "src/loopdev/domains/platform/types.ts",
+    "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
+    "src/test/catalog/catalog-adapter.test.ts",
+    "docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/core/api-contracts.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/04-api.md"
+  ],
+  "decisions": [
+    {
+      "id": "API-ERP-001",
+      "status": "confirmed",
+      "summary": "Products is the user-facing master; preserve legacy catalog IDs and CRM entity references."
+    },
+    {
+      "id": "API-ERP-002",
+      "status": "confirmed",
+      "summary": "Organization scope and actor authority derive from authenticated context."
+    },
+    {
+      "id": "API-ERP-003",
+      "status": "assumed",
+      "summary": "New logical contracts use the conceptual product model; legacy type conversion remains explicit and unresolved."
+    },
+    {
+      "id": "API-ERP-004",
+      "status": "assumed",
+      "summary": "Mutations use expectedVersion and idempotency metadata where duplicate effects are possible."
+    },
+    {
+      "id": "API-ERP-005",
+      "status": "assumed",
+      "summary": "Lists are bounded and stably paginated; exact cursor contract remains open."
+    },
+    {
+      "id": "API-ERP-006",
+      "status": "confirmed",
+      "summary": "Category management is a first-class logical query/command surface within Products."
+    },
+    {
+      "id": "API-ERP-007",
+      "status": "assumed",
+      "summary": "Offer and pricing APIs remain compatibility contracts pending ownership and sensitivity decisions."
+    },
+    {
+      "id": "API-ERP-008",
+      "status": "confirmed",
+      "summary": "Party role, availability and eligibility are not promised remotely until domain/persistence ownership is resolved."
+    },
+    {
+      "id": "API-ERP-009",
+      "status": "confirmed",
+      "summary": "Product/category events are proposals only; no event infrastructure or consumer contract is implemented."
+    },
+    {
+      "id": "API-ERP-010",
+      "status": "confirmed",
+      "summary": "Remote mutation remains blocked by access-model RLS and permission-key gaps."
+    },
+    {
+      "id": "API-ERP-011",
+      "status": "open",
+      "summary": "Transport and canonical routes are unresolved; organization-wide product/category scope is confirmed."
+    }
+  ],
+  "actions": [
+    "Mapped Products queries and commands from discovery, domain and current adapter contracts.",
+    "Defined request/response boundaries, validation and error/retry semantics.",
+    "Recorded pagination, optimistic concurrency, idempotency and consistency assumptions.",
+    "Specified proposed event payload boundaries and shared Platform/CRM compatibility.",
+    "Kept transport, infrastructure, implementation and endpoint naming open."
+  ],
+  "validation": [
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run validation passed: 103 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed."
+    },
+    {
+      "command": "npm run test:delivery",
+      "result": "passed (27 tests)",
+      "evidence": "Delivery state-machine and evidence tests passed."
+    },
+    {
+      "command": "python3 ERP JSON/SVG/Markdown-link check",
+      "result": "passed",
+      "evidence": "Parsed 8 JSON files and 5 SVG files; all local Markdown links resolve."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "status": "PARTIAL",
+      "evidence": "Logical product contracts are recorded; legacy type mapping, catalog grouping, versioning and remote access gaps remain open."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "status": "PARTIAL",
+      "evidence": "Category commands and error boundaries are documented; category scope, lifecycle and uniqueness are unresolved."
+    },
+    {
+      "id": "REQ-ERP-CRM-BOUNDARY",
+      "status": "PASS",
+      "evidence": "Existing catalog_item entity references and CRM-owned customer identity remain compatible; no duplicate customer API is proposed."
+    }
+  ],
+  "evidence": [
+    {
+      "type": "api-contract-design",
+      "path": "docs/implementation/erp/core/api-contracts.md",
+      "result": "Documents logical commands/queries, DTO boundaries, errors, pagination, concurrency, events, consumers and platform impact."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/adapter/index.ts",
+      "result": "Current adapter exposes unpaged arrays, legacy CRUD and catalog_item reference resolution; no category API exists."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/adapter/supabase.ts",
+      "result": "Remote adapter maps catalog rows but has no version/idempotency fields and returns empty remote party-role, availability and eligibility lists."
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "05-sync",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

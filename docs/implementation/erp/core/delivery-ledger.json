@@ -1,0 +1,432 @@
+{
+  "$schema": "../../_schemas/delivery-ledger.schema.json",
+  "schema_version": 1,
+  "suite": "erp",
+  "module": "core",
+  "status": "draft",
+  "approved_by": null,
+  "approved_at": null,
+  "approval_source": null,
+  "product_sources": [
+    "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
+    "docs/implementation/erp/core/discovery.md"
+  ],
+  "previous_ledger": null,
+  "requirements": [
+    {
+      "id": "REQ-ERP-BOUNDARY-MAP",
+      "title": "Define ERP core capabilities and ownership boundaries",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/erp/core/discovery.md",
+      "platforms": ["shared"],
+      "acceptance_criteria": [
+        "Classify each candidate capability under Platform, CRM, ERP, or a public channel and record owner, consumers, current evidence, scope and next decision.",
+        "Separate baseline ERP capabilities from approved MVP, follow-up and open scope; market references do not automatically become LoopDev requirements."
+      ],
+      "evidence_level": "E0_PRESENT",
+      "capability_ids": [
+        "CAP-ERP-CATALOG",
+        "CAP-ERP-PRODUCT-CATEGORIES",
+        "CAP-MIAUCRAFT-SHOPIFY",
+        "CAP-INHAND-COMMERCE",
+        "CAP-ERP-SALES",
+        "CAP-ERP-SUPPLIERS",
+        "CAP-ERP-PROCUREMENT",
+        "CAP-ERP-INVENTORY",
+        "CAP-ERP-FINANCE",
+        "CAP-ERP-REPORTING"
+      ]
+    },
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "title": "Define shared, sector-neutral ERP Products master data",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": [
+        "Products, services, variants, offers and prices have one ERP-owned contract that CRM and channels reference rather than duplicate.",
+        "The conceptual master distinguishes finished products, raw materials/components and services; semimanufactured items remain deferred until Manufacturing discovery.",
+        "Item class is independent from whether the item is purchasable, sellable or inventory-tracked; categories are managed within Products, the product base has one general category, and every separately managed/sold SKU has its own independently assigned category.",
+        "Finished products allow buy/make/both sourcing; raw materials/components are buy-only for now; services have no sourcing; variants inherit product sourcing. Separately managed/sold variants have their own SKU, while descriptive attributes alone do not create variants.",
+        "Products is the user-facing module and direct list entry point; existing catalog-named data, operation IDs and permissions remain compatible until their migration is explicitly approved.",
+        "Persistence, permission and platform behavior are verified independently for domain, renderer and user operations before claiming parity."
+      ],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": ["CAP-ERP-CATALOG", "CAP-ERP-PRODUCT-CATEGORIES"]
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "title": "Manage the hierarchical product category tree within Products",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/erp/core/discovery.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": [
+        "Category tree administration is available within Products, not as a separate Catalog module.",
+        "Each product and variant has a LoopDev-generated, immutable internal key distinct from SKU and unique within the organization; changing SKU does not change either key. Categories also have a LoopDev-generated immutable key distinct from visible name and unique within the organization. Each separately managed/sold SKU has its own primary category and an SKU unique across the organization after trimming outer whitespace and comparing case-insensitively; stored SKU preserves entered case. The product base has one general category. Draft products/SKUs may omit category, but category is required before activation. Category is independent from item class and sourcing.",
+        "Legacy records with an ambiguous item class are not guessed into a new class; preserve them as drafts until reviewed and assigned.",
+        "Archiving a category preserves existing product/SKU assignments and blocks new assignments; permanent deletion is prohibited; restore re-enables assignment when the parent is active; moving a category moves its subtree and preserves assignments without cycles; archiving is blocked while active children remain.",
+        "Moving a category moves its descendant subtree, preserves product/SKU assignments and cannot create a cycle or cross-organization parent link.",
+        "Read/manage operations have explicit authorization and desktop/mobile-web semantic parity before implementation is considered complete."
+      ],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": ["CAP-ERP-PRODUCT-CATEGORIES"]
+    },
+    {
+      "id": "REQ-ERP-CRM-BOUNDARY",
+      "title": "Reuse CRM ownership for customer relationships",
+      "classification": "PLATFORM_REUSE",
+      "source": "docs/06-product/crm/README.md",
+      "platforms": ["shared"],
+      "acceptance_criteria": [
+        "ERP transactions reference CRM customer/contact identity where applicable and do not create a parallel relationship-history master."
+      ],
+      "evidence_level": "E0_PRESENT",
+      "capability_ids": ["CAP-ERP-CATALOG", "CAP-MIAUCRAFT-SHOPIFY", "CAP-INHAND-COMMERCE"]
+    },
+    {
+      "id": "REQ-MIAUCRAFT-SHOPIFY",
+      "title": "Prioritize a Shopify-connected ERP workflow for MiauCraft",
+      "classification": "REQUIRED_FOLLOW_UP",
+      "source": "docs/implementation/erp/core/discovery.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": [
+        "Shopify remains MiauCraft's public sales platform; initial synchronization scope, source of truth and allowed writes are explicitly approved.",
+        "The approved connector is tenant-scoped, idempotent, observable and recoverable, with evidence for errors and reconciliation."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": ["CAP-MIAUCRAFT-SHOPIFY"]
+    },
+    {
+      "id": "REQ-INHAND-NATIVE-COMMERCE",
+      "title": "Design native LoopDev commerce for Inhand after MiauCraft",
+      "classification": "REQUIRED_FOLLOW_UP",
+      "source": "docs/implementation/erp/core/discovery.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": [
+        "The approved first-release design targets physical products, one warehouse, a LoopDev-owned commerce backend and an external payment provider.",
+        "Order, stock, tax, shipping, returns and storefront operations have explicit lifecycle, permissions and acceptance evidence before implementation starts."
+      ],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": ["CAP-INHAND-COMMERCE"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "CAP-ERP-CATALOG",
+      "name": "ERP Products module (catalog compatibility contract)",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP",
+        "REQ-ERP-CATALOG-FOUNDATION",
+        "REQ-ERP-CRM-BOUNDARY"
+      ],
+      "semantics": {
+        "operations": ["catalog.list", "catalog.manage"],
+        "validation_contract": "src/loopdev/domains/catalog/types.ts",
+        "errors": ["not-found", "conflict", "invalid-scope", "forbidden", "server-error"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "ERP Products administration; canonical route proposed, legacy route current", "route": "/app/erp/products" },
+        "mobile_web": { "required": true, "surface": "Responsive ERP Products administration; canonical route proposed, legacy route current", "route": "/app/erp/products" },
+        "ios": { "required": false, "surface": "planned; owner and decision pending", "route": null },
+        "android": { "required": false, "surface": "planned; owner and decision pending", "route": null }
+      },
+      "parity": { "domain": "partial", "renderer": "partial", "operations": "partial" },
+      "operation_coverage": [
+        { "id": "catalog.list", "desktop_web": "implemented", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "catalog.manage", "desktop_web": "implemented", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["catalog.read", "catalog.write", "catalog.manage"],
+      "contract_refs": [
+        "src/loopdev/domains/catalog/types.ts",
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "supabase/migrations/20260928160000_erp_catalog_foundation.sql"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-ERP-PRODUCT-CATEGORIES",
+      "name": "Hierarchical product category management within Products",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP", "REQ-ERP-CATALOG-FOUNDATION", "REQ-ERP-PRODUCT-CATEGORIES"],
+      "semantics": {
+        "operations": ["catalog.categories.list", "catalog.categories.manage"],
+        "validation_contract": null,
+        "errors": ["forbidden", "invalid-scope", "parent-not-found", "category-conflict", "category-in-use"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "Dedicated Products category-management view; conceptual composition", "route": "/app/erp/products" },
+        "mobile_web": { "required": true, "surface": "Stacked tree and detail within Products; conceptual composition", "route": "/app/erp/products" },
+        "ios": { "required": false, "surface": "planned; owner and decision pending", "route": null },
+        "android": { "required": false, "surface": "planned; owner and decision pending", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "catalog.categories.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "catalog.categories.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["catalog.read", "catalog.manage"],
+      "contract_refs": [
+        "docs/implementation/erp/core/discovery.md",
+        "docs/implementation/erp/core/visual-design.md",
+        "docs/implementation/erp/core/view-state-matrix.md"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-MIAUCRAFT-SHOPIFY",
+      "name": "MiauCraft Shopify channel integration",
+      "classification": "REQUIRED_FOLLOW_UP",
+      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP", "REQ-MIAUCRAFT-SHOPIFY", "REQ-ERP-CRM-BOUNDARY"],
+      "semantics": {
+        "operations": ["channel.connect", "channel.sync_approved_data", "channel.reconcile"],
+        "validation_contract": null,
+        "errors": ["connection-failed", "forbidden", "provider-error", "conflict", "sync-failed"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "ERP channel administration", "route": null },
+        "mobile_web": { "required": true, "surface": "Responsive ERP channel administration", "route": null },
+        "ios": { "required": false, "surface": "planned; owner and decision pending", "route": null },
+        "android": { "required": false, "surface": "planned; owner and decision pending", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "channel.connect", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "channel.sync_approved_data", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "channel.reconcile", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["erp.integration.read", "erp.integration.manage"],
+      "contract_refs": ["packages/contracts/src/"],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-INHAND-COMMERCE",
+      "name": "Inhand native commerce backend and storefront channel",
+      "classification": "REQUIRED_FOLLOW_UP",
+      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP", "REQ-INHAND-NATIVE-COMMERCE", "REQ-ERP-CRM-BOUNDARY"],
+      "semantics": {
+        "operations": ["commerce.order.manage", "inventory.single_warehouse.manage", "payment.coordinate"],
+        "validation_contract": null,
+        "errors": ["validation-error", "forbidden", "conflict", "stock-unavailable", "payment-failed"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "ERP administration and public storefront", "route": null },
+        "mobile_web": { "required": true, "surface": "Responsive ERP administration and public storefront", "route": null },
+        "ios": { "required": false, "surface": "planned; owner and decision pending", "route": null },
+        "android": { "required": false, "surface": "planned; owner and decision pending", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "commerce.order.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "inventory.single_warehouse.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "payment.coordinate", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["erp.orders.read", "erp.orders.manage", "erp.inventory.read", "erp.inventory.manage"],
+      "contract_refs": ["packages/contracts/src/"],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-ERP-SUPPLIERS",
+      "name": "Independent ERP supplier management",
+      "classification": "OPEN_DECISION",
+      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "semantics": {
+        "operations": ["supplier.list", "supplier.manage"],
+        "validation_contract": null,
+        "errors": ["validation-error", "forbidden", "conflict", "not-found"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "ERP supplier workspace; route and release timing open", "route": null },
+        "mobile_web": { "required": true, "surface": "Responsive ERP supplier workspace; route and release timing open", "route": null },
+        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
+        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "supplier.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "supplier.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["erp.suppliers.read", "erp.suppliers.manage"],
+      "contract_refs": ["docs/implementation/erp/core/design.md", "docs/implementation/erp/core/architecture-design.md"],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-ERP-SALES",
+      "name": "Cross-sector sales and order management",
+      "classification": "OPEN_DECISION",
+      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "semantics": {
+        "operations": ["sales.document.list", "sales.document.create", "sales.order.transition"],
+        "validation_contract": null,
+        "errors": ["validation-error", "forbidden", "conflict", "not-found"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "ERP sales workspace", "route": null },
+        "mobile_web": { "required": true, "surface": "Responsive ERP sales workspace", "route": null },
+        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
+        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "sales.document.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "sales.document.create", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "sales.order.transition", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["erp.sales.read", "erp.sales.create", "erp.sales.manage", "erp.sales.approve"],
+      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-ERP-PROCUREMENT",
+      "name": "Cross-sector purchasing and receipts",
+      "classification": "OPEN_DECISION",
+      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "semantics": {
+        "operations": ["procurement.purchase_order.list", "procurement.purchase_order.create", "procurement.receipt.record"],
+        "validation_contract": null,
+        "errors": ["validation-error", "forbidden", "conflict", "supplier-unavailable"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "ERP procurement workspace", "route": null },
+        "mobile_web": { "required": true, "surface": "Responsive ERP procurement workspace", "route": null },
+        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
+        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "procurement.purchase_order.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "procurement.purchase_order.create", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "procurement.receipt.record", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["erp.procurement.read", "erp.procurement.create", "erp.procurement.approve", "erp.inventory.receive"],
+      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-ERP-INVENTORY",
+      "name": "Cross-sector inventory and stock operations",
+      "classification": "OPEN_DECISION",
+      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "semantics": {
+        "operations": ["inventory.stock.read", "inventory.movement.record", "inventory.reservation.manage"],
+        "validation_contract": null,
+        "errors": ["validation-error", "forbidden", "conflict", "stock-unavailable"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "ERP inventory workspace", "route": null },
+        "mobile_web": { "required": true, "surface": "Responsive ERP inventory workspace", "route": null },
+        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
+        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "inventory.stock.read", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "inventory.movement.record", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "inventory.reservation.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["erp.inventory.read", "erp.inventory.adjust", "erp.inventory.reserve"],
+      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-ERP-FINANCE",
+      "name": "Cross-sector billing and finance operations",
+      "classification": "OPEN_DECISION",
+      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "semantics": {
+        "operations": ["finance.invoice.list", "finance.invoice.issue", "finance.payment.reconcile"],
+        "validation_contract": null,
+        "errors": ["validation-error", "forbidden", "conflict", "provider-error"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "ERP finance workspace", "route": null },
+        "mobile_web": { "required": true, "surface": "Responsive ERP finance workspace", "route": null },
+        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
+        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "finance.invoice.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "finance.invoice.issue", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "finance.payment.reconcile", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["erp.finance.read", "erp.finance.issue", "erp.finance.reconcile", "erp.finance.approve"],
+      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "task_ids": []
+    },
+    {
+      "id": "CAP-ERP-REPORTING",
+      "name": "Cross-sector ERP operational reporting",
+      "classification": "OPEN_DECISION",
+      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "semantics": {
+        "operations": ["erp.report.view", "erp.report.export"],
+        "validation_contract": null,
+        "errors": ["forbidden", "report-unavailable", "export-failed"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "ERP reports workspace", "route": null },
+        "mobile_web": { "required": true, "surface": "Responsive ERP reports workspace", "route": null },
+        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
+        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "erp.report.view", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "erp.report.export", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "offline", "pending", "success"],
+      "permissions": ["erp.reports.read", "erp.reports.export"],
+      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "task_ids": []
+    }
+  ],
+  "tasks": [],
+  "change_requests": [
+    {
+      "id": "CR-ERP-SUPPLIERS-SEPARATE",
+      "status": "approved",
+      "removed_requirement_ids": [],
+      "removed_capability_ids": [],
+      "approved_by": "Product owner",
+      "approved_at": "2026-10-24T13:36:44+02:00",
+      "source": "User decision: Suppliers is a standalone ERP module because it can be highly relevant depending on the company; its priority and delivery date remain open. Manufacturing is deferred to future discovery. Recorded in design.md and architecture-design.md."
+    },
+    {
+      "id": "CR-ERP-PRODUCTS-MODULE",
+      "status": "approved",
+      "removed_requirement_ids": [],
+      "removed_capability_ids": [],
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-24T13:42:36+02:00",
+      "source": "User instruction: \"vale pero ajusta todo el flow para cambiar el modulo de catalogo por el de productos\". Products becomes the user-facing ERP module and direct product/service list entry point. Preserve CAP-ERP-CATALOG, current catalog-named data/contracts/permissions and existing route as compatibility evidence. OrganizationCatalog is migration-only, not a target grouping or product-ownership boundary. No production route or data migration is included in this design change."
+    },
+    {
+      "id": "CR-ERP-PRODUCT-MASTER-MODEL",
+      "status": "approved",
+      "removed_requirement_ids": [],
+      "removed_capability_ids": [],
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-24T14:23:14Z",
+      "source": "User-confirmed product decisions in this conversation: one Products master; classes for finished products, raw materials/components and services; semimanufactured items deferred until Manufacturing discovery; item class independent from purchasing, selling and inventory-tracking uses; the category tree is managed within Products and each product has one primary hierarchical category; finished products allow buy/make/both sourcing, raw materials/components are buy-only for now, services have no sourcing, and variants inherit product sourcing; separately managed/sold variants have their own SKU, while other attributes remain descriptive. OrganizationCatalog is migration-only, not a target business entity or product-ownership boundary; commercial price currency is owned by each PriceBook, PriceEntry inherits that currency, and Offer has no independent currency. No production code or runtime data changes are authorized."
+    }
+  ],
+  "blockers": [
+    "The cross-sector SME target is confirmed, but the first-release module set and sequence remain open.",
+    "Supplier management is a separate module, but its functional scope, MiauCraft priority and delivery date remain open.",
+    "Manufacturing is deferred and requires future discovery and product approval.",
+    "Semimanufactured items are deferred until Manufacturing discovery.",
+    "Verify Products documentation/runtime parity and reconcile legacy catalog.write versus catalog.manage before implementation.",
+    "Assign destination-domain ownership for locale and channel fields formerly stored on migration-only OrganizationCatalog.",
+    "Assign an owner and explicit scope decision for iOS and Android before plan approval."
+  ]
+}

@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:05-sync",
+  "phase": "05-sync",
+  "skill": "sync-design",
+  "parent_span_id": "MOD-CORE-20261024-001:04-api",
+  "module": "Core",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 5,
+  "started_at": "2026-10-24T14:52:50.401Z",
+  "completed_at": "2026-10-24T14:55:23.814Z",
+  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": "develop",
+    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
+    "working_tree": "untracked ERP implementation docs; no production code changes",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/domain-model.md",
+    "docs/implementation/erp/core/access-model.md",
+    "docs/implementation/erp/core/api-contracts.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "src/loopdev/domains/catalog/adapter/index.ts",
+    "src/loopdev/domains/catalog/adapter/local.ts",
+    "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "src/loopdev/domains/catalog/data/localCatalog.ts",
+    "src/loopdev/domains/catalog/types.ts",
+    "src/lib/localStore.ts",
+    "src/lib/storage.ts",
+    "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
+    "src/test/catalog/catalog-adapter.test.ts",
+    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/core/sync-model.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/05-sync.md"
+  ],
+  "decisions": [
+    {
+      "id": "SYNC-ERP-001",
+      "status": "confirmed",
+      "summary": "Synthetic organization IDs route to local stores; UUID IDs route to Supabase."
+    },
+    {
+      "id": "SYNC-ERP-002",
+      "status": "confirmed",
+      "summary": "Local catalog mutations persist through browser localStorage with swallowed storage errors; this is not remote synchronization."
+    },
+    {
+      "id": "SYNC-ERP-003",
+      "status": "confirmed",
+      "summary": "Remote Supabase operations do not fall back to local fixtures on failure."
+    },
+    {
+      "id": "SYNC-ERP-004",
+      "status": "confirmed",
+      "summary": "Products has no offline mutation queue or replay."
+    },
+    {
+      "id": "SYNC-ERP-005",
+      "status": "assumed",
+      "summary": "Real remote mutations require online server acknowledgement until queue/version/access semantics are approved."
+    },
+    {
+      "id": "SYNC-ERP-006",
+      "status": "open",
+      "summary": "Offline remote reads from cached authorized snapshots are undefined."
+    },
+    {
+      "id": "SYNC-ERP-007",
+      "status": "confirmed",
+      "summary": "Business state, connectivity, entity sync state and mutation state are separate dimensions."
+    },
+    {
+      "id": "SYNC-ERP-008",
+      "status": "assumed",
+      "summary": "Use idempotency and optimistic versions when approved; do not use last-write-wins."
+    },
+    {
+      "id": "SYNC-ERP-009",
+      "status": "confirmed",
+      "summary": "Demo fixtures are not automatically uploaded or merged into remote organization data."
+    },
+    {
+      "id": "SYNC-ERP-010",
+      "status": "confirmed",
+      "summary": "Shared Platform capabilities retain their own synchronization and persistence boundaries."
+    },
+    {
+      "id": "SYNC-ERP-011",
+      "status": "open",
+      "summary": "Adapter selection by organization ID shape must be replaced by explicit runtime configuration."
+    },
+    {
+      "id": "SYNC-ERP-012",
+      "status": "confirmed",
+      "summary": "Category sync and categoryKey migration wait for approved category identity, scope and lifecycle."
+    }
+  ],
+  "actions": [
+    "Traced the catalog adapter proxy and local/Supabase persistence paths.",
+    "Inspected localStore and storage behavior, including reload persistence and swallowed storage errors.",
+    "Documented independent business, connectivity, entity-sync and mutation states.",
+    "Defined offline operation, idempotent retry, conflict, tenant-change and permission-change policies as proposed contracts.",
+    "Recorded a staged legacy-data reconciliation and rollback plan with no automatic coercion."
+  ],
+  "validation": [
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run validation passed: 104 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed."
+    },
+    {
+      "command": "npm run test:delivery",
+      "result": "passed (27 tests)",
+      "evidence": "Delivery state-machine and evidence tests passed."
+    },
+    {
+      "command": "python3 ERP JSON/SVG/Markdown-link check",
+      "result": "passed",
+      "evidence": "Parsed 9 JSON files and 5 SVG files; all local Markdown links resolve."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "status": "PARTIAL",
+      "evidence": "Local/demo and remote adapter boundaries are documented; adapter mode, persistence errors, mutation queue, versions and migration remain unresolved."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "status": "PARTIAL",
+      "evidence": "Category synchronization is explicitly deferred pending category identity, scope, lifecycle and persistence decisions."
+    },
+    {
+      "id": "REQ-ERP-CRM-BOUNDARY",
+      "status": "PASS",
+      "evidence": "CRM references retain stable catalog_item identity; shared Platform sync boundaries are reused."
+    }
+  ],
+  "evidence": [
+    {
+      "type": "sync-analysis",
+      "path": "docs/implementation/erp/core/sync-model.md",
+      "result": "Documents storage boundaries, state model, offline matrix, retry/conflict policy, migration and tests."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/adapter/index.ts",
+      "result": "Adapter selection is based on UUID-shaped organization IDs; no explicit runtime mode or offline queue exists."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/lib/storage.ts",
+      "result": "localStorage reads fall back silently to seed data and writes ignore storage/quota failures."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/adapter/supabase.ts",
+      "result": "Remote operations are direct and have no version/idempotency fields or local offline fallback."
+    }
+  ],
+  "detected_failure": {
+    "code": "SYNC-001",
+    "detected_by": "sync-design",
+    "summary": "Products has no mutation queue/version/reconciliation contract, and local storage suppresses read/write failures; no reliable local-first production guarantee can be claimed."
+  },
+  "likely_failure_origin": {
+    "phase": "baseline",
+    "skill": "existing catalog adapter and shared localStore/storage implementation",
+    "code": "SYNC-001",
+    "confidence": 9
+  },
+  "next_handoff": "06-plan after open decisions and access blockers are resolved",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

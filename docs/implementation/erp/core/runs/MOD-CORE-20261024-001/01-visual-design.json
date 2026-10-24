@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:01-visual-design",
+  "phase": "01-visual-design",
+  "skill": "module-visual-design",
+  "parent_span_id": null,
+  "module": "Core",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 5,
+  "started_at": "2026-10-24T14:42:11.317Z",
+  "completed_at": "2026-10-24T14:42:11.319Z",
+  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": "develop",
+    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
+    "working_tree": "untracked ERP implementation docs; no production code changes",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/design.md",
+    "docs/implementation/erp/core/architecture-design.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
+    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+    "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+    "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md",
+    "docs/03-platform/frontend/LOOPDEV_GLOBAL_FORMS_PHASE.md",
+    "docs/06-product/crm/CRM_UI_COMPONENT_PROTOCOL.md",
+    "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
+    "src/loopdev/pages/erp/Overview.tsx",
+    "src/loopdev/pages/erp/ProductCatalog.tsx",
+    "src/loopdev/components/crm/contacts/ContactForm.tsx",
+    "src/test/crm/contacts/contacts-form.test.tsx",
+    "src/test/platform/app-drawer.test.tsx",
+    "src/test/catalog/catalog-adapter.test.ts"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/core/visual-design.md",
+    "docs/implementation/erp/core/view-state-matrix.md",
+    "docs/implementation/erp/core/wireframes/erp-overview.svg",
+    "docs/implementation/erp/core/wireframes/erp-products.svg",
+    "docs/implementation/erp/core/wireframes/erp-product-categories.svg",
+    "docs/implementation/erp/core/wireframes/erp-product-form.svg",
+    "docs/implementation/erp/core/wireframes/erp-commercial-detail.svg",
+    "docs/implementation/erp/core/platform-scope.md",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "docs/implementation/erp/core/README.md"
+  ],
+  "decisions": [
+    {
+      "id": "VD-ERP-REUSE-001",
+      "status": "confirmed",
+      "summary": "Use current LoopDev/Rivera light-theme tokens and reusable Platform primitives; do not copy Rivera pages, hand-pick a palette or create parallel primitives."
+    },
+    {
+      "id": "VD-ERP-FONT-001",
+      "status": "confirmed",
+      "summary": "Use official Inter for UI and JetBrains Mono for technical data in the visual source; current Geist/Geist Mono runtime usage is implementation drift to reconcile in Platform."
+    },
+    {
+      "id": "ERP-DEC-004",
+      "status": "confirmed",
+      "summary": "Products is the user-facing ERP module and the direct product/service list entry point; the standalone catalog index is removed from the proposed user flow while legacy IDs/contracts/routes remain compatible."
+    },
+    {
+      "id": "ERP-DEC-005",
+      "status": "confirmed",
+      "summary": "Products uses a single master for finished products, raw materials/components and services; the product base has a general category and each SKU variant has its own category; drafts may omit category but activation requires it; item class is independent of purchase/sale/inventory uses; finished products allow buy/make/both sourcing, raw materials/components are buy-only for now, services have no sourcing, and variants inherit product sourcing; semimanufactured items await Manufacturing discovery."
+    },
+    {
+      "id": "ERP-A-003",
+      "status": "confirmed",
+      "summary": "Each variant/SKU has its own independently assigned category; the approved wireframes do not yet evidence this interaction."
+    },
+    {
+      "id": "VD-ERP-013",
+      "status": "confirmed",
+      "summary": "The Product Owner selected a dedicated responsive category-management view within Products, with visible return navigation and no nested drawers."
+    },
+    {
+      "id": "VD-ERP-SCOPE-001",
+      "status": "confirmed",
+      "summary": "Visual scope is ERP Overview plus Products direct-list, form and detail flows; the first-release module set and sequence remain open."
+    },
+    {
+      "id": "VD-ERP-APPROVAL-001",
+      "status": "confirmed",
+      "summary": "Product Owner approved the full conceptual visual source on 2026-10-24; runtime comparison remains post-implementation."
+    },
+    {
+      "id": "VD-ERP-FORM-001",
+      "status": "open",
+      "summary": "Resolve source/documentation drift for catalog forms and approve the shared form pattern for future ERP form work."
+    },
+    {
+      "id": "VD-ERP-MOBILE-001",
+      "status": "open",
+      "summary": "Approve the mobile item-card composition and resolve native iOS/Android applicability/ownership."
+    }
+  ],
+  "actions": [
+    "Audited current ERP routes and source-backed UI/form primitives against UI and shell references, tests, active tracks, global forms status and the Product Owner-confirmed official typography.",
+    "Created normative visual-design and view/state matrix artifacts with explicit scope, reuse, accessibility and open decisions.",
+    "Applied CR-ERP-PRODUCTS-MODULE: removed the standalone catalog index from the proposed flow, renamed the list/form/detail artifacts and made the unified product/service list the direct entry point.",
+    "Applied CR-ERP-PRODUCT-MASTER-MODEL: revised list, form, detail, state matrix and documentation to show item classes, independent uses, primary categories and product-level sourcing; added an in-module category administration entry point.",
+    "Applied the Product Owner's VD-ERP-013 choice: added a dedicated category-tree management composition for desktop and mobile web, with visible return navigation and no nested drawer.",
+    "Revised all five SVGs to use the exact light HSL token snapshot from src/index.css, the white shared sidebar and selected-route treatment from Sidebar.tsx, current LoopDev navigation labels and borderless SurfaceCard shadows.",
+    "Previewed the revised standalone SVGs in the browser canvas; this is visual artifact review only, not application-runtime evidence.",
+    "Recorded implementation/documentation drift: Geist runtime typography, current catalog form composition, native select, duplicated detail section, read-only drawer mode, nested drawers and Overview fetch states.",
+    "Updated platform scope/evidence and workspace README without changing production code.",
+    "Separated conceptual approval from post-implementation runtime comparison; no application runtime was started."
+  ],
+  "validation": [
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run validation passed: 100 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed."
+    },
+    {
+      "command": "Python inline ERP JSON/SVG/XML/Markdown-link check",
+      "result": "passed",
+      "evidence": "Parsed 5 JSON files and 5 SVG files; all local Markdown links resolve."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "VIS-ERP-001",
+      "status": "PASS",
+      "evidence": "Normative visual-design.md, view-state-matrix.md and five desktop/mobile token-mapped SVGs cover Overview, Products list, dedicated category management, product form and commercial detail. Category management is conceptual and not implemented."
+    },
+    {
+      "id": "VIS-ERP-002",
+      "status": "PASS",
+      "evidence": "Rivera/LoopDev token and primitive inventory is checked against current source, tests and active references; revised SVGs use current light tokens and shell/card treatments."
+    },
+    {
+      "id": "VIS-ERP-003",
+      "status": "PASS",
+      "evidence": "Meaningful view zones have reuse classifications, owner, rationale and source evidence; state/recovery and mobile adaptations are documented."
+    },
+    {
+      "id": "VIS-ERP-004",
+      "status": "PASS",
+      "evidence": "The complete conceptual visual source was explicitly approved by @loopdev-io on 2026-10-24; runtime screenshot comparison is NOT_RUN until implementation."
+    }
+  ],
+  "evidence": [
+    {
+      "type": "source-audit",
+      "path": "docs/implementation/erp/core/visual-design.md",
+      "result": "Current ERP/Platform source, tokens, shell, primitives, tests and documentation are cross-referenced; no production code changed."
+    },
+    {
+      "type": "visual-artifact",
+      "path": "docs/implementation/erp/core/wireframes/",
+      "result": "Five revised SVG wireframes parse as XML, use source-backed light-theme tokens and cover desktop/mobile web compositions; the Products list is the direct entry point and category management is a dedicated view within Products."
+    },
+    {
+      "type": "approval-state",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/run.json",
+      "result": "Visual approval is recorded as approved; no runtime comparison is claimed."
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "SPECIALIZED_ANALYSIS",
+  "approval_gate": {
+    "status": "approved",
+    "approved_by": "@loopdev-io",
+    "approved_at": "2026-10-24T14:42:11.307Z"
+  },
+  "invalidated": false
+}

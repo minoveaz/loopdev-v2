@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:01-design",
+  "phase": "01-design",
+  "skill": "module-design",
+  "parent_span_id": null,
+  "module": "Core",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 4,
+  "started_at": "2026-10-24T14:23:14Z",
+  "completed_at": "2026-10-24T14:29:24Z",
+  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": null,
+    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
+    "working_tree": "untracked ERP implementation docs; no production code changes",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
+    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+    "docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md",
+    "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+    "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md",
+    "docs/03-platform/backend/MULTI_TENANCY_STRATEGY.md",
+    "docs/03-platform/backend/DATABASE_SECURITY_RLS.md",
+    "docs/06-product/ai-platform/document-intelligence-core/DOCUMENT_INTELLIGENCE_CORE_IMPLEMENTATION_HANDOFF.md",
+    "docs/06-product/ai-platform/document-intelligence-core/DOCUMENT_INTELLIGENCE_CORE_UX_SPEC.md",
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "minoveaz/loopdev-v2#36"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/core/README.md",
+    "docs/implementation/erp/core/design.md",
+    "docs/implementation/erp/core/architecture-design.md",
+    "docs/implementation/erp/core/delivery-ledger.json"
+  ],
+  "decisions": [
+    {
+      "id": "ERP-OD-001",
+      "status": "confirmed",
+      "summary": "The ERP target is SMEs across sectors; this is not approval for a full ERP or every candidate module in the first release."
+    },
+    {
+      "id": "ERP-DEC-001",
+      "status": "confirmed",
+      "summary": "Prioritize MiauCraft with Shopify retained as its sales channel; Inhand follows with native LoopDev commerce."
+    },
+    {
+      "id": "ERP-DEC-003",
+      "status": "confirmed",
+      "summary": "Suppliers is a standalone ERP module, separate from Procurement; its priority and delivery date remain open. Manufacturing is deferred to future discovery."
+    },
+    {
+      "id": "ERP-DEC-004",
+      "status": "confirmed",
+      "summary": "Products is the user-facing ERP module and direct product/service list entry point; preserve catalog-named contracts, IDs, permissions and routes as compatibility until separately migrated."
+    },
+    {
+      "id": "ERP-DEC-005",
+      "status": "confirmed",
+      "summary": "Products has one master for finished products, raw materials/components and services; the product base has a general category and each separately managed/sold SKU has its own category; drafts may omit category but activation requires it; item class is independent from purchasing, selling and inventory tracking; finished products allow buy/make/both sourcing, raw materials/components are buy-only for now, services have no sourcing, and variants inherit product sourcing; semimanufactured items await Manufacturing discovery."
+    },
+    {
+      "id": "ERP-A-003",
+      "status": "confirmed",
+      "summary": "The product base has a general category and each variant/SKU has an independently assigned category; only sourcing is inherited from the product."
+    },
+    {
+      "id": "ERP-OD-006",
+      "status": "open",
+      "summary": "First-release module set, operational baseline and sequence need product approval."
+    },
+    {
+      "id": "ERP-OD-002",
+      "status": "open",
+      "summary": "MiauCraft's Shopify data ownership, sync direction and allowed writes require client confirmation."
+    },
+    {
+      "id": "ERP-OD-003",
+      "status": "open",
+      "summary": "Inhand jurisdiction, tax, shipping, returns and stock reservation policies remain open."
+    },
+    {
+      "id": "ERP-OD-005",
+      "status": "open",
+      "summary": "Native iOS/Android applicability and accountable owner remain open."
+    },
+    {
+      "id": "ERP-CF-001",
+      "status": "open",
+      "summary": "Catalog documentation and remote adapter/migration evidence conflict; remote runtime is unverified."
+    },
+    {
+      "id": "ERP-CF-002",
+      "status": "open",
+      "summary": "Local and remote catalog write permission names need canonicalization."
+    }
+  ],
+  "actions": [
+    "Drafted the 15-section cross-sector ERP functional/product design with explicit candidate scope and excluded enterprise capabilities.",
+    "Defined candidate context boundaries, Platform reuse decisions, interaction matrix and route status without claiming proposed paths are implemented.",
+    "Recorded the user-confirmed Suppliers module boundary, kept its release priority open, and deferred Manufacturing to future discovery.",
+    "Applied approved change request CR-ERP-PRODUCTS-MODULE across the design: Products replaces Catalog as the visible module and opens directly to the product/service list; no production route or data migration was made.",
+    "Applied user-approved CR-ERP-PRODUCT-MASTER-MODEL across discovery, design, architecture, ledger and visual scope; the category-inheritance assumption was later resolved by the user in favor of independently assigned SKU categories.",
+    "Recorded provisional lifecycle, entity, API, RBAC and local-first direction for later specialized phases.",
+    "Linked accepted market sources and documented security, multiplatform and platform-reuse dependencies.",
+    "At the design handoff, visual approval and specialized analysis were pending; the conceptual visual gate was approved on 2026-10-24, and specialized phases 02-domain through 05-sync have since completed with open decisions documented."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+    },
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run validation passed: 100 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed."
+    },
+    {
+      "command": "Python inline ERP JSON/SVG/XML/Markdown-link check",
+      "result": "passed",
+      "evidence": "Parsed 5 JSON files and 5 SVG files; all local Markdown links resolve."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-BOUNDARY-MAP",
+      "status": "PARTIAL",
+      "evidence": "Design records Suppliers as an independent ERP context and Manufacturing as deferred; first-release modules, supplier scope and sequence remain open."
+    },
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "status": "PARTIAL",
+      "evidence": "Products is the visible foundation; REQ-ERP-CATALOG-FOUNDATION and CAP-ERP-CATALOG retain stable IDs; the user-confirmed master model is documented as conceptual only, while legacy contracts remain compatible and remote-runtime/permission mismatches still block implementation expansion."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "status": "PARTIAL",
+      "evidence": "Category management is included within Products as an approved requirement; current categoryKey is not a hierarchical category contract, and desktop/mobile operations remain unimplemented."
+    },
+    {
+      "id": "REQ-MIAUCRAFT-SHOPIFY",
+      "status": "PARTIAL",
+      "evidence": "MiauCraft is prioritized and Shopify remains its channel; client field ownership and sync operations remain open."
+    },
+    {
+      "id": "REQ-INHAND-NATIVE-COMMERCE",
+      "status": "PARTIAL",
+      "evidence": "Inhand remains a later native-commerce case; jurisdiction and operational policies remain open."
+    }
+  ],
+  "evidence": [
+    "Design references and classifications are recorded in docs/implementation/erp/core/design.md.",
+    "Architecture boundaries and residual debt are recorded in docs/implementation/erp/core/architecture-design.md.",
+    "The user-confirmed supplier boundary and manufacturing deferral are captured in CR-ERP-SUPPLIERS-SEPARATE; Products naming/direct-list flow and the approved item master model are captured in CR-ERP-PRODUCTS-MODULE and CR-ERP-PRODUCT-MASTER-MODEL.",
+    "Official market source URLs are preserved in design.md and discovery.md."
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "01-visual-design: review the Products direct-list and confirmed item-master flows; keep specialized analysis and module-plan gated until explicit conceptual visual approval.",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

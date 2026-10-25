@@ -33,7 +33,7 @@
     "validate:mobile-boundaries": "node scripts/validate-mobile-boundaries.mjs",
     "report:module-runs": "node scripts/report-module-runs.mjs",
     "validate:contracts": "node scripts/validate-capability-contracts.mjs",
-    "test:delivery": "node --test scripts/test/delivery-state-machine.test.mjs scripts/test/delivery-evidence.test.mjs",
+    "test:delivery": "node --test scripts/test/delivery-state-machine.test.mjs scripts/test/delivery-evidence.test.mjs scripts/test/module-run-validation.test.mjs",
     "test:multiplatform-contracts": "vitest run src/test/crm/contacts/multiplatform-port.test.ts",
     "delivery": "node scripts/delivery-run.mjs",
     "delivery:init": "node scripts/delivery-run.mjs init",

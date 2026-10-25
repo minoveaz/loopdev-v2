@@ -10,6 +10,8 @@ const option = (name, fallback = null) => {
   const index = args.indexOf(`--${name}`);
   return index >= 0 ? args[index + 1] ?? fallback : fallback;
 };
+const optionValues = (name) => args.flatMap((argument, index) =>
+  argument === `--${name}` && args[index + 1] ? [args[index + 1]] : []);
 const moduleName = option("module");
 const suite = option("suite");
 const runId = option("run");
@@ -46,7 +48,12 @@ try {
   } else if (command === "handoff") {
     print(machine.handoff({ ...context(), from: option("from"), to: option("to"), owner: option("owner", "delivery") }));
   } else if (command === "resume") {
-    print(machine.resume({ ...context(), reason: option("reason") }));
+    const resolveBlockers = optionValues("resolve-blocker");
+    print(machine.resume({
+      ...context(),
+      reason: option("reason"),
+      resolveBlockers: resolveBlockers.length ? resolveBlockers : null,
+    }));
   } else {
     const script = command === "validate" ? "validate-module-runs.mjs" : "report-module-runs.mjs";
     const result = spawnSync(process.execPath, [join(root, "scripts", script)], { stdio: "inherit" });

@@ -59,19 +59,29 @@
   <text x="650" y="354" class="tiny muted">Dimensiones</text><text x="770" y="354" class="small">32 × 18 × 8 cm</text>
   <text x="650" y="382" class="tiny muted">Material</text><text x="770" y="382" class="small">Nylon</text>
   <text x="650" y="410" class="tiny muted">Descripción</text><text x="770" y="410" class="small">Arnés ajustable</text>
-  <rect x="250" y="457" width="770" height="120" rx="12" class="card"/>
+  <rect x="250" y="457" width="365" height="153" rx="12" class="card"/>
   <text x="270" y="485" class="tiny" fill="var(--primary)" font-weight="700">COSTE DE COMPRA DE REFERENCIA</text>
-  <text x="270" y="516" font-size="18" font-weight="700">Visible solo con permiso de coste</text>
-  <text x="270" y="542" class="small">Los SKUs gestionan su propio importe; no representa valoración contable ni margen.</text>
-  <text x="270" y="564" class="tiny muted">Ejemplo: 2 SKUs · 8,20 EUR y 9,10 EUR por unidad</text>
-  <rect x="250" y="592" width="770" height="232" rx="12" class="card"/>
-  <text x="270" y="620" class="tiny" fill="var(--primary)" font-weight="700">SKUs</text>
-  <text x="270" y="650" class="small" font-weight="700">SKU</text><text x="470" y="650" class="small" font-weight="700">Categoría propia</text><text x="700" y="650" class="small" font-weight="700">Datos físicos</text><text x="908" y="650" class="small" font-weight="700">Estado</text>
-  <line x1="270" y1="660" x2="1000" y2="660" stroke="var(--border)"/>
-  <text x="270" y="691" class="small mono">MC-ARN-042-AZ</text><text x="470" y="691" class="small">Arneses / Trail</text><text x="700" y="691" class="small">0,82 kg</text><text x="908" y="691" class="small">Active</text>
-  <line x1="270" y1="706" x2="1000" y2="706" stroke="var(--border)"/>
-  <text x="270" y="738" class="small mono">MC-ARN-042-RO</text><text x="470" y="738" class="small">Arneses / Trail</text><text x="700" y="738" class="small">0,82 kg</text><text x="908" y="738" class="small">Draft</text>
-  <text x="270" y="790" class="small" fill="var(--primary)" font-weight="600">Ver todos los SKUs  →</text>
+  <text x="270" y="516" class="small" font-weight="700">8,20 EUR / unidad</text>
+  <text x="270" y="542" class="tiny">Lectura: catalog.cost.read</text>
+  <text x="270" y="561" class="tiny">Edición: catalog.cost.manage</text>
+  <text x="270" y="585" class="tiny muted">No contable · sin margen</text>
+  <rect x="630" y="457" width="390" height="153" rx="12" class="card"/>
+  <text x="650" y="485" class="tiny" fill="var(--primary)" font-weight="700">IMÁGENES DEL PRODUCTO</text>
+  <rect x="650" y="497" width="186" height="96" rx="8" fill="var(--card-muted)"/>
+  <path d="M674 583 L709 532 L735 561 L756 540 L812 583 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="785" cy="520" r="9" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="856" y="507" width="144" height="36" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="877" y="530" class="tiny" font-weight="600">Abrir galería</text>
+  <text x="856" y="565" class="tiny muted">2 imágenes · Producto base</text>
+  <text x="856" y="586" class="tiny muted">Carrusel · proporción original</text>
+  <rect x="250" y="625" width="770" height="199" rx="12" class="card"/>
+  <text x="270" y="653" class="tiny" fill="var(--primary)" font-weight="700">SKUs</text>
+  <text x="270" y="681" class="small" font-weight="700">SKU</text><text x="470" y="681" class="small" font-weight="700">Categoría propia</text><text x="700" y="681" class="small" font-weight="700">Datos físicos</text><text x="908" y="681" class="small" font-weight="700">Estado</text>
+  <line x1="270" y1="691" x2="1000" y2="691" stroke="var(--border)"/>
+  <text x="270" y="722" class="small mono">MC-ARN-042-AZ</text><text x="470" y="722" class="small">Arneses / Trail</text><text x="700" y="722" class="small">0,82 kg</text><text x="908" y="722" class="small">Active</text>
+  <line x1="270" y1="737" x2="1000" y2="737" stroke="var(--border)"/>
+  <text x="270" y="769" class="small mono">MC-ARN-042-RO</text><text x="470" y="769" class="small">Arneses / Trail</text><text x="700" y="769" class="small">0,82 kg</text><text x="908" y="769" class="small">Draft</text>
+  <text x="270" y="804" class="small" fill="var(--primary)" font-weight="600">Ver todos los SKUs  →</text>
   <rect x="1168" y="100" width="390" height="850" rx="24" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
   <text x="1190" y="136" class="small" font-weight="700">‹  Productos</text>
   <text x="1190" y="177" class="tiny muted">PRODUCTO TERMINADO · ACTIVE</text>
@@ -87,14 +97,23 @@
   <text x="1206" y="406" class="small">0,80 kg</text><text x="1206" y="432" class="small">32 × 18 × 8 cm</text><text x="1206" y="458" class="tiny muted">Nylon</text>
   <rect x="1190" y="490" width="346" height="124" rx="10" class="card"/>
   <text x="1206" y="517" class="tiny" fill="var(--primary)" font-weight="700">COSTE DE COMPRA DE REFERENCIA</text>
-  <text x="1206" y="547" class="small" font-weight="700">Visible solo con permiso</text>
-  <text x="1206" y="573" class="tiny muted">Coste no contable · sin margen</text>
-  <text x="1206" y="598" class="tiny">2 SKUs · coste individual por SKU</text>
+  <text x="1206" y="547" class="small" font-weight="700">8,20 EUR / unidad</text>
+  <text x="1206" y="573" class="tiny muted">Lectura: catalog.cost.read</text>
+  <text x="1206" y="594" class="tiny muted">Edición: catalog.cost.manage</text>
   <rect x="1190" y="628" width="346" height="174" rx="10" class="card"/>
-  <text x="1206" y="655" class="tiny" fill="var(--primary)" font-weight="700">SKUs (2)</text>
-  <text x="1206" y="684" class="small mono">MC-ARN-042-AZ</text><text x="1206" y="704" class="tiny muted">Categoría propia · Active</text>
-  <line x1="1206" y1="718" x2="1520" y2="718" stroke="var(--border)"/>
-  <text x="1206" y="746" class="small mono">MC-ARN-042-RO</text><text x="1206" y="766" class="tiny muted">Categoría propia · Draft</text>
-  <text x="1206" y="790" class="tiny" fill="var(--primary)" font-weight="700">Ver todos los SKUs →</text>
+  <text x="1206" y="655" class="tiny" fill="var(--primary)" font-weight="700">IMÁGENES DEL PRODUCTO</text>
+  <rect x="1206" y="669" width="154" height="101" rx="8" fill="var(--card-muted)"/>
+  <path d="M1226 760 L1259 713 L1281 738 L1303 718 L1340 760 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="1318" cy="700" r="8" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="1374" y="680" width="146" height="36" rx="8" class="card"/>
+  <text x="1393" y="703" class="tiny" font-weight="600">Abrir galería</text>
+  <text x="1374" y="741" class="tiny muted">2 imágenes</text>
+  <text x="1374" y="761" class="tiny muted">Carrusel</text>
+  <rect x="1190" y="814" width="346" height="124" rx="10" class="card"/>
+  <text x="1206" y="838" class="tiny" fill="var(--primary)" font-weight="700">SKUs (2)</text>
+  <text x="1206" y="865" class="tiny mono">MC-ARN-042-AZ · Active</text>
+  <line x1="1206" y1="877" x2="1520" y2="877" stroke="var(--border)"/>
+  <text x="1206" y="899" class="tiny mono">MC-ARN-042-RO · Draft</text>
+  <text x="1206" y="923" class="tiny" fill="var(--primary)" font-weight="700">Ver todos los SKUs →</text>
   <text x="30" y="981" class="tiny muted" font-weight="700" letter-spacing="1.2">MOBILE WEB · SECCIONES APILADAS · COSTE OCULTO SIN PERMISO</text>
 </svg>

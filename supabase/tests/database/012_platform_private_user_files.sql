@@ -1,6 +1,6 @@
 begin;
 
-select plan(16);
+select plan(19);
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at)
 values
@@ -11,7 +11,9 @@ insert into public.organizations (id, name, slug)
 values ('00000000-0000-4000-8000-000000000003', 'Private Files Org', 'private-files-org');
 
 insert into public.organization_memberships (organization_id, user_id, role)
-values ('00000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000001', 'owner');
+values
+  ('00000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000001', 'owner'),
+  ('00000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000002', 'viewer');
 
 select is(
   (select is_nullable from information_schema.columns where table_schema = 'public' and table_name = 'platform_files' and column_name = 'organization_id'),
@@ -179,6 +181,45 @@ select lives_ok($$
     'private-avatar-org-continuity'
   )
 $$, 'organization members retain existing Files storage access');
+
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000002', true);
+
+select throws_ok($$
+  insert into storage.objects (bucket_id, name, owner, owner_id, metadata, version)
+  values (
+    'platform-files',
+    'organizations/00000000-0000-4000-8000-000000000003/00000000-0000-4000-8000-000000000002/00000000-0000-4000-8000-000000000008/unauthorized.pdf',
+    '00000000-0000-4000-8000-000000000002',
+    '00000000-0000-4000-8000-000000000002',
+    '{"mimetype":"application/pdf"}'::jsonb,
+    'private-files-viewer-insert'
+  )
+$$, 'new row violates row-level security policy for table "objects"', 'viewer cannot upload a legacy organization file');
+
+with updated as (
+  update storage.objects
+  set metadata = '{"mimetype":"application/pdf","changed_by":"viewer"}'::jsonb
+  where bucket_id = 'platform-files'
+    and name = 'organizations/00000000-0000-4000-8000-000000000003/00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000007/organization.pdf'
+  returning 1
+)
+select is((select count(*)::integer from updated), 0, 'viewer cannot update a legacy organization file');
+
+select ok(
+  exists (
+    select 1
+    from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'platform_files_storage_delete'
+      and qual like '%<>%product-media%'
+      and qual not like '%catalog.write%'
+      and qual like '%has_organization_role%'
+      and qual like '%platform_file_user_id%'
+      and qual not like '%is_organization_member%'
+  ),
+  'authenticated delete policy excludes product media and preserves Platform Files role/user checks'
+);
 
 select is(
   (select count(*)::integer from public.platform_files where organization_id = '00000000-0000-4000-8000-000000000003'),

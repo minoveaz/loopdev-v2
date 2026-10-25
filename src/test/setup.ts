@@ -1,4 +1,8 @@
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
+
+// Test runs explicitly use isolated local demo data unless a test overrides it.
+vi.stubEnv("VITE_CATALOG_ADAPTER_MODE", "local_demo");
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,

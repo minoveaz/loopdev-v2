@@ -60,10 +60,10 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
   const scopedTaskIds = Array.isArray(selectedTaskIds) ? [...new Set(selectedTaskIds)] : null;
   const taskScopedRun = ledger.task_scoped_approvals === true && ledger.status !== "approved" && Boolean(scopedTaskIds?.length);
   const requiresDiscoveryScope = ["discovery", "design", "plan"].includes(stage) || ledger.status === "approved";
-  const requiresPlan = (stage === "plan" || ledger.status === "approved") && !taskScopedRun;
+  const requiresPlanTasks = (stage === "plan" || ledger.status === "approved") && !taskScopedRun;
   const requirements = requireArray(errors, ledger.requirements, "requirements", { nonEmpty: requiresDiscoveryScope });
   const capabilities = requireArray(errors, ledger.capabilities, "capabilities", { nonEmpty: requiresDiscoveryScope });
-  const tasks = requireArray(errors, ledger.tasks, "tasks", { nonEmpty: requiresPlan });
+  const tasks = requireArray(errors, ledger.tasks, "tasks", { nonEmpty: requiresPlanTasks });
   const scopedTasks = scopedTaskIds?.map((taskId) => tasks.find((task) => task.id === taskId)).filter(Boolean) ?? [];
   const changeRequests = requireArray(errors, ledger.change_requests, "change_requests", { nonEmpty: false });
   const blockers = requireArray(errors, ledger.blockers, "blockers", { nonEmpty: false });
@@ -133,6 +133,9 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
     const operationCoverage = requireArray(errors, capability.operation_coverage, `${label}.operation_coverage`);
     const coverageById = new Map(operationCoverage.map((coverage) => [coverage?.id, coverage]));
     const capabilityScopedTasks = taskScopedRun ? scopedTasks.filter((task) => task.capability_ids?.includes(capability.id)) : [];
+    const requiresCapabilityPlan = taskScopedRun
+      ? capabilityScopedTasks.length > 0
+      : requiresPlanTasks && capability.classification === "REQUIRED_MVP";
     const operationsToValidate = taskScopedRun
       ? operations.filter((operation) => capabilityScopedTasks.some((task) => task.operation_ids?.includes(operation)))
       : operations;
@@ -148,7 +151,8 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
         if (status === "adapted" && !coverage.adaptation_ref) errors.push(`${label} operation ${operation} adapted on ${platform} requires adaptation_ref`);
         const scopedPlatform = !taskScopedRun || capabilityScopedTasks.some((task) =>
           task.operation_ids?.includes(operation) && task.platforms?.includes(platform));
-        const platformRequired = capability.platforms?.[platform]?.required && scopedPlatform;
+        const inApprovedScope = taskScopedRun || capability.classification === "REQUIRED_MVP";
+        const platformRequired = inApprovedScope && capability.platforms?.[platform]?.required && scopedPlatform;
         if ((stage === "plan" || ledger.status === "approved") && platformRequired && status === "not_applicable") {
           errors.push(`${label} operation ${operation} cannot be not_applicable on required platform ${platform}`);
         }
@@ -165,13 +169,13 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
       }
     }
     for (const coverage of operationCoverage) if (!operations.includes(coverage?.id)) errors.push(`${label} coverage references unknown operation ${coverage?.id ?? "missing"}`);
-    const taskIds = requireArray(errors, capability.task_ids, `${label}.task_ids`, { nonEmpty: requiresPlan });
+    const taskIds = requireArray(errors, capability.task_ids, `${label}.task_ids`, { nonEmpty: requiresCapabilityPlan });
     for (const taskId of taskIds) {
       const task = taskById.get(taskId);
       if (!task) errors.push(`${label} references unknown task ${taskId}`);
       else if (!task.capability_ids?.includes(capability.id)) errors.push(`${label} -> ${taskId} is not reciprocal`);
     }
-    if (requiresPlan) for (const platform of ["desktop_web", "mobile_web", "ios", "android"].filter((value) => capability.platforms?.[value]?.required)) {
+    if (requiresCapabilityPlan) for (const platform of ["desktop_web", "mobile_web", "ios", "android"].filter((value) => capability.platforms?.[value]?.required)) {
       if (!taskIds.some((taskId) => taskById.get(taskId)?.platforms?.includes(platform))) errors.push(`${label} has no task for required platform ${platform}`);
     }
   }

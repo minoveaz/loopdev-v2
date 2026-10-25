@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Products — galería de medios desktop</title>
+  <desc id="desc">Ficha de producto con galería integrada y diálogo contextual para reutilizar una imagen de la organización. El diálogo conserva el original y muestra el flujo de derivados de 1600 y 400 píxeles.</desc>
+  <defs>
+    <style>
+      :root {
+        --background: hsl(220 30% 98.8%);
+        --foreground: hsl(222 32% 11%);
+        --card: hsl(0 0% 100%);
+        --muted: hsl(220 20% 96%);
+        --primary: hsl(234 80% 58%);
+        --muted-foreground: hsl(222 12% 46%);
+        --border: hsl(220 22% 92%);
+        --border-strong: hsl(220 20% 85%);
+      }
+      text { font-family: Inter, Arial, sans-serif; fill: var(--foreground); }
+      .small { font-size: 13px; }
+      .tiny { font-size: 11px; }
+      .muted { fill: var(--muted-foreground); }
+      .mono { font-family: "JetBrains Mono", monospace; }
+      .primary { fill: var(--primary); }
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="var(--background)"/>
+  <text x="28" y="38" font-size="18" font-weight="700">Productos · galería de medios · VIS-ERP-MEDIA-01</text>
+  <text x="28" y="59" class="small muted">Selector contextual “Usar existente” dentro de la ficha; sin ruta independiente de biblioteca</text>
+
+  <rect x="48" y="92" width="1504" height="860" rx="16" fill="var(--card)" stroke="var(--border-strong)"/>
+  <rect x="49" y="93" width="204" height="858" rx="15" fill="var(--card)" stroke="var(--border)"/>
+  <text x="72" y="132" font-size="17" font-weight="700">LoopDev</text>
+  <text x="72" y="174" class="tiny muted" letter-spacing="1">SUITES</text>
+  <rect x="64" y="188" width="172" height="34" rx="8" fill="var(--muted)"/>
+  <text x="82" y="210" class="small" font-weight="600">ERP · Productos</text>
+
+  <text x="282" y="136" class="tiny muted">ERP / PRODUCTOS / ARNÉS TRAIL</text>
+  <text x="282" y="174" font-size="23" font-weight="700">Arnés Trail</text>
+  <text x="282" y="198" class="small muted"><tspan class="mono">PRD-00042</tspan> · Ficha del producto</text>
+  <line x1="282" y1="220" x2="1518" y2="220" stroke="var(--border)"/>
+  <text x="282" y="255" class="small" fill="var(--primary)" font-weight="700">Resumen</text>
+  <text x="366" y="255" class="small muted">SKUs (2)</text>
+  <text x="436" y="255" class="small muted">Ofertas y precios</text>
+  <text x="282" y="304" font-size="18" font-weight="700">Imágenes del producto</text>
+  <text x="282" y="328" class="small muted">Organiza imágenes para este producto y sus SKUs.</text>
+  <rect x="282" y="350" width="310" height="40" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="299" y="376" class="small">Destino: Producto base  ▾</text>
+  <rect x="1278" y="350" width="112" height="40" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="1303" y="376" class="small" font-weight="600">Usar existente</text>
+  <rect x="1400" y="350" width="118" height="40" rx="8" class="primary"/>
+  <text x="1430" y="376" class="small" fill="white" font-weight="700">Subir</text>
+
+  <rect x="282" y="410" width="274" height="278" rx="12" fill="var(--card)" stroke="var(--border)"/>
+  <rect x="298" y="426" width="242" height="142" rx="8" fill="var(--muted)"/>
+  <path d="M365 545 L412 474 L448 517 L476 488 L520 545 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="468" cy="457" r="12" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="298" y="594" class="small" font-weight="600">arnes-trail-azul.jpg</text>
+  <text x="298" y="617" class="tiny muted">Producto base · JPG original</text>
+  <text x="298" y="642" class="tiny muted">Alt text: Arnés azul visto de frente</text>
+  <text x="298" y="667" class="tiny" fill="var(--primary)" font-weight="600">Editar alt text</text>
+
+  <rect x="574" y="410" width="274" height="278" rx="12" fill="var(--card)" stroke="var(--border)"/>
+  <rect x="590" y="426" width="242" height="142" rx="8" fill="var(--muted)"/>
+  <path d="M655 545 L703 477 L739 521 L765 492 L812 545 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="756" cy="457" r="12" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="590" y="594" class="small" font-weight="600">arnes-trail-detalle.png</text>
+  <text x="590" y="617" class="tiny muted">SKU azul · PNG original</text>
+  <text x="590" y="642" class="tiny muted">Alt text: Hebilla de seguridad</text>
+  <text x="590" y="667" class="tiny" fill="var(--primary)" font-weight="600">Editar alt text</text>
+
+  <rect x="282" y="710" width="566" height="100" rx="10" fill="var(--muted)"/>
+  <text x="302" y="739" class="small" font-weight="700">Procesamiento de imágenes</text>
+  <text x="302" y="763" class="tiny">Original conservado · optimizada ≤1600 px · miniatura 400 px</text>
+  <text x="302" y="786" class="tiny muted">Proporción preservada · sin recorte · estado por archivo</text>
+
+  <rect x="48" y="92" width="1504" height="860" rx="16" fill="#111827" opacity=".42"/>
+  <rect x="610" y="166" width="780" height="700" rx="14" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="642" y="207" font-size="20" font-weight="700">Usar imagen existente</text>
+  <text x="642" y="232" class="small muted">Organización actual · se asignará a Arnés Trail / Producto base</text>
+  <line x1="642" y1="251" x2="1358" y2="251" stroke="var(--border)"/>
+  <rect x="642" y="270" width="460" height="42" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="660" y="297" class="small muted">Buscar por nombre o etiqueta</text>
+  <rect x="1114" y="270" width="244" height="42" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="1130" y="297" class="small">Tipo: Imágenes  ▾</text>
+
+  <rect x="642" y="332" width="220" height="210" rx="10" fill="var(--card)" stroke="var(--primary)" stroke-width="2"/>
+  <rect x="654" y="344" width="196" height="112" rx="7" fill="var(--muted)"/>
+  <path d="M690 444 L728 389 L756 423 L779 398 L815 444 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="779" cy="372" r="9" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="654" y="466" width="20" height="20" rx="4" class="primary"/>
+  <text x="660" y="481" class="tiny" fill="white" font-weight="700">✓</text>
+  <text x="682" y="481" class="tiny" font-weight="700">Seleccionada</text>
+  <text x="654" y="510" class="tiny" font-weight="600">campana-azul.webp</text>
+  <text x="654" y="528" class="tiny muted">WebP · 1.2 MB · 1600 px</text>
+
+  <rect x="878" y="332" width="220" height="210" rx="10" fill="var(--card)" stroke="var(--border)"/>
+  <rect x="890" y="344" width="196" height="112" rx="7" fill="var(--muted)"/>
+  <path d="M926 444 L964 389 L992 423 L1015 398 L1051 444 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="1015" cy="372" r="9" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="890" y="466" width="20" height="20" rx="4" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="918" y="481" class="tiny">Seleccionar</text>
+  <text x="890" y="510" class="tiny" font-weight="600">arnes-rojo.jpg</text>
+  <text x="890" y="528" class="tiny muted">JPG · 2.8 MB · original</text>
+
+  <rect x="1114" y="332" width="220" height="210" rx="10" fill="var(--card)" stroke="var(--border)"/>
+  <rect x="1126" y="344" width="196" height="112" rx="7" fill="var(--muted)"/>
+  <path d="M1162 444 L1200 389 L1228 423 L1251 398 L1287 444 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="1251" cy="372" r="9" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="1126" y="466" width="20" height="20" rx="4" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="1154" y="481" class="tiny">Seleccionar</text>
+  <text x="1126" y="510" class="tiny" font-weight="600">producto-lifestyle.png</text>
+  <text x="1126" y="528" class="tiny muted">PNG · 4.1 MB · original</text>
+
+  <rect x="642" y="570" width="716" height="86" rx="9" fill="var(--muted)"/>
+  <text x="662" y="598" class="small" font-weight="700">Se conserva el original</text>
+  <text x="662" y="620" class="tiny">LoopDev prepara una versión optimizada de hasta 1600 px y una miniatura de 400 px,</text>
+  <text x="662" y="639" class="tiny">manteniendo proporción y sin recorte. El procesamiento se confirma antes de usar derivados.</text>
+  <text x="642" y="687" class="small" font-weight="600">1 imagen seleccionada</text>
+  <rect x="1106" y="808" width="110" height="40" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="1137" y="834" class="small" font-weight="600">Cancelar</text>
+  <rect x="1228" y="808" width="130" height="40" rx="8" class="primary"/>
+  <text x="1250" y="834" class="small" fill="white" font-weight="700">Añadir a ficha</text>
+</svg>

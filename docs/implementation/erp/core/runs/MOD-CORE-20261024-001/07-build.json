@@ -1,0 +1,394 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:07-build",
+  "phase": "07-build",
+  "skill": "module-build",
+  "parent_span_id": null,
+  "module": "core",
+  "status": "blocked",
+  "decision_status": "open",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 9,
+  "started_at": "2026-10-25T13:02:25.056Z",
+  "completed_at": null,
+  "input_fingerprint": "sha256:7ce9b44cad626b5de49d65607db36c3b312eef926b64d1bd3251bb38de4fd4fa",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": "develop",
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified pre-existing ERP planning, contracts, run trace, migrations and delivery-validator/tests plus ADAPTER-MODE-001 Catalog adapter/storage changes and evidence updates.",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080,
+    "serving_process": "Vite dev server (node PID 32300)"
+  },
+  "input_artifacts": [],
+  "output_artifacts": [
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
+    "docs/implementation/erp/core/README.md",
+    "supabase/migrations/20261025100000_erp_product_media_library.sql",
+    "supabase/tests/database/012_platform_private_user_files.sql",
+    "src/loopdev/domains/catalog/adapter/index.ts",
+    "src/loopdev/domains/catalog/data/localCatalog.ts",
+    "src/lib/localStore.ts",
+    "src/lib/storage.ts",
+    "src/vite-env.d.ts",
+    "src/test/setup.ts",
+    "src/test/catalog/catalog-adapter.test.ts",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md"
+  ],
+  "decisions": [
+    {
+      "id": "BUILD-PLATFORM-FILES-001",
+      "status": "confirmed",
+      "summary": "The Product Owner explicitly approved extending the shared Platform Files contract for the product gallery. Products will consume the shared Files capability; this approval clears only the Files-contract decision and does not authorize Product data writes/migrations or bypass the remaining security/RLS/data gates."
+    },
+    {
+      "id": "BUILD-PLATFORM-AUDIT-001",
+      "status": "confirmed",
+      "summary": "The authorized Platform/DB owner @loopdev-io approved an append-only Products audit event using the existing Platform event envelope, allowlisted metadata (changed field names, version, correlation ID and reason code), no field values/sensitive data, same-transaction persistence with mutation rollback on audit failure, six months active retention, and restricted archive only for documented exceptions. This approves semantics only; Platform implementation, retention enforcement, atomicity tests and all remote Products writes remain gated."
+    },
+    {
+      "id": "BUILD-WRITE-CONTROL-001",
+      "status": "confirmed",
+      "summary": "The authorized Platform/DB owner @loopdev-io approved a database-enforced global and per-organization Products write control, default false, checked by every mutation, changed only by Platform/DB owner and audited. This is design approval only; no control or migration was implemented."
+    },
+    {
+      "id": "BUILD-MIGRATION-RECOVERY-001",
+      "status": "confirmed",
+      "summary": "The authorized Platform/DB owner @loopdev-io approved an immutable pre-cutover snapshot and forward-only recovery: disable writes/read-only on failure, repair forward without deleting post-cutover writes, and restore the snapshot only before post-cutover mutations or after reconciliation."
+    }
+  ],
+  "actions": [
+    "Completed AUDIT-ENV-001: recorded repository/checkout, branch/base/HEAD, modified working tree, Vite listener and route response classification. The route returns the Vite SPA HTML shell with HTTP 200; authentication, route permissions and product operations were not verified.",
+    "Completed AUDIT-REUSE-001: shared shell/UI, Notes, Tasks, Activity and Relations are reusable; Document Intelligence is reusable only for its separate document workflows, not product-image processing. Generic Files UI/types/local adapter exist, but no approved organization-scoped remote Files adapter/association contract is implemented. The existing product-media Supabase adapter directly manages Storage, platform_files and erp_product_media_* tables, bypassing the generic Files adapter. Product Owner later approved extending the shared Files contract; the adapter still must be replaced before media feature work proceeds.",
+    "Completed AUDIT-LEGACY-001: preserve organization-scoped catalog item IDs/keys/SKUs, variants, offers/price books, CRM references and old deep links during migration; keep the user-facing Products route canonical; treat OrganizationCatalog as migration provenance only per approved decision. Current persistence has UUID-organization Supabase paths and non-UUID local-demo fallback; runtime mode/auth remains unverified.",
+    "Recorded the Product Owner's explicit approval to extend the shared Platform Files contract for the product gallery; resolved only the matching Files boundary blocker. The existing module-specific product-media adapter remains to be replaced; no Product data write or media feature implementation has started.",
+    "Rebased the legacy scope fingerprint to the normalized fingerprint that excludes task execution metadata; no approved requirement/task definitions changed. Resumed attempt 9 with no invalidated phases or approvals, preserving prior checkpoint actions, validations and evidence.",
+    "Updated delivery resume/start-phase logic to resolve only selected blockers and preserve existing checkpoint evidence; npm run test:delivery passed (34 tests).",
+    "Retried the required local migration lint against the configured Docker Supabase database; it passed with no schema errors. No remote database writes or migrations were run in this continuation.",
+    "The authorized Platform/DB owner approved the shared Products audit semantics and six-month active retention baseline. This clears the owner/contract decision only; the implementation and atomicity evidence remain behind AUDIT-SECURITY-001.",
+    "The authorized Platform/DB owner approved a DB-enforced global/per-organization write kill switch (default false) and snapshot/forward-only recovery without deleting post-cutover writes. These are design approvals only; implementation remains gated by the security and deployed-state tasks.",
+    "Re-ran the focused product identifier adapter/component tests (26 passed), application typecheck, production build and i18n check; all passed.",
+    "Audited the real local desktop Products route after the user signed in directly in the browser: canonical route renders products; legacy route redirects to canonical; Overview navigation, browser back and refresh work; the unauthenticated route redirects to login. At a 440x775 viewport the desktop renderer remains usable. Source audit found mobile has no canonical Products route and falls through to the generic workspace screen.",
+    "Completed AUDIT-ARCH-001 by comparing the Products presentation, adapters, Files boundary, capability contract and deployed policy shape with the architecture contract. Recorded existing transition debt; no new exception or production-code change was approved.",
+    "Completed AUDIT-RESP-001 by assigning current and authoritative owners for presentation, application, domain, contracts, persistence, authorization, Files, synchronization and mutation audit; documented cohesion, coupling and duplication findings with ledger remediation seams.",
+    "Performed AUDIT-REFACTOR-001 impact and recovery review: affected routes, identifier/CRM/media adapters and consumers are recorded with current regression evidence. The approved design leaves exact migration recovery and executable write-kill-switch mechanisms open, so this task remains blocked and no migration/runtime behavior was changed.",
+    "Completed the read-only AUDIT-SECURITY-001 review. It found that the new Storage write policies broadened non-product Platform Files paths from owner/admin/agent (plus matching personal upload flows) to any active organization member.",
+    "Fixed the Storage policies so only product-media paths use catalog.read/catalog.write; non-product organization writes retain the existing owner/admin/agent checks, and personal file paths retain owner/session checks. Added a forward-only correction denying authenticated physical deletion of product-media objects, plus pgTAP assertions for the policy boundaries.",
+    "The Catalog adapter suite passed (12 tests). The user applied migrations 20261025120145, 20261025120200 and 20261025122000 to loopdev-platform-dev. Remote Management API queries confirmed the versions, Storage policy definitions and authenticated Files table grants. The isolated pgTAP suite passes all 19 tests; AUDIT-SECURITY-001 and 07-build remain blocked by broader audit criteria.",
+    "Completed only ready task ADAPTER-MODE-001: Catalog backend selection now requires explicit VITE_CATALOG_ADAPTER_MODE=local_demo|supabase, fails closed when configuration is missing/invalid, and never falls back to local fixtures after remote errors. Catalog local stores use strict persistence while unrelated localStore consumers retain best-effort semantics; failed writes do not update the in-memory cache."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "All repository delivery ledgers validate after AUDIT-ENV-001 moved to done."
+    },
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run and traceability validation passed after environment evidence was recorded."
+    },
+    {
+      "command": "npm run validate:contracts",
+      "result": "passed",
+      "evidence": "Capability contract validation passed: 25 contract files, 3 stable IDs."
+    },
+    {
+      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/crm/opportunities/opportunities-page.test.tsx",
+      "result": "passed (13 tests)",
+      "evidence": "Catalog adapter (12) and Opportunities page (1) regressions passed."
+    },
+    {
+      "command": "npm test -- src/test/crm/pipeline/catalog-reference.test.ts src/test/crm/customer-products-adapter.test.ts",
+      "result": "passed (3 tests)",
+      "evidence": "CRM catalog compatibility and customer-product association regressions passed."
+    },
+    {
+      "command": "npm test -- src/test/platform/notes-port.test.ts src/test/platform/platform-work.test.ts src/test/document-intelligence/adapter.test.ts",
+      "result": "passed (16 tests)",
+      "evidence": "Shared Notes, Platform work and Document Intelligence adapter tests passed."
+    },
+    {
+      "command": "npm run test:delivery",
+      "result": "passed (34 tests)",
+      "evidence": "Delivery-state-machine and evidence regression suite passed, including selective blocker resolution, normalized scope fingerprints and preservation of prior phase evidence on restart."
+    },
+    {
+      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts",
+      "result": "passed (12 tests)",
+      "evidence": "Catalog adapter authorization and persistence regressions passed."
+    },
+    {
+      "command": "supabase status --output json",
+      "result": "blocked",
+      "evidence": "The local Supabase status check could not connect to the Docker API socket; therefore the pgTAP Storage-policy regressions could not be executed in an isolated local database."
+    },
+    {
+      "command": "supabase db push --linked",
+      "result": "passed",
+      "evidence": "The user applied migrations 20261025120200_erp_product_media_no_direct_delete.sql and 20261025122000_platform_files_authenticated_access_grants.sql to the linked development project; migration state confirms 20261025120145, 20261025120200 and 20261025122000 are applied."
+    },
+    {
+      "command": "supabase db query --linked --output-format json \"select policyname, cmd, qual, with_check from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname like 'platform_files_storage_%' order by policyname\"",
+      "result": "passed",
+      "evidence": "Remote definitions show catalog.read/catalog.write only on product-media select/insert/update branches; non-product paths retain role/personal checks; the delete policy excludes product-media."
+    },
+    {
+      "command": "supabase db query --linked --output-format json \"select policyname, roles, cmd, qual, with_check from pg_policies where schemaname = 'storage' and tablename = 'objects' and cmd in ('DELETE', 'ALL') order by policyname\"",
+      "result": "passed",
+      "evidence": "All authenticated DELETE policies were inspected; the only policy for bucket platform-files excludes product-media. Other delete policies are scoped to separate buckets."
+    },
+    {
+      "command": "supabase migration up --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap",
+      "result": "passed",
+      "evidence": "Applied the explicit Platform Files authenticated-grant migration to the isolated fresh Supabase database; remote already had the same effective table privileges."
+    },
+    {
+      "command": "supabase test db --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap supabase/tests/database/012_platform_private_user_files.sql",
+      "result": "passed (19 tests)",
+      "evidence": "The isolated project applied the full migration chain with Auth and Storage enabled; all 19 pgTAP assertions passed."
+    },
+    {
+      "command": "supabase db query --linked --output-format json \"select version from supabase_migrations.schema_migrations where version in ('20261025120145', '20261025120200', '20261025122000') order by version\"",
+      "result": "passed",
+      "evidence": "Remote migration history contains all three forward-only policy/grant migrations."
+    },
+    {
+      "command": "supabase db query --linked --output-format json \"select c.relname, has_table_privilege('authenticated', c.oid, 'select') as can_select, has_table_privilege('authenticated', c.oid, 'insert') as can_insert, has_table_privilege('authenticated', c.oid, 'update') as can_update, has_table_privilege('authenticated', c.oid, 'delete') as can_delete from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname in ('platform_files', 'platform_file_versions', 'platform_file_upload_sessions') order by c.relname\"",
+      "result": "passed",
+      "evidence": "The remote authenticated role already had CRUD table privileges on all three Files tables; the new migration makes that deployed state explicit for fresh/local databases. RLS remains the row-level authorization boundary."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors in the policy migration or SQL regression changes."
+    },
+    {
+      "command": "supabase db lint --local",
+      "result": "passed",
+      "evidence": "Connected to the configured local Docker Supabase database at 127.0.0.1:54322; no schema errors found."
+    },
+    {
+      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx",
+      "result": "passed (26 tests)",
+      "evidence": "All four focused catalog identifier adapter and product UI suites passed."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "Application and Node TypeScript checks passed."
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "evidence": "Production bundle built successfully; existing large-chunk warning remains."
+    },
+    {
+      "command": "npm run i18n:check",
+      "result": "passed",
+      "evidence": "No visible-text candidates found."
+    },
+    {
+      "command": "npm run smoke:routes",
+      "result": "passed",
+      "evidence": "Route manifest validation found 10 desktop and 6 mobile routes; this check does not perform authenticated runtime journeys."
+    },
+    {
+      "command": "npm run validate:contracts",
+      "result": "passed",
+      "evidence": "Capability contract validation passed: 25 contract files, 3 stable IDs."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "Application and Node TypeScript checks passed after the responsibility audit."
+    },
+    {
+      "command": "npm run test:quality",
+      "result": "passed (555 tests)",
+      "evidence": "All 100 non-visual test files passed; no production code was changed by the refactor-safety audit."
+    },
+    {
+      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts",
+      "result": "passed (16 tests)",
+      "evidence": "Explicit mode validation, remote no-fallback behavior, strict Catalog local-storage failures and existing local adapter behavior."
+    },
+    {
+      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/crm/customer-products-adapter.test.ts src/test/crm/pipeline/catalog-reference.test.ts src/test/crm/opportunities/opportunities-page.test.tsx",
+      "result": "passed (20 tests)",
+      "evidence": "Catalog adapter-mode and CRM product-reference compatibility regressions."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "Application and Node TypeScript checks after ADAPTER-MODE-001."
+    },
+    {
+      "command": "npx eslint src/lib/storage.ts src/lib/localStore.ts src/loopdev/domains/catalog/data/localCatalog.ts src/loopdev/domains/catalog/adapter/index.ts src/vite-env.d.ts src/test/setup.ts src/test/catalog/catalog-adapter.test.ts",
+      "result": "passed",
+      "evidence": "Focused lint for the Catalog adapter-mode implementation and tests."
+    },
+    {
+      "command": "npm run test:quality",
+      "result": "passed (559 tests)",
+      "evidence": "All 100 non-visual test files passed after the adapter-mode change."
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "evidence": "Production web build succeeded; existing large-chunk warning remains."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "All 8 repository ledgers validated after ADAPTER-MODE-001 was marked done with evidence refs."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed",
+      "evidence": "110 checkpoint files passed schema validation."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Structural platform scope/evidence validation; no new renderer or operation parity is claimed."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "status": "PARTIAL",
+      "evidence": "Explicit adapter mode and strict local persistence are implemented and tested. Requirement remains partial because authenticated route access, full Products behavior, mobile operation parity and security/deployment gates remain unverified."
+    }
+  ],
+  "task_ids": [
+    "ERP-IDENTIFIERS-001",
+    "AUDIT-ENV-001",
+    "AUDIT-REUSE-001",
+    "AUDIT-LEGACY-001",
+    "AUDIT-ROUTE-001",
+    "AUDIT-STATE-001",
+    "AUDIT-PARITY-001",
+    "AUDIT-A11Y-001",
+    "AUDIT-SECURITY-001",
+    "AUDIT-ARCH-001",
+    "AUDIT-RESP-001",
+    "AUDIT-REFACTOR-001",
+    "PLATFORM-AUDIT-001",
+    "PLATFORM-FILES-001",
+    "PLATFORM-TYPOGRAPHY-001",
+    "PRODUCT-CONTRACT-001",
+    "ADAPTER-MODE-001",
+    "REMOTE-STATE-001",
+    "DATA-INVENTORY-001",
+    "RLS-MIGRATION-001",
+    "PRODUCT-DATA-001",
+    "PRODUCT-ADAPTER-001",
+    "MEDIA-ADAPTER-001",
+    "PRODUCT-DESKTOP-001",
+    "PRODUCT-MOBILE-001",
+    "CATEGORY-DESKTOP-001",
+    "CATEGORY-MOBILE-001",
+    "MEDIA-DESKTOP-001",
+    "MEDIA-MOBILE-001",
+    "COST-DESKTOP-001",
+    "COST-MOBILE-001",
+    "ACTION-TESTS-001",
+    "ROUTE-RUNTIME-001",
+    "CUTOVER-ROLLBACK-001",
+    "CATEGORY-CONTRACT-001",
+    "COST-CONTRACT-001",
+    "CATEGORY-DATA-001",
+    "COST-DATA-001",
+    "MEDIA-DATA-001",
+    "CATEGORY-ADAPTER-001",
+    "COST-ADAPTER-001"
+  ],
+  "evidence": [
+    {
+      "type": "refactor-safety-audit",
+      "path": "docs/implementation/erp/core/architecture-design.md",
+      "result": "Identified affected Products and legacy routes, local/Supabase catalog adapters, CRM key-compatibility consumers, product-media/Platform Files paths and authorization/audit boundaries. Current design proposes capability/tenant rollout and a snapshot/rollback strategy but explicitly leaves the executable kill switch and exact recovery mechanism open; remote writes remain gated."
+    },
+    {
+      "type": "platform-audit-owner-decision",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
+      "result": "User confirmed authorized Platform/DB ownership and approved the semantic event envelope, allowlisted/redacted metadata, same-transaction failure behavior, six months active retention and restricted archive exceptions. Implementation/tests are not complete."
+    },
+    {
+      "type": "owner-approved-recovery-controls",
+      "path": "docs/implementation/erp/core/architecture-design.md",
+      "result": "The Platform/DB owner approved global and per-organization database-enforced write controls, default false, plus immutable pre-cutover snapshot and forward-only recovery that preserves post-cutover writes. The decision is recorded; code, migrations, rollback rehearsal and operational tests are not implemented."
+    },
+    {
+      "type": "responsibility-structural-audit",
+      "path": "docs/implementation/erp/core/architecture-design.md",
+      "result": "Mapped implementation and authoritative owners for all required boundaries. Recorded broad CatalogAdapter cohesion, page-to-adapter coupling, inferred runtime mode, duplicated product media lifecycle, and missing Products audit call sites, each with existing ledger remediation ownership."
+    },
+    {
+      "type": "architecture-source-audit",
+      "path": "docs/implementation/erp/core/architecture-design.md",
+      "result": "Documented direct renderer-to-catalog-adapter calls, inferred local/remote adapter selection, the product-media bypass of shared remote Files, incomplete shared contract coverage, and legacy deployed RLS mismatch. These are existing transition/deployment debts; no new exception was approved."
+    },
+    {
+      "type": "runtime-auth-gate",
+      "path": "http://localhost:8080/app/erp/products",
+      "result": "Unauthenticated direct access redirects to /pages/login. After the user authenticated directly in the browser, the canonical Products route rendered the product list; the legacy /app/erp/product-catalog route redirected to /app/erp/products; Overview-to-Products navigation, back and refresh returned expected content. The browser canvas viewport was 440x775. No product data was mutated."
+    },
+    {
+      "type": "mobile-route-gap",
+      "path": "apps/mobile/App.tsx",
+      "result": "The mobile router handles /app/erp/product-catalog and /app/erp/overview but not /app/erp/products; canonical Products falls through to MobileRouteScreen. scripts/smoke-routes.json also omits ERP Products, so its passing route-manifest check does not establish Products route parity."
+    },
+    {
+      "type": "environment",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
+      "result": "Vite serves the SPA shell at http://localhost:8080/app/erp/products (HTTP 200; node PID 32300). This is not evidence of authenticated route access or operation behavior. Checkout is /Users/minoveaz/.copilot/repos/loopdev-v2, branch feature/erp-core-capabilities, base develop, HEAD 2e7faf367aa0b13a735492e9878390cc7e5a3621; working tree contains ERP planning/traceability and delivery-validator/test changes, with no product runtime or DB/schema changes."
+    },
+    {
+      "type": "platform-reuse-audit",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
+      "result": "REUSE: shared shell/UI, Notes, Tasks, Activity, Relations; Document Intelligence remains a separate reusable capability and is not used for product images. BLOCKED: generic remote/reusable Files associations and derivative lifecycle lack an approved contract. Product media currently bypasses that boundary via direct Supabase Storage/platform_files/erp_product_media_* access. See current UI/shell references, packages/contracts/src/notes.ts, tasks.ts, activity-timeline.ts, src/loopdev/domains/files/types.ts and src/loopdev/domains/catalog/adapter/product-media-supabase.ts."
+    },
+    {
+      "type": "legacy-behavior-audit",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
+      "result": "Catalog item IDs/keys/SKUs and CRM catalog references must remain stable across migration. Preserve /app/erp/product-catalog/:catalogId compatibility and redirect /app/erp/product-catalog to /app/erp/products; use /app/erp/products as canonical. Current Supabase persistence uses erp_catalog_items/offers/variants, erp_price_books/entries, erp_product_references and erp_product_cost_references; local demo uses local adapters. Related regression tests passed."
+    },
+    {
+      "type": "user-decision",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
+      "result": "The Product Owner approved extending the shared Platform Files contract for this gallery (user choice: “Sí, apruebo la ampliación del contrato de Platform Files para esta galería”). This authorizes the shared-contract implementation task only; Product data writes and migrations remain gated."
+    },
+    {
+      "type": "security-review",
+      "path": "supabase/migrations/20261025100000_erp_product_media_library.sql",
+      "result": "MEDIUM finding: Storage writes for non-product-media paths were broadened to any active organization member, bypassing pre-existing role/personal-upload constraints. Forward-only migrations restore those checks, scope catalog.read/catalog.write to product-media, deny authenticated product-media deletion, and make the already-deployed Files table grants explicit. All three migrations are applied and verified remotely; the isolated 19-assertion pgTAP suite passes."
+    },
+    {
+      "type": "task-evidence",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md",
+      "result": "ADAPTER-MODE-001 complete: explicit configuration, fail-closed selection, remote error propagation, strict Catalog local storage errors and no cache mutation after failed writes. Focused tests (20 total including CRM compatibility), full quality suite (559), typecheck, focused lint and production build passed. No mobile route, remote write, migration, deployment or runtime journey was performed."
+    },
+    {
+      "type": "architecture-quality",
+      "path": "docs/implementation/erp/core/architecture-design.md",
+      "result": "PASS_WITH_DEBT retained from the approved architecture audit. The optional strict-persistence setting changes behavior only for Catalog stores; best-effort behavior remains the default for all existing localStore consumers and is regression-tested."
+    }
+  ],
+  "detected_failure": "BUILD-003: npm run validate:module-runs failed with six approval consistency errors: completed 01-visual-design requires approved design; completed 02-domain, 03-access, 04-api, 05-sync and 06-plan require approved visual_design. Revalidate artifacts and obtain approvals before restart.",
+  "likely_failure_origin": "Attempt-10 fingerprint reconciliation invalidated prior approval gates; not caused by ADAPTER-MODE-001 implementation.",
+  "next_handoff": null,
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false,
+  "updated_at": "2026-10-25T12:19:13.000Z"
+}

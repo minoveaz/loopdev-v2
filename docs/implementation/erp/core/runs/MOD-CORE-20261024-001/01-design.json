@@ -5,23 +5,24 @@
   "phase": "01-design",
   "skill": "module-design",
   "parent_span_id": null,
-  "module": "Core",
+  "module": "core",
   "status": "completed",
   "decision_status": "confirmed",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 4,
-  "started_at": "2026-10-24T14:23:14Z",
-  "completed_at": "2026-10-24T14:29:24Z",
-  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "attempt": 13,
+  "started_at": "2026-10-25T16:14:42.795Z",
+  "completed_at": "2026-10-25T16:15:32.173Z",
+  "input_fingerprint": "sha256:8efd4ab86c7e61cd28da0b676118fd145e3a4b050d7b5d7c6f10aca8a3c7a834",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
-    "base_branch": null,
-    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
-    "working_tree": "untracked ERP implementation docs; no production code changes",
-    "runtime_url": null,
-    "runtime_port": null
+    "base_branch": "develop",
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified worktree (50 paths): Products planning/evidence, Catalog adapter/tests and local migrations; no Supabase remote writes or migration applications.",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080,
+    "serving_process": "Vite dev server (node PID 32300)"
   },
   "input_artifacts": [
     "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
@@ -76,8 +77,8 @@
     },
     {
       "id": "ERP-OD-006",
-      "status": "open",
-      "summary": "First-release module set, operational baseline and sequence need product approval."
+      "status": "confirmed",
+      "summary": "The first release is Products and categories only on desktop web and mobile web; other ERP modules and integrations remain deferred."
     },
     {
       "id": "ERP-OD-002",
@@ -91,8 +92,8 @@
     },
     {
       "id": "ERP-OD-005",
-      "status": "open",
-      "summary": "Native iOS/Android applicability and accountable owner remain open."
+      "status": "confirmed",
+      "summary": "Native iOS and Android are deferred; desktop web and mobile web are required in this release."
     },
     {
       "id": "ERP-CF-001",
@@ -101,8 +102,8 @@
     },
     {
       "id": "ERP-CF-002",
-      "status": "open",
-      "summary": "Local and remote catalog write permission names need canonicalization."
+      "status": "confirmed",
+      "summary": "Catalog mutations use catalog.write; purchase costs use separate catalog.cost.read and catalog.cost.manage permissions, with implementation and deployed RLS parity still open."
     }
   ],
   "actions": [
@@ -113,7 +114,11 @@
     "Applied user-approved CR-ERP-PRODUCT-MASTER-MODEL across discovery, design, architecture, ledger and visual scope; the category-inheritance assumption was later resolved by the user in favor of independently assigned SKU categories.",
     "Recorded provisional lifecycle, entity, API, RBAC and local-first direction for later specialized phases.",
     "Linked accepted market sources and documented security, multiplatform and platform-reuse dependencies.",
-    "At the design handoff, visual approval and specialized analysis were pending; the conceptual visual gate was approved on 2026-10-24, and specialized phases 02-domain through 05-sync have since completed with open decisions documented."
+    "Revalidated the design against current route and adapter source: /app/erp/products is registered, legacy catalog routing remains compatible, and catalog loading fails closed while VITE_CATALOG_ADAPTER_MODE is unset.",
+    "Updated the approved append-only audit contract status: semantics are confirmed; Products call sites, same-transaction rollback, and failure tests remain implementation gates.",
+    "Corrected architecture and platform evidence that still described ID-shape adapter selection, unimplemented routes, pending audit-owner assignment, and unimplemented mode handling.",
+    "No product scope or visual composition changed. The Product Owner reapproved current design and visual artifacts after the changed-input invalidation.",
+    "Prior specialized checkpoints 02-domain through 05-sync were invalidated by the refreshed design fingerprint and must be revalidated after the visual handoff."
   ],
   "validation": [
     {
@@ -122,19 +127,19 @@
       "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
     },
     {
-      "command": "npm run delivery:validate",
-      "result": "passed",
-      "evidence": "Module run validation passed: 100 checkpoint file(s) checked (36 archived legacy record(s))."
-    },
-    {
       "command": "npm run validate:multiplatform",
       "result": "passed",
       "evidence": "Multiplatform delivery validation passed."
     },
     {
-      "command": "Python inline ERP JSON/SVG/XML/Markdown-link check",
+      "command": "Review design.md and architecture-design.md against discovery.md and current V2 platform references",
       "result": "passed",
-      "evidence": "Parsed 5 JSON files and 5 SVG files; all local Markdown links resolve."
+      "evidence": "The approved Products/categories/cost scope remains unchanged; verified route registration, explicit fail-closed adapter mode, approved audit semantics and remaining runtime/security gates are reconciled without expanding scope."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors in the revalidated design and platform evidence."
     }
   ],
   "requirements": [
@@ -167,16 +172,21 @@
   "evidence": [
     "Design references and classifications are recorded in docs/implementation/erp/core/design.md.",
     "Architecture boundaries and residual debt are recorded in docs/implementation/erp/core/architecture-design.md.",
+    "Current route registration is evidenced by src/routes/LoopdevRoutes.tsx; explicit adapter selection is evidenced by src/loopdev/domains/catalog/adapter/index.ts and focused Catalog tests.",
+    "The current runtime remains fail-closed because VITE_CATALOG_ADAPTER_MODE is unset; no Supabase write or migration was performed.",
     "The user-confirmed supplier boundary and manufacturing deferral are captured in CR-ERP-SUPPLIERS-SEPARATE; Products naming/direct-list flow and the approved item master model are captured in CR-ERP-PRODUCTS-MODULE and CR-ERP-PRODUCT-MASTER-MODEL.",
     "Official market source URLs are preserved in design.md and discovery.md."
   ],
   "detected_failure": null,
   "likely_failure_origin": null,
-  "next_handoff": "01-visual-design: review the Products direct-list and confirmed item-master flows; keep specialized analysis and module-plan gated until explicit conceptual visual approval.",
+  "next_handoff": "01-visual-design: revalidate source and visual artifacts against the refreshed design; the Product Owner approved the current conceptual scope, while runtime comparison remains pending.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
     "approved_at": null
   },
-  "invalidated": false
+  "invalidated": false,
+  "invalidated_at": null,
+  "invalidation_reason": null,
+  "task_ids": []
 }

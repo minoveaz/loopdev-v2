@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:08-verify",
+  "phase": "08-verify",
+  "skill": "module-verify",
+  "parent_span_id": null,
+  "module": "Core",
+  "status": "blocked",
+  "decision_status": "open",
+  "architecture_quality": "BLOCKED",
+  "attempt": 1,
+  "started_at": "2026-10-25T09:45:00Z",
+  "completed_at": "2026-10-25T09:52:00Z",
+  "input_fingerprint": "sha256:3d589576d659e96ebf0d22d64db0c00da03681658a8eef678a0e4143b4e766df",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": "develop",
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "clean at verification start; documentation-only evidence changes follow",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080
+  },
+  "input_artifacts": [
+    "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
+    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+    "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+    "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md",
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/design.md",
+    "docs/implementation/erp/core/implementation-plan.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "docs/implementation/erp/core/access-model.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md",
+    "src/loopdev/pages/erp/ProductRecordPages.tsx",
+    "src/loopdev/pages/erp/ProductSkuManagerPage.tsx",
+    "src/loopdev/pages/erp/ProductMediaGalleryManager.tsx",
+    "src/loopdev/domains/catalog/adapter/product-media-supabase.ts"
+  ],
+  "actions": [
+    "Compared first-release requirements with current contracts, source, tests, migration and checkpoint evidence.",
+    "Ran focused Products, media and CRM tests, typecheck and delivery/platform/run validators.",
+    "Confirmed the local SPA responds on port 8080; did not claim authenticated runtime behavior.",
+    "Recorded gaps without changing production code or database state."
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/core/requirement-evidence-matrix.md",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "docs/implementation/erp/core/README.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/08-verify.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/08-verify.json"
+  ],
+  "validation": [
+    {
+      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx src/test/erp/product-media.test.tsx src/test/erp/products-capability.test.ts src/test/crm/opportunities/opportunities-page.test.tsx",
+      "result": "passed: 7 files, 35 tests",
+      "evidence": "Focused Products, media, and CRM compatibility tests."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "App and Node TypeScript projects."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed: 8 ledgers",
+      "evidence": "Structural ledger validation."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Structural validation; not operation-parity runtime evidence."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed: 107 checkpoint files before this snapshot",
+      "evidence": "Traceability validation."
+    },
+    {
+      "command": "npm run test:quality",
+      "result": "passed: 100 files, 555 tests (prior PR CI)",
+      "evidence": "Recorded in the prior CI evidence; not rerun for this snapshot."
+    },
+    {
+      "command": "curl http://localhost:8080/app/erp/products",
+      "result": "HTTP 200",
+      "evidence": "SPA response only; authentication and interaction were not verified."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "status": "PARTIAL",
+      "evidence": "Product/SKU source and focused tests pass; commercial, lifecycle and authenticated remote parity remain unverified."
+    },
+    {
+      "id": "REQ-ERP-AUTO-IDENTIFIERS",
+      "status": "PARTIAL",
+      "evidence": "Generated numeric keys/SKUs and legacy CRM compatibility are covered by source/tests; authenticated remote behavior and local migration lint are unverified."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "status": "FAIL",
+      "evidence": "Only flat category references and quick-create exist; category hierarchy management operations are absent."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-MEDIA",
+      "status": "PARTIAL",
+      "evidence": "Upload, association, preview, alt text and detach have source/local tests; the media visual addendum is conceptually approved, but library reuse, normalization and authenticated platform runtime evidence are absent."
+    },
+    {
+      "id": "REQ-ERP-COST-REFERENCE",
+      "status": "PARTIAL",
+      "evidence": "Product-level UI and adapters exist; SKU workflow and approved distinct cost access/audit contract remain incomplete."
+    },
+    {
+      "id": "REQ-ERP-ACCESS-AUDIT",
+      "status": "FAIL",
+      "evidence": "Foundation RLS has a documented read-only-delete risk; forward policy verification and shared append-only audit are release blockers."
+    },
+    {
+      "id": "REQ-ERP-DESKTOP-MOBILE-PARITY",
+      "status": "NOT_TESTED",
+      "evidence": "No authenticated desktop or mobile-web operation journey was performed."
+    },
+    {
+      "id": "REQ-ERP-PLAN-AND-RELEASE-GATES",
+      "status": "FAIL",
+      "evidence": "Ledger remains draft, only approved task is blocked, and no approved 06-plan checkpoint exists."
+    },
+    {
+      "id": "REQ-MIAUCRAFT-SHOPIFY / REQ-INHAND-NATIVE-COMMERCE",
+      "status": "NOT_APPLICABLE",
+      "evidence": "Explicitly deferred from this first release."
+    }
+  ],
+  "detected_failure": {
+    "code": "VERIFY-001",
+    "detected_by": "module-verify",
+    "summary": "Required category, media, cost-access, security/audit, mobile-runtime and formal plan evidence is incomplete."
+  },
+  "likely_failure_origin": null,
+  "next_handoff": "Reconcile design/domain/access/API/sync artifacts, approve the complete 06-plan, implement blockers, then resume authenticated desktop/mobile verification.",
+  "approval_gate": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "evidence_links": [
+    "docs/implementation/erp/core/requirement-evidence-matrix.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/08-verify.md",
+    "docs/implementation/erp/core/platform-evidence-matrix.md"
+  ],
+  "notes": [
+    "This is a bounded verification snapshot only. The formal run remains blocked before the approved plan/build gates; the checkpoint does not authorize additional implementation.",
+    "PR #38 is merged into develop; local HEAD remains on feature/erp-core-capabilities.",
+    "The delivery ledger contains one task, ERP-IDENTIFIERS-001, and it is blocked.",
+    "No production code, database or remote state was changed."
+  ],
+  "invalidated": false
+}

@@ -56,7 +56,14 @@ export const localCatalogItemsStore = createLocalStore<CatalogItem>({
       categoryKey: "software",
       status: "active",
       visibility: { organizationId: localOrganizationId, workspaceId: sharedWorkspace },
-      metadata: { vertical: "saas", seats: 25 },
+      metadata: {
+        vertical: "saas",
+        seats: 25,
+        loopdevIdentifierMigration: {
+          migration: "20261025000000_erp_system_generated_identifiers",
+          previousKey: "enterprise-plan",
+        },
+      },
       createdAt: now,
       updatedAt: now,
     },

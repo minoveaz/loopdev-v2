@@ -59,6 +59,19 @@ export interface CatalogItem extends Entity {
   metadata: CatalogItemMetadata;
 }
 
+export function matchesCatalogItemKey(item: CatalogItem, candidate: string): boolean {
+  const normalizedCandidate = candidate.trim().toLocaleLowerCase();
+  if (item.key.trim().toLocaleLowerCase() === normalizedCandidate) return true;
+
+  const migration = item.metadata.loopdevIdentifierMigration;
+  if (!migration || typeof migration !== "object" || Array.isArray(migration) || !("previousKey" in migration)) {
+    return false;
+  }
+
+  return typeof migration.previousKey === "string"
+    && migration.previousKey.trim().toLocaleLowerCase() === normalizedCandidate;
+}
+
 export interface Offer extends Entity {
   organizationId: string;
   workspaceId: string | null;

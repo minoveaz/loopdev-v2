@@ -65,6 +65,17 @@ describe("local Catalog adapter", () => {
     });
   });
 
+  it("resolves a previous product key preserved by identifier migration", async () => {
+    const resolved = await catalogAdapter.resolveReference({
+      organizationId,
+      reference: { productKey: "enterprise-plan" },
+    });
+
+    expect(resolved).toMatchObject({
+      item: { id: "catalog_item_enterprise_plan", key: "1" },
+    });
+  });
+
   it("exposes independent price books and entries through the same scope", async () => {
     const books = await catalogAdapter.listPriceBooks({ organizationId });
     const entries = await catalogAdapter.listPriceEntries({ organizationId, priceBookId: books[0].id });

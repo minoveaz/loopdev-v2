@@ -22,7 +22,7 @@ describe("Opportunities page", () => {
     fireEvent.click(ariaRecords[ariaRecords.length - 1]);
     fireEvent.change(within(dialog).getByLabelText("Opportunity name"), { target: { value: "New catalog deal" } });
     fireEvent.click(within(dialog).getByRole("combobox", { name: "Catalog item" }));
-    const enterpriseItems = await screen.findAllByText("Enterprise plan (enterprise-plan)");
+    const enterpriseItems = await screen.findAllByText("Enterprise plan (1)");
     fireEvent.click(enterpriseItems[enterpriseItems.length - 1]);
     fireEvent.click(within(dialog).getByRole("button", { name: "Create opportunity" }));
 

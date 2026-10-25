@@ -34,6 +34,9 @@ not imply that the full module plan, access model or release gates are approved.
 - Generate organization-scoped numeric identifiers in the local adapter;
   omit client-supplied identifiers from Supabase writes so database triggers
   assign them.
+- Preserve legacy CRM product-key references through the migration's
+  `loopdevIdentifierMigration.previousKey` metadata while keeping generated
+  numeric keys as the current product identifiers.
 - Added a migration for stable UUID generation, numeric internal keys, numeric
   LoopDev SKUs, organization-level key uniqueness and parent-SKU handling.
 - Updated product/variant forms, fixtures, translations and focused tests to
@@ -45,6 +48,8 @@ not imply that the full module plan, access model or release gates are approved.
 
 - Product and variant adapter, UI, fixture, translation and test changes.
 - Product media adapter, gallery page, product form preview and tests.
+- Catalog key-compatibility lookup for local and Supabase adapters, plus CRM
+  regression coverage for migrated legacy keys.
 - Identifier migrations, including
   `supabase/migrations/20261025000000_erp_system_generated_identifiers.sql`.
 - Media migration:
@@ -81,6 +86,8 @@ not imply that the full module plan, access model or release gates are approved.
 | `supabase db push` and `supabase migration list` | Passed: pending migrations applied and remote/local history aligned | Linked Supabase project |
 | `npm run validate:module-runs` | Passed: 107 checkpoint files checked after invalidating checkpoints that predate the media scope | Module-run traceability validator |
 | `npm run test:delivery` | Passed: 30 tests | Delivery tests |
+| `npm run test:quality` | Passed: 100 files, 555 tests | Full non-visual CI test suite |
+| `npm test -- src/test/crm/opportunities/opportunities-page.test.tsx src/test/crm/pipeline/catalog-reference.test.ts src/test/catalog/catalog-adapter.test.ts` | Passed: 3 files, 14 tests | CRM compatibility regression tests |
 | `npm run validate:delivery-evidence` | Passed: 0 evidence files checked | No registered phase evidence files |
 | `http://localhost:8080/app/erp/products/new` | HTTP 200 only | SPA response; no authenticated interaction evidence |
 
@@ -91,8 +98,8 @@ not imply that the full module plan, access model or release gates are approved.
 | Repository path | `/Users/minoveaz/.copilot/repos/loopdev-v2` |
 | Checkout type | branch |
 | Branch | `feature/erp-core-capabilities` |
-| HEAD | `6de4213c6ae2207e4c1e5965e3970fa721d18a29` |
-| Working tree | Clean after the implementation commit; delivery evidence is being reconciled separately |
+| HEAD | `cab0863351c652d0892dc61a5acbbda4abb02c95` |
+| Working tree | Modified with the legacy-key compatibility fix and regression tests; validated locally before the follow-up commit |
 | Runtime URL | `http://localhost:8080/app/erp/products/new` |
 | Runtime port | `8080` |
 
@@ -107,6 +114,10 @@ not imply that the full module plan, access model or release gates are approved.
   inconsistencies.
 - Likely origin: local database service is stopped; the run's visual-design
   addendum and approval state predate this task's scoped implementation.
+- Follow-up regression found by PR CI: CRM callers still send the previous
+  string product key after numeric-key migration. The compatibility alias is
+  now read from migration metadata by both catalog adapters and covered by
+  local CRM/catalog tests.
 - Next handoff: reconcile invalidated run checkpoints, add visual evidence for
   the approved product-media scope, and resolve access/legacy-data blockers
   before marking this task done or claiming module/release readiness.

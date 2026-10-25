@@ -33,7 +33,7 @@ import type {
   ProductReferenceCreateInput,
   ProductReferenceKind,
 } from "../types";
-import { CatalogAdapterError } from "../types";
+import { CatalogAdapterError, matchesCatalogItemKey } from "../types";
 import type { CatalogAdapter } from "./index";
 
 function scopeFor(params: CatalogScopeParams) {
@@ -244,7 +244,7 @@ export const localCatalogAdapter: CatalogAdapter = {
     assertRead(params);
     const normalizedKey = key.trim().toLocaleLowerCase();
     return visible(localCatalogItemsStore.list(), params)
-      .find((item) => item.key.toLocaleLowerCase() === normalizedKey) ?? null;
+      .find((item) => matchesCatalogItemKey(item, normalizedKey)) ?? null;
   },
 
   async listOffers(params) {
@@ -502,7 +502,7 @@ export const localCatalogAdapter: CatalogAdapter = {
     const offer = referencedOffer && referencedOffer.catalogItemId === item.id ? referencedOffer : null;
     const variant = referencedVariant && referencedVariant.catalogItemId === item.id ? referencedVariant : null;
     if ((reference.offerId && !offer) || (reference.variantId && !variant)) return null;
-    if (reference.productKey && reference.productKey.trim().toLocaleLowerCase() !== item.key.toLocaleLowerCase()) return null;
+    if (reference.productKey && !matchesCatalogItemKey(item, reference.productKey)) return null;
     return {
       item,
       offer,

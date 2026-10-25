@@ -9,9 +9,9 @@
   "status": "deviated",
   "decision_status": "confirmed",
   "architecture_quality": "PENDING",
-  "attempt": 2,
-  "started_at": "2026-10-25T09:23:49Z",
-  "completed_at": "2026-10-25T09:23:49Z",
+  "attempt": 3,
+  "started_at": "2026-10-25T09:32:06Z",
+  "completed_at": "2026-10-25T09:32:06Z",
   "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
   "environment": {
     "repository": "minoveaz/loopdev-v2",
@@ -19,42 +19,62 @@
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "6de4213c6ae2207e4c1e5965e3970fa721d18a29",
-    "working_tree": "Implementation commit is pushed; delivery evidence and invalidated checkpoints are being reconciled."
+    "head_commit": "cab0863351c652d0892dc61a5acbbda4abb02c95",
+    "working_tree": "Legacy-key compatibility fix and regression tests are validated locally; changes are pending commit and push."
   },
   "input_artifacts": [
     "docs/implementation/erp/core/README.md",
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md",
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/run.json",
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/01-visual-design.json",
+    "src/loopdev/domains/catalog/adapter/local.ts",
+    "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "src/loopdev/domains/catalog/data/localCatalog.ts",
+    "src/test/crm/pipeline/catalog-reference.test.ts",
     "User request: commit, push and open a pull request against develop."
   ],
   "output_artifacts": [
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/10-git.json",
     "docs/implementation/erp/core/README.md",
+    "src/loopdev/domains/catalog/adapter/local.ts",
+    "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "src/loopdev/domains/catalog/data/localCatalog.ts",
+    "src/loopdev/domains/catalog/types.ts",
+    "src/test/catalog/catalog-adapter.test.ts",
+    "src/test/crm/opportunities/opportunities-page.test.tsx",
     "6de4213c6ae2207e4c1e5965e3970fa721d18a29",
     "https://github.com/minoveaz/loopdev-v2/pull/38"
   ],
   "validation": [
     {
-      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx src/test/erp/product-media.test.tsx",
-      "result": "passed: 5 files, 30 tests",
-      "evidence": "Focused product catalog and media test output."
+      "command": "npm test -- src/test/crm/opportunities/opportunities-page.test.tsx src/test/crm/pipeline/catalog-reference.test.ts src/test/catalog/catalog-adapter.test.ts",
+      "result": "passed: 3 files, 14 tests",
+      "evidence": "Legacy CRM product-key compatibility and numeric product-key behavior."
+    },
+    {
+      "command": "npm run test:quality",
+      "result": "passed: 100 files, 555 tests",
+      "evidence": "Full non-visual CI test suite."
     },
     {
       "command": "npm run typecheck && npm run build && npm run i18n:check && npx eslint .",
       "result": "passed",
-      "evidence": "Validated before creating the implementation commit."
+      "evidence": "Validated for the implementation and follow-up compatibility fix."
     },
     {
       "command": "npm run validate:module-runs",
-      "result": "initial PR commit failed on 7 stale checkpoint errors; passed locally after marking prior-scope checkpoints invalidated",
-      "evidence": "107 checkpoint files checked after reconciliation."
+      "result": "passed: 107 checkpoint files checked",
+      "evidence": "Invalidated checkpoints that predate the media scope are no longer accepted as current completions."
+    },
+    {
+      "command": "gh pr checks 38 --repo minoveaz/loopdev-v2 --watch --interval 10",
+      "result": "initial traceability failure corrected; current PR run passed traceability, build, lint and mobile checks but failed two CRM tests before local compatibility fix",
+      "evidence": "PR CI run 40180526214 on commit cab0863351c652d0892dc61a5acbbda4abb02c95."
     },
     {
       "command": "gh pr view 38 --repo minoveaz/loopdev-v2",
-      "result": "open against develop; initial CI traceability check failed, other completed checks passed, component tests were still running",
-      "evidence": "Initial CI run 40180232687 on commit 6de4213c6ae2207e4c1e5965e3970fa721d18a29."
+      "result": "open against develop; CI rerun is required after the local CRM compatibility fix",
+      "evidence": "PR head cab0863351c652d0892dc61a5acbbda4abb02c95."
     },
     {
       "command": "git diff --check",
@@ -81,7 +101,7 @@
     {
       "id": "GIT-ERP-CI",
       "status": "PARTIAL",
-      "evidence": "The initial PR traceability check failed because checkpoints from the prior scope were still marked completed. The checkpoint corrections pass locally; CI must rerun on the updated commit."
+      "evidence": "Traceability and non-CRM CI checks pass on cab0863. Two CRM tests failed because migrated legacy product keys were not resolved; the compatibility fix and full local suite now pass, pending a new CI run."
     },
     {
       "id": "GIT-ERP-REMAINING-GATES",
@@ -92,15 +112,15 @@
   "detected_failure": {
     "code": "GIT-002",
     "detected_by": "git-workflow",
-    "summary": "The first PR CI run rejected completed checkpoints that were invalidated by the approved product-media scope amendment."
+    "summary": "PR CI exposed two CRM regressions after catalog keys became numeric; legacy product-key aliases were not yet resolved."
   },
   "likely_failure_origin": {
-    "phase": "01-visual-design",
-    "skill": "module-visual-design",
-    "code": "VIS-ERP-005",
-    "confidence": 9
+    "phase": "07-build",
+    "skill": "module-build",
+    "code": "BUILD-003",
+    "confidence": 10
   },
-  "next_handoff": "Commit and push the checkpoint reconciliation, then confirm the latest PR CI result and review; do not merge while required checks or module gates remain unresolved.",
+  "next_handoff": "Commit and push the CRM compatibility fix, then confirm PR CI passes; do not merge while required checks or module gates remain unresolved.",
   "approval_gate": {
     "status": "pending",
     "approved_by": null,
@@ -109,7 +129,7 @@
   },
   "invalidated": false,
   "notes": [
-    "The code commit and initial PR are published. The current delivery-evidence edits are not yet committed or pushed, so the failed CI result applies only to the initial PR commit.",
+    "The code commit, checkpoint reconciliation and PR are published. The CRM compatibility fix is validated locally but has not yet been committed or pushed.",
     "The PR is for review only; no merge or release-readiness claim is made."
   ]
 }

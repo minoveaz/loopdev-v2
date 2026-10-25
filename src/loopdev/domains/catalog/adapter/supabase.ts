@@ -25,7 +25,7 @@ import type {
   ProductPartyRole,
   ResolvedCatalogReference,
 } from "../types";
-import { CatalogAdapterError } from "../types";
+import { CatalogAdapterError, matchesCatalogItemKey } from "../types";
 import type { CatalogAdapter } from "./index";
 
 type Row = Record<string, unknown>;
@@ -130,7 +130,15 @@ export const supabaseCatalogAdapter: CatalogAdapter = {
   async deleteCatalogItem(id, params) { await deleteRow("erp_catalog_items", id, params.organizationId); },
   async listCatalogItems(params) { return (await listRows("erp_catalog_items", params, { catalog_id: params.catalogId })).map(mapItem); },
   async getCatalogItem(id, params) { const rows = await listRows("erp_catalog_items", params, { id }); return rows[0] ? mapItem(rows[0]) : null; },
-  async findCatalogItemByKey(key, params) { const rows = await listRows("erp_catalog_items", params, { key: key.trim().toLowerCase() }); return rows[0] ? mapItem(rows[0]) : null; },
+  async findCatalogItemByKey(key, params) {
+    const normalizedKey = key.trim().toLowerCase();
+    const currentRows = await listRows("erp_catalog_items", params, { key: normalizedKey });
+    if (currentRows[0]) return mapItem(currentRows[0]);
+    const legacyRows = await listRows("erp_catalog_items", params, {
+      "metadata->loopdevIdentifierMigration->>previousKey": normalizedKey,
+    });
+    return legacyRows[0] ? mapItem(legacyRows[0]) : null;
+  },
   async listOffers(params) { return (await listRows("erp_catalog_offers", params, { catalog_item_id: params.catalogItemId })).map(mapOffer); },
   async createOffer(input: CatalogOfferCreateInput) { return mapOffer(await insertRow("erp_catalog_offers", write({ organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, catalog_item_id: input.catalogItemId, key: input.key, name: input.name, status: input.status, billing_model: input.billingModel, currency: input.currency, unit: input.unit, valid_from: input.validFrom, valid_to: input.validTo, metadata: input.metadata }))); },
   async updateOffer(id, params, patch) { return mapOffer(await updateRow("erp_catalog_offers", id, params.organizationId, write({ key: patch.key, name: patch.name, status: patch.status, billing_model: patch.billingModel, currency: patch.currency, unit: patch.unit, valid_from: patch.validFrom, valid_to: patch.validTo, metadata: patch.metadata }))); },
@@ -207,6 +215,7 @@ export const supabaseCatalogAdapter: CatalogAdapter = {
   async resolveReference(params: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null> {
     const item = params.reference.catalogItemId ? await this.getCatalogItem(params.reference.catalogItemId, params) : params.reference.productKey ? await this.findCatalogItemByKey(params.reference.productKey, params) : null;
     if (!item) return null;
+    if (params.reference.productKey && !matchesCatalogItemKey(item, params.reference.productKey)) return null;
     const offers = await this.listOffers({ ...params, catalogItemId: item.id });
     const variants = await this.listVariants({ ...params, catalogItemId: item.id });
     return { item, offer: params.reference.offerId ? offers.find((offer) => offer.id === params.reference.offerId) ?? null : offers[0] ?? null, variant: params.reference.variantId ? variants.find((variant) => variant.id === params.reference.variantId) ?? null : variants[0] ?? null, reference: { entityType: "catalog_item", entityId: item.id, scope: { organizationId: item.organizationId, workspaceId: item.workspaceId } } };

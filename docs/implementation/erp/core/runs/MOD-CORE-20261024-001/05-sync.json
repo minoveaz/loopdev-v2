@@ -4,24 +4,25 @@
   "span_id": "MOD-CORE-20261024-001:05-sync",
   "phase": "05-sync",
   "skill": "sync-design",
-  "parent_span_id": "MOD-CORE-20261024-001:04-api",
-  "module": "Core",
-  "status": "deviated",
+  "parent_span_id": null,
+  "module": "core",
+  "status": "completed",
   "decision_status": "confirmed",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 5,
-  "started_at": "2026-10-24T14:52:50.401Z",
-  "completed_at": "2026-10-24T14:55:23.814Z",
-  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "attempt": 11,
+  "started_at": "2026-10-25T15:49:02.091Z",
+  "completed_at": "2026-10-25T15:51:30.218Z",
+  "input_fingerprint": "sha256:277c5cbc7947a25e3b7f6414e80840fce9510be4d9ac03da46c333c69e408009",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
-    "working_tree": "untracked ERP implementation docs; no production code changes",
-    "runtime_url": null,
-    "runtime_port": null
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified worktree (50 paths): Products planning/evidence, Catalog adapter/tests and local migrations; no Supabase remote writes or migration applications.",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080,
+    "serving_process": "Vite dev server (node PID 32300)"
   },
   "input_artifacts": [
     "docs/implementation/erp/core/discovery.md",
@@ -29,16 +30,26 @@
     "docs/implementation/erp/core/access-model.md",
     "docs/implementation/erp/core/api-contracts.md",
     "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+    "docs/03-platform/backend/FILES_BACKEND_MAPPING.md",
     "src/loopdev/domains/catalog/adapter/index.ts",
     "src/loopdev/domains/catalog/adapter/local.ts",
     "src/loopdev/domains/catalog/adapter/supabase.ts",
-    "src/loopdev/domains/catalog/data/localCatalog.ts",
+    "src/loopdev/domains/catalog/adapter/product-media-local.ts",
+    "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
+    "src/loopdev/domains/catalog/media/types.ts",
     "src/loopdev/domains/catalog/types.ts",
+    "src/loopdev/domains/catalog/data/localCatalog.ts",
+    "src/loopdev/domains/catalog/data/localProductMedia.ts",
     "src/lib/localStore.ts",
     "src/lib/storage.ts",
     "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
-    "src/test/catalog/catalog-adapter.test.ts",
-    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md"
+    "supabase/migrations/20261024180000_erp_product_details_and_references.sql",
+    "supabase/migrations/20261025100000_erp_product_media_library.sql",
+    "supabase/migrations/20261025120145_erp_product_media_storage_policy_hardening.sql",
+    "supabase/migrations/20261025120200_erp_product_media_no_direct_delete.sql",
+    "supabase/migrations/20260915000000_platform_security_hardening.sql",
+    "docs/implementation/_templates/phase-evidence.md"
   ],
   "output_artifacts": [
     "docs/implementation/erp/core/sync-model.md",
@@ -48,76 +59,103 @@
     {
       "id": "SYNC-ERP-001",
       "status": "confirmed",
-      "summary": "Synthetic organization IDs route to local stores; UUID IDs route to Supabase."
+      "summary": "Catalog adapter selection is explicit local_demo or supabase configuration and fails closed when missing/invalid; ID shape is not used."
     },
     {
       "id": "SYNC-ERP-002",
       "status": "confirmed",
-      "summary": "Local catalog mutations persist through browser localStorage with swallowed storage errors; this is not remote synchronization."
+      "summary": "Local demo storage is not secure or remotely synchronized; core catalog stores are strict, but product-media stores still use best-effort persistence."
     },
     {
       "id": "SYNC-ERP-003",
       "status": "confirmed",
-      "summary": "Remote Supabase operations do not fall back to local fixtures on failure."
+      "summary": "Remote Supabase failures never fall back to local fixtures."
     },
     {
       "id": "SYNC-ERP-004",
       "status": "confirmed",
-      "summary": "Products has no offline mutation queue or replay."
+      "summary": "No offline queue or remote mutation replay exists for Products in this release."
     },
     {
       "id": "SYNC-ERP-005",
-      "status": "assumed",
-      "summary": "Real remote mutations require online server acknowledgement until queue/version/access semantics are approved."
+      "status": "confirmed",
+      "summary": "Remote Products reads and writes require an online authoritative response; no offline write queue is provided."
     },
     {
       "id": "SYNC-ERP-006",
-      "status": "open",
-      "summary": "Offline remote reads from cached authorized snapshots are undefined."
+      "status": "confirmed",
+      "summary": "Remote Product, cost and media data are not cached for offline reads in this release."
     },
     {
       "id": "SYNC-ERP-007",
       "status": "confirmed",
-      "summary": "Business state, connectivity, entity sync state and mutation state are separate dimensions."
+      "summary": "Business lifecycle, connectivity, entity sync state and mutation state remain separate dimensions."
     },
     {
       "id": "SYNC-ERP-008",
-      "status": "assumed",
-      "summary": "Use idempotency and optimistic versions when approved; do not use last-write-wins."
+      "status": "confirmed",
+      "summary": "Mutations use expected versions and idempotency; conflicts require explicit resolution and never use last-write-wins."
     },
     {
       "id": "SYNC-ERP-009",
       "status": "confirmed",
-      "summary": "Demo fixtures are not automatically uploaded or merged into remote organization data."
+      "summary": "Local fixture/demo data is never automatically uploaded or merged into remote organization data."
     },
     {
       "id": "SYNC-ERP-010",
       "status": "confirmed",
-      "summary": "Shared Platform capabilities retain their own synchronization and persistence boundaries."
+      "summary": "Shared Files, Notes, Activity, Tasks, Relations and Document Intelligence retain their Platform synchronization and recovery boundaries."
     },
     {
       "id": "SYNC-ERP-011",
-      "status": "open",
-      "summary": "Adapter selection by organization ID shape must be replaced by explicit runtime configuration."
+      "status": "confirmed",
+      "summary": "Explicit local_demo or supabase adapter selection is implemented; the current runtime lacks VITE_CATALOG_ADAPTER_MODE and therefore fails closed."
     },
     {
       "id": "SYNC-ERP-012",
       "status": "confirmed",
-      "summary": "Category sync and categoryKey migration wait for approved category identity, scope and lifecycle."
+      "summary": "Category synchronization and categoryKey migration require reviewed identity, scope and lifecycle mapping."
+    },
+    {
+      "id": "SYNC-ERP-013",
+      "status": "confirmed",
+      "summary": "Costs have no offline cache, queued mutation or replay; reads/writes recheck current server permission."
+    },
+    {
+      "id": "SYNC-ERP-014",
+      "status": "confirmed",
+      "summary": "Gallery order changes only through an online atomic full-gallery command with expected versions; no merge or last-write-wins."
+    },
+    {
+      "id": "SYNC-ERP-015",
+      "status": "open",
+      "summary": "The shared Files ownership boundary is approved; upload/finalization, signed-preview authorization, retention and orphan-recovery semantics remain open."
+    },
+    {
+      "id": "SYNC-ERP-016",
+      "status": "confirmed",
+      "summary": "Asset registration and assignment are separate; an attach failure never deletes a reusable shared Platform File."
+    },
+    {
+      "id": "SYNC-ERP-017",
+      "status": "confirmed",
+      "summary": "Ambiguous cost/media mutations are retried only with the same idempotency key; stale gallery state requires refresh and explicit reconciliation."
     }
   ],
   "actions": [
-    "Traced the catalog adapter proxy and local/Supabase persistence paths.",
-    "Inspected localStore and storage behavior, including reload persistence and swallowed storage errors.",
-    "Documented independent business, connectivity, entity-sync and mutation states.",
-    "Defined offline operation, idempotent retry, conflict, tenant-change and permission-change policies as proposed contracts.",
-    "Recorded a staged legacy-data reconciliation and rollback plan with no automatic coercion."
+    "Reconciled the earlier sync design against the approved Products API contracts and current cost/media scope.",
+    "Verified explicit fail-closed adapter selection and corrected the matrix: core catalog stores are strict, while Product-media stores still use best-effort persistence.",
+    "Defined online-only cost access, immediate protected-projection invalidation on permission changes, and no remote cost cache or mutation replay.",
+    "Defined atomic manual gallery reordering, same-key retry after ambiguous outcomes, and explicit refresh/reconciliation on order conflicts.",
+    "Kept upload, preview, signed URL lifecycle and orphan cleanup in the shared Platform Files boundary; Products does not add a local upload queue or delete a shared File to compensate.",
+    "Expanded migration, user-visible recovery and multiplatform test cases for costs, media assignments, file upload, previews and gallery ordering.",
+    "Revalidated against access attempt 11 and API attempt 11: shared Files and audit semantics are approved, while media-table/preview lifecycle enforcement and Products audit atomicity evidence remain open."
   ],
   "validation": [
     {
-      "command": "npm run delivery:validate",
+      "command": "npm run test:delivery",
       "result": "passed",
-      "evidence": "Module run validation passed: 104 checkpoint file(s) checked (36 archived legacy record(s))."
+      "evidence": "All 34 delivery state-machine and evidence tests passed."
     },
     {
       "command": "npm run validate:delivery-ledgers",
@@ -130,67 +168,112 @@
       "evidence": "Multiplatform delivery validation passed."
     },
     {
-      "command": "npm run test:delivery",
-      "result": "passed (27 tests)",
-      "evidence": "Delivery state-machine and evidence tests passed."
+      "command": "npm run validate:module-runs",
+      "result": "passed",
+      "evidence": "Module run validation passed: 110 checkpoint files checked (36 archived legacy records)."
     },
     {
-      "command": "python3 ERP JSON/SVG/Markdown-link check",
+      "command": "Review sync-model.md against current Product stores, adapters, access and API contracts",
       "result": "passed",
-      "evidence": "Parsed 9 JSON files and 5 SVG files; all local Markdown links resolve."
+      "evidence": "Explicit mode, strict catalog persistence, best-effort media persistence, shared Files ownership, audit requirements and remote-write gates match current evidence."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors reported."
     }
   ],
   "requirements": [
     {
-      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "id": "REQ-ERP-CATALOG-SYNC",
       "status": "PARTIAL",
-      "evidence": "Local/demo and remote adapter boundaries are documented; adapter mode, persistence errors, mutation queue, versions and migration remain unresolved."
+      "evidence": "The online-only target and explicit fail-closed mode are documented; runtime configuration is absent, and versions/idempotency are not implemented. Core catalog persistence is strict, but media stores remain best-effort."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-COST-SYNC",
+      "status": "PARTIAL",
+      "evidence": "No-cache/no-replay behavior and permission invalidation are specified; current cost permission/RLS and adapter enforcement remain insufficient."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-MEDIA-SYNC",
+      "status": "PARTIAL",
+      "evidence": "Atomic order, retry and failure recovery are specified; the shared Files boundary is approved, but media lifecycle/table enforcement and current assignment version/order fields remain open or absent."
     },
     {
       "id": "REQ-ERP-PRODUCT-CATEGORIES",
       "status": "PARTIAL",
-      "evidence": "Category synchronization is explicitly deferred pending category identity, scope, lifecycle and persistence decisions."
+      "evidence": "Migration remains gated on actual category inventory, approved mapping and category implementation."
     },
     {
       "id": "REQ-ERP-CRM-BOUNDARY",
       "status": "PASS",
-      "evidence": "CRM references retain stable catalog_item identity; shared Platform sync boundaries are reused."
+      "evidence": "Stable catalog_item references are preserved; Products does not duplicate CRM identity or Platform synchronization."
+    },
+    {
+      "id": "REQ-ERP-MULTIPLATFORM-SYNC",
+      "status": "PARTIAL",
+      "evidence": "One semantic online-only policy and recovery contract is defined; desktop/mobile runtime evidence is absent and iOS/Android are deferred."
     }
   ],
   "evidence": [
     {
       "type": "sync-analysis",
       "path": "docs/implementation/erp/core/sync-model.md",
-      "result": "Documents storage boundaries, state model, offline matrix, retry/conflict policy, migration and tests."
+      "result": "Defines state dimensions, local/remote storage boundaries, operation matrix, no-queue policy, retries, conflicts, migration/recovery and media/cost tests."
     },
     {
       "type": "source-audit",
       "path": "src/loopdev/domains/catalog/adapter/index.ts",
-      "result": "Adapter selection is based on UUID-shaped organization IDs; no explicit runtime mode or offline queue exists."
+      "result": "Catalog adapter requires VITE_CATALOG_ADAPTER_MODE=local_demo or supabase and rejects missing/invalid configuration."
     },
     {
       "type": "source-audit",
       "path": "src/lib/storage.ts",
-      "result": "localStorage reads fall back silently to seed data and writes ignore storage/quota failures."
+      "result": "Generic storage defaults to best-effort, while core catalog stores use strict persistence; Product-media stores currently retain the best-effort default."
     },
     {
       "type": "source-audit",
-      "path": "src/loopdev/domains/catalog/adapter/supabase.ts",
-      "result": "Remote operations are direct and have no version/idempotency fields or local offline fallback."
+      "path": "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
+      "result": "Current media adapter writes directly to Storage and platform_files, creates an ERP asset in the same method, removes shared resources during cleanup and generates signed URLs directly."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/adapter/product-media-local.ts",
+      "result": "Local media upload uses shared local Files but pairs file creation and ERP asset creation, with direct file removal on asset failure."
+    },
+    {
+      "type": "api-contract",
+      "path": "docs/implementation/erp/core/api-contracts.md",
+      "result": "Defines no offline replay, idempotent retries, cost permission gates, same-organization Files references and atomic full-gallery order."
+    },
+    {
+      "type": "access-revalidation",
+      "path": "docs/implementation/erp/core/access-model.md",
+      "result": "Shared Files boundary and append-only audit semantics are approved; media metadata enforcement, full deployed ERP RLS and Products audit atomicity remain open."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/data/localCatalog.ts; src/loopdev/domains/catalog/data/localProductMedia.ts; src/lib/localStore.ts",
+      "result": "Core catalog stores use strict persistence; Product-media asset and assignment stores use createLocalStore's best-effort default."
+    },
+    {
+      "type": "user-decision",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/02-domain.md",
+      "result": "Product Owner confirmed manual ordering for each product/SKU media gallery."
     }
   ],
   "detected_failure": {
-    "code": "SYNC-001",
+    "code": "SYNC-ERP-002",
     "detected_by": "sync-design",
-    "summary": "Products has no mutation queue/version/reconciliation contract, and local storage suppresses read/write failures; no reliable local-first production guarantee can be claimed."
+    "summary": "Product-media stores can suppress persistence failures, and the remote media adapter owns direct upload/metadata/cleanup/signed-URL operations rather than delegating finalized-file lifecycle to shared Platform Files."
   },
   "likely_failure_origin": {
-    "phase": "baseline",
-    "skill": "existing catalog adapter and shared localStore/storage implementation",
-    "code": "SYNC-001",
-    "confidence": 9
+    "phase": "prior implementation before approved shared Files and sync contracts",
+    "skill": "module-build",
+    "confidence": 9,
+    "rationale": "Current media adapters combine file and ERP asset lifecycle and lack order/version recovery; exact originating changes are not established."
   },
-  "next_handoff": "06-plan after open decisions and access blockers are resolved",
+  "next_handoff": "06-plan: sequence media persistence/Files integration, audit atomicity, cost/RLS and configuration tasks; keep remote writes and migration blocked until deployed-state and authorized legacy-data evidence pass.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
@@ -198,6 +281,13 @@
   },
   "invalidated": true,
   "notes": [
-    "This checkpoint predates the approved product-media scope amendment and must be reconciled before it can satisfy the current run."
-  ]
+    "No code, schema, migration, runtime data or remote database was changed in this phase.",
+    "The shared Files boundary and append-only audit semantics are approved; remote writes remain blocked on media lifecycle/table enforcement, Products audit atomicity, forward RLS/permission migrations, deployed-state verification and authorized legacy-data dry run.",
+    "No remote offline cache or mutation queue is approved; local demo fixtures must never be presented as remote data.",
+    "Manual gallery order is approved, but current persistence lacks position/version fields and must be planned as an atomic migration/command.",
+    "User-approved mobile web scope is covered by the same semantic contracts; native iOS/Android remain deferred."
+  ],
+  "task_ids": [],
+  "invalidated_at": "2026-10-25T16:14:37.767Z",
+  "invalidation_reason": "Changed inputs: design"
 }

@@ -1,11 +1,11 @@
 # ERP Core — Diseño visual
 
 > **Fuente visual normativa del gate `01-visual-design`.** Los SVG son evidencia
-> revisable, no una especificación de implementación. La aprobación anterior
-> cubría el formulario en drawer; el Product Owner aprobó sustituirlo por
-> páginas completas y añadir coste de compra de referencia. @loopdev-io
-> aprobó conceptualmente esta revisión el 2026-10-24; la comparación de runtime
-> sigue pendiente.
+> revisable, no una especificación de implementación. La aprobación conceptual
+> anterior cubre Products, categorías y la asignación de categoría propia por
+> SKU; no cubre el alcance de medios añadido después. El nuevo addendum de
+> galería/selector contextual recibió aprobación conceptual explícita el
+> 2026-10-25; la comparación de runtime sigue pendiente.
 
 ## Entradas y aprobación
 
@@ -13,9 +13,9 @@
 - Arquitectura: [`architecture-design.md`](architecture-design.md), aprobada para el gate visual, con la misma enmienda registrada.
 - Contrato multiplataforma: [`MULTIPLATFORM_DELIVERY_CONTRACT.md`](../../../03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md).
 - Fuentes de componentes y shell: [`PLATFORM_V2_UI_REFERENCE.md`](../../../03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md), [`PLATFORM_V2_SHELL_REFERENCE.md`](../../../03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md).
-- Decisión de alcance visual: el módulo visible se llama **Productos**. El runtime actual sigue usando la ruta legacy `/app/erp/product-catalog`; la ruta canónica `/app/erp/products` es una propuesta de migración, no runtime existente. Ventas, compras, inventario, finanzas e integraciones siguen propuestas; no se representan como MVP aprobado.
-- Composiciones revisables: [overview](wireframes/erp-overview.svg), [lista de Productos](wireframes/erp-products.svg), [edición completa de producto](wireframes/erp-product-form-page.svg), [edición completa de SKU](wireframes/erp-sku-editor-page.svg), [ficha completa de producto](wireframes/erp-product-record-page.svg), [alta rápida de referencias](wireframes/erp-reference-quick-drawer.svg), [gestión de categorías](wireframes/erp-product-categories.svg) y [detalle comercial secundario](wireframes/erp-commercial-detail.svg). El índice de catálogos no es la entrada del módulo.
-- Estado de aprobación conceptual de esta revisión: `approved` el 2026-10-24. @loopdev-io confirmó que la decisión de páginas completas y el coste de referencia bastan para aprobar conceptualmente las composiciones actualizadas y pasar al plan mínimo. Comparación de runtime: `NOT_RUN`.
+- Decisión de alcance visual: el módulo visible se llama **Productos**. `/app/erp/products` es la ruta web canónica actual; `/app/erp/product-catalog` redirige a ella y `/app/erp/product-catalog/:catalogId` conserva compatibilidad. El shell autenticado de escritorio se verificó, pero la consulta local falla cerrada porque falta `VITE_CATALOG_ADAPTER_MODE`; `local_demo` con el tenant autenticado actual devuelve forbidden. No se habilitó Supabase. Ventas, compras, inventario, finanzas e integraciones siguen propuestas; no se representan como MVP aprobado.
+- Composiciones revisables: [overview](wireframes/erp-overview.svg), [lista de Productos](wireframes/erp-products.svg), [edición completa de producto](wireframes/erp-product-form-page.svg), [edición completa de SKU](wireframes/erp-sku-editor-page.svg), [ficha completa de producto](wireframes/erp-product-record-page.svg), [galería de medios — desktop](wireframes/erp-product-media-desktop.svg), [galería de medios — mobile](wireframes/erp-product-media-mobile.svg), [alta rápida de referencias](wireframes/erp-reference-quick-drawer.svg), [gestión de categorías](wireframes/erp-product-categories.svg) y [detalle comercial secundario](wireframes/erp-commercial-detail.svg). El índice de catálogos no es la entrada del módulo; el selector de medios no crea una ruta de biblioteca separada.
+- Estado de aprobación conceptual: las composiciones previas fueron aprobadas en 2026-10-24 y el addendum de galería/media desktop y mobile fue aprobado explícitamente por el Product Owner el 2026-10-25. La aprobación cubre la composición conceptual, no el contrato compartido de Files ni su implementación. Comparación de runtime: `NOT_RUN`.
 
 ## Revisión tras el rechazo visual
 
@@ -40,10 +40,12 @@ inicial de esta sección.
 | Clasificación | Alcance |
 |---|---|
 | Confirmado | ERP transversal para pymes; **Products** y categorías son el primer release en desktop/mobile web. Su lista unificada de productos/servicios es la entrada de trabajo, sin índice previo de catálogos. El maestro distingue terminados, materias primas/componentes y servicios; clase, compra, venta y control de inventario son dimensiones independientes. El producto base tiene una categoría principal y cada SKU variante una categoría propia; el abastecimiento se hereda en las variantes. La creación, edición y ficha de producto/SKU usan páginas completas. |
+| Aprobado conceptualmente | Productos y SKUs pueden subir imágenes o reutilizar un asset de la organización desde la propia galería. El selector contextual no abre una ruta independiente. Se conserva el original y se generan una imagen optimizada con lado mayor máximo de 1600 px y una miniatura de 400 px, manteniendo proporciones y sin recorte. La implementación de derivados y el contrato de Files siguen pendientes. |
+| Confirmado por @loopdev-io; contrato pendiente de análisis | Los costes usan permisos separados `catalog.cost.read` y `catalog.cost.manage`; la interfaz nunca infiere acceso de coste a partir de `catalog.read`. La regla de combinación entre lectura y gestión se resuelve en access design. |
 | Confirmado por @loopdev-io | Incluir coste de compra unitario de referencia por producto/SKU, no contable. No es valoración de inventario, coste de fabricación ni margen. |
 | Confirmado por @loopdev-io | Usar drawers solo para altas/ediciones rápidas de datos auxiliares; la gestión completa del árbol de categorías sigue en una vista dedicada. |
-| Confirmado por fuente | `/app/erp/overview`, `/app/erp/product-catalog` y `/app/erp/product-catalog/:catalogId` siguen siendo rutas runtime legacy; la navegación y el contenido real se confirman en `src/routes/LoopdevRoutes.tsx`, `src/loopdev/pages/erp/Overview.tsx` y `ProductCatalog.tsx`. |
-| Propuesta para build | `/app/erp/products` como ruta canónica; mantener un redirect/compatibilidad para las rutas legacy. La migración no se incluye en este gate visual. |
+| Confirmado por fuente | `/app/erp/products` es la ruta web canónica actual; `/app/erp/product-catalog` redirige a Products y `/app/erp/product-catalog/:catalogId` conserva compatibilidad. La navegación y el contenido se confirman en `src/routes/LoopdevRoutes.tsx`, `src/loopdev/pages/erp/Overview.tsx` y `ProductCatalog.tsx`. |
+| Estado de runtime | La ruta y el shell autenticado de escritorio se verificaron; la consulta de catálogo falla cerrada si no se configura el modo del adaptador. La ruta responsive sirve para mobile web, pero no hay evidencia de operación completa en viewport móvil. No se habilitó Supabase. |
 | Resuelto para este release | Locale/canales legacy se conservan como provenance y se difiere su destino. La moneda comercial pertenece a `PriceBook`; `Offer` no tiene moneda independiente. No se elimina ni migra data sin inventario autorizado y dry-run. La categoría propia de cada SKU debe reflejarse en el plan/build. |
 | Propuesta visual | Componer páginas completas con navegación por secciones y drawers ligeros para gestión rápida de referencias; mostrar coste y atributos físicos con semántica explícita. |
 | No aprobado / fuera de estos wireframes | Pantallas de ventas/pedidos, compras, almacén, finanzas, conexión Shopify, sincronización o storefront. Los pilotos MiauCraft e Inhand no convierten esas capacidades en alcance aprobado. |
@@ -281,6 +283,45 @@ siguen abiertas; no se crea un módulo genérico de configuración ERP.
 
 **Evidencia:** [alta rápida desktop y mobile](wireframes/erp-reference-quick-drawer.svg).
 
+### Addendum visual de medios (decisiones del Product Owner)
+
+La ficha de producto conserva una vista previa en su columna derecha: un
+carousel compacto de las imágenes asignadas al producto base y una acción para
+abrir la galería completa de ese producto. La galería completa sigue siendo una
+vista producto-específica con destino seleccionable entre producto base y sus
+SKUs. Allí se ofrecen **Subir** y **Usar existente**; esta última acción abre
+un `Dialog` contextual de assets de la organización y, al confirmar, asocia el
+asset al destino actual y vuelve a la galería. No se crea una ruta independiente
+de biblioteca organizacional. El selector muestra nombre/preview y metadatos
+útiles para elegir. Como default visual propuesto, el texto alternativo se edita
+en la asociación concreta, para que una imagen reutilizada pueda describir
+correctamente cada producto o SKU; esta propiedad queda pendiente de
+confirmación en specialized analysis.
+
+El original se conserva sin alteraciones. El flujo debe producir una versión
+optimizada con lado mayor máximo de 1600 px y una miniatura con lado mayor de
+400 px; ambas mantienen la relación de aspecto, sin recorte. Las vistas usan
+miniatura para tarjetas y la versión optimizada para preview; no presentan el
+original como representación de catálogo. La interfaz explica original y
+derivados como estados de procesamiento, no como nuevos controles configurables.
+Formato/calidad concretos, pipeline/owner y compatibilidad del contrato Files
+siguen en análisis técnico y no se dan por aprobados por esta composición.
+
+**Wireframe desktop:** la [ficha y su carousel en columna derecha](wireframes/erp-product-record-page.svg) enlazan con la [galería producto-específica y el selector contextual](wireframes/erp-product-media-desktop.svg). El overlay no oculta la identidad del contexto, y selección, filtros y cierre son legibles sin depender solo del color.
+
+**Wireframe mobile web:** los mismos artefactos representan la tarjeta/carousel apilado en la ficha y la [galería con selector de superficie completa](wireframes/erp-product-media-mobile.svg), con targets de al menos 44×44 CSS px. El cierre devuelve foco y contexto a la galería.
+
+![Ficha de producto con el carousel de medios en la columna derecha](wireframes/erp-product-record-page.svg)
+
+![Galería de medios desktop y selector contextual](wireframes/erp-product-media-desktop.svg)
+
+![Galería de medios mobile web y selector de superficie completa](wireframes/erp-product-media-mobile.svg)
+
+El objetivo conceptual aplica a uploads, assets reusados y todas las asignaciones
+de producto/SKU; no implica publicación automática, URL pública, optimización
+por canal, ni una implementación genérica de DAM. Desktop y mobile deben
+compartir operaciones, copy, validación, permisos y lifecycle.
+
 ## Estados visuales y recuperación
 
 La matriz normativa está en [`view-state-matrix.md`](view-state-matrix.md).
@@ -298,7 +339,7 @@ afirman que exista sync hoy.
 |---|---|---|---|
 | `>=1200px` | Shell con navegación amplia o colapsada; overview con KPI en tres columnas y dos zonas; lista tabular; ficha, editor de producto y editor de SKU en páginas completas. | Teclado completo, hover solo como ayuda; `AppDrawer` se limita a referencias rápidas. | `PLATFORM_V2_SHELL_REFERENCE.md`, `tailwind.config.ts`, wireframes. |
 | `768–1199px` | Shell mini-sidebar; grillas se reducen; páginas de formulario pasan a una columna con navegación de sección compacta. | No reducir hit-area para salvar densidad; filtros pueden pasar a una segunda fila. | Shell (`md` a `nav`) y wireframes como propuesta. |
-| `<768px` | Sidebar como drawer; una columna; artículo como card; detalle y formularios son páginas con retorno visible; drawer rápido ocupa la superficie completa. | Área objetivo mínima 44×44 CSS px; mismo significado, acción principal visible, navegación móvil y foco/dirty-state preservados. | `PLATFORM_V2_SHELL_REFERENCE.md`; wireframes; comportamiento ERP requiere prueba. |
+| `<768px` | Sidebar como drawer; una columna; artículo como card; detalle y formularios son páginas con retorno visible; carousel de medios apilado y selector en superficie completa, sin ruta de biblioteca. | Área objetivo mínima 44×44 CSS px; mismo significado, acción principal visible, navegación móvil y foco/dirty-state preservados. | `PLATFORM_V2_SHELL_REFERENCE.md`; wireframes; comportamiento ERP requiere prueba. |
 | iOS / Android | Sin composición nativa para este release; superficies diferidas. | No se afirma paridad nativa; mantener contratos compartidos si se aprueba una fase futura. | Scope `deferred`; aprobado por Product Owner. |
 
 ## Accesibilidad e internacionalización
@@ -306,6 +347,7 @@ afirman que exista sync hoy.
 - **Teclado:** orden de foco de breadcrumb → título/acción → filtros → lista → paginación; `Enter` abre un producto/servicio y `Escape` cierra la superficie superior. Una tarjeta clicable no contiene botones clicables anidados. Las tablas exponen encabezados, sort y acciones con nombre accesible.
 - **Páginas y formularios:** breadcrumb y retorno mantienen el contexto; navegación por secciones es operable con teclado y lector de pantalla. Cada control tiene label visible; `aria-invalid`/`aria-describedby` vinculan error y descripción. Confirmar descarte de draft ante navegación; el resumen de errores recibe foco tras submit inválido.
 - **Drawers auxiliares:** usar `AppDrawer`/Sheet para portal, foco atrapado por la primitiva, Escape y restauración de foco al opener; al cerrar se restaura el formulario padre sin perder el draft. No anidar drawers.
+- **Selector de medios:** abrir con foco en título/búsqueda, permitir búsqueda y selección de assets con teclado, anunciar el conteo elegido y devolver foco al botón “Usar existente” al cerrar; distinguir loading, empty, forbidden y error mediante texto.
 - **Screen reader:** loading `role=status`/`aria-live=polite`; errors con `role=alert`; empty con texto accionable; estado de sync/pending con copy explícito. Badges incluyen palabras (`Active`, `Draft`, `Archived`) y no solo puntos/color.
 - **Contraste:** usar tokens semánticos con light/dark; validar contraste WCAG 2.2 AA para texto, iconos/estados y focus ring en runtime. Esta auditoría no midió valores de contraste ni afirma aprobación.
 - **Touch:** controles funcionales tienen 44×44 CSS px en móvil, mediante la composición/área táctil si el primitive compacto es menor. `Input` actual tiene 40px y el botón puede ser menor; la aceptación visual debe comprobar la hit-area real.
@@ -326,6 +368,11 @@ afirman que exista sync hoy.
 | Campos de formulario | `Form`, `FormField`, `FormControl`, `FormLabel`, `FormMessage`, `Input`, `Select`, `Textarea`, `Checkbox` | `REUSE`; field sets y validaciones de producto/servicio son `MODULE_SPECIFIC`. La página actual aún usa estado local en vez del patrón RHF. | `src/components/ui/form.tsx`, `ProductCatalog.tsx`, `ContactForm.tsx`. |
 | Carga, empty y error | `LoadingState`, `EmptyState`, `DataCard`, `Alert` | `REUSE`; overview necesita estados explícitos; forbidden/conflict se componen con semántica textual. No crear estado paralelo. | `LoadingState.tsx`, `EmptyState.tsx`, `DataCard.tsx`, `ui/alert.tsx`. |
 | Notes, Files, Activity y Tasks en futuros workspaces ERP | Capacidades Platform existentes | `REUSE` cuando un módulo aprobado las consuma; prohibido crear editores/uploaders/feed/timeline de ERP en paralelo. No forman una zona de estas vistas actuales. | `PLATFORM_V2_UI_REFERENCE.md`, barrels Platform/Files y contratos compartidos. |
+| Product-media preview and carousel | Shared `Carousel` and `Button`; `ProductMediaSection` | `REUSE`; compact preview in the product record's right column, linking to the full product-specific gallery. | ERP Products owns placement and navigation; shared Carousel owns interaction. | `ProductMediaSection.tsx`; `ProductRecordPages.tsx`; `erp-product-record-page.svg`. |
+| Product-media upload and existing-file selection | `FilesDropzone`, `FilePicker`, `FilePreview`, `Dialog`, `SearchInput`, `Select`, `Button` | `EXTEND_PLATFORM` for organization-scoped remote asset listing/upload, safe preview, reusable multi-entity associations and rendition lifecycle; the product-specific gallery remains module composition. | Platform owns file bytes and renditions; ERP Products owns product/SKU placement and contextual alt text. | Current Files UI exports are implemented; current `FilesAdapter` has singular `FileRecord.relation` and no generic organization-scoped remote adapter or rendition evidence. |
+| Product/SKU media assignments and alt text | Existing `product-media` assignment contract, subject to domain/access reconciliation | `MODULE_SPECIFIC`; proposed composition shows assignment target, accessible alt text, and attach/detach lifecycle in the product record. | ERP Products | Product/variant imagery and reuse are approved; per-placement alt text is a proposed default, not a settled domain/API contract. | `ProductMediaGalleryManager.tsx`; current product media schema and adapter; media scope amendment. |
+| Optimized image and thumbnail presentation | Current `FilePreview` / Files contracts; no rendition contract verified | `EXTEND_PLATFORM`; use optimized image for preview and 400 px thumbnail for cards; preserve the original. | Platform | Do not add a module-local image pipeline or persist duplicate blobs without a shared ownership/retention contract. | User-approved 1600 px / 400 px sizes; current Files types contain no rendition metadata. |
+| Purchase-cost visibility and editing | Shared `Button`, `Input`, `Alert`; proposed `catalog.cost.read` / `catalog.cost.manage` permissions | `MODULE_SPECIFIC`; values render only with read access and edit controls only with manage access; no inference from `catalog.read`. | ERP Products (field); Platform (authorization/RLS) | The access model must settle behavior for manage-without-read before implementation. | Product Owner decision in current conversation; access model remains pending. |
 | Campos de oferta, variante y price book | Contratos técnicos actuales del catálogo y primitives anteriores | `MODULE_SPECIFIC`; mantenerlos bajo Products, no dentro de formularios genéricos de Platform. | `src/loopdev/domains/catalog/`, adapter tests y `CatalogCommercialManager`. |
 | Selector de Price Book | `Select` LoopDev | `REUSE`; el `<select>` nativo actual es una divergencia a corregir, no otro primitive a conservar. | `ProductCatalog.tsx` línea del bloque “Price entries”; directriz visual Rivera. |
 
@@ -347,6 +394,11 @@ afirman que exista sync hoy.
 | Tabs, precio/oferta/variante | `MODULE_SPECIFIC` | Contrato técnico actual + `Tabs`/`Select` UI | ERP Products | Composición y validación comercial pertenecen al módulo Productos. | `CatalogCommercialManager`; `src/loopdev/domains/catalog`. |
 | Alertas de error, conflict y forbidden | `shared` | `Alert`, `DataCard`, `EmptyState` | Platform | Reusar semántica común; mensaje/recuperación dependen de la operación. | `ui/alert.tsx`, `DataCard.tsx`. |
 | Notes, Files, Activity, Tasks | `shared` | Barrels Platform y Files | Platform | Futuras vistas de registro consumirán la capacidad; esta fase no crea widget ERP duplicado. | `PLATFORM_V2_UI_REFERENCE.md`. |
+| Preview de medios en ficha | `MODULE_SPECIFIC` | Shared `Carousel` and `Button`; `ProductMediaSection` | ERP Products | Mostrar un carousel compacto en la columna derecha; la ruta abre la galería completa del producto. | `ProductMediaSection.tsx`; `ProductRecordPages.tsx`; `erp-product-record-page.svg`. |
+| Galería y target product/SKU | `MODULE_SPECIFIC` | Product-media assignment contract; shared `FormSectionHeader`, `Select`, `Button`, `Input` | ERP Products | La selección de destino y el lifecycle de asignación pertenecen al catálogo; la galería completa es producto-específica. | `ProductMediaGalleryManager.tsx`; `/app/erp/products/:productId/media`; nuevos wireframes desktop/mobile. |
+| Subida y “Usar existente” | `EXTEND_PLATFORM` | Files UI (`FilePicker`, `FilePreview`), Files adapter/storage, `Dialog`, `SearchInput` | Platform (bytes, tenant-safe library, renditions); ERP (contextual placement) | No duplicar uploader, preview ni almacenamiento; el picker solo ofrece assets de la organización y regresa a la ficha. | `src/loopdev/domains/files/types.ts`; `ProductMediaGalleryManager.tsx`; wireframes media. |
+| Cards de medios y texto alternativo | `MODULE_SPECIFIC` | Shared `Input`, `Button`, image preview | ERP Products | Preview usa rendition adecuada; el default visual propone alt text por asociación para soportar contexto. | Product media adapter/schema; wireframes media. |
+| Costes de compra de referencia | `MODULE_SPECIFIC` | `catalog.cost.read` / `catalog.cost.manage`; shared form primitives | ERP Products (field); Platform (authorization/RLS) | Lectura y gestión se autorizan de forma independiente; acceso no se hereda de `catalog.read`. | Decisión del Product Owner; `access-model.md` pendiente de reconciliación. |
 
 No se propone crear primitivas globales nuevas en este gate. Las composiciones
 específicas de inventario, pedidos, compras o conexión de canales quedan
@@ -356,28 +408,31 @@ específicas de inventario, pedidos, compras o conexión de canales quedan
 
 | ID | Decisión | Evidencia | Consecuencia |
 |---|---|---|---|
-| VD-ERP-FONT-001 | La tipografía oficial de LoopDev es Inter para UI y JetBrains Mono para datos técnicos. | Confirmación explícita de @loopdev-io y `docs/06-product/crm/CRM_UI_COMPONENT_PROTOCOL.md`. | Los cinco wireframes usan Inter/JetBrains Mono. El runtime todavía carga Geist/Geist Mono; se registra como drift de Platform y no se corrige parcialmente dentro de ERP. |
+| VD-ERP-FONT-001 | La tipografía oficial de LoopDev es Inter para UI y JetBrains Mono para datos técnicos. | Confirmación explícita de @loopdev-io y `docs/06-product/crm/CRM_UI_COMPONENT_PROTOCOL.md`. | Los wireframes aprobados usan Inter/JetBrains Mono. El runtime todavía carga Geist/Geist Mono; se registra como drift de Platform y no se corrige parcialmente dentro de ERP. |
 | VD-ERP-REUSE-001 | Reutilizar el Shell, tokens de color, superficies y primitives actuales; no importar páginas ni lógica de Rivera ni abrir un sistema paralelo. | `PLATFORM_V2_UI_REFERENCE.md`, `PLATFORM_V2_SHELL_REFERENCE.md` y código/tests citados arriba. | El cambio visual mantiene la composición y controles compartidos; las reglas comerciales pertenecen al módulo Products. |
 | ERP-DEC-005 | El maestro de Productos distingue terminados, materias primas/componentes y servicios; usos de compra/venta/inventario son independientes; cada producto tiene categoría principal jerárquica; terminados permiten buy/make/both, materias primas/componentes solo buy por ahora y servicios no tienen sourcing; las variantes heredan el sourcing de su producto con SKU propio. Los semielaborados esperan a Fabricación. | Confirmación de @loopdev-io y `CR-ERP-PRODUCT-MASTER-MODEL`; decisiones posteriores registradas en `domain-model.md`. | La lista filtra por clase/categoría; formulario y detalle muestran clase, categoría, usos y abastecimiento solo cuando aplica, sin implicar capacidades de inventario o fabricación implementadas. |
 | VD-ERP-013 | La gestión del árbol de categorías usa una vista dedicada dentro de Productos con retorno visible a la lista. | Confirmación explícita de @loopdev-io: “Vista dedicada dentro de Productos, con retorno a la lista (Recomendado)”. | Se wireframea árbol y detalle en paralelo en desktop y apilados en mobile web; no se crean drawers anidados. |
 | VD-ERP-FORM-002 | Crear/editar y consultar la ficha completa de producto/SKU en páginas completas; drawers únicamente para alta/edición rápida de referencias auxiliares. | Selección explícita de @loopdev-io el 2026-10-24: “Sí: páginas completas y drawers para gestión rápida”. | Reemplaza el formulario principal en drawer y requiere rutas con deep-link, refresh, back y preservación de drafts. |
 | VD-ERP-COST-001 | Mostrar coste de compra unitario de referencia por producto/SKU; no es coste contable, valoración de inventario ni margen. | Selección explícita de @loopdev-io el 2026-10-24: “Coste de compra unitario de referencia por producto/SKU, no contable”. | Representar importe/moneda por separado del precio de venta; acceso protegido y reglas de herencia/permisos pendientes. |
 | VD-ERP-DATA-001 | Categoría y marca permiten alta rápida desde sus campos; la gestión del árbol de categorías permanece en vista dedicada. | Selección explícita de @loopdev-io para usar drawers en la gestión rápida de datos auxiliares; `VD-ERP-013` ya confirma la vista del árbol. | No implica aprobación de un módulo genérico de configuración ni resuelve entidad/retención de marcas y etiquetas. |
+| VD-ERP-MEDIA-001 | Mantener carousel compacto en columna derecha de la ficha y una galería completa por producto/SKU; “Usar existente” abre selector contextual, no una ruta de biblioteca organizacional. | Selección previa de Product Owner para el carousel y decisión actual sobre selección contextual. | Conserva la vista rápida en la ficha y permite gestionar el conjunto completo sin separar el picker de su contexto de producto. | Aprobado conceptualmente por @loopdev-io el 2026-10-25; la ejecución sigue condicionada al contrato de Files. |
+| VD-ERP-MEDIA-002 | Conservar original y generar versión optimizada de hasta 1600 px y miniatura de 400 px en el lado mayor; mantener proporción y no recortar. | Selección explícita del Product Owner en la conversación actual. | Requiere metadatos/lifecycle de derivados y un owner de procesamiento compartido; no define aún formato, calidad ni dónde corre el pipeline. | Aprobado conceptualmente por @loopdev-io el 2026-10-25; formato, calidad y pipeline siguen abiertos en specialized analysis. |
+| VD-ERP-COST-003 | Separar `catalog.cost.read` de `catalog.cost.manage`; no inferir permiso por `catalog.read`. | Selección explícita del Product Owner en la conversación actual. | Define render de solo lectura/edición; la combinación `manage` sin `read` debe resolverse en access design. | Decisión confirmada; aún no es aprobación de contrato o RLS. |
 
 ## Validación en dos niveles
 
 ### Aprobación conceptual — antes de implementación
 
-- **Alcance y jerarquía:** revisar que la fuente visual cubre solo Products y categorías, además del coste de compra de referencia, y que no convierte ventas/compras/inventario/Shopify en MVP.
-- **Composición:** revisar cards, tabla móvil, páginas completas de producto/SKU, ficha completa, alta rápida de referencias y la propuesta de evitar drawers anidados.
+- **Alcance y jerarquía:** revisar que la fuente visual cubre solo Products y categorías, medios aprobados y coste de compra de referencia, y que no convierte ventas/compras/inventario/Shopify en MVP.
+- **Composición:** revisar cards, tabla móvil, páginas completas de producto/SKU, ficha con carousel a la derecha, galería completa por producto, alta rápida de referencias y selector contextual de assets existentes.
 - **Estados y recuperación:** revisar loading, empty, error, forbidden, conflict, offline, pending y success por superficie en `view-state-matrix.md`.
 - **Reuso:** revisar inventario de fuentes, zonas y hallazgos (selector nativo, duplicación de sección, modo de drawer, falta de loading/error en Overview y discrepancia de formularios).
 - **Responsive/accesibilidad:** revisar navegación, target táctil, foco, contraste, lectura no-color e i18n/RTL.
-- **Aprobador/fecha/decisión/evidencia:** @loopdev-io aprobó conceptualmente la revisión completa el 2026-10-24; el registro se conserva en `01-visual-design.json`. La comparación visual de runtime sigue `NOT_RUN`.
+- **Aprobador/fecha/decisión/evidencia:** @loopdev-io aprobó las composiciones previas el 2026-10-24 y el addendum de medios el 2026-10-25; ambas aprobaciones conceptuales están registradas en `01-visual-design.json`. La comparación visual de runtime sigue `NOT_RUN`.
 
 ### Comparación runtime — después de implementación
 
-- **Rutas/viewport:** `/app/erp/overview` y la futura `/app/erp/products` (lista, detalle y formularios) en desktop >=1200px, tablet 768–1199px y móvil <768px, tema light/dark; comparar también la redirección desde `/app/erp/product-catalog`.
+- **Rutas/viewport:** `/app/erp/overview` y la ruta actual `/app/erp/products` (lista, detalle y formularios) en desktop >=1200px, tablet 768–1199px y móvil <768px, tema light/dark; comparar también la redirección desde `/app/erp/product-catalog`.
 - **Capturas y diff:** no existen aún; runtime no iniciado.
 - **Comparación con esta fuente:** `NOT_RUN` hasta implementación aprobada.
 - **Desviaciones:** registrar cada diferencia con aprobación/owner antes de cerrar `08-verify`.
@@ -397,16 +452,16 @@ específicas de inventario, pedidos, compras o conexión de canales quedan
 | VD-ERP-008 | Locale/moneda real del cliente. | Product Owner + cliente futuro | Fixtures ficticios `es-ES/EUR`; configuración de organización, sin impuesto/country assumption. | Afecta formatos y fiscalidad de integraciones futuras. | Diferido: no bloquear Products/categories; resolver antes de Shopify/Inhand/ventas. |
 | VD-ERP-009 | Enlaces canónicos de composición visual no existentes en el protocolo CRM. | Platform | Basar esta composición en UI/shell references y source/test evidence actuales. | Riesgo de enlazar documentación inexistente. | No bloquea este módulo; corregir enlaces como mantenimiento de Platform. |
 | VD-ERP-010 | Locale/canales de `OrganizationCatalog` (`ERP-OD-008`). | Product Owner + ERP/Platform | Preservar como provenance; moneda pertenece a `PriceBook`; `Offer` no tiene moneda propia. | No perder datos de migración. | Resuelto para este release; destino deferred. |
-| VD-ERP-011 | Ruta `/app/erp/products` y deep links legacy. | Product Owner + Platform | Products directo; compatibilidad/redirección desde `/app/erp/product-catalog`; no usar `catalogId` como límite de negocio. | Navegación, refresh, bookmarks, CRM links y mobile back. | Confirmado por aprobación conceptual del Products direct-list flow; validar en route/runtime audit. |
+| VD-ERP-011 | Ruta `/app/erp/products` y deep links legacy. | Product Owner + Platform | Products directo; compatibilidad/redirección desde `/app/erp/product-catalog`; no usar `catalogId` como límite de negocio. | Navegación, refresh, bookmarks, CRM links y mobile back. | Confirmado; la ruta canónica y el redirect legacy están registrados. La operación responsive y la configuración del adaptador siguen pendientes de verificación. |
 | VD-ERP-012 | Categoría propia por variante/SKU. | Product Owner + ERP domain | Producto base categoría general; cada SKU con su categoría; drafts pueden omitir y activación la exige. | El formulario/lista debe exponer ambas asignaciones. | Resuelto en `domain-model.md`; incorporar a contrato y tests. |
 | VD-ERP-014 | La interacción para asignar categoría a cada SKU no estaba dibujada. | Product Owner + ERP domain | Vista de edición de SKU con categoría general en solo lectura y selección propia. | Evita interpretar la categoría del producto como herencia de SKU. | Addendum aprobado explícitamente por @loopdev-io el 2026-10-24. |
 | VD-ERP-DATA-002 | Gestión completa de marcas/etiquetas y atributos auxiliares: referencias controladas, libres o mixtas; navegación a catálogo completo. | Product Owner + ERP domain | Alta rápida en drawer desde el formulario; categoría mantiene manager dedicado. | Afecta unicidad, scope, archivado, filtros, permisos y migración de strings legacy. | Requiere definir si marcas/etiquetas son catálogos administrados y si necesitan una página de gestión dentro de Products. |
 | VD-ERP-COST-002 | Permiso y visibilidad del coste de referencia; herencia/default de producto a SKU; moneda, fuente e historial. | Product Owner + ERP domain/access | Coste pertenece a la unidad comprable: producto si no tiene SKUs, SKU cuando se gestiona separadamente; se oculta sin permiso explícito. | Cambia modelo, DTO, persistencia, auditoría, autorización y layout de detalle. | Rerun domain/access/API/sync antes del plan; no reutilizar `catalog.read` por inferencia. |
 | VD-ERP-PHYSICAL-001 | Propiedad y herencia de peso/dimensiones entre producto base y SKU; unidades válidas. | Product Owner + ERP domain | Capturar valores estructurados en la entidad física gestionada y exponer unidad explícita. | Afecta validación, conversiones, logística futura e importación de datos. | Resolver en domain/API antes del build; el SVG solo presenta la composición propuesta. |
+| VD-ERP-MEDIA-003 | Alcance del texto alternativo cuando una imagen se reutiliza. | Product Owner + ERP domain | Alt text por asignación a producto/SKU, no global al archivo; es coherente con el contexto visual y el modelo de assignment existente. | Define propiedad del metadato, payload, ediciones y accesibilidad en cada destino. | La presentación conceptual fue aprobada el 2026-10-25; confirmar ownership de dominio y contrato antes del plan. |
 ## Handoff
 
-- **Requisitos visuales listos para revisión:** la revisión actual muestra lista, árbol de categorías, páginas completas de producto/SKU, ficha completa, referencias rápidas y preview comercial en desktop/mobile web. El Overview sigue como compatibilidad, no dashboard funcional.
-- **Decisiones confirmadas:** página completa para producto/SKU, coste unitario de compra de referencia no contable, alta rápida de referencias en drawer y gestión jerárquica de categorías en vista dedicada.
-- **Riesgos/dependencias:** coste sensible necesita policy propia; reglas de herencia/currency/unidades y el inventario de marcas/etiquetas requieren análisis de dominio/acceso/API/sync antes de planificar build.
-- **Preguntas abiertas:** administración completa de marcas/etiquetas; acceso, moneda, source/history y defaults del coste; propiedad de dimensiones; migración real y auditoría Platform.
-- **Estado:** `approved with open domain/access decisions` — las composiciones están aprobadas conceptualmente; coste, permisos, atributos y configuración auxiliar deben resolverse como tareas del plan. La comparación runtime permanece `NOT_RUN`.
+- **Requisitos visuales listos para revisión:** el addendum muestra el carousel en la columna derecha de la ficha, la galería producto-específica y el selector de assets existentes en desktop/mobile web. El Overview sigue como compatibilidad, no dashboard funcional.
+- **Decisiones confirmadas:** páginas completas para producto/SKU; costes de compra de referencia; permisos de coste separados; media gallery contextual, original preservado, derivados 1600/400 sin recorte; categoría y auxiliares como se documenta arriba.
+- **Riesgos/dependencias:** las asignaciones, renditions y selector remoto requieren contrato compartido de Files, seguridad por organización, auditoría y aprobación Platform antes del build. La combinación de permisos de coste y el pipeline técnico siguen en análisis.
+- **Estado:** `APPROVED_CONCEPTUAL` el 2026-10-25; el siguiente handoff es `SPECIALIZED_ANALYSIS`. Esta aprobación no cierra las decisiones de dominio/acceso/API/sync ni habilita implementación o migraciones. La comparación runtime permanece `NOT_RUN` hasta después del build aprobado.

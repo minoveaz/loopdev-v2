@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | `scope de Products aprobado; gate visual conceptual aprobado; plan de implementación pendiente de aprobación` |
+| Estado | `scope de Products permanece aprobado; evidencia de diseño/visual y plan requieren revalidación tras cambios en los insumos` |
 | Suite / módulo | ERP / Core capability map |
 | Run | `MOD-CORE-20261024-001` |
 | Discovery | `discovery.md` (attempt 2, partial) |
@@ -48,9 +48,11 @@ condicionada a un plan completo y explícitamente aprobado.
   propietario de la relación e historial del cliente; algunas pymes no
   gestionan inventario físico; canales externos pueden seguir siendo sistemas
   de registro.
-- **Dependencias abiertas:** inventario autorizado de datos legados y
-  aprobación del contrato de auditoría por Platform. País, impuestos, Shopify,
-  Inhand y otros módulos se resolverán en follow-up.
+- **Dependencias abiertas:** inventario autorizado de datos legados y dry-run;
+  verificación de las políticas RLS desplegadas y de los permisos de coste;
+  integración Products del contrato de auditoría append-only ya aprobado,
+  incluidos rollback atómico y pruebas. País, impuestos, Shopify, Inhand y
+  otros módulos se resolverán en follow-up.
 
 ### 2. Benchmark de mercado
 
@@ -88,10 +90,12 @@ Fuentes: [Odoo Sales](https://www.odoo.com/documentation/19.0/applications/sales
 - **Módulos afectados:** CRM (referencias de clientes y contexto comercial),
   Platform (organización, permisos, UI y colaboración), Communications
   (notificaciones futuras), ERP y los canales Shopify/Inhand.
-- **Estado de rutas:** existen `/app/erp/overview` y la ruta legacy
-  `/app/erp/product-catalog`. La ruta canónica propuesta para el módulo es
-  `/app/erp/products`; todavía no está implementada. Los enlaces legacy deberán
-  conservarse mediante redirección compatible durante la migración. Rutas como
+- **Estado de rutas:** existen `/app/erp/overview` y la ruta canónica
+  `/app/erp/products`; `/app/erp/product-catalog` redirige a Products y
+  `/app/erp/product-catalog/:catalogId` conserva compatibilidad. El shell
+  autenticado se ejercitó, pero la carga de catálogo falla cerrada porque
+  `VITE_CATALOG_ADAPTER_MODE` no está configurado; la ruta registrada no prueba
+  paridad de operaciones. Rutas como
   `/app/erp/suppliers`, `/app/erp/sales`, `/app/erp/procurement`,
   `/app/erp/inventory`, `/app/erp/finance`, `/app/erp/reports` e
   `/app/erp/integrations` son propuestas, no runtime existente.
@@ -362,10 +366,11 @@ explícita separada antes de mostrarse; `catalog.read` no lo concede por defecto
 
 ### 10. Arquitectura frontend
 
-- **Rutas actuales:** `/app/erp/overview` y la ruta legacy
-  `/app/erp/product-catalog`. La ruta canónica propuesta es
-  `/app/erp/products`; el build deberá migrar la navegación y conservar una
-  redirección compatible de deep links. La ruta de Proveedores y las de ventas, compras, inventario, finanzas,
+- **Rutas actuales:** `/app/erp/overview` y la ruta canónica
+  `/app/erp/products`; `/app/erp/product-catalog` redirige a Products y
+  `/app/erp/product-catalog/:catalogId` conserva compatibilidad. La carga
+  autenticada de catálogo falla cerrada con el modo del adapter sin configurar;
+  la ruta de Proveedores y las de ventas, compras, inventario, finanzas,
   reporting e integraciones son propuestas hasta aprobar scopes.
 - **Composición:** LoopDev AppShell + rutas definidas en
   `src/routes/LoopdevRoutes.tsx`; `PageContainer`, `PageHeader`, `PageTabs`,
@@ -390,7 +395,9 @@ explícita separada antes de mostrarse; `catalog.read` no lo concede por defecto
   permanece planificado hasta decisión y owner.
 - **Pruebas:** dominio y adapter por contrato; componente para acciones/estados;
   navegación y deep links; responsive/accessibility; visuales solo tras aprobar
-  `visual-design.md`. Ninguna ruta candidata cuenta como implementada.
+  `visual-design.md`. Las rutas Products y Overview están registradas; las
+  demás rutas candidatas no están implementadas. Registro de ruta no equivale a
+  comportamiento funcional completo.
 
 ### 11. Persistence and synchronization
 
@@ -426,8 +433,8 @@ approved first.
 
 | Fase | Objetivo | Frontend | Backend | Datos/Sync | Validación |
 |---|---|---|---|---|---|
-| 1. Pre-build audits and shared contracts | Complete environment, Platform reuse, architecture, responsibility, legacy, route, state, operation, accessibility and security audits | No renderer implementation | Confirm audit owner and API/persistence boundaries | Explicit mode, online-only, archive-only, migration dry-run contract | Audits and shared Product/category contract accepted |
-| 2. Platform audit capability | Implement the approved append-only audit contract before consumer writes | No Products mutation UI enabled | Shared audit adapter/schema and atomic persistence | Forward migration and rollback plan | Platform contract approval, tests, transaction failure rollback |
+| 1. Pre-build audits and shared contracts | Complete environment, Platform reuse, architecture, responsibility, legacy, route, state, operation, accessibility and security audits | No renderer implementation | Confirm Products audit call sites and API/persistence boundaries | Explicit mode, online-only, archive-only, migration dry-run contract | Audits and shared Product/category contract accepted |
+| 2. Products audit integration | Wire the approved append-only audit contract before remote consumer writes | No Products mutation UI enabled until security gates pass | Products call sites, same-transaction persistence and failure rollback | Forward migration and recovery evidence | Atomicity, failure-injection and kill-switch tests |
 | 3. Products persistence and security | Explicit adapter mode, surfaced demo storage failures, version/idempotency, operation-specific RLS and `catalog.write` | Existing flows remain disabled from remote mutation until gates pass | Supabase mapping and permission parity | Forward-only migration, no DELETE, shared audit | RLS, adapter-contract, idempotency and cross-tenant tests |
 | 4. Product/category domain | Implement approved classes, SKU/key/category/sourcing/currency/archive rules | Shared action contract, forms/list/detail and category view | Domain/use cases and category data access | Dry-run legacy mapping; no guessed class/category assignment | Domain and migration tests; mapped records reviewed |
 | 5. Desktop and mobile web | Complete parity for every approved operation using same semantic contract | Rivera-based desktop/mobile interactions, routes and states | No renderer-owned domain behavior | No offline remote cache/queue | Focused component tests, a11y/i18n/responsive tests and route evidence |

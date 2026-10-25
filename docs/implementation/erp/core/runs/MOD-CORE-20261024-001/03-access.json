@@ -4,24 +4,25 @@
   "span_id": "MOD-CORE-20261024-001:03-access",
   "phase": "03-access",
   "skill": "access-design",
-  "parent_span_id": "MOD-CORE-20261024-001:02-domain",
-  "module": "Core",
-  "status": "deviated",
+  "parent_span_id": null,
+  "module": "core",
+  "status": "completed",
   "decision_status": "confirmed",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 5,
-  "started_at": "2026-10-24T14:48:19.088Z",
-  "completed_at": "2026-10-24T14:50:59.071Z",
-  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "attempt": 11,
+  "started_at": "2026-10-25T15:43:36.105Z",
+  "completed_at": "2026-10-25T15:45:56.000Z",
+  "input_fingerprint": "sha256:277c5cbc7947a25e3b7f6414e80840fce9510be4d9ac03da46c333c69e408009",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
-    "working_tree": "untracked ERP implementation docs; no production code changes",
-    "runtime_url": null,
-    "runtime_port": null
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified worktree (50 paths): Products planning/evidence, Catalog adapter/tests and local migrations; no Supabase remote writes or migration applications.",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080,
+    "serving_process": "Vite dev server (node PID 32300)"
   },
   "input_artifacts": [
     "docs/implementation/erp/core/discovery.md",
@@ -36,10 +37,21 @@
     "supabase/migrations/20260811000000_platform_core_workspaces.sql",
     "supabase/migrations/20260816000000_platform_core_membership_status.sql",
     "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
+    "supabase/migrations/20261024180000_erp_product_details_and_references.sql",
+    "supabase/migrations/20261025100000_erp_product_media_library.sql",
+    "supabase/migrations/20261025120145_erp_product_media_storage_policy_hardening.sql",
+    "supabase/migrations/20261025120200_erp_product_media_no_direct_delete.sql",
+    "supabase/migrations/20260928000000_platform_files_metadata.sql",
+    "supabase/migrations/20260928100000_platform_files_storage.sql",
+    "supabase/migrations/20261011100000_platform_private_user_files.sql",
+    "supabase/migrations/20260930020000_document_intelligence_delete_policies.sql",
     "src/loopdev/domains/catalog/adapter/local.ts",
     "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
+    "src/loopdev/domains/platform/types.ts",
     "src/loopdev/domains/platform/adapter/local.ts",
-    "src/test/catalog/catalog-adapter.test.ts"
+    "src/loopdev/domains/files/types.ts",
+    "docs/implementation/_templates/phase-evidence.md"
   ],
   "output_artifacts": [
     "docs/implementation/erp/core/access-model.md",
@@ -58,8 +70,8 @@
     },
     {
       "id": "ACC-ERP-003",
-      "status": "assumed",
-      "summary": "catalog.read and catalog.manage are the target read/manage permissions; local catalog.write mismatch remains."
+      "status": "confirmed",
+      "summary": "catalog.write is the canonical general Products write permission; remote catalog.manage grants and RLS must be forward-migrated and deployment verified."
     },
     {
       "id": "ACC-ERP-004",
@@ -68,13 +80,13 @@
     },
     {
       "id": "ACC-ERP-005",
-      "status": "assumed",
-      "summary": "Organization is the initial Products access boundary."
+      "status": "confirmed",
+      "summary": "Organization is the Products access boundary; Products are shared across workspaces within that organization."
     },
     {
       "id": "ACC-ERP-006",
       "status": "confirmed",
-      "summary": "Products and categories are organization-wide; workspace-specific product authorization is outside the target scope."
+      "summary": "Workspace-specific Products authorization is outside this release; legacy workspace values are migration provenance."
     },
     {
       "id": "ACC-ERP-007",
@@ -83,8 +95,8 @@
     },
     {
       "id": "ACC-ERP-008",
-      "status": "open",
-      "summary": "Hard delete, exports and sensitive commercial fields need explicit policy."
+      "status": "confirmed",
+      "summary": "catalog.read includes sales-price visibility; purchase costs require separate cost permissions; export and permanent deletion remain disabled for this release."
     },
     {
       "id": "ACC-ERP-009",
@@ -95,25 +107,43 @@
       "id": "ACC-ERP-010",
       "status": "confirmed",
       "summary": "Membership and role grants remain Platform organization-management actions."
+    },
+    {
+      "id": "ACC-ERP-011",
+      "status": "confirmed",
+      "summary": "Remote Products mutations require an immutable Platform audit event in the same transaction; audit failure rejects the mutation."
+    },
+    {
+      "id": "ACC-ERP-012",
+      "status": "confirmed",
+      "summary": "Separate catalog.cost.read and catalog.cost.manage permissions are granted to owner/admin only by default; agent/viewer receive neither."
+    },
+    {
+      "id": "ACC-ERP-013",
+      "status": "open",
+      "summary": "The shared Files boundary is approved, but product-media metadata-table policies, signed-preview authorization, detach/retention behavior and end-to-end acceptance remain open."
     }
   ],
   "actions": [
-    "Inspected organization role/permission grants and active-membership authorization.",
-    "Compared local catalog permission checks with Supabase migration permissions and RLS.",
-    "Reviewed organization/workspace policy patterns and legacy role-vocabulary drift.",
-    "Defined a role/action/scope matrix, sensitive-data policy, audit requirements and RLS requirements.",
-    "Enumerated required authorization, tenant-isolation, bulk, export, attachment and replay tests."
+    "Reconciled catalog read/write permissions and organization-wide scope with current Platform roles and existing ERP policies.",
+    "Added the Product Owner-approved owner/admin-only default grants for catalog.cost.read and catalog.cost.manage.",
+    "Separated cost-field access from ordinary catalog projections, search, caches, logs, activity, exports and background processing.",
+    "Defined product/SKU association permissions separately from shared Files metadata and Storage permissions.",
+    "Audited current catalog, cost-reference, media-association, Storage and Files RLS policies and recorded deployment uncertainty.",
+    "Added authorization test cases for cost disclosure, role revocation, tenant boundaries, media access and deletion.",
+    "Revalidated the current media migration chain: Storage object deletion is denied for product-media paths, but media metadata tables retain FOR ALL/DELETE policies.",
+    "Confirmed the shared append-only audit table/function and approved semantics; Products call sites and atomicity tests remain absent."
   ],
   "validation": [
     {
-      "command": "npm run delivery:validate",
+      "command": "npm run test:delivery",
       "result": "passed",
-      "evidence": "Module run validation passed: 102 checkpoint file(s) checked (36 archived legacy record(s))."
+      "evidence": "All 34 delivery state-machine and evidence tests passed."
     },
     {
       "command": "npm run validate:delivery-ledgers",
       "result": "passed",
-      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+      "evidence": "Delivery ledger validation passed: 8 ledgers checked."
     },
     {
       "command": "npm run validate:multiplatform",
@@ -121,26 +151,41 @@
       "evidence": "Multiplatform delivery validation passed."
     },
     {
-      "command": "npm run test:delivery",
-      "result": "passed (27 tests)",
-      "evidence": "Delivery state-machine and evidence tests passed."
+      "command": "npm run validate:module-runs",
+      "result": "passed",
+      "evidence": "Module run validation passed: 110 checkpoint files checked (36 archived legacy records)."
     },
     {
-      "command": "python3 ERP JSON/SVG/Markdown-link check",
+      "command": "Review access-model.md against approved decisions and current migration chain",
       "result": "passed",
-      "evidence": "Parsed 7 JSON files and 5 SVG files; all local Markdown links resolve."
+      "evidence": "The Storage-object policy, asset/assignment table policies, shared audit capability and implementation/deployment gaps are distinguished accurately."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors in the access-design revalidation evidence."
     }
   ],
   "requirements": [
     {
       "id": "REQ-ERP-CATALOG-FOUNDATION",
       "status": "PARTIAL",
-      "evidence": "The permission-key mismatch and read-only delete policy gap must be resolved; deployment status is unverified."
+      "evidence": "The original foundation migration grants legacy catalog.manage and its FOR ALL policy permits DELETE through catalog.read; remote forward-state for all ERP tables remains unverified."
     },
     {
       "id": "REQ-ERP-PRODUCT-CATEGORIES",
       "status": "PARTIAL",
-      "evidence": "Organization-wide scope is confirmed; category-specific permissions and legacy workspace-ID migration handling remain open."
+      "evidence": "Organization-wide visibility is confirmed; legacy workspace IDs need a reviewed migration, and the deployed RLS state remains unverified."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-COST-ACCESS",
+      "status": "PARTIAL",
+      "evidence": "Owner/admin-only catalog.cost.read/manage grants are approved, but shared permission keys, role mappings, cost DTO filtering, adapter checks and RLS have not been implemented."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-MEDIA-ACCESS",
+      "status": "PARTIAL",
+      "evidence": "The shared Files boundary and Storage object-delete hardening are approved/recorded, but media metadata-table FOR ALL policies, signed previews, detach/retention acceptance and full RLS verification remain open."
     },
     {
       "id": "REQ-ERP-CRM-BOUNDARY",
@@ -152,31 +197,52 @@
     {
       "type": "access-analysis",
       "path": "docs/implementation/erp/core/access-model.md",
-      "result": "Defines current and target authorization decisions, matrix, scopes, RLS, audit, test cases, risks and open questions."
+      "result": "Defines role/action/scope matrix, cost permissions, shared Files boundary, RLS, audit, test cases and open decisions."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20261025120145_erp_product_media_storage_policy_hardening.sql; supabase/migrations/20261025120200_erp_product_media_no_direct_delete.sql",
+      "result": "Product-media Storage object reads/writes use catalog permissions and authenticated object deletion excludes product-media paths; these migrations do not replace asset/assignment table FOR ALL policies."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20260915000000_platform_security_hardening.sql",
+      "result": "The shared append-only audit table/function and mutation-prevention trigger exist; no Products mutation call site or transaction-atomicity test was found."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/platform/types.ts",
+      "result": "PlatformPermission contains catalog.read and catalog.write but no catalog.cost.read/manage permissions."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20261024180000_erp_product_details_and_references.sql",
+      "result": "Cost-reference SELECT, INSERT and UPDATE policies currently use catalog.write; DELETE is revoked."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20261025100000_erp_product_media_library.sql",
+      "result": "Association policies use FOR ALL with catalog.write and the migration replaces shared Storage policies; later forward migrations harden product-media object deletion but do not replace these table policies."
     },
     {
       "type": "source-audit",
       "path": "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
-      "result": "The generated FOR ALL policy uses catalog.read in USING and catalog.manage in WITH CHECK; read-only delete is possible by policy semantics. Deployment status is unverified."
+      "result": "Foundation policy uses FOR ALL with catalog.read in USING and catalog.manage in WITH CHECK; deployed state is unverified."
     },
     {
       "type": "source-audit",
-      "path": "src/loopdev/domains/catalog/adapter/local.ts",
-      "result": "The local adapter checks catalog.write while remote policy grants use catalog.manage."
+      "path": "supabase/migrations/20260928000000_platform_files_metadata.sql",
+      "result": "Shared file metadata RLS is based on active organization membership and does not define a files.* permission key."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20261011100000_platform_private_user_files.sql",
+      "result": "Current shared Files metadata policy allows active organization members to read/insert/update organization files and has a separate owner/admin/agent delete policy."
     }
   ],
-  "detected_failure": {
-    "code": "ACCESS-001",
-    "detected_by": "access-design",
-    "summary": "The ERP catalog migration's all-operations policy allows catalog.read users to delete rows by USING semantics; production deployment is unverified."
-  },
-  "likely_failure_origin": {
-    "phase": "baseline",
-    "skill": "existing ERP catalog foundation migration",
-    "code": "ACCESS-001",
-    "confidence": 10
-  },
-  "next_handoff": "04-api",
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "04-api: revalidate cost/media permission-filtered contracts against approved access semantics; keep remote mutation blocked pending RLS, audit integration and deployed-state evidence.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
@@ -184,6 +250,12 @@
   },
   "invalidated": true,
   "notes": [
-    "This checkpoint predates the approved product-media scope amendment and must be reconciled before it can satisfy the current run."
-  ]
+    "Only owner/admin receive both cost permissions by default; this role selection was confirmed by the Product Owner for this release.",
+    "Shared Files boundary and append-only audit semantics are approved; Files lifecycle/metadata-table enforcement and Products audit integration/atomicity tests are incomplete.",
+    "Forward permission/RLS migrations and deployed-state verification are required; no database or production policy was changed in this phase.",
+    "Legacy workspace/category data requires an authorized dry-run before any production migration."
+  ],
+  "invalidated_at": "2026-10-25T16:14:37.767Z",
+  "invalidation_reason": "Changed inputs: design",
+  "task_ids": []
 }

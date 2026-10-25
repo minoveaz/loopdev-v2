@@ -1,5 +1,30 @@
 # Phase 05 — Products synchronization design
 
+## Attempt 11 — Revalidation after access and API refresh
+
+| Field | Value |
+|---|---|
+| Run ID | `MOD-CORE-20261024-001` |
+| Span ID | `MOD-CORE-20261024-001:05-sync` |
+| Parent phase | `04-api` (attempt 11, completed) |
+| Status | `completed` (analysis outcome: `partial`) |
+| Environment | `feature/erp-core-capabilities`, HEAD `2e7faf367aa0b13a735492e9878390cc7e5a3621`; contract/evidence changes only |
+
+Rechecked adapter selection and persistence behavior against the current
+source. Catalog mode selection is already explicit and fails closed when
+`VITE_CATALOG_ADAPTER_MODE` is unset; core catalog stores use strict
+persistence, while Product-media asset/assignment stores still use the
+best-effort default. Product media still uploads/creates shared Files and ERP
+metadata in one adapter operation, generates remote signed URLs directly and
+may remove a File during cleanup. These differ from the approved shared Files
+boundary and separate finalized-file registration contract.
+
+The shared Files boundary and append-only audit semantics are approved.
+Detailed media table/preview/retention behavior, Products audit call sites
+and same-transaction rollback evidence remain open. The sync policy stays
+online-only for remote data, with no offline cache or mutation queue; no local
+demo fallback, remote migration or production write was authorized.
+
 ## Identity
 
 | Field | Value |
@@ -57,11 +82,12 @@ implementing storage or backend infrastructure.
 
 | Command or check | Result | Evidence path/link |
 |---|---|---|
-| `npm run delivery:validate` | passed; 104 checkpoint files checked | CLI output |
+| `npm run test:delivery` | passed; 34 tests | CLI output |
 | `npm run validate:delivery-ledgers` | passed; 8 ledgers checked | CLI output |
 | `npm run validate:multiplatform` | passed | CLI output |
-| `npm run test:delivery` | passed; 27 tests | CLI output |
-| Python ERP JSON/SVG/Markdown-link check | passed; 9 JSON, 5 SVG, all local links resolve | CLI output |
+| `npm run validate:module-runs` | passed; 110 checkpoint files checked, 36 archived legacy records | CLI output |
+| `git diff --check` | passed | CLI output |
+| Manual adapter/access review | passed; explicit mode, strict catalog persistence, best-effort media persistence, Files/audit gates distinguished | `sync-model.md`, current adapters, `access-model.md` |
 
 ## Environment
 
@@ -75,12 +101,81 @@ implementing storage or backend infrastructure.
 
 ## Decisions, failures and handoff
 
-- Decisions: `SYNC-ERP-001`–`004`, `007`, `009`, `010` and `012` confirmed;
-  `SYNC-ERP-005` and `008` assumed; `SYNC-ERP-006` and `011` open.
-- Detected failure: current local storage suppresses read/write failures, and
-  the Products domain has no remote mutation queue/version/reconciliation
-  contract; no production offline guarantee can be claimed.
-- Likely origin: existing catalog adapter and shared `localStore`/`storage`
-  implementation.
-- Next handoff: `06-plan` only after the open domain, access and API decisions
-  and the RLS/permission blockers are resolved.
+- Decisions: explicit adapter mode, online-only remote behavior, no
+  local-to-remote fixture merge, owner/admin-only cost handling and
+  version/idempotency semantics are confirmed; specific Files lifecycle
+  behavior remains open.
+- Detected failure: Product-media local stores still suppress persistence
+  failures; media adapters bypass finalized Files operations and may delete
+  shared files during compensation; remote RLS and Products audit atomicity
+  remain unverified/incomplete.
+- Likely origin: existing Product-media implementation predates the approved
+  shared Files lifecycle and current versioned Products contract.
+- Next handoff: `06-plan` may sequence implementation work, but remote
+  mutation, data migration and cutover remain gated on RLS, Files lifecycle,
+  audit atomicity and authorized legacy-data evidence.
+
+---
+
+## Attempt 7 — Product costs, media and gallery synchronization
+
+### Identity
+
+| Field | Value |
+|---|---|
+| Run ID | `MOD-CORE-20261024-001` |
+| Span ID | `MOD-CORE-20261024-001:05-sync` |
+| Skill | `sync-design` |
+| Parent phase | `04-api` |
+| Track | ERP Core |
+| Issue(s) | #36 |
+| Status | `completed` (analysis outcome: `partial`) |
+
+### Objective
+
+Reconcile the existing synchronization design with the completed Products API
+contracts for per-unit sensitive costs, reusable Platform Files and manually
+ordered product/SKU galleries.
+
+### Inputs and actions
+
+- Compared discovery, domain, access and API contracts with the existing local
+  and Supabase catalog/media adapters, localStorage helper and migrations.
+- Distinguished observed ID-shape adapter selection and swallowed storage
+  errors from the approved explicit runtime-mode and failure-reporting target.
+- Defined costs as online-only, current-permission-checked data with no
+  offline cache, queue or replay; permission changes invalidate the protected
+  projection.
+- Defined gallery reordering as an online, atomic full-set mutation with
+  expected assignment versions, same-key retries and explicit refresh and
+  user reconciliation on conflicts.
+- Kept upload, preview, signed URL expiry and safe orphan cleanup in shared
+  Platform Files; Products must not delete shared files as compensation.
+- Added migration, recovery and cross-platform test scenarios for costs,
+  ordering, upload failures, preview expiry and authorization changes.
+
+### Outputs and decisions
+
+- Updated `sync-model.md` with the operation/offline matrix, state model,
+  retries, conflict policy, migration risks, and cost/media tests.
+- Confirmed `SYNC-ERP-001`–`014`, `016` and `017`; kept
+  `SYNC-ERP-015` open pending Platform's Files authorization, finalization,
+  retention and orphan-recovery approval.
+- Detected failure `SYNC-ERP-002`: the current media adapter bypasses the
+  shared finalized Files boundary, can remove shared files during cleanup,
+  lacks gallery order/version recovery, and the shared storage helper
+  suppresses persistence errors.
+- Likely origin: baseline Products media implementation predating the
+  approved shared Files and versioned Products contract; confidence 9/10.
+
+### Validation evidence
+
+Validation commands and results are recorded in `05-sync.json`; no runtime,
+offline, Supabase deployment or migration behavior was tested.
+
+### Handoff
+
+**Status: `partial`.** Proceed to `06-plan` with Platform Files/audit approvals,
+cost permission/RLS work, deployed migration-state review and authorized
+legacy-data dry run as explicit dependencies/blockers. No code or schema was
+changed, and no offline queue or remote migration was authorized.

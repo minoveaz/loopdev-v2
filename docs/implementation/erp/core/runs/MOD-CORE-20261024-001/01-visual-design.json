@@ -5,23 +5,24 @@
   "phase": "01-visual-design",
   "skill": "module-visual-design",
   "parent_span_id": null,
-  "module": "Core",
-  "status": "deviated",
+  "module": "core",
+  "status": "completed",
   "decision_status": "confirmed",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 6,
-  "started_at": "2026-10-24T17:06:17Z",
-  "completed_at": "2026-10-24T17:09:40Z",
-  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "attempt": 13,
+  "started_at": "2026-10-25T16:16:07.433Z",
+  "completed_at": "2026-10-25T16:17:00.263Z",
+  "input_fingerprint": "sha256:8efd4ab86c7e61cd28da0b676118fd145e3a4b050d7b5d7c6f10aca8a3c7a834",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
-    "working_tree": "untracked ERP implementation docs; no production code changes",
-    "runtime_url": null,
-    "runtime_port": null
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified worktree (50 paths): Products planning/evidence, Catalog adapter/tests and local migrations; no Supabase remote writes or migration applications.",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080,
+    "serving_process": "Vite dev server (node PID 32300)"
   },
   "input_artifacts": [
     "docs/implementation/erp/core/discovery.md",
@@ -40,7 +41,11 @@
     "src/loopdev/components/crm/contacts/ContactForm.tsx",
     "src/test/crm/contacts/contacts-form.test.tsx",
     "src/test/platform/app-drawer.test.tsx",
-    "src/test/catalog/catalog-adapter.test.ts"
+    "src/test/catalog/catalog-adapter.test.ts",
+    "src/loopdev/pages/erp/ProductMediaGalleryManager.tsx",
+    "src/loopdev/domains/files/types.ts",
+    "docs/implementation/erp/core/platform-scope.md",
+    "docs/implementation/erp/core/platform-evidence-matrix.md"
   ],
   "output_artifacts": [
     "docs/implementation/erp/core/visual-design.md",
@@ -51,6 +56,12 @@
     "docs/implementation/erp/core/wireframes/erp-product-form.svg",
     "docs/implementation/erp/core/wireframes/erp-variant-form.svg",
     "docs/implementation/erp/core/wireframes/erp-commercial-detail.svg",
+    "docs/implementation/erp/core/wireframes/erp-product-record-page.svg",
+    "docs/implementation/erp/core/wireframes/erp-product-form-page.svg",
+    "docs/implementation/erp/core/wireframes/erp-sku-editor-page.svg",
+    "docs/implementation/erp/core/wireframes/erp-product-media-desktop.svg",
+    "docs/implementation/erp/core/wireframes/erp-product-media-mobile.svg",
+    "docs/implementation/erp/core/wireframes/erp-reference-quick-drawer.svg",
     "docs/implementation/erp/core/platform-scope.md",
     "docs/implementation/erp/core/platform-evidence-matrix.md",
     "docs/implementation/erp/core/README.md"
@@ -79,7 +90,7 @@
     {
       "id": "ERP-A-003",
       "status": "confirmed",
-      "summary": "Each variant/SKU has its own independently assigned category; the approved wireframes do not yet evidence this interaction."
+      "summary": "Each variant/SKU has its own independently assigned category; the approved SKU editor shows the product category as context and a separate SKU category control."
     },
     {
       "id": "VD-ERP-013",
@@ -94,12 +105,12 @@
     {
       "id": "VD-ERP-APPROVAL-001",
       "status": "confirmed",
-      "summary": "Product Owner approved the full conceptual visual source on 2026-10-24; runtime comparison remains post-implementation."
+      "summary": "Product Owner approved the current conceptual visual source, including Products/SKU/category and media compositions, on 2026-10-25; runtime comparison remains post-implementation."
     },
     {
       "id": "VD-ERP-FORM-001",
       "status": "open",
-      "summary": "Resolve source/documentation drift for catalog forms and approve the shared form pattern for future ERP form work."
+      "summary": "Platform and ERP must reconcile legacy Catalog form implementation/documentation during build and verify the approved page composition uses existing shared form primitives; this is implementation evidence, not a new conceptual-approval request."
     },
     {
       "id": "VD-ERP-MOBILE-001",
@@ -110,6 +121,21 @@
       "id": "VD-ERP-014",
       "status": "confirmed",
       "summary": "Product Owner approved the supplemental desktop/mobile SKU editor showing each SKU's own category separately from the product's general category."
+    },
+    {
+      "id": "VD-ERP-MEDIA-001",
+      "status": "confirmed",
+      "summary": "The Product Owner chose upload and existing-asset reuse inside the Product gallery, with a contextual selector and no separate library route."
+    },
+    {
+      "id": "VD-ERP-MEDIA-002",
+      "status": "confirmed",
+      "summary": "The Product Owner chose to retain originals and create a proportion-preserving optimized image up to 1600 px plus a 400 px thumbnail, without cropping."
+    },
+    {
+      "id": "VD-ERP-COST-003",
+      "status": "confirmed",
+      "summary": "The Product Owner chose separate catalog.cost.read and catalog.cost.manage permissions; access behavior remains subject to access design."
     }
   ],
   "actions": [
@@ -119,39 +145,49 @@
     "Applied CR-ERP-PRODUCT-MASTER-MODEL: revised list, form, detail, state matrix and documentation to show item classes, independent uses, primary categories and product-level sourcing; added an in-module category administration entry point.",
     "Applied the Product Owner's VD-ERP-013 choice: added a dedicated category-tree management composition for desktop and mobile web, with visible return navigation and no nested drawer.",
     "Revised the original five SVGs to use the exact light HSL token snapshot from src/index.css, the white shared sidebar and selected-route treatment from Sidebar.tsx, current LoopDev navigation labels and borderless SurfaceCard shadows.",
-    "Added a sixth responsive SKU editor wireframe to close the evidence gap for each variant's independently assigned category; this addendum is awaiting explicit Product Owner approval.",
+    "Added a sixth responsive SKU editor wireframe to close the evidence gap for each variant's independently assigned category; the Product Owner approved this addendum.",
+    "Added desktop/mobile product-media wireframes for the approved in-gallery existing-asset selector and original/1600 px/400 px rendition presentation; the Product Owner explicitly approved this media addendum on 2026-10-25.",
     "Previewed the revised standalone SVGs in the browser canvas; this is visual artifact review only, not application-runtime evidence.",
     "Recorded implementation/documentation drift: Geist runtime typography, current catalog form composition, native select, duplicated detail section, read-only drawer mode, nested drawers and Overview fetch states.",
     "Updated platform scope/evidence and workspace README without changing production code.",
-    "Recorded the original five-composition approval separately from the explicit approval of the SKU-category addendum; no application runtime was started."
+    "Reconciled canonical web route status and distinguished required mobile web from deferred native routing; no approved visual composition or product scope changed.",
+    "Recorded approvals separately for the original compositions, SKU-category addendum and media addendum; no application runtime was started.",
+    "Revalidated the current UI and shell references against their source-backed reusable primitives, route registration, active implementation evidence and the current fail-closed adapter behavior.",
+    "Confirmed that the approved desktop/mobile visual compositions and all 12 SVGs remain unchanged; only factual route, adapter and audit-status documentation was reconciled, with no visual or product-scope expansion.",
+    "The Product Owner explicitly reapproved the current design and visual artifacts after the changed-input invalidation; runtime comparison remains a post-implementation gate."
   ],
   "validation": [
     {
-      "command": "npm run delivery:validate",
-      "result": "not_run",
-      "evidence": "Re-run after plan and checkpoint reconciliation."
-    },
-    {
       "command": "npm run validate:delivery-ledgers",
-      "result": "not_run",
-      "evidence": "Re-run after executable tasks are added."
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed after route and platform-scope evidence reconciliation."
     },
     {
       "command": "npm run validate:multiplatform",
-      "result": "not_run",
-      "evidence": "Re-run after operation coverage is reconciled."
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed after refreshing route, adapter-mode and mobile-web evidence."
     },
     {
-      "command": "Python inline ERP JSON/SVG/XML/Markdown-link check",
+      "command": "python3 - <<'PY' (SVG/XML and local Markdown-link validation)",
       "result": "passed",
-      "evidence": "All six ERP SVG wireframes parse as XML; the new SKU-category interaction is explicitly approved."
+      "evidence": "All 12 ERP SVGs parse as XML and 60 local Markdown links resolve across the four visual/platform documents."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors in the refreshed design, visual and platform evidence."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed: 8 ledgers checked."
     }
   ],
   "requirements": [
     {
       "id": "VIS-ERP-001",
       "status": "PASS",
-      "evidence": "Six desktop/mobile compositions cover Overview compatibility, Products list, categories, product form, SKU-specific category assignment and commercial detail; all six are conceptually approved."
+      "evidence": "The Product Owner explicitly approved the complete conceptual visual source, including the media addendum, on 2026-10-25. Desktop/mobile compositions are recorded; runtime comparison remains a post-implementation gate."
     },
     {
       "id": "VIS-ERP-002",
@@ -161,58 +197,58 @@
     {
       "id": "VIS-ERP-003",
       "status": "PASS",
-      "evidence": "Meaningful view zones have reuse classifications, owner, rationale and source evidence; state/recovery and mobile adaptations are documented."
+      "evidence": "The zone matrix classifies gallery, upload, selection, assignment metadata and renditions with owners and evidence. The shared Files contract and rendition pipeline remain explicit downstream dependencies, not implied as implemented."
     },
     {
       "id": "VIS-ERP-004",
       "status": "PASS",
-      "evidence": "The original five-composition visual source and the supplemental SKU-category composition were explicitly approved by @loopdev-io on 2026-10-24; runtime screenshot comparison is NOT_RUN until implementation."
+      "evidence": "Conceptual approval from @loopdev-io is recorded in run.json for the current Products/SKU/category and media source on 2026-10-25. Runtime screenshot comparison remains NOT_RUN until after implementation."
     }
   ],
   "evidence": [
     {
       "type": "source-audit",
       "path": "docs/implementation/erp/core/visual-design.md",
-      "result": "Current ERP/Platform source, tokens, shell, primitives, tests and documentation are cross-referenced; no production code changed."
+      "result": "Current ERP/Platform source, tokens, shell, primitives, tests and documentation are cross-referenced. The canonical route is registered; its authenticated shell was exercised, but data loading currently fails closed because the explicit adapter mode is unset."
     },
     {
       "type": "visual-artifact",
       "path": "docs/implementation/erp/core/wireframes/",
-      "result": "The original five approved SVGs plus the approved sixth SKU-category composition cover desktop/mobile web and use source-backed light-theme tokens."
+      "result": "Prior approved SVGs remain unchanged; new desktop and mobile SVGs cover the in-gallery asset selector and rendition states using source-backed light-theme tokens."
+    },
+    {
+      "type": "design-decisions",
+      "path": "docs/implementation/erp/core/visual-design.md",
+      "result": "Records the user-selected 1600/400 px rendition sizes, preservation of originals, contextual existing-asset selection, separate cost permissions, and unresolved shared Files/access contracts."
     },
     {
       "type": "approval-state",
       "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/run.json",
-      "result": "The original approval and the later approval of the SKU-category addendum are both recorded; no runtime comparison is claimed."
+      "result": "@loopdev-io explicitly reapproved the current design and visual artifacts after the attempt-13 input refresh; the approval does not authorize implementation, migrations or remote writes."
     }
   ],
-  "detected_failure": {
-    "code": "VIS-ERP-005",
-    "detected_by": "module-visual-design",
-    "summary": "The previous visual attempt omitted the independently assigned SKU category; the gap was corrected and approved in this attempt."
-  },
-  "likely_failure_origin": {
-    "phase": "01-visual-design",
-    "skill": "module-visual-design",
-    "code": "VIS-ERP-005",
-    "confidence": 9
-  },
-  "next_handoff": "SPECIALIZED_ANALYSIS_AND_PLAN",
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "02-domain: revalidate the invalidated domain checkpoint against the approved visual source and current design; no implementation or remote write is authorized by conceptual approval.",
   "approval_gate": {
     "status": "approved",
     "approved_by": "@loopdev-io",
-    "approved_at": "2026-10-24T17:09:40Z",
-    "source": "Explicit user selection via ask_user: Aprobar el addendum visual (Recomendado).",
+    "approved_at": "2026-10-25T16:16:53.179Z",
+    "source": "User selected \"Sí, apruebo diseño y visual actuales; continúa (Recomendado)\" via ask_user after attempt-13 revalidation.",
     "previous_approval": {
       "approved_by": "@loopdev-io",
-      "approved_at": "2026-10-24T14:42:11.307Z",
-      "artifact_fingerprint": "sha256:b9d6373e08a115a02eb5509fbc89b0a5fcc6079633fdca9886400303dc75ec8d",
-      "scope": "Original five visual compositions only"
+      "approved_at": "2026-10-24T17:09:40Z",
+      "scope": "Products, categories, product/SKU forms and independent SKU category; excludes the later product-media visual addendum"
     },
-    "awaiting_approval_for": "Supplemental SKU editor and independent category assignment composition"
+    "approved_scope": "Current Products/SKU/category and media visual source for desktop and mobile web, including the product-scoped gallery, contextual existing-asset selector, per-assignment alt-text presentation, original retention and conceptual 1600 px/400 px proportional renditions. Approval does not authorize the Files contract, runtime implementation, migrations or remote writes."
   },
-  "invalidated": true,
+  "invalidated": false,
   "notes": [
-    "This checkpoint records the previously approved visual scope. The later product-media scope amendment is not covered by its visual artifacts, so this checkpoint cannot satisfy the current run's visual gate."
-  ]
+    "Conceptual visual approval is complete; proceed to revalidate the specialized analyses. Do not treat it as approval of the Files contract, processing implementation, module plan, production code or migrations.",
+    "The user's choice of the 1600 px optimized image and 400 px thumbnail confirms sizes/proportion/no-crop, not an image-processing platform contract, format/quality, or storage/runtime implementation.",
+    "Runtime screenshot comparison, authenticated catalog operations, mobile-web operation parity and remote Files behavior remain unverified. Native iOS/Android routing is deferred and is not a mobile-web release blocker."
+  ],
+  "invalidated_at": null,
+  "invalidation_reason": null,
+  "task_ids": []
 }

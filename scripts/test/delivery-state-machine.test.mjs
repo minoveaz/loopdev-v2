@@ -196,6 +196,31 @@ test("scope changes invalidate discovery and every downstream phase", (context) 
   assert.equal(resumed.invalidated_phases.at(-1), "10-git");
 });
 
+test("task progress and evidence do not invalidate the approved scope fingerprint", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const before = current.machine.fingerprints("crm", "Contacts").scope;
+  const ledgerFile = join(current.root, "docs/implementation/crm/contacts/delivery-ledger.json");
+  const ledger = JSON.parse(readFileSync(ledgerFile, "utf8"));
+  ledger.tasks[0].owner = "Platform owner";
+  ledger.tasks[0].status = "done";
+  ledger.tasks[0].blocked_by = ["Waiting for runtime access"];
+  ledger.tasks[0].evidence_refs = ["docs/evidence.md#task"];
+  write(ledgerFile, `${JSON.stringify(ledger, null, 2)}\n`);
+  assert.equal(current.machine.fingerprints("crm", "Contacts").scope, before);
+  const resumed = current.machine.resume({
+    suite: "crm",
+    moduleName: "Contacts",
+    runId: current.runId,
+    reason: "Task execution state changed",
+  });
+  assert.deepEqual(resumed.changed_categories, []);
+
+  ledger.requirements[0].acceptance_criteria.push("Changed approved outcome");
+  write(ledgerFile, `${JSON.stringify(ledger, null, 2)}\n`);
+  assert.notEqual(current.machine.fingerprints("crm", "Contacts").scope, before);
+});
+
 test("resume resets approvals whose approved inputs changed", (context) => {
   const current = fixture();
   context.after(current.cleanup);
@@ -216,6 +241,53 @@ test("block persists a blocker and resume records its explicit resolution", (con
   const resumed = current.machine.resume({ suite: "crm", moduleName: "Contacts", runId: current.runId, reason: "Product owner supplied the decision" });
   assert.deepEqual(resumed.blockers, []);
   assert.equal(resumed.next_phase, "00-discovery");
+});
+
+test("resume can resolve selected blockers without clearing the remaining gates", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "00-discovery", skill: "module-discovery" });
+  current.machine.block({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "00-discovery", reason: "Missing product decision" });
+  const manifestPath = current.machine.manifestFile("crm", "Contacts", current.runId);
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  manifest.blocked_by.push("Platform owner approval required");
+  write(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  const resumed = current.machine.resume({
+    suite: "crm",
+    moduleName: "Contacts",
+    runId: current.runId,
+    reason: "Product owner supplied the product decision",
+    resolveBlockers: ["Missing product decision"],
+  });
+
+  assert.deepEqual(resumed.blockers, ["Platform owner approval required"]);
+  const updated = JSON.parse(readFileSync(manifestPath, "utf8"));
+  assert.deepEqual(updated.resolved_blockers.map(({ blocker }) => blocker), ["Missing product decision"]);
+  assert.equal(updated.status, "running");
+});
+
+test("restarting a blocked phase preserves its evidence and decisions", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const checkpoint = current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "00-discovery", skill: "module-discovery" });
+  const checkpointFile = join(current.machine.runDirectory("crm", "Contacts", current.runId), "00-discovery.json");
+  checkpoint.actions.push("Recorded initial source review");
+  checkpoint.evidence.push({ type: "source", path: "src/contact.ts", result: "Inspected" });
+  write(checkpointFile, `${JSON.stringify(checkpoint, null, 2)}\n`);
+  current.machine.block({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "00-discovery", reason: "Missing product decision" });
+  current.machine.resume({
+    suite: "crm",
+    moduleName: "Contacts",
+    runId: current.runId,
+    reason: "Product owner supplied the decision",
+  });
+
+  const restarted = current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "00-discovery", skill: "module-discovery" });
+
+  assert.equal(restarted.status, "running");
+  assert.deepEqual(restarted.actions, ["Recorded initial source review"]);
+  assert.deepEqual(restarted.evidence, [{ type: "source", path: "src/contact.ts", result: "Inspected" }]);
 });
 
 test("all delivery schemas and the canonical workflow are valid JSON", () => {
@@ -262,6 +334,49 @@ test("plan approval requires an explicit task for each missing required operatio
   assert.ok(errors.some((error) => error.includes("without an operation-level task")));
   ledger.tasks[0].operation_ids = ["listContacts"];
   errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"), { stage: "plan" });
+  assert.deepEqual(errors, []);
+});
+
+test("approved ledger does not require implementation tasks for deferred capabilities", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const ledger = validLedger({
+    status: "approved",
+    approved_by: "owner@example.com",
+    approved_at: "2026-09-14T12:00:00.000Z",
+    approval_source: "https://github.test/issues/1",
+    blockers: [],
+  });
+  ledger.tasks[0].status = "ready";
+  ledger.requirements.push({
+    id: "CONTACTS-REQ-FOLLOW-UP",
+    title: "Future commerce integration",
+    classification: "REQUIRED_FOLLOW_UP",
+    source: "docs/06-product/crm/contacts/README.md",
+    platforms: ["desktop_web", "mobile_web"],
+    acceptance_criteria: ["Future integration scope is discovered separately"],
+    evidence_level: "E4_JOURNEY",
+    capability_ids: ["CONTACTS-CAP-FOLLOW-UP"],
+  });
+  ledger.capabilities.push({
+    ...structuredClone(ledger.capabilities[0]),
+    id: "CONTACTS-CAP-FOLLOW-UP",
+    name: "Future commerce integration",
+    classification: "REQUIRED_FOLLOW_UP",
+    requirement_ids: ["CONTACTS-REQ-FOLLOW-UP"],
+    semantics: { operations: ["connectFutureCommerce"], errors: ["FORBIDDEN"] },
+    operation_coverage: [{
+      id: "connectFutureCommerce",
+      desktop_web: "missing",
+      mobile_web: "missing",
+      ios: "not_applicable",
+      android: "not_applicable",
+      adaptation_ref: null,
+    }],
+    task_ids: [],
+  });
+
+  const errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"));
   assert.deepEqual(errors, []);
 });
 

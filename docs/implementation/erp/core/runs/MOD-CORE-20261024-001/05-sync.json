@@ -6,7 +6,7 @@
   "skill": "sync-design",
   "parent_span_id": "MOD-CORE-20261024-001:04-api",
   "module": "Core",
-  "status": "completed",
+  "status": "deviated",
   "decision_status": "confirmed",
   "architecture_quality": "PASS_WITH_DEBT",
   "attempt": 5,
@@ -196,5 +196,8 @@
     "approved_by": null,
     "approved_at": null
   },
-  "invalidated": false
+  "invalidated": true,
+  "notes": [
+    "This checkpoint predates the approved product-media scope amendment and must be reconciled before it can satisfy the current run."
+  ]
 }

@@ -21,13 +21,13 @@
 
 | Field | Value |
 |---|---|
-| Status | `discovery_partial` |
-| Current phase | Product-media discovery recorded; design and visual evidence must be updated before planning or build |
+| Status | `blocked` |
+| Current phase | Product-media visual evidence and module planning gates remain pending |
 | Current issue | #36 |
 | Branch | `feature/erp-core-capabilities` |
-| Commit | `2fe7908` |
-| Pull request | None |
-| Last evidence | @loopdev-io approved product/variant image assets with a reusable library, metadata and alt text, without automatic publishing, on 2026-10-25. Existing visual approval does not cover this new surface. |
+| Commit | `6de4213` |
+| Pull request | [#38](https://github.com/minoveaz/loopdev-v2/pull/38) |
+| Last evidence | Product catalog and media implementation is committed and under review; focused product tests pass and the linked Supabase migrations are applied. Existing visual approval does not cover the media surface, and module/release gates remain open. |
 
 ## Scope
 
@@ -158,3 +158,4 @@ direction on 2026-10-24; runtime comparison remains a post-implementation gate.
 | 2026-10-24 | Confirmed a dedicated category-management view within Products and added desktop/mobile wireframe evidence | `VD-ERP-013` | @loopdev-io |
 | 2026-10-24 | Bounded the first release to Products/categories on desktop and mobile web; deferred Shopify, Inhand, Suppliers, native apps and other ERP modules; confirmed online-only remote access and archive-only lifecycle | `CR-ERP-PRODUCTS-FIRST-RELEASE` | @loopdev-io |
 | 2026-10-25 | Amended Products scope to include reusable product/variant images, metadata and alt text; excluded automatic publication and recorded Files backend/relation dependencies | `CR-ERP-PRODUCT-MEDIA-001` | @loopdev-io |
+| 2026-10-25 | Committed and pushed the Products catalog/media implementation; opened a PR for review. The run remains blocked pending media visual evidence and module/release gates. | `6de4213`, PR #38 | @loopdev-io |

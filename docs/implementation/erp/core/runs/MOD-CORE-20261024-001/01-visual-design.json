@@ -6,7 +6,7 @@
   "skill": "module-visual-design",
   "parent_span_id": null,
   "module": "Core",
-  "status": "completed",
+  "status": "deviated",
   "decision_status": "confirmed",
   "architecture_quality": "PASS_WITH_DEBT",
   "attempt": 6,
@@ -211,5 +211,8 @@
     },
     "awaiting_approval_for": "Supplemental SKU editor and independent category assignment composition"
   },
-  "invalidated": false
+  "invalidated": true,
+  "notes": [
+    "This checkpoint records the previously approved visual scope. The later product-media scope amendment is not covered by its visual artifacts, so this checkpoint cannot satisfy the current run's visual gate."
+  ]
 }

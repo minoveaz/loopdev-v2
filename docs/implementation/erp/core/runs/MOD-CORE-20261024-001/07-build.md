@@ -14,9 +14,9 @@
 
 ## Objective
 
-Implement LoopDev-generated, numeric, immutable product and variant keys/SKUs
-for the explicitly approved task, without approving unrelated ERP scope or
-remote rollout.
+Implement LoopDev-generated numeric, immutable product and variant keys/SKUs,
+and the approved product/variant media experience. This implementation does
+not imply that the full module plan, access model or release gates are approved.
 
 ## Inputs
 
@@ -24,6 +24,7 @@ remote rollout.
   `delivery-ledger.json`.
 - Existing product, variant, local-adapter, Supabase-adapter and migration
   contracts.
+- Approved product/variant media scope in `CR-ERP-PRODUCT-MEDIA-001`.
 - Current checkout and working tree recorded below.
 
 ## Actions
@@ -37,20 +38,31 @@ remote rollout.
   LoopDev SKUs, organization-level key uniqueness and parent-SKU handling.
 - Updated product/variant forms, fixtures, translations and focused tests to
   show generated identifiers as read-only.
+- Added product and variant media adapters, a gallery with uncropped square
+  previews, and persistent Supabase Storage metadata/associations.
 
 ## Outputs
 
 - Product and variant adapter, UI, fixture, translation and test changes.
-- `supabase/migrations/20261025000000_erp_system_generated_identifiers.sql`.
-- The task remains `blocked` pending migration validation and phase-state
-  reconciliation; no database migration was applied remotely.
+- Product media adapter, gallery page, product form preview and tests.
+- Identifier migrations, including
+  `supabase/migrations/20261025000000_erp_system_generated_identifiers.sql`.
+- Media migration:
+  `supabase/migrations/20261025100000_erp_product_media_library.sql`.
+- Both migrations were applied to the linked Supabase project and verified
+  against remote migration history. The overall module run remains blocked
+  pending product-media visual evidence, access/deployment reconciliation and
+  formal plan/build/verification gates.
 
 ## Acceptance criteria
 
 - [x] UUIDs remain technical identifiers; numeric keys and SKUs are generated
       and direct users cannot edit them.
-- [x] Local adapter and form behavior pass focused adapter/component tests.
-- [ ] Migration lint and PostgreSQL execution pass.
+- [x] Product, variant and media adapter/component behavior passes focused
+      tests.
+- [x] The identifier and media migrations were applied remotely and the
+      linked migration history was verified.
+- [ ] Local migration lint passes; local PostgreSQL was unavailable.
 - [ ] Authenticated desktop and mobile-web journeys are verified.
 - [ ] Formal 06-plan/07-build checkpoints are accepted by the delivery state
       machine.
@@ -59,13 +71,16 @@ remote rollout.
 
 | Command or check | Result | Evidence path/link |
 |---|---|---|
-| `npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx` | Passed: 4 files, 25 tests | Focused test output |
+| `npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx src/test/erp/product-media.test.tsx` | Passed: 5 files, 30 tests | Focused test output |
 | `npm run typecheck` | Passed | Application and Node TypeScript checks |
 | `npm run build` | Passed; large-chunk warning remains | Build output |
 | `npm run i18n:check` | Passed: no visible-text candidates | i18n checker |
+| `npx eslint .` | Passed | ESLint |
 | `npm run validate:delivery-ledgers` | Passed: 8 ledgers checked | Ledger validator |
 | `supabase db lint --local` | Blocked: connection refused at `127.0.0.1:54322` | Local Postgres is not running |
-| `npm run validate:module-runs` | Failed on 7 existing run-state errors | Invalid visual-design checkpoint and unapproved visual-design gate in completed phases |
+| `supabase db push` and `supabase migration list` | Passed: pending migrations applied and remote/local history aligned | Linked Supabase project |
+| `npm run validate:module-runs` | Passed: 107 checkpoint files checked after invalidating checkpoints that predate the media scope | Module-run traceability validator |
+| `npm run test:delivery` | Passed: 30 tests | Delivery tests |
 | `npm run validate:delivery-evidence` | Passed: 0 evidence files checked | No registered phase evidence files |
 | `http://localhost:8080/app/erp/products/new` | HTTP 200 only | SPA response; no authenticated interaction evidence |
 
@@ -76,8 +91,8 @@ remote rollout.
 | Repository path | `/Users/minoveaz/.copilot/repos/loopdev-v2` |
 | Checkout type | branch |
 | Branch | `feature/erp-core-capabilities` |
-| HEAD | `2fe79082039b24eb771879dad3ca79a59dba6d21` |
-| Working tree | Modified; includes this task and pre-existing ERP changes |
+| HEAD | `6de4213c6ae2207e4c1e5965e3970fa721d18a29` |
+| Working tree | Clean after the implementation commit; delivery evidence is being reconciled separately |
 | Runtime URL | `http://localhost:8080/app/erp/products/new` |
 | Runtime port | `8080` |
 
@@ -92,6 +107,6 @@ remote rollout.
   inconsistencies.
 - Likely origin: local database service is stopped; the run's visual-design
   addendum and approval state predate this task's scoped implementation.
-- Next handoff: start local Supabase/PostgreSQL and validate the migration;
-  reconcile the visual-design approval and 06-plan checkpoint before marking
-  this task done or claiming module/release readiness.
+- Next handoff: reconcile invalidated run checkpoints, add visual evidence for
+  the approved product-media scope, and resolve access/legacy-data blockers
+  before marking this task done or claiming module/release readiness.

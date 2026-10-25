@@ -9,9 +9,9 @@
   "status": "deviated",
   "decision_status": "confirmed",
   "architecture_quality": "PENDING",
-  "attempt": 1,
-  "started_at": "2026-10-24T18:10:42+02:00",
-  "completed_at": "2026-10-24T18:10:42+02:00",
+  "attempt": 2,
+  "started_at": "2026-10-25T09:23:49Z",
+  "completed_at": "2026-10-25T09:23:49Z",
   "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
   "environment": {
     "repository": "minoveaz/loopdev-v2",
@@ -19,77 +19,97 @@
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "8204d0ba4211d3e37a5f048248f7c7b41de4dfec",
-    "working_tree": "clean after the local ERP documentation commit; no production code changes"
+    "head_commit": "6de4213c6ae2207e4c1e5965e3970fa721d18a29",
+    "working_tree": "Implementation commit is pushed; delivery evidence and invalidated checkpoints are being reconciled."
   },
   "input_artifacts": [
     "docs/implementation/erp/core/README.md",
-    "docs/implementation/erp/core/domain-model.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md",
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/run.json",
-    "User request: commit the current state; no push or pull request requested"
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/01-visual-design.json",
+    "User request: commit, push and open a pull request against develop."
   ],
   "output_artifacts": [
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/10-git.json",
     "docs/implementation/erp/core/README.md",
-    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/run.json",
-    "8204d0ba4211d3e37a5f048248f7c7b41de4dfec"
+    "6de4213c6ae2207e4c1e5965e3970fa721d18a29",
+    "https://github.com/minoveaz/loopdev-v2/pull/38"
   ],
   "validation": [
     {
-      "command": "npm run delivery:validate",
-      "result": "passed: 104 checkpoint files checked"
+      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx src/test/erp/product-media.test.tsx",
+      "result": "passed: 5 files, 30 tests",
+      "evidence": "Focused product catalog and media test output."
     },
     {
-      "command": "npm run validate:delivery-ledgers",
-      "result": "passed: 8 ledgers checked"
+      "command": "npm run typecheck && npm run build && npm run i18n:check && npx eslint .",
+      "result": "passed",
+      "evidence": "Validated before creating the implementation commit."
     },
     {
-      "command": "npm run validate:multiplatform",
-      "result": "passed"
+      "command": "npm run validate:module-runs",
+      "result": "initial PR commit failed on 7 stale checkpoint errors; passed locally after marking prior-scope checkpoints invalidated",
+      "evidence": "107 checkpoint files checked after reconciliation."
     },
     {
-      "command": "npm run test:delivery",
-      "result": "passed: 27 tests"
+      "command": "gh pr view 38 --repo minoveaz/loopdev-v2",
+      "result": "open against develop; initial CI traceability check failed, other completed checks passed, component tests were still running",
+      "evidence": "Initial CI run 40180232687 on commit 6de4213c6ae2207e4c1e5965e3970fa721d18a29."
     },
     {
-      "command": "git diff --cached --check",
-      "result": "passed before commit"
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors in delivery evidence changes."
     }
   ],
   "requirements": [
     {
       "id": "GIT-ERP-LOCAL-COMMIT",
       "status": "PASS",
-      "evidence": "Created local documentation checkpoint 8204d0ba4211d3e37a5f048248f7c7b41de4dfec with Conventional Commit message and required co-author trailer."
+      "evidence": "Created implementation commit 6de4213c6ae2207e4c1e5965e3970fa721d18a29 with Conventional Commit subject and required co-author trailer."
     },
     {
       "id": "GIT-ERP-PUSH",
-      "status": "NOT_APPLICABLE",
-      "evidence": "No push was requested."
+      "status": "PASS",
+      "evidence": "Pushed feature/erp-core-capabilities to origin and configured upstream tracking."
     },
     {
       "id": "GIT-ERP-PULL-REQUEST",
-      "status": "NOT_APPLICABLE",
-      "evidence": "No pull request was requested."
+      "status": "PASS",
+      "evidence": "Opened pull request #38 against develop; it remains open for review."
+    },
+    {
+      "id": "GIT-ERP-CI",
+      "status": "PARTIAL",
+      "evidence": "The initial PR traceability check failed because checkpoints from the prior scope were still marked completed. The checkpoint corrections pass locally; CI must rerun on the updated commit."
     },
     {
       "id": "GIT-ERP-REMAINING-GATES",
       "status": "PARTIAL",
-      "evidence": "The module run remains blocked by open domain, access, API and synchronization decisions; the local commit is not functional or release evidence."
+      "evidence": "The module run remains blocked by product-media visual evidence and unresolved access, legacy-data and formal verification gates. Git delivery does not establish release readiness."
     }
   ],
-  "detected_failure": null,
-  "likely_failure_origin": null,
-  "next_handoff": "Continue the unresolved Products domain decisions; resolve the documented access and synchronization blockers before starting 06-plan.",
+  "detected_failure": {
+    "code": "GIT-002",
+    "detected_by": "git-workflow",
+    "summary": "The first PR CI run rejected completed checkpoints that were invalidated by the approved product-media scope amendment."
+  },
+  "likely_failure_origin": {
+    "phase": "01-visual-design",
+    "skill": "module-visual-design",
+    "code": "VIS-ERP-005",
+    "confidence": 9
+  },
+  "next_handoff": "Commit and push the checkpoint reconciliation, then confirm the latest PR CI result and review; do not merge while required checks or module gates remain unresolved.",
   "approval_gate": {
     "status": "pending",
     "approved_by": null,
     "approved_at": null,
-    "source": "The user authorized a local recovery checkpoint only; the formal release gate remains pending. Push and pull request were not requested."
+    "source": "The user explicitly authorized commit, push and PR creation; formal module release approval remains pending."
   },
   "invalidated": false,
   "notes": [
-    "This local documentation checkpoint was requested while the module run remained blocked at 05-sync, before the canonical 09-review/release gate. It is recorded as deviated and does not complete the formal 10-git phase.",
-    "No production code was changed, and no remote branch or pull request was created."
+    "The code commit and initial PR are published. The current delivery-evidence edits are not yet committed or pushed, so the failed CI result applies only to the initial PR commit.",
+    "The PR is for review only; no merge or release-readiness claim is made."
   ]
 }

@@ -105,6 +105,7 @@ export interface ReplaceFileVersionInput {
 export interface FilePreviewSource {
   url: string | null;
   mimeType: string;
+  expiresAt?: string;
   revoke?: () => void;
 }
 

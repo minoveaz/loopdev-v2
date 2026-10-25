@@ -21,6 +21,7 @@ import type {
   ProductCostReferenceInput,
   ProductReference,
   ProductReferenceCreateInput,
+  ProductReferenceUpdateInput,
   ProductReferenceKind,
   ProductPartyRole,
   ResolvedCatalogReference,
@@ -40,6 +41,9 @@ function client(): SupabaseClient {
 function mapError(error: { code?: string; message: string }): CatalogAdapterError {
   if (error.code === "42501" || /permission|policy|forbidden/i.test(error.message)) {
     return new CatalogAdapterError("You do not have permission to manage this catalog.", "forbidden");
+  }
+  if (error.code === "40001" || /PRODUCT_COST_CONFLICT/i.test(error.message)) {
+    return new CatalogAdapterError("Purchase cost changed. Reload and try again.", "conflict");
   }
   if (/SKU.*already exists/i.test(error.message)) return new CatalogAdapterError("A product or SKU with this code already exists in the organization.", "conflict");
   if (error.code === "23505") return new CatalogAdapterError("A catalog record with this key already exists.", "conflict");
@@ -77,11 +81,11 @@ function mapPriceEntry(row: Row): PriceEntry {
 }
 
 function mapProductReference(row: Row): ProductReference {
-  return { ...base(row), organizationId: String(row.organization_id), kind: row.kind as ProductReferenceKind, key: String(row.key), name: String(row.name), parentId: (row.parent_id as string | null) ?? null, status: row.status as ProductReference["status"] };
+  return { ...base(row), organizationId: String(row.organization_id), kind: row.kind as ProductReferenceKind, key: String(row.key), name: String(row.name), parentId: (row.parent_id as string | null) ?? null, status: row.status as ProductReference["status"], version: Number(row.version ?? 1) };
 }
 
 function mapProductCostReference(row: Row): ProductCostReference {
-  return { ...base(row), organizationId: String(row.organization_id), catalogItemId: String(row.catalog_item_id), variantId: (row.variant_id as string | null) ?? null, amount: row.amount == null ? null : Number(row.amount), currency: String(row.currency) };
+  return { ...base(row), organizationId: String(row.organization_id), catalogItemId: String(row.catalog_item_id), variantId: (row.variant_id as string | null) ?? null, amount: row.amount == null ? null : Number(row.amount), currency: String(row.currency), version: Number(row.version ?? 1) };
 }
 
 async function listRows(table: TableName, params: CatalogListParams, filters: Record<string, string | undefined> = {}) {
@@ -158,8 +162,8 @@ export const supabaseCatalogAdapter: CatalogAdapter = {
   async listProductPartyRoles() { return [] as ProductPartyRole[]; },
   async listAvailabilities() { return [] as CatalogAvailability[]; },
   async listEligibilities() { return [] as CatalogEligibility[]; },
-  async listProductReferences(params: CatalogScopeParams & { kind?: ProductReferenceKind }) {
-    const rows = await listRows("erp_product_references", { ...params, includeArchived: false }, { kind: params.kind });
+  async listProductReferences(params: CatalogScopeParams & { kind?: ProductReferenceKind; includeArchived?: boolean }) {
+    const rows = await listRows("erp_product_references", { ...params, includeArchived: params.includeArchived }, { kind: params.kind });
     return rows.map(mapProductReference);
   },
   async createProductReference(input: ProductReferenceCreateInput) {
@@ -172,6 +176,23 @@ export const supabaseCatalogAdapter: CatalogAdapter = {
       status: "active",
     }));
   },
+  async updateProductReference(id, params, input) {
+    const { data, error } = await client().from("erp_product_references")
+      .update(write({
+        name: input.patch.name?.trim(),
+        parent_id: input.patch.parentId,
+        status: input.patch.status,
+      }))
+      .eq("id", id)
+      .eq("organization_id", params.organizationId)
+      .eq("kind", "category")
+      .eq("version", input.expectedVersion)
+      .select("*")
+      .maybeSingle();
+    if (error) throw mapError(error);
+    if (!data) throw new CatalogAdapterError("Product category changed or is no longer available. Reload and try again.", "conflict");
+    return mapProductReference(data as Row);
+  },
   async getProductCostReference(params: CatalogScopeParams & { catalogItemId: string; variantId?: string | null }) {
     let query = client().from("erp_product_cost_references").select("*")
       .eq("organization_id", params.organizationId)
@@ -182,35 +203,27 @@ export const supabaseCatalogAdapter: CatalogAdapter = {
     return data ? mapProductCostReference(data as Row) : null;
   },
   async saveProductCostReference(input: ProductCostReferenceInput) {
-    if (input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0)) {
+    if (input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0 || Math.round(input.amount * 100) !== input.amount * 100)) {
       throw new CatalogAdapterError("Cost must be a non-negative amount.", "server-error");
     }
     if (!/^[A-Z]{3}$/.test(input.currency)) {
       throw new CatalogAdapterError("Cost currency must be a three-letter ISO code.", "server-error");
     }
-    let lookup = client().from("erp_product_cost_references").select("id")
-      .eq("organization_id", input.organizationId)
-      .eq("catalog_item_id", input.catalogItemId);
-    lookup = input.variantId ? lookup.eq("variant_id", input.variantId) : lookup.is("variant_id", null);
-    const { data: current, error: lookupError } = await lookup.maybeSingle();
-    if (lookupError) throw mapError(lookupError);
-    const payload = {
-      organization_id: input.organizationId,
-      catalog_item_id: input.catalogItemId,
-      variant_id: input.variantId,
-      amount: input.amount,
-      currency: input.currency,
-    };
-    if (current) {
-      const { data, error } = await client().from("erp_product_cost_references").update(payload)
-        .eq("id", String((current as Row).id))
-        .eq("organization_id", input.organizationId)
-        .select("*")
-        .single();
-      if (error) throw mapError(error);
-      return mapProductCostReference(data as Row);
+    if (!Number.isInteger(input.expectedVersion) || input.expectedVersion < 0 || !/^[A-Za-z0-9._:-]{8,128}$/.test(input.idempotencyKey)) {
+      throw new CatalogAdapterError("Cost version and idempotency key are required.", "server-error");
     }
-    return mapProductCostReference(await insertRow("erp_product_cost_references", payload));
+    const { data, error } = await client().rpc("save_erp_product_cost_reference", {
+      target_organization_id: input.organizationId,
+      target_catalog_item_id: input.catalogItemId,
+      target_variant_id: input.variantId ?? null,
+      target_amount: input.amount,
+      target_currency: input.currency,
+      target_expected_version: input.expectedVersion,
+      target_idempotency_key: input.idempotencyKey,
+    });
+    if (error) throw mapError(error);
+    if (!data) throw new CatalogAdapterError("Purchase cost operation returned no result.", "server-error");
+    return mapProductCostReference(data as Row);
   },
   async resolveReference(params: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null> {
     const item = params.reference.catalogItemId ? await this.getCatalogItem(params.reference.catalogItemId, params) : params.reference.productKey ? await this.findCatalogItemByKey(params.reference.productKey, params) : null;

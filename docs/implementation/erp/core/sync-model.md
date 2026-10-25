@@ -6,7 +6,7 @@
 |---|---|
 | Run | `MOD-CORE-20261024-001` |
 | Phase | `05-sync` |
-| Status | `partial` (revalidated in attempt 11 against refreshed access and API contracts) |
+| Status | `partial` (shared Files lifecycle ratified in build attempt 15; adapter implementation pending) |
 | Parent | `04-api` |
 | Domain input | `domain-model.md` |
 | Access input | `access-model.md` |
@@ -17,12 +17,13 @@ This defines observed local/remote behavior and a safe synchronization
 contract proposal. It does not implement an offline queue, select persistence
 infrastructure, or authorize migration of real local data.
 
-Attempt 11 revalidated the synchronization contract against access and API
-attempt 11. The shared Files boundary and append-only Platform audit semantics
-are approved; detailed Files finalization/preview/lifecycle behavior,
-product-media metadata-table enforcement, Products audit integration and
-transaction-atomicity evidence remain open. Remote Products costs and media
-remain online-only, without a local queue or remote-data fallback.
+Build attempt 15 ratified the shared Files lifecycle and preview contract:
+server-validated uploads, finalized-file registration, 300-second maximum
+signed previews, Platform-owned renditions/retention/orphan recovery, and
+consumer-owned assignments. The generic remote Files adapter and Products
+integration remain pending. Products RLS and audit controls are deployed with
+remote write controls off. Remote costs and media remain online-only, without
+a local queue or remote-data fallback.
 
 ## Decision status
 
@@ -42,7 +43,7 @@ remain online-only, without a local queue or remote-data fallback.
 | `SYNC-ERP-012` | Category synchronization and legacy `categoryKey` migration wait for category scope, identity and lifecycle decisions. | `confirmed` | No category entity/store/table or migration exists. |
 | `SYNC-ERP-013` | Product costs are permission-sensitive remote data: no offline cache, queued mutation or replay; every read/write requires current server authorization. | `confirmed` | Owner/admin-only default grants are approved; permission revocation must invalidate any protected in-memory projection. |
 | `SYNC-ERP-014` | Product/SKU gallery order changes only through an online, atomic full-gallery command with expected assignment versions; no last-write-wins or automatic merge. | `confirmed` | Manual per-gallery ordering is approved; current media assignments have no position/version fields. |
-| `SYNC-ERP-015` | Product media upload and preview remain in the shared Files synchronization/lifecycle boundary; Products queues no file bytes or signed URLs. | `open` | The shared Files ownership boundary is approved; upload/finalization, signed-preview authorization, retention and orphan-recovery semantics remain to be implemented and accepted by Platform. |
+| `SYNC-ERP-015` | Product media upload and preview remain in the shared Files synchronization/lifecycle boundary; Products queues no file bytes or signed URLs. | `confirmed` | `PlatformFilesPort` defines finalized upload and on-demand preview with a maximum 300-second signed URL. Platform owns processing, retention and orphan recovery; Products only registers finalized files and manages its own assignments. |
 | `SYNC-ERP-016` | Registering an asset and attaching it are separate recoverable steps; attach failure never deletes a reusable Platform File. | `confirmed` | Matches the API contract; any orphan cleanup is Platform-owned and must not remove a file with other references. |
 | `SYNC-ERP-017` | A cost or media mutation with an ambiguous network outcome is retried only with the same idempotency key after online reconnection; a conflict is refreshed and resolved explicitly. | `confirmed` | No queue is used in this release; the rule prevents duplicate cost writes or gallery assignments if a caller retries. |
 
@@ -117,7 +118,7 @@ validation, scope and stale-version failures are not automatic retries.
 | Media upload / register asset | Current adapters upload bytes and create Files metadata plus the ERP asset in one adapter call; local media stores use best-effort persistence, and remote code directly writes Storage/metadata. | Requires online Files/storage access; current code has no shared finalized-upload contract. | No Products queue. Files owns upload retry and orphan cleanup; Products registers only a finalized file and keeps every failed step visible. | File upload state is Platform-owned; Product mutation state starts only at asset registration |
 | Attach / detach / update alt text | Local assignment store mutation; current storage errors may be hidden. | Online Supabase mutation; no expected version or durable idempotency yet. | No offline queue; preserve uploaded reusable asset if attach fails. | Assignment mutation and shared File lifecycle remain separate |
 | Reorder product/SKU gallery | No position field or ordering command exists. | No position/version field or atomic reorder command exists. | Online atomic full-gallery command only; stale membership/version requires refresh and explicit reorder resubmission. | Gallery membership/version conflict is separate from connectivity |
-| Product media preview | Local Files adapter returns preview source. | Supabase adapter generates a one-hour signed URL directly, outside a generic Files preview operation. | No cached signed URL or offline preview; request a fresh Platform preview after reauthorizing. | Platform Files controls preview authorization, availability and expiry |
+| Product media preview | Local Files adapter returns preview source. | Current Supabase adapter generates a one-hour signed URL directly, outside a generic Files preview operation; target contract caps it at 300 seconds. | No cached signed URL or offline preview; request a fresh Platform preview after reauthorizing. | Platform Files controls preview authorization, availability and expiry |
 | Resolve product reference | Looks up local product/offer/variant IDs or key | Resolves remote references | No remote cache; offline resolution is unavailable. Never guess a legacy mapping. | Connectivity/request state, not business status |
 | Shared Files/Notes/Tasks/Document Intelligence | Shared Platform adapters | Platform-owned remote contracts | Reuse Platform queues, permission checks and recovery; do not enqueue through Products. | Platform-owned state plus parent-record access |
 
@@ -286,21 +287,17 @@ remote, browser-storage or mobile runtime tests.
 
 ## Risks and open decisions
 
-1. Shared audit semantics are approved, but Products mutation call sites and
-   same-transaction failure/rollback tests must pass before remote mutations
-   are enabled.
-2. Product-media Storage policy migrations are applied and verified in
-   `loopdev-platform-dev`; the broader ERP permission/RLS migration and full
-   deployed schema remain unverified.
+1. Products audit and operation-specific RLS are deployed and locally tested;
+   verify the approved six-month audit retention/archive operation and keep
+   write controls off until recovery gates pass.
+2. The current Products media adapter still bypasses `PlatformFilesPort`.
+   Migrate it and test server validation, finalization, same-organization
+   access, 300-second preview expiry and detach-without-delete behavior.
 3. Production category/workspace data must pass the dry-run mapping and
    visibility review before migration.
 4. Remote mutation implementation must add expected-version checks,
    idempotency and audit atomically; none exists in the current adapter/schema.
-5. The shared Files boundary is approved, but the current media adapter
-   bypasses finalized-file registration and generates signed URLs directly;
-   metadata-table policies, preview authorization, retention and safe orphan
-   recovery remain prerequisites to remote media writes and preview.
-6. Product cost fields require owner/admin-only permissions, exact decimal
+5. Product cost fields require owner/admin-only permissions, exact decimal
    representation, no remote offline cache and immediate invalidation on
    permission changes; present SQL/adapter enforcement is insufficient.
 
@@ -311,9 +308,9 @@ Products are online-only with no offline cache or mutation queue; local demo
 data is selected explicitly and is never a remote fallback. Fail-closed
 adapter selection and strict core-catalog persistence are implemented, but
 runtime mode is unset and local media persistence remains best-effort.
-Versions, idempotency, audit integration, RLS and production migration remain
-implementation tasks. The shared Files and audit semantics are approved, but
-Files lifecycle/table enforcement and Products audit atomicity evidence remain
-open. Do not enable remote writes until forward migrations are applied and
-verified, and do not migrate categories or workspace scope before the approved
-dry run.
+Versions, idempotency and product-media adapter integration remain
+implementation tasks. The Files lifecycle contract is approved, but the
+current adapter does not yet comply. Products RLS and audit controls are
+deployed with write controls disabled. Do not enable remote writes until
+recovery/data gates pass, and do not migrate categories or workspace scope
+before the approved dry run.

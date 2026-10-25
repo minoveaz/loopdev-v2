@@ -335,15 +335,28 @@ export const localProductReferencesStore = createCatalogLocalStore<ProductRefere
   key: "loopdev:catalog:product-references",
   idPrefix: "product_reference",
   seed: [
-    { id: "product_reference_category_commerce", organizationId: localOrganizationId, kind: "category", key: "commerce", name: "Commerce", parentId: null, status: "active", createdAt: now, updatedAt: now },
-    { id: "product_reference_category_software", organizationId: localOrganizationId, kind: "category", key: "software", name: "Software", parentId: null, status: "active", createdAt: now, updatedAt: now },
-    { id: "product_reference_category_services", organizationId: localOrganizationId, kind: "category", key: "services", name: "Services", parentId: null, status: "active", createdAt: now, updatedAt: now },
+    { id: "product_reference_category_commerce", organizationId: localOrganizationId, kind: "category", key: "commerce", name: "Commerce", parentId: null, status: "active", version: 1, createdAt: now, updatedAt: now },
+    { id: "product_reference_category_software", organizationId: localOrganizationId, kind: "category", key: "software", name: "Software", parentId: null, status: "active", version: 1, createdAt: now, updatedAt: now },
+    { id: "product_reference_category_services", organizationId: localOrganizationId, kind: "category", key: "services", name: "Services", parentId: null, status: "active", version: 1, createdAt: now, updatedAt: now },
   ],
 });
 
 export const localProductCostReferencesStore = createCatalogLocalStore<ProductCostReference>({
   key: "loopdev:catalog:product-cost-references",
   idPrefix: "product_cost",
+  seed: [],
+});
+
+export interface LocalProductCostMutation extends Entity {
+  organizationId: string;
+  idempotencyKey: string;
+  fingerprint: string;
+  costReferenceId: string;
+}
+
+export const localProductCostMutationsStore = createCatalogLocalStore<LocalProductCostMutation>({
+  key: "loopdev:catalog:product-cost-mutations",
+  idPrefix: "product_cost_mutation",
   seed: [],
 });
 

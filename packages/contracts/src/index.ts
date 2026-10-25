@@ -19,6 +19,7 @@ export * from "./account-navigation";
 export * from "./account-profile";
 export * from "./private-user-files";
 export * from "./private-user-files-supabase";
+export * from "./platform-files";
 export * from "./profile-avatar-adapter";
 export * from "./user-preferences";
 export * from "./user-preferences-sync";

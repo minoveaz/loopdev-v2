@@ -1,7 +1,8 @@
 import { createPlatformAvatarReference, getPlatformAvatarFileId } from "./account-profile";
+import { PLATFORM_FILE_PREVIEW_TTL_SECONDS } from "./platform-files";
 
 export const PROFILE_AVATAR_MAX_BYTES = 5 * 1024 * 1024;
-export const PROFILE_AVATAR_PREVIEW_TTL_SECONDS = 300;
+export const PROFILE_AVATAR_PREVIEW_TTL_SECONDS = PLATFORM_FILE_PREVIEW_TTL_SECONDS;
 
 const PROFILE_AVATAR_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 

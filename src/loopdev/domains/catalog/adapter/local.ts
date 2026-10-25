@@ -7,6 +7,7 @@ import {
   localOrganizationCatalogsStore,
   localCatalogOffersStore,
   localProductCostReferencesStore,
+  localProductCostMutationsStore,
   localProductReferencesStore,
   localCatalogPriceBooksStore,
   localCatalogPriceEntriesStore,
@@ -31,6 +32,7 @@ import type {
   ResolvedCatalogReference,
   ProductCostReferenceInput,
   ProductReferenceCreateInput,
+  ProductReferenceUpdateInput,
   ProductReferenceKind,
 } from "../types";
 import { CatalogAdapterError, matchesCatalogItemKey } from "../types";
@@ -73,6 +75,16 @@ function assertWrite(params: CatalogScopeParams): void {
   if (!localPlatformAdapter.hasPermission("catalog.write", scopeFor(params))) {
     throw new CatalogAdapterError("You do not have permission to manage this catalog.", "forbidden");
   }
+}
+
+function assertActiveCategory(organizationId: string, categoryKey: string | null | undefined): void {
+  if (!categoryKey) return;
+  const category = localProductReferencesStore.list().find((reference) =>
+    reference.organizationId === organizationId
+    && reference.kind === "category"
+    && reference.key === categoryKey
+    && reference.status === "active");
+  if (!category) throw new CatalogAdapterError("Choose an active category in this organization.", "invalid-scope");
 }
 
 function assertUniqueSku(sku: string, organizationId: string, exceptVariantId?: string, exceptItemId?: string): void {
@@ -185,6 +197,7 @@ export const localCatalogAdapter: CatalogAdapter = {
       throw new CatalogAdapterError("You do not have permission to manage this catalog.", "forbidden");
     }
     if (!input.name.trim()) throw new CatalogAdapterError("A product name is required.", "server-error");
+    assertActiveCategory(input.organizationId, input.categoryKey);
     const key = nextCatalogItemKey(input.organizationId);
     const sku = nextCatalogSku(input.organizationId);
     assertUniqueSku(sku, input.organizationId);
@@ -213,6 +226,8 @@ export const localCatalogAdapter: CatalogAdapter = {
       throw new CatalogAdapterError("Catalog item not found in this scope.", "server-error");
     }
     assertIdentifiersAreServerControlled(patch);
+    if (patch.categoryKey !== undefined) assertActiveCategory(params.organizationId, patch.categoryKey);
+    if (patch.status === "active") assertActiveCategory(params.organizationId, patch.categoryKey ?? current.categoryKey);
     const updated = localCatalogItemsStore.update(id, patch);
     if (!updated) throw new CatalogAdapterError("Unable to update catalog item.", "server-error");
     return updated;
@@ -290,6 +305,7 @@ export const localCatalogAdapter: CatalogAdapter = {
         : null;
       if (!category) throw new CatalogAdapterError("An active SKU needs an active category.", "invalid-scope");
     }
+    if (typeof input.metadata.categoryKey === "string") assertActiveCategory(input.organizationId, input.metadata.categoryKey);
     const key = nextCatalogItemKey(input.organizationId);
     const sku = nextCatalogSku(input.organizationId);
     assertUniqueSku(sku, input.organizationId);
@@ -316,6 +332,8 @@ export const localCatalogAdapter: CatalogAdapter = {
     if (!current) throw new CatalogAdapterError("SKU not found.", "not-found");
     const updatedValue = { ...current, ...patch };
     if (!updatedValue.name.trim()) throw new CatalogAdapterError("A variant name is required.", "server-error");
+    const categoryKey = updatedValue.metadata.categoryKey;
+    if (typeof categoryKey === "string") assertActiveCategory(params.organizationId, categoryKey);
     if (patch.status === "active" && current.status !== "active") {
       const categoryKey = updatedValue.metadata.categoryKey;
       const category = typeof categoryKey === "string"
@@ -408,21 +426,32 @@ export const localCatalogAdapter: CatalogAdapter = {
     assertRead(params);
     return localProductReferencesStore.list()
       .filter((reference) => reference.organizationId === params.organizationId)
-      .filter((reference) => reference.status === "active")
+      .filter((reference) => params.includeArchived || reference.status !== "archived")
       .filter((reference) => !params.kind || reference.kind === params.kind);
   },
 
   async createProductReference(input: ProductReferenceCreateInput) {
     assertWrite(input);
-    const normalizedKey = input.key.trim().toLocaleLowerCase().replace(/\s+/g, "-");
     const name = input.name.trim();
-    if (!normalizedKey || !name) throw new CatalogAdapterError("Reference name and key are required.", "server-error");
-    if (localProductReferencesStore.list().some((reference) =>
+    const baseKey = input.kind === "category"
+      ? name.toLocaleLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "category"
+      : input.key.trim().toLocaleLowerCase().replace(/\s+/g, "-");
+    if (!baseKey || !name) throw new CatalogAdapterError("Reference name and key are required.", "server-error");
+    const duplicate = localProductReferencesStore.list().some((reference) =>
       reference.organizationId === input.organizationId
       && reference.kind === input.kind
-      && reference.key.toLocaleLowerCase() === normalizedKey
-      && reference.status !== "archived")) {
+      && reference.key.toLocaleLowerCase() === baseKey
+      && reference.status !== "archived");
+    if (duplicate && input.kind !== "category") {
       throw new CatalogAdapterError("A reference with this name already exists.", "conflict");
+    }
+    let normalizedKey = baseKey;
+    let suffix = 2;
+    while (localProductReferencesStore.list().some((reference) =>
+      reference.organizationId === input.organizationId
+      && reference.kind === input.kind
+      && reference.key.toLocaleLowerCase() === normalizedKey)) {
+      normalizedKey = `${baseKey}-${suffix++}`;
     }
     if (input.parentId) {
       const parent = localProductReferencesStore.get(input.parentId);
@@ -436,11 +465,62 @@ export const localCatalogAdapter: CatalogAdapter = {
       name,
       parentId: input.kind === "category" ? input.parentId : null,
       status: "active",
+      version: 1,
     });
   },
 
-  async getProductCostReference(params) {
+  async updateProductReference(id: string, params: CatalogScopeParams, input: ProductReferenceUpdateInput) {
     assertWrite(params);
+    const current = localProductReferencesStore.get(id);
+    if (!current || current.organizationId !== params.organizationId || current.kind !== "category") {
+      throw new CatalogAdapterError("Product category not found in this organization.", "not-found");
+    }
+    if (current.version !== input.expectedVersion) throw new CatalogAdapterError("Product category changed. Reload and try again.", "conflict");
+    const patch = input.patch;
+    if (patch.name !== undefined && !patch.name.trim()) throw new CatalogAdapterError("Category name is required.", "server-error");
+    if (patch.status !== undefined && patch.status !== "active" && patch.status !== "archived") {
+      throw new CatalogAdapterError("Category status is invalid.", "server-error");
+    }
+    const parentId = patch.parentId === undefined ? current.parentId : patch.parentId;
+    let parent = parentId ? localProductReferencesStore.get(parentId) : null;
+    if (parentId && (!parent || parent.organizationId !== params.organizationId || parent.kind !== "category" || parent.status !== "active")) {
+      throw new CatalogAdapterError("The parent category must be active and in this organization.", "invalid-scope");
+    }
+    const visited = new Set<string>();
+    while (parent) {
+      if (parent.id === id || visited.has(parent.id)) {
+        throw new CatalogAdapterError("Category moves cannot create a hierarchy cycle.", "conflict");
+      }
+      visited.add(parent.id);
+      parent = parent.parentId ? localProductReferencesStore.get(parent.parentId) ?? null : null;
+    }
+    if (patch.status === "archived") {
+      const hasActiveChildren = localProductReferencesStore.list().some((reference) =>
+        reference.kind === "category" && reference.parentId === id && reference.status === "active");
+      const hasActiveAssignments = localCatalogItemsStore.list().some((item) =>
+        item.organizationId === params.organizationId && item.status === "active" && item.categoryKey === current.key)
+        || localCatalogVariantsStore.list().some((variant) =>
+          variant.organizationId === params.organizationId
+          && variant.status === "active"
+          && variant.metadata.categoryKey === current.key);
+      if (hasActiveChildren || hasActiveAssignments) {
+        throw new CatalogAdapterError("Move active child categories and assignments before archiving this category.", "conflict");
+      }
+    }
+    const updated = localProductReferencesStore.update(id, {
+      ...patch,
+      ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+      parentId,
+      version: current.version + 1,
+    });
+    if (!updated) throw new CatalogAdapterError("Unable to update product category.", "server-error");
+    return updated;
+  },
+
+  async getProductCostReference(params) {
+    if (!localPlatformAdapter.hasPermission("catalog.cost.read", scopeFor(params))) {
+      throw new CatalogAdapterError("You do not have permission to view purchase costs.", "forbidden");
+    }
     const item = localCatalogItemsStore.get(params.catalogItemId);
     if (!item || item.organizationId !== params.organizationId) return null;
     if (params.variantId) {
@@ -454,12 +534,17 @@ export const localCatalogAdapter: CatalogAdapter = {
   },
 
   async saveProductCostReference(input: ProductCostReferenceInput) {
-    assertWrite(input);
-    if (input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0)) {
+    if (!localPlatformAdapter.hasPermission("catalog.cost.manage", scopeFor(input))) {
+      throw new CatalogAdapterError("You do not have permission to manage purchase costs.", "forbidden");
+    }
+    if (input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0 || Math.round(input.amount * 100) !== input.amount * 100)) {
       throw new CatalogAdapterError("Cost must be a non-negative amount.", "server-error");
     }
     if (!/^[A-Z]{3}$/.test(input.currency)) {
       throw new CatalogAdapterError("Cost currency must be a three-letter ISO code.", "server-error");
+    }
+    if (!Number.isInteger(input.expectedVersion) || input.expectedVersion < 0 || !/^[A-Za-z0-9._:-]{8,128}$/.test(input.idempotencyKey)) {
+      throw new CatalogAdapterError("Cost version and idempotency key are required.", "server-error");
     }
     const item = localCatalogItemsStore.get(input.catalogItemId);
     if (!item || item.organizationId !== input.organizationId) {
@@ -475,12 +560,52 @@ export const localCatalogAdapter: CatalogAdapter = {
       cost.organizationId === input.organizationId
       && cost.catalogItemId === input.catalogItemId
       && cost.variantId === (input.variantId ?? null));
-    if (current) {
-      const updated = localProductCostReferencesStore.update(current.id, input);
-      if (!updated) throw new CatalogAdapterError("Unable to update product cost reference.", "server-error");
-      return updated;
+    const fingerprint = JSON.stringify([
+      input.catalogItemId,
+      input.variantId ?? null,
+      input.amount,
+      input.currency,
+      input.expectedVersion,
+    ]);
+    const priorMutation = localProductCostMutationsStore.list().find((mutation) =>
+      mutation.organizationId === input.organizationId && mutation.idempotencyKey === input.idempotencyKey);
+    if (priorMutation) {
+      if (priorMutation.fingerprint !== fingerprint) {
+        throw new CatalogAdapterError("The cost idempotency key was reused with different values.", "conflict");
+      }
+      const priorCost = localProductCostReferencesStore.get(priorMutation.costReferenceId);
+      if (!priorCost) throw new CatalogAdapterError("The idempotent cost result is unavailable.", "server-error");
+      return priorCost;
     }
-    return localProductCostReferencesStore.create(input);
+    if ((current?.version ?? 0) !== input.expectedVersion) {
+      throw new CatalogAdapterError("Purchase cost changed. Reload and try again.", "conflict");
+    }
+    let saved: import("../types").ProductCostReference;
+    if (current) {
+      const updated = localProductCostReferencesStore.update(current.id, {
+        amount: input.amount,
+        currency: input.currency,
+        version: current.version + 1,
+      });
+      if (!updated) throw new CatalogAdapterError("Unable to update product cost reference.", "server-error");
+      saved = updated;
+    } else {
+      saved = localProductCostReferencesStore.create({
+        organizationId: input.organizationId,
+        catalogItemId: input.catalogItemId,
+        variantId: input.variantId ?? null,
+        amount: input.amount,
+        currency: input.currency,
+        version: 1,
+      });
+    }
+    localProductCostMutationsStore.create({
+      organizationId: input.organizationId,
+      idempotencyKey: input.idempotencyKey,
+      fingerprint,
+      costReferenceId: saved.id,
+    });
+    return saved;
   },
 
   async resolveReference({ reference, ...params }: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null> {

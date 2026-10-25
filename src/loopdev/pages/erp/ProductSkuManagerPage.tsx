@@ -21,6 +21,10 @@ type SkuDraft = {
   categoryKey: string;
   status: CatalogRecordStatus;
   metadata: Record<string, unknown>;
+  costAmount: string;
+  costCurrency: string;
+  costVersion: number;
+  costMutationKey: string | null;
 };
 
 const splitValues = (value: string) => Array.from(new Map(
@@ -37,6 +41,10 @@ const toDraft = (variant: CatalogVariant): SkuDraft => ({
   categoryKey: typeof variant.metadata.categoryKey === "string" ? variant.metadata.categoryKey : "",
   status: variant.status,
   metadata: variant.metadata,
+  costAmount: "",
+  costCurrency: "EUR",
+  costVersion: 0,
+  costMutationKey: null,
 });
 
 export function ProductSkuManagerPage({ productId }: { productId: string }) {
@@ -55,6 +63,7 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [costManagementAvailable, setCostManagementAvailable] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -67,7 +76,7 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
       catalogAdapter.getCatalogItem(productId, { organizationId }),
       catalogAdapter.listProductReferences({ organizationId, kind: "category" }),
       catalogAdapter.listVariants({ organizationId, catalogItemId: productId, includeArchived: true }),
-    ]).then(([loadedItem, loadedReferences, loadedVariants]) => {
+    ]).then(async ([loadedItem, loadedReferences, loadedVariants]) => {
       if (!active) return;
       if (!loadedItem) {
         setError(translateRef.current("common.erpProductRecord.productNotFound"));
@@ -79,7 +88,34 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
       }
       setItem(loadedItem);
       setReferences(loadedReferences);
-      setRows(loadedVariants.map(toDraft));
+      let costsByVariant = new Map<string, Awaited<ReturnType<typeof catalogAdapter.getProductCostReference>>>();
+      if (loadedItem.metadata.canPurchase === true) {
+        try {
+          const costs = await Promise.all(loadedVariants.map((variant) =>
+            catalogAdapter.getProductCostReference({ organizationId, catalogItemId: loadedItem.id, variantId: variant.id })));
+          costsByVariant = new Map(loadedVariants.map((variant, index) => [variant.id, costs[index]]));
+        } catch (cause) {
+          if (cause instanceof CatalogAdapterError && cause.code === "forbidden") {
+            setCostManagementAvailable(false);
+          } else {
+            throw cause;
+          }
+        }
+      } else {
+        setCostManagementAvailable(false);
+      }
+      if (!active) return;
+      setRows(loadedVariants.map((variant) => {
+        const draft = toDraft(variant);
+        const cost = costsByVariant.get(variant.id);
+        return {
+          ...draft,
+          costAmount: cost?.amount == null ? "" : String(cost.amount),
+          costCurrency: cost?.currency ?? "EUR",
+          costVersion: cost?.version ?? 0,
+          costMutationKey: null,
+        };
+      }));
       const colorValues = Array.from(new Set(loadedVariants.map((variant) => variant.attributes.color).filter(Boolean)));
       const sizeValues = Array.from(new Set(loadedVariants.map((variant) => variant.attributes.size).filter(Boolean)));
       setColors(colorValues.join(", "));
@@ -94,7 +130,13 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
 
   const categoryOptions = useMemo(() => references.filter((reference) => reference.kind === "category"), [references]);
   const updateRow = (localId: string, patch: Partial<SkuDraft>) => {
-    setRows((current) => current.map((row) => row.localId === localId ? { ...row, ...patch } : row));
+    setRows((current) => current.map((row) => row.localId === localId
+      ? {
+        ...row,
+        ...patch,
+        ...(patch.costAmount !== undefined || patch.costCurrency !== undefined ? { costMutationKey: null } : {}),
+      }
+      : row));
     setError(null);
     setSuccess(false);
   };
@@ -127,6 +169,10 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
         categoryKey: item?.categoryKey ?? "",
         status: "draft",
         metadata: {},
+        costAmount: "",
+        costCurrency: "EUR",
+        costVersion: 0,
+        costMutationKey: null,
       };
     });
     setRows((current) => {
@@ -154,6 +200,14 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
       setError(t("common.erpProductRecord.activateProductFirst"));
       return;
     }
+    if (rows.some((row) => row.costAmount.trim() && (
+      !Number.isFinite(Number(row.costAmount))
+      || Number(row.costAmount) < 0
+      || Math.round(Number(row.costAmount) * 100) !== Number(row.costAmount) * 100
+    ))) {
+      setError(t("common.erpProductRecord.invalidCost"));
+      return;
+    }
     setSaving(true);
     setError(null);
     setSuccess(false);
@@ -177,10 +231,34 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
         setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
           ? { ...currentRow, variantId: saved.id, sku: saved.sku, name: saved.name, metadata: saved.metadata }
           : currentRow));
+        let costVersion = row.costVersion;
+        if (item.metadata.canPurchase === true && costManagementAvailable && (row.costAmount.trim() || row.costVersion > 0)) {
+          const idempotencyKey = row.costMutationKey ?? window.crypto?.randomUUID?.();
+          if (!idempotencyKey) throw new Error(t("common.erpProductRecord.costMutationUnavailable"));
+          setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
+            ? { ...currentRow, costMutationKey: idempotencyKey }
+            : currentRow));
+          const cost = await catalogAdapter.saveProductCostReference({
+            organizationId,
+            catalogItemId: item.id,
+            variantId: saved.id,
+            amount: row.costAmount.trim() ? Number(row.costAmount) : null,
+            currency: row.costCurrency,
+            expectedVersion: row.costVersion,
+            idempotencyKey,
+          });
+          costVersion = cost.version;
+          setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
+            ? { ...currentRow, costMutationKey: null }
+            : currentRow));
+        }
+        setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
+          ? { ...currentRow, variantId: saved.id, sku: saved.sku, name: saved.name, metadata: saved.metadata, costVersion }
+          : currentRow));
       }
       setSuccess(true);
     } catch (cause) {
-      setError(cause instanceof CatalogAdapterError && cause.code === "conflict"
+      setError(cause instanceof CatalogAdapterError && cause.code === "conflict" && /SKU|already exists/i.test(cause.message)
         ? t("common.erpProductRecord.duplicateVariantSku")
         : cause instanceof Error ? cause.message : t("common.erpProductRecord.saveError"));
     } finally {
@@ -227,6 +305,10 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
               categoryKey: item.categoryKey ?? "",
               status: "draft",
               metadata: {},
+              costAmount: "",
+              costCurrency: "EUR",
+              costVersion: 0,
+              costMutationKey: null,
             }]);
           }}><Plus className="me-2 h-4 w-4" />{t("common.erpProductRecord.addSku")}</Button>
         </div>
@@ -240,6 +322,10 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
               <TableHead>{t("common.erpProductRecord.sku")}</TableHead>
               <TableHead>{t("common.erpForm.item.category")}</TableHead>
               <TableHead>{t("common.erpForm.item.status")}</TableHead>
+              {item.metadata.canPurchase === true && costManagementAvailable && <>
+                <TableHead>{t("common.erpProductRecord.purchaseCost")}</TableHead>
+                <TableHead>{t("common.erpForm.item.currency")}</TableHead>
+              </>}
             </TableRow></TableHeader>
             <TableBody>{rows.map((row) => <TableRow key={row.localId}>
               <TableCell><Input aria-label={`${t("common.erpProductRecord.color")} ${row.name || row.sku}`} value={row.color} onChange={(event) => updateRow(row.localId, { color: event.target.value, name: [event.target.value, row.size].filter(Boolean).join(" / ") })} /></TableCell>
@@ -253,6 +339,13 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
                 <SelectTrigger aria-label={`${t("common.erpForm.item.status")} ${row.name || row.sku}`}><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="draft">{t("common.erpForm.item.draft")}</SelectItem><SelectItem value="active">{t("common.erpForm.item.active")}</SelectItem><SelectItem value="archived">{t("common.erpForm.item.archived")}</SelectItem></SelectContent>
               </Select></TableCell>
+              {item.metadata.canPurchase === true && costManagementAvailable && <>
+                <TableCell><Input aria-label={`${t("common.erpProductRecord.purchaseCost")} ${row.name || row.sku}`} type="number" min="0" step="0.01" value={row.costAmount} onChange={(event) => updateRow(row.localId, { costAmount: event.target.value })} /></TableCell>
+                <TableCell><Select value={row.costCurrency} onValueChange={(value) => updateRow(row.localId, { costCurrency: value })}>
+                  <SelectTrigger aria-label={`${t("common.erpForm.item.currency")} ${row.name || row.sku}`}><SelectValue /></SelectTrigger>
+                  <SelectContent>{["EUR", "USD", "GBP"].map((currency) => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}</SelectContent>
+                </Select></TableCell>
+              </>}
             </TableRow>)}</TableBody>
           </Table>
         </div>

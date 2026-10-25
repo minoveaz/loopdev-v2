@@ -2,20 +2,25 @@ import { localProductMediaAdapter } from "../adapter/product-media-local";
 import { supabaseProductMediaAdapter } from "../adapter/product-media-supabase";
 import type { ProductMediaAdapter } from "./types";
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function configuredProductMediaAdapter(): ProductMediaAdapter {
+  const mode: string | undefined = import.meta.env?.VITE_CATALOG_ADAPTER_MODE;
+  if (mode === "local_demo") return localProductMediaAdapter;
+  if (mode === "supabase") return supabaseProductMediaAdapter;
+  throw new Error("Product media adapter mode must be explicitly configured as local_demo or supabase.");
+}
 
-export const productMediaAdapter: ProductMediaAdapter = new Proxy(supabaseProductMediaAdapter, {
-  get(target, property, receiver) {
-    const value = Reflect.get(target, property, receiver);
-    if (typeof value !== "function") return value;
+export const productMediaAdapter: ProductMediaAdapter = new Proxy({} as ProductMediaAdapter, {
+  get(_target, property) {
+    if (property === "then" || typeof property !== "string") return undefined;
     return (...args: unknown[]) => {
-      const scope = args.find((arg): arg is { organizationId?: unknown } =>
-        Boolean(arg) && typeof arg === "object" && "organizationId" in arg);
-      if (scope?.organizationId && typeof scope.organizationId === "string" && !UUID_PATTERN.test(scope.organizationId)) {
-        const localValue = Reflect.get(localProductMediaAdapter, property);
-        if (typeof localValue === "function") return localValue.apply(localProductMediaAdapter, args);
+      try {
+        const adapter = configuredProductMediaAdapter();
+        const method = Reflect.get(adapter, property);
+        if (typeof method !== "function") throw new Error("The requested product media operation is unavailable.");
+        return method.apply(adapter, args);
+      } catch (error) {
+        return Promise.reject(error);
       }
-      return value.apply(target, args);
     };
   },
 });

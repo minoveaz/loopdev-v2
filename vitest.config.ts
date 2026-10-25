@@ -16,6 +16,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@contracts": path.resolve(__dirname, "./packages/contracts/src"),
       "react-native": path.resolve(__dirname, "./src/test/platform/account/stubs/react-native.tsx"),
       "react-native-svg": path.resolve(__dirname, "./src/test/platform/account/stubs/react-native-svg.tsx"),
       "lucide-react-native": path.resolve(__dirname, "./src/test/platform/account/stubs/lucide-react-native.tsx"),

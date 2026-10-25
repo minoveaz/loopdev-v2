@@ -6,7 +6,7 @@
 |---|---|
 | Run | `MOD-CORE-20261024-001` |
 | Phase | `04-api` |
-| Status | `partial` (revalidated in attempt 8 against the refreshed access contract) |
+| Status | `partial` (Products Files contract ratified in build attempt 15; adapter implementation remains pending) |
 | Parent | `03-access` |
 | Domain input | `domain-model.md` |
 | Access input | `access-model.md` |
@@ -19,13 +19,14 @@ change the legacy catalog interface. Existing catalog IDs and the shared
 `EntityRef<"catalog_item">` remain compatibility constraints. No API, schema,
 event bus or endpoint was implemented in this phase.
 
-Attempt 8 revalidated these contracts against access attempt 11 and the
-refreshed discovery/domain inputs. The owner/admin-only cost boundary and
-same-transaction audit semantics remain confirmed. The shared Files ownership
-boundary is approved, while product-media table enforcement, signed-preview
-authorization and lifecycle acceptance remain open; deployed ERP RLS and
-Products audit integration are still unverified. No endpoint, schema or
-runtime behavior changed.
+Build attempt 15 ratified the shared Files consumer contract: server-validated
+product images, finalized-file registration, reusable multi-assignment,
+Platform-owned renditions/retention/orphan recovery, and signed previews with
+a 300-second maximum lifetime. These semantics do not mean the Products
+adapter or generic organization-scoped remote Files adapter is implemented.
+Products RLS and audit controls are deployed with all write controls disabled.
+No HTTP endpoint or signed-URL runtime behavior changed in this contract
+ratification.
 
 ## Contract decision status
 
@@ -40,15 +41,15 @@ runtime behavior changed.
 | `API-ERP-007` | Offers, price books and price entries are in Products scope; every `catalog.read` role can read sales prices. Purchase costs use separate `catalog.cost.read` and `catalog.cost.manage` gates. | `confirmed` | User approved sales-price visibility for all readers and owner/admin-only default grants for the distinct cost permissions; margin and export remain out of scope. |
 | `API-ERP-008` | ProductPartyRole, availability and eligibility are not promised by the future remote API until their domain/persistence ownership is resolved. | `confirmed` | Local adapter returns or stores them, but Supabase adapter/migration have no remote tables. |
 | `API-ERP-009` | Domain events are proposed contracts only; publish only after actor/version/audit and consumer ownership are approved. | `confirmed` | No product/category events are implemented. |
-| `API-ERP-010` | Remote mutations require operation-specific RLS, explicit adapter mode, optimistic versions and an atomic Platform audit event; costs require their dedicated read/manage permissions and no Products entity has a DELETE operation. | `confirmed` | Policy is approved; forward migrations and deployed-state verification are not complete. |
+| `API-ERP-010` | Remote mutations require operation-specific RLS, explicit adapter mode, optimistic versions and an atomic Platform audit event; costs require their dedicated read/manage permissions and no Products entity has a DELETE operation. | `confirmed` | Forward migrations and audit controls are deployed and verified on the development database; global and organization write controls remain off pending recovery and data gates. |
 | `API-ERP-011` | Preserve the existing adapter boundary and Supabase persistence transport; use organization scope only and keep remote operations online-only. | `confirmed` | This avoids introducing a new HTTP API surface for the Products-only first release. |
 | `API-ERP-012` | Product/SKU create and update commands do not accept user-supplied internal keys or SKUs. The authoritative adapter generates numeric values; a trusted future integration may import an external SKU through a separate server-side boundary. | `confirmed` | User-approved rule; the integration boundary and provenance transport are future work. |
 | `API-ERP-013` | Purchase costs are separate per purchasable unit, returned only through an explicitly authorized cost query/projection and never embedded in ordinary Product DTOs. | `confirmed` | Domain and access decisions require no inheritance, explicit ISO currency and owner/admin-only default cost permissions. Currency precision and history remain open. |
 | `API-ERP-014` | Product and SKU media galleries may contain multiple assignments with manually controlled per-gallery order. | `confirmed` | Product Owner confirmed manual ordering; the current schema lacks a position field and needs a versioned, atomic reorder contract. |
-| `API-ERP-015` | Product media references finalized Platform Files; upload/preview/signed access remains owned by Files, while Product owns same-organization assignments and contextual alt text. | `open` | The shared Files boundary is approved. Product-media metadata-table enforcement, signed-preview authorization, detach/retention behavior and end-to-end acceptance remain open; no ERP-local upload or public URL contract is approved. |
+| `API-ERP-015` | Product media references finalized Platform Files; upload/preview/signed access remains owned by Files, while Product owns same-organization assignments and contextual alt text. | `confirmed` | `PlatformFilesPort` is the consumer contract. Platform Files owns upload/finalization, content validation, 1600/400 max-edge renditions, 300-second maximum signed previews, retention and orphan recovery. ERP owns tags and product/SKU assignments; detach never deletes the reusable File. Runtime adapter integration remains a separate task. |
 | `API-ERP-016` | Product and SKU request/response DTOs carry optional unit-specific physical attributes in kg/cm without inheritance. | `confirmed` | Domain decision confirmed; field activation guards and numeric precision remain open. |
 | `API-ERP-017` | Cost amounts use canonical base-10 decimal strings in JSON to avoid binary floating-point loss. | `assumed` | Currency-specific scale and validation limits remain open. |
-| `API-ERP-018` | Cost history/source, shared asset tags/renditions, durable event/outbox semantics and deployed migration behavior are not finalized. | `open` | Resolve with Platform and an authorized legacy/deployment review before implementation. |
+| `API-ERP-018` | Cost history/source, durable event/outbox semantics and currency-specific cost precision are not finalized. | `open` | Shared asset tags are ERP-owned; rendition dimensions are approved and encoding/quality remain Platform policy. Resolve remaining cost/event decisions separately. |
 
 ## Command and query catalog
 
@@ -80,7 +81,7 @@ adapter call follow the same authorization and not-found masking behavior.
 | `UpdateProductMediaAssignment` | Command | Assignment ID, contextual alt text, `expectedVersion` | Updated assignment and version | Requires catalog write; changing alt text affects only this assignment. Position can change only through the atomic gallery operation below. |
 | `ReorderProductMedia` | Command | Product ID and optional SKU ID, full ordered assignment ID list, each assignment's expected version, idempotency key | Updated ordered gallery | Requires catalog write; all current assignments for that target must be represented and updated atomically. Concurrent attach/reorder returns `MEDIA_ORDER_CONFLICT`; other galleries are unchanged. |
 | `DetachProductMedia` | Command | Assignment ID, `expectedVersion`, idempotency key | Detached assignment or not-found | Requires catalog write; preserves the reusable asset and Platform File. |
-| `GetProductMediaPreview` | Query | Asset ID, product/SKU context | Short-lived Platform File preview source | Recheck both parent-record and Files authorization at request time; never return or persist a public URL. |
+| `GetProductMediaPreview` | Query | Asset ID, product/SKU context and `original`, `large` or `thumbnail` rendition | Platform File preview source with `expiresAt` and effective rendition | Recheck parent-record and Files authorization at request time; signed URL lifetime is at most 300 seconds; never return or persist a public URL. |
 | `ListOffers` / `CreateOffer` / `UpdateOffer` | Query/command | Product ID, offer data without independent currency, version/idempotency | Offers or changed offer | Offer prices use each associated PriceBook's currency; retire legacy `Offer.currency` from the target DTO. |
 | `ListPriceBooks` / `ListPriceEntries` and mutations | Query/command | Filters, book/product/offer/variant IDs, book currency, amount, validity, version | Scoped price records | Currency is owned by each PriceBook and inherited by entries; reconcile legacy Offer.currency and valid reference combinations before implementation. |
 | `ResolveProductReference` | Query | Product ID or legacy key plus optional offer/variant IDs | Product, optional offer/variant, shared entity reference | Preserve legacy `catalog_item` identity and return no cross-scope partial matches. |
@@ -230,8 +231,9 @@ audit records.
   Platform resource.
 - Purchase-cost queries and mutations use `catalog.cost.read` and
   `catalog.cost.manage`; all ordinary Product lists/details omit cost fields.
-  Signed File preview requests go through Platform Files and re-check current
-  parent and file authorization; Products never returns public object URLs.
+  The target signed File preview request goes through Platform Files and
+  re-checks current parent and file authorization; Products never returns
+  public object URLs. The current Products adapter has not yet migrated.
 - Direct product/category URLs use the same authenticated query and
   cross-tenant not-found behavior as list/detail actions.
 - Shopify, public storefront, sales and inventory are not enabled by these
@@ -249,19 +251,18 @@ audit records.
 
 ## Risks and open decisions
 
-1. Integrate Products mutations with the approved append-only audit contract
-   and prove same-transaction rollback on audit failure.
-2. Apply and verify the forward RLS/permission migration; full deployed ERP
-   schema/grant/RLS state remains unverified.
-3. Complete the product-media metadata-table, signed-preview and
-   detach/retention behavior under the approved shared Files boundary.
-4. Confirm existing remote migration state and actual data through an
+1. Verify the approved six-month audit retention/archive operation and preserve
+   the default-off write controls until recovery gates pass.
+2. Implement the generic remote Files adapter and migrate Products away from
+   direct Storage upload/signing; test 300-second URL expiry and current
+   authorization checks.
+3. Confirm existing remote migration state and actual data through an
    authorized, read-only inventory before migration dry run.
-5. Review actual legacy category keys and currency mismatches before mapping;
+4. Review actual legacy category keys and currency mismatches before mapping;
    no value conversion or category inference is permitted.
-6. Reconcile ProductMediaAsset tags ownership and implement/persist gallery
-   positions; current media assignments have no order/version field.
-7. Define currency-specific decimal precision and whether cost history/source
+5. Implement/persist gallery positions; current media assignments have no
+   order/version field.
+6. Define currency-specific decimal precision and whether cost history/source
    is required; amounts must not be rounded through binary floating-point.
 
 ## Handoff
@@ -269,8 +270,8 @@ audit records.
 **Status: `partial`.** Products commands, per-unit costs, unit-specific
 physical attributes, manually ordered product/SKU media, version/idempotency
 rules, pagination, errors, archive-only lifecycle and online-only behavior
-are defined. Implementation remains blocked on Products audit integration
-and atomicity evidence, media-table/preview/lifecycle enforcement, forward
-cost/RLS migrations, deployed-state verification, currency precision and an
-authorized legacy-data dry run. The next sync phase must define media/file and
-sensitive-cost retry behavior before a plan is eligible for approval.
+are defined. Products RLS and mutation audit controls are deployed with
+writes disabled. Implementation remains blocked on shared Files adapter
+integration, recovery/data gates, gallery persistence, currency precision and
+runtime/mobile verification. The next sync phase must preserve the approved
+Files lifecycle and the five-minute preview-URL maximum.

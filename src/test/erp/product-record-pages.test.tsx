@@ -8,6 +8,7 @@ import {
   localCatalogItemKeyCountersStore,
   localCatalogSkuCountersStore,
   localOrganizationCatalogsStore,
+  localProductCostMutationsStore,
   localProductCostReferencesStore,
   localProductReferencesStore,
   localCatalogVariantsStore,
@@ -26,6 +27,7 @@ describe("ERP product record pages", () => {
     localCatalogItemKeyCountersStore.reset();
     localCatalogSkuCountersStore.reset();
     localOrganizationCatalogsStore.reset();
+    localProductCostMutationsStore.reset();
     localProductCostReferencesStore.reset();
     localProductReferencesStore.reset();
     localCatalogVariantsStore.reset();
@@ -292,6 +294,48 @@ describe("ERP product record pages", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create" }));
 
     expect(await screen.findByText("MiauCraft")).toBeInTheDocument();
+  });
+
+  it("manages category names, parent placement, archive and restore", async () => {
+    const parent = await localCatalogAdapter.createProductReference({
+      organizationId: "local-development-organization",
+      kind: "category",
+      key: "pet-care",
+      name: "Pet care",
+      parentId: null,
+    });
+    const child = await localCatalogAdapter.createProductReference({
+      organizationId: "local-development-organization",
+      kind: "category",
+      key: "cat-toys",
+      name: "Cat toys",
+      parentId: parent.id,
+    });
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={["/app/erp/products/configuration"]}>
+          <ProductConfigurationPage />
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+
+    await screen.findByRole("textbox", { name: "Category name: Pet care" });
+    fireEvent.click(screen.getByRole("button", { name: "Archive Pet care" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Move active child categories and assignments");
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Category name: Cat toys" }), { target: { value: "Feline toys" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save name for Cat toys" }));
+    await waitFor(() => expect(localProductReferencesStore.list().find((reference) => reference.id === child.id)?.name).toBe("Feline toys"));
+
+    fireEvent.click(screen.getByRole("combobox", { name: "Parent category for Feline toys" }));
+    fireEvent.click(await screen.findByRole("option", { name: "No parent (root)" }));
+    await waitFor(() => expect(localProductReferencesStore.get(child.id)?.parentId).toBeNull());
+
+    fireEvent.click(screen.getByRole("button", { name: "Archive Feline toys" }));
+    await waitFor(() => expect(localProductReferencesStore.get(child.id)?.status).toBe("archived"));
+    fireEvent.click(screen.getByRole("button", { name: "Restore Feline toys" }));
+    await waitFor(() => expect(localProductReferencesStore.get(child.id)?.status).toBe("active"));
   });
 
   it("shows the complete product form in the selected Spanish language", async () => {

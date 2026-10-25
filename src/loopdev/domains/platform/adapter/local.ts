@@ -32,6 +32,8 @@ const localPermissionSet: PlatformPermissionSet = {
     "workspace.read",
     "catalog.read",
     "catalog.write",
+    "catalog.cost.read",
+    "catalog.cost.manage",
     "crm.read",
     "crm.write",
     "crm.assign",

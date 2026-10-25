@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1000" viewBox="0 0 1480 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Supplier detail responsive wireframe</title>
+  <desc id="desc">Supplier detail with synthetic tax and bank values, desktop tabular sections, and mobile stacked sections.</desc>
+  <style>
+    text { font-family: Geist, system-ui, sans-serif; fill: hsl(222 32% 11%); }
+    .muted { fill: hsl(222 12% 46%); }
+    .small { font-size: 12px; }
+    .body { font-size: 14px; }
+    .label { font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+    .title { font-size: 22px; font-weight: 700; }
+    .card { fill: white; stroke: hsl(220 22% 92%); }
+    .line { stroke: hsl(220 22% 92%); }
+    .success { fill: hsl(158 70% 94%); }
+    .soft { fill: hsl(234 92% 96.5%); }
+  </style>
+  <rect width="1480" height="1000" fill="hsl(220 30% 98.8%)"/>
+  <text x="40" y="42" class="label muted">SUPPLIER DETAIL · SOURCE: visual-design.md §2 · ALL VALUES SYNTHETIC</text>
+  <text x="40" y="76" class="small muted">Desktop ≥ 768px</text>
+  <text x="1095" y="76" class="small muted">Mobile &lt; 768px</text>
+
+  <!-- Desktop -->
+  <rect x="32" y="94" width="1015" height="862" rx="8" class="card"/>
+  <text x="68" y="132" class="small muted">ERP  /  Suppliers  /  Acme Industrial Supplies</text>
+  <text x="68" y="174" class="title">Acme Industrial Supplies</text>
+  <text x="68" y="198" class="small muted">SUP-00042 · Company · Spain · Updated 25 Oct 2026</text>
+  <rect x="68" y="213" width="62" height="24" rx="12" class="success"/><text x="80" y="229" class="small">Active</text>
+  <rect x="138" y="213" width="120" height="24" rx="12" class="soft"/><text x="150" y="229" class="small">Payee verified</text>
+  <rect x="872" y="145" width="138" height="38" rx="6" fill="white" stroke="hsl(220 22% 92%)"/><text x="900" y="169" class="body">Edit supplier</text>
+  <line x1="68" y1="250" x2="1010" y2="250" class="line"/>
+  <text x="78" y="282" class="body" font-weight="600">Overview</text>
+  <text x="178" y="282" class="body muted">Contacts &amp; addresses</text>
+  <text x="358" y="282" class="body muted">Purchasing</text>
+  <text x="470" y="282" class="body muted">Tax &amp; finance</text>
+  <text x="604" y="282" class="body muted">Payment instructions</text>
+  <text x="812" y="282" class="body muted">Supplier items</text>
+  <line x1="68" y1="296" x2="1010" y2="296" class="line"/>
+
+  <rect x="68" y="318" width="452" height="164" rx="8" class="card"/>
+  <text x="88" y="346" class="body" font-weight="600">Legal identity</text>
+  <text x="88" y="374" class="small muted">LEGAL NAME</text><text x="88" y="394" class="body">Acme Industrial Supplies S.L.</text>
+  <text x="88" y="426" class="small muted">TAX ID · SYNTHETIC</text><text x="88" y="446" class="body">ESB12345678</text>
+  <text x="88" y="470" class="small muted">Spain · VAT registered</text>
+
+  <rect x="536" y="318" width="474" height="164" rx="8" class="card"/>
+  <text x="556" y="346" class="body" font-weight="600">Purchasing defaults</text>
+  <text x="556" y="374" class="small muted">CURRENCY</text><text x="556" y="394" class="body">EUR · Net 30</text>
+  <text x="556" y="426" class="small muted">ORDER CONTACT</text><text x="556" y="446" class="body">Marta Ruiz · purchasing@acme.example</text>
+  <text x="556" y="470" class="small muted">Default lead time: 8 business days</text>
+
+  <rect x="68" y="500" width="452" height="196" rx="8" class="card"/>
+  <text x="88" y="528" class="body" font-weight="600">Remittance address</text>
+  <text x="88" y="560" class="body">Calle de la Industria 18</text>
+  <text x="88" y="582" class="body">28022 Madrid, Spain</text>
+  <text x="88" y="620" class="small muted">ACCOUNTS PAYABLE</text>
+  <text x="88" y="644" class="body">ap@acme.example · +34 910 555 010</text>
+  <text x="88" y="675" class="small muted">Default for remittance</text>
+
+  <rect x="536" y="500" width="474" height="196" rx="8" class="card"/>
+  <text x="556" y="528" class="body" font-weight="600">Payment instruction</text>
+  <rect x="556" y="542" width="88" height="22" rx="11" class="success"/><text x="568" y="557" class="small">Verified</text>
+  <text x="556" y="588" class="small muted">BENEFICIARY</text><text x="556" y="608" class="body">Acme Industrial Supplies S.L.</text>
+  <text x="556" y="638" class="small muted">IBAN · SYNTHETIC, FULL VALUE VISIBLE TO SUPPLIER READERS</text>
+  <text x="556" y="660" class="body">ES91 2100 0418 4502 0005 1332</text>
+  <text x="556" y="684" class="small muted">EUR · Bank transfer</text>
+
+  <rect x="68" y="714" width="942" height="184" rx="8" class="card"/>
+  <text x="88" y="742" class="body" font-weight="600">Supplier items</text>
+  <text x="88" y="773" class="label muted">SUPPLIER REF</text><text x="310" y="773" class="label muted">LOOPDEV PRODUCT</text><text x="582" y="773" class="label muted">PURCHASE UNIT</text><text x="738" y="773" class="label muted">PRICE</text><text x="874" y="773" class="label muted">LEAD TIME</text>
+  <line x1="88" y1="785" x2="990" y2="785" class="line"/>
+  <text x="88" y="814" class="body">AC-440</text><text x="310" y="814" class="body">Steel fastener M8</text><text x="582" y="814" class="body">Box of 100</text><text x="738" y="814" class="body">EUR 18.40</text><text x="874" y="814" class="body">8 days</text>
+  <line x1="88" y1="828" x2="990" y2="828" class="line"/>
+  <text x="88" y="858" class="body">AC-441</text><text x="310" y="858" class="body">Steel fastener M10</text><text x="582" y="858" class="body">Box of 50</text><text x="738" y="858" class="body">EUR 22.10</text><text x="874" y="858" class="body">8 days</text>
+  <text x="68" y="928" class="small muted">No PO, receipt, invoice or payment history is edited on this master record.</text>
+
+  <!-- Mobile -->
+  <rect x="1080" y="94" width="366" height="862" rx="24" fill="white" stroke="hsl(220 20% 85%)"/>
+  <rect x="1098" y="112" width="330" height="826" rx="16" fill="hsl(220 30% 98.8%)"/>
+  <text x="1118" y="148" class="small muted">‹ Suppliers</text>
+  <text x="1118" y="183" font-size="20" font-weight="700">Acme Industrial</text>
+  <text x="1118" y="203" class="small muted">SUP-00042 · Spain</text>
+  <rect x="1118" y="214" width="62" height="22" rx="11" class="success"/><text x="1128" y="229" class="small">Active</text>
+  <rect x="1188" y="214" width="108" height="22" rx="11" class="soft"/><text x="1198" y="229" class="small">Payee verified</text>
+  <rect x="1310" y="212" width="98" height="28" rx="5" fill="white" stroke="hsl(220 22% 92%)"/><text x="1330" y="231" class="small">Edit</text>
+  <rect x="1118" y="250" width="290" height="32" rx="6" fill="white" stroke="hsl(220 22% 92%)"/>
+  <text x="1132" y="271" class="small">Overview · Tax · Payment · Items</text>
+
+  <rect x="1118" y="296" width="290" height="130" rx="8" class="card"/>
+  <text x="1134" y="321" class="body" font-weight="600">Legal identity</text>
+  <text x="1134" y="344" class="small muted">LEGAL NAME</text><text x="1134" y="364" class="body">Acme Industrial Supplies S.L.</text>
+  <text x="1134" y="388" class="small muted">TAX ID · SYNTHETIC</text><text x="1134" y="408" class="body">ESB12345678</text>
+
+  <rect x="1118" y="436" width="290" height="120" rx="8" class="card"/>
+  <text x="1134" y="461" class="body" font-weight="600">Purchasing</text>
+  <text x="1134" y="484" class="small muted">CURRENCY / TERMS</text><text x="1134" y="504" class="body">EUR · Net 30</text>
+  <text x="1134" y="532" class="small muted">Lead time: 8 business days</text>
+
+  <rect x="1118" y="566" width="290" height="174" rx="8" class="card"/>
+  <text x="1134" y="591" class="body" font-weight="600">Payment instruction</text>
+  <rect x="1134" y="601" width="76" height="22" rx="11" class="success"/><text x="1144" y="616" class="small">Verified</text>
+  <text x="1134" y="648" class="small muted">BENEFICIARY</text><text x="1134" y="668" class="body">Acme Industrial Supplies S.L.</text>
+  <text x="1134" y="696" class="small muted">IBAN · SYNTHETIC, FULL VALUE VISIBLE</text>
+  <text x="1134" y="718" class="body">ES91 2100 0418 4502 0005 1332</text>
+
+  <rect x="1118" y="750" width="290" height="154" rx="8" class="card"/>
+  <text x="1134" y="776" class="body" font-weight="600">Supplier items · 18</text>
+  <text x="1134" y="804" class="body">Steel fastener M8</text><text x="1134" y="824" class="small muted">AC-440 · Box of 100 · EUR 18.40</text>
+  <line x1="1134" y1="836" x2="1392" y2="836" class="line"/>
+  <text x="1134" y="862" class="body">Steel fastener M10</text><text x="1134" y="882" class="small muted">AC-441 · Box of 50 · EUR 22.10</text>
+</svg>

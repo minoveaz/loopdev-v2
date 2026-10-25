@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "workflow_version": 1,
+  "profile": "standard",
   "run_id": "MOD-<MODULE>-<YYYYMMDD>-<SEQUENCE>",
   "suite": "<suite>",
   "module": "<Module name>",
@@ -12,6 +13,7 @@
   "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
   "fingerprints": {
     "product": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
+    "scope": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
     "design": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
     "plan": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
     "contracts": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",

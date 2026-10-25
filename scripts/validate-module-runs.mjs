@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
+import { workflowForRun } from "./lib/delivery-state-machine.mjs";
 
 const root = process.cwd();
 const workflow = JSON.parse(readFileSync(join(root, "docs", "03-platform", "governance", "delivery-workflow.json"), "utf8"));
@@ -70,6 +71,18 @@ for (const phase of workflow.phases) {
   if (phaseIds.has(phase.id)) errors.push(`delivery-workflow.json: duplicate phase "${phase.id}"`);
   phaseIds.add(phase.id);
   if (!phase.skill) errors.push(`delivery-workflow.json: phase "${phase.id}" requires a skill owner`);
+}
+for (const [name, profile] of Object.entries(workflow.experimental_profiles ?? {})) {
+  const ids = new Set(profile.phases.map((phase) => phase.id));
+  const initialPhase = profile.initial_phase ?? workflow.initial_phase;
+  const terminalPhase = profile.terminal_phase ?? workflow.terminal_phase;
+  if (ids.size !== profile.phases.length) errors.push(`delivery-workflow.json: profile "${name}" has duplicate phases`);
+  if (!ids.has(initialPhase) || !ids.has(terminalPhase)) errors.push(`delivery-workflow.json: profile "${name}" requires its initial and terminal phases`);
+  for (const phase of profile.phases) {
+    if (phaseById.get(phase.id)?.skill !== phase.skill) errors.push(`delivery-workflow.json: profile "${name}" has invalid phase owner "${phase.id}"`);
+    for (const predecessor of phase.predecessors) if (!ids.has(predecessor)) errors.push(`delivery-workflow.json: profile "${name}" has unknown predecessor "${predecessor}"`);
+    if (phase.required_gate && !profile.gates.includes(phase.required_gate)) errors.push(`delivery-workflow.json: profile "${name}" has unknown gate "${phase.required_gate}"`);
+  }
 }
 if (!phaseIds.has(workflow.initial_phase)) errors.push(`delivery-workflow.json: unknown initial phase "${workflow.initial_phase}"`);
 if (!phaseIds.has(workflow.terminal_phase)) errors.push(`delivery-workflow.json: unknown terminal phase "${workflow.terminal_phase}"`);
@@ -183,6 +196,26 @@ function validateManifest(file) {
     addError(file, `unsupported schema_version "${manifest.schema_version}"`);
     return;
   }
+  let selectedWorkflow;
+  try {
+    selectedWorkflow = workflowForRun(workflow, manifest);
+  } catch (error) {
+    addError(file, error.message);
+    return;
+  }
+  const selectedPhases = new Map(selectedWorkflow.phases.map((phase) => [phase.id, phase]));
+  if (manifest.profile === "supplier-pilot") {
+    if (!Array.isArray(manifest.approval_history) || !Array.isArray(manifest.iterations)) addError(file, "pilot requires approval_history and iterations");
+    if (!["desktop_web", "mobile_web"].every((platform) => manifest.platform_scope?.includes(platform))) addError(file, "pilot requires desktop and mobile web");
+    for (const [gate, approval] of Object.entries(manifest.approvals ?? {})) {
+      if (!selectedWorkflow.gates.includes(gate)) addError(file, `unknown pilot approval gate "${gate}"`);
+      if (approval?.status === "approved" && (approval.slice_id !== manifest.slice_id
+        || !approval.source || !approval.artifact || !/^sha256:[a-f0-9]{64}$/.test(approval.artifact_fingerprint ?? "")
+        || !approval.baseline || Object.keys(workflow.fingerprint_invalidation).some((category) => !/^sha256:[a-f0-9]{64}$/.test(approval.baseline[category] ?? "")))) {
+        addError(file, `pilot approval "${gate}" requires slice, source, artifact fingerprint and baseline`);
+      }
+    }
+  }
 
   for (const field of requiredManifestFields) {
     if (!(field in manifest)) addError(file, `missing required field "${field}"`);
@@ -228,12 +261,12 @@ function validateManifest(file) {
     for (const category of Object.keys(workflow.fingerprint_invalidation)) {
       if (!/^sha256:[a-f0-9]{64}$/.test(manifest.fingerprints?.[category] ?? "")) addError(file, `schema v1 fingerprint "${category}" is missing or invalid`);
     }
-    for (const requiredFile of workflow.required_schema_v1_files) {
+    for (const requiredFile of selectedWorkflow?.required_schema_v1_files ?? workflow.required_schema_v1_files) {
       if (!existsSync(join(workspace, requiredFile))) addError(file, `schema v1 workspace is missing required file "${requiredFile}"`);
     }
   }
 
-  for (const requiredFile of workflow.required_workspace_files) {
+  for (const requiredFile of selectedWorkflow?.required_workspace_files ?? workflow.required_workspace_files) {
     if (!existsSync(join(workspace, requiredFile))) addError(file, `workspace is missing required file "${requiredFile}"`);
   }
 
@@ -252,7 +285,9 @@ function validateManifest(file) {
     if (!candidates.some(existsSync)) addError(file, `checkpoint path does not exist: "${checkpointPath}"`);
   }
   for (const [phaseId, checkpoint] of checkpoints) {
-    const phase = phaseById.get(phaseId);
+    const phase = selectedPhases.get(phaseId);
+    if (!phase && manifest.profile) addError(file, `phase "${phaseId}" does not belong to the "${manifest.profile}" profile`);
+    if (manifest.profile === "supplier-pilot" && checkpoint.invalidated) continue;
     if (!phase || checkpoint.status !== "completed") continue;
     for (const predecessor of phase.predecessors) {
       if (checkpoints.get(predecessor)?.status !== "completed") addError(file, `completed phase "${phaseId}" requires completed predecessor "${predecessor}"`);
@@ -262,6 +297,16 @@ function validateManifest(file) {
       const approvalStatus = typeof approval === "string" ? approval : approval?.status;
       if (approvalStatus !== "approved") addError(file, `completed phase "${phaseId}" requires approved gate "${phase.required_gate}"`);
     }
+    if (manifest.profile === "supplier-pilot" && phaseId === "06-plan") {
+      for (const area of ["domain", "access", "persistence", "platform_reuse", "rollback"]) {
+        if (typeof checkpoint.prebuild_decisions?.[area] !== "string" || !checkpoint.prebuild_decisions[area].trim()) addError(file, `pilot plan requires prebuild_decisions.${area}`);
+      }
+    }
+    if (manifest.profile === "implementation-first" && phaseId === "08-verify"
+      && !checkpoint.output_artifacts?.some((artifact) => artifact.replaceAll("\\", "/").split("/").at(-1) === "implementation-report.md")) {
+      addError(file, "implementation-first verification requires implementation-report.md");
+    }
+    if (manifest.profile === "supplier-pilot" && !checkpoint.validated_fingerprints) addError(file, `completed pilot phase "${phaseId}" requires validated_fingerprints`);
   }
 }
 

@@ -32,6 +32,40 @@
   "required_schema_v1_files": [
     "delivery-ledger.json"
   ],
+  "experimental_profiles": {
+    "implementation-first": {
+      "suite": "*",
+      "module": "*",
+      "initial_phase": "06-plan",
+      "terminal_phase": "10-git",
+      "required_workspace_files": ["delivery-ledger.json"],
+      "verification_report": "implementation-report.md",
+      "phases": [
+        { "id": "06-plan", "skill": "module-plan", "predecessors": [], "required_gate": null },
+        { "id": "07-build", "skill": "module-build", "predecessors": ["06-plan"], "required_gate": "plan" },
+        { "id": "08-verify", "skill": "module-verify", "predecessors": ["07-build"], "required_gate": null },
+        { "id": "09-review", "skill": "module-review", "predecessors": ["08-verify"], "required_gate": "verification" },
+        { "id": "10-git", "skill": "git-workflow", "predecessors": ["09-review"], "required_gate": "release" }
+      ],
+      "gates": ["plan", "verification", "release", "push", "pull_request"]
+    },
+    "supplier-pilot": {
+      "suite": "erp",
+      "module": "proveedores",
+      "requires_slice": true,
+      "phases": [
+        { "id": "00-discovery", "skill": "module-discovery", "predecessors": [], "required_gate": null },
+        { "id": "01-design", "skill": "module-design", "predecessors": ["00-discovery"], "required_gate": null },
+        { "id": "01-visual-design", "skill": "module-visual-design", "predecessors": ["01-design"], "required_gate": null },
+        { "id": "06-plan", "skill": "module-plan", "predecessors": ["01-visual-design"], "required_gate": "visual_design" },
+        { "id": "07-build", "skill": "module-build", "predecessors": ["06-plan"], "required_gate": "visual_design" },
+        { "id": "08-verify", "skill": "module-verify", "predecessors": ["07-build"], "required_gate": null },
+        { "id": "09-review", "skill": "module-review", "predecessors": ["08-verify"], "required_gate": "product_acceptance" },
+        { "id": "10-git", "skill": "git-workflow", "predecessors": ["09-review"], "required_gate": "release" }
+      ],
+      "gates": ["visual_design", "product_acceptance", "release", "push", "pull_request"]
+    }
+  },
   "fingerprint_invalidation": {
     "product": ["00-discovery", "01-design", "01-visual-design", "02-domain", "03-access", "04-api", "05-sync", "06-plan", "07-build", "08-verify", "09-review", "10-git"],
     "scope": ["00-discovery", "01-design", "01-visual-design", "02-domain", "03-access", "04-api", "05-sync", "06-plan", "07-build", "08-verify", "09-review", "10-git"],

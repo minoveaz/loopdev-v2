@@ -6,6 +6,20 @@ user-invocable: true
 
 # LoopDev Module Build
 
+For an `implementation-first` run, start production implementation as soon as
+the executable ledger is approved. Do not create phase prose, audits,
+architecture/visual documents, matrices or issue updates before coding. Add or
+update focused tests with every behavior change, run them, and keep the build
+checkpoint factual. If code exposes a real unresolved decision or risk, stop
+only the affected task and continue independent approved work.
+
+For an explicitly selected `supplier-pilot` run, follow the experimental
+profile section of `MODULE_DELIVERY_AGENT_CONTRACT.md` instead of the standard
+separate phase/issue ceremony. Build only authorized ledger work after the
+combined scope/visual gate and completed safety plan. Use `delivery iterate`
+for feedback within the approved slice; never treat implementation as product
+acceptance, release readiness or publication.
+
 Implement an approved `module-design` and `module-plan` in the verified
 LoopDev checkout.
 
@@ -77,12 +91,13 @@ Use the workspace created by `delivery` at
 `docs/implementation/<suite>/<module>/`. Update only the build phase evidence,
 architecture deviations/refactoring records, checkpoints and linked issue.
 Never create a parallel flat directory or replace prior phase evidence.
+For implementation-first, update only the JSON checkpoint and task evidence;
+write narrative implementation documentation after verification succeeds.
 
 ### Input context
 
-- approved `module-design`;
-- approved `module-plan`;
-- completed `module-discovery` baseline and expected-versus-existing matrix;
+- approved task ledger and existing product decisions;
+- design/discovery artifacts only when they exist and are relevant to the task;
 - actual repository, checkout, branch, commit and working-tree state.
 
 ### Decision status

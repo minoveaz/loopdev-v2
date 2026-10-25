@@ -54,6 +54,7 @@ export const loopdevNavigationContract: {
       items: [
         { id: "erp-overview", label: "Overview", path: "/app/erp/overview" },
         { id: "erp-products", label: "Products", path: "/app/erp/products" },
+        { id: "erp-suppliers", label: "Suppliers", path: "/app/erp/suppliers" },
       ],
     },
     {

@@ -23,6 +23,25 @@
       }
     },
     "gates": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "experimental_profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["suite", "module", "phases", "gates"],
+        "properties": {
+          "suite": { "type": "string", "minLength": 1 },
+          "module": { "type": "string", "minLength": 1 },
+          "initial_phase": { "type": "string" },
+          "terminal_phase": { "type": "string" },
+          "required_workspace_files": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+          "verification_report": { "type": "string", "minLength": 1 },
+          "requires_slice": { "type": "boolean" },
+          "phases": { "$ref": "#/properties/phases" },
+          "gates": { "$ref": "#/properties/gates" }
+        },
+        "additionalProperties": false
+      }
+    },
     "required_workspace_files": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "required_schema_v1_files": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "fingerprint_invalidation": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }

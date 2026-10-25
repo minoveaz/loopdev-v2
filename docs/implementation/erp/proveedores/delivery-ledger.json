@@ -1,0 +1,1759 @@
+{
+  "$schema": "../../_schemas/delivery-ledger.schema.json",
+  "schema_version": 1,
+  "suite": "erp",
+  "module": "proveedores",
+  "status": "draft",
+  "approved_by": null,
+  "approved_at": null,
+  "approval_source": null,
+  "product_sources": [
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/design.md",
+    "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
+    "docs/implementation/erp/proveedores/discovery.md"
+  ],
+  "previous_ledger": null,
+  "requirements": [
+    {
+      "id": "REQ-ERP-SUPPLIER-FOLLOWUP",
+      "title": "Manage ERP-owned supplier entities as commercial counterparties.",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/erp/proveedores/discovery.md",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "Supplier is an ERP-owned commercial entity, separate from CRM and the canonical LoopDev Product master.",
+        "Supplier kind supports both companies/organizations and individuals who provide services.",
+        "The supplier master captures legal identity, jurisdiction-appropriate tax data, role-based contacts and addresses, purchasing defaults, finance references, and verified payee instructions needed by downstream purchase-to-pay modules.",
+        "Supplier tax and bank data are visible to the same user profiles that can access Products through a Supplier-specific read grant; Products catalog.read is not broadened.",
+        "Supplier management maps to the Products writer population, with organization-scoped server authorization and auditable changes.",
+        "Responsive desktop and mobile web are in scope; native iOS and Android apps are excluded."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-DIRECTORY"
+      ]
+    },
+    {
+      "id": "REQ-ERP-SUPPLIER-P2P-MASTER",
+      "title": "Maintain supplier master data ready for purchasing, receiving and future supplier payment.",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/erp/proveedores/discovery.md",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "The Supplier master supports jurisdiction-aware legal/tax identity, role-based contacts and addresses, purchasing defaults, company-specific Finance references, and payee/payment instructions.",
+        "Tax and bank fields are viewable by the same profiles that can access Products through a Supplier-specific read grant; changes are auditable and organization-scoped.",
+        "Only owner/admin can verify payee instructions, and the verifier differs from the editor; a material account change clears verification.",
+        "Initial tax jurisdictions are Spain, the United States and Colombia; Finance/Legal must validate exact country-specific required fields before tax-profile implementation.",
+        "Real tax/bank values use protected server-authoritative storage and are unavailable to offline reads, edits or queues."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-SETUP"
+      ]
+    },
+    {
+      "id": "REQ-ERP-SUPPLIER-CATALOG",
+      "title": "Bring supplier-provided product and service catalog entries into LoopDev Products.",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/erp/proveedores/discovery.md",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "One supplier may offer many catalog items and one LoopDev item may be linked to multiple suppliers.",
+        "Supplier-specific identifiers remain separate from LoopDev's canonical product identity and SKU.",
+        "Users can link a supplier item to an existing LoopDev Product or its variant, or initiate Product creation through the Products owner flow.",
+        "SupplierItem records can store purchasing UOM/conversion and supplier offer terms such as price/currency, minimum quantity, lead time and validity; selected values are snapshotted by a future purchase order.",
+        "Unlinked SupplierItem drafts are not eligible for purchase; a purchasable offer links to a same-organization Product/variant and has a positive purchase-to-stock conversion.",
+        "CSV import is excluded from this slice; any later import requires separate scope approval."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-ASSORTMENT",
+        "CAP-ERP-SUPPLIER-CATALOG-IMPORT"
+      ]
+    },
+    {
+      "id": "REQ-ERP-SUPPLIER-P2P-CONSUMERS",
+      "title": "Connect Supplier master data to separate purchase-to-pay transaction workflows.",
+      "classification": "OUT_OF_SCOPE",
+      "source": "docs/implementation/erp/proveedores/discovery.md",
+      "platforms": [
+        "shared"
+      ],
+      "acceptance_criteria": [
+        "Procurement, Inventory and Finance own purchase orders, actual receipts/stock movements, supplier invoices/payables and payments as separate transaction records.",
+        "Downstream transactions reference Supplier and, where applicable, SupplierItem; they snapshot selected defaults/offer terms and retain their own quantities, dates, warehouse, tax, invoice and settlement history.",
+        "The Supplier profile never stores per-order, actual-receipt, invoice or payment history as mutable master fields."
+      ],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-CONSUMERS"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "CAP-ERP-SUPPLIER-DIRECTORY",
+      "name": "ERP supplier directory",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-FOLLOWUP"
+      ],
+      "semantics": {
+        "operations": [
+          "list_suppliers",
+          "search_suppliers",
+          "view_supplier",
+          "create_supplier",
+          "update_supplier",
+          "deactivate_supplier",
+          "reactivate_supplier"
+        ],
+        "validation_contract": "Require active membership and derive organization from authenticated context. kind, legalName and countryCode are required. Exact tax-identifier duplicates within the same organization and jurisdiction return duplicate; normalized-name similarity warns without auto-merging. Mutations require expectedVersion. Preserve referenced history and do not hard-delete.",
+        "errors": [
+          "forbidden",
+          "validation",
+          "conflict",
+          "duplicate",
+          "offline",
+          "server_error"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP supplier directory (proposed; no route exists)",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP supplier directory (proposed; no route exists)",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
+      "operation_coverage": [
+        {
+          "id": "list_suppliers",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "search_suppliers",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "view_supplier",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "create_supplier",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "update_supplier",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "deactivate_supplier",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "reactivate_supplier",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success",
+        "active",
+        "on_hold",
+        "inactive"
+      ],
+      "permissions": [
+        "organization scope derived server-side",
+        "Supplier-specific read grant maps to Products readers, including tax/bank visibility",
+        "Supplier management maps to Products writers; do not broaden Products catalog.read",
+        "mutations require immutable audit",
+        "no hard delete"
+      ],
+      "contract_refs": [
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "src/loopdev/domains/catalog/types.ts",
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/proveedores/architecture-design.md"
+      ],
+      "task_ids": [
+        "SUPPLIER-MANDATORY-AUDITS",
+        "SUPPLIER-ROUTE-AUDIT",
+        "SUPPLIER-DIRECTORY-CONTRACT",
+        "SUPPLIER-DIRECTORY-DOMAIN",
+        "SUPPLIER-DIRECTORY-DESKTOP",
+        "SUPPLIER-DIRECTORY-MOBILE",
+        "SUPPLIER-DIRECTORY-TESTS"
+      ]
+    },
+    {
+      "id": "CAP-ERP-SUPPLIER-P2P-SETUP",
+      "name": "Supplier purchase-to-pay master setup",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-MASTER"
+      ],
+      "semantics": {
+        "operations": [
+          "manage_supplier_contacts_addresses",
+          "manage_supplier_purchase_defaults",
+          "manage_supplier_tax_profile",
+          "manage_supplier_payee_instructions",
+          "verify_supplier_payee_account"
+        ],
+        "validation_contract": "Validate tax identifiers and required fields by jurisdiction and supplier kind; initial jurisdictions are Spain, the United States and Colombia, with exact fields blocked on Finance/Legal validation. Validate currency and one active default per address/contact purpose. Payment instructions require method-specific fields; a material change clears verification and an unverified account cannot be selected for payment. Recheck expectedVersion and same-organization finance references. Persist mutations only with an audit event; owner/admin verifier must differ from editor.",
+        "errors": [
+          "forbidden",
+          "validation",
+          "conflict",
+          "not-found",
+          "offline",
+          "server_error",
+          "duplicate",
+          "verification_required"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "Supplier P2P master settings (proposed)",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive Supplier P2P master settings (proposed)",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
+      "operation_coverage": [
+        {
+          "id": "manage_supplier_contacts_addresses",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "manage_supplier_purchase_defaults",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "manage_supplier_tax_profile",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "manage_supplier_payee_instructions",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "verify_supplier_payee_account",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success",
+        "unverified",
+        "pending_review",
+        "verified",
+        "rejected",
+        "inactive"
+      ],
+      "permissions": [
+        "organization scope derived server-side",
+        "Supplier-specific read grant maps to Products readers including tax/bank values",
+        "Supplier management maps to Products writers",
+        "only owner/admin may verify and verifier must differ from editor",
+        "immutable Platform audit and protected server-authoritative storage required",
+        "no clear local cache or offline sensitive access/mutation"
+      ],
+      "contract_refs": [
+        "docs/implementation/erp/core/access-model.md",
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "docs/implementation/erp/proveedores/architecture-design.md"
+      ],
+      "task_ids": [
+        "SUPPLIER-P2P-CONTRACT",
+        "SUPPLIER-P2P-DOMAIN",
+        "SUPPLIER-COUNTRY-TAX-RULES",
+        "SUPPLIER-P2P-DESKTOP",
+        "SUPPLIER-P2P-MOBILE",
+        "SUPPLIER-P2P-TESTS"
+      ]
+    },
+    {
+      "id": "CAP-ERP-SUPPLIER-ASSORTMENT",
+      "name": "Supplier-to-Product assortment",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-CATALOG"
+      ],
+      "semantics": {
+        "operations": [
+          "list_supplier_items",
+          "add_supplier_item",
+          "link_supplier_item_to_product",
+          "start_product_creation_from_supplier_item",
+          "update_supplier_item",
+          "update_supplier_item_terms",
+          "deactivate_supplier_item"
+        ],
+        "validation_contract": "SupplierItem may be an unlinked draft, but a purchasable offer must reference a same-organization canonical Product or its variant. Keep Product identity canonical. Enforce supplier-reference uniqueness within a Supplier, positive purchase-to-stock conversion, valid currency/price/minimum quantity and non-overlapping effective dates as approved. Mutations require expectedVersion; preserve historical snapshots and do not hard-delete.",
+        "errors": [
+          "forbidden",
+          "validation",
+          "conflict",
+          "not-found",
+          "offline",
+          "server_error",
+          "duplicate"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": true,
+          "surface": "Supplier assortment and Product links (proposed)",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive supplier assortment and Product links (proposed)",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "verified",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
+      "operation_coverage": [
+        {
+          "id": "list_supplier_items",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "add_supplier_item",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "link_supplier_item_to_product",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "start_product_creation_from_supplier_item",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "update_supplier_item",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "update_supplier_item_terms",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "deactivate_supplier_item",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success",
+        "active",
+        "inactive",
+        "expired"
+      ],
+      "permissions": [
+        "organization scope derived server-side",
+        "catalog.read profiles may view offers",
+        "catalog.write profiles manage offers",
+        "Product writes remain owned by Products and must use its authorized create flow"
+      ],
+      "contract_refs": [
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "src/loopdev/domains/catalog/types.ts",
+        "docs/implementation/erp/proveedores/architecture-design.md"
+      ],
+      "task_ids": [
+        "SUPPLIER-ASSORTMENT-CONTRACT",
+        "SUPPLIER-ASSORTMENT-DOMAIN",
+        "SUPPLIER-ASSORTMENT-DESKTOP",
+        "SUPPLIER-ASSORTMENT-MOBILE",
+        "SUPPLIER-ASSORTMENT-TESTS"
+      ]
+    },
+    {
+      "id": "CAP-ERP-SUPPLIER-CATALOG-IMPORT",
+      "name": "Deferred CSV supplier catalog intake",
+      "classification": "OUT_OF_SCOPE",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-CATALOG"
+      ],
+      "semantics": {
+        "operations": [
+          "upload_supplier_catalog_csv",
+          "preview_supplier_catalog_csv",
+          "match_supplier_items",
+          "confirm_supplier_catalog_import"
+        ],
+        "validation_contract": "CSV is excluded from supplier-directory. Any future import requires separate scope approval, allowlisted schema and size/type limits, row-level matching before mutation, explicit confirmation, batch idempotency and no silent overwrite of canonical Product or payment data.",
+        "errors": [
+          "forbidden",
+          "validation",
+          "conflict",
+          "duplicate",
+          "server_error"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": false,
+          "surface": "Deferred from supplier-directory; no entry point",
+          "route": null
+        },
+        "mobile_web": {
+          "required": false,
+          "surface": "Deferred from supplier-directory; no entry point",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
+      "operation_coverage": [
+        {
+          "id": "upload_supplier_catalog_csv",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "preview_supplier_catalog_csv",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "match_supplier_items",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "confirm_supplier_catalog_import",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "pending",
+        "success",
+        "review_required",
+        "processing",
+        "completed",
+        "cancelled"
+      ],
+      "permissions": [
+        "Out of scope; separate approval required before defining access or UI"
+      ],
+      "contract_refs": [
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "src/loopdev/domains/catalog/types.ts",
+        "docs/implementation/erp/proveedores/architecture-design.md"
+      ],
+      "task_ids": [
+        "SUPPLIER-CSV-BOUNDARY"
+      ]
+    },
+    {
+      "id": "CAP-ERP-SUPPLIER-P2P-CONSUMERS",
+      "name": "Downstream purchase-to-pay transaction consumers",
+      "classification": "OUT_OF_SCOPE",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-CONSUMERS"
+      ],
+      "semantics": {
+        "operations": [
+          "reference_supplier_on_purchase_order",
+          "snapshot_supplier_item_terms_on_order",
+          "record_actual_receipt_in_inventory",
+          "reference_supplier_on_invoice",
+          "select_verified_payee_for_payment"
+        ],
+        "validation_contract": "Downstream owners authorize and persist each transaction. Require an active eligible Supplier for new orders; snapshot selected SupplierItem terms and defaults on the order; record actual quantities, dates and warehouses only in Inventory receipts; retain invoice/payment facts only in Finance; payment selection requires a verified active payee instruction. Supplier changes never rewrite historical transactions.",
+        "errors": [
+          "forbidden",
+          "validation",
+          "conflict",
+          "not-found",
+          "server_error",
+          "verification_required"
+        ]
+      },
+      "platforms": {
+        "desktop_web": {
+          "required": false,
+          "surface": "Separate Procurement, Inventory and Finance scopes",
+          "route": null
+        },
+        "mobile_web": {
+          "required": false,
+          "surface": "Separate downstream ERP scopes",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "Native app excluded for now",
+          "route": null
+        }
+      },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
+      "operation_coverage": [
+        {
+          "id": "reference_supplier_on_purchase_order",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "snapshot_supplier_item_terms_on_order",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "record_actual_receipt_in_inventory",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "reference_supplier_on_invoice",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "select_verified_payee_for_payment",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        }
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "Owned by Procurement, Inventory and Finance",
+        "reference Supplier/SupplierItem without duplicating master data"
+      ],
+      "contract_refs": [
+        "docs/implementation/erp/core/design.md",
+        "docs/implementation/erp/proveedores/discovery.md",
+        "docs/implementation/erp/proveedores/architecture-design.md"
+      ],
+      "task_ids": [
+        "SUPPLIER-P2P-BOUNDARY"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "SUPPLIER-MANDATORY-AUDITS",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Run supplier delivery audits",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-FOLLOWUP"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-DIRECTORY"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [],
+      "owner": "ERP + Platform",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Record environment-truth, platform-reuse, legacy-flow, route/runtime, surface-state, accessibility/i18n, security/rollback, architecture-boundary, responsibility and refactor-safety audit evidence.",
+        "Reuse existing Platform contracts and list prohibited duplicate implementations.",
+        "Do not claim behavior without test or runtime evidence.",
+        "Record the approved Supplier reader/manage grant mapping, organization-scoped RLS and append-only audit pattern; prove catalog.read is unchanged."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/proveedores/implementation-plan.md",
+        "docs/implementation/erp/proveedores/platform-evidence-matrix.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/proveedores/platform-evidence-matrix.md",
+        "docs/implementation/erp/proveedores/implementation-plan.md",
+        "docs/implementation/erp/proveedores/platform-scope.md"
+      ],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-ROUTE-AUDIT",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "ready",
+      "title": "Confirm Supplier route and sidebar placement",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-FOLLOWUP"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-DIRECTORY"
+      ],
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-MANDATORY-AUDITS"
+      ],
+      "owner": "ERP + Platform navigation",
+      "risk": "medium",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Confirm the route against current route and sidebar conventions.",
+        "Verify direct navigation, refresh, back behavior and organization authorization."
+      ],
+      "validation": [
+        {
+          "command": "npm run smoke:routes",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/routes/LoopdevRoutes.tsx",
+        "src/loopdev/navigation.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-DIRECTORY-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "done",
+      "title": "Define shared Supplier directory contract",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-FOLLOWUP"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-DIRECTORY"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "SUPPLIER-MANDATORY-AUDITS"
+      ],
+      "owner": "ERP domain",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Define stable IDs, DTOs, directory operations, errors, lifecycle and tenant scope.",
+        "Encode Supplier-specific reader/manage grants without widening Products catalog.read.",
+        "Contract is consumed by both web renderers."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/suppliers.ts",
+        "docs/implementation/erp/proveedores/architecture-design.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/suppliers.ts",
+        "packages/contracts/src/suppliers-capability.ts",
+        "src/test/erp/suppliers-capability.test.ts"
+      ],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-DIRECTORY-DOMAIN",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "blocked",
+      "title": "Implement Supplier directory domain and persistence ports",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-FOLLOWUP"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-DIRECTORY"
+      ],
+      "operation_ids": [
+        "list_suppliers",
+        "search_suppliers",
+        "view_supplier",
+        "create_supplier",
+        "update_supplier",
+        "deactivate_supplier",
+        "reactivate_supplier"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "SUPPLIER-DIRECTORY-CONTRACT",
+        "SUPPLIER-MANDATORY-AUDITS"
+      ],
+      "owner": "ERP domain",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Enforce org scope, expectedVersion, exact fiscal duplicate blocking and normalized-name warnings.",
+        "Support active/on_hold/inactive without hard delete; preserve historical facts."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [
+        "Exact fiscal duplicate blocking requires country-specific tax data rules; Finance/Legal validation is still pending."
+      ],
+      "evidence_refs": [],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-DIRECTORY-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "pending",
+      "title": "Build Supplier directory desktop web",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-FOLLOWUP"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-DIRECTORY"
+      ],
+      "operation_ids": [
+        "list_suppliers",
+        "search_suppliers",
+        "view_supplier",
+        "create_supplier",
+        "update_supplier",
+        "deactivate_supplier",
+        "reactivate_supplier"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-DIRECTORY-CONTRACT",
+        "SUPPLIER-DIRECTORY-DOMAIN",
+        "SUPPLIER-ROUTE-AUDIT"
+      ],
+      "owner": "ERP frontend",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Implement approved directory/detail/form using shared Rivera controls.",
+        "Every operation uses the shared contract and has loading/empty/error/forbidden/conflict/pending/success states."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-DIRECTORY-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "pending",
+      "title": "Build Supplier directory mobile web",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-FOLLOWUP"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-DIRECTORY"
+      ],
+      "operation_ids": [
+        "list_suppliers",
+        "search_suppliers",
+        "view_supplier",
+        "create_supplier",
+        "update_supplier",
+        "deactivate_supplier",
+        "reactivate_supplier"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-DIRECTORY-CONTRACT",
+        "SUPPLIER-DIRECTORY-DOMAIN",
+        "SUPPLIER-ROUTE-AUDIT"
+      ],
+      "owner": "ERP frontend",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Preserve all directory operations and semantics in mobile cards/forms.",
+        "Verify touch targets, keyboard/focus, reflow and no horizontal overflow."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-DIRECTORY-TESTS",
+      "phase": "07-build",
+      "type": "test",
+      "status": "pending",
+      "title": "Verify Supplier directory operations",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-FOLLOWUP"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-DIRECTORY"
+      ],
+      "operation_ids": [
+        "list_suppliers",
+        "search_suppliers",
+        "view_supplier",
+        "create_supplier",
+        "update_supplier",
+        "deactivate_supplier",
+        "reactivate_supplier"
+      ],
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-DIRECTORY-DESKTOP",
+        "SUPPLIER-DIRECTORY-MOBILE"
+      ],
+      "owner": "ERP QA",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Test allowed/forbidden roles, org isolation, duplicates, stale version and lifecycle on both renderers.",
+        "Record focused component and domain test evidence."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-P2P-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "done",
+      "title": "Define shared Supplier P2P setup contract",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-MASTER"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-SETUP"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "SUPPLIER-MANDATORY-AUDITS"
+      ],
+      "owner": "ERP + Finance",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Define contact/address/default/payment-instruction operations and typed errors.",
+        "Represent jurisdiction tax profiles without inventing country requirements.",
+        "Keep sensitive values out of logs, clear caches and offline queues."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/suppliers.ts",
+        "docs/implementation/erp/proveedores/architecture-design.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/suppliers.ts",
+        "packages/contracts/src/suppliers-capability.ts",
+        "src/test/erp/suppliers-capability.test.ts"
+      ],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-P2P-DOMAIN",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "blocked",
+      "title": "Implement Supplier P2P master domain",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-MASTER"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-SETUP"
+      ],
+      "operation_ids": [
+        "manage_supplier_contacts_addresses",
+        "manage_supplier_purchase_defaults",
+        "manage_supplier_tax_profile",
+        "manage_supplier_payee_instructions",
+        "verify_supplier_payee_account"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "SUPPLIER-P2P-CONTRACT",
+        "SUPPLIER-COUNTRY-TAX-RULES"
+      ],
+      "owner": "ERP + Finance",
+      "risk": "critical",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Enforce owner/admin-only maker-checker verification and revoke verification on material account change.",
+        "Protect real tax/bank values server-side and require immutable audit for mutations."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [
+        "SUPPLIER-COUNTRY-TAX-RULES remains blocked pending Finance/Legal validation"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "SUPPLIER-COUNTRY-TAX-RULES",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "blocked",
+      "title": "Validate country-specific Supplier tax fields",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-MASTER"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-SETUP"
+      ],
+      "operation_ids": [
+        "manage_supplier_tax_profile"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Finance/Legal",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Document required identifiers, formats and conditional fields for Spain, United States and Colombia from authoritative sources.",
+        "Approve field/error cases before implementing tax-profile validation."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/proveedores/architecture-design.md",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [
+        "Finance/Legal field requirements and authoritative validation evidence"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "SUPPLIER-P2P-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "blocked",
+      "title": "Build Supplier P2P setup desktop web",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-MASTER"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-SETUP"
+      ],
+      "operation_ids": [
+        "manage_supplier_contacts_addresses",
+        "manage_supplier_purchase_defaults",
+        "manage_supplier_tax_profile",
+        "manage_supplier_payee_instructions",
+        "verify_supplier_payee_account"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-P2P-CONTRACT",
+        "SUPPLIER-P2P-DOMAIN",
+        "SUPPLIER-ROUTE-AUDIT"
+      ],
+      "owner": "ERP frontend",
+      "risk": "critical",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Implement approved P2P sections with shared primitives and no sensitive local persistence.",
+        "Expose verification only to eligible owner/admin who did not edit the instruction."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [
+        "SUPPLIER-P2P-DOMAIN is blocked by country tax rules"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "SUPPLIER-P2P-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "blocked",
+      "title": "Build Supplier P2P setup mobile web",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-MASTER"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-SETUP"
+      ],
+      "operation_ids": [
+        "manage_supplier_contacts_addresses",
+        "manage_supplier_purchase_defaults",
+        "manage_supplier_tax_profile",
+        "manage_supplier_payee_instructions",
+        "verify_supplier_payee_account"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-P2P-CONTRACT",
+        "SUPPLIER-P2P-DOMAIN",
+        "SUPPLIER-ROUTE-AUDIT"
+      ],
+      "owner": "ERP frontend",
+      "risk": "critical",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Preserve P2P actions and states in responsive sections/forms.",
+        "Verify no real sensitive value is read, edited or queued offline."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [
+        "SUPPLIER-P2P-DOMAIN is blocked by country tax rules"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "SUPPLIER-P2P-TESTS",
+      "phase": "07-build",
+      "type": "test",
+      "status": "blocked",
+      "title": "Verify Supplier P2P access and verification",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-MASTER"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-SETUP"
+      ],
+      "operation_ids": [
+        "manage_supplier_contacts_addresses",
+        "manage_supplier_purchase_defaults",
+        "manage_supplier_tax_profile",
+        "manage_supplier_payee_instructions",
+        "verify_supplier_payee_account"
+      ],
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-P2P-DESKTOP",
+        "SUPPLIER-P2P-MOBILE"
+      ],
+      "owner": "ERP QA + Platform Access",
+      "risk": "critical",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Test same-reader visibility, writer-only mutations, owner/admin verifier and editor/verifier separation.",
+        "Test cross-org denial, audit failure, material-change invalidation and offline denial."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [
+        "SUPPLIER-P2P-DESKTOP and SUPPLIER-P2P-MOBILE are blocked by country tax rules"
+      ],
+      "evidence_refs": []
+    },
+    {
+      "id": "SUPPLIER-ASSORTMENT-CONTRACT",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "done",
+      "title": "Define shared SupplierItem contract",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-CATALOG"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-ASSORTMENT"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "SUPPLIER-MANDATORY-AUDITS"
+      ],
+      "owner": "Products + ERP",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Define SupplierItem draft/link lifecycle, Product-or-variant reference, terms, conversion and operation errors.",
+        "Product remains canonical and Product creation uses the Products owner flow."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/suppliers.ts",
+        "docs/implementation/erp/proveedores/architecture-design.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "packages/contracts/src/suppliers.ts",
+        "packages/contracts/src/suppliers-capability.ts",
+        "src/test/erp/suppliers-capability.test.ts"
+      ],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-ASSORTMENT-DOMAIN",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "done",
+      "title": "Implement SupplierItem domain and Product links",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-CATALOG"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-ASSORTMENT"
+      ],
+      "operation_ids": [
+        "list_supplier_items",
+        "add_supplier_item",
+        "link_supplier_item_to_product",
+        "start_product_creation_from_supplier_item",
+        "update_supplier_item",
+        "update_supplier_item_terms",
+        "deactivate_supplier_item"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "SUPPLIER-ASSORTMENT-CONTRACT",
+        "SUPPLIER-MANDATORY-AUDITS"
+      ],
+      "owner": "Products + ERP",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Allow unlinked drafts but reject purchase eligibility until same-org Product/variant link and positive conversion.",
+        "Never mutate canonical Product from SupplierItem operations; preserve order snapshots."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/domains/suppliers/adapter/localItems.ts",
+        "src/loopdev/domains/suppliers/adapter/supabaseItems.ts",
+        "src/test/erp/suppliers/supplier-items.test.ts"
+      ],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-ASSORTMENT-DESKTOP",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "pending",
+      "title": "Build Supplier assortment desktop web",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-CATALOG"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-ASSORTMENT"
+      ],
+      "operation_ids": [
+        "list_supplier_items",
+        "add_supplier_item",
+        "link_supplier_item_to_product",
+        "start_product_creation_from_supplier_item",
+        "update_supplier_item",
+        "update_supplier_item_terms",
+        "deactivate_supplier_item"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-ASSORTMENT-CONTRACT",
+        "SUPPLIER-ASSORTMENT-DOMAIN",
+        "SUPPLIER-ROUTE-AUDIT"
+      ],
+      "owner": "ERP frontend",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Implement assortment actions using shared controls and canonical Products handoff.",
+        "Show draft-unlinked and purchasable-linked states without implying a draft is order-eligible."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-ASSORTMENT-MOBILE",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "pending",
+      "title": "Build Supplier assortment mobile web",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-CATALOG"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-ASSORTMENT"
+      ],
+      "operation_ids": [
+        "list_supplier_items",
+        "add_supplier_item",
+        "link_supplier_item_to_product",
+        "start_product_creation_from_supplier_item",
+        "update_supplier_item",
+        "update_supplier_item_terms",
+        "deactivate_supplier_item"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-ASSORTMENT-CONTRACT",
+        "SUPPLIER-ASSORTMENT-DOMAIN",
+        "SUPPLIER-ROUTE-AUDIT"
+      ],
+      "owner": "ERP frontend",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Preserve assortment actions and Product/variant semantics in mobile cards/forms.",
+        "Verify touch, focus, reflow and no horizontal overflow."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-ASSORTMENT-TESTS",
+      "phase": "07-build",
+      "type": "test",
+      "status": "pending",
+      "title": "Verify SupplierItem/Product linking",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-CATALOG"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-ASSORTMENT"
+      ],
+      "operation_ids": [
+        "list_supplier_items",
+        "add_supplier_item",
+        "link_supplier_item_to_product",
+        "start_product_creation_from_supplier_item",
+        "update_supplier_item",
+        "update_supplier_item_terms",
+        "deactivate_supplier_item"
+      ],
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "SUPPLIER-ASSORTMENT-DESKTOP",
+        "SUPPLIER-ASSORTMENT-MOBILE"
+      ],
+      "owner": "Products + ERP QA",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Test same-org Product/variant links, cross-org denial, positive conversion, draft eligibility and unchanged canonical Product.",
+        "Record focused tests for both renderers."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-CSV-BOUNDARY",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Keep CSV import outside supplier-directory",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-CATALOG"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-CATALOG-IMPORT"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Product",
+      "risk": "low",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "No CSV route, upload entry point or implementation task is included in this slice.",
+        "Any future import requires a separate approved scope/change request."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/proveedores/delivery-ledger.json",
+        "docs/implementation/erp/proveedores/visual-design.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/proveedores/delivery-ledger.json",
+        "docs/implementation/erp/proveedores/platform-evidence-matrix.md"
+      ],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    },
+    {
+      "id": "SUPPLIER-P2P-BOUNDARY",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Keep purchase-to-pay transactions in owning modules",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-CONSUMERS"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-CONSUMERS"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [],
+      "owner": "Procurement + Inventory + Finance",
+      "risk": "medium",
+      "evidence_level": "E0_PRESENT",
+      "acceptance_criteria": [
+        "Supplier stores no mutable PO, receipt, invoice, payable or settlement history.",
+        "Downstream modules remain separate follow-up scopes and own their permissions/events."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/proveedores/delivery-ledger.json",
+        "docs/implementation/erp/proveedores/architecture-design.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/proveedores/implementation-plan.md",
+        "docs/implementation/erp/proveedores/platform-evidence-matrix.md"
+      ],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T12:49:27.286Z",
+        "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
+      }
+    }
+  ],
+  "change_requests": [],
+  "blockers": [
+    "Finance/Legal must validate exact tax identifiers, formats and required fields for Spain, the United States and Colombia before country-specific tax-profile work can proceed."
+  ],
+  "task_scoped_approvals": true
+}

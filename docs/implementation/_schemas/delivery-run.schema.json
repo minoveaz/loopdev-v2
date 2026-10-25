@@ -21,6 +21,10 @@
         "run_id": { "type": "string", "pattern": "^MOD-[A-Z0-9-]+-[0-9]{8}-[0-9]{3}$" },
         "suite": { "type": "string" },
         "module": { "type": "string" },
+        "profile": { "enum": ["standard", "implementation-first", "supplier-pilot"] },
+        "slice_id": { "type": "string", "minLength": 1 },
+        "approval_history": { "type": "array", "items": { "type": "object" } },
+        "iterations": { "type": "array", "items": { "type": "object" } },
         "status": { "enum": ["pending", "running", "completed", "blocked", "failed", "deviated", "waiting_user", "paused"] },
         "current_phase": { "type": "string" },
         "attempt": { "type": "integer", "minimum": 1 },
@@ -31,7 +35,16 @@
         "invalidated_phases": { "type": "array", "items": { "type": "string" } },
         "environment": { "type": "object" },
         "next_action": { "type": "string", "minLength": 1 }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["profile"], "properties": { "profile": { "const": "supplier-pilot" } } },
+          "then": {
+            "required": ["slice_id", "approval_history", "iterations"],
+            "properties": { "suite": { "const": "erp" }, "module": { "type": "string", "pattern": "^[Pp]roveedores$" } }
+          }
+        }
+      ]
     }
   ]
 }

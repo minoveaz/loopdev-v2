@@ -24,6 +24,18 @@
         "architecture_quality": { "enum": ["PENDING", "PASS", "PASS_WITH_DEBT", "DEVIATED", "BLOCKED", "FAIL"] },
         "attempt": { "type": "integer", "minimum": 1 },
         "task_ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "prebuild_decisions": {
+          "type": "object",
+          "required": ["domain", "access", "persistence", "platform_reuse", "rollback"],
+          "properties": {
+            "domain": { "type": "string", "minLength": 1 },
+            "access": { "type": "string", "minLength": 1 },
+            "persistence": { "type": "string", "minLength": 1 },
+            "platform_reuse": { "type": "string", "minLength": 1 },
+            "rollback": { "type": "string", "minLength": 1 }
+          }
+        },
+        "validated_fingerprints": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" } },
         "input_artifacts": { "type": "array", "items": { "type": "string" } },
         "output_artifacts": { "type": "array", "items": { "type": "string" } },
         "validation": { "type": "array", "items": { "type": "object", "required": ["command", "result"] } },

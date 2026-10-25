@@ -1,0 +1,71 @@
+{
+  "architecture_quality": "PASS_WITH_DEBT",
+  "input_artifacts": [
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/design.md",
+    "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
+    "src/routes/LoopdevRoutes.tsx",
+    "src/loopdev/navigation.ts",
+    "src/loopdev/domains/catalog/types.ts",
+    "src/loopdev/domains/catalog/adapter/index.ts",
+    "src/loopdev/domains/catalog/adapter/local.ts",
+    "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "src/loopdev/domains/crm/adapter/index.ts"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/proveedores/README.md",
+    "docs/implementation/erp/proveedores/discovery.md",
+    "docs/implementation/erp/proveedores/delivery-ledger.json",
+    "docs/implementation/erp/proveedores/expected-vs-existing-matrix.md",
+    "docs/implementation/erp/proveedores/platform-scope.md",
+    "docs/implementation/erp/proveedores/platform-evidence-matrix.md"
+  ],
+  "decisions": [
+    {
+      "id": "DISC-BASELINE",
+      "status": "confirmed",
+      "summary": "This phase establishes a sourced discovery baseline only; no candidate supplier feature or implementation scope is product-approved."
+    }
+  ],
+  "actions": [
+    "Compared official ERPNext, Odoo, and Microsoft Dynamics 365 Business Central documentation; separated common patterns from product-specific options.",
+    "Inspected current ERP routes/navigation, ProductPartyRole contracts/adapters, CRM contact adapter, and organization permission patterns.",
+    "Recorded open product, domain, access, persistence, sync, and rollback decisions; kept the delivery ledger draft with no implementation tasks."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "9 ledgers checked"
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed",
+      "evidence": "109 checkpoint files checked (36 archived legacy records)"
+    },
+    {
+      "command": "npm run validate:delivery-evidence",
+      "result": "passed",
+      "evidence": "0 evidence files checked; no implementation evidence is claimed"
+    },
+    {
+      "command": "npm run test:delivery",
+      "result": "passed",
+      "evidence": "46 tests passed"
+    },
+    {
+      "command": "git --no-pager diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-SUPPLIER-FOLLOWUP",
+      "status": "PARTIAL",
+      "evidence": "Discovery baseline, SaaS benchmark, current-state matrix, and draft ledger are complete; product acceptance and design decisions remain open."
+    }
+  ],
+  "evidence": [],
+  "next_handoff": "01-design"
+}

@@ -6,12 +6,31 @@ user-invocable: true
 
 # LoopDev Module Plan
 
+For an `implementation-first` run, this skill is a short execution gate, not
+a documentation phase. Reuse the approved product scope, decisions and any
+existing plan. Inspect only code/contracts directly needed by the selected
+tasks. Update `delivery-ledger.json` with the minimal approved task set,
+dependencies, acceptance criteria and targeted tests; do not create or expand
+discovery, architecture, visual, platform, track or issue documents. Do not
+run broad audits unless a specific risk or unresolved decision blocks safe
+implementation. Request only the approval needed to start the listed tasks.
+
+For an explicitly selected `supplier-pilot` run, first read the experimental
+profile section of `MODULE_DELIVERY_AGENT_CONTRACT.md`. It overrides the
+standard separate plan gate, specialist-phase artifacts and issue-per-phase
+rules below. Preserve authorized ledger tasks and the safety/reuse audits;
+record domain, access, persistence, Platform reuse and rollback decisions in
+`prebuild_decisions` before plan completion. Do not infer approval of new scope.
+
 Consume a `module-design` specification and convert it into an executable
 implementation plan without writing production code.
 
-Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first. Do not turn
-proposed `SAAS_*` references or archive-only documents into implementation
-dependencies without verified V2 source, route, test, or checkpoint evidence.
+In the legacy standard profile, read
+`docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first. In
+implementation-first, consult only references needed by the approved tasks.
+Do not turn proposed `SAAS_*` references or archive-only documents into
+implementation dependencies without verified V2 source, route, test, or
+checkpoint evidence.
 
 ## Responsibilities
 
@@ -50,7 +69,7 @@ dependencies without verified V2 source, route, test, or checkpoint evidence.
 
 Do not claim implementation is complete and do not modify production files.
 
-## Platform integration planning
+## Platform integration planning (legacy standard profile)
 
 The first planning task must inspect:
 
@@ -155,6 +174,12 @@ This skill inspects and plans only. It does not modify production files,
 create commits or silently expand the approved scope.
 
 ### Traceability
+
+For `implementation-first`, the ledger is the plan artifact. Reuse an existing
+plan when it already defines the approved tasks; do not generate
+`implementation-plan.md` solely to satisfy this standard profile's traceability
+rule. Do not create a track or issue for a bounded task unless coordination
+requires it.
 
 Create or update `docs/implementation/<suite>/<module>/implementation-plan.md`
 and its phase evidence in the initialized workspace. Create a checkpoint for

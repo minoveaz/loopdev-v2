@@ -6,14 +6,21 @@ user-invocable: true
 
 # LoopDev Module Verify
 
+For an `implementation-first` run, verify the changed code and run the relevant
+tests before writing narrative documentation. Then create the required
+`implementation-report.md` as a concise comparison of approved task IDs,
+changed files, exact validation commands/results, verified behavior, platform
+coverage, gaps and risks. Do not restate the full product or design documents,
+and do not create separate matrices unless scope or risk requires them.
+
 Evaluate the implemented module against `module-design` and `module-plan`.
 
-Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first, then use
-`docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md` and
-`docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md` when verifying reusable UI
-and shell claims. Verify runtime claims from source, tests, and active
-checkpoints; proposed `SAAS_*` documents and archived history are not
-implementation evidence.
+For the legacy standard profile, read
+`docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first, then use
+the UI and shell references when verifying reuse claims. In
+implementation-first, inspect only the source, tests and references needed to
+verify the changed behavior. Proposed `SAAS_*` documents and archived history
+are not implementation evidence.
 
 ## Responsibilities
 
@@ -101,6 +108,9 @@ and exact next handoff. Use
 distinguish `detected_by` from `likely_origin`. Do not close verification
 issues until every applicable requirement has evidence or an explicit gap.
 Leave the issue open for `PARTIAL`, `FAIL` or `NOT_TESTED` outcomes.
+For implementation-first, the single `implementation-report.md` replaces the
+separate requirement matrix and narrative phase document; retain the JSON
+checkpoint and report partial or untested requirements plainly.
 
 ## Platform integration verification
 

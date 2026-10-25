@@ -6,10 +6,25 @@ user-invocable: true
 
 # LoopDev Module Review
 
-Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first, then use
-`docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md` and
-`docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md` for current reusable UI and
-shell evidence. Keep proposed `SAAS_*` documents and archive-only history
+For `implementation-first`, review the approved ledger, actual code/tests and
+`implementation-report.md`. Do not require discovery, architecture, visual or
+platform documents that were intentionally not produced. Report findings only
+when source, test, runtime or repository evidence supports them. Append the
+review verdict and accepted gaps to the existing report; do not create another
+summary document or matrix.
+
+For an explicitly selected `supplier-pilot` run, use the experimental profile
+section of `MODULE_DELIVERY_AGENT_CONTRACT.md`. Review the approved slice and
+its plan safety decisions without demanding absent specialist-phase reports.
+Require current verification and explicit product acceptance before review.
+Slice release approval never authorizes push/PR or establishes whole-module
+completion.
+
+For legacy standard reviews, read
+`docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first, then use
+the UI and shell references for current reusable UI and shell evidence. In
+implementation-first, consult only references needed to validate specific
+reuse claims. Keep proposed `SAAS_*` documents and archive-only history
 separate from implemented V2 evidence when reviewing delivery claims.
 
 Perform a final product and architecture review using the design, plan and
@@ -95,6 +110,9 @@ README from `docs/implementation/_templates/module-implementation-readme.md`,
 the requirement evidence matrix and the track before closing the review issue.
 The review issue may close only after the verdict and all blocking findings
 are resolved or explicitly accepted by the responsible approver.
+For implementation-first, the JSON review checkpoint and updated
+`implementation-report.md` replace the separate README, evidence matrix and
+track updates unless coordination explicitly requires them.
 
 ## Platform and cross-module review
 

@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-PROVEEDORES-20261025-001",
+  "span_id": "MOD-PROVEEDORES-20261025-001:06-plan",
+  "phase": "06-plan",
+  "skill": "module-plan",
+  "parent_span_id": null,
+  "module": "Proveedores",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 7,
+  "started_at": "2026-10-25T12:57:20.863Z",
+  "completed_at": "2026-10-25T12:58:04.210Z",
+  "input_fingerprint": "sha256:5cba37db9cab1e901b5e7c4a3c811450d6aaa930af93daecb1deb76cba199cbe",
+  "environment": {
+    "repository_path": "C:\\Users\\o010630\\copilot-worktrees\\loopdev-v2\\o010630-upgraded-enigma",
+    "checkout_type": "branch",
+    "branch": "feature/erp-proveedores",
+    "base_branch": null,
+    "head_commit": "ffd9bd16d01438f8dc3efd25be4b646861988476",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/erp/proveedores/discovery.md",
+    "docs/implementation/erp/proveedores/architecture-design.md",
+    "docs/implementation/erp/proveedores/visual-design.md",
+    "docs/implementation/erp/proveedores/delivery-ledger.json",
+    "docs/implementation/erp/core/access-model.md",
+    "docs/03-platform/governance/MODULE_DELIVERY_AGENT_CONTRACT.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/proveedores/implementation-plan.md",
+    "docs/implementation/erp/proveedores/delivery-ledger.json",
+    "docs/implementation/erp/proveedores/platform-scope.md",
+    "docs/implementation/erp/proveedores/view-state-matrix.md"
+  ],
+  "decisions": [
+    {
+      "id": "USER-APPROVED-PREBUILD-DEFAULTS",
+      "status": "confirmed",
+      "summary": "Approved access, protected persistence/offline behavior, lifecycle, duplicates, SupplierItem drafts, independent payee verification, CSV deferral and rollback."
+    },
+    {
+      "id": "OPEN-INITIAL-JURISDICTIONS",
+      "status": "confirmed",
+      "summary": "Spain, the United States and Colombia are the initial jurisdictions; exact tax fields remain subject to Finance/Legal validation."
+    },
+    {
+      "id": "OPEN-PAYEE-VERIFIER-ROLE",
+      "status": "confirmed",
+      "summary": "Only owners/admins may verify payment instructions, and the verifier differs from the editor."
+    },
+    {
+      "id": "OPEN-SUPPLIER-ITEM-LINK-TARGET",
+      "status": "confirmed",
+      "summary": "SupplierItem may link to canonical Product or variant; unlinked drafts are not purchasable until same-org link and positive conversion."
+    },
+    {
+      "id": "PLAN-SUPPLIER-COUNTRY-TAX-RULES",
+      "status": "open",
+      "summary": "Finance/Legal must validate exact identifiers, formats and required tax fields before country-specific tax-profile work."
+    },
+    {
+      "id": "PLAN-SUPPLIER-ROUTE",
+      "status": "confirmed",
+      "summary": "User confirmed ERP > Proveedores, separate from CRM and the Products catalog; route/runtime behavior still requires audit evidence."
+    },
+    {
+      "id": "USER-APPROVED-NON-TAX-TASK-SCOPE",
+      "status": "confirmed",
+      "summary": "User authorized task-scoped execution for tasks not dependent on country-specific tax rules; tax-profile tasks remain blocked pending Finance/Legal evidence."
+    }
+  ],
+  "actions": [
+    "Recorded the approved defaults, initial jurisdictions, owner/admin maker-checker rule and Product-or-variant SupplierItem link target.",
+    "Recorded ERP > Proveedores as the approved navigation location.",
+    "Recorded task-scoped approval for tasks not dependent on country tax rules; the first executable batch is mandatory audits plus CSV/P2P boundary audits.",
+    "Kept country-specific tax rules and their dependent P2P implementation blocked pending Finance/Legal evidence; no production code has been changed."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed: 9 ledgers checked with scoped task approvals."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed: 112 checkpoint files checked."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed."
+    },
+    {
+      "command": "npm run validate:delivery-evidence",
+      "result": "passed: 0 evidence files checked."
+    },
+    {
+      "command": "npm run test:delivery",
+      "result": "passed: 46 tests."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-SUPPLIER-FOLLOWUP",
+      "status": "PARTIAL",
+      "evidence": "Scope, route choice and non-tax task scope are approved; route/runtime audit evidence remains to be collected."
+    },
+    {
+      "id": "REQ-ERP-SUPPLIER-P2P-MASTER",
+      "status": "PARTIAL",
+      "evidence": "The generic P2P contract is approved; country-specific tax profile and dependent domain/renderers remain blocked pending Finance/Legal evidence."
+    },
+    {
+      "id": "REQ-ERP-SUPPLIER-CATALOG",
+      "status": "PARTIAL",
+      "evidence": "Manual SupplierItem/Product linking tasks are approved; CSV remains explicitly out of scope."
+    }
+  ],
+  "task_ids": [
+    "SUPPLIER-MANDATORY-AUDITS",
+    "SUPPLIER-CSV-BOUNDARY",
+    "SUPPLIER-P2P-BOUNDARY",
+    "SUPPLIER-ROUTE-AUDIT",
+    "SUPPLIER-DIRECTORY-CONTRACT",
+    "SUPPLIER-P2P-CONTRACT",
+    "SUPPLIER-ASSORTMENT-CONTRACT"
+  ],
+  "evidence": [],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "07-build after explicit plan completion and handoff",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false,
+  "prebuild_decisions": {
+    "domain": "Approved: Supplier lifecycle active/on_hold/inactive, no hard delete, existing transaction facts remain unchanged; exact tax-ID duplicates within the organization and jurisdiction block, normalized-name similarity warns; SupplierItem may be an unlinked draft and is purchasable only when linked to the same-organization canonical Product or its variant with positive conversion. Initial jurisdictions are Spain, the United States and Colombia; exact tax-field rules require Finance/Legal validation.",
+    "access": "Approved: a Supplier-specific read grant maps to the same user population as Products readers, including tax/bank visibility; Supplier management maps to the Products writer population; organization scope is derived server-side. Only owner/admin may verify payee instructions, and the verifier must be a different person from the editor. Mutations require immutable audit evidence.",
+    "persistence": "Approved: real tax/bank values use protected, server-authoritative persistence; never store them in localStorage or a clear local cache, and do not support offline reads, writes or queued mutations for those values. Local fixtures use synthetic data; offline behavior may cover only non-sensitive data.",
+    "platform_reuse": "Approved: reuse existing Rivera and LoopDev Platform primitives/contracts; desktop and responsive mobile web only; do not build native apps or duplicate shared controls. Canonical Product creation stays in Products. CSV import is deferred from this slice; downstream PO/receipt/invoice/payment transactions stay in their owning modules.",
+    "rollback": "Approved: organization-scoped feature flag, forward migration with dry-run, stop writes/retries when disabled, return to a safe read-only mode, preserve audit and downstream transaction history, and never use hard-delete cascades."
+  },
+  "validated_fingerprints": {
+    "product": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scope": "sha256:1be901fadb335e38e31b01057c04732aa52ddeeef4b0e1c527a4001bf9cce7e4",
+    "design": "sha256:70503784448cffc856e5b17f5d4b0a9a1b4ad4fecd2164234c50b11e6217c4bb",
+    "plan": "sha256:c1410cd1a59c6bfd767e49f98438d201996f431852f775fd5ab9ded3704c2395",
+    "contracts": "sha256:58242ddb2ba0d26ab7ad86f678929bf3ed553be0fd949ee5e25be099fb3ceac9",
+    "code": "sha256:31a0b648026cec7866e88a266845b2e4f5b11e8871a7714960dd0f56eff04bd1",
+    "tests": "sha256:2322ff08416b927ee251647c91e791c0b13ad21f7e2e4a7111566dd135e9dee9"
+  }
+}

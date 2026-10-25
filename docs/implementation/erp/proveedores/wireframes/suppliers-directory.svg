@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1000" viewBox="0 0 1480 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Supplier directory responsive wireframe</title>
+  <desc id="desc">Synthetic supplier directory shown as a compact desktop table and mobile cards using Rivera semantic tokens.</desc>
+  <style>
+    text { font-family: Geist, system-ui, sans-serif; fill: hsl(222 32% 11%); }
+    .muted { fill: hsl(222 12% 46%); }
+    .small { font-size: 12px; }
+    .body { font-size: 14px; }
+    .label { font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+    .title { font-size: 23px; font-weight: 700; }
+    .card { fill: white; stroke: hsl(220 22% 92%); }
+    .line { stroke: hsl(220 22% 92%); }
+    .primary { fill: hsl(234 80% 58%); }
+    .soft { fill: hsl(234 92% 96.5%); }
+    .success { fill: hsl(158 70% 94%); }
+    .warning { fill: hsl(36 96% 94%); }
+    .shadow { filter: drop-shadow(0 1px 2px rgb(0 0 0 / .08)); }
+  </style>
+  <rect width="1480" height="1000" fill="hsl(220 30% 98.8%)"/>
+  <text x="40" y="42" class="label muted">SUPPLIERS DIRECTORY · SOURCE: visual-design.md §2 · SYNTHETIC DATA</text>
+  <text x="40" y="76" class="small muted">Desktop ≥ 768px</text>
+  <text x="1095" y="76" class="small muted">Mobile &lt; 768px</text>
+
+  <!-- Desktop composition -->
+  <rect x="32" y="94" width="1015" height="862" rx="8" class="card shadow"/>
+  <text x="68" y="132" class="small muted">ERP  /  Suppliers</text>
+  <text x="68" y="174" class="title">Suppliers</text>
+  <text x="68" y="199" class="small muted">Manage supplier relationships and purchase-to-pay setup.</text>
+  <rect x="866" y="145" width="144" height="40" rx="6" class="primary"/>
+  <text x="888" y="170" font-size="13" font-weight="600" fill="white">+ New supplier</text>
+  <line x1="68" y1="220" x2="1010" y2="220" class="line"/>
+
+  <rect x="68" y="242" width="340" height="38" rx="6" fill="white" stroke="hsl(220 22% 92%)"/>
+  <circle cx="87" cy="260" r="6" fill="none" stroke="hsl(222 12% 46%)"/>
+  <line x1="91" y1="264" x2="96" y2="269" stroke="hsl(222 12% 46%)"/>
+  <text x="108" y="265" class="small muted">Search name, supplier code or item reference</text>
+  <rect x="420" y="242" width="126" height="38" rx="6" fill="white" stroke="hsl(220 22% 92%)"/>
+  <text x="436" y="265" class="small">Status: All  v</text>
+  <rect x="558" y="242" width="130" height="38" rx="6" fill="white" stroke="hsl(220 22% 92%)"/>
+  <text x="574" y="265" class="small">Country: All  v</text>
+  <rect x="700" y="242" width="126" height="38" rx="6" fill="white" stroke="hsl(220 22% 92%)"/>
+  <text x="716" y="265" class="small">Category: All  v</text>
+  <text x="918" y="265" class="small muted">42 suppliers</text>
+
+  <rect x="68" y="302" width="942" height="42" rx="4" fill="hsl(220 20% 96%)"/>
+  <text x="88" y="328" class="label muted">SUPPLIER</text>
+  <text x="385" y="328" class="label muted">COUNTRY</text>
+  <text x="500" y="328" class="label muted">PURCHASE ITEMS</text>
+  <text x="650" y="328" class="label muted">PAYEE SETUP</text>
+  <text x="820" y="328" class="label muted">STATUS</text>
+  <text x="966" y="328" class="label muted">MORE</text>
+  <line x1="68" y1="345" x2="1010" y2="345" class="line"/>
+
+  <g class="body">
+    <text x="88" y="380" font-weight="600">Acme Industrial Supplies</text><text x="88" y="400" class="small muted">SUP-00042 · Acme Industrial</text>
+    <text x="385" y="390">Spain</text><text x="500" y="390">18 items</text>
+    <rect x="650" y="366" width="92" height="24" rx="12" class="success"/><text x="662" y="382" class="small" fill="hsl(158 70% 30%)">Verified</text>
+    <rect x="820" y="366" width="66" height="24" rx="12" class="success"/><text x="831" y="382" class="small">Active</text><text x="978" y="390" class="body muted">•••</text>
+  </g>
+  <line x1="68" y1="418" x2="1010" y2="418" class="line"/>
+  <g class="body">
+    <text x="88" y="452" font-weight="600">Northstar Components</text><text x="88" y="472" class="small muted">SUP-00037 · Northstar</text>
+    <text x="385" y="462">Germany</text><text x="500" y="462">6 items</text>
+    <rect x="650" y="438" width="104" height="24" rx="12" class="warning"/><text x="662" y="454" class="small">Review needed</text>
+    <rect x="820" y="438" width="66" height="24" rx="12" class="success"/><text x="831" y="454" class="small">Active</text><text x="978" y="462" class="body muted">•••</text>
+  </g>
+  <line x1="68" y1="490" x2="1010" y2="490" class="line"/>
+  <g class="body">
+    <text x="88" y="524" font-weight="600">Marea Packaging Cooperative</text><text x="88" y="544" class="small muted">SUP-00031 · Marea Pack</text>
+    <text x="385" y="534">Portugal</text><text x="500" y="534">12 items</text>
+    <rect x="650" y="510" width="92" height="24" rx="12" class="success"/><text x="662" y="526" class="small">Verified</text>
+    <rect x="820" y="510" width="74" height="24" rx="12" class="warning"/><text x="829" y="526" class="small">On hold</text><text x="978" y="534" class="body muted">•••</text>
+  </g>
+  <line x1="68" y1="562" x2="1010" y2="562" class="line"/>
+  <g class="body">
+    <text x="88" y="596" font-weight="600">Lumen Studio Services</text><text x="88" y="616" class="small muted">SUP-00028 · Individual provider</text>
+    <text x="385" y="606">France</text><text x="500" y="606">2 services</text>
+    <rect x="650" y="582" width="104" height="24" rx="12" class="warning"/><text x="662" y="598" class="small">Not verified</text>
+    <rect x="820" y="582" width="66" height="24" rx="12" class="success"/><text x="831" y="598" class="small">Active</text><text x="978" y="606" class="body muted">•••</text>
+  </g>
+  <line x1="68" y1="634" x2="1010" y2="634" class="line"/>
+  <g class="body">
+    <text x="88" y="668" font-weight="600">Cedar Raw Materials</text><text x="88" y="688" class="small muted">SUP-00019 · Cedar Materials</text>
+    <text x="385" y="678">Italy</text><text x="500" y="678">9 items</text>
+    <rect x="650" y="654" width="92" height="24" rx="12" class="success"/><text x="662" y="670" class="small">Verified</text>
+    <rect x="820" y="654" width="72" height="24" rx="12" fill="hsl(220 18% 95%)"/><text x="831" y="670" class="small">Inactive</text><text x="978" y="678" class="body muted">•••</text>
+  </g>
+  <line x1="68" y1="706" x2="1010" y2="706" class="line"/>
+  <text x="88" y="744" class="small muted">Showing 1–5 of 42 suppliers</text>
+  <text x="848" y="744" class="small muted">Rows 10  v</text>
+  <rect x="900" y="724" width="42" height="30" rx="5" fill="white" stroke="hsl(220 22% 92%)"/>
+  <text x="913" y="744" class="small">‹</text>
+  <rect x="950" y="724" width="42" height="30" rx="5" fill="white" stroke="hsl(220 22% 92%)"/>
+  <text x="963" y="744" class="small">›</text>
+  <text x="68" y="924" class="small muted">States: loading skeleton · first-use empty CTA · filtered no-match · retryable error · forbidden · offline freshness</text>
+
+  <!-- Mobile composition -->
+  <rect x="1080" y="94" width="366" height="862" rx="24" fill="white" stroke="hsl(220 20% 85%)" class="shadow"/>
+  <rect x="1098" y="112" width="330" height="826" rx="16" fill="hsl(220 30% 98.8%)"/>
+  <text x="1118" y="148" class="small muted">ERP  /  Suppliers</text>
+  <text x="1118" y="185" font-size="22" font-weight="700">Suppliers</text>
+  <rect x="1118" y="201" width="290" height="36" rx="6" fill="white" stroke="hsl(220 22% 92%)"/>
+  <text x="1132" y="224" class="small muted">Search suppliers...</text>
+  <rect x="1118" y="246" width="112" height="34" rx="6" fill="white" stroke="hsl(220 22% 92%)"/>
+  <text x="1134" y="268" class="small">Filters  v</text>
+  <rect x="1240" y="246" width="168" height="34" rx="6" class="primary"/>
+  <text x="1262" y="268" class="small" fill="white" font-weight="600">+ New supplier</text>
+  <text x="1118" y="302" class="small muted">42 suppliers · sorted by name</text>
+
+  <rect x="1118" y="316" width="290" height="112" rx="8" class="card"/>
+  <text x="1134" y="342" class="body" font-weight="600">Acme Industrial Supplies</text>
+  <text x="1134" y="362" class="small muted">SUP-00042 · Spain</text>
+  <rect x="1134" y="376" width="66" height="22" rx="11" class="success"/><text x="1144" y="391" class="small">Active</text>
+  <text x="1210" y="391" class="small">Payee verified</text><text x="1382" y="391" class="body muted">•••</text>
+  <text x="1134" y="416" class="small muted">18 supplier items</text>
+
+  <rect x="1118" y="438" width="290" height="112" rx="8" class="card"/>
+  <text x="1134" y="464" class="body" font-weight="600">Northstar Components</text>
+  <text x="1134" y="484" class="small muted">SUP-00037 · Germany</text>
+  <rect x="1134" y="498" width="66" height="22" rx="11" class="success"/><text x="1144" y="513" class="small">Active</text>
+  <text x="1210" y="513" class="small">Review needed</text><text x="1382" y="513" class="body muted">•••</text>
+  <text x="1134" y="538" class="small muted">6 supplier items</text>
+
+  <rect x="1118" y="560" width="290" height="112" rx="8" class="card"/>
+  <text x="1134" y="586" class="body" font-weight="600">Marea Packaging Coop.</text>
+  <text x="1134" y="606" class="small muted">SUP-00031 · Portugal</text>
+  <rect x="1134" y="620" width="74" height="22" rx="11" class="warning"/><text x="1144" y="635" class="small">On hold</text>
+  <text x="1218" y="635" class="small">Payee verified</text><text x="1382" y="635" class="body muted">•••</text>
+  <text x="1134" y="660" class="small muted">12 supplier items</text>
+
+  <rect x="1118" y="682" width="290" height="112" rx="8" class="card"/>
+  <text x="1134" y="708" class="body" font-weight="600">Lumen Studio Services</text>
+  <text x="1134" y="728" class="small muted">SUP-00028 · France</text>
+  <rect x="1134" y="742" width="66" height="22" rx="11" class="success"/><text x="1144" y="757" class="small">Active</text>
+  <text x="1210" y="757" class="small">Not verified</text><text x="1382" y="757" class="body muted">•••</text>
+  <text x="1134" y="782" class="small muted">2 services</text>
+  <text x="1118" y="832" class="small muted">More results · Previous / Next</text>
+</svg>

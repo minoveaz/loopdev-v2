@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1000" viewBox="0 0 1480 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Supplier create and edit responsive wireframe</title>
+  <desc id="desc">Full-page supplier setup form with identity, tax, purchasing, contact, and synthetic payment fields on desktop and mobile.</desc>
+  <style>
+    text { font-family: Geist, system-ui, sans-serif; fill: hsl(222 32% 11%); }
+    .muted { fill: hsl(222 12% 46%); }
+    .small { font-size: 12px; }
+    .body { font-size: 14px; }
+    .label { font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+    .title { font-size: 22px; font-weight: 700; }
+    .card { fill: white; stroke: hsl(220 22% 92%); }
+    .line { stroke: hsl(220 22% 92%); }
+    .input { fill: white; stroke: hsl(220 22% 92%); }
+    .primary { fill: hsl(234 80% 58%); }
+  </style>
+  <rect width="1480" height="1000" fill="hsl(220 30% 98.8%)"/>
+  <text x="40" y="42" class="label muted">SUPPLIER FORM · SOURCE: visual-design.md §2 · REPRESENTATIVE SYNTHETIC VALUES</text>
+  <text x="40" y="76" class="small muted">Desktop ≥ 768px</text>
+  <text x="1095" y="76" class="small muted">Mobile &lt; 768px</text>
+
+  <!-- Desktop -->
+  <rect x="32" y="94" width="1015" height="862" rx="8" class="card"/>
+  <text x="68" y="132" class="small muted">ERP  /  Suppliers  /  New supplier</text>
+  <text x="68" y="174" class="title">New supplier</text>
+  <text x="68" y="198" class="small muted">Add the commercial details needed for purchasing and future payment.</text>
+  <text x="890" y="168" class="body muted">Cancel</text>
+  <rect x="934" y="145" width="76" height="38" rx="6" class="primary"/><text x="949" y="169" class="small" fill="white" font-weight="600">Save</text>
+
+  <rect x="68" y="220" width="942" height="155" rx="8" class="card"/>
+  <text x="88" y="248" class="body" font-weight="600">Identity</text><text x="88" y="269" class="small muted">Required to create a supplier record.</text>
+  <text x="88" y="300" class="label muted">SUPPLIER TYPE *</text><text x="88" y="324" class="body">Company  v</text>
+  <rect x="88" y="332" width="262" height="1" class="line"/>
+  <text x="386" y="300" class="label muted">LEGAL NAME *</text><text x="386" y="324" class="body">Acme Industrial Supplies S.L.</text><line x1="386" y1="332" x2="628" y2="332" class="line"/>
+  <text x="660" y="300" class="label muted">COUNTRY *</text><text x="660" y="324" class="body">Spain  v</text><line x1="660" y1="332" x2="968" y2="332" class="line"/>
+  <text x="88" y="357" class="small muted">Duplicate check: no exact tax ID match found in this organization.</text>
+
+  <rect x="68" y="389" width="942" height="132" rx="8" class="card"/>
+  <text x="88" y="417" class="body" font-weight="600">Tax profile</text><text x="88" y="438" class="small muted">Fields depend on supplier country and legal type.</text>
+  <text x="88" y="469" class="label muted">TAX JURISDICTION</text><text x="88" y="493" class="body">Spain  v</text><line x1="88" y1="501" x2="350" y2="501" class="line"/>
+  <text x="386" y="469" class="label muted">VAT ID · SYNTHETIC</text><text x="386" y="493" class="body">ESB12345678</text><line x1="386" y1="501" x2="628" y2="501" class="line"/>
+  <text x="660" y="469" class="label muted">TAX CATEGORY</text><text x="660" y="493" class="body">Standard  v</text><line x1="660" y1="501" x2="968" y2="501" class="line"/>
+
+  <rect x="68" y="535" width="452" height="158" rx="8" class="card"/>
+  <text x="88" y="563" class="body" font-weight="600">Purchasing defaults</text>
+  <text x="88" y="594" class="label muted">CURRENCY *</text><text x="88" y="618" class="body">EUR  v</text><line x1="88" y1="626" x2="270" y2="626" class="line"/>
+  <text x="292" y="594" class="label muted">PAYMENT TERMS</text><text x="292" y="618" class="body">Net 30  v</text><line x1="292" y1="626" x2="492" y2="626" class="line"/>
+  <text x="88" y="658" class="label muted">DEFAULT LEAD TIME</text><text x="88" y="680" class="body">8 business days</text>
+
+  <rect x="536" y="535" width="474" height="158" rx="8" class="card"/>
+  <text x="556" y="563" class="body" font-weight="600">Purchasing contact</text>
+  <text x="556" y="594" class="label muted">CONTACT NAME</text><text x="556" y="618" class="body">Marta Ruiz</text><line x1="556" y1="626" x2="755" y2="626" class="line"/>
+  <text x="775" y="594" class="label muted">FUNCTION</text><text x="775" y="618" class="body">Purchasing  v</text><line x1="775" y1="626" x2="990" y2="626" class="line"/>
+  <text x="556" y="658" class="label muted">EMAIL</text><text x="556" y="680" class="body">purchasing@acme.example</text>
+
+  <rect x="68" y="707" width="942" height="174" rx="8" class="card"/>
+  <text x="88" y="735" class="body" font-weight="600">Payment instruction</text><text x="88" y="756" class="small muted">Synthetic example only · all Supplier readers may view saved values.</text>
+  <text x="88" y="788" class="label muted">BENEFICIARY</text><text x="88" y="812" class="body">Acme Industrial Supplies S.L.</text><line x1="88" y1="820" x2="400" y2="820" class="line"/>
+  <text x="430" y="788" class="label muted">PAYMENT METHOD</text><text x="430" y="812" class="body">Bank transfer  v</text><line x1="430" y1="820" x2="670" y2="820" class="line"/>
+  <text x="700" y="788" class="label muted">IBAN · SYNTHETIC</text><text x="700" y="812" class="body">ES91 2100 0418 4502 0005 1332</text><line x1="700" y1="820" x2="990" y2="820" class="line"/>
+  <text x="88" y="854" class="small muted">A new or changed account is unverified and cannot be selected for a future payment.</text>
+  <text x="68" y="923" class="small muted">Unsaved form errors appear in a focusable summary and next to each invalid field.</text>
+
+  <!-- Mobile -->
+  <rect x="1080" y="94" width="366" height="862" rx="24" fill="white" stroke="hsl(220 20% 85%)"/>
+  <rect x="1098" y="112" width="330" height="826" rx="16" fill="hsl(220 30% 98.8%)"/>
+  <text x="1118" y="148" class="small muted">‹ Suppliers</text>
+  <text x="1118" y="182" font-size="20" font-weight="700">New supplier</text>
+  <text x="1118" y="204" class="small muted">Create a commercial record</text>
+
+  <rect x="1118" y="220" width="290" height="170" rx="8" class="card"/>
+  <text x="1134" y="246" class="body" font-weight="600">Identity</text>
+  <text x="1134" y="272" class="label muted">SUPPLIER TYPE *</text><text x="1134" y="294" class="body">Company  v</text><line x1="1134" y1="301" x2="1392" y2="301" class="line"/>
+  <text x="1134" y="326" class="label muted">LEGAL NAME *</text><text x="1134" y="348" class="body">Acme Industrial Supplies S.L.</text><line x1="1134" y1="355" x2="1392" y2="355" class="line"/>
+  <text x="1134" y="378" class="small muted">Country: Spain</text>
+
+  <rect x="1118" y="400" width="290" height="140" rx="8" class="card"/>
+  <text x="1134" y="426" class="body" font-weight="600">Tax profile</text>
+  <text x="1134" y="452" class="label muted">JURISDICTION</text><text x="1134" y="474" class="body">Spain  v</text><line x1="1134" y1="481" x2="1392" y2="481" class="line"/>
+  <text x="1134" y="506" class="label muted">VAT ID · SYNTHETIC</text><text x="1134" y="528" class="body">ESB12345678</text>
+
+  <rect x="1118" y="550" width="290" height="132" rx="8" class="card"/>
+  <text x="1134" y="576" class="body" font-weight="600">Purchasing</text>
+  <text x="1134" y="602" class="label muted">CURRENCY / PAYMENT TERMS</text><text x="1134" y="624" class="body">EUR · Net 30</text><line x1="1134" y1="632" x2="1392" y2="632" class="line"/>
+  <text x="1134" y="660" class="small muted">Lead time: 8 business days</text>
+
+  <rect x="1118" y="692" width="290" height="150" rx="8" class="card"/>
+  <text x="1134" y="718" class="body" font-weight="600">Payment instruction</text>
+  <text x="1134" y="744" class="label muted">BENEFICIARY</text><text x="1134" y="766" class="body">Acme Industrial Supplies S.L.</text>
+  <text x="1134" y="792" class="label muted">IBAN · SYNTHETIC</text><text x="1134" y="814" class="body">ES91 2100 0418 4502 0005 1332</text>
+  <text x="1134" y="834" class="small muted">Unverified until reviewed</text>
+
+  <rect x="1118" y="852" width="290" height="58" rx="8" fill="white" stroke="hsl(220 22% 92%)"/>
+  <text x="1142" y="878" class="body muted">Cancel</text>
+  <rect x="1288" y="862" width="104" height="38" rx="6" class="primary"/>
+  <text x="1320" y="886" class="body" fill="white" font-weight="600">Save</text>
+</svg>

@@ -55,8 +55,8 @@ docs/implementation/<suite>/<module>/
         └── 10-git.json
 ```
 
-The `delivery` agent creates this workspace before the first skill runs.
-`module-design` is the first skill to populate its module-specific content.
+The legacy standard profile creates this workspace before the first skill
+runs. `module-design` is its first skill to populate module-specific content.
 For example, CRM Pipeline uses
 `docs/implementation/crm/pipeline/`. Skills must reuse this workspace and
 must not create alternative flat roots.
@@ -65,11 +65,93 @@ Use the templates in `docs/implementation/_templates/`.
 
 ## Executable delivery runs
 
+### Implementation-first (default for new code runs)
+
+New `delivery:init` runs use `implementation-first`. This profile is for work
+with approved scope: keep pre-build setup to the task ledger, implement code
+and tests, run verification, and only then write
+`implementation-report.md` with the results actually observed.
+
+```bash
+npm run delivery:init -- --suite crm --module Contacts
+```
+
+The only required pre-build workspace artifact is `delivery-ledger.json`.
+Reuse the approved product decisions and existing plan; do not generate
+discovery, architecture, visual, platform, track or per-phase issue documents
+unless a concrete unresolved decision or risk requires one. Plan approval
+authorizes the listed tasks; it does not prove their implementation.
+
+The verification report maps each approved task to changed code, exact test
+and build commands/results, verified behavior, platform coverage, gaps and
+risks. It must be written after the tests pass. The review phase compares this
+report to the code, tests and approved ledger.
+
+### Opt-in supplier pilot
+
+The experimental profile is limited to `erp/Proveedores`; it does not change
+existing runs. Starting it requires a named, bounded slice. The following
+initialization creates a draft run, not an approved supplier implementation:
+
+```bash
+npm run delivery:init -- --suite erp --module Proveedores --profile supplier-pilot --slice supplier-directory --platform-scope desktop_web,mobile_web
+```
+
+Its graph is discovery -> design -> prototype -> plan -> build -> verify ->
+review -> Git. Domain/access/API/sync analysis remains required when relevant,
+but is captured in plan decisions rather than separate phase reports.
+
+Complete the prototype checkpoint, then record the user's combined scope and
+visual approval with the existing `delivery:approve` command and gate
+`visual_design`. Supply the exact relative artifact path, its actual SHA-256,
+actor, role and approval source. The CLI rejects mismatched fingerprints.
+Keep the approved semantic design in the existing design/visual documents.
+Rendering-only refinements in code do not change this baseline; semantic
+changes must update it and require approval again.
+
+Plan completion data must include `prebuild_decisions` with non-empty
+`domain`, `access`, `persistence`, `platform_reuse` and `rollback` decisions or
+links to their canonical definitions. It still requires authorized ledger
+tasks, acceptance criteria, contracts, dependencies and validation.
+The ledger represents the current complete slice. A partially implemented
+module-wide ledger is not a shortcut to slice release: strict operation
+coverage and module-wide blockers remain enforced.
+
+After completing build, feedback can reopen it without restarting discovery:
+
+```bash
+npm run delivery -- iterate --suite erp --module Proveedores --run MOD-PROVEEDORES-YYYYMMDD-001 --reason "Refine the approved interaction"
+npm run delivery -- inspect --suite erp --module Proveedores --run MOD-PROVEEDORES-YYYYMMDD-001
+```
+
+Iteration preserves the previous checkpoint snapshot and combined product
+approval, but withdraws acceptance/release/push/PR approvals. Update task
+progress and collect evidence again. If semantic scope, design or contracts
+changed, use `delivery:resume` and obtain the affected approval again.
+Task status/evidence updates alone do not invalidate product scope; changed
+task definitions invalidate the plan. Fingerprints still conservatively
+include repository-wide code and tests; contracts are scoped to the
+capabilities' declared `contract_refs`, including their shared dependencies.
+
+Record acceptance with gate `product_acceptance` against the completed,
+current build artifact. Verify/review the slice, then record `release`
+approval against the current review artifact. Push and PR remain separate
+explicit approvals. `inspect` never equates prototype, accepted UI, passing
+verification or release permission with remote publication.
+
+The normative exception and its safeguards are in
+`MODULE_DELIVERY_AGENT_CONTRACT.md` under "Experimental supplier delivery
+profile". Do not use this profile for another module or migrate old runs.
+
+### Legacy standard lifecycle
+
+The explicit `standard` profile preserves the original documentation-heavy
+workflow for design-only requests or work whose scope is not yet approved.
 The delivery lifecycle is intentionally append-only: it never resets, amends,
 force-pushes or overwrites an existing run.
 
 ```bash
-npm run delivery:init -- --suite crm --module Contacts
+npm run delivery:init -- --suite crm --module Contacts --profile standard
 npm run delivery:start-phase -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --phase 00-discovery --skill module-discovery
 npm run delivery:complete-phase -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --phase 00-discovery --data path/to/completion-data.json
 npm run delivery:handoff -- --suite crm --module Contacts --run MOD-CONTACTS-YYYYMMDD-001 --from 00-discovery --to 01-design
@@ -90,12 +172,12 @@ validation/navigation metadata and renderer imports. `npm run smoke:routes`
 checks the deterministic desktop/mobile route manifest; checks marked
 `runtime_dependent` still require runtime evidence in the platform matrix.
 
-Every module must include `architecture-design.md`. It is the structural
+Legacy standard runs require `architecture-design.md`. It is the structural
 baseline for layer boundaries, responsibilities, dependencies, refactors and
 technical debt, and is linked from the design, plan, checkpoints, evidence
 matrix and review issue.
 
-Every module must also include `visual-design.md` and `view-state-matrix.md`.
+Legacy standard runs also require `visual-design.md` and `view-state-matrix.md`.
 These Markdown files are the normative visual source: they define wireframes,
 visual states, responsive breakpoints, accessibility, Rivera/shared LoopDev
 primitive reuse and open decisions. SVG or other visual artifacts are review

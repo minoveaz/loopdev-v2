@@ -6,6 +6,13 @@ user-invocable: true
 
 # LoopDev Module Visual Design
 
+For an explicitly selected `supplier-pilot` run, the experimental profile
+section of `MODULE_DELIVERY_AGENT_CONTRACT.md` overrides the standard separate
+design gate and mandatory SVG evidence below. Present an isolated LoopDev
+prototype with synthetic data and no live writes; retain a versioned review
+artifact and the semantic Markdown baseline. The combined `visual_design`
+approval covers only the reviewed scope and visual direction.
+
 Read `docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` first. Proposed
 `SAAS_*` documents are non-runtime visual references; verify implemented
 platform primitives and consumers from

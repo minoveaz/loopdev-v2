@@ -9,6 +9,39 @@ const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 const writeJson = (file, value) => writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
 
+export function workflowForRun(workflow, manifest = {}) {
+  if (!manifest.profile || manifest.profile === "standard") return workflow;
+  const profile = workflow.experimental_profiles?.[manifest.profile];
+  if (!profile) throw new Error(`Unknown delivery profile: ${manifest.profile}`);
+  if ((profile.suite !== "*" && slug(manifest.suite ?? "") !== profile.suite)
+    || (profile.module !== "*" && slug(manifest.module ?? "") !== profile.module)) {
+    throw new Error(`Profile ${manifest.profile} is restricted to ${profile.suite}/${profile.module}`);
+  }
+  if (profile.requires_slice && !manifest.slice_id?.trim()) throw new Error("Pilot runs require a stable slice_id");
+  return {
+    ...workflow,
+    initial_phase: profile.initial_phase ?? workflow.initial_phase,
+    terminal_phase: profile.terminal_phase ?? workflow.terminal_phase,
+    phases: profile.phases,
+    gates: profile.gates,
+    required_workspace_files: profile.required_workspace_files ?? workflow.required_workspace_files,
+    verification_report: profile.verification_report ?? null,
+  };
+}
+
+// Execution evidence is mutable; only semantic scope belongs to the approved baseline.
+function approvedScope(ledger) {
+  return {
+    suite: ledger.suite, module: ledger.module, product_sources: ledger.product_sources,
+    requirements: ledger.requirements,
+    capabilities: ledger.capabilities?.map((capability) => ({
+      ...Object.fromEntries(Object.entries(capability).filter(([key]) => !["parity", "operation_coverage", "task_ids"].includes(key))),
+      adaptations: capability.operation_coverage?.filter((operation) => operation.adaptation_ref)
+        .map(({ id, adaptation_ref }) => ({ id, adaptation_ref })),
+    })),
+  };
+}
+
 const templateMap = {
   "README.md": "module-implementation-readme.md",
   "discovery.md": "discovery.md",
@@ -76,15 +109,17 @@ export class DeliveryStateMachine {
   loadRun(suite, moduleName, runId) {
     const file = this.manifestFile(suite, moduleName, runId);
     if (!existsSync(file)) throw new Error(`Run not found: ${runId}`);
-    return { file, manifest: readJson(file) };
+    const manifest = readJson(file);
+    workflowForRun(this.workflow, manifest);
+    return { file, manifest };
   }
 
-  materializeWorkspace(suite, moduleName) {
+  materializeWorkspace(suite, moduleName, workflow = this.workflow) {
     const workspace = this.workspace(suite, moduleName);
     const templates = join(this.root, "docs", "implementation", "_templates");
     mkdirSync(workspace, { recursive: true });
     const created = [];
-    for (const requiredFile of [...this.workflow.required_workspace_files, ...this.workflow.required_schema_v1_files]) {
+    for (const requiredFile of [...workflow.required_workspace_files, ...workflow.required_schema_v1_files]) {
       const destination = join(workspace, requiredFile);
       if (existsSync(destination)) continue;
       const sourceName = templateMap[requiredFile];
@@ -98,22 +133,42 @@ export class DeliveryStateMachine {
     return created;
   }
 
-  fingerprints(suite, moduleName) {
+  fingerprints(suite, moduleName, profile = "standard") {
     const workspace = relative(this.root, this.workspace(suite, moduleName));
+    const ledgerProfiles = ["implementation-first", "supplier-pilot"];
+    const ledger = ledgerProfiles.includes(profile) ? readJson(join(this.workspace(suite, moduleName), "delivery-ledger.json")) : null;
     return {
       product: fingerprintPaths(this.root, [join("docs", "06-product", slug(suite), slug(moduleName))]),
-      scope: fingerprintPaths(this.root, [join(workspace, "delivery-ledger.json")]),
+      scope: ledger
+        ? sha256(JSON.stringify(approvedScope(ledger)))
+        : fingerprintPaths(this.root, [join(workspace, "delivery-ledger.json")]),
       design: fingerprintPaths(this.root, [join(workspace, "architecture-design.md"), join(workspace, "visual-design.md"), join(workspace, "view-state-matrix.md")]),
-      plan: fingerprintPaths(this.root, [join(workspace, "implementation-plan.md")]),
-      contracts: fingerprintPaths(this.root, [join("packages", "contracts", "src")]),
+      plan: ledger
+        ? sha256(JSON.stringify({
+          document: fingerprintPaths(this.root, [join(workspace, "implementation-plan.md")]),
+          tasks: ledger.tasks?.map((task) => Object.fromEntries(Object.entries(task)
+            .filter(([key]) => !["status", "evidence_refs", "blocked_by", "approval"].includes(key)))),
+        }))
+        : fingerprintPaths(this.root, [join(workspace, "implementation-plan.md")]),
+      contracts: fingerprintPaths(this.root, ledger
+        ? [...new Set(ledger.capabilities.flatMap((capability) => capability.contract_refs ?? []))]
+        : [join("packages", "contracts", "src")]),
       code: fingerprintPaths(this.root, ["src", join("apps", "mobile")], [join("src", "test"), join("apps", "mobile", "test")]),
       tests: fingerprintPaths(this.root, [join("src", "test"), join("apps", "mobile", "test")]),
     };
   }
 
-  initialize({ suite, moduleName, platformScope = ["desktop_web", "mobile_web", "ios", "android"] }) {
+  initialize({ suite, moduleName, platformScope = null, profile = "implementation-first", sliceId = null }) {
     if (!suite || !moduleName) throw new Error("--suite and --module are required");
-    const createdFiles = this.materializeWorkspace(suite, moduleName);
+    const selectedWorkflow = workflowForRun(this.workflow, { profile, suite, module: moduleName, slice_id: sliceId });
+    platformScope ??= ["implementation-first", "supplier-pilot"].includes(profile)
+      ? ["desktop_web", "mobile_web"]
+      : ["desktop_web", "mobile_web", "ios", "android"];
+    if (profile === "supplier-pilot" && (!["desktop_web", "mobile_web"].every((platform) => platformScope.includes(platform))
+      || platformScope.some((platform) => !["desktop_web", "mobile_web", "ios", "android"].includes(platform)))) {
+      throw new Error("Pilot platform scope requires desktop_web and mobile_web and only supported platforms");
+    }
+    const createdFiles = this.materializeWorkspace(suite, moduleName, selectedWorkflow);
     const runs = join(this.workspace(suite, moduleName), "runs");
     mkdirSync(runs, { recursive: true });
     const sequenceFile = join(runs, ".sequence");
@@ -122,14 +177,14 @@ export class DeliveryStateMachine {
     const runId = `MOD-${slug(moduleName).toUpperCase()}-${this.now().slice(0, 10).replaceAll("-", "")}-${sequence}`;
     const directory = this.runDirectory(suite, moduleName, runId);
     mkdirSync(directory, { recursive: true });
-    const approvals = Object.fromEntries(this.workflow.gates.map((gate) => [gate, {
+    const approvals = Object.fromEntries(selectedWorkflow.gates.map((gate) => [gate, {
       status: "pending", approved_by: null, approved_at: null, role: null,
       artifact: null, artifact_fingerprint: null, source: null,
     }]));
-    const fingerprints = this.fingerprints(suite, moduleName);
+    const fingerprints = this.fingerprints(suite, moduleName, profile);
     const manifest = {
       schema_version: 1, workflow_version: this.workflow.schema_version, run_id: runId,
-      suite: slug(suite), module: moduleName, status: "running", current_phase: this.workflow.initial_phase,
+      suite: slug(suite), module: moduleName, status: "running", current_phase: selectedWorkflow.initial_phase,
       attempt: 1, started_at: this.now(), updated_at: this.now(),
       input_fingerprint: sha256(JSON.stringify(fingerprints)), fingerprints,
       environment: {
@@ -142,9 +197,17 @@ export class DeliveryStateMachine {
       platform_scope: platformScope, approvals, approval_gates: [], architecture_quality: "PENDING",
       platform_impact: [], checkpoint_paths: [], evidence_links: [], change_requests: [], blocked_by: [],
       invalidated_phases: [], invalidation_reason: null, shared_contract_inputs: ["packages/contracts/src"],
-      next_action: `Start phase ${this.workflow.initial_phase}.`, handoffs: [], commit: null, pull_request: null,
+      next_action: `Start phase ${selectedWorkflow.initial_phase}.`, handoffs: [], commit: null, pull_request: null,
       retention: { contains_pii: false, redacted: true, retention_class: "engineering-documentation" },
     };
+    if (profile !== "standard") {
+      manifest.profile = profile;
+      if (sliceId) manifest.slice_id = sliceId;
+    }
+    if (profile === "supplier-pilot") {
+      manifest.approval_history = [];
+      manifest.iterations = [];
+    }
     writeJson(join(directory, "run.json"), manifest);
     return { run_id: runId, workspace: relative(this.root, this.workspace(suite, moduleName)), created_files: createdFiles };
   }
@@ -173,9 +236,29 @@ export class DeliveryStateMachine {
   }
 
   assertCanStart(manifest, checkpoints, suite, moduleName, phaseId, skill) {
-    const phase = this.phaseById.get(phaseId);
+    const workflow = workflowForRun(this.workflow, manifest);
+    const phase = workflow.phases.find((candidate) => candidate.id === phaseId);
     if (!phase) throw new Error(`Unknown phase: ${phaseId}`);
     if (skill !== phase.skill) throw new Error(`Phase ${phaseId} must be owned by ${phase.skill}`);
+    if (manifest.profile === "supplier-pilot") {
+      if (manifest.approvals.visual_design?.status === "approved") this.assertApprovedBaseline(manifest, suite, moduleName);
+      if (manifest.blocked_by?.length) throw new Error("Resolve pilot blockers with resume before starting another phase");
+      if (phaseId === "07-build") {
+        const plan = checkpoints.get("06-plan")?.checkpoint;
+        if (plan?.validated_fingerprints?.plan !== this.fingerprints(suite, moduleName, manifest.profile).plan) {
+          throw new Error("Plan inputs changed; resume and complete the plan again");
+        }
+        const ledger = readJson(join(this.workspace(suite, moduleName), "delivery-ledger.json"));
+        const selectedTasks = ledger.tasks.filter((task) => plan.task_ids.includes(task.id));
+        if (!selectedTasks.length || selectedTasks.some((task) => !["ready", "in_progress", "done"].includes(task.status) || task.blocked_by?.length)) {
+          throw new Error("Pilot build requires ready, unblocked tasks in the approved slice");
+        }
+      }
+      if (["08-verify", "09-review", "10-git"].includes(phaseId)) {
+        const build = checkpoints.get("07-build")?.checkpoint;
+        if (!this.currentEvidence(manifest, build, suite, moduleName)) throw new Error("Build inputs changed; iterate and rebuild before verification or delivery");
+      }
+    }
     if (checkpoints.get(phaseId)?.checkpoint.status === "completed" && !checkpoints.get(phaseId)?.checkpoint.invalidated) throw new Error(`Phase ${phaseId} is already completed`);
     for (const predecessor of phase.predecessors) {
       const checkpoint = checkpoints.get(predecessor)?.checkpoint;
@@ -188,6 +271,10 @@ export class DeliveryStateMachine {
         && planTaskIds.length > 0
         && planTaskIds.every((taskId) => readyTaskIds.includes(taskId));
       if (!scopedBuildApproved) throw new Error(`Phase ${phaseId} requires approved gate ${phase.required_gate}`);
+    }
+    if (manifest.profile === "supplier-pilot" && phase.required_gate
+      && !this.approvalArtifactCurrent(manifest.approvals[phase.required_gate])) {
+      throw new Error(`Approved ${phase.required_gate} artifact changed; obtain approval of the current version`);
     }
     if (phaseId === "08-verify" || phaseId === "10-git") {
       const ledgerFile = join(this.workspace(suite, moduleName), "delivery-ledger.json");
@@ -202,16 +289,21 @@ export class DeliveryStateMachine {
     const checkpoints = this.checkpoints(suite, moduleName, runId);
     this.assertCanStart(manifest, checkpoints, suite, moduleName, phaseId, skill);
     let taskIds = [];
-    if (phaseId === "06-plan") {
+    if (phaseId === "06-plan" || (phaseId === "07-build" && manifest.profile === "supplier-pilot")) {
       const ledger = readJson(join(this.workspace(suite, moduleName), "delivery-ledger.json"));
-      taskIds = ledger.status === "approved"
-        ? ledger.tasks.map((task) => task.id)
-        : this.scopedReadyTaskIds(suite, moduleName);
+      taskIds = phaseId === "07-build"
+        ? [...(checkpoints.get("06-plan")?.checkpoint.task_ids ?? [])]
+        : ledger.status === "approved"
+          ? ledger.tasks.map((task) => task.id)
+          : this.scopedReadyTaskIds(suite, moduleName);
     } else if (phaseId === "07-build") {
       const ledger = readJson(join(this.workspace(suite, moduleName), "delivery-ledger.json"));
-      taskIds = this.approvalStatus(manifest, "plan") === "approved"
-        ? ledger.tasks.map((task) => task.id)
-        : [...(checkpoints.get("06-plan")?.checkpoint.task_ids ?? [])];
+      const plannedTaskIds = checkpoints.get("06-plan")?.checkpoint.task_ids ?? [];
+      taskIds = plannedTaskIds.length
+        ? [...plannedTaskIds]
+        : ledger.status === "approved"
+          ? ledger.tasks.map((task) => task.id)
+          : [];
     }
     const checkpoint = {
       schema_version: 1, run_id: runId, span_id: `${runId}:${phaseId}`, phase: phaseId, skill,
@@ -240,6 +332,10 @@ export class DeliveryStateMachine {
     const entry = this.checkpoints(suite, moduleName, runId).get(phaseId);
     if (!entry) throw new Error(`Phase ${phaseId} has not been started`);
     if (entry.checkpoint.status !== "running") throw new Error(`Phase ${phaseId} must be running before completion`);
+    if (manifest.profile === "supplier-pilot") {
+      this.assertCanStart({ ...manifest }, new Map([...this.checkpoints(suite, moduleName, runId)]
+        .filter(([phase]) => phase !== phaseId)), suite, moduleName, phaseId, entry.checkpoint.skill);
+    }
     const checkpoint = {
       ...entry.checkpoint,
       architecture_quality: data.architecture_quality,
@@ -252,10 +348,23 @@ export class DeliveryStateMachine {
       evidence: data.evidence ?? entry.checkpoint.evidence,
       next_handoff: data.next_handoff ?? entry.checkpoint.next_handoff,
     };
+    if (manifest.profile === "supplier-pilot" && phaseId === "06-plan") {
+      checkpoint.prebuild_decisions = data.prebuild_decisions;
+      for (const area of ["domain", "access", "persistence", "platform_reuse", "rollback"]) {
+        if (typeof checkpoint.prebuild_decisions?.[area] !== "string" || !checkpoint.prebuild_decisions[area].trim()) {
+          throw new Error(`Pilot plan requires prebuild_decisions.${area}`);
+        }
+      }
+    }
     if (!this.workflow.architecture_completion_states.includes(checkpoint.architecture_quality)) throw new Error("Completion requires architecture_quality PASS or PASS_WITH_DEBT");
     if (!checkpoint.output_artifacts?.length) throw new Error("Completion requires output_artifacts");
     for (const artifact of checkpoint.output_artifacts) {
       if (!existsSync(join(this.root, artifact))) throw new Error(`Completion output artifact does not exist: ${artifact}`);
+    }
+    const verificationReport = workflowForRun(this.workflow, manifest).verification_report;
+    if (phaseId === "08-verify" && verificationReport
+      && !checkpoint.output_artifacts.some((artifact) => basename(artifact) === verificationReport)) {
+      throw new Error(`Verification must produce ${verificationReport}`);
     }
     if (!checkpoint.validation?.length) throw new Error("Completion requires validation evidence");
     if (checkpoint.validation.some((validation) => !validation.command)) throw new Error("Every validation entry requires a command");
@@ -281,17 +390,23 @@ export class DeliveryStateMachine {
         throw new Error("Plan completion requires an approved ledger or an approved task scope");
       }
       if (phaseId === "07-build") {
-        const requiredTasks = ledger.status === "approved" ? ledger.tasks : ledger.tasks.filter((task) => taskIds?.includes(task.id));
+        const requiredTasks = taskIds?.length ? ledger.tasks.filter((task) => taskIds.includes(task.id)) : ledger.tasks;
         if (requiredTasks.some((task) => task.status !== "done")) {
-          throw new Error(ledger.status === "approved"
-            ? "Build completion requires every ledger task to be done with evidence"
-            : "Build completion requires every approved scoped task to be done with evidence");
+          throw new Error(taskIds?.length
+            ? "Build completion requires every approved scoped task to be done with evidence"
+            : "Build completion requires every ledger task to be done with evidence");
         }
       }
     }
     checkpoint.status = "completed";
     checkpoint.decision_status = "confirmed";
     checkpoint.completed_at = this.now();
+    if (manifest.profile === "supplier-pilot") {
+      checkpoint.validated_fingerprints = this.fingerprints(suite, moduleName, manifest.profile);
+      manifest.fingerprints = checkpoint.validated_fingerprints;
+      manifest.input_fingerprint = sha256(JSON.stringify(manifest.fingerprints));
+      manifest.invalidated_phases = manifest.invalidated_phases.filter((phase) => phase !== phaseId);
+    }
     checkpoint.approval_gate = checkpoint.approval_gate?.status === "approved" ? checkpoint.approval_gate : { status: "not_required", approved_by: null, approved_at: null };
     writeJson(entry.file, checkpoint);
     manifest.updated_at = this.now();
@@ -318,11 +433,34 @@ export class DeliveryStateMachine {
 
   approve({ suite, moduleName, runId, gate, approvedBy, role, artifact, artifactFingerprint, source }) {
     const { file, manifest } = this.loadRun(suite, moduleName, runId);
-    if (!this.workflow.gates.includes(gate)) throw new Error(`Unknown approval gate: ${gate}`);
+    const workflow = workflowForRun(this.workflow, manifest);
+    if (!workflow.gates.includes(gate)) throw new Error(`Unknown approval gate: ${gate}`);
     if (!approvedBy || !role || !artifact || !artifactFingerprint || !source) throw new Error("Approval requires --by, --role, --artifact, --fingerprint and --source");
     if (!/^sha256:[a-f0-9]{64}$/.test(artifactFingerprint)) throw new Error("Approval fingerprint must be sha256:<64 hex>");
+    if (manifest.profile === "supplier-pilot") {
+      const requiredPhase = { visual_design: "01-visual-design", product_acceptance: "07-build", release: "09-review", push: "09-review", pull_request: "09-review" }[gate];
+      const checkpoint = this.checkpoints(suite, moduleName, runId).get(requiredPhase)?.checkpoint;
+      if (checkpoint?.status !== "completed" || checkpoint.invalidated) throw new Error(`Gate ${gate} requires completed phase ${requiredPhase}`);
+      if (gate !== "visual_design") {
+        this.assertApprovedBaseline(manifest, suite, moduleName);
+        if (!this.currentEvidence(manifest, checkpoint, suite, moduleName)) throw new Error(`Gate ${gate} requires current implementation/test evidence`);
+      }
+      if (["push", "pull_request"].includes(gate) && !this.approvalArtifactCurrent(manifest.approvals.release)) {
+        throw new Error(`Gate ${gate} requires release approval`);
+      }
+      if (!existsSync(join(this.root, artifact))) throw new Error(`Approval artifact does not exist: ${artifact}`);
+      if (!checkpoint.output_artifacts.includes(artifact)) throw new Error(`Gate ${gate} requires an output artifact from ${requiredPhase}`);
+      if (sha256(readFileSync(join(this.root, artifact))) !== artifactFingerprint) throw new Error("Approval fingerprint does not match the artifact");
+      manifest.approval_history.push({ gate, approval: manifest.approvals[gate], replaced_at: this.now() });
+    }
     manifest.approvals[gate] = { status: "approved", approved_by: approvedBy, approved_at: this.now(), role,
       artifact, artifact_fingerprint: artifactFingerprint, source };
+    if (manifest.profile === "supplier-pilot") {
+      manifest.approvals[gate].slice_id = manifest.slice_id;
+      manifest.approvals[gate].baseline = this.fingerprints(suite, moduleName, manifest.profile);
+      manifest.fingerprints = manifest.approvals[gate].baseline;
+      manifest.input_fingerprint = sha256(JSON.stringify(manifest.fingerprints));
+    }
     manifest.approval_gates = [...new Set([...(manifest.approval_gates ?? []), gate])];
     manifest.updated_at = this.now();
     writeJson(file, manifest);
@@ -333,7 +471,7 @@ export class DeliveryStateMachine {
     const { file, manifest } = this.loadRun(suite, moduleName, runId);
     const checkpoints = this.checkpoints(suite, moduleName, runId);
     if (checkpoints.get(from)?.checkpoint.status !== "completed") throw new Error(`Cannot hand off incomplete phase ${from}`);
-    const target = this.phaseById.get(to);
+    const target = workflowForRun(this.workflow, manifest).phases.find((phase) => phase.id === to);
     if (!target) throw new Error(`Unknown handoff target: ${to}`);
     this.assertCanStart(manifest, checkpoints, suite, moduleName, to, target.skill);
     const handoff = { from, to, owner, at: this.now(), input_fingerprint: manifest.input_fingerprint };
@@ -348,9 +486,11 @@ export class DeliveryStateMachine {
   resume({ suite, moduleName, runId, reason }) {
     const { file, manifest } = this.loadRun(suite, moduleName, runId);
     if (!reason) throw new Error("Resume requires --reason");
-    const current = this.fingerprints(suite, moduleName);
+    const workflow = workflowForRun(this.workflow, manifest);
+    const current = this.fingerprints(suite, moduleName, manifest.profile);
     const changedCategories = Object.keys(current).filter((category) => manifest.fingerprints?.[category] !== current[category]);
-    const invalidated = [...new Set(changedCategories.flatMap((category) => this.workflow.fingerprint_invalidation[category] ?? []))];
+    const invalidated = [...new Set(changedCategories.flatMap((category) => this.workflow.fingerprint_invalidation[category] ?? []))]
+      .filter((phase) => workflow.phases.some((candidate) => candidate.id === phase));
     const approvalInvalidation = {
       product: ["design", "visual_design", "plan", "verification", "release"],
       scope: ["design", "visual_design", "plan", "verification", "release"],
@@ -361,12 +501,22 @@ export class DeliveryStateMachine {
       tests: ["verification", "release"],
     };
     const invalidatedApprovals = [...new Set(changedCategories.flatMap((category) => approvalInvalidation[category] ?? []))];
-    for (const gate of invalidatedApprovals) {
+    if (manifest.profile === "supplier-pilot") {
+      if (changedCategories.some((category) => ["product", "scope", "design", "contracts"].includes(category))) invalidatedApprovals.push("visual_design");
+      if (changedCategories.length) invalidatedApprovals.push("product_acceptance", "release", "push", "pull_request");
+    }
+    const affectedApprovals = [...new Set(invalidatedApprovals)].filter((gate) => workflow.gates.includes(gate));
+    for (const gate of affectedApprovals) {
       const approval = manifest.approvals?.[gate];
       if (!approval || this.approvalStatus(manifest, gate) !== "approved") continue;
+      if (manifest.profile === "supplier-pilot") manifest.approval_history.push({ gate, approval, replaced_at: this.now() });
       manifest.approvals[gate] = { ...approval, status: "pending", invalidated_at: this.now(), invalidation_reason: `Changed inputs: ${changedCategories.join(", ")}` };
     }
     const checkpoints = this.checkpoints(suite, moduleName, runId);
+    if (manifest.profile === "supplier-pilot" && changedCategories.length) {
+      manifest.iterations.push({ at: this.now(), reason, slice_id: manifest.slice_id, changed_categories: changedCategories,
+        checkpoints: [...checkpoints.values()].map(({ checkpoint }) => checkpoint) });
+    }
     for (const phaseId of invalidated) {
       const entry = checkpoints.get(phaseId);
       if (!entry || entry.checkpoint.status !== "completed") continue;
@@ -381,7 +531,7 @@ export class DeliveryStateMachine {
     manifest.invalidation_reason = changedCategories.length ? `Changed inputs: ${changedCategories.join(", ")}` : null;
     manifest.updated_at = this.now();
     const refreshed = this.checkpoints(suite, moduleName, runId);
-    const nextPhase = this.workflow.phases.find((phase) => {
+    const nextPhase = workflow.phases.find((phase) => {
       const checkpoint = refreshed.get(phase.id)?.checkpoint;
       if (checkpoint?.status === "completed" && !checkpoint.invalidated) return false;
       return phase.predecessors.every((predecessor) => {
@@ -396,9 +546,94 @@ export class DeliveryStateMachine {
     return {
       schema_version: 1, run_id: runId, attempt: manifest.attempt, reason,
       changed_categories: changedCategories, invalidated_phases: invalidated,
-      invalidated_approvals: invalidatedApprovals,
+      invalidated_approvals: affectedApprovals,
       blockers: manifest.blocked_by ?? [], last_valid_phase: [...refreshed.values()].filter(({ checkpoint }) => checkpoint.status === "completed" && !checkpoint.invalidated).at(-1)?.checkpoint.phase ?? null,
       next_phase: nextPhase?.id ?? null, next_skill: nextPhase?.skill ?? null, next_action: manifest.next_action,
     };
+  }
+
+  iterate({ suite, moduleName, runId, reason }) {
+    const { file, manifest } = this.loadRun(suite, moduleName, runId);
+    if (manifest.profile !== "supplier-pilot") throw new Error("Iteration is only available for supplier-pilot runs");
+    if (!reason?.trim()) throw new Error("Iteration requires --reason");
+    const checkpoints = this.checkpoints(suite, moduleName, runId);
+    const build = checkpoints.get("07-build")?.checkpoint;
+    if (build?.status !== "completed" || build.invalidated) throw new Error("Iteration requires a completed build");
+    const plan = checkpoints.get("06-plan")?.checkpoint;
+    if (plan?.status !== "completed" || plan.invalidated) throw new Error("Iteration requires a valid completed plan");
+    this.assertApprovedBaseline(manifest, suite, moduleName);
+    const invalidated = ["07-build", "08-verify", "09-review", "10-git"];
+    for (const phase of invalidated) {
+      const entry = checkpoints.get(phase);
+      if (entry) writeJson(entry.file, { ...entry.checkpoint, invalidated: true, invalidation_reason: reason });
+    }
+    for (const gate of ["product_acceptance", "release", "push", "pull_request"]) {
+      const approval = manifest.approvals[gate];
+      if (approval.status === "approved") manifest.approval_history.push({ gate, approval, replaced_at: this.now() });
+      manifest.approvals[gate] = { ...approval, status: "pending" };
+    }
+    manifest.iterations.push({ at: this.now(), reason, slice_id: manifest.slice_id,
+      checkpoints: [...checkpoints.values()].map(({ checkpoint }) => checkpoint) });
+    manifest.attempt += 1;
+    manifest.current_phase = "07-build";
+    manifest.status = "running";
+    manifest.updated_at = this.now();
+    manifest.invalidated_phases = [...new Set([...manifest.invalidated_phases, ...invalidated])];
+    manifest.next_action = "Start 07-build for the approved slice; obtain acceptance and verification again.";
+    writeJson(file, manifest);
+    return { run_id: runId, slice_id: manifest.slice_id, next_phase: "07-build", invalidated_phases: invalidated };
+  }
+
+  assertApprovedBaseline(manifest, suite, moduleName) {
+    const approval = manifest.approvals.visual_design;
+    if (approval?.status !== "approved") throw new Error("Pilot requires scope/visual approval");
+    if (!this.approvalArtifactCurrent(approval)) throw new Error("Approved visual artifact changed; obtain approval of the reviewed version");
+    const current = this.fingerprints(suite, moduleName, manifest.profile);
+    for (const category of ["product", "scope", "design", "contracts"]) {
+      if (approval.baseline?.[category] !== current[category]) throw new Error(`Approved ${category} changed; resume and reapprove`);
+    }
+  }
+
+  approvalArtifactCurrent(approval) {
+    return approval?.status === "approved" && typeof approval.artifact === "string"
+      && existsSync(join(this.root, approval.artifact))
+      && sha256(readFileSync(join(this.root, approval.artifact))) === approval.artifact_fingerprint;
+  }
+
+  currentEvidence(manifest, checkpoint, suite, moduleName) {
+    if (!checkpoint?.validated_fingerprints) return false;
+    const current = this.fingerprints(suite, moduleName, manifest.profile);
+    if (!["product", "scope", "design", "plan", "contracts", "code", "tests"]
+      .every((category) => checkpoint.validated_fingerprints[category] === current[category])) return false;
+    const ledgerFile = join(this.workspace(suite, moduleName), "delivery-ledger.json");
+    const ledger = readJson(ledgerFile);
+    const build = this.checkpoints(suite, moduleName, manifest.run_id).get("07-build")?.checkpoint;
+    if (build?.status !== "completed" || build.invalidated) return false;
+    const taskIds = build.task_ids ?? [];
+    const selectedTasks = taskIds.map((taskId) => ledger.tasks.find((task) => task.id === taskId));
+    return selectedTasks.length > 0 && selectedTasks.every((task) => task?.status === "done" && !task.blocked_by?.length)
+      && validateLedgerFile(this.root, ledgerFile, { stage: "implementation", taskIds }).length === 0;
+  }
+
+  inspect({ suite, moduleName, runId }) {
+    const { manifest } = this.loadRun(suite, moduleName, runId);
+    const checkpoints = this.checkpoints(suite, moduleName, runId);
+    const completed = (phase) => {
+      const checkpoint = checkpoints.get(phase)?.checkpoint;
+      return checkpoint?.status === "completed" && !checkpoint.invalidated
+        && (manifest.profile !== "supplier-pilot" || !["07-build", "08-verify", "09-review"].includes(phase)
+          || this.currentEvidence(manifest, checkpoint, suite, moduleName));
+    };
+    return { ...manifest, completion_scope: manifest.profile === "supplier-pilot" ? { type: "slice", id: manifest.slice_id } : { type: "module" }, milestones: {
+      prototype: completed("01-visual-design"),
+      implemented: completed("07-build"),
+      product_accepted: completed("07-build") && this.approvalArtifactCurrent(manifest.approvals.product_acceptance),
+      verified: completed("08-verify"),
+      ready_for_delivery: completed("09-review") && (manifest.profile === "supplier-pilot"
+        ? this.approvalArtifactCurrent(manifest.approvals.release) && this.approvalArtifactCurrent(manifest.approvals.product_acceptance)
+          && this.approvalArtifactCurrent(manifest.approvals.visual_design)
+        : manifest.approvals.release?.status === "approved"),
+      publication: "not_recorded",
+    } };
   }
 }

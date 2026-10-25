@@ -20,6 +20,17 @@ production repository and should be reviewed with the module design.
 
 ## Execution phases
 
+The table below is the standard profile. Explicit `supplier-pilot` runs for
+`erp/Proveedores` use their own graph in `delivery-workflow.json` and the
+bounded exception in `MODULE_DELIVERY_AGENT_CONTRACT.md`. Do not fabricate
+specialist checkpoints for phases absent from that graph. Each pilot run
+records a stable slice ID, semantic approval baselines, approval history and
+checkpoint snapshots for feedback/resume iterations. The current checkpoint
+is the latest attempt; snapshots retain its preceding evidence.
+Task progress is execution state, not a new approved product definition.
+Use `delivery inspect` to distinguish product acceptance, verification,
+slice release readiness and unrecorded publication.
+
 | Phase | Primary skill | Purpose | Completion gate |
 |---|---|---|---|
 | `00-discovery` | `module-discovery` | Expected capabilities and existing-state comparison | Scope, domain baseline and handoff matrix complete |

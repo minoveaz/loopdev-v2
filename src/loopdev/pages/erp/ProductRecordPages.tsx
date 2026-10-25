@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Save } from "lucide-react";
 import { AppDrawer } from "@/components/platform";
 import { FormSectionHeader, LoadingState, PageContainer, PageHeader, StatusBadge } from "@/components/common";
@@ -79,6 +79,45 @@ const emptyForm = (): ProductForm => ({
   costCurrency: "EUR",
   status: "draft",
 });
+
+type SupplierProductHandoff = {
+  organizationId: string;
+  supplierId: string;
+  supplierItemId: string;
+  version: number;
+  name: string;
+  supplierItemCode: string | null;
+  purchaseUnit: string;
+};
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === "string";
+}
+
+function readSupplierProductHandoff(state: unknown): SupplierProductHandoff | null {
+  if (!state || typeof state !== "object" || !("supplierProductHandoff" in state)) return null;
+  const handoff = state.supplierProductHandoff;
+  if (!handoff || typeof handoff !== "object") return null;
+  if (!("organizationId" in handoff) || typeof handoff.organizationId !== "string") return null;
+  if (!("supplierId" in handoff) || typeof handoff.supplierId !== "string") return null;
+  if (!("supplierItemId" in handoff) || typeof handoff.supplierItemId !== "string") return null;
+  if (!("version" in handoff) || typeof handoff.version !== "number") return null;
+  if (!("name" in handoff) || typeof handoff.name !== "string") return null;
+  if (!("supplierItemCode" in handoff)) return null;
+  const rawSupplierItemCode = handoff.supplierItemCode;
+  if (!isNullableString(rawSupplierItemCode)) return null;
+  const supplierItemCode = typeof rawSupplierItemCode === "string" ? rawSupplierItemCode : null;
+  if (!("purchaseUnit" in handoff) || typeof handoff.purchaseUnit !== "string") return null;
+  return {
+    organizationId: handoff.organizationId,
+    supplierId: handoff.supplierId,
+    supplierItemId: handoff.supplierItemId,
+    version: handoff.version,
+    name: handoff.name,
+    supplierItemCode,
+    purchaseUnit: handoff.purchaseUnit,
+  };
+}
 
 const slugify = (value: string) => value.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 const stringValue = (value: unknown) => typeof value === "string" ? value : "";
@@ -190,8 +229,10 @@ function ReferenceQuickDrawer({
 export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; itemId: string | null }) {
   const t = useT();
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeOrganization } = useTenantContext();
   const organizationId = activeOrganization?.id ?? "";
+  const supplierHandoff = useMemo(() => readSupplierProductHandoff(location.state), [location.state]);
   const previousItemId = useRef(itemId);
   const [item, setItem] = useState<CatalogItem | null>(null);
   const [variants, setVariants] = useState<CatalogVariant[]>([]);
@@ -203,6 +244,17 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
   const [saving, setSaving] = useState(false);
   const [quickCreateKind, setQuickCreateKind] = useState<ProductReferenceKind | null>(null);
   const [costReadable, setCostReadable] = useState(true);
+
+  useEffect(() => {
+    if (mode !== "create" || !supplierHandoff || supplierHandoff.organizationId !== organizationId) return;
+    setForm((current) => current.name ? current : {
+      ...current,
+      name: supplierHandoff.name,
+      itemKind: "product",
+      sourcingMode: "buy",
+      canPurchase: true,
+    });
+  }, [mode, organizationId, supplierHandoff]);
 
   useEffect(() => {
     if (!itemId && previousItemId.current) {
@@ -322,6 +374,10 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
 
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (supplierHandoff && supplierHandoff.organizationId !== organizationId) {
+      setSaveError("The active organization changed. Return to the supplier and start product creation again.");
+      return;
+    }
     if (!organizationId || !form.name.trim()) {
       setSaveError(t("common.erpProductRecord.requiredFields"));
       return;
@@ -419,7 +475,17 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
           currency: form.costCurrency,
         });
       }
-      navigate(`/app/erp/products/${savedItem.id}`);
+      if (mode === "create" && supplierHandoff) {
+        const params = new URLSearchParams({
+          supplier: supplierHandoff.supplierId,
+          linkSupplierItem: supplierHandoff.supplierItemId,
+          linkProduct: savedItem.id,
+          linkVersion: String(supplierHandoff.version),
+        });
+        navigate(`/app/erp/suppliers?${params.toString()}`);
+      } else {
+        navigate(`/app/erp/products/${savedItem.id}`);
+      }
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : t("common.erpProductRecord.saveError"));
     } finally {

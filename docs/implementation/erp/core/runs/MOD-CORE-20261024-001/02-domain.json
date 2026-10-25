@@ -4,24 +4,25 @@
   "span_id": "MOD-CORE-20261024-001:02-domain",
   "phase": "02-domain",
   "skill": "domain-model",
-  "parent_span_id": "MOD-CORE-20261024-001:01-visual-design",
-  "module": "Core",
-  "status": "deviated",
+  "parent_span_id": null,
+  "module": "core",
+  "status": "running",
   "decision_status": "confirmed",
-  "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 5,
-  "started_at": "2026-10-24T14:42:11.321Z",
-  "completed_at": "2026-10-24T14:48:08.803Z",
-  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "architecture_quality": "PENDING",
+  "attempt": 13,
+  "started_at": "2026-10-25T16:17:15.648Z",
+  "completed_at": null,
+  "input_fingerprint": "sha256:8efd4ab86c7e61cd28da0b676118fd145e3a4b050d7b5d7c6f10aca8a3c7a834",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
-    "working_tree": "untracked ERP implementation docs; no production code changes",
-    "runtime_url": null,
-    "runtime_port": null
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified worktree (50 paths): Products planning/evidence, Catalog adapter/tests and local migrations; no Supabase remote writes or migration applications.",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080,
+    "serving_process": "Vite dev server (node PID 32300)"
   },
   "input_artifacts": [
     "docs/implementation/erp/core/discovery.md",
@@ -30,12 +31,30 @@
     "docs/implementation/erp/core/delivery-ledger.json",
     "docs/implementation/erp/core/visual-design.md",
     "docs/implementation/erp/core/view-state-matrix.md",
+    "docs/implementation/erp/core/platform-scope.md",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
     "docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md",
+    "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
+    "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+    "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md",
     "src/loopdev/domains/catalog/types.ts",
     "src/loopdev/domains/catalog/adapter/local.ts",
     "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "src/loopdev/domains/catalog/media/types.ts",
+    "src/loopdev/domains/catalog/media/adapter.ts",
+    "src/loopdev/domains/catalog/adapter/product-media-local.ts",
+    "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
+    "src/loopdev/domains/catalog/adapter/index.ts",
+    "src/loopdev/pages/erp/ProductMediaGalleryManager.tsx",
+    "src/loopdev/pages/erp/ProductRecordPages.tsx",
+    "src/loopdev/domains/files/types.ts",
     "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
-    "src/test/catalog/catalog-adapter.test.ts"
+    "supabase/migrations/20261024180000_erp_product_details_and_references.sql",
+    "supabase/migrations/20261025100000_erp_product_media_library.sql",
+    "src/test/catalog/catalog-adapter.test.ts",
+    "src/test/erp/product-media.test.tsx",
+    "src/test/erp/product-record-pages.test.tsx",
+    "docs/implementation/_templates/phase-evidence.md"
   ],
   "output_artifacts": [
     "docs/implementation/erp/core/domain-model.md",
@@ -114,13 +133,13 @@
     },
     {
       "id": "DOM-ERP-015",
-      "status": "open",
-      "summary": "Define mapping of legacy categoryKey references to organization-scoped ProductCategory keys."
+      "status": "assumed",
+      "summary": "Preserve legacy category keys as provenance and require a reviewed record-level mapping; never infer target categories from opaque legacy keys."
     },
     {
       "id": "DOM-ERP-016",
-      "status": "open",
-      "summary": "Assign target-domain owners and migration mappings for legacy OrganizationCatalog locale and channel fields."
+      "status": "confirmed",
+      "summary": "Locale and channel are outside Products scope for this release; preserve them as migration provenance and defer ownership to future localization/channel work."
     },
     {
       "id": "DOM-ERP-017",
@@ -131,6 +150,46 @@
       "id": "DOM-ERP-018",
       "status": "confirmed",
       "summary": "Offer has no independent currency; offer prices use the currency of their associated PriceBook."
+    },
+    {
+      "id": "DOM-ERP-023",
+      "status": "confirmed",
+      "summary": "Cost reference belongs to the purchasable unit: product when no SKUs exist, otherwise independent values per purchasable SKU with no inheritance."
+    },
+    {
+      "id": "DOM-ERP-024",
+      "status": "confirmed",
+      "summary": "Each cost reference carries its own ISO currency; there is no automatic conversion or inheritance from a sales PriceBook."
+    },
+    {
+      "id": "DOM-ERP-025",
+      "status": "confirmed",
+      "summary": "Physical measurements are independent per managed unit, with optional weight in kg and dimensions in cm for this release."
+    },
+    {
+      "id": "DOM-ERP-026",
+      "status": "confirmed",
+      "summary": "Product/SKU alt text belongs to the media assignment, not the reusable Platform File."
+    },
+    {
+      "id": "DOM-ERP-027",
+      "status": "confirmed",
+      "summary": "Product media is organization-scoped and reusable; Platform Files owns bytes/common file metadata while ERP Products owns the association."
+    },
+    {
+      "id": "DOM-ERP-028",
+      "status": "assumed",
+      "summary": "Purchase cost is an optional current value; cost history/source requirements are not confirmed."
+    },
+    {
+      "id": "DOM-ERP-029",
+      "status": "assumed",
+      "summary": "Detaching a Product media assignment preserves the reusable asset and shared Platform File."
+    },
+    {
+      "id": "DOM-ERP-031",
+      "status": "confirmed",
+      "summary": "Product and SKU galleries support multiple media assignments with an explicit manual order scoped to each target gallery."
     }
   ],
   "actions": [
@@ -138,18 +197,22 @@
     "Documented entity/cardinality, lifecycle transitions, invariants, commands and proposed domain events.",
     "Recorded per-entity ownership, local fixture strategy, remote identity, archive/delete/restore behavior and event boundaries.",
     "Identified legacy category, type mapping, workspace scope, cascade-delete and version/audit gaps.",
-    "Kept production implementation and permission/API/synchronization contracts out of scope."
+    "Reconciled purchase-cost ownership/currency, physical measurements and Product media entity boundaries with current Product Owner decisions.",
+    "Recorded the Product Owner's follow-up confirmation that product and SKU media galleries support manual ordering.",
+    "Recorded cross-boundary media retention, shared tag ownership, cost history and precision as explicit downstream questions.",
+    "Kept production implementation and permission/API/synchronization contracts out of scope.",
+    "Revalidated the domain model against refreshed discovery and current visual scope in attempt 11; no domain decisions changed."
   ],
   "validation": [
     {
-      "command": "npm run delivery:validate",
+      "command": "npm run test:delivery",
       "result": "passed",
-      "evidence": "Module run validation passed: 101 checkpoint file(s) checked (36 archived legacy record(s))."
+      "evidence": "All 34 delivery state-machine and evidence tests passed."
     },
     {
       "command": "npm run validate:delivery-ledgers",
       "result": "passed",
-      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+      "evidence": "Delivery ledger validation passed: 8 ledgers checked."
     },
     {
       "command": "npm run validate:multiplatform",
@@ -157,14 +220,14 @@
       "evidence": "Multiplatform delivery validation passed."
     },
     {
-      "command": "npm run test:delivery",
-      "result": "passed (27 tests)",
-      "evidence": "Delivery state-machine and evidence tests passed."
+      "command": "Review domain-model.md against refreshed discovery.md, approved visual scope and source contracts",
+      "result": "passed",
+      "evidence": "Product, category, cost, physical-attribute and media semantics remain consistent; runtime mode/tenant issues are tracked outside domain rules, and unresolved items remain explicit."
     },
     {
-      "command": "python3 ERP JSON/SVG/Markdown-link check",
+      "command": "git diff --check",
       "result": "passed",
-      "evidence": "Parsed 6 JSON files and 5 SVG files; all local Markdown links resolve."
+      "evidence": "No whitespace errors in the domain revalidation evidence."
     }
   ],
   "requirements": [
@@ -179,12 +242,32 @@
       "evidence": "Organization-wide scope, separate product-base/SKU categories, activation timing, archive-only behavior, restore conditions, subtree-preserving reparenting, blocking parent archive while active children remain, and organization-unique generated immutable category keys are confirmed."
     },
     {
+      "id": "REQ-ERP-PRODUCT-MEDIA-DOMAIN",
+      "status": "PARTIAL",
+      "evidence": "Organization-scoped reusable files, product/SKU assignments and context-specific alt text are defined; file retention, shared metadata ownership and Platform renditions remain open."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-COST-DOMAIN",
+      "status": "PARTIAL",
+      "evidence": "Per-purchasable-unit cost ownership, no inheritance and per-reference ISO currency are confirmed; history/source and currency-specific decimal precision remain open."
+    },
+    {
+      "id": "REQ-ERP-PHYSICAL-ATTRIBUTES-DOMAIN",
+      "status": "PARTIAL",
+      "evidence": "Product-versus-SKU ownership, non-inheritance and metric kg/cm units are confirmed; activation-required fields and runtime storage are not verified."
+    },
+    {
       "id": "REQ-ERP-CRM-BOUNDARY",
       "status": "PASS",
       "evidence": "CRM remains source of truth for Contact identity and history; Products references it without duplicating the customer master."
     }
   ],
   "evidence": [
+    {
+      "type": "revalidation",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/02-domain.md",
+      "result": "Attempt 11 records the source reconciliation, unchanged domain decisions, current runtime boundary and unresolved risks."
+    },
     {
       "type": "domain-analysis",
       "path": "docs/implementation/erp/core/domain-model.md",
@@ -199,18 +282,39 @@
       "type": "source-audit",
       "path": "src/loopdev/domains/catalog/adapter/local.ts",
       "result": "Current local adapter CRUD, status and fixture behavior was treated as baseline, not target policy."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20261025100000_erp_product_media_library.sql",
+      "result": "Current media tables, shared Storage policy changes, physical-delete grants and cascading relationships were compared with reusable-file and archive-only semantics."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
+      "result": "Current organization media listing, direct upload, assignment, per-assignment alt text, detach and signed-preview behavior was inspected; no rendition processing exists."
+    },
+    {
+      "type": "user-decision",
+      "path": "docs/implementation/erp/core/domain-model.md",
+      "result": "Product Owner confirmed: “Sí, permitir orden manual”; ordering is scoped to each product/SKU gallery."
     }
   ],
   "detected_failure": null,
   "likely_failure_origin": null,
-  "next_handoff": "03-access",
+  "next_handoff": null,
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
     "approved_at": null
   },
-  "invalidated": true,
+  "invalidated": false,
   "notes": [
-    "This checkpoint predates the approved product-media scope amendment and must be reconciled before it can satisfy the current run."
-  ]
+    "Cost history/source and currency-specific precision remain open; no value conversion is implied.",
+    "Manual product/SKU gallery ordering was confirmed after the original attempt-7 completion and is documented as DOM-ERP-031.",
+    "Platform must approve shared Files ownership, asset retention and the append-only audit contract before remote write behavior is enabled.",
+    "Remote schema/deployment state and authorized legacy-data dry run remain unverified; no production migration is authorized by this domain checkpoint."
+  ],
+  "invalidated_at": "2026-10-25T16:14:37.766Z",
+  "invalidation_reason": "Changed inputs: design",
+  "task_ids": []
 }

@@ -4,24 +4,25 @@
   "span_id": "MOD-CORE-20261024-001:04-api",
   "phase": "04-api",
   "skill": "api-contracts",
-  "parent_span_id": "MOD-CORE-20261024-001:03-access",
-  "module": "Core",
-  "status": "deviated",
+  "parent_span_id": null,
+  "module": "core",
+  "status": "completed",
   "decision_status": "confirmed",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 5,
-  "started_at": "2026-10-24T14:51:07.069Z",
-  "completed_at": "2026-10-24T14:52:44.630Z",
-  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "attempt": 11,
+  "started_at": "2026-10-25T15:47:31.321Z",
+  "completed_at": "2026-10-25T15:48:42.318Z",
+  "input_fingerprint": "sha256:277c5cbc7947a25e3b7f6414e80840fce9510be4d9ac03da46c333c69e408009",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
-    "working_tree": "untracked ERP implementation docs; no production code changes",
-    "runtime_url": null,
-    "runtime_port": null
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified worktree (50 paths): Products planning/evidence, Catalog adapter/tests and local migrations; no Supabase remote writes or migration applications.",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080,
+    "serving_process": "Vite dev server (node PID 32300)"
   },
   "input_artifacts": [
     "docs/implementation/erp/core/discovery.md",
@@ -29,15 +30,27 @@
     "docs/implementation/erp/core/domain-model.md",
     "docs/implementation/erp/core/access-model.md",
     "docs/implementation/erp/core/delivery-ledger.json",
-    "docs/implementation/erp/core/visual-design.md",
-    "src/loopdev/domains/catalog/adapter/index.ts",
+    "docs/implementation/erp/core/platform-scope.md",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md",
+    "docs/03-platform/backend/FILES_BACKEND_MAPPING.md",
     "src/loopdev/domains/catalog/types.ts",
+    "src/loopdev/domains/catalog/adapter/index.ts",
     "src/loopdev/domains/catalog/adapter/local.ts",
     "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "src/loopdev/domains/catalog/media/types.ts",
+    "src/loopdev/domains/catalog/adapter/product-media-local.ts",
+    "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
     "src/loopdev/domains/platform/types.ts",
-    "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
-    "src/test/catalog/catalog-adapter.test.ts",
-    "docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md"
+    "src/loopdev/domains/files/types.ts",
+    "src/loopdev/pages/erp/ProductRecordPages.tsx",
+    "src/loopdev/pages/erp/ProductMediaGalleryManager.tsx",
+    "supabase/migrations/20261024180000_erp_product_details_and_references.sql",
+    "supabase/migrations/20261025100000_erp_product_media_library.sql",
+    "supabase/migrations/20261025120145_erp_product_media_storage_policy_hardening.sql",
+    "supabase/migrations/20261025120200_erp_product_media_no_direct_delete.sql",
+    "supabase/migrations/20260915000000_platform_security_hardening.sql",
+    "docs/implementation/_templates/phase-evidence.md"
   ],
   "output_artifacts": [
     "docs/implementation/erp/core/api-contracts.md",
@@ -47,71 +60,108 @@
     {
       "id": "API-ERP-001",
       "status": "confirmed",
-      "summary": "Products is the user-facing master; preserve legacy catalog IDs and CRM entity references."
+      "summary": "Products is the user-facing master; retain legacy catalog IDs and CRM EntityRef identities."
     },
     {
       "id": "API-ERP-002",
       "status": "confirmed",
-      "summary": "Organization scope and actor authority derive from authenticated context."
+      "summary": "Commands derive organization and actor from authenticated context; clients do not choose tenant authority."
     },
     {
       "id": "API-ERP-003",
       "status": "assumed",
-      "summary": "New logical contracts use the conceptual product model; legacy type conversion remains explicit and unresolved."
+      "summary": "Logical DTOs use the approved product class model and a named compatibility mapper for legacy CatalogItem.type values."
     },
     {
       "id": "API-ERP-004",
-      "status": "assumed",
-      "summary": "Mutations use expectedVersion and idempotency metadata where duplicate effects are possible."
+      "status": "confirmed",
+      "summary": "Updates and lifecycle/reorder mutations use expected versions; creates and retryable commands use organization-scoped idempotency keys."
     },
     {
       "id": "API-ERP-005",
-      "status": "assumed",
-      "summary": "Lists are bounded and stably paginated; exact cursor contract remains open."
+      "status": "confirmed",
+      "summary": "Bounded cursor pagination uses default page size 50, maximum 100 and stable deterministic ordering."
     },
     {
       "id": "API-ERP-006",
       "status": "confirmed",
-      "summary": "Category management is a first-class logical query/command surface within Products."
+      "summary": "Product categories are a first-class logical query/command surface."
     },
     {
       "id": "API-ERP-007",
-      "status": "assumed",
-      "summary": "Offer and pricing APIs remain compatibility contracts pending ownership and sensitivity decisions."
+      "status": "confirmed",
+      "summary": "All catalog.read roles may read sales prices; purchase costs require catalog.cost.read/manage."
     },
     {
       "id": "API-ERP-008",
       "status": "confirmed",
-      "summary": "Party role, availability and eligibility are not promised remotely until domain/persistence ownership is resolved."
+      "summary": "Party-role, availability and eligibility contracts are not promised until their ownership and remote persistence are resolved."
     },
     {
       "id": "API-ERP-009",
       "status": "confirmed",
-      "summary": "Product/category events are proposals only; no event infrastructure or consumer contract is implemented."
+      "summary": "Domain events remain proposed; publish only with approved actor/version/audit and consumer ownership."
     },
     {
       "id": "API-ERP-010",
       "status": "confirmed",
-      "summary": "Remote mutation remains blocked by access-model RLS and permission-key gaps."
+      "summary": "Remote writes require operation-specific RLS, cost-specific permissions, optimistic versions, archive-only semantics and the approved atomic Platform audit contract; Products call sites and atomicity tests remain required."
     },
     {
       "id": "API-ERP-011",
+      "status": "confirmed",
+      "summary": "Keep the existing catalog adapter boundary and online-only remote operations; do not introduce an HTTP transport without an approved plan."
+    },
+    {
+      "id": "API-ERP-012",
+      "status": "confirmed",
+      "summary": "Direct users cannot provide product/SKU internal keys or SKUs; a trusted future integration may import an external SKU through a separate boundary."
+    },
+    {
+      "id": "API-ERP-013",
+      "status": "confirmed",
+      "summary": "Cost is queried and mutated through permission-gated per-purchasable-unit contracts, never embedded in ordinary Product DTOs."
+    },
+    {
+      "id": "API-ERP-014",
+      "status": "confirmed",
+      "summary": "Product/SKU media galleries support multiple assignments and manual per-gallery order."
+    },
+    {
+      "id": "API-ERP-015",
       "status": "open",
-      "summary": "Transport and canonical routes are unresolved; organization-wide product/category scope is confirmed."
+      "summary": "The shared Files boundary is approved; product-media metadata-table enforcement, signed-preview authorization, detach/retention behavior and end-to-end acceptance remain open."
+    },
+    {
+      "id": "API-ERP-016",
+      "status": "confirmed",
+      "summary": "Product and SKU DTOs expose optional per-unit physical attributes in kg/cm without inheritance."
+    },
+    {
+      "id": "API-ERP-017",
+      "status": "assumed",
+      "summary": "Represent cost amounts as canonical base-10 decimal strings in JSON to avoid binary floating-point loss; ISO-currency scale remains open."
+    },
+    {
+      "id": "API-ERP-018",
+      "status": "open",
+      "summary": "Cost history/source, shared asset tags/renditions, event outbox and exact migration/deployed-state behavior remain unresolved."
     }
   ],
   "actions": [
-    "Mapped Products queries and commands from discovery, domain and current adapter contracts.",
-    "Defined request/response boundaries, validation and error/retry semantics.",
-    "Recorded pagination, optimistic concurrency, idempotency and consistency assumptions.",
-    "Specified proposed event payload boundaries and shared Platform/CRM compatibility.",
-    "Kept transport, infrastructure, implementation and endpoint naming open."
+    "Reconciled API contracts with confirmed domain and access decisions for category, SKU, cost, physical-attribute and media behaviors.",
+    "Defined separate cost reads/writes gated by catalog.cost.read/manage and excluded cost from ordinary Product DTOs and projections.",
+    "Defined logical Product/SKU media commands that reference finalized Platform Files rather than transporting file bytes.",
+    "Added atomic full-gallery ordering with expected assignment versions, stable pagination and no partial reorder behavior.",
+    "Aligned the proposed product-media event name and safe payload with discovery; excluded file bytes, public URLs and sensitive cost values.",
+    "Recorded Files authorization, currency precision/history, tag/rendition ownership, audit and deployed migration state as open dependencies.",
+    "Revalidated access-sensitive contracts against access attempt 11: owner/admin-only cost grants, approved Files boundary, outstanding media-table enforcement, and approved audit semantics with missing Products call sites and atomicity tests."
   ],
   "validation": [
     {
-      "command": "npm run delivery:validate",
+      "command": "npm run test:delivery",
       "result": "passed",
-      "evidence": "Module run validation passed: 103 checkpoint file(s) checked (36 archived legacy record(s))."
+      "evidence": "All 34 delivery state-machine and evidence tests passed."
     },
     {
       "command": "npm run validate:delivery-ledgers",
@@ -124,53 +174,108 @@
       "evidence": "Multiplatform delivery validation passed."
     },
     {
-      "command": "npm run test:delivery",
-      "result": "passed (27 tests)",
-      "evidence": "Delivery state-machine and evidence tests passed."
+      "command": "npm run validate:module-runs",
+      "result": "passed",
+      "evidence": "Module run validation passed: 110 checkpoint files checked (36 archived legacy records)."
     },
     {
-      "command": "python3 ERP JSON/SVG/Markdown-link check",
+      "command": "Review api-contracts.md against access attempt 11 and current migrations",
       "result": "passed",
-      "evidence": "Parsed 8 JSON files and 5 SVG files; all local Markdown links resolve."
+      "evidence": "Cost permissions, shared Files approval, open media-table/signed-preview lifecycle gates, and approved audit semantics versus missing Products integration are distinguished."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors reported."
     }
   ],
   "requirements": [
     {
-      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "id": "REQ-ERP-CATALOG-API",
       "status": "PARTIAL",
-      "evidence": "Logical product contracts are recorded; legacy type mapping, catalog grouping, versioning and remote access gaps remain open."
+      "evidence": "Logical catalog/category contracts preserve identity and scope; current adapters lack shared versioning and category implementation."
     },
     {
-      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "id": "REQ-ERP-PRODUCT-COST-API",
       "status": "PARTIAL",
-      "evidence": "Category commands and error boundaries are documented; category scope, lifecycle and uniqueness are unresolved."
+      "evidence": "Per-unit cost commands and sensitive DTO boundaries are defined; cost permissions, precision/history and RLS are not implemented."
+    },
+    {
+      "id": "REQ-ERP-PHYSICAL-ATTRIBUTES-API",
+      "status": "PARTIAL",
+      "evidence": "Optional per-product/per-SKU kg/cm DTO fields are defined; current persistence/UI supports product-level values only."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-MEDIA-API",
+      "status": "PARTIAL",
+      "evidence": "The shared Files boundary is approved; media metadata-table enforcement, signed-preview authorization, detach/retention acceptance, tags/renditions and current schema version/order fields remain open."
+    },
+    {
+      "id": "REQ-ERP-MULTIPLATFORM-API",
+      "status": "PARTIAL",
+      "evidence": "Desktop/mobile share logical operations, errors and pagination; no runtime contract test has been performed."
     },
     {
       "id": "REQ-ERP-CRM-BOUNDARY",
       "status": "PASS",
-      "evidence": "Existing catalog_item entity references and CRM-owned customer identity remain compatible; no duplicate customer API is proposed."
+      "evidence": "Contracts preserve the existing catalog_item reference and CRM-owned identity."
     }
   ],
   "evidence": [
     {
-      "type": "api-contract-design",
+      "type": "api-analysis",
       "path": "docs/implementation/erp/core/api-contracts.md",
-      "result": "Documents logical commands/queries, DTO boundaries, errors, pagination, concurrency, events, consumers and platform impact."
+      "result": "Defines operation catalog, DTOs, errors, pagination, idempotency, versioning, events and shared Platform dependencies."
     },
     {
       "type": "source-audit",
       "path": "src/loopdev/domains/catalog/adapter/index.ts",
-      "result": "Current adapter exposes unpaged arrays, legacy CRUD and catalog_item reference resolution; no category API exists."
+      "result": "Current CatalogAdapter exposes cost reads/writes without expected versions and no ProductMediaAdapter integration."
     },
     {
       "type": "source-audit",
-      "path": "src/loopdev/domains/catalog/adapter/supabase.ts",
-      "result": "Remote adapter maps catalog rows but has no version/idempotency fields and returns empty remote party-role, availability and eligibility lists."
+      "path": "src/loopdev/domains/catalog/media/types.ts",
+      "result": "Current media contract accepts raw File upload, returns arrays without pagination/version/order, and exposes tags/update/detach/preview."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/types.ts",
+      "result": "Cost amount is currently a nullable number and ProductVariant has no explicit physical attributes."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20261024180000_erp_product_details_and_references.sql",
+      "result": "Cost table is product/SKU-addressable but current policy uses broad catalog.write and has no version/history fields."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20261025100000_erp_product_media_library.sql",
+      "result": "Media tables have no position/version fields and link to shared Files; migration replaces Storage policies."
+    },
+    {
+      "type": "user-decision",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/02-domain.md",
+      "result": "Product Owner confirmed manual image ordering for every product/SKU gallery as DOM-ERP-031."
+    },
+    {
+      "type": "access-revalidation",
+      "path": "docs/implementation/erp/core/access-model.md",
+      "result": "Owner/admin-only cost permissions and the shared Files boundary are confirmed; media metadata/signed-preview enforcement, full deployed RLS and Products audit integration/atomicity remain open gates."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20261025120145_erp_product_media_storage_policy_hardening.sql; supabase/migrations/20261025120200_erp_product_media_no_direct_delete.sql",
+      "result": "Storage object deletion is denied for product-media paths, but the later migrations do not replace asset/assignment table FOR ALL policies."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20260915000000_platform_security_hardening.sql",
+      "result": "The shared append-only audit table/function exist and semantics are approved; Products mutation call sites and atomicity tests are missing."
     }
   ],
   "detected_failure": null,
   "likely_failure_origin": null,
-  "next_handoff": "05-sync",
+  "next_handoff": "05-sync: define retry behavior using the approved Files and audit semantics; preserve cost confidentiality, require reauthorization, and keep remote mutations blocked until RLS and Products audit atomicity evidence pass.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
@@ -178,6 +283,13 @@
   },
   "invalidated": true,
   "notes": [
-    "This checkpoint predates the approved product-media scope amendment and must be reconciled before it can satisfy the current run."
-  ]
+    "No endpoints, DTO implementations, database schema, migrations or production code were changed in this phase.",
+    "The shared Files boundary and append-only audit semantics are approved; media-table enforcement, signed-preview lifecycle, Products audit call sites and atomicity tests remain prerequisites for remote writes.",
+    "Costs require owner/admin-only catalog.cost.read/manage and must be absent from all unauthorized DTOs, projections, events and caches.",
+    "Gallery order is a confirmed Product Owner requirement; storage needs a migration and optimistic reorder semantics.",
+    "Currency-specific decimal scale, cost history/source and asset tag/rendition ownership are explicitly open."
+  ],
+  "task_ids": [],
+  "invalidated_at": "2026-10-25T16:14:37.767Z",
+  "invalidation_reason": "Changed inputs: design"
 }

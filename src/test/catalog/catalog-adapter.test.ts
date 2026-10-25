@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { localCatalogAdapter as catalogAdapter } from "@/loopdev/domains/catalog";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { catalogAdapter, CatalogAdapterError, localCatalogAdapter, supabaseCatalogAdapter } from "@/loopdev/domains/catalog";
+import { createLocalStore } from "@/lib/localStore";
 import {
   localCatalogItemsStore,
   localCatalogItemKeyCountersStore,
@@ -31,6 +32,84 @@ describe("local Catalog adapter", () => {
     localCatalogEligibilitiesStore.reset();
     localProductCostReferencesStore.reset();
     localProductReferencesStore.reset();
+  });
+
+  describe("configured Catalog adapter", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+      vi.stubEnv("VITE_CATALOG_ADAPTER_MODE", "local_demo");
+    });
+
+    it("fails closed when adapter mode is missing or invalid", async () => {
+      vi.stubEnv("VITE_CATALOG_ADAPTER_MODE", undefined);
+      await expect(catalogAdapter.listCatalogItems({ organizationId }))
+        .rejects.toMatchObject({ name: "CatalogAdapterError", code: "server-error" });
+
+      vi.stubEnv("VITE_CATALOG_ADAPTER_MODE", "fixtures" as "local_demo");
+      await expect(catalogAdapter.listCatalogItems({ organizationId }))
+        .rejects.toThrow("must be explicitly configured");
+    });
+
+    it("uses only the explicitly selected remote adapter and does not fall back after remote failure", async () => {
+      vi.stubEnv("VITE_CATALOG_ADAPTER_MODE", "supabase");
+      const remoteError = new CatalogAdapterError("Remote catalog unavailable.", "server-error");
+      const remoteList = vi.spyOn(supabaseCatalogAdapter, "listCatalogItems").mockRejectedValue(remoteError);
+      const localList = vi.spyOn(localCatalogAdapter, "listCatalogItems");
+
+      await expect(catalogAdapter.listCatalogItems({ organizationId }))
+        .rejects.toBe(remoteError);
+      expect(remoteList).toHaveBeenCalledOnce();
+      expect(localList).not.toHaveBeenCalled();
+    });
+
+    it("surfaces strict catalog persistence errors without changing other local-store defaults", () => {
+      const strictKey = "strict-read-test";
+      const bestEffortKey = "best-effort-read-test";
+      const seed = [{ id: "seed", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }];
+      const strictStore = createLocalStore({ key: strictKey, seed, persistence: "strict" });
+      const bestEffortStore = createLocalStore({ key: bestEffortKey, seed });
+      const browserStorage = window.localStorage;
+      vi.stubGlobal("localStorage", {
+        getItem: (key: string) => {
+        if (key === `rivera:${strictKey}` || key === `rivera:${bestEffortKey}`) {
+          throw new Error("storage access denied");
+        }
+          return browserStorage.getItem(key);
+        },
+        setItem: browserStorage.setItem.bind(browserStorage),
+        removeItem: browserStorage.removeItem.bind(browserStorage),
+        clear: browserStorage.clear.bind(browserStorage),
+        key: browserStorage.key.bind(browserStorage),
+        get length() { return browserStorage.length; },
+      } satisfies Storage);
+
+      expect(() => strictStore.list()).toThrow("storage access denied");
+      expect(bestEffortStore.list()).toEqual(seed);
+    });
+
+    it("does not report a local product write as successful when persistence fails", async () => {
+      const browserStorage = window.localStorage;
+      vi.stubGlobal("localStorage", {
+        getItem: browserStorage.getItem.bind(browserStorage),
+        setItem: (key: string, value: string) => {
+          if (key === "rivera:loopdev:catalog:items") throw new Error("catalog quota exceeded");
+          browserStorage.setItem(key, value);
+        },
+        removeItem: browserStorage.removeItem.bind(browserStorage),
+        clear: browserStorage.clear.bind(browserStorage),
+        key: browserStorage.key.bind(browserStorage),
+        get length() { return browserStorage.length; },
+      } satisfies Storage);
+
+      await expect(catalogAdapter.createCatalogItem({
+        organizationId,
+        catalogId: "catalog_products",
+        name: "Unpersisted product",
+        type: "physical_product",
+      })).rejects.toThrow("catalog quota exceeded");
+      expect(localCatalogItemsStore.list()).not.toContainEqual(expect.objectContaining({ name: "Unpersisted product" }));
+    });
   });
 
   it("lists shared catalog items and workspace-visible items", async () => {

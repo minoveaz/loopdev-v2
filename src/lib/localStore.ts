@@ -51,6 +51,8 @@ interface CreateStoreOptions<T extends Entity> {
   seed: T[];
   /** ID prefix for newly-created records (e.g. `"u"` -> `"u_n_…"`). */
   idPrefix?: string;
+  /** Strict stores fail on storage access/serialization errors instead of using an in-memory fallback. */
+  persistence?: "best-effort" | "strict";
 }
 
 let counter = 0;
@@ -59,18 +61,26 @@ function genId(prefix: string): string {
   return `${prefix}_n_${Date.now().toString(36)}_${counter.toString(36)}`;
 }
 
-export function createLocalStore<T extends Entity>({ key, seed, idPrefix = key }: CreateStoreOptions<T>): LocalStore<T> {
+export function createLocalStore<T extends Entity>({
+  key,
+  seed,
+  idPrefix = key,
+  persistence = "best-effort",
+}: CreateStoreOptions<T>): LocalStore<T> {
   const listeners = new Set<Listener>();
 
   let cache: T[] | null = null;
   const read = (): T[] => {
     if (cache) return cache;
-    cache = storage.get<T[]>(key, seed);
+    cache = persistence === "strict"
+      ? storage.getStrict<T[]>(key, seed)
+      : storage.get<T[]>(key, seed);
     return cache;
   };
   const write = (items: T[]) => {
+    if (persistence === "strict") storage.setStrict(key, items);
+    else storage.set(key, items);
     cache = items;
-    storage.set(key, items);
     listeners.forEach((l) => l());
   };
 

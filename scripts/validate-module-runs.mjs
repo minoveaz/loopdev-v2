@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { workflowForRun } from "./lib/delivery-state-machine.mjs";
+import { validateCurrentPhaseDependencies } from "./lib/module-run-validation.mjs";
 
 const root = process.cwd();
 const workflow = JSON.parse(readFileSync(join(root, "docs", "03-platform", "governance", "delivery-workflow.json"), "utf8"));
@@ -287,16 +288,14 @@ function validateManifest(file) {
   for (const [phaseId, checkpoint] of checkpoints) {
     const phase = selectedPhases.get(phaseId);
     if (!phase && manifest.profile) addError(file, `phase "${phaseId}" does not belong to the "${manifest.profile}" profile`);
-    if (manifest.profile === "supplier-pilot" && checkpoint.invalidated) continue;
-    if (!phase || checkpoint.status !== "completed") continue;
-    for (const predecessor of phase.predecessors) {
-      if (checkpoints.get(predecessor)?.status !== "completed") addError(file, `completed phase "${phaseId}" requires completed predecessor "${predecessor}"`);
-    }
-    if (phase.required_gate) {
-      const approval = manifest.approvals?.[phase.required_gate];
-      const approvalStatus = typeof approval === "string" ? approval : approval?.status;
-      if (approvalStatus !== "approved") addError(file, `completed phase "${phaseId}" requires approved gate "${phase.required_gate}"`);
-    }
+  }
+  for (const message of validateCurrentPhaseDependencies(manifest, checkpoints, selectedPhases)) {
+    addError(file, message);
+  }
+  for (const [phaseId, checkpoint] of checkpoints) {
+    const phase = selectedPhases.get(phaseId);
+    if (!phase || checkpoint.status !== "completed"
+      || checkpoint.invalidated === true || manifest.invalidated_phases?.includes(phaseId)) continue;
     if (manifest.profile === "supplier-pilot" && phaseId === "06-plan") {
       for (const area of ["domain", "access", "persistence", "platform_reuse", "rollback"]) {
         if (typeof checkpoint.prebuild_decisions?.[area] !== "string" || !checkpoint.prebuild_decisions[area].trim()) addError(file, `pilot plan requires prebuild_decisions.${area}`);

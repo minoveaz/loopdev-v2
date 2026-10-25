@@ -1,5 +1,6 @@
 import { localCatalogAdapter } from "./local";
 import { supabaseCatalogAdapter } from "./supabase";
+import { CatalogAdapterError } from "../types";
 import type {
   CatalogItem,
   CatalogCreateInput,
@@ -63,28 +64,38 @@ export interface CatalogAdapter {
   resolveReference(params: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null>;
 }
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const isUuid = (value: unknown): value is string => typeof value === "string" && UUID_PATTERN.test(value);
+function configuredCatalogAdapter(): CatalogAdapter {
+  const mode: string | undefined = import.meta.env?.VITE_CATALOG_ADAPTER_MODE;
+  if (mode === "local_demo") return localCatalogAdapter;
+  if (mode === "supabase") return supabaseCatalogAdapter;
+  throw new CatalogAdapterError(
+    "Catalog adapter mode must be explicitly configured as local_demo or supabase.",
+    "server-error",
+  );
+}
 
-// Keep local fixtures available for unauthenticated/demo consumers while all
-// real organization UUIDs use the tenant-scoped Supabase adapter.
-export const catalogAdapter: CatalogAdapter = new Proxy(supabaseCatalogAdapter, {
-  get(target, property, receiver) {
-    const value = Reflect.get(target, property, receiver);
-    if (typeof value !== "function") return value;
+// Configuration is resolved on each operation so missing or invalid runtime
+// configuration fails as a rejected adapter operation, never as fixture fallback.
+export const catalogAdapter: CatalogAdapter = new Proxy({} as CatalogAdapter, {
+  get(_target, property) {
+    if (property === "then" || typeof property !== "string") return undefined;
     return (...args: unknown[]) => {
-      const scope = args.find((arg): arg is { organizationId?: unknown } => Boolean(arg) && typeof arg === "object" && "organizationId" in arg);
-      if (scope && scope.organizationId && !isUuid(scope.organizationId)) {
-        const localValue = Reflect.get(localCatalogAdapter, property);
-        if (typeof localValue === "function") return localValue.apply(localCatalogAdapter, args);
+      try {
+        const adapter = configuredCatalogAdapter();
+        const method = Reflect.get(adapter, property);
+        if (typeof method !== "function") {
+          throw new CatalogAdapterError("The requested catalog operation is unavailable.", "server-error");
+        }
+        return method.apply(adapter, args);
+      } catch (error) {
+        return Promise.reject(error);
       }
-      return value.apply(target, args);
     };
   },
 });
 export { localCatalogAdapter };
 export { supabaseCatalogAdapter };
 
-export { CatalogAdapterError } from "../types";
+export { CatalogAdapterError };
 
 export type { CatalogCreateInput, CatalogItemCreateInput, CatalogItem, CatalogListParams, CatalogReference, CatalogReferenceResolutionParams, CatalogScopeParams, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole, CatalogAvailability, CatalogEligibility, ProductCostReference, ProductCostReferenceInput, ProductReference, ProductReferenceCreateInput, ProductReferenceKind, ResolvedCatalogReference, CatalogOfferCreateInput, CatalogVariantCreateInput, CatalogPriceBookCreateInput, CatalogPriceEntryCreateInput };

@@ -4,66 +4,65 @@
   "run_id": "MOD-CORE-20261024-001",
   "suite": "erp",
   "module": "Core",
-  "status": "blocked",
-  "current_phase": "01-visual-design",
-  "attempt": 6,
+  "status": "running",
+  "current_phase": "02-domain",
+  "attempt": 13,
   "started_at": "2026-10-24T10:00:46.235Z",
-  "updated_at": "2026-10-24T17:06:17Z",
-  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "updated_at": "2026-10-25T16:17:15.648Z",
+  "input_fingerprint": "sha256:8efd4ab86c7e61cd28da0b676118fd145e3a4b050d7b5d7c6f10aca8a3c7a834",
   "fingerprints": {
     "product": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "scope": "sha256:d28f7015415208a74c5d768f70abf1c9911dc890c53857cbf01a22c0264eaacc",
-    "design": "sha256:613987fc691f5c34f4acbef16eb89023453f475f8b9f45bf0f3e608d4b77a781",
-    "plan": "sha256:81a970fd6c165c0fc2905b6a9e3cfc25961ad6c37acc6fa70e3e4f5ef05f8d25",
-    "contracts": "sha256:18abe04b358d2e7b02913594768e275fe4bd0a28f79851b67d64d591056a9c6f",
-    "code": "sha256:cf09447dc4d6dce54d5945d385428eda754264b9d02bcc0906ee54c8b56fe411",
-    "tests": "sha256:d2eceb55eb47c7fd0b1fb8e02af5eeed9681fdae21638bc471cdd453b24fa6cd"
+    "scope": "sha256:da85de7529d84eaf6c8b8e4135d4effd914f2bdda1f91bdcf92b921f870da697",
+    "design": "sha256:31cdacd4abdb1f3958ef210c131476fdbabd20662e813d74c7ff97e3713163cd",
+    "plan": "sha256:e59dc901213d25be48ece6738c4ffd392e8ce66d515533401f78a1f153a71445",
+    "contracts": "sha256:6d954ee7fe7d77cb686f5cc18a14ba593d5dcfad7681feb8fcbe00a89f17e3b9",
+    "code": "sha256:82c32ef20e892aef5feb4bc5ebd7a1c9a9e2ca263ac22efb4c0075bd0876f169",
+    "tests": "sha256:f1a9e94390af26c22b5660683f8936055bf7d1c1e0a4afa339fdc801b40a1ddf"
   },
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "0024978c4c92097cf295313864e4eadb4e810aba",
-    "working_tree": "modified ERP documentation; no production code changes",
-    "runtime_url": null,
-    "runtime_port": null
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified worktree (50 paths): Products planning/evidence, Catalog adapter/tests and local migrations; no Supabase remote writes or migration applications.",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080,
+    "serving_process": "Vite dev server (node PID 32300)"
   },
-  "platform_scope": ["desktop_web", "mobile_web"],
+  "platform_scope": [
+    "desktop_web",
+    "mobile_web"
+  ],
   "approvals": {
     "design": {
       "status": "approved",
       "approved_by": "@loopdev-io",
-      "approved_at": "2026-10-24T14:29:24Z",
-      "role": "Product owner",
-      "artifact": "docs/implementation/erp/core/design.md + docs/implementation/erp/core/architecture-design.md + docs/implementation/erp/core/delivery-ledger.json",
-      "artifact_fingerprint": "sha256:51e7177074bb5726de575eec9f81617f557f8898898568c0b9067c4b34d8cb56",
-      "source": "Original design approval plus user-approved amendments CR-ERP-PRODUCTS-MODULE and CR-ERP-PRODUCT-MASTER-MODEL in Copilot conversation, 2026-10-24"
+      "approved_at": "2026-10-25T16:15:48.155Z",
+      "role": "Product Owner",
+      "artifact": "docs/implementation/erp/core/design.md + architecture-design.md + delivery-ledger.json",
+      "artifact_fingerprint": "sha256:0a30a88a01869bd6c296bd5e17013d264ddabe69451f089484a63bdef479fd35",
+      "source": "User selected: Sí, apruebo diseño y visual actuales; continúa (Recomendado) after design revalidation."
     },
     "visual_design": {
-      "status": "pending",
-      "approved_by": null,
-      "approved_at": null,
-      "role": "Product owner",
-      "artifact": "docs/implementation/erp/core/visual-design.md; docs/implementation/erp/core/view-state-matrix.md; docs/implementation/erp/core/platform-scope.md; docs/implementation/erp/core/platform-evidence-matrix.md; docs/implementation/erp/core/wireframes/erp-overview.svg; docs/implementation/erp/core/wireframes/erp-products.svg; docs/implementation/erp/core/wireframes/erp-product-categories.svg; docs/implementation/erp/core/wireframes/erp-product-form.svg; docs/implementation/erp/core/wireframes/erp-variant-form.svg; docs/implementation/erp/core/wireframes/erp-commercial-detail.svg",
-      "artifact_fingerprint": null,
-      "source": null,
-      "previous_approval": {
-        "approved_by": "@loopdev-io",
-        "approved_at": "2026-10-24T14:42:11.307Z",
-        "artifact_fingerprint": "sha256:b9d6373e08a115a02eb5509fbc89b0a5fcc6079633fdca9886400303dc75ec8d",
-        "scope": "Original five visual compositions"
-      },
-      "awaiting_approval_for": "Supplemental SKU editor showing each SKU's independently assigned category"
+      "status": "approved",
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-25T16:16:53.179Z",
+      "role": "Product Owner",
+      "artifact": "docs/implementation/erp/core/visual-design.md; view-state-matrix.md; platform-scope.md; platform-evidence-matrix.md; wireframes/",
+      "artifact_fingerprint": "sha256:d3d3b192251f9c283b54b420cb124e40c5a02fb5ce9b8da0de51e746cd5342ef",
+      "source": "User selected: Sí, apruebo diseño y visual actuales; continúa (Recomendado) via ask_user after attempt-13 revalidation."
     },
     "plan": {
       "status": "pending",
-      "approved_by": null,
-      "approved_at": null,
-      "role": null,
-      "artifact": null,
-      "artifact_fingerprint": null,
-      "source": null
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-25T15:34:39.267Z",
+      "role": "Product owner",
+      "artifact": "docs/implementation/erp/core/implementation-plan.md + delivery-ledger.json",
+      "artifact_fingerprint": "sha256:9a3be92cc5b35eb5116252cee7035f20d36a2d9bbcd8782c20020fbe64c20500",
+      "source": "User selected \"Sí, apruebo los artefactos actuales y continúa\" in the explicit approval prompt on 2026-10-25.",
+      "invalidated_at": "2026-10-25T15:52:09.085Z",
+      "invalidation_reason": "Changed inputs: design"
     },
     "verification": {
       "status": "pending",
@@ -104,7 +103,8 @@
   },
   "approval_gates": [
     "design",
-    "visual_design"
+    "visual_design",
+    "plan"
   ],
   "architecture_quality": "PASS_WITH_DEBT",
   "platform_impact": [],
@@ -116,7 +116,9 @@
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/03-access.json",
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/04-api.json",
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/05-sync.json",
-    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/10-git.json"
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/10-git.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/06-plan.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json"
   ],
   "evidence_links": [
     "docs/implementation/erp/core/visual-design.md",
@@ -151,14 +153,16 @@
       "approved_by": "@loopdev-io",
       "approved_at": "2026-10-24T14:23:14Z",
       "source": "User confirmed the conceptual Products item model: finished products, raw materials/components and services; independent purchasing/selling/inventory uses; one primary hierarchical category; finished products allow buy/make/both sourcing, raw materials/components are buy-only for now, services have no sourcing, and variants inherit product sourcing; separately managed/sold variants have their own SKU; product, variant and category keys are LoopDev-generated, immutable, distinct from SKU/name and unique within the organization; semimanufactured items deferred until Manufacturing discovery."
+    },
+    {
+      "id": "CR-ERP-PRODUCT-MEDIA-001",
+      "status": "approved",
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-25T10:27:49Z",
+      "source": "Product Owner approved organization-scoped reusable product/variant media with metadata and alt text; automatic publication is excluded. Visual composition approval was separately recorded on 2026-10-25."
     }
   ],
-  "blocked_by": [
-    "Visual addendum for per-SKU category assignment requires explicit Product Owner approval before 06-plan.",
-    "Platform owner is not assigned to approve the shared append-only audit contract; remote writes must remain disabled.",
-    "Authorized legacy-data inventory and dry-run are unavailable; category/workspace/currency mappings and migration cutover must remain blocked.",
-    "Deployed Supabase policy/schema state has not been verified from an authorized runtime."
-  ],
+  "blocked_by": [],
   "invalidated_phases": [
     "00-discovery",
     "01-design",
@@ -173,11 +177,11 @@
     "09-review",
     "10-git"
   ],
-  "invalidation_reason": "Changed inputs: scope, design",
+  "invalidation_reason": "Changed inputs: design",
   "shared_contract_inputs": [
     "packages/contracts/src"
   ],
-  "next_action": "Wait for Product Owner approval of the SKU-category visual addendum; then resume 06-plan with external dependencies represented as blocked tasks.",
+  "next_action": "Complete or block phase 02-domain.",
   "handoffs": [
     {
       "from": "00-discovery",
@@ -220,6 +224,69 @@
       "owner": "ERP",
       "at": "2026-10-24T14:52:50.256Z",
       "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05"
+    },
+    {
+      "from": "01-visual-design",
+      "to": "02-domain",
+      "owner": "ERP product",
+      "at": "2026-10-25T10:27:49Z",
+      "input_fingerprint": "sha256:8725619179f67601808245f3bbc49ebf825437bc5a87909533ed8e7eae0b62cb"
+    },
+    {
+      "from": "02-domain",
+      "to": "03-access",
+      "owner": "ERP",
+      "at": "2026-10-25T10:43:03.514Z",
+      "input_fingerprint": "sha256:0d37c8a3dd559eeba13c8173e5f6bcd5ac7683fb8fcc8b74dd570d32dcb9a58a"
+    },
+    {
+      "from": "03-access",
+      "to": "04-api",
+      "owner": "ERP",
+      "at": "2026-10-25T10:46:11.036Z",
+      "input_fingerprint": "sha256:0d37c8a3dd559eeba13c8173e5f6bcd5ac7683fb8fcc8b74dd570d32dcb9a58a"
+    },
+    {
+      "from": "04-api",
+      "to": "05-sync",
+      "owner": "ERP",
+      "at": "2026-10-25T10:52:57.365Z",
+      "input_fingerprint": "sha256:0d37c8a3dd559eeba13c8173e5f6bcd5ac7683fb8fcc8b74dd570d32dcb9a58a"
+    },
+    {
+      "from": "05-sync",
+      "to": "06-plan",
+      "owner": "product",
+      "at": "2026-10-25T11:08:52.679Z",
+      "input_fingerprint": "sha256:0d37c8a3dd559eeba13c8173e5f6bcd5ac7683fb8fcc8b74dd570d32dcb9a58a"
+    },
+    {
+      "from": "06-plan",
+      "to": "07-build",
+      "owner": "ERP",
+      "at": "2026-10-25T11:30:54.176Z",
+      "input_fingerprint": "sha256:c7a0fe26445fef27af1fb36950c88b5282abe7c743a110557d417bc4cffd5fb7"
+    },
+    {
+      "from": "04-api",
+      "to": "05-sync",
+      "owner": "sync-design",
+      "at": "2026-10-25T15:49:00.206Z",
+      "input_fingerprint": "sha256:277c5cbc7947a25e3b7f6414e80840fce9510be4d9ac03da46c333c69e408009"
+    },
+    {
+      "from": "01-design",
+      "to": "01-visual-design",
+      "owner": "@loopdev-io",
+      "at": "2026-10-25T16:15:48.259Z",
+      "input_fingerprint": "sha256:8efd4ab86c7e61cd28da0b676118fd145e3a4b050d7b5d7c6f10aca8a3c7a834"
+    },
+    {
+      "from": "01-visual-design",
+      "to": "02-domain",
+      "owner": "ERP product",
+      "at": "2026-10-25T16:17:15.527Z",
+      "input_fingerprint": "sha256:8efd4ab86c7e61cd28da0b676118fd145e3a4b050d7b5d7c6f10aca8a3c7a834"
     }
   ],
   "commit": "8204d0ba4211d3e37a5f048248f7c7b41de4dfec",
@@ -244,6 +311,56 @@
       "id": "ERP-OD-005",
       "resolution": "Desktop web and mobile web are required; native iOS and Android are deferred.",
       "resolved_at": "2026-10-24T17:06:17Z"
+    },
+    {
+      "blocker": "Product Owner approval is recorded, but approval-stage ledger validation requires task mappings for deferred Shopify, Inhand and other ERP capabilities; no build task has started.",
+      "resolution": "Validator now scopes global plan approval to REQUIRED_MVP capabilities; the approved ERP ledger passes plan-stage validation while preserving deferred capabilities and task blockers.",
+      "resolved_at": "2026-10-25T11:29:33.492Z"
+    },
+    {
+      "blocker": "Unapproved Platform Files boundary deviation: existing product-media Supabase adapter bypasses the generic Files contract. Stop product/media implementation until Platform owner approval or an approved scope change.",
+      "resolution": "User approved using the shared Platform Files contract for the gallery; continue only unblocked tasks and preserve remaining task-level gates.",
+      "resolved_at": "2026-10-25T11:47:12.246Z"
+    },
+    {
+      "blocker": "Platform owner is not assigned to approve the shared append-only audit contract; remote writes must remain disabled.",
+      "resolution": "Recorded the owner-approved append-only audit and recovery semantics; implementation remains security-gated. The earlier Storage-policy finding and its three forward-only policy/grant corrections were verified in existing evidence, so stale run blockers are cleared only for those resolved facts.",
+      "resolved_at": "2026-10-25T13:08:11.830Z"
+    },
+    {
+      "blocker": "The reported Storage-policy finding is fixed, three forward-only policy/grant migrations are applied, and the isolated pgTAP suite passes 19/19.",
+      "resolution": "Recorded the owner-approved append-only audit and recovery semantics; implementation remains security-gated. The earlier Storage-policy finding and its three forward-only policy/grant corrections were verified in existing evidence, so stale run blockers are cleared only for those resolved facts.",
+      "resolved_at": "2026-10-25T13:08:11.830Z"
+    },
+    {
+      "blocker": "Attempt 10 detected changed scope, design, code and test fingerprints and invalidated the prior phase checkpoints and design/visual/plan approval gates. Revalidate the canonical discovery/design/visual/plan artifacts and obtain the required gate approvals before continuing; ADAPTER-MODE-001 remains implemented and evidenced, but build cannot resume under invalidated gates.",
+      "resolution": "Owner reapproved current design, visual design and plan; checkpoint validation now passes.",
+      "resolved_at": "2026-10-25T15:33:35.648Z"
+    },
+    {
+      "blocker": "BUILD-003: npm run validate:module-runs failed with six approval consistency errors: completed 01-visual-design requires approved design; completed 02-domain, 03-access, 04-api, 05-sync and 06-plan require approved visual_design. Revalidate artifacts and obtain approvals before restart.",
+      "resolution": "Owner reapproved current design, visual design and plan; checkpoint validation now passes.",
+      "resolved_at": "2026-10-25T15:33:35.648Z"
+    },
+    {
+      "blocker": "Authorized legacy-data inventory and dry-run are unavailable; category/workspace/currency mappings and migration cutover must remain blocked.",
+      "resolution": "Revalidated access, API and synchronization contracts against the current approved scope; refresh downstream plan/verification fingerprints before continuing.",
+      "resolved_at": "2026-10-25T15:52:09.090Z"
+    },
+    {
+      "blocker": "Full deployed ERP policy/schema state has not been verified from an authorized runtime; the product-media Storage policy definitions have been verified remotely.",
+      "resolution": "Revalidated access, API and synchronization contracts against the current approved scope; refresh downstream plan/verification fingerprints before continuing.",
+      "resolved_at": "2026-10-25T15:52:09.090Z"
+    },
+    {
+      "blocker": "Full AUDIT-SECURITY-001 criteria for cost-field isolation, operation-specific RLS, transactional audit, kill switch/recovery and negative role/tenant tests remain incomplete.",
+      "resolution": "Revalidated access, API and synchronization contracts against the current approved scope; refresh downstream plan/verification fingerprints before continuing.",
+      "resolved_at": "2026-10-25T15:52:09.090Z"
+    },
+    {
+      "blocker": "ADAPTER-MODE-001 is complete; no additional ready task has all dependencies satisfied. Remaining build work is blocked by incomplete tenant/cost/RLS/audit security evidence, unavailable authorized deployed-state and legacy-data review, the unresolved shared typography decision, and missing canonical mobile Products route/operations.",
+      "resolution": "Revalidated access, API and synchronization contracts against the current approved scope; refresh downstream plan/verification fingerprints before continuing.",
+      "resolved_at": "2026-10-25T15:52:09.090Z"
     }
   ]
 }

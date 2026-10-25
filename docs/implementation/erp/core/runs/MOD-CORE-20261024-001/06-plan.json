@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:06-plan",
+  "phase": "06-plan",
+  "skill": "module-plan",
+  "parent_span_id": null,
+  "module": "Core",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 8,
+  "started_at": "2026-10-25T11:29:33.492Z",
+  "completed_at": "2026-10-25T11:30:35.766Z",
+  "input_fingerprint": "sha256:c7a0fe26445fef27af1fb36950c88b5282abe7c743a110557d417bc4cffd5fb7",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": "develop",
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified ERP planning/traceability and delivery validation/test files; no product runtime, schema or database changes",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/design.md",
+    "docs/implementation/erp/core/architecture-design.md",
+    "docs/implementation/erp/core/visual-design.md",
+    "docs/implementation/erp/core/domain-model.md",
+    "docs/implementation/erp/core/access-model.md",
+    "docs/implementation/erp/core/api-contracts.md",
+    "docs/implementation/erp/core/sync-model.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+    "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md",
+    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/core/implementation-plan.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "tracks/active/erp/2026-10-25-erp-products-and-skus.md"
+  ],
+  "decisions": [
+    {
+      "id": "PLAN-ERP-SCOPE-001",
+      "status": "confirmed",
+      "summary": "This plan is bounded to Products/SKUs, identifiers, categories, commercial data, cost references, physical attributes and reusable product media on desktop and mobile web; Shopify and Inhand remain excluded."
+    },
+    {
+      "id": "PLAN-ERP-APPROVAL-001",
+      "status": "confirmed",
+      "summary": "Product Owner approval is recorded; the approval-stage validator is now scoped to REQUIRED_MVP capabilities."
+    },
+    {
+      "id": "PLAN-ERP-DEPENDENCIES-001",
+      "status": "open",
+      "summary": "Platform audit/Files contracts, authorized deployed-state verification, legacy-data dry-run, local migration validation and visual-system reconciliation remain explicit blockers."
+    }
+  ],
+  "actions": [
+    "Reconciled discovery and approved design/domain/access/API/sync decisions into a dependency-ordered Products/SKUs implementation plan.",
+    "Normalized the executable ledger's reciprocal requirement, capability and task references; retained unrelated deferred ERP and CRM boundaries.",
+    "Mapped required desktop/mobile operations to explicit tasks while leaving unimplemented operations missing.",
+    "Recorded the handoff from 05-sync to 06-plan; no production or database changes were made.",
+    "Recorded the Product Owner plan approval and opened build issue #39 before execution.",
+    "Fixed delivery-ledger approval validation to require planned operation coverage only for REQUIRED_MVP capabilities; added a regression test for deferred capabilities.",
+    "Resumed plan attempt 8 without changing Product scope; preserved the eight owner/data/environment blockers and all completed upstream phase evidence."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed."
+    },
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run validation passed: 109 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm run test:delivery",
+      "result": "passed (31 tests)",
+      "evidence": "All 31 delivery state-machine and evidence tests passed."
+    },
+    {
+      "command": "python3 inline ERP JSON/SVG/Markdown-link check",
+      "result": "passed",
+      "evidence": "Parsed 14 JSON and 12 SVG files; scanned 20 Markdown files; all local links resolve."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors reported."
+    },
+    {
+      "command": "approved ERP ledger plan-stage validation",
+      "result": "passed",
+      "evidence": "Approved ERP ledger passes with 33 ready and 8 blocked tasks; non-MVP capabilities are not required to have implementation tasks."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "status": "PARTIAL",
+      "evidence": "Scope and acceptance work are planned; production behavior and desktop/mobile runtime evidence remain unverified."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "status": "PARTIAL",
+      "evidence": "Category lifecycle and desktop/mobile operations have explicit tasks; implementation and authorized migration mapping remain outstanding."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-MEDIA",
+      "status": "PARTIAL",
+      "evidence": "Shared Files dependencies and gallery tasks are explicit; approved Platform contract, implementation and runtime evidence are outstanding."
+    },
+    {
+      "id": "REQ-ERP-COST-REFERENCE",
+      "status": "PARTIAL",
+      "evidence": "Protected cost semantics and renderer tasks are planned; permission enforcement and runtime evidence are outstanding."
+    },
+    {
+      "id": "REQ-ERP-MULTIPLATFORM-SYNC",
+      "status": "PARTIAL",
+      "evidence": "One online-only semantic contract is planned across desktop/mobile; neither platform has operation-level runtime evidence."
+    }
+  ],
+  "task_ids": [
+    "ERP-IDENTIFIERS-001",
+    "AUDIT-ENV-001",
+    "AUDIT-REUSE-001",
+    "AUDIT-LEGACY-001",
+    "AUDIT-ROUTE-001",
+    "AUDIT-STATE-001",
+    "AUDIT-PARITY-001",
+    "AUDIT-A11Y-001",
+    "AUDIT-SECURITY-001",
+    "AUDIT-ARCH-001",
+    "AUDIT-RESP-001",
+    "AUDIT-REFACTOR-001",
+    "PLATFORM-AUDIT-001",
+    "PLATFORM-FILES-001",
+    "PLATFORM-TYPOGRAPHY-001",
+    "PRODUCT-CONTRACT-001",
+    "ADAPTER-MODE-001",
+    "REMOTE-STATE-001",
+    "DATA-INVENTORY-001",
+    "RLS-MIGRATION-001",
+    "PRODUCT-DATA-001",
+    "PRODUCT-ADAPTER-001",
+    "MEDIA-ADAPTER-001",
+    "PRODUCT-DESKTOP-001",
+    "PRODUCT-MOBILE-001",
+    "CATEGORY-DESKTOP-001",
+    "CATEGORY-MOBILE-001",
+    "MEDIA-DESKTOP-001",
+    "MEDIA-MOBILE-001",
+    "COST-DESKTOP-001",
+    "COST-MOBILE-001",
+    "ACTION-TESTS-001",
+    "ROUTE-RUNTIME-001",
+    "CUTOVER-ROLLBACK-001",
+    "CATEGORY-CONTRACT-001",
+    "COST-CONTRACT-001",
+    "CATEGORY-DATA-001",
+    "COST-DATA-001",
+    "MEDIA-DATA-001",
+    "CATEGORY-ADAPTER-001",
+    "COST-ADAPTER-001"
+  ],
+  "evidence": [
+    {
+      "type": "validation",
+      "path": "docs/implementation/erp/core/delivery-ledger.json",
+      "result": "All 8 repository delivery ledgers validate with the ERP ledger approved; 33 tasks are ready and 8 remain explicitly blocked."
+    },
+    {
+      "type": "plan",
+      "path": "docs/implementation/erp/core/implementation-plan.md",
+      "result": "Defines current state, target architecture, suite interaction matrix, audit gates, operation coverage, acceptance evidence and blockers."
+    },
+    {
+      "type": "phase-issue",
+      "path": "https://github.com/minoveaz/loopdev-v2/issues/39",
+      "result": "Build issue created before execution; no build task has started."
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "Handoff to 07-build under issue #39; execute ready tasks in dependency order and keep the eight blocked tasks gated.",
+  "approval_gate": {
+    "status": "approved",
+    "approved_by": "@loopdev-io",
+    "approved_at": "2026-10-25T11:21:29.469Z",
+    "artifact_fingerprint": "sha256:debca3bd6eb9b8a6364bfeeaf72735fd4123175c0b494801e99137e8c177d5e9",
+    "source": "User selected: Sí, aprobar el plan y empezar solo tareas desbloqueadas (Recomendado)."
+  },
+  "invalidated": true,
+  "notes": [
+    "Attempt 7 was blocked because approval validation required operation/task mappings for deferred capabilities. The Product Owner approved the unchanged Products/SKUs scope; attempt 8 records the scope-aware validator fix and preserves deferred Shopify/Inhand/other ERP boundaries.",
+    "The issue #39 and ERP active track were created before build execution. No production implementation, migration, database access or task execution has started.",
+    "External Platform, deployed-state and authorized-data blockers remain represented on their task records; clearing the global ledger blocker list does not resolve them."
+  ],
+  "invalidated_at": "2026-10-25T16:14:37.767Z",
+  "invalidation_reason": "Changed inputs: design"
+}

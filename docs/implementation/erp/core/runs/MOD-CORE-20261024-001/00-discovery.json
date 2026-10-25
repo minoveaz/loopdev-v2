@@ -5,30 +5,35 @@
   "phase": "00-discovery",
   "skill": "module-discovery",
   "parent_span_id": null,
-  "module": "Core",
+  "module": "core",
   "status": "completed",
   "decision_status": "confirmed",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 3,
-  "started_at": "2026-10-24T10:13:41.839Z",
-  "completed_at": "2026-10-24T14:29:24Z",
-  "input_fingerprint": "sha256:0c806cfd742e0479af179631b9fee00fd03cd5d372d5d0f93e52025f5523f8fb",
+  "attempt": 11,
+  "started_at": "2026-10-25T15:36:29.308Z",
+  "completed_at": "2026-10-25T15:37:19.090Z",
+  "input_fingerprint": "sha256:277c5cbc7947a25e3b7f6414e80840fce9510be4d9ac03da46c333c69e408009",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
-    "base_branch": null,
-    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
-    "working_tree": "untracked ERP implementation docs; no production code changes",
-    "runtime_url": null,
-    "runtime_port": null
+    "base_branch": "develop",
+    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
+    "working_tree": "Modified worktree (50 paths): Products planning/evidence, Catalog adapter/tests and local migrations; no Supabase remote writes or migration applications.",
+    "runtime_url": "http://localhost:8080/app/erp/products",
+    "runtime_port": 8080,
+    "serving_process": "Vite dev server (node PID 32300)"
   },
   "input_artifacts": [
     "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
     "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+    "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+    "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md",
     "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
     "docs/implementation/erp/core/discovery.md",
     "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/implementation/erp/core/implementation-plan.md",
+    "tracks/active/erp/2026-10-25-erp-products-and-skus.md",
     "minoveaz/loopdev-v2#36",
     "User decision: ERP transversal para pymes de distintos sectores desde el inicio.",
     "User-confirmed Products item classes, independent operational uses, category hierarchy, product-level sourcing and variant SKU rules."
@@ -86,7 +91,9 @@
     "Recorded the user's confirmed cross-sector SME target without treating it as approval for an unbounded ERP MVP.",
     "Expanded the discovery map and ledger with sector-neutral candidate areas for sales, procurement, inventory, finance and operational reporting.",
     "Preserved existing capability IDs and documented the first-release module set as open.",
-    "Revalidated the expanded delivery ledger and JSON artifacts.",
+    "Revalidated the current discovery against the V2 source-of-truth, platform UI/shell references, product definition, approved plan and current implementation.",
+    "Confirmed the canonical desktop route and recorded its runtime failure when VITE_CATALOG_ADAPTER_MODE is unset; local_demo is forbidden for the authenticated tenant because the fixture data is scoped to local-development-organization.",
+    "Confirmed ADAPTER-MODE-001 makes mode selection explicit and strict Catalog persistence errors visible; its focused tests pass, while authenticated remote runtime remains unverified and no remote writes were attempted.",
     "Amended discovery with CR-ERP-PRODUCT-MASTER-MODEL after the user's product-model decisions; the category-inheritance assumption was subsequently resolved by the user in favor of independently assigned SKU categories."
   ],
   "validation": [
@@ -96,9 +103,34 @@
       "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
     },
     {
-      "command": "python3 ERP workspace JSON parse check",
+      "command": "npm run validate:multiplatform",
       "result": "passed",
-      "evidence": "ERP workspace JSON files parse successfully."
+      "evidence": "Multiplatform delivery validation passed."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed",
+      "evidence": "Module run validation passed: 110 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts",
+      "result": "passed: 1 file, 16 tests",
+      "evidence": "Explicit adapter-mode failure, remote no-fallback, and strict local persistence tests."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "App and Node TypeScript projects."
+    },
+    {
+      "command": "supabase db lint --local",
+      "result": "passed",
+      "evidence": "No schema errors found in local extensions and public schemas; no remote database operation."
+    },
+    {
+      "command": "Authenticated browser: http://localhost:8080/app/erp/products",
+      "result": "passed",
+      "evidence": "The canonical page and shell load, but the current environment has no explicit catalog adapter mode and shows the fail-closed configuration error."
     }
   ],
   "requirements": [
@@ -110,7 +142,7 @@
     {
       "id": "REQ-ERP-CATALOG-FOUNDATION",
       "status": "PARTIAL",
-      "evidence": "Local adapter/tests, remote adapter and migration reviewed; the user-confirmed item-class/category/sourcing model is recorded as a proposal, not runtime behavior; remote runtime and permission parity remain unverified."
+      "evidence": "Catalog contracts, local/remote adapters and migrations exist; explicit adapter mode and strict local persistence are tested. The authenticated runtime currently lacks the mode configuration, local_demo fixtures do not match its tenant, and remote authorization/runtime remain unverified."
     },
     {
       "id": "REQ-ERP-PRODUCT-CATEGORIES",
@@ -131,15 +163,24 @@
   "evidence": [
     "User selected the cross-sector SME ERP target during this session.",
     "ERP capability candidates and classifications are listed in discovery.md and delivery-ledger.json.",
-    "Existing catalog source, adapters, migration, routes and tests remain as documented in discovery.md."
+    "The canonical /app/erp/products route renders in the authenticated desktop shell; its data request fails closed because no adapter mode is configured.",
+    "Explicit local_demo selection returns forbidden for the authenticated tenant; remote mode was not enabled and no Supabase remote writes or migrations were performed.",
+    "The local Supabase schema lint and focused Catalog adapter test suite pass."
   ],
-  "detected_failure": null,
-  "likely_failure_origin": null,
-  "next_handoff": "01-design: incorporate CR-ERP-PRODUCT-MASTER-MODEL; visual design then remains gated on explicit conceptual approval.",
+  "detected_failure": {
+    "code": "DISCOVERY-ERP-001",
+    "detected_by": "module-discovery",
+    "summary": "The authenticated Products route has no safe working data mode in the current runtime: mode is unset, and the local_demo fixtures are scoped to a different tenant."
+  },
+  "likely_failure_origin": "Runtime configuration is unset; the local demo adapter uses a fixed fixture organization ID rather than tenant-scoped demo persistence.",
+  "next_handoff": "01-design: reconcile the current runtime/configuration and existing code gaps with the approved Products scope without enabling remote writes; preserve the recorded mobile, RLS, audit, legacy-data and typography blockers.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
     "approved_at": null
   },
-  "invalidated": false
+  "invalidated": false,
+  "invalidated_at": "2026-10-25T15:33:35.646Z",
+  "invalidation_reason": "Changed inputs: scope",
+  "task_ids": []
 }

@@ -81,6 +81,15 @@ function fingerprintPaths(root, paths, excludedFragments = []) {
   return sha256(content);
 }
 
+function fingerprintLedgerScope(root, ledgerPath) {
+  const ledger = readJson(join(root, ledgerPath));
+  const mutableTaskFields = new Set(["owner", "status", "blocked_by", "evidence_refs"]);
+  const plannedTasks = ledger.tasks.map((task) => Object.fromEntries(
+    Object.entries(task).filter(([field]) => !mutableTaskFields.has(field)),
+  ));
+  return sha256(`${ledgerPath}:${JSON.stringify({ ...ledger, tasks: plannedTasks })}`);
+}
+
 function git(root, args, fallback = null) {
   try {
     return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
@@ -148,7 +157,7 @@ export class DeliveryStateMachine {
       product: fingerprintPaths(this.root, [join("docs", "06-product", slug(suite), slug(moduleName))]),
       scope: ledger
         ? sha256(JSON.stringify(approvedScope(ledger)))
-        : fingerprintPaths(this.root, [join(workspace, "delivery-ledger.json")]),
+        : fingerprintLedgerScope(this.root, join(workspace, "delivery-ledger.json")),
       design: fingerprintPaths(this.root, [join(workspace, "architecture-design.md"), join(workspace, "visual-design.md"), join(workspace, "view-state-matrix.md")]),
       plan: ledger
         ? sha256(JSON.stringify({
@@ -312,15 +321,19 @@ export class DeliveryStateMachine {
           ? ledger.tasks.map((task) => task.id)
           : [];
     }
+    const previous = checkpoints.get(phaseId)?.checkpoint;
     const checkpoint = {
+      ...previous,
       schema_version: 1, run_id: runId, span_id: `${runId}:${phaseId}`, phase: phaseId, skill,
-      parent_span_id: null, module: moduleName, status: "running", decision_status: "open",
+      parent_span_id: null, module: moduleName, status: "running", decision_status: previous?.decision_status ?? "open",
       architecture_quality: "PENDING", attempt: manifest.attempt, started_at: this.now(), completed_at: null,
       input_fingerprint: manifest.input_fingerprint, environment: manifest.environment,
-      input_artifacts: [], output_artifacts: [], decisions: [], actions: [], validation: [], requirements: [],
-      task_ids: taskIds,
-      evidence: [], detected_failure: null, likely_failure_origin: null, next_handoff: null,
-      approval_gate: { status: "not_required", approved_by: null, approved_at: null }, invalidated: false,
+      input_artifacts: previous?.input_artifacts ?? [], output_artifacts: previous?.output_artifacts ?? [],
+      decisions: previous?.decisions ?? [], actions: previous?.actions ?? [], validation: previous?.validation ?? [],
+      requirements: previous?.requirements ?? [], task_ids: taskIds.length ? taskIds : previous?.task_ids ?? [],
+      evidence: previous?.evidence ?? [], detected_failure: null, likely_failure_origin: null, next_handoff: null,
+      approval_gate: previous?.approval_gate ?? { status: "not_required", approved_by: null, approved_at: null },
+      invalidated: false,
     };
     const checkpointFile = join(this.runDirectory(suite, moduleName, runId), `${phaseId}.json`);
     writeJson(checkpointFile, checkpoint);
@@ -527,9 +540,13 @@ export class DeliveryStateMachine {
     return handoff;
   }
 
-  resume({ suite, moduleName, runId, reason }) {
+  resume({ suite, moduleName, runId, reason, resolveBlockers = null }) {
     const { file, manifest } = this.loadRun(suite, moduleName, runId);
     if (!reason) throw new Error("Resume requires --reason");
+    const activeBlockers = manifest.blocked_by ?? [];
+    const blockersToResolve = resolveBlockers ?? activeBlockers;
+    const unknownBlockers = blockersToResolve.filter((blocker) => !activeBlockers.includes(blocker));
+    if (unknownBlockers.length) throw new Error(`Cannot resolve inactive blocker(s): ${unknownBlockers.join(", ")}`);
     const workflow = workflowForRun(this.workflow, manifest);
     const current = this.fingerprints(suite, moduleName, manifest.profile);
     const changedCategories = Object.keys(current).filter((category) => manifest.fingerprints?.[category] !== current[category]);
@@ -567,8 +584,8 @@ export class DeliveryStateMachine {
       writeJson(entry.file, { ...entry.checkpoint, invalidated: true, invalidated_at: this.now(), invalidation_reason: `Changed inputs: ${changedCategories.join(", ")}` });
     }
     manifest.attempt = (manifest.attempt ?? 1) + 1;
-    manifest.resolved_blockers = [...(manifest.resolved_blockers ?? []), ...(manifest.blocked_by ?? []).map((blocker) => ({ blocker, resolution: reason, resolved_at: this.now() }))];
-    manifest.blocked_by = [];
+    manifest.resolved_blockers = [...(manifest.resolved_blockers ?? []), ...blockersToResolve.map((blocker) => ({ blocker, resolution: reason, resolved_at: this.now() }))];
+    manifest.blocked_by = activeBlockers.filter((blocker) => !blockersToResolve.includes(blocker));
     manifest.fingerprints = current;
     manifest.input_fingerprint = sha256(JSON.stringify(current));
     manifest.invalidated_phases = [...new Set([...(manifest.invalidated_phases ?? []), ...invalidated])];
@@ -585,7 +602,9 @@ export class DeliveryStateMachine {
     });
     manifest.current_phase = nextPhase?.id ?? manifest.current_phase;
     manifest.status = "running";
-    manifest.next_action = nextPhase ? `Start phase ${nextPhase.id} with ${nextPhase.skill}.` : "Resolve blockers or invalidated predecessors.";
+    manifest.next_action = nextPhase
+      ? `Start phase ${nextPhase.id} with ${nextPhase.skill}; keep ${manifest.blocked_by.length} task-level blocker(s) gated.`
+      : "Resolve blockers or invalidated predecessors.";
     writeJson(file, manifest);
     return {
       schema_version: 1, run_id: runId, attempt: manifest.attempt, reason,

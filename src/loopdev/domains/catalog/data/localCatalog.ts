@@ -2,12 +2,18 @@ import { createLocalStore } from "@/lib/localStore";
 import type { Entity } from "@/types";
 import type { CatalogAvailability, CatalogEligibility, CatalogItem, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductCostReference, ProductPartyRole, ProductReference } from "../types";
 
+const createCatalogLocalStore = <T extends Entity>(options: {
+  key: string;
+  seed: T[];
+  idPrefix?: string;
+}) => createLocalStore({ ...options, persistence: "strict" as const });
+
 const localOrganizationId = "local-development-organization";
 const otherOrganizationId = "other-development-organization";
 const sharedWorkspace = null;
 const now = "2026-09-10T00:00:00.000Z";
 
-export const localOrganizationCatalogsStore = createLocalStore<OrganizationCatalog>({
+export const localOrganizationCatalogsStore = createCatalogLocalStore<OrganizationCatalog>({
   key: "loopdev:catalog:catalogs",
   idPrefix: "catalog",
   seed: [
@@ -40,7 +46,7 @@ export const localOrganizationCatalogsStore = createLocalStore<OrganizationCatal
   ],
 });
 
-export const localCatalogItemsStore = createLocalStore<CatalogItem>({
+export const localCatalogItemsStore = createCatalogLocalStore<CatalogItem>({
   key: "loopdev:catalog:items",
   idPrefix: "catalog_item",
   seed: [
@@ -139,19 +145,19 @@ interface CatalogItemKeyCounter extends Entity {
   lastValue: string;
 }
 
-export const localCatalogItemKeyCountersStore = createLocalStore<CatalogItemKeyCounter>({
+export const localCatalogItemKeyCountersStore = createCatalogLocalStore<CatalogItemKeyCounter>({
   key: "loopdev:catalog:item-key-counters",
   idPrefix: "catalog_item_key_counter",
   seed: [],
 });
 
-export const localCatalogSkuCountersStore = createLocalStore<CatalogItemKeyCounter>({
+export const localCatalogSkuCountersStore = createCatalogLocalStore<CatalogItemKeyCounter>({
   key: "loopdev:catalog:sku-counters",
   idPrefix: "catalog_sku_counter",
   seed: [],
 });
 
-export const localCatalogOffersStore = createLocalStore<Offer>({
+export const localCatalogOffersStore = createCatalogLocalStore<Offer>({
   key: "loopdev:catalog:offers",
   idPrefix: "catalog_offer",
   seed: [
@@ -192,7 +198,7 @@ export const localCatalogOffersStore = createLocalStore<Offer>({
   ],
 });
 
-export const localCatalogVariantsStore = createLocalStore<CatalogVariant>({
+export const localCatalogVariantsStore = createCatalogLocalStore<CatalogVariant>({
   key: "loopdev:catalog:variants",
   idPrefix: "catalog_variant",
   seed: [
@@ -213,7 +219,7 @@ export const localCatalogVariantsStore = createLocalStore<CatalogVariant>({
   ],
 });
 
-export const localCatalogPartyRolesStore = createLocalStore<ProductPartyRole>({
+export const localCatalogPartyRolesStore = createCatalogLocalStore<ProductPartyRole>({
   key: "loopdev:catalog:party-roles",
   idPrefix: "catalog_party_role",
   seed: [
@@ -236,7 +242,7 @@ export const localCatalogPartyRolesStore = createLocalStore<ProductPartyRole>({
   ],
 });
 
-export const localCatalogAvailabilitiesStore = createLocalStore<CatalogAvailability>({
+export const localCatalogAvailabilitiesStore = createCatalogLocalStore<CatalogAvailability>({
   key: "loopdev:catalog:availabilities",
   idPrefix: "catalog_availability",
   seed: [
@@ -258,7 +264,7 @@ export const localCatalogAvailabilitiesStore = createLocalStore<CatalogAvailabil
   ],
 });
 
-export const localCatalogEligibilitiesStore = createLocalStore<CatalogEligibility>({
+export const localCatalogEligibilitiesStore = createCatalogLocalStore<CatalogEligibility>({
   key: "loopdev:catalog:eligibilities",
   idPrefix: "catalog_eligibility",
   seed: [
@@ -278,7 +284,7 @@ export const localCatalogEligibilitiesStore = createLocalStore<CatalogEligibilit
   ],
 });
 
-export const localCatalogPriceBooksStore = createLocalStore<PriceBook>({
+export const localCatalogPriceBooksStore = createCatalogLocalStore<PriceBook>({
   key: "loopdev:catalog:price-books",
   idPrefix: "price_book",
   seed: [
@@ -299,7 +305,7 @@ export const localCatalogPriceBooksStore = createLocalStore<PriceBook>({
   ],
 });
 
-export const localCatalogPriceEntriesStore = createLocalStore<PriceEntry>({
+export const localCatalogPriceEntriesStore = createCatalogLocalStore<PriceEntry>({
   key: "loopdev:catalog:price-entries",
   idPrefix: "price_entry",
   seed: [
@@ -325,7 +331,7 @@ export const localCatalogPriceEntriesStore = createLocalStore<PriceEntry>({
   ],
 });
 
-export const localProductReferencesStore = createLocalStore<ProductReference>({
+export const localProductReferencesStore = createCatalogLocalStore<ProductReference>({
   key: "loopdev:catalog:product-references",
   idPrefix: "product_reference",
   seed: [
@@ -335,7 +341,7 @@ export const localProductReferencesStore = createLocalStore<ProductReference>({
   ],
 });
 
-export const localProductCostReferencesStore = createLocalStore<ProductCostReference>({
+export const localProductCostReferencesStore = createCatalogLocalStore<ProductCostReference>({
   key: "loopdev:catalog:product-cost-references",
   idPrefix: "product_cost",
   seed: [],

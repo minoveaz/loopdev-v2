@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 940" role="img" aria-labelledby="title desc">
+  <title id="title">Products — selector contextual de medios mobile web</title>
+  <desc id="desc">Selector de imágenes existente en una superficie completa mobile. Conserva el contexto de producto, ofrece selección accesible y vuelve a la galería sin una ruta independiente de biblioteca.</desc>
+  <defs>
+    <style>
+      :root {
+        --background: hsl(220 30% 98.8%);
+        --foreground: hsl(222 32% 11%);
+        --card: hsl(0 0% 100%);
+        --muted: hsl(220 20% 96%);
+        --primary: hsl(234 80% 58%);
+        --muted-foreground: hsl(222 12% 46%);
+        --border: hsl(220 22% 92%);
+        --border-strong: hsl(220 20% 85%);
+      }
+      text { font-family: Inter, Arial, sans-serif; fill: var(--foreground); }
+      .small { font-size: 13px; }
+      .tiny { font-size: 11px; }
+      .muted { fill: var(--muted-foreground); }
+      .primary { fill: var(--primary); }
+    </style>
+  </defs>
+  <rect width="430" height="940" fill="var(--background)"/>
+  <rect x="18" y="18" width="394" height="916" rx="28" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="40" y="58" class="small" fill="var(--primary)" font-weight="700">‹  Volver a la galería</text>
+  <text x="40" y="101" font-size="21" font-weight="700">Usar imagen existente</text>
+  <text x="40" y="126" class="tiny muted">Arnés Trail · Producto base</text>
+  <line x1="40" y1="145" x2="390" y2="145" stroke="var(--border)"/>
+
+  <rect x="40" y="164" width="350" height="46" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <circle cx="60" cy="186" r="7" fill="none" stroke="var(--muted-foreground)" stroke-width="2"/>
+  <line x1="65" y1="191" x2="71" y2="197" stroke="var(--muted-foreground)" stroke-width="2"/>
+  <text x="82" y="191" class="small muted">Buscar imágenes</text>
+  <rect x="40" y="221" width="350" height="44" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="56" y="248" class="small">Todas las imágenes  ▾</text>
+
+  <rect x="40" y="280" width="166" height="222" rx="10" fill="var(--card)" stroke="var(--primary)" stroke-width="2"/>
+  <rect x="50" y="290" width="146" height="112" rx="7" fill="var(--muted)"/>
+  <path d="M75 390 L105 344 L128 372 L147 350 L185 390 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="157" cy="327" r="8" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="50" y="411" width="20" height="20" rx="4" class="primary"/>
+  <text x="56" y="426" class="tiny" fill="white" font-weight="700">✓</text>
+  <text x="77" y="426" class="tiny" font-weight="700">Seleccionada</text>
+  <text x="50" y="458" class="tiny" font-weight="600">campana-azul.webp</text>
+  <text x="50" y="479" class="tiny muted">WebP · 1.2 MB</text>
+
+  <rect x="224" y="280" width="166" height="222" rx="10" fill="var(--card)" stroke="var(--border)"/>
+  <rect x="234" y="290" width="146" height="112" rx="7" fill="var(--muted)"/>
+  <path d="M259 390 L289 344 L312 372 L331 350 L369 390 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="341" cy="327" r="8" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="234" y="411" width="20" height="20" rx="4" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="262" y="426" class="tiny">Seleccionar</text>
+  <text x="234" y="458" class="tiny" font-weight="600">arnes-rojo.jpg</text>
+  <text x="234" y="479" class="tiny muted">JPG · 2.8 MB</text>
+
+  <rect x="40" y="518" width="166" height="222" rx="10" fill="var(--card)" stroke="var(--border)"/>
+  <rect x="50" y="528" width="146" height="112" rx="7" fill="var(--muted)"/>
+  <path d="M75 628 L105 582 L128 610 L147 588 L185 628 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="157" cy="565" r="8" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="50" y="649" width="20" height="20" rx="4" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="78" y="664" class="tiny">Seleccionar</text>
+  <text x="50" y="696" class="tiny" font-weight="600">producto-lifestyle.png</text>
+  <text x="50" y="717" class="tiny muted">PNG · 4.1 MB</text>
+
+  <rect x="224" y="518" width="166" height="222" rx="10" fill="var(--card)" stroke="var(--border)"/>
+  <rect x="234" y="528" width="146" height="112" rx="7" fill="var(--muted)"/>
+  <path d="M259 628 L289 582 L312 610 L331 588 L369 628 Z" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <circle cx="341" cy="565" r="8" fill="white" stroke="var(--border-strong)" stroke-width="2"/>
+  <rect x="234" y="649" width="20" height="20" rx="4" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="262" y="664" class="tiny">Seleccionar</text>
+  <text x="234" y="696" class="tiny" font-weight="600">arnes-trail-detalle.png</text>
+  <text x="234" y="717" class="tiny muted">PNG · 860 KB</text>
+
+  <rect x="40" y="758" width="350" height="76" rx="9" fill="var(--muted)"/>
+  <text x="56" y="783" class="tiny" font-weight="700">Original conservado</text>
+  <text x="56" y="803" class="tiny">Optimizada ≤1600 px + miniatura 400 px</text>
+  <text x="56" y="820" class="tiny muted">Proporción preservada · sin recorte</text>
+
+  <line x1="40" y1="850" x2="390" y2="850" stroke="var(--border)"/>
+  <text x="40" y="875" class="tiny">1 imagen seleccionada</text>
+  <rect x="40" y="886" width="350" height="44" rx="8" class="primary"/>
+  <text x="134" y="914" class="small" fill="white" font-weight="700">Añadir a Arnés Trail</text>
+</svg>

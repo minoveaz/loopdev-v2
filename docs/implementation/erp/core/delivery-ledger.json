@@ -3,10 +3,10 @@
   "schema_version": 1,
   "suite": "erp",
   "module": "core",
-  "status": "draft",
-  "approved_by": null,
-  "approved_at": null,
-  "approval_source": null,
+  "status": "approved",
+  "approved_by": "@loopdev-io",
+  "approved_at": "2026-10-25T11:21:29.469Z",
+  "approval_source": "User selected: Sí, aprobar el plan y empezar solo tareas desbloqueadas (Recomendado).",
   "task_scoped_approvals": true,
   "product_sources": [
     "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
@@ -19,7 +19,9 @@
       "title": "Define ERP core capabilities and ownership boundaries",
       "classification": "REQUIRED_MVP",
       "source": "docs/implementation/erp/core/discovery.md",
-      "platforms": ["shared"],
+      "platforms": [
+        "shared"
+      ],
       "acceptance_criteria": [
         "Classify each candidate capability under Platform, CRM, ERP, or a public channel and record owner, consumers, current evidence, scope and next decision.",
         "Separate baseline ERP capabilities from approved MVP, follow-up and open scope; market references do not automatically become LoopDev requirements."
@@ -43,7 +45,11 @@
       "title": "Define shared, sector-neutral ERP Products master data",
       "classification": "REQUIRED_MVP",
       "source": "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
-      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
       "acceptance_criteria": [
         "Products, services, variants, offers and prices have one ERP-owned contract that CRM and channels reference rather than duplicate.",
         "The conceptual master distinguishes finished products, raw materials/components and services; semimanufactured items remain deferred until Manufacturing discovery.",
@@ -53,14 +59,21 @@
         "Persistence, permission and platform behavior are verified independently for domain, renderer and user operations before claiming parity."
       ],
       "evidence_level": "E2_UNIT",
-      "capability_ids": ["CAP-ERP-CATALOG", "CAP-ERP-PRODUCT-CATEGORIES"]
+      "capability_ids": [
+        "CAP-ERP-CATALOG",
+        "CAP-ERP-PRODUCT-CATEGORIES"
+      ]
     },
     {
       "id": "REQ-ERP-AUTO-IDENTIFIERS",
       "title": "Generate immutable LoopDev identifiers and SKU values",
       "classification": "REQUIRED_MVP",
       "source": "docs/implementation/erp/core/implementation-plan.md",
-      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
       "acceptance_criteria": [
         "The database UUID remains the immutable technical primary key; users cannot choose or edit it.",
         "LoopDev generates numeric, organization-unique, immutable internal keys for products and variants.",
@@ -68,14 +81,20 @@
         "A trusted future integration may replace the LoopDev SKU with the external system's SKU while preserving the internal key and recording source provenance; channel integration itself remains out of scope."
       ],
       "evidence_level": "E3_COMPONENT",
-      "capability_ids": ["CAP-ERP-CATALOG"]
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ]
     },
     {
       "id": "REQ-ERP-PRODUCT-CATEGORIES",
       "title": "Manage the hierarchical product category tree within Products",
       "classification": "REQUIRED_MVP",
       "source": "docs/implementation/erp/core/discovery.md",
-      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
       "acceptance_criteria": [
         "Category tree administration is available within Products, not as a separate Catalog module.",
         "Each product and variant has a LoopDev-generated, immutable internal key distinct from SKU and unique within the organization; changing SKU does not change either key. Categories also have a LoopDev-generated immutable key distinct from visible name and unique within the organization. Each separately managed/sold SKU has its own primary category and an SKU unique across the organization after trimming outer whitespace and comparing case-insensitively; stored SKU preserves entered case. The product base has one general category. Draft products/SKUs may omit category, but category is required before activation. Category is independent from item class and sourcing.",
@@ -85,14 +104,21 @@
         "Read/manage operations have explicit authorization and desktop/mobile-web semantic parity before implementation is considered complete."
       ],
       "evidence_level": "E2_UNIT",
-      "capability_ids": ["CAP-ERP-PRODUCT-CATEGORIES"]
+      "capability_ids": [
+        "CAP-ERP-CATALOG",
+        "CAP-ERP-PRODUCT-CATEGORIES"
+      ]
     },
     {
       "id": "REQ-ERP-PRODUCT-MEDIA",
       "title": "Manage reusable image assets for Products and variants",
       "classification": "REQUIRED_MVP",
       "source": "docs/implementation/erp/core/discovery.md",
-      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
       "acceptance_criteria": [
         "Products operators can browse an organization-scoped image library, upload images through the shared Files capability, and attach an existing image to a product or variant.",
         "The same image file can be reused by multiple product/variant associations within its organization without duplicating binary content; cross-organization association is rejected.",
@@ -101,14 +127,20 @@
         "This scope does not publish or synchronize images to ecommerce, Shopify or social channels and does not expose public storage URLs."
       ],
       "evidence_level": "E3_COMPONENT",
-      "capability_ids": ["CAP-ERP-PRODUCT-MEDIA"]
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-MEDIA"
+      ]
     },
     {
       "id": "REQ-ERP-COST-REFERENCE",
       "title": "Maintain a non-accounting unit purchase-cost reference for Products",
       "classification": "REQUIRED_MVP",
       "source": "docs/implementation/erp/core/design.md",
-      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
       "acceptance_criteria": [
         "A product without separately managed SKUs or an individual SKU can carry a unit purchase-cost reference with an explicit currency.",
         "The reference is not accounting/inventory valuation, manufacturing cost, sales price or margin; the product UI never derives or displays margin from it.",
@@ -116,45 +148,123 @@
         "Product/SKU ownership, default/inheritance behavior, currency defaults, source/history and migration are resolved in domain/access/API/sync tasks before the capability can be built."
       ],
       "evidence_level": "E3_COMPONENT",
-      "capability_ids": ["CAP-ERP-COST-REFERENCE"]
+      "capability_ids": [
+        "CAP-ERP-COST-REFERENCE"
+      ]
+    },
+    {
+      "id": "REQ-ERP-ACCESS-AUDIT",
+      "title": "Enforce tenant-scoped permissions and append-only audit for Products",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/erp/core/access-model.md",
+      "platforms": [
+        "shared"
+      ],
+      "acceptance_criteria": [
+        "Product mutations enforce organization membership and operation-specific RLS; permanent delete is denied.",
+        "Cost read/manage permissions remain separate and owner/admin-only by default; unauthorized projections reveal no cost values or existence hints.",
+        "Every successful remote Products mutation writes an append-only Platform audit event in the same transaction, without sensitive field values; audit failure aborts the mutation."
+      ],
+      "evidence_level": "E2_UNIT",
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ]
+    },
+    {
+      "id": "REQ-ERP-DESKTOP-MOBILE-PARITY",
+      "title": "Deliver and verify Products operations on desktop and mobile web",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "Every required Products, category, media and cost operation uses the same contract, permission, validation, state and navigation meaning on desktop and mobile web.",
+        "Authenticated routes, responsive operation behavior, accessibility and recovery evidence are recorded separately for both web surfaces."
+      ],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": [
+        "CAP-ERP-CATALOG",
+        "CAP-ERP-PRODUCT-CATEGORIES",
+        "CAP-ERP-PRODUCT-MEDIA",
+        "CAP-ERP-COST-REFERENCE"
+      ]
+    },
+    {
+      "id": "REQ-ERP-PLAN-AND-RELEASE-GATES",
+      "title": "Approve plan and satisfy migration, verification and release gates",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md",
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "acceptance_criteria": [
+        "The Product Owner approves the dependency-aware plan before 07-build; owner-dependent tasks remain explicitly blocked.",
+        "No release or issue closure occurs while a required operation lacks evidence or any applicable requirement is partial, failed or not tested."
+      ],
+      "evidence_level": "E4_JOURNEY",
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ]
     },
     {
       "id": "REQ-ERP-CRM-BOUNDARY",
       "title": "Reuse CRM ownership for customer relationships",
       "classification": "PLATFORM_REUSE",
       "source": "docs/06-product/crm/README.md",
-      "platforms": ["shared"],
+      "platforms": [
+        "shared"
+      ],
       "acceptance_criteria": [
         "ERP transactions reference CRM customer/contact identity where applicable and do not create a parallel relationship-history master."
       ],
       "evidence_level": "E0_PRESENT",
-      "capability_ids": ["CAP-ERP-CATALOG", "CAP-MIAUCRAFT-SHOPIFY", "CAP-INHAND-COMMERCE"]
+      "capability_ids": [
+        "CAP-ERP-CATALOG",
+        "CAP-MIAUCRAFT-SHOPIFY",
+        "CAP-INHAND-COMMERCE"
+      ]
     },
     {
       "id": "REQ-MIAUCRAFT-SHOPIFY",
       "title": "Prioritize a Shopify-connected ERP workflow for MiauCraft",
       "classification": "REQUIRED_FOLLOW_UP",
       "source": "docs/implementation/erp/core/discovery.md",
-      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
       "acceptance_criteria": [
         "Shopify remains MiauCraft's public sales platform; initial synchronization scope, source of truth and allowed writes are explicitly approved.",
         "The approved connector is tenant-scoped, idempotent, observable and recoverable, with evidence for errors and reconciliation."
       ],
       "evidence_level": "E3_COMPONENT",
-      "capability_ids": ["CAP-MIAUCRAFT-SHOPIFY"]
+      "capability_ids": [
+        "CAP-MIAUCRAFT-SHOPIFY"
+      ]
     },
     {
       "id": "REQ-INHAND-NATIVE-COMMERCE",
       "title": "Design native LoopDev commerce for Inhand after MiauCraft",
       "classification": "REQUIRED_FOLLOW_UP",
       "source": "docs/implementation/erp/core/discovery.md",
-      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
       "acceptance_criteria": [
         "The approved first-release design targets physical products, one warehouse, a LoopDev-owned commerce backend and an external payment provider.",
         "Order, stock, tax, shipping, returns and storefront operations have explicit lifecycle, permissions and acceptance evidence before implementation starts."
       ],
       "evidence_level": "E4_JOURNEY",
-      "capability_ids": ["CAP-INHAND-COMMERCE"]
+      "capability_ids": [
+        "CAP-INHAND-COMMERCE"
+      ]
     }
   ],
   "capabilities": [
@@ -165,347 +275,1293 @@
       "requirement_ids": [
         "REQ-ERP-BOUNDARY-MAP",
         "REQ-ERP-CATALOG-FOUNDATION",
+        "REQ-ERP-AUTO-IDENTIFIERS",
+        "REQ-ERP-PRODUCT-CATEGORIES",
         "REQ-ERP-CRM-BOUNDARY",
-        "REQ-ERP-AUTO-IDENTIFIERS"
+        "REQ-ERP-ACCESS-AUDIT",
+        "REQ-ERP-DESKTOP-MOBILE-PARITY",
+        "REQ-ERP-PLAN-AND-RELEASE-GATES"
       ],
       "semantics": {
-        "operations": ["catalog.list", "catalog.manage", "catalog.identifiers.generate"],
+        "operations": [
+          "catalog.list",
+          "catalog.manage",
+          "catalog.variants.list",
+          "catalog.variants.manage",
+          "catalog.offers.list",
+          "catalog.offers.manage",
+          "catalog.price-books.list",
+          "catalog.price-books.manage",
+          "catalog.price-entries.list",
+          "catalog.price-entries.manage",
+          "catalog.identifiers.generate"
+        ],
         "validation_contract": "src/loopdev/domains/catalog/types.ts",
-        "errors": ["not-found", "conflict", "invalid-scope", "forbidden", "server-error"]
+        "errors": [
+          "not-found",
+          "conflict",
+          "invalid-scope",
+          "forbidden",
+          "server-error"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "ERP Products administration; canonical route proposed, legacy route current", "route": "/app/erp/products" },
-        "mobile_web": { "required": true, "surface": "Responsive ERP Products administration; canonical route proposed, legacy route current", "route": "/app/erp/products" },
-        "ios": { "required": false, "surface": "planned; owner and decision pending", "route": null },
-        "android": { "required": false, "surface": "planned; owner and decision pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP Products administration; canonical route wired, legacy route retained",
+          "route": "/app/erp/products"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP Products administration; canonical route wired, legacy route retained",
+          "route": "/app/erp/products"
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; owner and decision pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; owner and decision pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "partial", "renderer": "partial", "operations": "partial" },
+      "parity": {
+        "domain": "partial",
+        "renderer": "partial",
+        "operations": "partial"
+      },
       "operation_coverage": [
-        { "id": "catalog.list", "desktop_web": "implemented", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "catalog.manage", "desktop_web": "implemented", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "catalog.identifiers.generate", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+        {
+          "id": "catalog.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.variants.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.variants.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.offers.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.offers.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.price-books.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.price-books.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.price-entries.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.price-entries.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.identifiers.generate",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["catalog.read", "catalog.write", "catalog.manage"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "catalog.read",
+        "catalog.write",
+        "catalog.manage (legacy compatibility only)"
+      ],
       "contract_refs": [
         "src/loopdev/domains/catalog/types.ts",
         "src/loopdev/domains/catalog/adapter/index.ts",
         "supabase/migrations/20260928160000_erp_catalog_foundation.sql"
       ],
-      "task_ids": ["ERP-IDENTIFIERS-001"]
+      "task_ids": [
+        "ERP-IDENTIFIERS-001",
+        "AUDIT-ENV-001",
+        "AUDIT-REUSE-001",
+        "AUDIT-LEGACY-001",
+        "AUDIT-ROUTE-001",
+        "AUDIT-STATE-001",
+        "AUDIT-PARITY-001",
+        "AUDIT-A11Y-001",
+        "AUDIT-SECURITY-001",
+        "AUDIT-ARCH-001",
+        "AUDIT-RESP-001",
+        "AUDIT-REFACTOR-001",
+        "PLATFORM-AUDIT-001",
+        "PLATFORM-TYPOGRAPHY-001",
+        "PRODUCT-CONTRACT-001",
+        "ADAPTER-MODE-001",
+        "REMOTE-STATE-001",
+        "RLS-MIGRATION-001",
+        "PRODUCT-DATA-001",
+        "PRODUCT-ADAPTER-001",
+        "PRODUCT-DESKTOP-001",
+        "PRODUCT-MOBILE-001",
+        "ACTION-TESTS-001",
+        "ROUTE-RUNTIME-001",
+        "CUTOVER-ROLLBACK-001"
+      ]
     },
     {
       "id": "CAP-ERP-PRODUCT-MEDIA",
       "name": "Product and variant image library",
       "classification": "REQUIRED_MVP",
-      "requirement_ids": ["REQ-ERP-PRODUCT-MEDIA"],
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-MEDIA",
+        "REQ-ERP-DESKTOP-MOBILE-PARITY"
+      ],
       "semantics": {
         "operations": [
           "catalog.media.library.list",
           "catalog.media.upload",
           "catalog.media.attach",
           "catalog.media.metadata.manage",
-          "catalog.media.detach"
+          "catalog.media.reorder",
+          "catalog.media.detach",
+          "catalog.media.preview"
         ],
         "validation_contract": null,
-        "errors": ["forbidden", "cross-organization-file", "invalid-image", "conflict", "upload-failed", "file-unavailable"]
+        "errors": [
+          "forbidden",
+          "cross-organization-file",
+          "invalid-image",
+          "conflict",
+          "upload-failed",
+          "file-unavailable"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "Product record and organization-scoped image library; composition to be designed", "route": "/app/erp/products" },
-        "mobile_web": { "required": true, "surface": "Responsive Product record and image library; touch and upload-interruption behavior to be designed", "route": "/app/erp/products" },
-        "ios": { "required": false, "surface": "deferred; no native surface in this release", "route": null },
-        "android": { "required": false, "surface": "deferred; no native surface in this release", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "Product record carousel and in-context organization-scoped asset selector; conceptual composition approved",
+          "route": "/app/erp/products"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive Product record and full-surface asset selector; conceptual composition approved",
+          "route": "/app/erp/products"
+        },
+        "ios": {
+          "required": false,
+          "surface": "deferred; no native surface in this release",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "deferred; no native surface in this release",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "catalog.media.library.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
-        { "id": "catalog.media.upload", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
-        { "id": "catalog.media.attach", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
-        { "id": "catalog.media.metadata.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
-        { "id": "catalog.media.detach", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+        {
+          "id": "catalog.media.library.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.media.upload",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.media.attach",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.media.metadata.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.media.reorder",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.media.detach",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.media.preview",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["catalog.read", "catalog.write", "work.read", "work.write"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "catalog.read",
+        "catalog.write",
+        "Platform Files authorization (permission mapping pending)"
+      ],
       "contract_refs": [
         "docs/implementation/erp/core/discovery.md",
         "src/loopdev/domains/files/types.ts",
         "docs/03-platform/backend/FILES_BACKEND_MAPPING.md"
       ],
-      "task_ids": []
+      "task_ids": [
+        "AUDIT-PARITY-001",
+        "AUDIT-A11Y-001",
+        "PLATFORM-FILES-001",
+        "MEDIA-ADAPTER-001",
+        "MEDIA-DESKTOP-001",
+        "MEDIA-MOBILE-001",
+        "ACTION-TESTS-001",
+        "ROUTE-RUNTIME-001",
+        "MEDIA-DATA-001"
+      ]
     },
     {
       "id": "CAP-ERP-PRODUCT-CATEGORIES",
       "name": "Hierarchical product category management within Products",
       "classification": "REQUIRED_MVP",
-      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP", "REQ-ERP-CATALOG-FOUNDATION", "REQ-ERP-PRODUCT-CATEGORIES"],
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP",
+        "REQ-ERP-CATALOG-FOUNDATION",
+        "REQ-ERP-PRODUCT-CATEGORIES",
+        "REQ-ERP-DESKTOP-MOBILE-PARITY"
+      ],
       "semantics": {
-        "operations": ["catalog.categories.list", "catalog.categories.manage"],
+        "operations": [
+          "catalog.categories.list",
+          "catalog.categories.manage",
+          "catalog.categories.assign"
+        ],
         "validation_contract": null,
-        "errors": ["forbidden", "invalid-scope", "parent-not-found", "category-conflict", "category-in-use"]
+        "errors": [
+          "forbidden",
+          "invalid-scope",
+          "parent-not-found",
+          "category-conflict",
+          "category-in-use"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "Dedicated Products category-management view; conceptual composition", "route": "/app/erp/products" },
-        "mobile_web": { "required": true, "surface": "Stacked tree and detail within Products; conceptual composition", "route": "/app/erp/products" },
-        "ios": { "required": false, "surface": "planned; owner and decision pending", "route": null },
-        "android": { "required": false, "surface": "planned; owner and decision pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "Dedicated Products category-management view; conceptual composition",
+          "route": "/app/erp/products"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Stacked tree and detail within Products; conceptual composition",
+          "route": "/app/erp/products"
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; owner and decision pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; owner and decision pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "catalog.categories.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
-        { "id": "catalog.categories.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+        {
+          "id": "catalog.categories.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.categories.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.categories.assign",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["catalog.read", "catalog.manage"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "catalog.read",
+        "catalog.write"
+      ],
       "contract_refs": [
         "docs/implementation/erp/core/discovery.md",
         "docs/implementation/erp/core/visual-design.md",
         "docs/implementation/erp/core/view-state-matrix.md"
       ],
-      "task_ids": []
+      "task_ids": [
+        "AUDIT-PARITY-001",
+        "AUDIT-A11Y-001",
+        "DATA-INVENTORY-001",
+        "CATEGORY-DESKTOP-001",
+        "CATEGORY-MOBILE-001",
+        "ACTION-TESTS-001",
+        "ROUTE-RUNTIME-001",
+        "CATEGORY-CONTRACT-001",
+        "CATEGORY-DATA-001",
+        "CATEGORY-ADAPTER-001"
+      ]
     },
     {
       "id": "CAP-ERP-COST-REFERENCE",
       "name": "Non-accounting unit purchase-cost reference",
       "classification": "REQUIRED_MVP",
-      "requirement_ids": ["REQ-ERP-COST-REFERENCE"],
+      "requirement_ids": [
+        "REQ-ERP-COST-REFERENCE",
+        "REQ-ERP-DESKTOP-MOBILE-PARITY"
+      ],
       "semantics": {
-        "operations": ["catalog.cost-reference.read", "catalog.cost-reference.manage"],
+        "operations": [
+          "catalog.cost-reference.read",
+          "catalog.cost-reference.manage"
+        ],
         "validation_contract": null,
-        "errors": ["forbidden", "invalid-currency", "invalid-amount", "conflict", "server-error"]
+        "errors": [
+          "forbidden",
+          "invalid-currency",
+          "invalid-amount",
+          "conflict",
+          "server-error"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "Protected cost-reference section on full-page product/SKU record and editor", "route": "/app/erp/products" },
-        "mobile_web": { "required": true, "surface": "Protected cost-reference section on full-page product/SKU record and editor", "route": "/app/erp/products" },
-        "ios": { "required": false, "surface": "deferred; no native surface in this release", "route": null },
-        "android": { "required": false, "surface": "deferred; no native surface in this release", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "Protected cost-reference section on full-page product/SKU record and editor",
+          "route": "/app/erp/products"
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Protected cost-reference section on full-page product/SKU record and editor",
+          "route": "/app/erp/products"
+        },
+        "ios": {
+          "required": false,
+          "surface": "deferred; no native surface in this release",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "deferred; no native surface in this release",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "catalog.cost-reference.read", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
-        { "id": "catalog.cost-reference.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+        {
+          "id": "catalog.cost-reference.read",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        },
+        {
+          "id": "catalog.cost-reference.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "not_applicable",
+          "android": "not_applicable",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["catalog.cost.read", "catalog.cost.manage"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "catalog.cost.read",
+        "catalog.cost.manage"
+      ],
       "contract_refs": [
         "docs/implementation/erp/core/design.md",
         "docs/implementation/erp/core/domain-model.md",
         "docs/implementation/erp/core/access-model.md",
         "docs/implementation/erp/core/visual-design.md"
       ],
-      "task_ids": []
+      "task_ids": [
+        "AUDIT-PARITY-001",
+        "AUDIT-A11Y-001",
+        "COST-DESKTOP-001",
+        "COST-MOBILE-001",
+        "ACTION-TESTS-001",
+        "ROUTE-RUNTIME-001",
+        "COST-CONTRACT-001",
+        "COST-DATA-001",
+        "COST-ADAPTER-001"
+      ]
     },
     {
       "id": "CAP-MIAUCRAFT-SHOPIFY",
       "name": "MiauCraft Shopify channel integration",
       "classification": "REQUIRED_FOLLOW_UP",
-      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP", "REQ-MIAUCRAFT-SHOPIFY", "REQ-ERP-CRM-BOUNDARY"],
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP",
+        "REQ-MIAUCRAFT-SHOPIFY",
+        "REQ-ERP-CRM-BOUNDARY"
+      ],
       "semantics": {
-        "operations": ["channel.connect", "channel.sync_approved_data", "channel.reconcile"],
+        "operations": [
+          "channel.connect",
+          "channel.sync_approved_data",
+          "channel.reconcile"
+        ],
         "validation_contract": null,
-        "errors": ["connection-failed", "forbidden", "provider-error", "conflict", "sync-failed"]
+        "errors": [
+          "connection-failed",
+          "forbidden",
+          "provider-error",
+          "conflict",
+          "sync-failed"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "ERP channel administration", "route": null },
-        "mobile_web": { "required": true, "surface": "Responsive ERP channel administration", "route": null },
-        "ios": { "required": false, "surface": "planned; owner and decision pending", "route": null },
-        "android": { "required": false, "surface": "planned; owner and decision pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP channel administration",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP channel administration",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; owner and decision pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; owner and decision pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "channel.connect", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "channel.sync_approved_data", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "channel.reconcile", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+        {
+          "id": "channel.connect",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "channel.sync_approved_data",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "channel.reconcile",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["erp.integration.read", "erp.integration.manage"],
-      "contract_refs": ["packages/contracts/src/"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "erp.integration.read",
+        "erp.integration.manage"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/"
+      ],
       "task_ids": []
     },
     {
       "id": "CAP-INHAND-COMMERCE",
       "name": "Inhand native commerce backend and storefront channel",
       "classification": "REQUIRED_FOLLOW_UP",
-      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP", "REQ-INHAND-NATIVE-COMMERCE", "REQ-ERP-CRM-BOUNDARY"],
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP",
+        "REQ-INHAND-NATIVE-COMMERCE",
+        "REQ-ERP-CRM-BOUNDARY"
+      ],
       "semantics": {
-        "operations": ["commerce.order.manage", "inventory.single_warehouse.manage", "payment.coordinate"],
+        "operations": [
+          "commerce.order.manage",
+          "inventory.single_warehouse.manage",
+          "payment.coordinate"
+        ],
         "validation_contract": null,
-        "errors": ["validation-error", "forbidden", "conflict", "stock-unavailable", "payment-failed"]
+        "errors": [
+          "validation-error",
+          "forbidden",
+          "conflict",
+          "stock-unavailable",
+          "payment-failed"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "ERP administration and public storefront", "route": null },
-        "mobile_web": { "required": true, "surface": "Responsive ERP administration and public storefront", "route": null },
-        "ios": { "required": false, "surface": "planned; owner and decision pending", "route": null },
-        "android": { "required": false, "surface": "planned; owner and decision pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP administration and public storefront",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP administration and public storefront",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; owner and decision pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; owner and decision pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "commerce.order.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "inventory.single_warehouse.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "payment.coordinate", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+        {
+          "id": "commerce.order.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "inventory.single_warehouse.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "payment.coordinate",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["erp.orders.read", "erp.orders.manage", "erp.inventory.read", "erp.inventory.manage"],
-      "contract_refs": ["packages/contracts/src/"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "erp.orders.read",
+        "erp.orders.manage",
+        "erp.inventory.read",
+        "erp.inventory.manage"
+      ],
+      "contract_refs": [
+        "packages/contracts/src/"
+      ],
       "task_ids": []
     },
     {
       "id": "CAP-ERP-SUPPLIERS",
       "name": "Independent ERP supplier management",
       "classification": "OPEN_DECISION",
-      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP"
+      ],
       "semantics": {
-        "operations": ["supplier.list", "supplier.manage"],
+        "operations": [
+          "supplier.list",
+          "supplier.manage"
+        ],
         "validation_contract": null,
-        "errors": ["validation-error", "forbidden", "conflict", "not-found"]
+        "errors": [
+          "validation-error",
+          "forbidden",
+          "conflict",
+          "not-found"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "ERP supplier workspace; route and release timing open", "route": null },
-        "mobile_web": { "required": true, "surface": "Responsive ERP supplier workspace; route and release timing open", "route": null },
-        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
-        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP supplier workspace; route and release timing open",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP supplier workspace; route and release timing open",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "supplier.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "supplier.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+        {
+          "id": "supplier.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "supplier.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["erp.suppliers.read", "erp.suppliers.manage"],
-      "contract_refs": ["docs/implementation/erp/core/design.md", "docs/implementation/erp/core/architecture-design.md"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "erp.suppliers.read",
+        "erp.suppliers.manage"
+      ],
+      "contract_refs": [
+        "docs/implementation/erp/core/design.md",
+        "docs/implementation/erp/core/architecture-design.md"
+      ],
       "task_ids": []
     },
     {
       "id": "CAP-ERP-SALES",
       "name": "Cross-sector sales and order management",
       "classification": "OPEN_DECISION",
-      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP"
+      ],
       "semantics": {
-        "operations": ["sales.document.list", "sales.document.create", "sales.order.transition"],
+        "operations": [
+          "sales.document.list",
+          "sales.document.create",
+          "sales.order.transition"
+        ],
         "validation_contract": null,
-        "errors": ["validation-error", "forbidden", "conflict", "not-found"]
+        "errors": [
+          "validation-error",
+          "forbidden",
+          "conflict",
+          "not-found"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "ERP sales workspace", "route": null },
-        "mobile_web": { "required": true, "surface": "Responsive ERP sales workspace", "route": null },
-        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
-        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP sales workspace",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP sales workspace",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "sales.document.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "sales.document.create", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "sales.order.transition", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+        {
+          "id": "sales.document.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "sales.document.create",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "sales.order.transition",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["erp.sales.read", "erp.sales.create", "erp.sales.manage", "erp.sales.approve"],
-      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "erp.sales.read",
+        "erp.sales.create",
+        "erp.sales.manage",
+        "erp.sales.approve"
+      ],
+      "contract_refs": [
+        "docs/implementation/erp/core/discovery.md"
+      ],
       "task_ids": []
     },
     {
       "id": "CAP-ERP-PROCUREMENT",
       "name": "Cross-sector purchasing and receipts",
       "classification": "OPEN_DECISION",
-      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP"
+      ],
       "semantics": {
-        "operations": ["procurement.purchase_order.list", "procurement.purchase_order.create", "procurement.receipt.record"],
+        "operations": [
+          "procurement.purchase_order.list",
+          "procurement.purchase_order.create",
+          "procurement.receipt.record"
+        ],
         "validation_contract": null,
-        "errors": ["validation-error", "forbidden", "conflict", "supplier-unavailable"]
+        "errors": [
+          "validation-error",
+          "forbidden",
+          "conflict",
+          "supplier-unavailable"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "ERP procurement workspace", "route": null },
-        "mobile_web": { "required": true, "surface": "Responsive ERP procurement workspace", "route": null },
-        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
-        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP procurement workspace",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP procurement workspace",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "procurement.purchase_order.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "procurement.purchase_order.create", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "procurement.receipt.record", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+        {
+          "id": "procurement.purchase_order.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "procurement.purchase_order.create",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "procurement.receipt.record",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["erp.procurement.read", "erp.procurement.create", "erp.procurement.approve", "erp.inventory.receive"],
-      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "erp.procurement.read",
+        "erp.procurement.create",
+        "erp.procurement.approve",
+        "erp.inventory.receive"
+      ],
+      "contract_refs": [
+        "docs/implementation/erp/core/discovery.md"
+      ],
       "task_ids": []
     },
     {
       "id": "CAP-ERP-INVENTORY",
       "name": "Cross-sector inventory and stock operations",
       "classification": "OPEN_DECISION",
-      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP"
+      ],
       "semantics": {
-        "operations": ["inventory.stock.read", "inventory.movement.record", "inventory.reservation.manage"],
+        "operations": [
+          "inventory.stock.read",
+          "inventory.movement.record",
+          "inventory.reservation.manage"
+        ],
         "validation_contract": null,
-        "errors": ["validation-error", "forbidden", "conflict", "stock-unavailable"]
+        "errors": [
+          "validation-error",
+          "forbidden",
+          "conflict",
+          "stock-unavailable"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "ERP inventory workspace", "route": null },
-        "mobile_web": { "required": true, "surface": "Responsive ERP inventory workspace", "route": null },
-        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
-        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP inventory workspace",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP inventory workspace",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "inventory.stock.read", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "inventory.movement.record", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "inventory.reservation.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+        {
+          "id": "inventory.stock.read",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "inventory.movement.record",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "inventory.reservation.manage",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["erp.inventory.read", "erp.inventory.adjust", "erp.inventory.reserve"],
-      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "erp.inventory.read",
+        "erp.inventory.adjust",
+        "erp.inventory.reserve"
+      ],
+      "contract_refs": [
+        "docs/implementation/erp/core/discovery.md"
+      ],
       "task_ids": []
     },
     {
       "id": "CAP-ERP-FINANCE",
       "name": "Cross-sector billing and finance operations",
       "classification": "OPEN_DECISION",
-      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP"
+      ],
       "semantics": {
-        "operations": ["finance.invoice.list", "finance.invoice.issue", "finance.payment.reconcile"],
+        "operations": [
+          "finance.invoice.list",
+          "finance.invoice.issue",
+          "finance.payment.reconcile"
+        ],
         "validation_contract": null,
-        "errors": ["validation-error", "forbidden", "conflict", "provider-error"]
+        "errors": [
+          "validation-error",
+          "forbidden",
+          "conflict",
+          "provider-error"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "ERP finance workspace", "route": null },
-        "mobile_web": { "required": true, "surface": "Responsive ERP finance workspace", "route": null },
-        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
-        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP finance workspace",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP finance workspace",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "finance.invoice.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "finance.invoice.issue", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "finance.payment.reconcile", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+        {
+          "id": "finance.invoice.list",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "finance.invoice.issue",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "finance.payment.reconcile",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
-      "permissions": ["erp.finance.read", "erp.finance.issue", "erp.finance.reconcile", "erp.finance.approve"],
-      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "conflict",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "erp.finance.read",
+        "erp.finance.issue",
+        "erp.finance.reconcile",
+        "erp.finance.approve"
+      ],
+      "contract_refs": [
+        "docs/implementation/erp/core/discovery.md"
+      ],
       "task_ids": []
     },
     {
       "id": "CAP-ERP-REPORTING",
       "name": "Cross-sector ERP operational reporting",
       "classification": "OPEN_DECISION",
-      "requirement_ids": ["REQ-ERP-BOUNDARY-MAP"],
+      "requirement_ids": [
+        "REQ-ERP-BOUNDARY-MAP"
+      ],
       "semantics": {
-        "operations": ["erp.report.view", "erp.report.export"],
+        "operations": [
+          "erp.report.view",
+          "erp.report.export"
+        ],
         "validation_contract": null,
-        "errors": ["forbidden", "report-unavailable", "export-failed"]
+        "errors": [
+          "forbidden",
+          "report-unavailable",
+          "export-failed"
+        ]
       },
       "platforms": {
-        "desktop_web": { "required": true, "surface": "ERP reports workspace", "route": null },
-        "mobile_web": { "required": true, "surface": "Responsive ERP reports workspace", "route": null },
-        "ios": { "required": false, "surface": "planned; native scope pending", "route": null },
-        "android": { "required": false, "surface": "planned; native scope pending", "route": null }
+        "desktop_web": {
+          "required": true,
+          "surface": "ERP reports workspace",
+          "route": null
+        },
+        "mobile_web": {
+          "required": true,
+          "surface": "Responsive ERP reports workspace",
+          "route": null
+        },
+        "ios": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        },
+        "android": {
+          "required": false,
+          "surface": "planned; native scope pending",
+          "route": null
+        }
       },
-      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "parity": {
+        "domain": "not_tested",
+        "renderer": "not_tested",
+        "operations": "not_tested"
+      },
       "operation_coverage": [
-        { "id": "erp.report.view", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "erp.report.export", "desktop_web": "missing", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+        {
+          "id": "erp.report.view",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        },
+        {
+          "id": "erp.report.export",
+          "desktop_web": "missing",
+          "mobile_web": "missing",
+          "ios": "missing",
+          "android": "missing",
+          "adaptation_ref": null
+        }
       ],
-      "states": ["loading", "empty", "error", "forbidden", "offline", "pending", "success"],
-      "permissions": ["erp.reports.read", "erp.reports.export"],
-      "contract_refs": ["docs/implementation/erp/core/discovery.md"],
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "offline",
+        "pending",
+        "success"
+      ],
+      "permissions": [
+        "erp.reports.read",
+        "erp.reports.export"
+      ],
+      "contract_refs": [
+        "docs/implementation/erp/core/discovery.md"
+      ],
       "task_ids": []
     }
   ],
@@ -514,12 +1570,22 @@
       "id": "ERP-IDENTIFIERS-001",
       "phase": "07-build",
       "type": "backend",
-      "status": "blocked",
+      "status": "done",
       "title": "Generate immutable numeric product and SKU identifiers",
-      "requirement_ids": ["REQ-ERP-AUTO-IDENTIFIERS"],
-      "capability_ids": ["CAP-ERP-CATALOG"],
-      "operation_ids": ["catalog.identifiers.generate"],
-      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "requirement_ids": [
+        "REQ-ERP-AUTO-IDENTIFIERS"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "operation_ids": [
+        "catalog.identifiers.generate"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
       "dependencies": [],
       "owner": "@loopdev-io",
       "approval": {
@@ -537,12 +1603,30 @@
         "Focused adapter, component and migration validation passes; remote deployment remains gated by the shared Platform audit and deployment checks."
       ],
       "validation": [
-        { "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx", "required": true },
-        { "command": "npm run typecheck", "required": true },
-        { "command": "npm run build", "required": true },
-        { "command": "npm run i18n:check", "required": true },
-        { "command": "npm run validate:delivery-ledgers", "required": true },
-        { "command": "supabase db lint --local", "required": true }
+        {
+          "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        },
+        {
+          "command": "npm run build",
+          "required": true
+        },
+        {
+          "command": "npm run i18n:check",
+          "required": true
+        },
+        {
+          "command": "npm run validate:delivery-ledgers",
+          "required": true
+        },
+        {
+          "command": "supabase db lint --local",
+          "required": true
+        }
       ],
       "files": [
         "src/loopdev/domains/catalog/types.ts",
@@ -560,17 +1644,2028 @@
         "src/test/erp/product-sku-manager.test.tsx",
         "supabase/migrations/20261025000000_erp_system_generated_identifiers.sql"
       ],
-      "blocked_by": [
-        "Required migration validation is blocked because Docker/local PostgreSQL is unavailable at 127.0.0.1:54322.",
-        "The module run has no 06-plan checkpoint and its current phase validation fails on pre-existing visual-design evidence and approval inconsistencies."
-      ],
+      "blocked_by": [],
       "evidence_refs": [
         "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
         "src/test/catalog/catalog-adapter.test.ts",
         "src/test/erp/product-list-table.test.tsx",
         "src/test/erp/product-record-pages.test.tsx",
         "src/test/erp/product-sku-manager.test.tsx",
         "supabase/migrations/20261025000000_erp_system_generated_identifiers.sql"
+      ]
+    },
+    {
+      "id": "AUDIT-ENV-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Verify planning environment and runtime truth",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [],
+      "owner": "@loopdev-io",
+      "risk": "medium",
+      "evidence_level": "E1_LINT",
+      "acceptance_criteria": [
+        "Record repository, checkout, branch, base, HEAD, working tree and serving runtime for the active task.",
+        "Distinguish an SPA HTTP response from authenticated route or operation evidence."
+      ],
+      "validation": [
+        {
+          "command": "npm run delivery:validate",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/run.json",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/06-plan.json"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json#environment",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/run.json#environment"
+      ]
+    },
+    {
+      "id": "AUDIT-REUSE-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit shared Platform contracts and consumers",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "AUDIT-ENV-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E1_LINT",
+      "acceptance_criteria": [
+        "Inspect current UI/shell references and Notes, Files, Activity, Tasks, Relations and Document Intelligence contracts and consumers.",
+        "Classify each planned capability as REUSE, EXTEND_PLATFORM, MODULE_SPECIFIC or BLOCKED; identify duplicate risks, affected consumers, versioning and tests."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md",
+        "docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md",
+        "packages/contracts/src/",
+        "src/loopdev/domains/files/",
+        "src/loopdev/components/platform/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json#platform-reuse-audit"
+      ]
+    },
+    {
+      "id": "AUDIT-LEGACY-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Map legacy catalog behavior and consumers",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-ENV-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Map current Catalog screens/actions, IDs, routes, persistence and CRM product references against the approved Products contract.",
+        "Identify behavior to preserve, replace or retire and link regression evidence for every affected consumer."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/crm/opportunities/opportunities-page.test.tsx",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/catalog/",
+        "src/loopdev/pages/erp/",
+        "src/routes/LoopdevRoutes.tsx",
+        "src/test/catalog/",
+        "src/test/crm/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json#legacy-behavior-audit"
+      ]
+    },
+    {
+      "id": "AUDIT-ROUTE-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "blocked",
+      "title": "Audit routes and authenticated runtime",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-ENV-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Verify direct canonical/legacy routes, navigation, refresh, back, route guards and real runtime behavior on desktop and mobile web.",
+        "Record authenticated evidence and responsive viewport separately; do not treat HTTP 200 as route authorization."
+      ],
+      "validation": [
+        {
+          "command": "npm run smoke:routes",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/routes/LoopdevRoutes.tsx",
+        "src/routes/ProtectedRoute.tsx",
+        "src/loopdev/navigation.ts"
+      ],
+      "blocked_by": [
+        "The authenticated desktop route works, but apps/mobile/App.tsx has no canonical /app/erp/products route and falls through to the generic workspace screen. Mobile runtime behavior remains unverified; implement the route under PRODUCT-MOBILE-001 before claiming parity."
+      ],
+      "evidence_refs": [
+        "docs/implementation/erp/core/platform-scope.md",
+        "docs/implementation/erp/core/platform-evidence-matrix.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
+        "src/routes/LoopdevRoutes.tsx",
+        "apps/mobile/App.tsx",
+        "scripts/smoke-routes.json"
+      ]
+    },
+    {
+      "id": "AUDIT-STATE-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "ready",
+      "title": "Audit operation and recovery states",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-ROUTE-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "For every in-scope view, verify loading, empty, error, forbidden, conflict, offline, pending and success states and recovery actions.",
+        "Separate local_demo persistence failure from remote unavailability; no remote cache, queue or fixture fallback."
+      ],
+      "validation": [
+        {
+          "command": "npm run test:multiplatform-contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/core/view-state-matrix.md",
+        "src/loopdev/pages/erp/",
+        "src/loopdev/domains/catalog/adapter/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/sync-model.md",
+        "docs/implementation/erp/core/view-state-matrix.md"
+      ]
+    },
+    {
+      "id": "AUDIT-PARITY-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "ready",
+      "title": "Audit shared and renderer operation parity",
+      "requirement_ids": [
+        "REQ-ERP-DESKTOP-MOBILE-PARITY"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG",
+        "CAP-ERP-PRODUCT-CATEGORIES",
+        "CAP-ERP-PRODUCT-MEDIA",
+        "CAP-ERP-COST-REFERENCE"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-REUSE-001",
+        "AUDIT-STATE-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Compare domain, renderer and operation parity separately for every declared operation and required web platform.",
+        "Map each missing operation to a build task with operation_ids, owner, dependency, measurable acceptance criteria and focused test."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:multiplatform",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/core/delivery-ledger.json",
+        "docs/implementation/erp/core/platform-evidence-matrix.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md"
+      ]
+    },
+    {
+      "id": "AUDIT-A11Y-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "ready",
+      "title": "Audit accessibility and localization parity",
+      "requirement_ids": [
+        "REQ-ERP-DESKTOP-MOBILE-PARITY"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG",
+        "CAP-ERP-PRODUCT-CATEGORIES",
+        "CAP-ERP-PRODUCT-MEDIA",
+        "CAP-ERP-COST-REFERENCE"
+      ],
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-ROUTE-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Verify keyboard/focus, portals, accessible labels/status, screen-reader semantics, touch targets, narrow viewports, i18n and RTL for changed actions.",
+        "Reuse established LoopDev controls; no native select or renderer-specific business rules."
+      ],
+      "validation": [
+        {
+          "command": "npm run i18n:check",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/",
+        "src/test/erp/",
+        "src/locales/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/visual-design.md",
+        "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md"
+      ]
+    },
+    {
+      "id": "AUDIT-SECURITY-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "blocked",
+      "title": "Audit tenant security and rollback boundaries",
+      "requirement_ids": [
+        "REQ-ERP-ACCESS-AUDIT"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "AUDIT-REUSE-001",
+        "AUDIT-LEGACY-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Map organization isolation, cost projections, file authorization, operation-specific RLS, audit transaction, feature/kill switch and recovery.",
+        "Record negative cross-tenant/role tests and keep remote writes disabled until every server-side gate passes."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/catalog/catalog-adapter.test.ts",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/api-contracts.md",
+        "supabase/migrations/"
+      ],
+      "blocked_by": [
+        "Audit semantics, recovery strategy and DB-enforced kill-switch design are approved, but tenant isolation, cost-field authorization, operation-specific RLS, audit implementation/atomicity tests and negative role/tenant tests remain incomplete."
+      ],
+      "evidence_refs": [
+        "docs/03-platform/backend/DATABASE_SECURITY_RLS.md",
+        "docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md",
+        "supabase/migrations/20261025100000_erp_product_media_library.sql",
+        "supabase/migrations/20261025120145_erp_product_media_storage_policy_hardening.sql",
+        "supabase/migrations/20261025120200_erp_product_media_no_direct_delete.sql",
+        "supabase/migrations/20261025122000_platform_files_authenticated_access_grants.sql",
+        "supabase/tests/database/012_platform_private_user_files.sql",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json"
+      ]
+    },
+    {
+      "id": "AUDIT-ARCH-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit architecture boundaries and dependencies",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "AUDIT-REUSE-001",
+        "AUDIT-LEGACY-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E1_LINT",
+      "acceptance_criteria": [
+        "Compare actual layers, module boundaries, public contracts, dependency direction and imports with architecture-design.md.",
+        "Record approved deviations and prohibit renderer persistence shortcuts or module-local Platform capability clones."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/core/architecture-design.md",
+        "src/loopdev/domains/catalog/",
+        "packages/contracts/src/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md",
+        "docs/implementation/erp/core/architecture-design.md",
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
+        "packages/contracts/src/erp-products-capability.ts"
+      ]
+    },
+    {
+      "id": "AUDIT-RESP-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit ownership, cohesion and duplication",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "AUDIT-ARCH-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E1_LINT",
+      "acceptance_criteria": [
+        "Assign each UI, application, domain, port, adapter, authorization, file-lifecycle and sync responsibility to one owner.",
+        "Record SRP, cohesion, coupling and duplicate-implementation findings with a chosen remediation seam."
+      ],
+      "validation": [
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/core/architecture-design.md",
+        "src/loopdev/domains/catalog/",
+        "src/loopdev/domains/files/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md",
+        "docs/implementation/erp/core/architecture-design.md",
+        "src/loopdev/pages/erp/ProductRecordPages.tsx",
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
+        "src/loopdev/domains/platform/adapter/auth-supabase.ts"
+      ]
+    },
+    {
+      "id": "AUDIT-REFACTOR-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "done",
+      "title": "Audit behavior preservation and rollback safety",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-ARCH-001",
+        "AUDIT-LEGACY-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "List affected routes, states, adapters, CRM/file consumers and before/after regression evidence.",
+        "Define migration rollback or forward recovery, feature flag/write kill switch and residual debt owner before risky changes."
+      ],
+      "validation": [
+        {
+          "command": "npm run test:quality",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/core/implementation-plan.md",
+        "src/test/catalog/",
+        "src/test/crm/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md",
+        "docs/implementation/erp/core/architecture-design.md",
+        "docs/implementation/erp/core/design.md",
+        "docs/implementation/erp/core/sync-model.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
+        "supabase/migrations/20261025000000_erp_system_generated_identifiers.sql"
+      ]
+    },
+    {
+      "id": "PLATFORM-AUDIT-001",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "blocked",
+      "title": "Approve and implement atomic shared mutation audit",
+      "requirement_ids": [
+        "REQ-ERP-ACCESS-AUDIT"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "AUDIT-SECURITY-001",
+        "AUDIT-REUSE-001"
+      ],
+      "owner": "@loopdev-io",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T13:49:01+01:00",
+        "approval_source": "User confirmed Platform/DB authority and approved six-month active retention with documented restricted-archive exceptions plus the event-field/redaction/atomicity contract."
+      },
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Platform owner approves append-only event fields, redaction, retention, same-transaction semantics and failure behavior.",
+        "Audit-write failure aborts mutation; two-tenant negative tests and atomicity tests pass before any remote Products write."
+      ],
+      "validation": [
+        {
+          "command": "npm run test:multiplatform-contracts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/",
+        "src/loopdev/domains/platform/",
+        "supabase/migrations/"
+      ],
+      "blocked_by": [
+        "Audit owner and semantic contract are approved; implementation and atomicity tests remain gated by AUDIT-SECURITY-001."
+      ],
+      "evidence_refs": [
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/api-contracts.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json"
+      ]
+    },
+    {
+      "id": "PLATFORM-FILES-001",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "ready",
+      "title": "Approve reusable and secure Platform Files integration",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-MEDIA"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-MEDIA"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "AUDIT-REUSE-001",
+        "AUDIT-SECURITY-001"
+      ],
+      "owner": "Platform (shared contract implementation)",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Approve finalized upload, multi-association, image validation, previews/signed URLs, 1600/400 renditions, retention and orphan-recovery ownership.",
+        "Enforce same-organization file access and ensure detach never deletes a reusable file or binary."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        },
+        {
+          "command": "npm run test:multiplatform-contracts",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/files/",
+        "src/loopdev/components/files/",
+        "packages/contracts/src/",
+        "docs/03-platform/backend/FILES_BACKEND_MAPPING.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/api-contracts.md",
+        "docs/implementation/erp/core/sync-model.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json"
+      ]
+    },
+    {
+      "id": "PLATFORM-TYPOGRAPHY-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "blocked",
+      "title": "Resolve shared typography baseline before visual parity",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-REUSE-001"
+      ],
+      "owner": "Platform owner (assignment required)",
+      "risk": "high",
+      "evidence_level": "E1_LINT",
+      "acceptance_criteria": [
+        "Platform decides global Inter/JetBrains Mono adoption or records an approved deviation from the current Geist runtime.",
+        "Products does not add ERP-only font overrides or claim visual parity before the shared decision is implemented."
+      ],
+      "validation": [
+        {
+          "command": "npm run build",
+          "required": true
+        }
+      ],
+      "files": [
+        "index.html",
+        "src/index.css",
+        "tailwind.config.ts",
+        "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md"
+      ],
+      "blocked_by": [
+        "Platform owner decision is required for the shared typography mismatch."
+      ],
+      "evidence_refs": [
+        "docs/implementation/erp/core/visual-design.md"
+      ]
+    },
+    {
+      "id": "PRODUCT-CONTRACT-001",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "ready",
+      "title": "Define versioned Products and category operation contract",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "operation_ids": [
+        "catalog.list",
+        "catalog.manage",
+        "catalog.variants.list",
+        "catalog.variants.manage",
+        "catalog.offers.list",
+        "catalog.offers.manage",
+        "catalog.price-books.list",
+        "catalog.price-books.manage",
+        "catalog.price-entries.list",
+        "catalog.price-entries.manage"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-PARITY-001",
+        "AUDIT-ARCH-001",
+        "AUDIT-RESP-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Define typed DTOs, operation IDs, lifecycle, validation, permissions, errors, states, navigation and version/idempotency semantics for products, SKUs, categories, offers, price books/entries and costs.",
+        "Preserve UUID/legacy catalog references; costs remain a separate protected projection; desktop and mobile consume the same action catalog."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        },
+        {
+          "command": "npm run test -- src/test/erp/products-capability.test.ts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/erp-products-capability.ts",
+        "packages/contracts/src/index.ts",
+        "src/test/erp/products-capability.test.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/api-contracts.md",
+        "docs/implementation/erp/core/domain-model.md"
+      ]
+    },
+    {
+      "id": "ADAPTER-MODE-001",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "done",
+      "title": "Make catalog runtime mode explicit and persistence failures visible",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "AUDIT-REUSE-001",
+        "AUDIT-RESP-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Select only explicit local_demo or supabase mode and fail closed for missing/invalid configuration.",
+        "Local read/write failures surface as failures; remote errors never fall back to fixtures; unrelated storage consumers retain existing behavior."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/catalog/catalog-adapter.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "src/loopdev/domains/catalog/adapter/local.ts",
+        "src/lib/storage.ts",
+        "src/test/catalog/catalog-adapter.test.ts"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/sync-model.md",
+        "src/test/catalog/catalog-adapter.test.ts",
+        "docs/implementation/erp/core/platform-evidence-matrix.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md"
+      ]
+    },
+    {
+      "id": "REMOTE-STATE-001",
+      "phase": "07-build",
+      "type": "audit",
+      "status": "blocked",
+      "title": "Verify deployed Supabase schema and policies read-only",
+      "requirement_ids": [
+        "REQ-ERP-ACCESS-AUDIT"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "AUDIT-SECURITY-001"
+      ],
+      "owner": "Platform DB owner (assignment/access required)",
+      "risk": "critical",
+      "evidence_level": "E1_LINT",
+      "acceptance_criteria": [
+        "Using authorized read-only access, record the actual project/environment, migration history, tables, triggers, RLS policies and Storage policies.",
+        "Do not infer deployed state from migration files or apply any remote change."
+      ],
+      "validation": [
+        {
+          "command": "npm run supabase:check",
+          "required": true
+        }
+      ],
+      "files": [
+        "supabase/migrations/",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/06-plan.json"
+      ],
+      "blocked_by": [
+        "Authorized read-only database access and Platform DB owner are unavailable."
+      ],
+      "evidence_refs": [
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/sync-model.md"
+      ]
+    },
+    {
+      "id": "DATA-INVENTORY-001",
+      "phase": "07-build",
+      "type": "migration",
+      "status": "blocked",
+      "title": "Inventory legacy Products data and review dry-run mappings",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-CATEGORIES"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-CATEGORIES"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "AUDIT-LEGACY-001",
+        "REMOTE-STATE-001"
+      ],
+      "owner": "Product Owner + Platform data owner",
+      "risk": "critical",
+      "evidence_level": "E1_LINT",
+      "acceptance_criteria": [
+        "Produce authorized read-only counts and dry-run for legacy category keys, item classes, workspace IDs, currencies, duplicates and unmapped records.",
+        "Preserve provenance, make no guessed mappings, and obtain data-owner review before cutover."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-evidence",
+          "required": true
+        }
+      ],
+      "files": [
+        "docs/implementation/erp/core/sync-model.md",
+        "supabase/migrations/"
+      ],
+      "blocked_by": [
+        "Authorized legacy-data access and data-owner review are unavailable."
+      ],
+      "evidence_refs": [
+        "docs/implementation/erp/core/domain-model.md"
+      ]
+    },
+    {
+      "id": "RLS-MIGRATION-001",
+      "phase": "07-build",
+      "type": "migration",
+      "status": "blocked",
+      "title": "Add forward-only operation-specific Products RLS",
+      "requirement_ids": [
+        "REQ-ERP-ACCESS-AUDIT"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "PLATFORM-AUDIT-001",
+        "AUDIT-SECURITY-001",
+        "REMOTE-STATE-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Use catalog.write consistently with operation-specific SELECT/INSERT/UPDATE policies; revoke physical delete and preserve approved role grants.",
+        "Add separate owner/admin-only cost grants/RLS and tests proving cross-tenant, viewer, agent and unauthenticated access is denied; never modify an applied migration."
+      ],
+      "validation": [
+        {
+          "command": "supabase db lint --local",
+          "required": true
+        },
+        {
+          "command": "npm run test:quality",
+          "required": true
+        }
+      ],
+      "files": [
+        "supabase/migrations/",
+        "src/loopdev/domains/platform/types.ts",
+        "src/test/"
+      ],
+      "blocked_by": [
+        "Blocked until Platform audit contract and deployed RLS state are verified."
+      ],
+      "evidence_refs": [
+        "docs/implementation/erp/core/access-model.md"
+      ]
+    },
+    {
+      "id": "PRODUCT-DATA-001",
+      "phase": "07-build",
+      "type": "migration",
+      "status": "ready",
+      "title": "Add target Products, category, cost and gallery schema",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "PRODUCT-CONTRACT-001",
+        "RLS-MIGRATION-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Add forward-only organization-scoped category tree, physical-attribute/cost fields, reusable media assignments with position/version and constraints for normalized SKU/key uniqueness.",
+        "Enforce same-organization references, no category cycles or physical delete, optimistic versions and atomic reorder; document rollback/forward recovery."
+      ],
+      "validation": [
+        {
+          "command": "supabase db lint --local",
+          "required": true
+        }
+      ],
+      "files": [
+        "supabase/migrations/",
+        "src/test/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/domain-model.md",
+        "docs/implementation/erp/core/api-contracts.md"
+      ]
+    },
+    {
+      "id": "PRODUCT-ADAPTER-001",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "ready",
+      "title": "Implement shared Products and category domain adapters",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "operation_ids": [
+        "catalog.list",
+        "catalog.manage",
+        "catalog.variants.list",
+        "catalog.variants.manage",
+        "catalog.offers.list",
+        "catalog.offers.manage",
+        "catalog.price-books.list",
+        "catalog.price-books.manage",
+        "catalog.price-entries.list",
+        "catalog.price-entries.manage"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "PRODUCT-CONTRACT-001",
+        "PRODUCT-DATA-001",
+        "ADAPTER-MODE-001",
+        "ERP-IDENTIFIERS-001",
+        "PLATFORM-AUDIT-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Implement local_demo and Supabase ports for product, SKU, category, offers/prices and protected cost operations with identical validation, restore-to-draft, expected-version and idempotency semantics.",
+        "Surface errors; keep costs out of ordinary DTOs; preserve CRM references; all remote mutations use atomic audit and no delete."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/catalog/catalog-adapter.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/catalog/",
+        "src/test/catalog/",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/api-contracts.md",
+        "docs/implementation/erp/core/sync-model.md"
+      ]
+    },
+    {
+      "id": "MEDIA-ADAPTER-001",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "ready",
+      "title": "Implement Products media assignments through Platform Files",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-MEDIA"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-MEDIA"
+      ],
+      "operation_ids": [
+        "catalog.media.library.list",
+        "catalog.media.upload",
+        "catalog.media.attach",
+        "catalog.media.metadata.manage",
+        "catalog.media.reorder",
+        "catalog.media.detach",
+        "catalog.media.preview"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "PLATFORM-FILES-001",
+        "MEDIA-DATA-001",
+        "PLATFORM-AUDIT-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Products stores only reusable File references and contextual assignment metadata/order; Platform Files owns bytes, finalized upload, preview, derivatives and lifecycle.",
+        "Reorder validates full gallery and versions atomically; attach/detach failures never delete a shared file; cross-organization access is denied."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/erp/product-media.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/catalog/media/",
+        "src/loopdev/domains/catalog/adapter/product-media-local.ts",
+        "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
+        "src/test/erp/product-media.test.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/api-contracts.md",
+        "docs/implementation/erp/core/sync-model.md"
+      ]
+    },
+    {
+      "id": "PRODUCT-DESKTOP-001",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "ready",
+      "title": "Deliver desktop Products, SKU and commercial operations",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "operation_ids": [
+        "catalog.list",
+        "catalog.manage",
+        "catalog.variants.list",
+        "catalog.variants.manage",
+        "catalog.offers.list",
+        "catalog.offers.manage",
+        "catalog.price-books.list",
+        "catalog.price-books.manage",
+        "catalog.price-entries.list",
+        "catalog.price-entries.manage",
+        "catalog.identifiers.generate"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "PRODUCT-CONTRACT-001",
+        "PRODUCT-ADAPTER-001",
+        "PLATFORM-TYPOGRAPHY-001",
+        "AUDIT-A11Y-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Deliver the direct organization-wide Products list, full-page product/SKU forms and records, commercial operations and archive/restore using shared actions/states.",
+        "Generated identifiers are read-only; category, physical and sourcing guards match the contract; CRM references remain stable."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/visual-design.md"
+      ]
+    },
+    {
+      "id": "PRODUCT-MOBILE-001",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "ready",
+      "title": "Deliver mobile Products, SKU and commercial operations",
+      "requirement_ids": [
+        "REQ-ERP-CATALOG-FOUNDATION"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "operation_ids": [
+        "catalog.list",
+        "catalog.manage",
+        "catalog.variants.list",
+        "catalog.variants.manage",
+        "catalog.offers.list",
+        "catalog.offers.manage",
+        "catalog.price-books.list",
+        "catalog.price-books.manage",
+        "catalog.price-entries.list",
+        "catalog.price-entries.manage",
+        "catalog.identifiers.generate"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "PRODUCT-CONTRACT-001",
+        "PRODUCT-ADAPTER-001",
+        "PLATFORM-TYPOGRAPHY-001",
+        "AUDIT-A11Y-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Provide every desktop Products/commercial action on mobile web with the same validation, permission, navigation and state semantics.",
+        "Verify card/table adaptation, no action overflow, focus/return path, responsive form layout and minimum touch targets."
+      ],
+      "validation": [
+        {
+          "command": "npm run test:multiplatform-contracts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/platform-scope.md"
+      ]
+    },
+    {
+      "id": "CATEGORY-DESKTOP-001",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "ready",
+      "title": "Deliver desktop category tree management",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-CATEGORIES"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-CATEGORIES"
+      ],
+      "operation_ids": [
+        "catalog.categories.list",
+        "catalog.categories.manage",
+        "catalog.categories.assign"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "CATEGORY-CONTRACT-001",
+        "CATEGORY-ADAPTER-001",
+        "PLATFORM-TYPOGRAPHY-001",
+        "AUDIT-A11Y-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Implement create/rename/move/archive/restore and independent product/SKU category assignment in the dedicated Products view.",
+        "Guard cycles, cross-organization parents, active children, archived categories and stale versions; never expose permanent delete."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/erp/product-categories.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/wireframes/erp-product-categories.svg"
+      ]
+    },
+    {
+      "id": "CATEGORY-MOBILE-001",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "ready",
+      "title": "Deliver mobile category tree operations",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-CATEGORIES"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-CATEGORIES"
+      ],
+      "operation_ids": [
+        "catalog.categories.list",
+        "catalog.categories.manage",
+        "catalog.categories.assign"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "CATEGORY-CONTRACT-001",
+        "CATEGORY-ADAPTER-001",
+        "PLATFORM-TYPOGRAPHY-001",
+        "AUDIT-A11Y-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Implement the same category list, create, rename, move, archive, restore and assignment semantics in a stacked mobile tree/detail composition.",
+        "Verify visible return navigation, focus, touch target and all error/conflict states."
+      ],
+      "validation": [
+        {
+          "command": "npm run test:multiplatform-contracts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/wireframes/erp-product-categories.svg"
+      ]
+    },
+    {
+      "id": "MEDIA-DESKTOP-001",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "ready",
+      "title": "Deliver desktop reusable product media galleries",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-MEDIA"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-MEDIA"
+      ],
+      "operation_ids": [
+        "catalog.media.library.list",
+        "catalog.media.upload",
+        "catalog.media.attach",
+        "catalog.media.metadata.manage",
+        "catalog.media.reorder",
+        "catalog.media.detach",
+        "catalog.media.preview"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "MEDIA-ADAPTER-001",
+        "PLATFORM-FILES-001",
+        "PLATFORM-TYPOGRAPHY-001",
+        "AUDIT-A11Y-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Deliver product/SKU carousel, in-context reusable-asset selector, upload, assignment alt text, manual order and safe detach.",
+        "Show file processing/error/preview-expiry states; preserve original plus approved proportion-preserving 1600/400 derivatives through Platform Files."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/erp/product-media.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/ProductMediaGalleryManager.tsx",
+        "src/test/erp/product-media.test.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/wireframes/erp-product-media-desktop.svg"
+      ]
+    },
+    {
+      "id": "MEDIA-MOBILE-001",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "ready",
+      "title": "Deliver mobile reusable product media galleries",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-MEDIA"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-MEDIA"
+      ],
+      "operation_ids": [
+        "catalog.media.library.list",
+        "catalog.media.upload",
+        "catalog.media.attach",
+        "catalog.media.metadata.manage",
+        "catalog.media.reorder",
+        "catalog.media.detach",
+        "catalog.media.preview"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "MEDIA-ADAPTER-001",
+        "PLATFORM-FILES-001",
+        "PLATFORM-TYPOGRAPHY-001",
+        "AUDIT-A11Y-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Implement the same gallery, reuse, upload, alt-text, reorder and detach operations in the mobile full-surface selector.",
+        "Test interruption/retry, safe-area/layout, focus return, preview expiry and operation parity."
+      ],
+      "validation": [
+        {
+          "command": "npm run test:multiplatform-contracts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/ProductMediaGalleryManager.tsx",
+        "src/test/erp/product-media.test.tsx"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/wireframes/erp-product-media-mobile.svg"
+      ]
+    },
+    {
+      "id": "COST-DESKTOP-001",
+      "phase": "07-build",
+      "type": "desktop_renderer",
+      "status": "ready",
+      "title": "Deliver protected desktop purchase-cost workflows",
+      "requirement_ids": [
+        "REQ-ERP-COST-REFERENCE"
+      ],
+      "capability_ids": [
+        "CAP-ERP-COST-REFERENCE"
+      ],
+      "operation_ids": [
+        "catalog.cost-reference.read",
+        "catalog.cost-reference.manage"
+      ],
+      "platforms": [
+        "desktop_web"
+      ],
+      "dependencies": [
+        "COST-CONTRACT-001",
+        "COST-ADAPTER-001",
+        "PLATFORM-AUDIT-001",
+        "AUDIT-A11Y-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Read and manage a product cost only when no managed SKUs exist, otherwise manage independent SKU costs with their own ISO currency and no inheritance.",
+        "Owner/admin-only cost permissions gate projections and actions; amounts never leak into ordinary product queries, search, logs or activity."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/erp/product-record-pages.test.tsx",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/ProductRecordPages.tsx",
+        "src/loopdev/pages/erp/ProductSkuManagerPage.tsx",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/api-contracts.md"
+      ]
+    },
+    {
+      "id": "COST-MOBILE-001",
+      "phase": "07-build",
+      "type": "mobile_renderer",
+      "status": "ready",
+      "title": "Deliver protected mobile purchase-cost workflows",
+      "requirement_ids": [
+        "REQ-ERP-COST-REFERENCE"
+      ],
+      "capability_ids": [
+        "CAP-ERP-COST-REFERENCE"
+      ],
+      "operation_ids": [
+        "catalog.cost-reference.read",
+        "catalog.cost-reference.manage"
+      ],
+      "platforms": [
+        "mobile_web"
+      ],
+      "dependencies": [
+        "COST-CONTRACT-001",
+        "COST-ADAPTER-001",
+        "PLATFORM-AUDIT-001",
+        "AUDIT-A11Y-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Provide the same permission-gated product/SKU cost read/manage semantics on mobile without cached sensitive projections.",
+        "Test forbidden, revoked-permission, offline, validation and conflict states at mobile viewport."
+      ],
+      "validation": [
+        {
+          "command": "npm run test:multiplatform-contracts",
+          "required": true
+        },
+        {
+          "command": "npm run validate:mobile-boundaries",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/pages/erp/ProductRecordPages.tsx",
+        "src/loopdev/pages/erp/ProductSkuManagerPage.tsx",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/platform-scope.md"
+      ]
+    },
+    {
+      "id": "ACTION-TESTS-001",
+      "phase": "07-build",
+      "type": "test",
+      "status": "ready",
+      "title": "Prove operation parity and regression behavior",
+      "requirement_ids": [
+        "REQ-ERP-DESKTOP-MOBILE-PARITY"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG",
+        "CAP-ERP-PRODUCT-CATEGORIES",
+        "CAP-ERP-PRODUCT-MEDIA",
+        "CAP-ERP-COST-REFERENCE"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "PRODUCT-ADAPTER-001",
+        "CATEGORY-ADAPTER-001",
+        "COST-ADAPTER-001",
+        "MEDIA-ADAPTER-001",
+        "PRODUCT-DESKTOP-001",
+        "PRODUCT-MOBILE-001",
+        "CATEGORY-DESKTOP-001",
+        "CATEGORY-MOBILE-001",
+        "MEDIA-DESKTOP-001",
+        "MEDIA-MOBILE-001",
+        "COST-DESKTOP-001",
+        "COST-MOBILE-001",
+        "RLS-MIGRATION-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Every required operation has focused domain, adapter, permission and component evidence on each required web surface.",
+        "Cover tenant isolation, audit failure, version conflict, idempotency, restore-to-draft, demo persistence failure, Files reuse, gallery reorder and CRM regression; no failed validation mutates state."
+      ],
+      "validation": [
+        {
+          "command": "npm run test:multiplatform-contracts",
+          "required": true
+        },
+        {
+          "command": "npm run test:quality",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/test/catalog/",
+        "src/test/erp/",
+        "src/test/platform/",
+        "src/test/crm/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/platform-evidence-matrix.md"
+      ]
+    },
+    {
+      "id": "ROUTE-RUNTIME-001",
+      "phase": "07-build",
+      "type": "test",
+      "status": "ready",
+      "title": "Verify authenticated desktop and mobile Products journeys",
+      "requirement_ids": [
+        "REQ-ERP-DESKTOP-MOBILE-PARITY"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG",
+        "CAP-ERP-PRODUCT-CATEGORIES",
+        "CAP-ERP-PRODUCT-MEDIA",
+        "CAP-ERP-COST-REFERENCE"
+      ],
+      "platforms": [
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "ACTION-TESTS-001",
+        "AUDIT-ROUTE-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Exercise canonical and legacy direct routes, refresh/back/navigation, authentication and every applicable state on desktop and mobile viewports.",
+        "Record runtime URL, port, checkout/commit, screenshots, accessibility findings and recovery evidence; HTTP 200 alone does not pass."
+      ],
+      "validation": [
+        {
+          "command": "npm run smoke:routes",
+          "required": true
+        },
+        {
+          "command": "npm run build",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/routes/LoopdevRoutes.tsx",
+        "src/loopdev/pages/erp/",
+        "docs/implementation/erp/core/platform-evidence-matrix.md"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/visual-design.md",
+        "docs/implementation/erp/core/view-state-matrix.md"
+      ]
+    },
+    {
+      "id": "CUTOVER-ROLLBACK-001",
+      "phase": "07-build",
+      "type": "migration",
+      "status": "blocked",
+      "title": "Run approved legacy migration dry-run and recovery gate",
+      "requirement_ids": [
+        "REQ-ERP-PLAN-AND-RELEASE-GATES"
+      ],
+      "capability_ids": [
+        "CAP-ERP-CATALOG"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "DATA-INVENTORY-001",
+        "REMOTE-STATE-001",
+        "ACTION-TESTS-001",
+        "PLATFORM-AUDIT-001"
+      ],
+      "owner": "Product Owner + Platform data owner",
+      "risk": "critical",
+      "evidence_level": "E4_JOURNEY",
+      "acceptance_criteria": [
+        "Data owner approves the mapping/dry-run and count reconciliation; no unmapped record is guessed or coerced.",
+        "Exercise forward migration, feature/write kill switch, rollback or forward-recovery and tenant/access verification before enabling any remote writes."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:delivery-evidence",
+          "required": true
+        }
+      ],
+      "files": [
+        "supabase/migrations/",
+        "docs/implementation/erp/core/sync-model.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/"
+      ],
+      "blocked_by": [
+        "Authorized legacy data, deployed-state verification and Platform audit approval are unavailable."
+      ],
+      "evidence_refs": [
+        "docs/implementation/erp/core/sync-model.md",
+        "docs/implementation/erp/core/access-model.md"
+      ]
+    },
+    {
+      "id": "CATEGORY-CONTRACT-001",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "ready",
+      "title": "Define shared category lifecycle and operations",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-CATEGORIES"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-CATEGORIES"
+      ],
+      "operation_ids": [
+        "catalog.categories.list",
+        "catalog.categories.manage",
+        "catalog.categories.assign"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-PARITY-001",
+        "AUDIT-ARCH-001",
+        "AUDIT-RESP-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Define category IDs/keys, organization scope, tree queries, create/rename/move/archive/restore/assignment commands, permissions, errors, versions and cycle/parent guards.",
+        "Specify the same action catalog and accessible navigation semantics for desktop and mobile."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        },
+        {
+          "command": "npm run test -- src/test/erp/products-capability.test.ts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/erp-products-capability.ts",
+        "packages/contracts/src/index.ts",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/domain-model.md",
+        "docs/implementation/erp/core/api-contracts.md"
+      ]
+    },
+    {
+      "id": "COST-CONTRACT-001",
+      "phase": "07-build",
+      "type": "shared_contract",
+      "status": "ready",
+      "title": "Define protected purchase-cost operations",
+      "requirement_ids": [
+        "REQ-ERP-COST-REFERENCE"
+      ],
+      "capability_ids": [
+        "CAP-ERP-COST-REFERENCE"
+      ],
+      "operation_ids": [
+        "catalog.cost-reference.read",
+        "catalog.cost-reference.manage"
+      ],
+      "platforms": [
+        "shared",
+        "desktop_web",
+        "mobile_web"
+      ],
+      "dependencies": [
+        "AUDIT-PARITY-001",
+        "AUDIT-SECURITY-001",
+        "AUDIT-RESP-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Define current-cost read/set/clear DTOs, amount/currency validation, purchasable-unit ownership, expected versions, idempotency and safe errors.",
+        "Keep costs out of ordinary product projections; authorize reads and writes independently with catalog.cost.read/manage."
+      ],
+      "validation": [
+        {
+          "command": "npm run validate:contracts",
+          "required": true
+        },
+        {
+          "command": "npm run test -- src/test/erp/products-capability.test.ts",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/erp-products-capability.ts",
+        "packages/contracts/src/index.ts",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/api-contracts.md",
+        "docs/implementation/erp/core/access-model.md"
+      ]
+    },
+    {
+      "id": "CATEGORY-DATA-001",
+      "phase": "07-build",
+      "type": "migration",
+      "status": "ready",
+      "title": "Persist organization-scoped category trees safely",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-CATEGORIES"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-CATEGORIES"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "CATEGORY-CONTRACT-001",
+        "PRODUCT-DATA-001",
+        "RLS-MIGRATION-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Add forward-only category schema, immutable generated organization-unique key, same-organization parent and assignment constraints, lifecycle/version fields and no hard-delete path.",
+        "Enforce cycle, active-child, archived-assignment and restore-parent guards with database/domain tests."
+      ],
+      "validation": [
+        {
+          "command": "supabase db lint --local",
+          "required": true
+        }
+      ],
+      "files": [
+        "supabase/migrations/",
+        "src/test/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/domain-model.md",
+        "docs/implementation/erp/core/sync-model.md"
+      ]
+    },
+    {
+      "id": "COST-DATA-001",
+      "phase": "07-build",
+      "type": "migration",
+      "status": "ready",
+      "title": "Persist isolated purchase-cost references",
+      "requirement_ids": [
+        "REQ-ERP-COST-REFERENCE"
+      ],
+      "capability_ids": [
+        "CAP-ERP-COST-REFERENCE"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "COST-CONTRACT-001",
+        "PRODUCT-DATA-001",
+        "RLS-MIGRATION-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Persist one current optional non-negative amount and ISO currency for the purchasable product or SKU unit, without inheritance or automatic FX conversion.",
+        "Protect cost projections/rows with separate owner/admin-only read/manage permissions and prevent values in ordinary Product DTOs or audit payloads."
+      ],
+      "validation": [
+        {
+          "command": "supabase db lint --local",
+          "required": true
+        }
+      ],
+      "files": [
+        "supabase/migrations/",
+        "src/test/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/domain-model.md",
+        "docs/implementation/erp/core/access-model.md"
+      ]
+    },
+    {
+      "id": "MEDIA-DATA-001",
+      "phase": "07-build",
+      "type": "migration",
+      "status": "ready",
+      "title": "Persist reusable media assignments and atomic gallery order",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-MEDIA"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-MEDIA"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "PLATFORM-FILES-001",
+        "PRODUCT-DATA-001",
+        "RLS-MIGRATION-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Persist same-organization reusable File references and contextual alt-text assignments with per-gallery position/version; do not duplicate binary content.",
+        "Reorder the complete assignment set atomically and ensure detach preserves the File and any other assignments."
+      ],
+      "validation": [
+        {
+          "command": "supabase db lint --local",
+          "required": true
+        }
+      ],
+      "files": [
+        "supabase/migrations/",
+        "src/test/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/domain-model.md",
+        "docs/implementation/erp/core/api-contracts.md"
+      ]
+    },
+    {
+      "id": "CATEGORY-ADAPTER-001",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "ready",
+      "title": "Implement category domain and local/remote adapters",
+      "requirement_ids": [
+        "REQ-ERP-PRODUCT-CATEGORIES"
+      ],
+      "capability_ids": [
+        "CAP-ERP-PRODUCT-CATEGORIES"
+      ],
+      "operation_ids": [
+        "catalog.categories.list",
+        "catalog.categories.manage",
+        "catalog.categories.assign"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "CATEGORY-CONTRACT-001",
+        "CATEGORY-DATA-001",
+        "ADAPTER-MODE-001",
+        "PLATFORM-AUDIT-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Implement category query/commands with identical local_demo and Supabase semantics, organization scope, generated keys, lifecycle and expected-version checks.",
+        "No cycles, cross-organization parents, physical deletion, silent fallback or unaudited remote mutation."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/catalog/catalog-adapter.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/catalog/",
+        "src/test/catalog/",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/domain-model.md",
+        "docs/implementation/erp/core/api-contracts.md"
+      ]
+    },
+    {
+      "id": "COST-ADAPTER-001",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "ready",
+      "title": "Implement protected product and SKU cost adapters",
+      "requirement_ids": [
+        "REQ-ERP-COST-REFERENCE"
+      ],
+      "capability_ids": [
+        "CAP-ERP-COST-REFERENCE"
+      ],
+      "operation_ids": [
+        "catalog.cost-reference.read",
+        "catalog.cost-reference.manage"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "COST-CONTRACT-001",
+        "COST-DATA-001",
+        "PRODUCT-ADAPTER-001",
+        "PLATFORM-AUDIT-001"
+      ],
+      "owner": "@loopdev-io",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Implement separate cost read and set/clear operations with permission revalidation, decimal-string handling, version/idempotency and no offline cache/replay.",
+        "Prove agent/viewer denial and absence of cost leakage from ordinary product/list/search projections."
+      ],
+      "validation": [
+        {
+          "command": "npm test -- src/test/catalog/catalog-adapter.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
+        }
+      ],
+      "files": [
+        "src/loopdev/domains/catalog/",
+        "src/test/catalog/",
+        "src/test/erp/"
+      ],
+      "blocked_by": [],
+      "evidence_refs": [
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/sync-model.md"
       ]
     }
   ],
@@ -630,16 +3725,5 @@
       "source": "User asked to add product images and a place to reuse images for ecommerce/social use, then approved: product/variant assets with a reusable library, metadata and alt text, without automatic publishing. Scope is limited to image asset management inside Products; no channel connector, publication, video, social scheduler or external system is authorized."
     }
   ],
-  "blockers": [
-    "The cross-sector SME target is confirmed, but the first-release module set and sequence remain open.",
-    "Supplier management is a separate module, but its functional scope, MiauCraft priority and delivery date remain open.",
-    "Manufacturing is deferred and requires future discovery and product approval.",
-    "Semimanufactured items are deferred until Manufacturing discovery.",
-    "Verify Products documentation/runtime parity and reconcile legacy catalog.write versus catalog.manage before implementation.",
-    "Assign destination-domain ownership for locale and channel fields formerly stored on migration-only OrganizationCatalog.",
-    "Assign an owner and explicit scope decision for iOS and Android before plan approval.",
-    "Product media must pass updated design, visual, domain, access, API, sync and plan phases before any implementation task can be authorized.",
-    "The generic organization-scoped Files upload/preview adapter and reusable multi-entity relation are not evidenced; obtain Platform owner approval and define tenant, signed-URL, audit, retention and image-validation behavior.",
-    "Resolve alt-text/metadata ownership, service eligibility, variant image count/order, and shared-file detach/archive/delete behavior before planning implementation."
-  ]
+  "blockers": []
 }

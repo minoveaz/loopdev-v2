@@ -3,7 +3,7 @@
 ## References
 
 - Product definition: `docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md`; first release amended by `CR-ERP-PRODUCT-MEDIA-001` to include reusable product/variant images, metadata and alt text
-- Track: current ERP implementation workspace; plan approval remains pending
+- Track: current ERP implementation workspace; plan approved and build underway
 - Run ID: `MOD-CORE-20261024-001`
 - Main issue: [minoveaz/loopdev-v2#36](https://github.com/minoveaz/loopdev-v2/issues/36)
 - Multiplatform contract: `docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md`
@@ -22,12 +22,12 @@
 | Field | Value |
 |---|---|
 | Status | `blocked` |
-| Current phase | Product-media visual evidence and module planning gates remain pending |
-| Current issue | #36 |
+| Current phase | Attempt 10 is blocked at `00-discovery`: changed scope/design/code/test fingerprints invalidated prior phase handoffs and design, visual-design, plan, verification and release approvals. `ADAPTER-MODE-001` is implemented and evidenced; the `07-build` checkpoint remains blocked pending revalidation/approval. Security, mobile route/operations, deployed RLS and authorized legacy-data gates remain unresolved. No remote writes were made. |
+| Current issue | #39 (remaining security-audit criteria); #36 remains open for Product/Platform acceptance evidence |
 | Branch | `feature/erp-core-capabilities` |
-| Commit | `6de4213` |
-| Pull request | [#38](https://github.com/minoveaz/loopdev-v2/pull/38) |
-| Last evidence | Product catalog/media implementation is under review; linked Supabase migrations are applied, and all PR checks pass on the implementation/fix revision. Legacy CRM product-key compatibility is covered. Media visual evidence and module/release gates remain open. |
+| Commit | `2e7faf367aa0b13a735492e9878390cc7e5a3621` |
+| Pull request | [#38](https://github.com/minoveaz/loopdev-v2/pull/38), merged into `develop` on 2026-10-25 |
+| Last evidence | The Product Owner approved extending the shared Files contract. Migrations `20261025120145`, `20261025120200` and `20261025122000` are applied in `loopdev-platform-dev`; remote queries confirm policy boundaries and grant parity. The isolated pgTAP regression suite passes 19/19. This does not complete the broader security audit. The Catalog adapter suite (12 tests) and delivery tooling (34 tests) passed. |
 
 ## Scope
 
@@ -69,7 +69,18 @@
 | Phase | Issue | Status | Checkpoint | Evidence |
 |---|---:|---|---|---|
 | 00-discovery | #36 | `completed` (`partial` handoff; product-media scope) | New run checkpoint created after discovery validation | `discovery.md`, `delivery-ledger.json`, platform matrices |
-| 01-design onward | #36 | `pending revalidation` | Prior run artifacts predate the approved media scope | Update design, visual, domain, access, API and sync evidence before planning |
+| 01-design | #36 | `completed` | Product scope and design approved | `design.md`, `architecture-design.md` |
+| 01-visual-design | #36 | `completed` (conceptual approval) | Runtime comparison remains post-implementation | `visual-design.md`, `01-visual-design.json` |
+| 02-domain | #36 | `completed` (`partial`) | Open implementation/data decisions remain tracked | `domain-model.md`, `02-domain.json` |
+| 03-access | #36 | `completed` (`partial`) | Platform audit/RLS dependencies remain blockers | `access-model.md`, `03-access.json` |
+| 04-api | #36 | `completed` (`partial`) | Platform Files/precision/deployed-state decisions remain open | `api-contracts.md`, `04-api.json` |
+| 05-sync | #36 | `completed` (`partial`) | Online-only semantics defined; runtime behavior remains unimplemented | `sync-model.md`, `05-sync.json` |
+| 06-plan | #36 | `completed` | Approved plan validated against `REQUIRED_MVP`; deferred capabilities remain out of scope | `implementation-plan.md`, `delivery-ledger.json`, `runs/MOD-CORE-20261024-001/06-plan.json` |
+| 07-build | #39 | `blocked` | Complete the full security audit and required regression evidence; remote Storage policy state is already verified | `delivery-ledger.json`, `runs/MOD-CORE-20261024-001/07-build.json` |
+
+The phase rows above describe historical artifacts. Attempt 10 invalidated
+their current handoff status; revalidate the canonical artifacts and required
+approval gates before resuming work.
 
 ## Visual gate
 
@@ -89,14 +100,20 @@ buy only for now, and services have no sourcing; variants inherit product
 sourcing. Categories are managed within
 Products; the list opens a dedicated category-management view with a visible
 return path, confirmed by the Product Owner and wireframed for desktop and
-mobile. The Product Owner approved the conceptual visual source on 2026-10-24;
-runtime comparison remains pending implementation. Semimanufactured items and
+mobile. The Product Owner approved the conceptual visual source on 2026-10-24
+and separately approved the media addendum on 2026-10-25; runtime comparison
+remains pending implementation. Semimanufactured items and
 manufacturing operations remain deferred. The approved release boundary is
 Products and categories with a unit purchase-cost reference and physical
 attributes, amended to include product/variant images and reusable media with
 metadata and alt text. The 2026-10-24 visual approval predates that media
-scope, so it does not approve a media library or its interaction. Accounting
-valuation and margin calculations remain excluded.
+scope; the separate desktop/mobile addendum approving its in-gallery selector
+was approved on 2026-10-25. Accounting valuation and margin calculations
+remain excluded. The current desktop/mobile media addendum depicts the in-gallery “Subir” /
+“Usar existente” flow and the original plus 1600 px / 400 px derivatives; it
+was approved conceptually by @loopdev-io on 2026-10-25. Its approval does not
+resolve the Files contract, processing pipeline or access/domain semantics;
+runtime comparison remains pending implementation.
 Product/SKU forms and records now use full pages; auxiliary quick creation uses
 drawers. `VD-ERP-013` remains resolved. Cost permissions, inheritance/units and
 full brand/tag management need task-level analysis. Specialized domain/access/
@@ -116,7 +133,7 @@ direction on 2026-10-24; runtime comparison remains a post-implementation gate.
 | ERP-DEC-004 | Confirmed | The existing catalog-facing ERP module is named Products; product/service records are the direct list entry point; catalog-named contracts remain compatible | User instruction / `CR-ERP-PRODUCTS-MODULE` | `design.md`, `architecture-design.md` |
 | ERP-DEC-005 | Confirmed | One Products master distinguishes finished goods, raw materials/components and services; class is independent from purchase/sale/inventory uses; categories are hierarchical; finished products allow buy/make/both sourcing, raw materials/components allow buy only for now, and services have no sourcing; variants inherit product sourcing | User confirmation / `CR-ERP-PRODUCT-MASTER-MODEL` and `domain-model.md` | `design.md`, `architecture-design.md`, `visual-design.md` |
 | VD-ERP-013 | Confirmed | Category management is a dedicated view within Products with visible return navigation | User confirmation | `visual-design.md`, `wireframes/erp-product-categories.svg` |
-| VIS-ERP-GATE-001 | Confirmed | Prior conceptual product/SKU/category visual source approved; product-media visual addendum remains pending | User approval via explicit gate confirmation; media scope approved separately | `runs/MOD-CORE-20261024-001/01-visual-design.json`, `discovery.md` |
+| VIS-ERP-GATE-001 | Confirmed | Product/SKU/category source and product-media visual addendum approved conceptually; runtime comparison remains pending | User approval via explicit gate confirmation on 2026-10-25 | `runs/MOD-CORE-20261024-001/01-visual-design.json`, `visual-design.md` |
 | ACC-ERP-RISK-001 | High-priority gap | ERP migration's all-operations RLS policy uses `catalog.read` in `USING`, which permits read-only deletion by policy semantics; deployment state is unverified | `access-model.md`, `supabase/migrations/20260928160000_erp_catalog_foundation.sql` |
 | ERP-A-003 | Resolved | Variants inherit sourcing, but each SKU has its own category; drafts may omit it, active items may not | Confirmed by the user; reflected in `domain-model.md` and `api-contracts.md` |
 | ERP-DEC-007 | Confirmed | SKU is unique across the organization after trimming outer whitespace and comparing case-insensitively; stored SKU preserves entered case | User decision; product, variant and category keys are generated, immutable and organization-unique |
@@ -136,7 +153,7 @@ direction on 2026-10-24; runtime comparison remains a post-implementation gate.
 | ERP-CF-001 | Execution gate | Reconcile product documentation with the existing remote adapter and verify deployed schema/runtime | Plan task | `discovery.md`, `implementation-plan.md` |
 | ERP-CF-002 | Resolved decision | `catalog.write` is canonical; a forward RLS/permission migration and deployed-state verification remain required | User approved | `access-model.md`, `api-contracts.md` |
 | ACC-ERP-011 | Platform dependency | Append-only shared Platform audit is required before remote writes; Platform owner must approve its contract | Owner approval pending | `access-model.md`, `implementation-plan.md` |
-| CR-ERP-PRODUCT-MEDIA-001 | Scope approval | Product/variant image library, metadata and alt text approved; automatic publication excluded | Design and Platform implementation evidence pending | `discovery.md`, `delivery-ledger.json` |
+| CR-ERP-PRODUCT-MEDIA-001 | Scope approval | Product/variant image library, metadata and alt text approved; automatic publication excluded | Conceptual visual approved; shared Files contract and runtime evidence pending | `discovery.md`, `delivery-ledger.json` |
 | MIG-ERP-001 | Data-access dependency | Actual legacy category/workspace/currency data requires an authorized inventory and dry run before migration | Remote access unavailable | `sync-model.md`, `implementation-plan.md` |
 
 ## Platform impact
@@ -158,4 +175,4 @@ direction on 2026-10-24; runtime comparison remains a post-implementation gate.
 | 2026-10-24 | Confirmed a dedicated category-management view within Products and added desktop/mobile wireframe evidence | `VD-ERP-013` | @loopdev-io |
 | 2026-10-24 | Bounded the first release to Products/categories on desktop and mobile web; deferred Shopify, Inhand, Suppliers, native apps and other ERP modules; confirmed online-only remote access and archive-only lifecycle | `CR-ERP-PRODUCTS-FIRST-RELEASE` | @loopdev-io |
 | 2026-10-25 | Amended Products scope to include reusable product/variant images, metadata and alt text; excluded automatic publication and recorded Files backend/relation dependencies | `CR-ERP-PRODUCT-MEDIA-001` | @loopdev-io |
-| 2026-10-25 | Committed and pushed the Products catalog/media implementation; opened a PR for review. The run remains blocked pending media visual evidence and module/release gates. | `6de4213`, PR #38 | @loopdev-io |
+| 2026-10-25 | Committed and pushed the Products catalog/media implementation; PR #38 merged. The visual media addendum is approved; plan, access, migration and runtime verification gates remain open. | `6de4213`, PR #38 | @loopdev-io |

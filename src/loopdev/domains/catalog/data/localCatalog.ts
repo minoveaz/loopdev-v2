@@ -1,5 +1,6 @@
 import { createLocalStore } from "@/lib/localStore";
-import type { CatalogAvailability, CatalogEligibility, CatalogItem, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole } from "../types";
+import type { Entity } from "@/types";
+import type { CatalogAvailability, CatalogEligibility, CatalogItem, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductCostReference, ProductPartyRole, ProductReference } from "../types";
 
 const localOrganizationId = "local-development-organization";
 const otherOrganizationId = "other-development-organization";
@@ -47,15 +48,22 @@ export const localCatalogItemsStore = createLocalStore<CatalogItem>({
       id: "catalog_item_enterprise_plan",
       organizationId: localOrganizationId,
       workspaceId: sharedWorkspace,
-      key: "enterprise-plan",
-      sku: "SAAS-ENTERPRISE",
+      key: "1",
+      sku: "10000000001",
       type: "subscription",
       name: "Enterprise plan",
       description: "Annual access plan for larger teams.",
       categoryKey: "software",
       status: "active",
       visibility: { organizationId: localOrganizationId, workspaceId: sharedWorkspace },
-      metadata: { vertical: "saas", seats: 25 },
+      metadata: {
+        vertical: "saas",
+        seats: 25,
+        loopdevIdentifierMigration: {
+          migration: "20261025000000_erp_system_generated_identifiers",
+          previousKey: "enterprise-plan",
+        },
+      },
       createdAt: now,
       updatedAt: now,
     },
@@ -63,8 +71,8 @@ export const localCatalogItemsStore = createLocalStore<CatalogItem>({
       id: "catalog_item_health_consultation",
       organizationId: localOrganizationId,
       workspaceId: "workspace-health",
-      key: "health-consultation",
-      sku: "HEALTH-CONSULT",
+      key: "2",
+      sku: "10000000002",
       type: "service",
       name: "Health consultation",
       description: "A generic appointment-based service.",
@@ -79,8 +87,8 @@ export const localCatalogItemsStore = createLocalStore<CatalogItem>({
       id: "catalog_item_store_kit",
       organizationId: localOrganizationId,
       workspaceId: "workspace-commerce",
-      key: "store-kit",
-      sku: "STORE-KIT-001",
+      key: "3",
+      sku: "10000000003",
       type: "physical_product",
       name: "Store starter kit",
       description: "A generic physical product bundle.",
@@ -95,8 +103,8 @@ export const localCatalogItemsStore = createLocalStore<CatalogItem>({
       id: "catalog_item_advisory_package",
       organizationId: localOrganizationId,
       workspaceId: sharedWorkspace,
-      key: "advisory-package",
-      sku: "SERVICES-ADVISORY",
+      key: "4",
+      sku: "10000000004",
       type: "package",
       name: "Advisory package",
       description: "A reusable package for professional services.",
@@ -111,8 +119,8 @@ export const localCatalogItemsStore = createLocalStore<CatalogItem>({
       id: "catalog_item_other_org",
       organizationId: otherOrganizationId,
       workspaceId: sharedWorkspace,
-      key: "other-org-plan",
-      sku: "OTHER-001",
+      key: "1",
+      sku: "10000000001",
       type: "digital_product",
       name: "Other organization plan",
       description: null,
@@ -124,6 +132,23 @@ export const localCatalogItemsStore = createLocalStore<CatalogItem>({
       updatedAt: now,
     },
   ],
+});
+
+interface CatalogItemKeyCounter extends Entity {
+  organizationId: string;
+  lastValue: string;
+}
+
+export const localCatalogItemKeyCountersStore = createLocalStore<CatalogItemKeyCounter>({
+  key: "loopdev:catalog:item-key-counters",
+  idPrefix: "catalog_item_key_counter",
+  seed: [],
+});
+
+export const localCatalogSkuCountersStore = createLocalStore<CatalogItemKeyCounter>({
+  key: "loopdev:catalog:sku-counters",
+  idPrefix: "catalog_sku_counter",
+  seed: [],
 });
 
 export const localCatalogOffersStore = createLocalStore<Offer>({
@@ -176,8 +201,8 @@ export const localCatalogVariantsStore = createLocalStore<CatalogVariant>({
       organizationId: localOrganizationId,
       workspaceId: sharedWorkspace,
       catalogItemId: "catalog_item_enterprise_plan",
-      key: "enterprise-25-seats",
-      sku: "SAAS-ENTERPRISE-25",
+      key: "5",
+      sku: "10000000005",
       name: "25 seats",
       status: "active",
       attributes: { seats: "25" },
@@ -298,6 +323,22 @@ export const localCatalogPriceEntriesStore = createLocalStore<PriceEntry>({
       updatedAt: now,
     },
   ],
+});
+
+export const localProductReferencesStore = createLocalStore<ProductReference>({
+  key: "loopdev:catalog:product-references",
+  idPrefix: "product_reference",
+  seed: [
+    { id: "product_reference_category_commerce", organizationId: localOrganizationId, kind: "category", key: "commerce", name: "Commerce", parentId: null, status: "active", createdAt: now, updatedAt: now },
+    { id: "product_reference_category_software", organizationId: localOrganizationId, kind: "category", key: "software", name: "Software", parentId: null, status: "active", createdAt: now, updatedAt: now },
+    { id: "product_reference_category_services", organizationId: localOrganizationId, kind: "category", key: "services", name: "Services", parentId: null, status: "active", createdAt: now, updatedAt: now },
+  ],
+});
+
+export const localProductCostReferencesStore = createLocalStore<ProductCostReference>({
+  key: "loopdev:catalog:product-cost-references",
+  idPrefix: "product_cost",
+  seed: [],
 });
 
 export const LOCAL_CATALOG_ORGANIZATION_ID = localOrganizationId;

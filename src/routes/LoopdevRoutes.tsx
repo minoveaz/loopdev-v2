@@ -26,6 +26,7 @@ const PlatformWorkspace = lazy(() => import("@/loopdev/pages/platform/Workspace"
 const TaskTemplates = lazy(() => import("@/loopdev/pages/platform/TaskTemplates"));
 const ERPOverview = lazy(() => import("@/loopdev/pages/erp/Overview"));
 const ERPProductCatalog = lazy(() => import("@/loopdev/pages/erp/ProductCatalog"));
+const ERPProductMediaGallery = lazy(() => import("@/loopdev/pages/erp/ProductMediaGalleryPage"));
 const DocumentIntelligenceOverview = lazy(() => import("@/loopdev/pages/tools/document-intelligence/Overview"));
 const DocumentIntelligenceWorkspace = lazy(() => import("@/loopdev/pages/tools/document-intelligence/ExtractionWorkspace"));
 
@@ -62,10 +63,17 @@ export const loopdevRouteElements = (
     <Route path="/tasks" element={<SalesCRMTasks />} />
     <Route path="/app/tasks" element={<SalesCRMTasks />} />
     <Route path="/app/sales-crm/task-templates" element={<TaskTemplates />} />
-    <Route path="/app/erp" element={<Navigate to="/app/erp/overview" replace />} />
+    <Route path="/app/erp" element={<Navigate to="/app/erp/products" replace />} />
     <Route path="/app/erp/overview" element={<ERPOverview />} />
+    <Route path="/app/erp/products/configuration" element={<ERPProductCatalog productsOnly />} />
+    <Route path="/app/erp/products/new" element={<ERPProductCatalog productsOnly />} />
+    <Route path="/app/erp/products/:productId/media" element={<ERPProductMediaGallery />} />
+    <Route path="/app/erp/products/:productId/edit" element={<ERPProductCatalog productsOnly />} />
+    <Route path="/app/erp/products/:productId/skus" element={<ERPProductCatalog productsOnly />} />
+    <Route path="/app/erp/products/:productId" element={<ERPProductCatalog productsOnly />} />
+    <Route path="/app/erp/products" element={<ERPProductCatalog productsOnly />} />
     <Route path="/app/erp/product-catalog/:catalogId" element={<ERPProductCatalog />} />
-    <Route path="/app/erp/product-catalog" element={<ERPProductCatalog />} />
+    <Route path="/app/erp/product-catalog" element={<Navigate to="/app/erp/products" replace />} />
     <Route path="/app/tools/document-intelligence" element={<DocumentIntelligenceOverview />} />
     <Route path="/app/tools/document-intelligence/:extractionId" element={<DocumentIntelligenceWorkspace />} />
   </Fragment>

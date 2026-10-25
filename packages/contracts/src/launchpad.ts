@@ -44,12 +44,12 @@ export const launchpadSuites: LaunchpadSuite[] = [
   {
     id: "erp",
     title: "ERP",
-    description: "Shared product and service catalogs for LoopDev operations.",
+    description: "Manage products, categories and services for LoopDev operations.",
     version: "0.1.0",
     status: "ready",
     illustration: "erp",
     availability: { kind: "workspace", suiteKey: "operations" },
-    entryPath: "/app/erp/overview",
+    entryPath: "/app/erp/products",
   },
   {
     id: "financial-ops",

@@ -23,6 +23,7 @@
         "decision_status": { "enum": ["confirmed", "assumed", "open", "rejected"] },
         "architecture_quality": { "enum": ["PENDING", "PASS", "PASS_WITH_DEBT", "DEVIATED", "BLOCKED", "FAIL"] },
         "attempt": { "type": "integer", "minimum": 1 },
+        "task_ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "input_artifacts": { "type": "array", "items": { "type": "string" } },
         "output_artifacts": { "type": "array", "items": { "type": "string" } },
         "validation": { "type": "array", "items": { "type": "object", "required": ["command", "result"] } },

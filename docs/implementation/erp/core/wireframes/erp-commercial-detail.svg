@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">ERP Products — detalle y configuración comercial</title>
+  <desc id="desc">Drawer de detalle en modo lectura con una única sección de participantes y disponibilidad; vista de gestión cambia dentro del drawer sin overlay anidado.</desc>
+  <defs>
+    <style>
+      :root {
+        --background: hsl(220 30% 98.8%);
+        --foreground: hsl(222 32% 11%);
+        --card: hsl(0 0% 100%);
+        --card-muted: hsl(220 26% 97.6%);
+        --primary: hsl(234 80% 58%);
+        --primary-soft: hsl(234 92% 96.5%);
+        --muted: hsl(220 20% 96%);
+        --muted-foreground: hsl(222 12% 46%);
+        --accent: hsl(158 70% 42%);
+        --accent-soft: hsl(158 70% 95%);
+        --gold: hsl(38 92% 52%);
+        --success: hsl(158 70% 40%);
+        --success-soft: hsl(158 70% 94%);
+        --warning: hsl(36 96% 52%);
+        --warning-soft: hsl(36 96% 94%);
+        --info: hsl(210 92% 52%);
+        --info-soft: hsl(210 92% 96%);
+        --destructive: hsl(350 78% 56%);
+        --border: hsl(220 22% 92%);
+        --border-strong: hsl(220 20% 85%);
+        --sidebar-background: hsl(0 0% 100%);
+        --sidebar-foreground: hsl(222 18% 32%);
+        --sidebar-accent: hsl(220 22% 96%);
+        --sidebar-accent-foreground: hsl(222 28% 16%);
+        --sidebar-border: hsl(220 18% 92%);
+      }
+      text { font-family: Inter, Arial, sans-serif; fill: var(--foreground); }
+      .mono { font-family: "JetBrains Mono", monospace; }
+      .muted { fill: var(--muted-foreground); }
+      .tiny { font-size: 11px; }
+      .small { font-size: 13px; }
+      .card { fill: var(--card); stroke: none; filter: url(#surface-shadow); }
+      .line { stroke: var(--border); }
+      .primary { fill: var(--primary); }
+    </style>
+    <filter id="surface-shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="hsl(0 0% 0%)" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="var(--background)"/>
+  <text x="28" y="38" font-size="18" font-weight="700">Detalle y configuración comercial · VIS-ERP-FLOW-05</text>
+  <text x="28" y="59" class="small muted">Una sola superficie de drawer · modo Read-only explícito · estado textual</text>
+  <text x="30" y="87" font-size="11" font-weight="700" letter-spacing="1.2" class="muted">DESKTOP WEB · DETALLE / GESTIONAR EN EL MISMO DRAWER</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="var(--card)" stroke="var(--border-strong)"/>
+  <rect x="25" y="101" width="198" height="848" rx="15" fill="var(--sidebar-background)" stroke="var(--sidebar-border)"/>
+  <text x="47" y="137" font-size="17" font-weight="700" fill="var(--foreground)">LoopDev</text>
+  <text x="47" y="180" class="tiny muted">LAUNCHPAD</text>
+  <text x="57" y="208" class="small" fill="var(--sidebar-foreground)">⌂  Launchpad</text>
+  <text x="47" y="250" class="tiny muted">SUITES</text>
+  <text x="57" y="281" class="small" fill="var(--sidebar-foreground)">CRM</text>
+  <rect x="39" y="294" width="169" height="32" rx="8" fill="var(--sidebar-accent)"/>
+  <text x="57" y="316" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">▦  ERP  ⌄</text>
+  <text x="70" y="350" class="small" fill="var(--sidebar-foreground)">Overview</text>
+  <rect x="51" y="359" width="156" height="28" rx="7" fill="var(--sidebar-accent)"/>
+  <text x="70" y="378" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">Productos</text>
+  <text x="47" y="433" class="tiny muted">TOOLS</text>
+  <text x="57" y="462" class="small" fill="var(--sidebar-foreground)">Document Intelligence</text>
+  <text x="47" y="520" class="tiny muted">WORKSPACE</text>
+  <text x="57" y="549" class="small" fill="var(--sidebar-foreground)">Settings</text>
+  <text x="250" y="187" class="tiny muted">PRODUCTOS · 28 REGISTROS</text>
+  <text x="250" y="221" class="small" font-weight="700">Arnés Trail</text>
+  <text x="250" y="247" class="tiny muted"><tspan class="mono">MC-ARN-042</tspan> · Producto terminado</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="black" opacity="0.8"/>
+  <rect x="646" y="101" width="398" height="848" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="670" y="132" class="tiny" fill="var(--primary)" font-weight="700">ERP / PRODUCTOS</text>
+  <text x="670" y="166" font-size="20" font-weight="700">Arnés Trail</text>
+  <text x="670" y="190" class="tiny muted">Read-only · Producto</text>
+  <rect x="923" y="145" width="91" height="26" rx="13" fill="var(--success-soft)"/>
+  <text x="943" y="163" class="tiny" fill="var(--success)" font-weight="700">Active</text>
+  <line x1="646" y1="212" x2="1044" y2="212" class="line"/>
+  <rect x="670" y="232" width="350" height="36" rx="8" fill="var(--muted)"/>
+  <text x="686" y="255" class="tiny" font-weight="700" fill="var(--primary)">Detalle</text>
+  <text x="769" y="255" class="tiny muted">Ofertas</text>
+  <text x="850" y="255" class="tiny muted">Variantes</text>
+  <text x="943" y="255" class="tiny muted">Precios</text>
+  <rect x="670" y="286" width="350" height="136" rx="10" class="card"/>
+  <text x="688" y="312" class="tiny" fill="var(--primary)" font-weight="700">IDENTIDAD</text>
+  <text x="688" y="340" class="tiny muted">SKU</text>
+  <text x="808" y="340" class="small mono" font-weight="600">MC-ARN-042</text>
+  <text x="688" y="367" class="tiny muted">Clase</text>
+  <text x="808" y="367" class="small">Terminado</text>
+  <text x="688" y="394" class="tiny muted">Categoría</text>
+  <text x="808" y="394" class="small">Arneses</text>
+  <rect x="670" y="438" width="350" height="152" rx="10" class="card"/>
+  <text x="688" y="464" class="tiny" fill="var(--primary)" font-weight="700">USOS Y ABASTECIMIENTO</text>
+  <text x="688" y="492" class="tiny muted">Usos</text>
+  <text x="808" y="492" class="small">Compra · venta · inventario</text>
+  <text x="688" y="519" class="tiny muted">Abastecimiento</text>
+  <text x="808" y="519" class="small">Comprar</text>
+  <text x="688" y="546" class="tiny muted">Variantes</text>
+  <text x="808" y="546" class="small">Heredan abastecimiento</text>
+  <text x="688" y="573" class="tiny muted">No implica ejecución de fabricación.</text>
+  <rect x="670" y="604" width="350" height="128" rx="10" class="card"/>
+  <text x="688" y="630" class="tiny" fill="var(--primary)" font-weight="700">DISPONIBILIDAD</text>
+  <text x="688" y="659" class="small" font-weight="700">Ecommerce · España</text>
+  <text x="688" y="685" class="tiny muted">El stock físico requiere contrato de Inventario.</text>
+  <rect x="670" y="749" width="350" height="50" rx="9" fill="var(--primary-soft)"/>
+  <text x="690" y="770" class="tiny" font-weight="700">GESTIONAR CONFIGURACIÓN</text>
+  <text x="690" y="790" class="tiny muted">Abrir la vista interna, no un segundo drawer.</text>
+  <rect x="670" y="818" width="350" height="42" rx="8" class="primary"/>
+  <text x="802" y="844" class="small" fill="var(--card)" font-weight="700">Gestionar comercialización</text>
+  <text x="30" y="981" font-size="11" font-weight="700" letter-spacing="1.2" class="muted">MOBILE WEB · MISMA SUPERFICIE, SECCIONES APILADAS</text>
+  <rect x="1168" y="100" width="390" height="850" rx="24" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="1190" y="136" class="small" font-weight="700">‹  Volver a productos</text>
+  <text x="1190" y="183" class="tiny muted">READ-ONLY · PRODUCTOS</text>
+  <text x="1190" y="213" font-size="21" font-weight="700">Arnés Trail</text>
+  <text x="1190" y="237" class="tiny muted"><tspan class="mono">MC-ARN-042</tspan> · Producto terminado</text>
+  <text x="1190" y="268" class="small" fill="var(--success)" font-weight="700">Active</text>
+  <line x1="1169" y1="287" x2="1557" y2="287" class="line"/>
+  <rect x="1190" y="305" width="346" height="38" rx="8" fill="var(--muted)"/>
+  <text x="1203" y="329" class="tiny" fill="var(--primary)" font-weight="700">Detalle</text>
+  <text x="1274" y="329" class="tiny muted">Oferta</text>
+  <text x="1342" y="329" class="tiny muted">Variantes</text>
+  <text x="1440" y="329" class="tiny muted">Precios</text>
+  <rect x="1190" y="358" width="346" height="123" rx="10" class="card"/>
+  <text x="1208" y="385" class="tiny" fill="var(--primary)" font-weight="700">IDENTIDAD</text>
+  <text x="1208" y="414" class="tiny muted">SKU</text>
+  <text x="1280" y="414" class="tiny muted mono">MC-ARN-042</text>
+  <text x="1208" y="442" class="tiny muted">Clase · categoría</text>
+  <text x="1208" y="464" class="small">Terminado · Arneses</text>
+  <rect x="1190" y="495" width="346" height="146" rx="10" class="card"/>
+  <text x="1208" y="522" class="tiny" fill="var(--primary)" font-weight="700">USOS Y ABASTECIMIENTO</text>
+  <text x="1208" y="551" class="tiny muted">Usos</text>
+  <text x="1280" y="551" class="tiny">Compra · venta · inventario</text>
+  <text x="1208" y="580" class="tiny muted">Abastecimiento</text>
+  <text x="1208" y="603" class="small">Comprar</text>
+  <text x="1208" y="628" class="tiny muted">Las variantes heredan esta regla.</text>
+  <rect x="1190" y="657" width="346" height="82" rx="10" class="card"/>
+  <text x="1208" y="684" class="tiny" fill="var(--primary)" font-weight="700">DISPONIBILIDAD</text>
+  <text x="1208" y="712" class="small" font-weight="700">Ecommerce · España</text>
+  <text x="1208" y="731" class="tiny muted">El stock físico requiere Inventario.</text>
+  <rect x="1190" y="762" width="346" height="44" rx="8" class="primary"/>
+  <text x="1276" y="790" class="small" fill="var(--card)" font-weight="700">Gestionar comercialización</text>
+  <text x="1190" y="834" class="tiny muted">“Manage” cambia de vista dentro del mismo drawer.</text>
+</svg>

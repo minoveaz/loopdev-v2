@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">ERP Products — edición de SKU y categoría propia</title>
+  <desc id="desc">Composición desktop y mobile para gestionar un SKU variante con categoría propia, diferenciada de la categoría general del producto.</desc>
+  <defs>
+    <style>
+      :root {
+        --background: hsl(220 30% 98.8%);
+        --foreground: hsl(222 32% 11%);
+        --card: hsl(0 0% 100%);
+        --card-muted: hsl(220 26% 97.6%);
+        --primary: hsl(234 80% 58%);
+        --muted-foreground: hsl(222 12% 46%);
+        --border: hsl(220 22% 92%);
+        --border-strong: hsl(220 20% 85%);
+        --sidebar-background: hsl(0 0% 100%);
+        --sidebar-foreground: hsl(222 18% 32%);
+        --sidebar-accent: hsl(220 22% 96%);
+        --sidebar-accent-foreground: hsl(222 28% 16%);
+        --sidebar-border: hsl(220 18% 92%);
+      }
+      text { font-family: Inter, Arial, sans-serif; fill: var(--foreground); }
+      .mono { font-family: "JetBrains Mono", monospace; }
+      .muted { fill: var(--muted-foreground); }
+      .tiny { font-size: 11px; }
+      .small { font-size: 13px; }
+      .label { font-size: 12px; font-weight: 600; }
+      .input { fill: var(--card); stroke: var(--border-strong); }
+      .primary { fill: var(--primary); }
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="var(--background)"/>
+  <text x="28" y="38" font-size="18" font-weight="700">SKU / variante · categoría propia · VIS-ERP-FLOW-06</text>
+  <text x="28" y="59" class="small muted">La categoría del SKU es independiente de la categoría general del producto base</text>
+  <text x="30" y="87" class="tiny muted" font-weight="700" letter-spacing="1.2">DESKTOP WEB · APPDRAWER</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="var(--card)" stroke="var(--border-strong)"/>
+  <rect x="25" y="101" width="198" height="848" rx="15" fill="var(--sidebar-background)" stroke="var(--sidebar-border)"/>
+  <text x="47" y="137" font-size="17" font-weight="700">LoopDev</text>
+  <text x="47" y="180" class="tiny muted">LAUNCHPAD</text>
+  <text x="57" y="208" class="small" fill="var(--sidebar-foreground)">⌂  Launchpad</text>
+  <text x="47" y="250" class="tiny muted">SUITES</text>
+  <rect x="39" y="264" width="169" height="32" rx="8" fill="var(--sidebar-accent)"/>
+  <text x="57" y="286" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">▦  ERP  ⌄</text>
+  <rect x="51" y="304" width="156" height="28" rx="7" fill="var(--sidebar-accent)"/>
+  <text x="70" y="323" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">Productos</text>
+  <rect x="254" y="184" width="410" height="196" rx="12" fill="var(--card)" stroke="var(--border)"/>
+  <text x="276" y="216" class="tiny muted">PRODUCTO BASE</text>
+  <text x="276" y="248" font-size="20" font-weight="700">Arnés Trail</text>
+  <text x="276" y="273" class="small muted">Categoría general</text>
+  <rect x="276" y="288" width="356" height="40" rx="8" fill="var(--card-muted)"/>
+  <text x="292" y="313" class="small">Accesorios / Perros</text>
+  <text x="276" y="353" class="tiny muted">El SKU se clasifica por separado.</text>
+  <rect x="254" y="396" width="410" height="100" rx="12" fill="var(--card)" stroke="var(--border)"/>
+  <text x="276" y="430" class="small" font-weight="700">SKU existentes</text>
+  <text x="276" y="461" class="small">Azul · <tspan class="mono">MC-ARN-042-AZ</tspan></text>
+  <text x="598" y="461" class="small" fill="var(--primary)">Editar</text>
+  <rect x="254" y="512" width="410" height="42" rx="9" class="primary"/>
+  <text x="375" y="539" class="small" fill="var(--card)" font-weight="700">＋  Añadir SKU</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="black" opacity="0.8"/>
+  <rect x="690" y="101" width="354" height="848" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="712" y="134" class="tiny" fill="var(--primary)" font-weight="700">PRODUCTOS / ARNÉS TRAIL</text>
+  <text x="712" y="165" font-size="20" font-weight="700">Editar SKU</text>
+  <text x="712" y="188" class="tiny muted">Borrador · guardado remoto pendiente</text>
+  <line x1="690" y1="211" x2="1044" y2="211" stroke="var(--border)"/>
+  <text x="712" y="244" class="small" font-weight="700">Identidad del SKU</text>
+  <text x="712" y="275" class="label">Nombre / atributo visible</text>
+  <rect x="712" y="284" width="310" height="38" rx="8" class="input"/>
+  <text x="727" y="309" class="small">Azul</text>
+  <text x="712" y="351" class="label">SKU *</text>
+  <rect x="712" y="360" width="310" height="38" rx="8" class="input"/>
+  <text x="727" y="385" class="small mono">MC-ARN-042-AZ</text>
+  <rect x="712" y="419" width="310" height="1" fill="var(--border)"/>
+  <text x="712" y="454" class="small" font-weight="700">Clasificación propia de este SKU</text>
+  <text x="712" y="484" class="tiny muted">Categoría general del producto: Accesorios / Perros</text>
+  <text x="712" y="522" class="label">Categoría principal del SKU *</text>
+  <rect x="712" y="531" width="310" height="40" rx="8" class="input"/>
+  <text x="727" y="557" class="small">Arneses / Trail  ▾</text>
+  <text x="712" y="598" class="tiny muted">No se hereda del producto ni de otros SKU.</text>
+  <rect x="712" y="636" width="310" height="54" rx="9" fill="var(--card-muted)"/>
+  <text x="728" y="659" class="tiny" font-weight="700">ABASTECIMIENTO</text>
+  <text x="728" y="679" class="small">Heredado del producto base · Comprar</text>
+  <line x1="690" y1="758" x2="1044" y2="758" stroke="var(--border)"/>
+  <rect x="712" y="780" width="102" height="42" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="739" y="806" class="small" font-weight="600">Cancelar</text>
+  <rect x="824" y="780" width="198" height="42" rx="8" class="primary"/>
+  <text x="871" y="806" class="small" fill="var(--card)" font-weight="700">Guardar SKU</text>
+  <text x="712" y="855" class="tiny muted">La activación requiere SKU y categoría válidos.</text>
+  <text x="30" y="981" class="tiny muted" font-weight="700" letter-spacing="1.2">MOBILE WEB · SUPERFICIE COMPLETA · HIT TARGET ≥44 PX</text>
+  <rect x="1168" y="100" width="390" height="850" rx="24" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="1190" y="136" class="small" font-weight="700">‹  Productos</text>
+  <text x="1190" y="180" class="tiny muted">ARNÉS TRAIL</text>
+  <text x="1190" y="210" font-size="20" font-weight="700">Editar SKU</text>
+  <text x="1190" y="233" class="tiny muted">Borrador · cambios sin guardar</text>
+  <line x1="1169" y1="253" x2="1557" y2="253" stroke="var(--border)"/>
+  <text x="1190" y="286" class="small" font-weight="700">Identidad del SKU</text>
+  <text x="1190" y="318" class="label">Nombre / atributo visible</text>
+  <rect x="1190" y="327" width="346" height="44" rx="8" class="input"/>
+  <text x="1206" y="354" class="small">Azul</text>
+  <text x="1190" y="405" class="label">SKU *</text>
+  <rect x="1190" y="414" width="346" height="44" rx="8" class="input"/>
+  <text x="1206" y="441" class="small mono">MC-ARN-042-AZ</text>
+  <rect x="1190" y="479" width="346" height="1" fill="var(--border)"/>
+  <text x="1190" y="513" class="small" font-weight="700">Categoría del SKU</text>
+  <text x="1190" y="539" class="tiny muted">Categoría general: Accesorios / Perros</text>
+  <rect x="1190" y="554" width="346" height="48" rx="8" class="input"/>
+  <text x="1206" y="584" class="small">Arneses / Trail  ▾</text>
+  <text x="1190" y="626" class="tiny muted">Propia de este SKU; no se hereda.</text>
+  <rect x="1190" y="650" width="346" height="62" rx="9" fill="var(--card-muted)"/>
+  <text x="1206" y="676" class="tiny" font-weight="700">ABASTECIMIENTO</text>
+  <text x="1206" y="699" class="small">Heredado · Comprar</text>
+  <rect x="1185" y="767" width="158" height="48" rx="8" fill="var(--card)" stroke="var(--border-strong)"/>
+  <text x="1237" y="797" class="small" font-weight="600">Cancelar</text>
+  <rect x="1353" y="767" width="188" height="48" rx="8" class="primary"/>
+  <text x="1406" y="797" class="small" fill="var(--card)" font-weight="700">Guardar SKU</text>
+  <text x="1190" y="857" class="tiny muted">SKU y categoría requeridos antes de activar.</text>
+</svg>

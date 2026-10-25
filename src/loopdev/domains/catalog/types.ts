@@ -12,6 +12,17 @@ export const CATALOG_ITEM_TYPES = [
 ] as const;
 
 export type CatalogItemType = (typeof CATALOG_ITEM_TYPES)[number];
+export type CatalogItemKind = "product" | "service";
+export type CatalogItemClass = "finished_product" | "raw_material" | "component" | "service";
+export type CatalogSourcingMode = "buy" | "make" | "both";
+export interface CatalogItemMetadata extends Record<string, unknown> {
+  itemKind?: CatalogItemKind;
+  itemClass?: CatalogItemClass;
+  sourcingMode?: CatalogSourcingMode | null;
+  canPurchase?: boolean;
+  canSell?: boolean;
+  trackInventory?: boolean;
+}
 export type CatalogRecordStatus = "draft" | "active" | "archived";
 export type CatalogBillingModel = "one_time" | "recurring" | "usage";
 export type OrganizationCatalogKind = "products" | "services";
@@ -45,7 +56,20 @@ export interface CatalogItem extends Entity {
   categoryKey: string | null;
   status: CatalogRecordStatus;
   visibility: CatalogVisibility;
-  metadata: Record<string, unknown>;
+  metadata: CatalogItemMetadata;
+}
+
+export function matchesCatalogItemKey(item: CatalogItem, candidate: string): boolean {
+  const normalizedCandidate = candidate.trim().toLocaleLowerCase();
+  if (item.key.trim().toLocaleLowerCase() === normalizedCandidate) return true;
+
+  const migration = item.metadata.loopdevIdentifierMigration;
+  if (!migration || typeof migration !== "object" || Array.isArray(migration) || !("previousKey" in migration)) {
+    return false;
+  }
+
+  return typeof migration.previousKey === "string"
+    && migration.previousKey.trim().toLocaleLowerCase() === normalizedCandidate;
 }
 
 export interface Offer extends Entity {
@@ -73,6 +97,25 @@ export interface CatalogVariant extends Entity {
   status: CatalogRecordStatus;
   attributes: Record<string, string>;
   metadata: Record<string, unknown>;
+}
+
+export type ProductReferenceKind = "category" | "brand" | "tag";
+
+export interface ProductReference extends Entity {
+  organizationId: string;
+  kind: ProductReferenceKind;
+  key: string;
+  name: string;
+  parentId: string | null;
+  status: CatalogRecordStatus;
+}
+
+export interface ProductCostReference extends Entity {
+  organizationId: string;
+  catalogItemId: string;
+  variantId: string | null;
+  amount: number | null;
+  currency: string;
 }
 
 export interface ProductPartyRole extends Entity {
@@ -143,9 +186,11 @@ export interface PriceEntry extends Entity {
 }
 
 export type CatalogOfferCreateInput = Omit<Offer, "id" | "createdAt" | "updatedAt">;
-export type CatalogVariantCreateInput = Omit<CatalogVariant, "id" | "createdAt" | "updatedAt">;
+export type CatalogVariantCreateInput = Omit<CatalogVariant, "id" | "key" | "sku" | "createdAt" | "updatedAt">;
 export type CatalogPriceBookCreateInput = Omit<PriceBook, "id" | "createdAt" | "updatedAt">;
 export type CatalogPriceEntryCreateInput = Omit<PriceEntry, "id" | "createdAt" | "updatedAt">;
+export type ProductReferenceCreateInput = Omit<ProductReference, "id" | "createdAt" | "updatedAt" | "status">;
+export type ProductCostReferenceInput = Omit<ProductCostReference, "id" | "createdAt" | "updatedAt">;
 
 export interface CatalogScopeParams {
   organizationId: string;
@@ -172,14 +217,12 @@ export interface CatalogItemCreateInput {
   organizationId: string;
   workspaceId?: string | null;
   catalogId?: string | null;
-  key: string;
-  sku: string;
   name: string;
   description?: string | null;
   type: CatalogItemType;
   status?: CatalogRecordStatus;
   categoryKey?: string | null;
-  metadata?: Record<string, unknown>;
+  metadata?: CatalogItemMetadata;
 }
 
 export interface CatalogReference {
@@ -209,4 +252,3 @@ export class CatalogAdapterError extends Error {
     this.name = "CatalogAdapterError";
   }
 }
-

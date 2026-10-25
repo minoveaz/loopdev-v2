@@ -94,6 +94,22 @@ If the implementation directory has not been created yet, use:
 docs/06-product/module-runs/<run-id>/
 ```
 
+## Task-scoped approvals
+
+Global ledger approval remains the gate for starting the complete module plan
+and claiming module-wide verification or release. To avoid blocking an
+independent, explicitly approved change on unrelated module work, a ledger may
+opt into `task_scoped_approvals`. A task in a non-approved ledger may become
+`ready` only with its own `approved_by`, `approved_at` and `approval_source`,
+no task-local blockers and all dependencies done.
+
+The plan/build checkpoints snapshot the approved task IDs. Their acceptance,
+operation-coverage validation and completion apply only to those tasks and
+their linked requirements, capabilities, operations and platforms. Unrelated
+ledger blockers remain recorded and continue to block their own dependent
+tasks, module-wide verification/release and remote deployment. Task-scoped
+approval never upgrades the ledger to globally approved.
+
 The product documentation under `docs/06-product` remains the definition of
 what must be built. It is not the primary location for implementation
 checkpoints. The canonical checkpoint shape is:

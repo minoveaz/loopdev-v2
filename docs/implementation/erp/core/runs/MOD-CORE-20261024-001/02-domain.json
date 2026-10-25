@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:02-domain",
+  "phase": "02-domain",
+  "skill": "domain-model",
+  "parent_span_id": "MOD-CORE-20261024-001:01-visual-design",
+  "module": "Core",
+  "status": "deviated",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 5,
+  "started_at": "2026-10-24T14:42:11.321Z",
+  "completed_at": "2026-10-24T14:48:08.803Z",
+  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": "develop",
+    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
+    "working_tree": "untracked ERP implementation docs; no production code changes",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/design.md",
+    "docs/implementation/erp/core/architecture-design.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/implementation/erp/core/visual-design.md",
+    "docs/implementation/erp/core/view-state-matrix.md",
+    "docs/03-platform/governance/MODULE_DEVELOPMENT_TRACEABILITY.md",
+    "src/loopdev/domains/catalog/types.ts",
+    "src/loopdev/domains/catalog/adapter/local.ts",
+    "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
+    "src/test/catalog/catalog-adapter.test.ts"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/core/domain-model.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/02-domain.md"
+  ],
+  "decisions": [
+    {
+      "id": "DOM-ERP-001",
+      "status": "confirmed",
+      "summary": "One Products master covers finished products, raw materials/components and services; semimanufactured items remain deferred."
+    },
+    {
+      "id": "DOM-ERP-002",
+      "status": "confirmed",
+      "summary": "Product class is independent of purchasing, selling and inventory-tracking uses."
+    },
+    {
+      "id": "DOM-ERP-003",
+      "status": "confirmed",
+      "summary": "The product base has one general category; each separately managed/sold SKU has its own primary category, which may differ from the base and sibling variants."
+    },
+    {
+      "id": "DOM-ERP-004",
+      "status": "confirmed",
+      "summary": "Buy/make/both sourcing is product-owned and inherited by variants."
+    },
+    {
+      "id": "DOM-ERP-005",
+      "status": "confirmed",
+      "summary": "A variant is a specific product managed or sold separately, with its own SKU distinct from sibling variants."
+    },
+    {
+      "id": "DOM-ERP-006",
+      "status": "confirmed",
+      "summary": "Each variant/SKU has its own independently assigned category; the product base retains a general category and SKU categories may differ."
+    },
+    {
+      "id": "DOM-ERP-007",
+      "status": "confirmed",
+      "summary": "Products and categories are organization-scoped and shared across workspaces; legacy workspace IDs need migration handling."
+    },
+    {
+      "id": "DOM-ERP-008",
+      "status": "confirmed",
+      "summary": "Product, variant and category keys are LoopDev-generated, immutable, distinct from SKU/name and unique organization-wide. SKU uniqueness is organization-wide after trimming outer whitespace and comparing case-insensitively while preserving entered case."
+    },
+    {
+      "id": "DOM-ERP-009",
+      "status": "confirmed",
+      "summary": "Only legacy service maps automatically to Service; physical_product, digital_product, subscription, coverage, package and fee remain drafts until explicitly reviewed. Legacy categoryKey mapping remains open."
+    },
+    {
+      "id": "DOM-ERP-010",
+      "status": "confirmed",
+      "summary": "A draft product/SKU may omit category; a category is required before activation."
+    },
+    {
+      "id": "DOM-ERP-011",
+      "status": "confirmed",
+      "summary": "Archive preserves existing assignments and blocks new ones; permanent deletion is prohibited; restore and subtree-preserving reparent rules are confirmed; archiving is blocked while active children remain."
+    },
+    {
+      "id": "DOM-ERP-012",
+      "status": "confirmed",
+      "summary": "Finished products allow buy/make/both; raw materials/components are buy-only for now; services have no sourcing value. Revisit raw-material sourcing during Manufacturing discovery."
+    },
+    {
+      "id": "DOM-ERP-013",
+      "status": "confirmed",
+      "summary": "OrganizationCatalog is migration-only, not a target business entity or product-ownership boundary."
+    },
+    {
+      "id": "DOM-ERP-014",
+      "status": "confirmed",
+      "summary": "Commercial price currency is owned by each PriceBook; migrate the legacy OrganizationCatalog currency into applicable books."
+    },
+    {
+      "id": "DOM-ERP-015",
+      "status": "open",
+      "summary": "Define mapping of legacy categoryKey references to organization-scoped ProductCategory keys."
+    },
+    {
+      "id": "DOM-ERP-016",
+      "status": "open",
+      "summary": "Assign target-domain owners and migration mappings for legacy OrganizationCatalog locale and channel fields."
+    },
+    {
+      "id": "DOM-ERP-017",
+      "status": "confirmed",
+      "summary": "Each PriceEntry uses the currency of its PriceBook; legacy PriceEntry.currency is not an independent target value."
+    },
+    {
+      "id": "DOM-ERP-018",
+      "status": "confirmed",
+      "summary": "Offer has no independent currency; offer prices use the currency of their associated PriceBook."
+    }
+  ],
+  "actions": [
+    "Reconciled approved Products decisions against discovery, design, platform references and the existing catalog implementation.",
+    "Documented entity/cardinality, lifecycle transitions, invariants, commands and proposed domain events.",
+    "Recorded per-entity ownership, local fixture strategy, remote identity, archive/delete/restore behavior and event boundaries.",
+    "Identified legacy category, type mapping, workspace scope, cascade-delete and version/audit gaps.",
+    "Kept production implementation and permission/API/synchronization contracts out of scope."
+  ],
+  "validation": [
+    {
+      "command": "npm run delivery:validate",
+      "result": "passed",
+      "evidence": "Module run validation passed: 101 checkpoint file(s) checked (36 archived legacy record(s))."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Multiplatform delivery validation passed."
+    },
+    {
+      "command": "npm run test:delivery",
+      "result": "passed (27 tests)",
+      "evidence": "Delivery state-machine and evidence tests passed."
+    },
+    {
+      "command": "python3 ERP JSON/SVG/Markdown-link check",
+      "result": "passed",
+      "evidence": "Parsed 6 JSON files and 5 SVG files; all local Markdown links resolve."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "status": "PARTIAL",
+      "evidence": "Current catalog entities and constraints are documented; only legacy service maps automatically to Service, while physical_product, digital_product, subscription, coverage, package and fee remain drafts pending explicit review. Legacy categoryKey mapping, ownership of legacy OrganizationCatalog fields, deletion policy and version/audit rules remain unresolved."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "status": "PARTIAL",
+      "evidence": "Organization-wide scope, separate product-base/SKU categories, activation timing, archive-only behavior, restore conditions, subtree-preserving reparenting, blocking parent archive while active children remain, and organization-unique generated immutable category keys are confirmed."
+    },
+    {
+      "id": "REQ-ERP-CRM-BOUNDARY",
+      "status": "PASS",
+      "evidence": "CRM remains source of truth for Contact identity and history; Products references it without duplicating the customer master."
+    }
+  ],
+  "evidence": [
+    {
+      "type": "domain-analysis",
+      "path": "docs/implementation/erp/core/domain-model.md",
+      "result": "Documents decisions, relationships, lifecycle, invariants, events, per-entity continuity and open questions."
+    },
+    {
+      "type": "source-audit",
+      "path": "supabase/migrations/20260928160000_erp_catalog_foundation.sql",
+      "result": "Legacy catalog schema, scoped uniqueness, category_key representation and cascading deletes were compared with the target model."
+    },
+    {
+      "type": "source-audit",
+      "path": "src/loopdev/domains/catalog/adapter/local.ts",
+      "result": "Current local adapter CRUD, status and fixture behavior was treated as baseline, not target policy."
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "03-access",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": true,
+  "notes": [
+    "This checkpoint predates the approved product-media scope amendment and must be reconciled before it can satisfy the current run."
+  ]
+}

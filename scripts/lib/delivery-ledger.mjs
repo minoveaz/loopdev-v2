@@ -48,7 +48,7 @@ function detectTaskCycles(tasks, errors) {
   for (const task of tasks) visit(task.id, []);
 }
 
-export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json", { stage = "base" } = {}) {
+export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json", { stage = "base", taskIds: selectedTaskIds = null } = {}) {
   const errors = [];
   if (ledger.schema_version !== 1) errors.push("schema_version must be 1");
   if (!ledger.suite) errors.push("suite is required");
@@ -57,11 +57,14 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
   const productSources = requireArray(errors, ledger.product_sources, "product_sources");
   for (const source of productSources) if (!existsSync(join(root, source))) errors.push(`product source does not exist: ${source}`);
 
+  const scopedTaskIds = Array.isArray(selectedTaskIds) ? [...new Set(selectedTaskIds)] : null;
+  const taskScopedRun = ledger.task_scoped_approvals === true && ledger.status !== "approved" && Boolean(scopedTaskIds?.length);
   const requiresDiscoveryScope = ["discovery", "design", "plan"].includes(stage) || ledger.status === "approved";
-  const requiresPlan = stage === "plan" || ledger.status === "approved";
+  const requiresPlan = (stage === "plan" || ledger.status === "approved") && !taskScopedRun;
   const requirements = requireArray(errors, ledger.requirements, "requirements", { nonEmpty: requiresDiscoveryScope });
   const capabilities = requireArray(errors, ledger.capabilities, "capabilities", { nonEmpty: requiresDiscoveryScope });
   const tasks = requireArray(errors, ledger.tasks, "tasks", { nonEmpty: requiresPlan });
+  const scopedTasks = scopedTaskIds?.map((taskId) => tasks.find((task) => task.id === taskId)).filter(Boolean) ?? [];
   const changeRequests = requireArray(errors, ledger.change_requests, "change_requests", { nonEmpty: false });
   const blockers = requireArray(errors, ledger.blockers, "blockers", { nonEmpty: false });
   for (const type of [["requirement", requirements], ["capability", capabilities], ["task", tasks]]) {
@@ -71,6 +74,15 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
   const requirementById = new Map(requirements.map((requirement) => [requirement.id, requirement]));
   const capabilityById = new Map(capabilities.map((capability) => [capability.id, capability]));
   const taskById = new Map(tasks.map((task) => [task.id, task]));
+  if (scopedTaskIds) {
+    for (const taskId of scopedTaskIds) {
+      const task = taskById.get(taskId);
+      if (!task) errors.push(`selected task ${taskId} does not exist`);
+      else if (ledger.status !== "approved" && (!taskScopedRun || !["ready", "in_progress", "done"].includes(task.status) || !task.approval)) {
+        errors.push(`selected task ${taskId} is not approved for scoped execution`);
+      }
+    }
+  }
 
   for (const requirement of requirements) {
     const label = `requirement ${requirement.id ?? "<missing>"}`;
@@ -120,7 +132,11 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
     }
     const operationCoverage = requireArray(errors, capability.operation_coverage, `${label}.operation_coverage`);
     const coverageById = new Map(operationCoverage.map((coverage) => [coverage?.id, coverage]));
-    for (const operation of operations) {
+    const capabilityScopedTasks = taskScopedRun ? scopedTasks.filter((task) => task.capability_ids?.includes(capability.id)) : [];
+    const operationsToValidate = taskScopedRun
+      ? operations.filter((operation) => capabilityScopedTasks.some((task) => task.operation_ids?.includes(operation)))
+      : operations;
+    for (const operation of operationsToValidate) {
       const coverage = coverageById.get(operation);
       if (!coverage) {
         errors.push(`${label} operation ${operation} has no platform coverage decision`);
@@ -130,7 +146,9 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
         const status = coverage[platform];
         if (!operationStatuses.has(status)) errors.push(`${label} operation ${operation} has invalid ${platform} status "${status ?? "missing"}"`);
         if (status === "adapted" && !coverage.adaptation_ref) errors.push(`${label} operation ${operation} adapted on ${platform} requires adaptation_ref`);
-        const platformRequired = capability.platforms?.[platform]?.required;
+        const scopedPlatform = !taskScopedRun || capabilityScopedTasks.some((task) =>
+          task.operation_ids?.includes(operation) && task.platforms?.includes(platform));
+        const platformRequired = capability.platforms?.[platform]?.required && scopedPlatform;
         if ((stage === "plan" || ledger.status === "approved") && platformRequired && status === "not_applicable") {
           errors.push(`${label} operation ${operation} cannot be not_applicable on required platform ${platform}`);
         }
@@ -196,6 +214,19 @@ export function validateLedger(root, ledger, ledgerFile = "delivery-ledger.json"
     const evidenceRefs = requireArray(errors, task.evidence_refs, `${label}.evidence_refs`, { nonEmpty: false });
     if (task.status === "blocked" && taskBlockers.length === 0) errors.push(`${label} is blocked without blocked_by`);
     if (task.status === "done" && evidenceRefs.length === 0) errors.push(`${label} is done without evidence_refs`);
+    const requiresTaskApproval = ledger.task_scoped_approvals === true
+      && ledger.status !== "approved"
+      && ["ready", "in_progress", "done"].includes(task.status);
+    if (requiresTaskApproval) {
+      const approval = task.approval;
+      if (!approval?.approved_by || !approval?.approved_at || Number.isNaN(Date.parse(approval.approved_at)) || !approval?.approval_source) {
+        errors.push(`${label} requires a complete task-scoped approval`);
+      }
+      if (taskBlockers.length) errors.push(`${label} cannot be ready with task-local blockers`);
+      for (const dependency of task.dependencies ?? []) {
+        if (taskById.get(dependency)?.status !== "done") errors.push(`${label} has an incomplete dependency ${dependency}`);
+      }
+    }
   }
   detectTaskCycles(tasks, errors);
 

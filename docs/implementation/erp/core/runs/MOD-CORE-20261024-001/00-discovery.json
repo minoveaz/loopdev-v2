@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "span_id": "MOD-CORE-20261024-001:00-discovery",
+  "phase": "00-discovery",
+  "skill": "module-discovery",
+  "parent_span_id": null,
+  "module": "Core",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 3,
+  "started_at": "2026-10-24T10:13:41.839Z",
+  "completed_at": "2026-10-24T14:29:24Z",
+  "input_fingerprint": "sha256:0c806cfd742e0479af179631b9fee00fd03cd5d372d5d0f93e52025f5523f8fb",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": null,
+    "head_commit": "cb2b35d30c87f7b3d4e42fbfcc1fe9390f624387",
+    "working_tree": "untracked ERP implementation docs; no production code changes",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [
+    "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
+    "docs/03-platform/governance/MULTIPLATFORM_DELIVERY_CONTRACT.md",
+    "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "minoveaz/loopdev-v2#36",
+    "User decision: ERP transversal para pymes de distintos sectores desde el inicio.",
+    "User-confirmed Products item classes, independent operational uses, category hierarchy, product-level sourcing and variant SKU rules."
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/core/README.md",
+    "docs/implementation/erp/core/discovery.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/implementation/erp/core/platform-scope.md",
+    "docs/implementation/erp/core/platform-evidence-matrix.md"
+  ],
+  "decisions": [
+    {
+      "id": "ERP-DEC-001",
+      "status": "confirmed",
+      "summary": "Define a cross-sector SME ERP capability map and boundaries before client-specific implementation; prioritize MiauCraft and then Inhand."
+    },
+    {
+      "id": "ERP-DEC-002",
+      "status": "confirmed",
+      "summary": "Inhand's initial direction is physical products, a LoopDev-owned commerce backend, one warehouse and an external payment provider."
+    },
+    {
+      "id": "ERP-OD-001",
+      "status": "confirmed",
+      "summary": "ERP target customers are SMEs across sectors; this does not approve a full ERP or the first-release module set."
+    },
+    {
+      "id": "ERP-DEC-005",
+      "status": "confirmed",
+      "summary": "Products has one master for finished products, raw materials/components and services; item class is independent from purchasing, selling and inventory tracking; the product base has a general category and each separately managed/sold SKU has its own category; drafts may omit category but activation requires it; finished products allow buy/make/both sourcing, raw materials/components are buy-only for now, services have no sourcing, and variants inherit product sourcing; semimanufactured items await Manufacturing discovery."
+    },
+    {
+      "id": "ERP-A-003",
+      "status": "confirmed",
+      "summary": "The product base has a general category and each variant/SKU has an independently assigned category; only sourcing is inherited from the product."
+    },
+    {
+      "id": "ERP-OD-006",
+      "status": "open",
+      "summary": "The first validated release's module set and sequence remain open."
+    },
+    {
+      "id": "ERP-CF-001",
+      "status": "open",
+      "summary": "Catalog documentation, remote adapter and migration evidence conflict; deployment/runtime behavior is unverified."
+    },
+    {
+      "id": "ERP-CF-002",
+      "status": "open",
+      "summary": "Local catalog permission naming differs from the remote migration; canonical action IDs need resolution."
+    }
+  ],
+  "actions": [
+    "Recorded the user's confirmed cross-sector SME target without treating it as approval for an unbounded ERP MVP.",
+    "Expanded the discovery map and ledger with sector-neutral candidate areas for sales, procurement, inventory, finance and operational reporting.",
+    "Preserved existing capability IDs and documented the first-release module set as open.",
+    "Revalidated the expanded delivery ledger and JSON artifacts.",
+    "Amended discovery with CR-ERP-PRODUCT-MASTER-MODEL after the user's product-model decisions; the category-inheritance assumption was subsequently resolved by the user in favor of independently assigned SKU categories."
+  ],
+  "validation": [
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "Delivery ledger validation passed: 8 ledger(s) checked."
+    },
+    {
+      "command": "python3 ERP workspace JSON parse check",
+      "result": "passed",
+      "evidence": "ERP workspace JSON files parse successfully."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-ERP-BOUNDARY-MAP",
+      "status": "PARTIAL",
+      "evidence": "Cross-sector capability map includes candidate modules; first-release scope, sequencing and owner approval remain open."
+    },
+    {
+      "id": "REQ-ERP-CATALOG-FOUNDATION",
+      "status": "PARTIAL",
+      "evidence": "Local adapter/tests, remote adapter and migration reviewed; the user-confirmed item-class/category/sourcing model is recorded as a proposal, not runtime behavior; remote runtime and permission parity remain unverified."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "status": "PARTIAL",
+      "evidence": "The category tree and one-primary-category rule are approved; only legacy categoryKey evidence exists, with no category entity/tree management implementation."
+    },
+    {
+      "id": "REQ-MIAUCRAFT-SHOPIFY",
+      "status": "NOT_TESTED",
+      "evidence": "No Shopify connector exists in the inspected source; client-specific sync scope remains open."
+    },
+    {
+      "id": "REQ-INHAND-NATIVE-COMMERCE",
+      "status": "NOT_TESTED",
+      "evidence": "Initial direction is recorded; transactions, stock and storefront are not implemented."
+    }
+  ],
+  "evidence": [
+    "User selected the cross-sector SME ERP target during this session.",
+    "ERP capability candidates and classifications are listed in discovery.md and delivery-ledger.json.",
+    "Existing catalog source, adapters, migration, routes and tests remain as documented in discovery.md."
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "01-design: incorporate CR-ERP-PRODUCT-MASTER-MODEL; visual design then remains gated on explicit conceptual approval.",
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

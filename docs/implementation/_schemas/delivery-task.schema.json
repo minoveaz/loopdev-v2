@@ -15,6 +15,16 @@
     "platforms": { "type": "array", "items": { "enum": ["shared", "desktop_web", "mobile_web", "ios", "android"] }, "minItems": 1 },
     "dependencies": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "owner": { "type": "string", "minLength": 1 },
+    "approval": {
+      "type": "object",
+      "required": ["approved_by", "approved_at", "approval_source"],
+      "properties": {
+        "approved_by": { "type": "string", "minLength": 1 },
+        "approved_at": { "type": "string", "format": "date-time" },
+        "approval_source": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
     "risk": { "enum": ["low", "medium", "high", "critical"] },
     "evidence_level": { "enum": ["E0_PRESENT", "E1_LINT", "E2_UNIT", "E3_COMPONENT", "E4_JOURNEY", "E5_DEVICE"] },
     "acceptance_criteria": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },

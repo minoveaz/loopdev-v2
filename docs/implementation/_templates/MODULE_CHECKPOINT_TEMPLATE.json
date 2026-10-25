@@ -10,6 +10,7 @@
   "decision_status": "open",
   "architecture_quality": "PENDING",
   "attempt": 1,
+  "task_ids": [],
   "input_fingerprint": "sha256:a41777df25ff570bc2669834de4359ef0fe5982231d03adc954454d2d0cbe4a6",
   "started_at": "<RFC3339 timestamp>",
   "completed_at": null,

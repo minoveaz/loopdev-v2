@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">ERP Products — lista de productos y servicios</title>
+  <desc id="desc">Propuesta de lista directa del módulo Productos. Desktop usa DataTable compacta con filtros; mobile usa tarjetas con los mismos campos y acciones.</desc>
+  <defs>
+    <style>
+      :root {
+        --background: hsl(220 30% 98.8%);
+        --foreground: hsl(222 32% 11%);
+        --card: hsl(0 0% 100%);
+        --card-muted: hsl(220 26% 97.6%);
+        --primary: hsl(234 80% 58%);
+        --primary-soft: hsl(234 92% 96.5%);
+        --muted: hsl(220 20% 96%);
+        --muted-foreground: hsl(222 12% 46%);
+        --accent: hsl(158 70% 42%);
+        --accent-soft: hsl(158 70% 95%);
+        --gold: hsl(38 92% 52%);
+        --success: hsl(158 70% 40%);
+        --success-soft: hsl(158 70% 94%);
+        --warning: hsl(36 96% 52%);
+        --warning-soft: hsl(36 96% 94%);
+        --info: hsl(210 92% 52%);
+        --info-soft: hsl(210 92% 96%);
+        --destructive: hsl(350 78% 56%);
+        --border: hsl(220 22% 92%);
+        --border-strong: hsl(220 20% 85%);
+        --sidebar-background: hsl(0 0% 100%);
+        --sidebar-foreground: hsl(222 18% 32%);
+        --sidebar-accent: hsl(220 22% 96%);
+        --sidebar-accent-foreground: hsl(222 28% 16%);
+        --sidebar-border: hsl(220 18% 92%);
+      }
+      text { font-family: Inter, Arial, sans-serif; fill: var(--foreground); }
+      .mono { font-family: "JetBrains Mono", monospace; }
+      .muted { fill: var(--muted-foreground); }
+      .tiny { font-size: 11px; }
+      .small { font-size: 13px; }
+      .title { font-size: 24px; font-weight: 700; }
+      .card { fill: var(--card); stroke: none; filter: url(#surface-shadow); }
+      .line { stroke: var(--border); }
+      .primary { fill: var(--primary); }
+    </style>
+    <filter id="surface-shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="hsl(0 0% 0%)" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="var(--background)"/>
+  <text x="28" y="38" font-size="18" font-weight="700">Productos y servicios · VIS-ERP-VIEW-03</text>
+  <text x="28" y="59" class="small muted">Maestro unificado por clase y categoría · mismas acciones en desktop y mobile</text>
+  <text x="30" y="87" font-size="11" font-weight="700" letter-spacing="1.2" class="muted">DESKTOP WEB · 1440 PX</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="var(--card)" stroke="var(--border-strong)"/>
+  <rect x="25" y="101" width="198" height="848" rx="15" fill="var(--sidebar-background)" stroke="var(--sidebar-border)"/>
+  <text x="47" y="137" font-size="17" font-weight="700" fill="var(--foreground)">LoopDev</text>
+  <text x="47" y="180" class="tiny" fill="var(--sidebar-foreground)">LAUNCHPAD</text>
+  <text x="57" y="208" class="small" fill="var(--sidebar-foreground)">⌂  Launchpad</text>
+  <text x="47" y="250" class="tiny" fill="var(--sidebar-foreground)">SUITES</text>
+  <text x="57" y="281" class="small" fill="var(--sidebar-foreground)">CRM</text>
+  <rect x="39" y="294" width="169" height="32" rx="8" fill="var(--sidebar-accent)"/>
+  <text x="57" y="316" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">▦  ERP  ⌄</text>
+  <text x="70" y="350" class="small" fill="var(--sidebar-foreground)">Overview</text>
+  <rect x="51" y="359" width="156" height="28" rx="7" fill="var(--sidebar-accent)"/>
+  <text x="70" y="378" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">Productos</text>
+  <text x="47" y="433" class="tiny" fill="var(--sidebar-foreground)">TOOLS</text>
+  <text x="57" y="462" class="small" fill="var(--sidebar-foreground)">Document Intelligence</text>
+  <text x="47" y="520" class="tiny" fill="var(--sidebar-foreground)">WORKSPACE</text>
+  <text x="57" y="549" class="small" fill="var(--sidebar-foreground)">Settings</text>
+  <rect x="223" y="101" width="820" height="54" fill="var(--card)"/>
+  <text x="247" y="134" class="small muted">Buscar en LoopDev</text>
+  <text x="885" y="134" class="small muted">ES  ·  Organización activa</text>
+  <text x="254" y="188" class="tiny muted">ERP  /  PRODUCTOS</text>
+  <text x="254" y="222" class="title">Productos</text>
+  <text x="254" y="246" class="small muted">Productos y servicios · 28 registros</text>
+  <rect x="722" y="184" width="132" height="40" rx="9" fill="var(--card)" stroke="var(--border)"/>
+  <text x="743" y="210" class="small" font-weight="600">Categorías</text>
+  <rect x="864" y="184" width="150" height="40" rx="9" class="primary"/>
+  <text x="884" y="210" class="small" fill="var(--card)" font-weight="700">＋  Nuevo producto</text>
+  <rect x="254" y="270" width="360" height="40" rx="8" fill="var(--card)" stroke="var(--border)"/>
+  <text x="270" y="295" class="small muted">⌕  Buscar por nombre, SKU o clave</text>
+  <rect x="626" y="270" width="126" height="40" rx="8" fill="var(--card)" stroke="var(--border)"/>
+  <text x="644" y="295" class="small">Estado: Todos  ▾</text>
+  <rect x="764" y="270" width="116" height="40" rx="8" fill="var(--card)" stroke="var(--border)"/>
+  <text x="781" y="295" class="small">Clase: Todas  ▾</text>
+  <rect x="892" y="270" width="122" height="40" rx="8" fill="var(--card)" stroke="var(--border)"/>
+  <text x="909" y="295" class="small">Categoría  ▾</text>
+  <rect x="254" y="328" width="760" height="516" rx="12" class="card"/>
+  <rect x="254" y="328" width="760" height="46" rx="12" fill="var(--card-muted)"/>
+  <text x="276" y="357" class="tiny muted" font-weight="700">PRODUCTO  ↕</text>
+  <text x="526" y="357" class="tiny muted" font-weight="700">CLASE</text>
+  <text x="666" y="357" class="tiny muted" font-weight="700">CATEGORÍA</text>
+  <text x="841" y="357" class="tiny muted" font-weight="700">ESTADO</text>
+  <text x="976" y="357" class="tiny muted" font-weight="700">⋯</text>
+  <line x1="254" y1="374" x2="1014" y2="374" class="line"/>
+  <text x="276" y="405" class="small" font-weight="700">Arnés Trail</text>
+  <text x="276" y="426" class="tiny muted mono">MC-ARN-042</text>
+  <text x="526" y="411" class="small">Terminado</text>
+  <text x="666" y="411" class="small">Arneses</text>
+  <rect x="841" y="392" width="64" height="23" rx="11" fill="var(--success-soft)"/>
+  <text x="853" y="408" class="tiny" fill="var(--success)" font-weight="700">Active</text>
+  <text x="979" y="412" class="body muted">⋯</text>
+  <line x1="254" y1="445" x2="1014" y2="445" class="line"/>
+  <text x="276" y="477" class="small" font-weight="700">Collar Brisa</text>
+  <text x="276" y="498" class="tiny muted mono">MC-COL-018</text>
+  <text x="526" y="483" class="small">Terminado</text>
+  <text x="666" y="483" class="small">Collares</text>
+  <rect x="841" y="464" width="55" height="23" rx="11" fill="var(--warning-soft)"/>
+  <text x="853" y="480" class="tiny" fill="var(--warning)" font-weight="700">Draft</text>
+  <text x="979" y="484" class="body muted">⋯</text>
+  <line x1="254" y1="517" x2="1014" y2="517" class="line"/>
+  <text x="276" y="549" class="small" font-weight="700">Cinta de nylon</text>
+  <text x="276" y="570" class="tiny muted mono">MAT-NYL-003</text>
+  <text x="526" y="555" class="small">Materia prima</text>
+  <text x="666" y="555" class="small">Materiales</text>
+  <rect x="841" y="536" width="64" height="23" rx="11" fill="var(--success-soft)"/>
+  <text x="853" y="552" class="tiny" fill="var(--success)" font-weight="700">Active</text>
+  <text x="979" y="556" class="body muted">⋯</text>
+  <line x1="254" y1="589" x2="1014" y2="589" class="line"/>
+  <text x="276" y="621" class="small" font-weight="700">Ajuste de arnés</text>
+  <text x="276" y="642" class="tiny muted mono">SRV-AJU-001</text>
+  <text x="526" y="627" class="small">Servicio</text>
+  <text x="666" y="627" class="small">Servicios</text>
+  <rect x="841" y="608" width="72" height="23" rx="11" fill="var(--muted)"/>
+  <text x="850" y="624" class="tiny" fill="var(--muted-foreground)" font-weight="700">Archived</text>
+  <text x="979" y="628" class="body muted">⋯</text>
+  <line x1="254" y1="661" x2="1014" y2="661" class="line"/>
+  <text x="276" y="699" class="small muted">Mostrando 1–10 de 28 artículos</text>
+  <text x="827" y="699" class="small muted">‹  Anterior</text>
+  <rect x="915" y="681" width="28" height="28" rx="6" fill="var(--primary)"/>
+  <text x="925" y="700" class="small" fill="var(--card)" font-weight="700">1</text>
+  <text x="952" y="700" class="small muted">2  3  Siguiente  ›</text>
+  <text x="30" y="981" font-size="11" font-weight="700" letter-spacing="1.2" class="muted">MOBILE WEB · 390 PX · ACCIONES SIN SCROLL LATERAL</text>
+  <rect x="1168" y="100" width="390" height="850" rx="24" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="1190" y="136" class="small" font-weight="700">☰   LoopDev</text>
+  <text x="1190" y="183" class="tiny muted">ERP  /  PRODUCTOS</text>
+  <text x="1190" y="213" font-size="21" font-weight="700">Productos</text>
+  <text x="1190" y="237" class="tiny muted">Productos y servicios · 28 registros</text>
+  <rect x="1190" y="253" width="346" height="40" rx="9" class="primary"/>
+  <text x="1280" y="279" class="small" fill="var(--card)" font-weight="700">＋  Nuevo producto</text>
+  <rect x="1190" y="305" width="346" height="40" rx="8" fill="var(--card)" stroke="var(--border)"/>
+  <text x="1207" y="330" class="small muted">⌕  Buscar por nombre o SKU</text>
+  <rect x="1190" y="356" width="164" height="38" rx="8" fill="var(--card)" stroke="var(--border)"/>
+  <text x="1208" y="380" class="tiny">Estado: Todos  ▾</text>
+  <rect x="1364" y="356" width="172" height="38" rx="8" fill="var(--card)" stroke="var(--border)"/>
+  <text x="1382" y="380" class="tiny">Clase: Todas  ▾</text>
+  <rect x="1190" y="406" width="242" height="38" rx="8" fill="var(--card)" stroke="var(--border)"/>
+  <text x="1208" y="430" class="tiny">Categoría: Todas  ▾</text>
+  <rect x="1442" y="406" width="94" height="38" rx="8" fill="var(--card)" stroke="var(--border)"/>
+  <text x="1451" y="430" class="tiny" font-weight="600">Gestionar</text>
+  <rect x="1190" y="456" width="346" height="128" rx="11" class="card"/>
+  <text x="1208" y="485" font-size="15" font-weight="700">Arnés Trail</text>
+  <text x="1208" y="507" class="tiny muted"><tspan class="mono">MC-ARN-042</tspan> · Terminado · Arneses</text>
+  <text x="1208" y="534" class="small" fill="var(--success)" font-weight="700">● Active</text>
+  <text x="1484" y="534" class="small" fill="var(--primary)" font-weight="700">Ver</text>
+  <line x1="1208" y1="547" x2="1518" y2="547" class="line"/>
+  <text x="1208" y="570" class="tiny muted">Precio de referencia: 24,90 EUR</text>
+  <rect x="1190" y="595" width="346" height="128" rx="11" class="card"/>
+  <text x="1208" y="624" font-size="15" font-weight="700">Cinta de nylon</text>
+  <text x="1208" y="646" class="tiny muted"><tspan class="mono">MAT-NYL-003</tspan> · Materia prima · Materiales</text>
+  <text x="1208" y="673" class="small" fill="var(--warning)" font-weight="700">Draft</text>
+  <text x="1484" y="673" class="small" fill="var(--primary)" font-weight="700">Ver</text>
+  <line x1="1208" y1="686" x2="1518" y2="686" class="line"/>
+  <text x="1208" y="709" class="tiny muted">Sin precio de referencia</text>
+  <text x="1190" y="748" class="small muted">Mostrando 1–10 de 28 registros</text>
+  <text x="1190" y="782" class="small" fill="var(--primary)" font-weight="700">Cargar más productos</text>
+  <text x="1190" y="854" class="tiny muted">Muestra ficticia para revisar jerarquía; no son datos de cliente.</text>
+</svg>

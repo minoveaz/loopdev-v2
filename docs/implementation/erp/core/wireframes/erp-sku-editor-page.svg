@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">ERP Products — página completa de SKU</title>
+  <desc id="desc">Edición completa de un SKU en página propia. La categoría es independiente de la del producto base; el coste de compra de referencia y las medidas pertenecen a la unidad SKU.</desc>
+  <defs>
+    <style>
+      :root {
+        --background: hsl(220 30% 98.8%);
+        --foreground: hsl(222 32% 11%);
+        --card: hsl(0 0% 100%);
+        --card-muted: hsl(220 26% 97.6%);
+        --primary: hsl(234 80% 58%);
+        --muted-foreground: hsl(222 12% 46%);
+        --border: hsl(220 22% 92%);
+        --border-strong: hsl(220 20% 85%);
+        --sidebar-background: hsl(0 0% 100%);
+        --sidebar-foreground: hsl(222 18% 32%);
+        --sidebar-accent: hsl(220 22% 96%);
+        --sidebar-accent-foreground: hsl(222 28% 16%);
+        --sidebar-border: hsl(220 18% 92%);
+      }
+      text { font-family: Inter, Arial, sans-serif; fill: var(--foreground); }
+      .mono { font-family: "JetBrains Mono", monospace; }
+      .muted { fill: var(--muted-foreground); }
+      .tiny { font-size: 11px; }
+      .small { font-size: 13px; }
+      .label { font-size: 12px; font-weight: 600; }
+      .input { fill: var(--card); stroke: var(--border-strong); }
+      .card { fill: var(--card); stroke: var(--border); }
+      .primary { fill: var(--primary); }
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="var(--background)"/>
+  <text x="28" y="38" font-size="18" font-weight="700">Crear / editar SKU · VIS-ERP-FLOW-06</text>
+  <text x="28" y="59" class="small muted">Página completa · categoría, coste y atributos específicos de la unidad gestionada por SKU</text>
+  <text x="30" y="87" class="tiny muted" font-weight="700" letter-spacing="1.2">DESKTOP WEB · PÁGINA EN APP SHELL</text>
+  <rect x="24" y="100" width="1020" height="850" rx="16" fill="var(--card)" stroke="var(--border-strong)"/>
+  <rect x="25" y="101" width="198" height="848" rx="15" fill="var(--sidebar-background)" stroke="var(--sidebar-border)"/>
+  <text x="47" y="137" font-size="17" font-weight="700">LoopDev</text>
+  <text x="47" y="180" class="tiny muted">LAUNCHPAD</text>
+  <text x="57" y="208" class="small" fill="var(--sidebar-foreground)">⌂  Launchpad</text>
+  <text x="47" y="250" class="tiny muted">SUITES</text>
+  <rect x="39" y="264" width="169" height="32" rx="8" fill="var(--sidebar-accent)"/>
+  <text x="57" y="286" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">▦  ERP  ⌄</text>
+  <rect x="51" y="304" width="156" height="28" rx="7" fill="var(--sidebar-accent)"/>
+  <text x="70" y="323" class="small" fill="var(--sidebar-accent-foreground)" font-weight="600">Productos</text>
+  <text x="250" y="137" class="tiny muted">ERP / PRODUCTOS / ARNÉS TRAIL / NUEVO SKU</text>
+  <text x="250" y="174" font-size="22" font-weight="700">Nuevo SKU</text>
+  <text x="250" y="197" class="small muted">Producto base: Arnés Trail · Borrador</text>
+  <rect x="792" y="146" width="100" height="36" rx="8" fill="var(--card)" stroke="var(--border-strong)"/><text x="820" y="169" class="small" font-weight="600">Cancelar</text>
+  <rect x="902" y="146" width="118" height="36" rx="8" class="primary"/><text x="923" y="169" class="small" fill="white" font-weight="700">Guardar SKU</text>
+  <line x1="250" y1="214" x2="1020" y2="214" stroke="var(--border)"/>
+  <text x="250" y="246" class="tiny" fill="var(--primary)" font-weight="700">SECCIONES</text>
+  <text x="250" y="277" class="small" fill="var(--primary)" font-weight="700">Identidad</text>
+  <text x="250" y="308" class="small muted">Categoría propia</text>
+  <text x="250" y="339" class="small muted">Coste de compra</text>
+  <text x="250" y="370" class="small muted">Datos físicos</text>
+  <rect x="430" y="230" width="590" height="142" rx="12" class="card"/>
+  <text x="450" y="258" class="tiny" fill="var(--primary)" font-weight="700">IDENTIDAD DEL SKU</text>
+  <text x="450" y="289" class="label">Nombre / atributo visible *</text><rect x="450" y="297" width="255" height="36" rx="7" class="input"/><text x="463" y="320" class="small">Azul</text>
+  <text x="725" y="289" class="label">SKU *</text><rect x="725" y="297" width="275" height="36" rx="7" class="input"/><text x="738" y="320" class="small mono">MC-ARN-042-AZ</text>
+  <text x="450" y="355" class="tiny muted">Clave interna generada por LoopDev; el SKU es único en la organización.</text>
+  <rect x="430" y="386" width="590" height="126" rx="12" class="card"/>
+  <text x="450" y="414" class="tiny" fill="var(--primary)" font-weight="700">CATEGORÍA PROPIA</text>
+  <text x="450" y="443" class="small">Categoría general del producto base: Accesorios / Perros</text>
+  <text x="450" y="475" class="label">Categoría principal de este SKU *</text>
+  <rect x="450" y="483" width="365" height="24" rx="7" class="input"/><text x="463" y="500" class="small">Arneses / Trail  ▾</text>
+  <text x="829" y="500" class="tiny muted">No se hereda.</text>
+  <rect x="430" y="526" width="590" height="122" rx="12" class="card"/>
+  <text x="450" y="554" class="tiny" fill="var(--primary)" font-weight="700">COSTE DE COMPRA DE REFERENCIA</text>
+  <text x="450" y="579" class="small">Coste unitario estimado de este SKU; no contable y sin cálculo de margen.</text>
+  <text x="450" y="610" class="label">Importe</text><rect x="450" y="618" width="300" height="24" rx="6" class="input"/><text x="463" y="635" class="small">8,20</text>
+  <text x="770" y="610" class="label">Moneda</text><rect x="770" y="618" width="95" height="24" rx="6" class="input"/><text x="783" y="635" class="small">EUR  ▾</text>
+  <text x="875" y="635" class="tiny muted">Permiso pendiente</text>
+  <rect x="430" y="662" width="590" height="144" rx="12" class="card"/>
+  <text x="450" y="690" class="tiny" fill="var(--primary)" font-weight="700">DATOS FÍSICOS DE ESTE SKU</text>
+  <text x="450" y="718" class="label">Peso</text><rect x="450" y="726" width="130" height="34" rx="7" class="input"/><text x="463" y="748" class="small">0,82</text>
+  <rect x="590" y="726" width="78" height="34" rx="7" class="input"/><text x="602" y="748" class="small">kg  ▾</text>
+  <text x="687" y="718" class="label">Largo × ancho × alto</text><rect x="687" y="726" width="285" height="34" rx="7" class="input"/><text x="700" y="748" class="small">32 × 18 × 8 cm</text>
+  <text x="450" y="786" class="tiny muted">Las unidades visibles deben normalizarse según la configuración acordada.</text>
+  <rect x="1168" y="100" width="390" height="850" rx="24" fill="var(--card)" stroke="var(--border-strong)" stroke-width="2"/>
+  <text x="1190" y="136" class="small" font-weight="700">‹  Arnés Trail</text>
+  <text x="1190" y="177" class="tiny muted">ERP / PRODUCTOS / SKU</text>
+  <text x="1190" y="208" font-size="20" font-weight="700">Editar SKU</text>
+  <text x="1190" y="231" class="tiny muted">Azul · Borrador</text>
+  <line x1="1169" y1="250" x2="1557" y2="250" stroke="var(--border)"/>
+  <text x="1190" y="280" class="tiny" fill="var(--primary)" font-weight="700">IDENTIDAD</text>
+  <text x="1190" y="310" class="label">Nombre / atributo visible *</text><rect x="1190" y="318" width="346" height="42" rx="8" class="input"/><text x="1205" y="345" class="small">Azul</text>
+  <text x="1190" y="388" class="label">SKU *</text><rect x="1190" y="396" width="346" height="42" rx="8" class="input"/><text x="1205" y="423" class="small mono">MC-ARN-042-AZ</text>
+  <text x="1190" y="468" class="tiny" fill="var(--primary)" font-weight="700">CATEGORÍA PROPIA</text>
+  <text x="1190" y="494" class="tiny muted">Categoría general: Accesorios / Perros</text>
+  <rect x="1190" y="504" width="346" height="46" rx="8" class="input"/><text x="1205" y="533" class="small">Arneses / Trail  ▾</text>
+  <text x="1190" y="581" class="tiny" fill="var(--primary)" font-weight="700">COSTE DE COMPRA DE REFERENCIA</text>
+  <rect x="1190" y="591" width="214" height="42" rx="8" class="input"/><text x="1205" y="618" class="small">8,20</text>
+  <rect x="1412" y="591" width="124" height="42" rx="8" class="input"/><text x="1425" y="618" class="small">EUR  ▾</text>
+  <text x="1190" y="655" class="tiny muted">No contable · sin margen</text>
+  <text x="1190" y="693" class="tiny" fill="var(--primary)" font-weight="700">DATOS FÍSICOS</text>
+  <text x="1190" y="719" class="label">Peso</text><rect x="1190" y="727" width="155" height="42" rx="8" class="input"/><text x="1205" y="754" class="small">0,82 kg</text>
+  <text x="1360" y="719" class="label">Dimensiones</text><rect x="1360" y="727" width="176" height="42" rx="8" class="input"/><text x="1370" y="754" class="tiny">32×18×8 cm</text>
+  <rect x="1169" y="832" width="388" height="1" fill="var(--border)"/>
+  <rect x="1185" y="852" width="126" height="48" rx="8" fill="var(--card)" stroke="var(--border-strong)"/><text x="1223" y="882" class="small" font-weight="600">Cancelar</text>
+  <rect x="1321" y="852" width="220" height="48" rx="8" class="primary"/><text x="1383" y="882" class="small" fill="white" font-weight="700">Guardar SKU</text>
+  <text x="30" y="981" class="tiny muted" font-weight="700" letter-spacing="1.2">MOBILE WEB · PÁGINA COMPLETA · NAVEGACIÓN Y TARGETS ≥44 PX</text>
+</svg>

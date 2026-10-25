@@ -53,7 +53,7 @@ export const loopdevNavigationContract: {
       iconKey: "erp",
       items: [
         { id: "erp-overview", label: "Overview", path: "/app/erp/overview" },
-        { id: "erp-product-catalog", label: "Product Catalog", path: "/app/erp/product-catalog" },
+        { id: "erp-products", label: "Products", path: "/app/erp/products" },
       ],
     },
     {

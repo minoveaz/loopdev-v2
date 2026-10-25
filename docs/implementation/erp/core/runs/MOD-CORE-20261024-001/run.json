@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "workflow_version": 1,
+  "run_id": "MOD-CORE-20261024-001",
+  "suite": "erp",
+  "module": "Core",
+  "status": "blocked",
+  "current_phase": "01-visual-design",
+  "attempt": 6,
+  "started_at": "2026-10-24T10:00:46.235Z",
+  "updated_at": "2026-10-24T17:06:17Z",
+  "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05",
+  "fingerprints": {
+    "product": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scope": "sha256:d28f7015415208a74c5d768f70abf1c9911dc890c53857cbf01a22c0264eaacc",
+    "design": "sha256:613987fc691f5c34f4acbef16eb89023453f475f8b9f45bf0f3e608d4b77a781",
+    "plan": "sha256:81a970fd6c165c0fc2905b6a9e3cfc25961ad6c37acc6fa70e3e4f5ef05f8d25",
+    "contracts": "sha256:18abe04b358d2e7b02913594768e275fe4bd0a28f79851b67d64d591056a9c6f",
+    "code": "sha256:cf09447dc4d6dce54d5945d385428eda754264b9d02bcc0906ee54c8b56fe411",
+    "tests": "sha256:d2eceb55eb47c7fd0b1fb8e02af5eeed9681fdae21638bc471cdd453b24fa6cd"
+  },
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": "develop",
+    "head_commit": "0024978c4c92097cf295313864e4eadb4e810aba",
+    "working_tree": "modified ERP documentation; no production code changes",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "platform_scope": ["desktop_web", "mobile_web"],
+  "approvals": {
+    "design": {
+      "status": "approved",
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-24T14:29:24Z",
+      "role": "Product owner",
+      "artifact": "docs/implementation/erp/core/design.md + docs/implementation/erp/core/architecture-design.md + docs/implementation/erp/core/delivery-ledger.json",
+      "artifact_fingerprint": "sha256:51e7177074bb5726de575eec9f81617f557f8898898568c0b9067c4b34d8cb56",
+      "source": "Original design approval plus user-approved amendments CR-ERP-PRODUCTS-MODULE and CR-ERP-PRODUCT-MASTER-MODEL in Copilot conversation, 2026-10-24"
+    },
+    "visual_design": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": "Product owner",
+      "artifact": "docs/implementation/erp/core/visual-design.md; docs/implementation/erp/core/view-state-matrix.md; docs/implementation/erp/core/platform-scope.md; docs/implementation/erp/core/platform-evidence-matrix.md; docs/implementation/erp/core/wireframes/erp-overview.svg; docs/implementation/erp/core/wireframes/erp-products.svg; docs/implementation/erp/core/wireframes/erp-product-categories.svg; docs/implementation/erp/core/wireframes/erp-product-form.svg; docs/implementation/erp/core/wireframes/erp-variant-form.svg; docs/implementation/erp/core/wireframes/erp-commercial-detail.svg",
+      "artifact_fingerprint": null,
+      "source": null,
+      "previous_approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-24T14:42:11.307Z",
+        "artifact_fingerprint": "sha256:b9d6373e08a115a02eb5509fbc89b0a5fcc6079633fdca9886400303dc75ec8d",
+        "scope": "Original five visual compositions"
+      },
+      "awaiting_approval_for": "Supplemental SKU editor showing each SKU's independently assigned category"
+    },
+    "plan": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "verification": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "release": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "push": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "pull_request": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    }
+  },
+  "approval_gates": [
+    "design",
+    "visual_design"
+  ],
+  "architecture_quality": "PASS_WITH_DEBT",
+  "platform_impact": [],
+  "checkpoint_paths": [
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/00-discovery.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/01-design.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/01-visual-design.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/02-domain.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/03-access.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/04-api.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/05-sync.json",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/10-git.json"
+  ],
+  "evidence_links": [
+    "docs/implementation/erp/core/visual-design.md",
+    "docs/implementation/erp/core/view-state-matrix.md",
+    "docs/implementation/erp/core/platform-scope.md",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "docs/implementation/erp/core/domain-model.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/02-domain.md",
+    "docs/implementation/erp/core/access-model.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/03-access.md",
+    "docs/implementation/erp/core/api-contracts.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/04-api.md",
+    "docs/implementation/erp/core/sync-model.md",
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/05-sync.md",
+    "docs/implementation/erp/core/wireframes/erp-overview.svg",
+    "docs/implementation/erp/core/wireframes/erp-products.svg",
+    "docs/implementation/erp/core/wireframes/erp-product-categories.svg",
+    "docs/implementation/erp/core/wireframes/erp-product-form.svg",
+    "docs/implementation/erp/core/wireframes/erp-commercial-detail.svg"
+  ],
+  "change_requests": [
+    {
+      "id": "CR-ERP-PRODUCTS-MODULE",
+      "status": "approved",
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-24T13:42:36+02:00",
+      "source": "User instruction: Products becomes the user-facing ERP module and direct product/service list entry point; preserve catalog-named contracts, data, permissions and route as compatibility."
+    },
+    {
+      "id": "CR-ERP-PRODUCT-MASTER-MODEL",
+      "status": "approved",
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-24T14:23:14Z",
+      "source": "User confirmed the conceptual Products item model: finished products, raw materials/components and services; independent purchasing/selling/inventory uses; one primary hierarchical category; finished products allow buy/make/both sourcing, raw materials/components are buy-only for now, services have no sourcing, and variants inherit product sourcing; separately managed/sold variants have their own SKU; product, variant and category keys are LoopDev-generated, immutable, distinct from SKU/name and unique within the organization; semimanufactured items deferred until Manufacturing discovery."
+    }
+  ],
+  "blocked_by": [
+    "Visual addendum for per-SKU category assignment requires explicit Product Owner approval before 06-plan.",
+    "Platform owner is not assigned to approve the shared append-only audit contract; remote writes must remain disabled.",
+    "Authorized legacy-data inventory and dry-run are unavailable; category/workspace/currency mappings and migration cutover must remain blocked.",
+    "Deployed Supabase policy/schema state has not been verified from an authorized runtime."
+  ],
+  "invalidated_phases": [
+    "00-discovery",
+    "01-design",
+    "01-visual-design",
+    "02-domain",
+    "03-access",
+    "04-api",
+    "05-sync",
+    "06-plan",
+    "07-build",
+    "08-verify",
+    "09-review",
+    "10-git"
+  ],
+  "invalidation_reason": "Changed inputs: scope, design",
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
+  "next_action": "Wait for Product Owner approval of the SKU-category visual addendum; then resume 06-plan with external dependencies represented as blocked tasks.",
+  "handoffs": [
+    {
+      "from": "00-discovery",
+      "to": "01-design",
+      "owner": "product",
+      "at": "2026-10-24T10:14:16.319Z",
+      "input_fingerprint": "sha256:0c806cfd742e0479af179631b9fee00fd03cd5d372d5d0f93e52025f5523f8fb"
+    },
+    {
+      "from": "01-design",
+      "to": "01-visual-design",
+      "owner": "design",
+      "at": "2026-10-24T10:34:10.415Z",
+      "input_fingerprint": "sha256:0c806cfd742e0479af179631b9fee00fd03cd5d372d5d0f93e52025f5523f8fb"
+    },
+    {
+      "from": "01-visual-design",
+      "to": "02-domain",
+      "owner": "ERP product",
+      "at": "2026-10-24T14:42:11.320Z",
+      "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05"
+    },
+    {
+      "from": "02-domain",
+      "to": "03-access",
+      "owner": "ERP",
+      "at": "2026-10-24T14:48:18.953Z",
+      "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05"
+    },
+    {
+      "from": "03-access",
+      "to": "04-api",
+      "owner": "ERP",
+      "at": "2026-10-24T14:51:06.943Z",
+      "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05"
+    },
+    {
+      "from": "04-api",
+      "to": "05-sync",
+      "owner": "ERP",
+      "at": "2026-10-24T14:52:50.256Z",
+      "input_fingerprint": "sha256:3f701e2995b41c529f17fc56d378efa9f68437a300fde89099404ca3b9df3a05"
+    }
+  ],
+  "commit": "8204d0ba4211d3e37a5f048248f7c7b41de4dfec",
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  },
+  "resolved_blockers": [
+    {
+      "id": "DOM-ERP-021",
+      "resolution": "Product Owner confirmed archived products and SKUs always restore to draft; activation guards must pass again.",
+      "resolved_at": "2026-10-24T17:06:17Z"
+    },
+    {
+      "id": "ERP-OD-006",
+      "resolution": "First release is Products and categories only; other ERP modules and commerce integrations are deferred.",
+      "resolved_at": "2026-10-24T17:06:17Z"
+    },
+    {
+      "id": "ERP-OD-005",
+      "resolution": "Desktop web and mobile web are required; native iOS and Android are deferred.",
+      "resolved_at": "2026-10-24T17:06:17Z"
+    }
+  ]
+}

@@ -23,6 +23,7 @@
     "approved_by": { "type": ["string", "null"] },
     "approved_at": { "type": ["string", "null"], "format": "date-time" },
     "approval_source": { "type": ["string", "null"] },
+    "task_scoped_approvals": { "type": "boolean", "default": false },
     "product_sources": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
     "previous_ledger": { "type": ["string", "null"] },
     "requirements": {

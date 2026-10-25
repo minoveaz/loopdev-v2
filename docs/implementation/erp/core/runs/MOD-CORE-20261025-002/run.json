@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "workflow_version": 1,
+  "run_id": "MOD-CORE-20261025-002",
+  "suite": "erp",
+  "module": "Core",
+  "status": "running",
+  "current_phase": "00-discovery",
+  "attempt": 1,
+  "started_at": "2026-10-25T08:12:57.442Z",
+  "updated_at": "2026-10-25T08:12:59.245Z",
+  "input_fingerprint": "sha256:4fc29f4f672ed7c4aba3216a8cfa761bcc22bcbe27af5d01206ce88877f55b2a",
+  "fingerprints": {
+    "product": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scope": "sha256:b90970a2b07e3cc9559725fdea6454d48583b7f781844b6f0900d7850f688669",
+    "design": "sha256:1cc697251b6f673b79891594b6a99959fd6a3e06f7942d45710a32bb7bee7c64",
+    "plan": "sha256:9431313fd1a4d18c2560527a92feb55c33c1434c58d5cc3dcdc3f9269e9acb61",
+    "contracts": "sha256:6d954ee7fe7d77cb686f5cc18a14ba593d5dcfad7681feb8fcbe00a89f17e3b9",
+    "code": "sha256:26c6d32e2c620734a5d874b5bd6d0451cdbe820eff051f29f1717a120ca17dc9",
+    "tests": "sha256:c4532e276e6f160dafd01cf558824b81a0617743e6f7b52b371978677aa111e0"
+  },
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": null,
+    "head_commit": "2fe79082039b24eb771879dad3ca79a59dba6d21",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "platform_scope": [
+    "desktop_web",
+    "mobile_web"
+  ],
+  "approvals": {
+    "design": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "visual_design": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "plan": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "verification": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "release": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "push": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    },
+    "pull_request": {
+      "status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "role": null,
+      "artifact": null,
+      "artifact_fingerprint": null,
+      "source": null
+    }
+  },
+  "approval_gates": [],
+  "architecture_quality": "PENDING",
+  "platform_impact": [],
+  "checkpoint_paths": [
+    "docs/implementation/erp/core/runs/MOD-CORE-20261025-002/00-discovery.json"
+  ],
+  "evidence_links": [],
+  "change_requests": [],
+  "blocked_by": [],
+  "invalidated_phases": [],
+  "invalidation_reason": null,
+  "shared_contract_inputs": [
+    "packages/contracts/src"
+  ],
+  "next_action": "Complete or block phase 00-discovery.",
+  "handoffs": [],
+  "commit": null,
+  "pull_request": null,
+  "retention": {
+    "contains_pii": false,
+    "redacted": true,
+    "retention_class": "engineering-documentation"
+  }
+}

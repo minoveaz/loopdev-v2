@@ -554,3 +554,17 @@ Checkout evidence: `/Users/minoveaz/.copilot/repos/loopdev-v2`,
 run in this continuation. Mobile work, remote deployment, recovery/cutover
 evidence and enabling Product writes remain out of scope; this task does not
 claim module or release readiness.
+
+### Git checkpoint — follow-up PR preparation
+
+Committed the approved web Products scope as
+`311d9f7e468326ddb727a01d4f7b5692b44fd360`
+(`feat(erp): deliver Products web management`) on
+`feature/erp-core-capabilities`, with the `MOD-CORE-20261024-001` trailer and
+required co-author trailer. The working tree is clean. The PR template is
+`.github/pull_request_template.md`; the change is prepared locally but has not
+been pushed or opened as a PR. The linked database migration check failed with
+PostgreSQL password authentication, so no remote schema change or deployment
+was performed. The missing `position` column is added by
+`20261025175000_erp_product_media_gallery_order.sql`, now included in this
+local commit.

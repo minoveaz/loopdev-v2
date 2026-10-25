@@ -602,16 +602,21 @@
       "type": "task-evidence",
       "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-17-platform-files-product-media",
       "result": "MEDIA-ADAPTER-001 complete in the existing checkout. Products media now uses PlatformFilesPort and the authenticated platform-files function for library listing, upload/finalization, status recovery and short-lived previews. Focused web tests passed (48 tests), Deno image/function checks passed (5 tests), five isolated Products pgTAP suites passed (105 assertions), and typecheck/build/i18n/contracts/ledger/module-run/migration-lint/focused-eslint validations passed. No remote migration, deployment, Product data write or authenticated browser journey was performed."
+    },
+    {
+      "type": "git-checkpoint",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#git-checkpoint-follow-up-pr-preparation",
+      "result": "Committed the complete approved web Products follow-up scope as 311d9f7e468326ddb727a01d4f7b5692b44fd360 on feature/erp-core-capabilities; working tree was clean. The commit includes migration 20261025175000_erp_product_media_gallery_order.sql, which adds the missing position column. Changes have not been pushed and no follow-up PR has been opened. Remote migration history could not be checked because PostgreSQL password authentication failed; no remote migration or deployment was performed."
     }
   ],
-  "detected_failure": "The approved media backend and adapter task is complete and validated locally. Module-wide readiness remains incomplete: other web Products/category/cost task records are still open, mobile work is excluded by user direction, and remote deployment, authenticated browser evidence, data inventory and recovery gates were not performed.",
-  "likely_failure_origin": "Earlier build evidence predates the Platform Files adapter. Remaining gaps are module-level scope and deployment/runtime gates, not failures in the validated media adapter or database suites.",
-  "next_handoff": "MEDIA-ADAPTER-001 is complete locally. Keep Product writes disabled; do not deploy or claim module/release readiness without the remaining approved web tasks and explicit remote/cutover authorization.",
+  "detected_failure": "The Products web follow-up scope is implemented and committed locally. The visible missing-position error remains possible until migration 20261025175000 is applied to the database used by the application. Remote migration status could not be verified because PostgreSQL password authentication failed; no deployment was performed as requested.",
+  "likely_failure_origin": "The application adapter reads erp_product_media_assignments.position, but the migration that adds that column was absent from the previously merged PR #40. The migration is now included in local commit 311d9f7e468326ddb727a01d4f7b5692b44fd360; the runtime database has not been changed.",
+  "next_handoff": "The web Products changes and migration are committed locally and ready for publication review. Do not push, open a PR, or deploy remotely without explicit authorization; database authentication and the target migration state must be resolved before claiming the runtime error is fixed. Mobile work remains excluded.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
     "approved_at": null
   },
   "invalidated": false,
-  "updated_at": "2026-10-27T20:45:00Z"
+  "updated_at": "2026-10-25T20:24:44Z"
 }

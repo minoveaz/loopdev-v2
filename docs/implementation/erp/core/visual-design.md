@@ -251,12 +251,19 @@ edición conceptual y no evidencia runtime.
 ### Ficha de producto y configuración comercial — `VIS-ERP-VIEW-07`
 
 La ficha de lectura usa página completa, con resumen, secciones de identidad,
-clasificación, datos físicos, coste protegido y SKUs. Ofertas y listas de
-precios permanecen separadas de la referencia de coste; no se agregan Shopify,
-stock, pedidos o gestión de compras. El coste solo se renderiza a un usuario
-con permiso explícito; de lo contrario se omite su valor y se explica que es
-un dato restringido. La vista del producto es el punto de acceso a las páginas
-de SKU y a la edición.
+clasificación, datos físicos, coste protegido y SKUs. La columna derecha agrupa
+el precio de referencia, el coste protegido y una vista previa compacta de la
+galería de imágenes. “Abrir galería” conduce a una página completa dedicada al
+producto: permite gestionar imágenes generales y específicas de sus SKUs, y
+reutilizar recursos de la biblioteca de la organización. Si el producto no
+tiene SKUs, las cargas se asocian directamente a su galería sin pedir un
+destino; en productos con SKUs, el selector permite asignar imágenes generales
+o específicas de una variante. Ofertas y listas de precios permanecen
+separadas de la referencia de coste; no se agregan Shopify, stock, pedidos o
+gestión de compras. El coste solo se renderiza a un usuario con permiso
+explícito; de lo contrario se omite su valor y se explica que es un dato
+restringido. La vista del producto es el punto de acceso a las páginas de SKU y
+a la edición.
 
 **Evidencia:** [ficha completa desktop y mobile](wireframes/erp-product-record-page.svg).
 El [detalle comercial compacto](wireframes/erp-commercial-detail.svg) queda

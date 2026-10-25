@@ -58,12 +58,16 @@ Use helper skills for focused decisions, not as independent implementers:
 
 Never claim completion without evidence from the actual checkout.
 
-Build work must reference a `ready` task from the approved
-`delivery-ledger.json`. Implement only that task's requirements, capabilities
-and platforms, and attach evidence references before marking it `done`. Do not
-start `pending` or `blocked` tasks, and do not remove uncovered requirements to
-make validation pass. Run `npm run validate:delivery-ledgers` after every task
-status or scope change.
+Build work must reference a `ready` task from `delivery-ledger.json`. A task
+may be authorized either by a globally `approved` ledger or, when
+`task_scoped_approvals` is enabled, by its own explicit approval record. A
+task-scoped approval permits only that task's linked requirements,
+capabilities, operations and platforms; unrelated ledger blockers remain in
+force for their own scope and for module-wide verification/release. Implement
+only the authorized task scope, and attach evidence references before marking
+it `done`. Do not start `pending` or `blocked` tasks, and do not remove
+uncovered requirements to make validation pass. Run
+`npm run validate:delivery-ledgers` after every task status or scope change.
 
 ## Common Contract
 

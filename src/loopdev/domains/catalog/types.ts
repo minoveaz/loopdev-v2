@@ -173,7 +173,7 @@ export interface PriceEntry extends Entity {
 }
 
 export type CatalogOfferCreateInput = Omit<Offer, "id" | "createdAt" | "updatedAt">;
-export type CatalogVariantCreateInput = Omit<CatalogVariant, "id" | "createdAt" | "updatedAt">;
+export type CatalogVariantCreateInput = Omit<CatalogVariant, "id" | "key" | "sku" | "createdAt" | "updatedAt">;
 export type CatalogPriceBookCreateInput = Omit<PriceBook, "id" | "createdAt" | "updatedAt">;
 export type CatalogPriceEntryCreateInput = Omit<PriceEntry, "id" | "createdAt" | "updatedAt">;
 export type ProductReferenceCreateInput = Omit<ProductReference, "id" | "createdAt" | "updatedAt" | "status">;
@@ -204,8 +204,6 @@ export interface CatalogItemCreateInput {
   organizationId: string;
   workspaceId?: string | null;
   catalogId?: string | null;
-  key: string;
-  sku: string;
   name: string;
   description?: string | null;
   type: CatalogItemType;

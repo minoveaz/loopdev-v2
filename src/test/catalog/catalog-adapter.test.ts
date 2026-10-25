@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { localCatalogAdapter as catalogAdapter } from "@/loopdev/domains/catalog";
 import {
   localCatalogItemsStore,
+  localCatalogItemKeyCountersStore,
+  localCatalogSkuCountersStore,
   localCatalogOffersStore,
   localCatalogPriceBooksStore,
   localCatalogPriceEntriesStore,
@@ -18,6 +20,8 @@ const organizationId = "local-development-organization";
 describe("local Catalog adapter", () => {
   beforeEach(() => {
     localCatalogItemsStore.reset();
+    localCatalogItemKeyCountersStore.reset();
+    localCatalogSkuCountersStore.reset();
     localCatalogOffersStore.reset();
     localCatalogPriceBooksStore.reset();
     localCatalogPriceEntriesStore.reset();
@@ -31,10 +35,10 @@ describe("local Catalog adapter", () => {
 
   it("lists shared catalog items and workspace-visible items", async () => {
     const shared = await catalogAdapter.listCatalogItems({ organizationId });
-    expect(shared.map((item) => item.key)).toEqual(["enterprise-plan", "advisory-package"]);
+    expect(shared.map((item) => item.key)).toEqual(["1", "4"]);
 
     const health = await catalogAdapter.listCatalogItems({ organizationId, workspaceId: "workspace-health" });
-    expect(health.map((item) => item.key)).toEqual(["enterprise-plan", "health-consultation", "advisory-package"]);
+    expect(health.map((item) => item.key)).toEqual(["1", "2", "4"]);
   });
 
   it("keeps another organization's catalog invisible", async () => {
@@ -48,15 +52,15 @@ describe("local Catalog adapter", () => {
     const resolved = await catalogAdapter.resolveReference({
       organizationId,
       reference: {
-        productKey: "enterprise-plan",
+        productKey: "1",
         offerId: "catalog_offer_enterprise_annual",
         variantId: "catalog_variant_enterprise_25",
       },
     });
     expect(resolved).toMatchObject({
-      item: { id: "catalog_item_enterprise_plan", type: "subscription", key: "enterprise-plan", sku: "SAAS-ENTERPRISE" },
+      item: { id: "catalog_item_enterprise_plan", type: "subscription", key: "1", sku: "10000000001" },
       offer: { key: "enterprise-annual", billingModel: "recurring" },
-      variant: { key: "enterprise-25-seats" },
+      variant: { key: "5", sku: "10000000005" },
       reference: { entityType: "catalog_item", entityId: "catalog_item_enterprise_plan" },
     });
   });
@@ -72,15 +76,13 @@ describe("local Catalog adapter", () => {
     const created = await catalogAdapter.createCatalogItem({
       organizationId,
       catalogId: "catalog_products",
-      key: "physical-lamp",
-      sku: "LAMP-001",
       name: "Physical lamp",
       type: "physical_product",
       status: "active",
       metadata: { barcode: "843000000001", material: "Steel" },
     });
 
-    expect(created).toMatchObject({ key: "physical-lamp", sku: "LAMP-001", status: "active" });
+    expect(created).toMatchObject({ key: "6", sku: "10000000006", status: "active" });
 
     const archived = await catalogAdapter.updateCatalogItem(created.id, { organizationId }, { status: "archived" });
     expect(archived.status).toBe("archived");
@@ -90,6 +92,43 @@ describe("local Catalog adapter", () => {
     expect(restored.status).toBe("draft");
     await catalogAdapter.deleteCatalogItem(created.id, { organizationId });
     await expect(catalogAdapter.getCatalogItem(created.id, { organizationId })).resolves.toBeNull();
+  });
+
+  it("generates numeric organization-scoped keys and SKUs and blocks user changes", async () => {
+    const forgedInput = {
+      organizationId,
+      catalogId: "catalog_products",
+      name: "Numeric key product one",
+      type: "physical_product",
+    } as const;
+    const first = await catalogAdapter.createCatalogItem(Object.assign(forgedInput, { key: "900", sku: "USER-CHOSEN" }));
+    const second = await catalogAdapter.createCatalogItem({
+      organizationId,
+      catalogId: "catalog_products",
+      name: "Numeric key product two",
+      type: "physical_product",
+    });
+
+    expect(first.key).toBe("6");
+    expect(first.sku).toBe("10000000006");
+    expect(second.key).toBe("7");
+    expect(second.sku).toBe("10000000007");
+    expect(first.key).toMatch(/^\d+$/);
+    expect(first.sku).toMatch(/^\d+$/);
+    await expect(catalogAdapter.updateCatalogItem(first.id, { organizationId }, Object.assign({ name: first.name }, { key: "900" })))
+      .rejects.toMatchObject({ code: "conflict" });
+    await expect(catalogAdapter.updateCatalogItem(first.id, { organizationId }, Object.assign({ name: first.name }, { sku: "900" })))
+      .rejects.toMatchObject({ code: "conflict" });
+
+    await catalogAdapter.deleteCatalogItem(second.id, { organizationId });
+    const third = await catalogAdapter.createCatalogItem({
+      organizationId,
+      catalogId: "catalog_products",
+      name: "Numeric key product three",
+      type: "physical_product",
+    });
+    expect(third.key).toBe("8");
+    expect(third.sku).toBe("10000000008");
   });
 
   it("lists service offering roles, availability and eligibility in the same scope", async () => {
@@ -115,6 +154,9 @@ describe("local Catalog adapter", () => {
   });
 
   it("creates, updates and deletes commercial records", async () => {
+    const category = await catalogAdapter.createProductReference({
+      organizationId, kind: "category", key: "saas-plans", name: "SaaS plans", parentId: null,
+    });
     const offer = await catalogAdapter.createOffer({
       organizationId, workspaceId: null, catalogItemId: "catalog_item_enterprise_plan",
       key: "enterprise-monthly", name: "Enterprise monthly", status: "draft",
@@ -126,8 +168,10 @@ describe("local Catalog adapter", () => {
 
     const variant = await catalogAdapter.createVariant({
       organizationId, workspaceId: null, catalogItemId: "catalog_item_enterprise_plan",
-      key: "enterprise-50-seats", sku: "ENT-50", name: "50 seats", status: "draft", attributes: { seats: "50" }, metadata: {},
+      name: "50 seats", status: "draft", attributes: { seats: "50" }, metadata: { categoryKey: category.key },
     });
+    expect(variant.key).toMatch(/^\d+$/);
+    expect(variant.sku).toMatch(/^\d+$/);
     expect((await catalogAdapter.updateVariant(variant.id, { organizationId }, { status: "active" })).status).toBe("active");
     await catalogAdapter.deleteVariant(variant.id, { organizationId });
 
@@ -143,6 +187,34 @@ describe("local Catalog adapter", () => {
     expect((await catalogAdapter.updatePriceEntry(entry.id, { organizationId }, { amount: 109 })).amount).toBe(109);
     await catalogAdapter.deletePriceEntry(entry.id, { organizationId });
     await catalogAdapter.deletePriceBook(book.id, { organizationId });
+  });
+
+  it("generates distinct numeric SKUs for products and variants and protects them from edits", async () => {
+    const forgedInput = {
+      organizationId,
+      catalogId: "catalog_products",
+      name: "SKU uniqueness test",
+      type: "physical_product",
+      status: "draft",
+    } as const;
+    const item = await catalogAdapter.createCatalogItem(Object.assign(forgedInput, { key: "manual-key", sku: "MIAU-TOY-01" }));
+
+    const variant = await catalogAdapter.createVariant({
+      organizationId,
+      workspaceId: null,
+      catalogItemId: item.id,
+      name: "Duplicate SKU",
+      status: "draft",
+      attributes: { color: "Black", size: "S" },
+      metadata: {},
+    });
+    expect(variant.sku).toMatch(/^\d+$/);
+    expect(variant.sku).not.toBe(item.sku);
+    expect(localCatalogItemsStore.get(item.id)?.sku).toBe("");
+    await expect(catalogAdapter.updateVariant(variant.id, { organizationId }, Object.assign({ name: variant.name }, { sku: item.sku })))
+      .rejects.toMatchObject({ code: "conflict" });
+    await catalogAdapter.deleteVariant(variant.id, { organizationId });
+    expect(localCatalogItemsStore.get(item.id)?.sku).toMatch(/^\d+$/);
   });
 
   it("creates organization-scoped category, brand and tag references", async () => {
@@ -193,8 +265,6 @@ describe("local Catalog adapter", () => {
     const item = await catalogAdapter.createCatalogItem({
       organizationId,
       catalogId: "catalog_products",
-      key: "cost-test-product",
-      sku: "COST-001",
       name: "Cost test product",
       type: "physical_product",
       status: "draft",

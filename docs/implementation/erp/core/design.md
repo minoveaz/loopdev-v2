@@ -536,6 +536,11 @@ caminos activos sin una decisión de migración.
   alta/edición rápida de referencias auxiliares. Se incluye coste unitario de
   compra de referencia por producto/SKU, no contable, sin valoración de
   inventario ni cálculo de margen.
+- `CR-ERP-SKU-AUTO-GENERATION` (aprobada por @loopdev-io el 2026-10-24):
+  LoopDev genera automáticamente claves internas y SKU numéricos para
+  productos y variantes; las personas usuarias no pueden asignarlos ni
+  cambiarlos. Una integración futura podrá importar el SKU externo por una vía
+  confiable, sin alterar la identidad técnica ni la clave interna de LoopDev.
 - No duplicar CRM, Platform o reglas de negocio en canales públicos.
 
 **Supuestos y decisiones abiertas**

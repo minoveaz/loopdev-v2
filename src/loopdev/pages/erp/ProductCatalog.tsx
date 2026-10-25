@@ -16,6 +16,7 @@ import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useT } from "@/i18n";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ProductConfigurationPage, ProductRecordPage } from "./ProductRecordPages";
+import { ProductSkuManagerPage } from "./ProductSkuManagerPage";
 
 const itemTypeTranslationKeys: Record<CatalogItem["type"], string> = {
   physical_product: "physicalProduct", service: "service", subscription: "subscription",
@@ -58,6 +59,7 @@ export default function ProductCatalog({ productsOnly = false }: { productsOnly?
   const [catalogs, setCatalogs] = useState<OrganizationCatalog[]>([]);
   const [selectedCatalog, setSelectedCatalog] = useState<ProductCatalogView | null>(null);
   const [items, setItems] = useState<CatalogItem[]>([]);
+  const [variants, setVariants] = useState<CatalogVariant[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | CatalogItem["status"]>("all");
   const [typeFilter, setTypeFilter] = useState<"all" | CatalogItem["type"]>("all");
@@ -114,15 +116,28 @@ export default function ProductCatalog({ productsOnly = false }: { productsOnly?
   };
   useEffect(reloadCatalogs, [catalogId, LOCAL_CATALOG_ORGANIZATION_ID, productsOnly]);
   useEffect(() => {
-    if (!selectedCatalog) return;
+    if (!selectedCatalog) {
+      setItems([]);
+      setVariants([]);
+      return;
+    }
     setItemsLoading(true);
     setItemsError(null);
-    void localCatalogAdapter.listCatalogItems(itemListParams(LOCAL_CATALOG_ORGANIZATION_ID, selectedCatalog)).then(setItems).catch((cause) => setItemsError(cause instanceof Error ? cause.message : "Unable to load catalog items.")).finally(() => setItemsLoading(false));
+    const params = itemListParams(LOCAL_CATALOG_ORGANIZATION_ID, selectedCatalog);
+    void Promise.all([
+      localCatalogAdapter.listCatalogItems(params),
+      localCatalogAdapter.listVariants({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, includeArchived: true }),
+    ]).then(([loadedItems, loadedVariants]) => {
+      setItems(loadedItems);
+      setVariants(loadedVariants);
+    }).catch((cause) => setItemsError(cause instanceof Error ? cause.message : "Unable to load catalog items.")).finally(() => setItemsLoading(false));
   }, [selectedCatalog, productsOnly]);
   const visibleItems = useMemo(() => items.filter((item) => {
-    const matchesQuery = !query.trim() || `${item.name} ${item.sku} ${item.key}`.toLowerCase().includes(query.trim().toLowerCase());
+    const queryValue = query.trim().toLocaleLowerCase();
+    const variantSkus = variants.filter((variant) => variant.catalogItemId === item.id).map((variant) => variant.sku).join(" ");
+    const matchesQuery = !queryValue || `${item.name} ${item.sku} ${item.key} ${variantSkus}`.toLocaleLowerCase().includes(queryValue);
     return matchesQuery && (status === "all" || item.status === status) && (typeFilter === "all" || item.type === typeFilter) && (categoryFilter === "all" || item.categoryKey === categoryFilter);
-  }), [items, query, status, typeFilter, categoryFilter]);
+  }), [items, variants, query, status, typeFilter, categoryFilter]);
   const categories = useMemo(() => Array.from(new Set(items.map((item) => item.categoryKey).filter((value): value is string => Boolean(value)))).sort(), [items]);
   const availableTypes = productsOnly ? allItemTypes : selectedCatalog?.kind === "services" ? serviceItemTypes : productItemTypes;
   const hasActiveFilters = Boolean(query.trim()) || status !== "all" || typeFilter !== "all" || categoryFilter !== "all";
@@ -187,15 +202,21 @@ export default function ProductCatalog({ productsOnly = false }: { productsOnly?
     if (!form.name.trim() || !selectedCatalog) return;
     setItemError(null);
     try {
-      const serviceKey = form.key.trim() || slugify(form.name);
-      const input: CatalogItemCreateInput = {
-        organizationId: LOCAL_CATALOG_ORGANIZATION_ID, catalogId: selectedCatalog.aggregateOrganizationProducts ? (editingItem?.catalogId ?? null) : selectedCatalog.id, key: selectedCatalog.kind === "services" ? serviceKey : (form.key || form.name), sku: selectedCatalog.kind === "services" ? "" : form.sku, name: form.name,
+      const itemFields = {
+        name: form.name,
         type: form.type, status: form.status,
         description: form.description, categoryKey: form.categoryKey,
         metadata: { shortDescription: form.shortDescription, brand: form.brand, provider: form.provider, performer: form.performer, manufacturer: form.manufacturer, barcode: form.barcode, material: form.material, color: form.color, size: form.size, weight: form.weight || null, dimensions: form.dimensions, currency: form.currency, unit: form.unit, duration: form.duration || null, price: form.price ? Number(form.price) : null, pricingModel: form.pricingModel, billingPeriod: form.billingPeriod, priceNote: form.priceNote, billingModel: form.billingModel, status: form.status, channels: form.channels, markets: form.markets, eligibility: form.eligibility, validFrom: form.validFrom || null, validTo: form.validTo || null, tags: form.tags.split(",").map((tag) => tag.trim()).filter(Boolean) },
       };
-      if (editingItem) await localCatalogAdapter.updateCatalogItem(editingItem.id, { organizationId: LOCAL_CATALOG_ORGANIZATION_ID }, input);
-      else await localCatalogAdapter.createCatalogItem(input);
+      if (editingItem) await localCatalogAdapter.updateCatalogItem(editingItem.id, { organizationId: LOCAL_CATALOG_ORGANIZATION_ID }, itemFields);
+      else {
+        const input: CatalogItemCreateInput = {
+          organizationId: LOCAL_CATALOG_ORGANIZATION_ID,
+          catalogId: selectedCatalog.aggregateOrganizationProducts ? null : selectedCatalog.id,
+          ...itemFields,
+        };
+        await localCatalogAdapter.createCatalogItem(input);
+      }
       setForm(emptyItemForm()); setEditingItem(null); setDrawerOpen(false);
       void localCatalogAdapter.listCatalogItems(itemListParams(LOCAL_CATALOG_ORGANIZATION_ID, selectedCatalog)).then(setItems);
     } catch (cause) {
@@ -246,7 +267,7 @@ export default function ProductCatalog({ productsOnly = false }: { productsOnly?
   const duplicateItem = (item: CatalogItem) => {
     openItemEditor(item);
     setEditingItem(null);
-    setForm((current) => ({ ...current, name: `${current.name} copy`, key: `${current.key}-copy`, sku: current.sku ? `${current.sku}-COPY` : "" }));
+    setForm((current) => ({ ...current, name: `${current.name} copy`, key: "", sku: "" }));
   };
   const archiveItem = async (item: CatalogItem) => {
     try {
@@ -275,6 +296,9 @@ export default function ProductCatalog({ productsOnly = false }: { productsOnly?
   const productPath = location.pathname.replace(/\/+$/, "");
   if (productsOnly && productPath === "/app/erp/products/configuration") {
     return <ProductConfigurationPage />;
+  }
+  if (productsOnly && productId && productPath === `/app/erp/products/${productId}/skus`) {
+    return <ProductSkuManagerPage productId={productId} />;
   }
   if (productsOnly && (productId || productPath === "/app/erp/products/new")) {
     const mode = productPath === "/app/erp/products/new" ? "create" : productPath.endsWith("/edit") ? "edit" : "view";
@@ -370,83 +394,87 @@ export default function ProductCatalog({ productsOnly = false }: { productsOnly?
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{sortHeader(selectedCatalog.kind === "services" ? "Service" : "Product", "name")}</TableHead>
-                <TableHead>{sortHeader("Type", "type")}</TableHead>
-                <TableHead>{sortHeader("Category", "category")}</TableHead>
-                <TableHead>{sortHeader("Status", "status")}</TableHead>
+                <TableHead>{sortHeader(t(selectedCatalog.kind === "services" ? "common.erpProductRecord.itemKinds.service" : "common.erpProductRecord.itemKinds.product"), "name")}</TableHead>
+                <TableHead>{sortHeader(t("common.erpProductRecord.type"), "type")}</TableHead>
+                <TableHead>{sortHeader(t("common.erpForm.item.category"), "category")}</TableHead>
+                <TableHead>{sortHeader(t("common.erpForm.item.status"), "status")}</TableHead>
                 <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedItems.map((item) => (
-                <TableRow
-                  key={item.id}
-                  className="cursor-pointer"
-                  tabIndex={0}
-                  onClick={() => productsOnly ? navigate(`/app/erp/products/${item.id}`) : setDetailItem(item)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      if (productsOnly) navigate(`/app/erp/products/${item.id}`);
-                      else setDetailItem(item);
-                    }
-                  }}
-                >
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-foreground">{item.name}</p>
-                      <p className="font-mono text-xs text-muted-foreground">{item.sku || item.key}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{t(`common.erpForm.item.${itemTypeTranslationKeys[item.type]}`)}</TableCell>
-                  <TableCell>{item.categoryKey ?? "Uncategorized"}</TableCell>
-                  <TableCell>
-                    <StatusBadge tone={item.status === "active" ? "success" : item.status === "draft" ? "warning" : "neutral"} dot>
-                      {item.status}
-                    </StatusBadge>
-                  </TableCell>
-                  <TableCell onClick={(event) => event.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7"
-                          aria-label={`Actions for ${item.name}`}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <MoreHorizontal className="h-3.5 w-3.5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => productsOnly ? navigate(`/app/erp/products/${item.id}/edit`) : openItemEditor(item)}>
-                          <Edit className="mr-2 h-3.5 w-3.5" />{t("common.edit")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => duplicateItem(item)}>
-                          <Copy className="mr-2 h-3.5 w-3.5" />Duplicate
-                        </DropdownMenuItem>
-                        {item.status === "archived" ? (
-                          <DropdownMenuItem onClick={() => void archiveItem(item)}>
-                            <RotateCcw className="mr-2 h-3.5 w-3.5" />Restore
+              {sortedItems.map((item) => {
+                const itemVariants = variants.filter((variant) => variant.catalogItemId === item.id && variant.status !== "archived");
+                const displaySku = item.sku || itemVariants[0]?.sku || "";
+                return (
+                  <TableRow
+                    key={item.id}
+                    className="cursor-pointer"
+                    tabIndex={0}
+                    onClick={() => productsOnly ? navigate(`/app/erp/products/${item.id}`) : setDetailItem(item)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        if (productsOnly) navigate(`/app/erp/products/${item.id}`);
+                        else setDetailItem(item);
+                      }
+                    }}
+                  >
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-foreground">{item.name}</p>
+                        {displaySku && <p className="font-mono text-xs text-muted-foreground">{displaySku}{itemVariants.length > 1 && <span className="font-sans"> · {t("common.erpProductRecord.additionalSkus", { count: itemVariants.length - 1 })}</span>}</p>}
+                      </div>
+                    </TableCell>
+                    <TableCell>{t(`common.erpForm.item.${itemTypeTranslationKeys[item.type]}`)}</TableCell>
+                    <TableCell>{item.categoryKey ?? t("common.erpProductRecord.uncategorized")}</TableCell>
+                    <TableCell>
+                      <StatusBadge tone={item.status === "active" ? "success" : item.status === "draft" ? "warning" : "neutral"} dot>
+                        {t(`common.erpForm.item.${item.status}`)}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell onClick={(event) => event.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            aria-label={`Actions for ${item.name}`}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <MoreHorizontal className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => productsOnly ? navigate(`/app/erp/products/${item.id}/edit`) : openItemEditor(item)}>
+                            <Edit className="mr-2 h-3.5 w-3.5" />{t("common.edit")}
                           </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => void archiveItem(item)}>
-                            <Archive className="mr-2 h-3.5 w-3.5" />Archive
+                          <DropdownMenuItem onClick={() => duplicateItem(item)}>
+                            <Copy className="mr-2 h-3.5 w-3.5" />Duplicate
                           </DropdownMenuItem>
-                        )}
-                        {!productsOnly && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteTarget(item)}>
-                              <Trash2 className="mr-2 h-3.5 w-3.5" />{t("common.delete")}
+                          {item.status === "archived" ? (
+                            <DropdownMenuItem onClick={() => void archiveItem(item)}>
+                              <RotateCcw className="mr-2 h-3.5 w-3.5" />Restore
                             </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                          ) : (
+                            <DropdownMenuItem onClick={() => void archiveItem(item)}>
+                              <Archive className="mr-2 h-3.5 w-3.5" />Archive
+                            </DropdownMenuItem>
+                          )}
+                          {!productsOnly && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteTarget(item)}>
+                                <Trash2 className="mr-2 h-3.5 w-3.5" />{t("common.delete")}
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}
@@ -524,7 +552,6 @@ function CatalogCommercialManager({ item, open, onOpenChange }: { item: CatalogI
   const [status, setStatus] = useState<CatalogItem["status"]>("draft");
   const [billingModel, setBillingModel] = useState<Offer["billingModel"]>("one_time");
   const [unit, setUnit] = useState("Unit");
-  const [sku, setSku] = useState("");
   const [entryAmount, setEntryAmount] = useState("");
   const [entryUnit, setEntryUnit] = useState("Unit");
   const [entryEditingId, setEntryEditingId] = useState<string | null>(null);
@@ -542,9 +569,9 @@ function CatalogCommercialManager({ item, open, onOpenChange }: { item: CatalogI
     if (!selectedPriceBookId) { setPriceEntries([]); return; }
     void localCatalogAdapter.listPriceEntries({ organizationId: LOCAL_CATALOG_ORGANIZATION_ID, priceBookId: selectedPriceBookId, includeArchived: true }).then((entries) => setPriceEntries(entries.filter((entry) => entry.catalogItemId === item.id)));
   }, [selectedPriceBookId, item.id]);
-  const reset = () => { setEditingId(null); setName(""); setKey(""); setCurrency("EUR"); setStatus("draft"); setBillingModel("one_time"); setUnit("Unit"); setSku(""); setEntryAmount(""); setEntryUnit("Unit"); setEntryEditingId(null); setError(null); };
+  const reset = () => { setEditingId(null); setName(""); setKey(""); setCurrency("EUR"); setStatus("draft"); setBillingModel("one_time"); setUnit("Unit"); setEntryAmount(""); setEntryUnit("Unit"); setEntryEditingId(null); setError(null); };
   const save = async () => {
-    if (!name.trim() || !key.trim()) { setError("Name and technical key are required."); return; }
+    if (!name.trim() || (section !== "variants" && !key.trim())) { setError("Name and technical key are required."); return; }
     setError(null);
     try {
       if (section === "offers") {
@@ -552,7 +579,7 @@ function CatalogCommercialManager({ item, open, onOpenChange }: { item: CatalogI
         if (editingId) await localCatalogAdapter.updateOffer(editingId, { organizationId: LOCAL_CATALOG_ORGANIZATION_ID }, patch);
         else await localCatalogAdapter.createOffer(patch);
       } else if (section === "variants") {
-        const patch = { organizationId: LOCAL_CATALOG_ORGANIZATION_ID, workspaceId: null, catalogItemId: item.id, key, sku, name, status, attributes: {}, metadata: {} };
+        const patch = { organizationId: LOCAL_CATALOG_ORGANIZATION_ID, workspaceId: null, catalogItemId: item.id, name, status, attributes: {}, metadata: {} };
         if (editingId) await localCatalogAdapter.updateVariant(editingId, { organizationId: LOCAL_CATALOG_ORGANIZATION_ID }, patch);
         else await localCatalogAdapter.createVariant(patch);
       } else {
@@ -564,7 +591,7 @@ function CatalogCommercialManager({ item, open, onOpenChange }: { item: CatalogI
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save commercial configuration."); }
   };
   const edit = (record: Offer | CatalogVariant | PriceBook) => {
-    setEditingId(record.id); setName(record.name); setKey(record.key); setStatus(record.status); setCurrency("currency" in record ? record.currency : "EUR"); setBillingModel("billingModel" in record ? record.billingModel : "one_time"); setUnit("unit" in record ? record.unit : "Unit"); setSku("sku" in record ? record.sku : ""); setError(null);
+    setEditingId(record.id); setName(record.name); setKey(record.key); setStatus(record.status); setCurrency("currency" in record ? record.currency : "EUR"); setBillingModel("billingModel" in record ? record.billingModel : "one_time"); setUnit("unit" in record ? record.unit : "Unit"); setError(null);
   };
   const remove = async (id: string, kind = section === "offers" ? "offer" : section === "variants" ? "variant" : "priceBook") => {
     try {
@@ -592,8 +619,8 @@ function CatalogCommercialManager({ item, open, onOpenChange }: { item: CatalogI
     <div className="space-y-5">
       <div className="flex gap-1 rounded-md bg-muted p-1">{(["offers", "variants", "priceBooks"] as const).map((value) => <button key={value} type="button" onClick={() => { setSection(value); reset(); }} className={`flex-1 rounded px-3 py-2 text-sm ${section === value ? "bg-background font-medium shadow-sm" : "text-muted-foreground"}`}>{value === "priceBooks" ? "Price books" : value[0].toUpperCase() + value.slice(1)}</button>)}</div>
       {error && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">{error}</p>}
-      <div className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2"><Field label="Name" required><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field label="Technical key" required><Input value={key} onChange={(event) => setKey(event.target.value)} /></Field>{section !== "variants" && <Field label="Currency"><Input value={currency} onChange={(event) => setCurrency(event.target.value.toUpperCase())} /></Field>}{section === "offers" && <><Field label="Billing model"><Select value={billingModel} onValueChange={(value) => setBillingModel(value as Offer["billingModel"])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="one_time">One time</SelectItem><SelectItem value="recurring">Recurring</SelectItem><SelectItem value="usage">Usage</SelectItem></SelectContent></Select></Field><Field label="Unit"><Input value={unit} onChange={(event) => setUnit(event.target.value)} /></Field></>}{section === "variants" && <Field label="SKU"><Input value={sku} onChange={(event) => setSku(event.target.value)} /></Field>}<Field label="Status"><Select value={status} onValueChange={(value) => setStatus(value as CatalogItem["status"])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="draft">Draft</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="archived">Archived</SelectItem></SelectContent></Select></Field><div className="flex items-end gap-2 sm:col-span-2"><Button onClick={() => void save()}>{editingId ? "Save changes" : `Create ${section === "priceBooks" ? "price book" : section.slice(0, -1)}`}</Button>{editingId && <Button variant="ghost" onClick={reset}>Cancel edit</Button>}</div></div>
-      <div className="space-y-2">{records.length ? records.map((record) => <div key={record.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm"><div><p className="font-medium">{record.name}</p><p className="font-mono text-xs text-muted-foreground">{record.key} · {record.status}</p></div><div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => edit(record)}>Edit</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget({ kind: section === "offers" ? "offer" : section === "variants" ? "variant" : "priceBook", id: record.id, name: record.name })}>Delete</Button></div></div>) : <p className="text-sm text-muted-foreground">No records configured.</p>}</div>
+      <div className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2"><Field label="Name" required><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>{section !== "variants" && <Field label="Technical key" required><Input value={key} onChange={(event) => setKey(event.target.value)} /></Field>}{section === "variants" && <p className="self-end text-xs text-muted-foreground">LoopDev assigns the internal key and SKU when the variant is saved.</p>}{section !== "variants" && <Field label="Currency"><Input value={currency} onChange={(event) => setCurrency(event.target.value.toUpperCase())} /></Field>}{section === "offers" && <><Field label="Billing model"><Select value={billingModel} onValueChange={(value) => setBillingModel(value as Offer["billingModel"])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="one_time">One time</SelectItem><SelectItem value="recurring">Recurring</SelectItem><SelectItem value="usage">Usage</SelectItem></SelectContent></Select></Field><Field label="Unit"><Input value={unit} onChange={(event) => setUnit(event.target.value)} /></Field></>}<Field label="Status"><Select value={status} onValueChange={(value) => setStatus(value as CatalogItem["status"])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="draft">Draft</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="archived">Archived</SelectItem></SelectContent></Select></Field><div className="flex items-end gap-2 sm:col-span-2"><Button onClick={() => void save()}>{editingId ? "Save changes" : `Create ${section === "priceBooks" ? "price book" : section.slice(0, -1)}`}</Button>{editingId && <Button variant="ghost" onClick={reset}>Cancel edit</Button>}</div></div>
+      <div className="space-y-2">{records.length ? records.map((record) => <div key={record.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm"><div><p className="font-medium">{record.name}</p><p className="font-mono text-xs text-muted-foreground">{record.key} · {record.status}{ "sku" in record ? ` · SKU ${record.sku}` : ""}</p></div><div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => edit(record)}>Edit</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget({ kind: section === "offers" ? "offer" : section === "variants" ? "variant" : "priceBook", id: record.id, name: record.name })}>Delete</Button></div></div>) : <p className="text-sm text-muted-foreground">No records configured.</p>}</div>
       {section === "priceBooks" && <section className="space-y-3 rounded-lg border border-border p-4"><div className="flex items-center justify-between gap-2"><div><p className="font-medium">Price entries</p><p className="text-xs text-muted-foreground">Define the amount for this catalog item in the selected price book.</p></div><select aria-label="Price book for entries" value={selectedPriceBookId} onChange={(event) => setSelectedPriceBookId(event.target.value)} className="h-8 max-w-[48%] rounded-md border border-input bg-background px-2 text-xs"><option value="">Select price book</option>{priceBooks.map((book) => <option key={book.id} value={book.id}>{book.name}</option>)}</select></div><div className="grid gap-3 sm:grid-cols-3"><Field label="Amount"><Input type="number" min="0" step="0.01" value={entryAmount} onChange={(event) => setEntryAmount(event.target.value)} /></Field><Field label="Unit"><Input value={entryUnit} onChange={(event) => setEntryUnit(event.target.value)} /></Field><div className="flex items-end"><Button onClick={() => void saveEntry()} disabled={!selectedPriceBookId}>{entryEditingId ? "Save entry" : "Add entry"}</Button></div></div><div className="space-y-2">{priceEntries.map((entry) => <div key={entry.id} className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm"><span>{entry.amount} {entry.currency} · {entry.unit}</span><span className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => { setEntryEditingId(entry.id); setEntryAmount(String(entry.amount)); setEntryUnit(entry.unit); setCurrency(entry.currency); }}>Edit</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget({ kind: "priceEntry", id: entry.id, name: `${entry.amount} ${entry.currency}` })}>Delete</Button></span></div>)}</div></section>}
     </div>
     <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={(nextOpen) => { if (!nextOpen) setDeleteTarget(null); }} title="Delete commercial configuration?" description={deleteTarget ? `${deleteTarget.name} will be permanently removed from this local catalog.` : undefined} confirmLabel="Delete" tone="destructive" onConfirm={() => { if (!deleteTarget) return; void remove(deleteTarget.id, deleteTarget.kind).then(() => setDeleteTarget(null)); }} />
@@ -614,20 +641,10 @@ function ItemDrawer({ open, editingItem, form, setForm, error, selectedCatalog, 
   const t = useT();
   const tx = (key: string) => t(`common.erpForm.item.${key}`);
   const isService = selectedCatalog.kind === "services";
-  const [serviceKeyEdited, setServiceKeyEdited] = useState(false);
   const allowedTypes = isService ? serviceItemTypes : productItemTypes;
-  useEffect(() => {
-    if (!open) {
-      setServiceKeyEdited(false);
-      return;
-    }
-    if (isService && !serviceKeyEdited) {
-      setForm((current) => ({ ...current, key: slugify(current.name) }));
-    }
-  }, [form.name, isService, open, serviceKeyEdited, setForm]);
-  return <DrawerShell open={open} onOpenChange={onOpenChange} title={editingItem ? tx(isService ? "editService" : "editProduct") : tx(isService ? "newService" : "newProduct")} eyebrow={tx("eyebrow")} mode={editingItem ? "Editing" : "New"} headerMeta={<span>{selectedCatalog.name}</span>} description={isService ? tx("descriptionService") : tx("descriptionProduct")} dirty={() => Boolean(form.name || form.key || form.sku || form.description || form.price)} confirmTitle={isService ? tx("discardService") : tx("discardProduct")} confirmDescription={tx("unsaved")} onDiscard={() => { setServiceKeyEdited(false); setForm(emptyItemForm()); }} footer={<div className="flex justify-end gap-2"><Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button><Button onClick={onCreate} disabled={!form.name.trim() || (!isService && !form.sku.trim())}>{editingItem ? tx(isService ? "saveService" : "saveProduct") : tx(isService ? "createService" : "createProduct")}</Button></div>}>
+  return <DrawerShell open={open} onOpenChange={onOpenChange} title={editingItem ? tx(isService ? "editService" : "editProduct") : tx(isService ? "newService" : "newProduct")} eyebrow={tx("eyebrow")} mode={editingItem ? "Editing" : "New"} headerMeta={<span>{selectedCatalog.name}</span>} description={isService ? tx("descriptionService") : tx("descriptionProduct")} dirty={() => Boolean(form.name || form.key || form.sku || form.description || form.price)} confirmTitle={isService ? tx("discardService") : tx("discardProduct")} confirmDescription={tx("unsaved")} onDiscard={() => setForm(emptyItemForm())} footer={<div className="flex justify-end gap-2"><Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button><Button onClick={onCreate} disabled={!form.name.trim()}>{editingItem ? tx(isService ? "saveService" : "saveProduct") : tx(isService ? "createService" : "createProduct")}</Button></div>}>
     <form className="loopdev-form space-y-6" onSubmit={(event) => { event.preventDefault(); onCreate(); }}>
-      <section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs"><FormSectionHeader eyebrow={tx("identity")} title={isService ? tx("serviceIdentity") : tx("productIdentity")} description={isService ? tx("serviceIdentityDescription") : tx("productIdentityDescription")} mode="expanded" responsive="auto" meta={<span>{t("common.erpForm.catalog.required")}</span>} /><div className="grid gap-4 sm:grid-cols-2"><Field label={isService ? tx("serviceName") : tx("productName")} required><Input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder={isService ? tx("serviceNamePlaceholder") : tx("productNamePlaceholder")} /></Field><Field label={isService ? tx("serviceKey") : tx("skuKey")} required><Input value={isService ? form.key : form.sku} onChange={(event) => { if (isService) setServiceKeyEdited(true); setForm((current) => ({ ...current, ...(isService ? { key: slugify(event.target.value) } : { sku: event.target.value }) })); }} placeholder={isService ? tx("serviceKeyPlaceholder") : tx("skuPlaceholder")} /><p className="text-xs font-normal text-muted-foreground">{isService && !serviceKeyEdited ? tx("autoKey") : isService ? tx("customServiceKey") : tx("stableIdentifier")}</p></Field><Field label={isService ? tx("serviceType") : tx("productType")} required><Select value={form.type} onValueChange={(value) => setForm((current) => ({ ...current, type: value as CatalogItem["type"] }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{allowedTypes.map((value) => <SelectItem key={value} value={value}>{t(`common.erpForm.item.${itemTypeTranslationKeys[value]}`)}</SelectItem>)}</SelectContent></Select></Field><Field label={tx("category")}><Input value={form.categoryKey} onChange={(event) => setForm((current) => ({ ...current, categoryKey: event.target.value }))} /></Field>{!isService && <Field label={tx("brand")}><Input value={form.brand} onChange={(event) => setForm((current) => ({ ...current, brand: event.target.value }))} /></Field>}<Field label={tx("tags")}><Input value={form.tags} onChange={(event) => setForm((current) => ({ ...current, tags: event.target.value }))} /></Field></div><Field label={tx("shortDescription")}><Input value={form.shortDescription} onChange={(event) => setForm((current) => ({ ...current, shortDescription: event.target.value }))} /></Field><Field label={tx("longDescription")}><Textarea value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} /></Field></section>
+      <section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs"><FormSectionHeader eyebrow={tx("identity")} title={isService ? tx("serviceIdentity") : tx("productIdentity")} description={tx("productIdentityDescription")} mode="expanded" responsive="auto" meta={<span>{t("common.erpForm.catalog.required")}</span>} /><div className="grid gap-4 sm:grid-cols-2"><Field label={isService ? tx("serviceName") : tx("productName")} required><Input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder={isService ? tx("serviceNamePlaceholder") : tx("productNamePlaceholder")} /></Field><Field label={t("common.erpProductRecord.internalKey")}><Input value={form.key} readOnly placeholder={t("common.erpProductRecord.generatedKey")} /></Field><Field label={t("common.erpProductRecord.sku")}><Input value={form.sku} readOnly placeholder={t("common.erpProductRecord.generatedKey")} /><p className="text-xs font-normal text-muted-foreground">{tx("stableIdentifier")}</p></Field><Field label={isService ? tx("serviceType") : tx("productType")} required><Select value={form.type} onValueChange={(value) => setForm((current) => ({ ...current, type: value as CatalogItem["type"] }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{allowedTypes.map((value) => <SelectItem key={value} value={value}>{t(`common.erpForm.item.${itemTypeTranslationKeys[value]}`)}</SelectItem>)}</SelectContent></Select></Field><Field label={tx("category")}><Input value={form.categoryKey} onChange={(event) => setForm((current) => ({ ...current, categoryKey: event.target.value }))} /></Field>{!isService && <Field label={tx("brand")}><Input value={form.brand} onChange={(event) => setForm((current) => ({ ...current, brand: event.target.value }))} /></Field>}<Field label={tx("tags")}><Input value={form.tags} onChange={(event) => setForm((current) => ({ ...current, tags: event.target.value }))} /></Field></div><Field label={tx("shortDescription")}><Input value={form.shortDescription} onChange={(event) => setForm((current) => ({ ...current, shortDescription: event.target.value }))} /></Field><Field label={tx("longDescription")}><Textarea value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} /></Field></section>
       {isService && <section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs"><FormSectionHeader eyebrow={tx("delivery")} title={tx("deliveryTitle")} description={tx("deliveryDescription")} mode="expanded" responsive="auto" /><div className="grid gap-4 sm:grid-cols-2"><Field label={tx("provider")}><Input value={form.provider} onChange={(event) => setForm((current) => ({ ...current, provider: event.target.value }))} /></Field><Field label={tx("performer")}><Input value={form.performer} onChange={(event) => setForm((current) => ({ ...current, performer: event.target.value }))} /></Field><Field label={tx("duration")}><Input type="number" min="0" value={form.duration} onChange={(event) => setForm((current) => ({ ...current, duration: event.target.value }))} placeholder="60" /></Field><Field label={tx("durationUnit")}><Select value={form.unit} onValueChange={(value) => setForm((current) => ({ ...current, unit: value }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Minute", "Hour", "Day", "Month", "Year", "Session", "Treatment"].map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select></Field></div></section>}
       <section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs"><FormSectionHeader eyebrow="Commercial" title={isService ? "Indicative pricing" : "Pricing and billing"} description={isService ? "Store a reference price without treating it as the final price of a quote, application or policy." : "Set the default commercial values; detailed price books can be added later."} mode="expanded" responsive="auto" /><div className="grid gap-4 sm:grid-cols-2"><Field label={isService ? "Estimated starting price" : "Base price"}><Input type="number" min="0" value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} placeholder="0.00" /></Field><Field label="Currency"><Select value={form.currency} onValueChange={(value) => setForm((current) => ({ ...current, currency: value }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{currencies.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select></Field>{isService && <Field label="Pricing model"><Select value={form.pricingModel} onValueChange={(value) => setForm((current) => ({ ...current, pricingModel: value as ItemForm["pricingModel"] }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="fixed_reference">Fixed reference</SelectItem><SelectItem value="from_price">From price</SelectItem><SelectItem value="quote_required">Quote required</SelectItem><SelectItem value="calculated_at_checkout">Calculated at checkout</SelectItem></SelectContent></Select></Field>}{isService && <Field label="Billing period"><Select value={form.billingPeriod} onValueChange={(value) => setForm((current) => ({ ...current, billingPeriod: value as ItemForm["billingPeriod"] }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="one_time">One time</SelectItem><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="quarterly">Quarterly</SelectItem><SelectItem value="annual">Annual</SelectItem></SelectContent></Select></Field>}<Field label="Billing model"><Select value={form.billingModel} onValueChange={(value) => setForm((current) => ({ ...current, billingModel: value as ItemForm["billingModel"] }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="one_time">One time</SelectItem><SelectItem value="recurring">Recurring</SelectItem><SelectItem value="usage">Usage based</SelectItem></SelectContent></Select></Field>{!isService && <Field label="Unit"><Select value={form.unit} onValueChange={(value) => setForm((current) => ({ ...current, unit: value }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{units.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select></Field>}</div>{isService && <><Field label="Price note"><Textarea value={form.priceNote} onChange={(event) => setForm((current) => ({ ...current, priceNote: event.target.value }))} placeholder="Indicative price subject to underwriting and final eligibility." /><p className="text-xs text-muted-foreground">The final amount is defined later by the quote, application or policy process.</p></Field></>}</section>
       {!isService && <section className="space-y-4 rounded-xl border border-border-strong/70 bg-card/70 p-4 shadow-xs"><FormSectionHeader eyebrow="Participants" title="Product participants" description="Use neutral roles for brands, suppliers and manufacturers." mode="expanded" responsive="auto" /><div className="grid gap-4 sm:grid-cols-2"><Field label="Provider"><Input value={form.provider} onChange={(event) => setForm((current) => ({ ...current, provider: event.target.value }))} placeholder="Provider or supplier" /></Field><Field label="Manufacturer"><Input value={form.manufacturer} onChange={(event) => setForm((current) => ({ ...current, manufacturer: event.target.value }))} placeholder="Optional manufacturer" /></Field></div></section>}

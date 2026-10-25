@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { catalogAdapter } from "@/loopdev/domains/catalog/adapter";
-import type { CatalogItem, CatalogItemClass, CatalogItemKind, CatalogSourcingMode, ProductReference, ProductReferenceKind } from "@/loopdev/domains/catalog";
+import type { CatalogItem, CatalogItemClass, CatalogItemKind, CatalogSourcingMode, CatalogVariant, ProductReference, ProductReferenceKind } from "@/loopdev/domains/catalog";
+import { ProductMediaSection } from "./ProductMediaSection";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useT } from "@/i18n";
 
@@ -193,6 +194,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
   const organizationId = activeOrganization?.id ?? "";
   const previousItemId = useRef(itemId);
   const [item, setItem] = useState<CatalogItem | null>(null);
+  const [variants, setVariants] = useState<CatalogVariant[]>([]);
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [references, setReferences] = useState<ProductReference[]>([]);
   const [isLoading, setIsLoading] = useState(mode !== "create");
@@ -203,7 +205,10 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
   const [costReadable, setCostReadable] = useState(true);
 
   useEffect(() => {
-    if (!itemId && previousItemId.current) setForm(emptyForm());
+    if (!itemId && previousItemId.current) {
+      setForm(emptyForm());
+      setVariants([]);
+    }
     previousItemId.current = itemId;
   }, [itemId]);
 
@@ -234,6 +239,9 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
           return;
         }
         setItem(loadedItem);
+        const loadedVariants = await catalogAdapter.listVariants({ organizationId, catalogItemId: loadedItem.id, includeArchived: true });
+        if (!active) return;
+        setVariants(loadedVariants);
         const metadata = loadedItem.metadata;
         const storedClass = isCatalogItemClass(metadata.itemClass) ? metadata.itemClass : "";
         const storedKind = metadata.itemKind === "product" || metadata.itemKind === "service"
@@ -314,7 +322,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
 
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!organizationId || !form.name.trim() || !form.sku.trim()) {
+    if (!organizationId || !form.name.trim()) {
       setSaveError(t("common.erpProductRecord.requiredFields"));
       return;
     }
@@ -384,7 +392,6 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
         });
       const savedItem = item
         ? await catalogAdapter.updateCatalogItem(item.id, { organizationId }, {
-          sku: form.sku.trim(),
           name: form.name.trim(),
           description: form.description.trim() || null,
           type: form.itemKind === "service" ? "service" : "physical_product",
@@ -395,8 +402,6 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
         : await catalogAdapter.createCatalogItem({
           organizationId,
           catalogId: targetCatalog.id,
-          key: slugify(form.name),
-          sku: form.sku.trim(),
           name: form.name.trim(),
           description: form.description.trim() || null,
           type: form.itemKind === "service" ? "service" : "physical_product",
@@ -446,14 +451,14 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
         title={item.name}
         description={stringValue(metadata.shortDescription) || item.description || t(storedItemKind === "service" ? "common.erpProductRecord.serviceDetails" : "common.erpProductRecord.productDetails")}
         breadcrumbs={[{ label: "ERP" }, { label: t("common.erpProductRecord.products") }, { label: item.name }]}
-        actions={<div className="flex gap-2"><Button variant="outline" onClick={() => navigate("/app/erp/products")}><ArrowLeft className="me-2 h-4 w-4" />{t("common.erpProductRecord.products")}</Button><Button onClick={() => navigate(`/app/erp/products/${item.id}/edit`)}>{t(storedItemKind === "service" ? "common.erpProductRecord.editServiceAction" : "common.erpProductRecord.editProductAction")}</Button></div>}
+        actions={<div className="flex gap-2"><Button variant="outline" onClick={() => navigate("/app/erp/products")}><ArrowLeft className="me-2 h-4 w-4" />{t("common.erpProductRecord.products")}</Button>{physicalType && <Button variant="outline" onClick={() => navigate(`/app/erp/products/${item.id}/skus`)}>{t("common.erpProductRecord.manageSkusAction")}</Button>}<Button onClick={() => navigate(`/app/erp/products/${item.id}/edit`)}>{t(storedItemKind === "service" ? "common.erpProductRecord.editServiceAction" : "common.erpProductRecord.editProductAction")}</Button></div>}
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,1fr)]">
         <div className="space-y-5">
           <section className="rounded-xl border border-border bg-card p-5">
             <FormSectionHeader eyebrow={t(storedItemKind === "service" ? "common.erpProductRecord.itemKinds.service" : "common.erpProductRecord.productEyebrow")} title={t("common.erpProductRecord.identityClassification")} description={t(storedItemKind === "service" ? "common.erpProductRecord.serviceIdentityRecordDescription" : "common.erpProductRecord.identityRecordDescription")} mode="expanded" responsive="auto" />
             <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-              <RecordValue label="SKU" value={item.sku || "—"} technical />
+              <RecordValue label="SKU" value={item.sku || (variants.length ? t("common.erpProductRecord.skusManagedSeparately") : "—")} technical />
               <RecordValue label={t("common.erpProductRecord.internalKey")} value={item.key} technical />
               <RecordValue label={t("common.erpProductRecord.type")} value={displayedItemClass} />
               {metadata.sourcingMode === "buy" || metadata.sourcingMode === "make" || metadata.sourcingMode === "both"
@@ -483,14 +488,29 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
               <RecordValue label={t("common.erpProductRecord.dimensions")} value={stringValue(metadata.dimensions) || "—"} />
             </dl>
           </section>}
+          {physicalType && <section className="rounded-xl border border-border bg-card p-5">
+            <div className="flex items-start justify-between gap-3">
+              <FormSectionHeader eyebrow={t("common.erpProductRecord.variants")} title={t("common.erpProductRecord.skus")} description={t("common.erpProductRecord.skusDescription")} mode="expanded" responsive="auto" />
+              <Button variant="outline" onClick={() => navigate(`/app/erp/products/${item.id}/skus`)}>{t("common.erpProductRecord.manageSkusAction")}</Button>
+            </div>
+            {variants.length ? <div className="mt-4 divide-y divide-border">{variants.map((variant) => {
+              const categoryKey = typeof variant.metadata.categoryKey === "string" ? variant.metadata.categoryKey : "";
+              const category = references.find((reference) => reference.kind === "category" && reference.key === categoryKey)?.name ?? categoryKey;
+              return <div key={variant.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+                <span><span className="block font-medium">{variant.name}</span><span className="font-mono text-xs text-muted-foreground">{variant.sku}</span></span>
+                <span className="flex items-center gap-3 text-muted-foreground"><span>{category || t("common.erpProductRecord.uncategorized")}</span><StatusBadge tone={variant.status === "active" ? "success" : variant.status === "draft" ? "warning" : "neutral"} dot>{t(`common.erpForm.item.${variant.status}`)}</StatusBadge></span>
+              </div>;
+            })}</div> : <p className="mt-4 text-sm text-muted-foreground">{t("common.erpProductRecord.noSkus")}</p>}
+          </section>}
         </div>
-        <div className="space-y-5">
+        <aside className="space-y-5">
           {metadata.canSell !== false && <section className="rounded-xl border border-border bg-card p-5">
             <FormSectionHeader eyebrow={t("common.erpProductRecord.sales")} title={t("common.erpProductRecord.referencePrice")} description={t("common.erpProductRecord.referencePriceDescription")} mode="expanded" responsive="auto" />
             <p className="mt-5 text-2xl font-semibold">{numberValue(metadata.price) ? `${metadata.price} ${stringValue(metadata.currency) || "EUR"}` : t("common.erpProductRecord.notSet")}</p>
           </section>}
           {canShowCost && <ProductCostCard itemId={item.id} organizationId={organizationId} />}
-        </div>
+          <ProductMediaSection item={item} organizationId={organizationId} />
+        </aside>
       </div>
     </PageContainer>;
   }
@@ -525,8 +545,9 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
                   key={kind}
                   type="button"
                   aria-pressed={form.itemKind === kind}
+                  disabled={Boolean(item && variants.length && kind === "service")}
                   onClick={() => setItemKind(kind)}
-                  className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${form.itemKind === kind ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}
+                  className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${form.itemKind === kind ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}
                 >
                   <span aria-hidden="true" className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${form.itemKind === kind ? "border-primary" : "border-muted-foreground/50"}`}>
                     {form.itemKind === kind && <span className="h-2 w-2 rounded-full bg-primary" />}
@@ -555,7 +576,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
             <FormSectionHeader eyebrow={t("common.erpProductRecord.identityEyebrow")} title={t(form.itemKind === "service" ? "common.erpProductRecord.serviceIdentityTitle" : "common.erpProductRecord.identityTitle")} description={t(form.itemKind === "service" ? "common.erpProductRecord.serviceIdentityDescription" : "common.erpProductRecord.identityDescription")} mode="expanded" responsive="auto" />
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <Field label={t(form.itemKind === "service" ? "common.erpProductRecord.serviceName" : "common.erpForm.item.productName")} required><Input required autoFocus value={form.name} onChange={(event) => setField("name", event.target.value)} /></Field>
-              <Field label="SKU" required><Input required value={form.sku} onChange={(event) => setField("sku", event.target.value)} /></Field>
+              <Field label={form.itemKind === "service" ? t("common.erpProductRecord.sku") : t("common.erpProductRecord.baseSku")}><Input value={form.sku} readOnly placeholder={t("common.erpProductRecord.generatedKey")} /><p className="text-xs font-normal text-muted-foreground">{form.itemKind === "product" ? t("common.erpProductRecord.productSkuHelp") : t("common.erpProductRecord.stableIdentifier")}</p></Field>
               <Field label={t("common.erpForm.item.category")}>
                 <div className="flex gap-2">
                   <Select value={form.categoryKey || "__none"} onValueChange={(value) => setField("categoryKey", value === "__none" ? "" : value)}>
@@ -668,7 +689,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
         <aside className="space-y-4">
           <section className="sticky top-5 rounded-xl border border-border bg-card p-4">
             <p className="text-sm font-semibold">{t("common.erpProductRecord.recordSummary")}</p>
-            <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{item?.key ?? (slugify(form.name) || t("common.erpProductRecord.generatedKey"))}</p>
+            <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{item?.key ?? t("common.erpProductRecord.generatedKey")}</p>
             <div className="mt-4 space-y-2 text-sm"><p><span className="text-muted-foreground">{t("common.erpProductRecord.type")}:</span> {form.itemKind ? t(`common.erpProductRecord.itemKinds.${form.itemKind}`) : t("common.erpProductRecord.notSet")}</p><p><span className="text-muted-foreground">SKU:</span> {form.sku || t("common.erpProductRecord.notSet")}</p><p><span className="text-muted-foreground">{t("common.erpForm.item.category")}:</span> {categoryReferences.find((reference) => reference.key === form.categoryKey)?.name ?? t("common.erpProductRecord.uncategorized")}</p><p><span className="text-muted-foreground">{t("common.erpForm.item.status")}:</span> {t(`common.erpForm.item.${form.status}`)}</p></div>
             <Button className="mt-5 w-full" type="submit" disabled={saving || !form.itemKind || (isProduct && !form.itemClass) || (isFinishedProduct && !form.sourcingMode) || (isPhysical && form.canPurchase && !costReadable)}><Save className="me-2 h-4 w-4" />{saving ? t("common.erpProductRecord.saving") : mode === "create" ? pageTitle : t("common.erpProductRecord.saveChanges")}</Button>
             {saveError && <p role="alert" className="mt-3 text-sm text-destructive">{saveError}</p>}

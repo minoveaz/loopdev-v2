@@ -25,7 +25,12 @@ The visual gate covers the current ERP Overview as navigation compatibility and
 the target Products surface as the first-release functionality: a direct,
 organization-scoped product/service list, full-page product/SKU records and
 forms, quick auxiliary-reference drawers, commercial configuration and
-category-tree administration within Products. The approved record includes a
+category-tree administration within Products. The approved scope is amended by
+`CR-ERP-PRODUCT-MEDIA-001` to include image assets for products and variants,
+an organization-scoped reusable library, file metadata and alt text, without
+automatic channel publication or synchronization. The existing conceptual
+visual approval does not cover the media experience; a new visual-design
+addendum is required before implementation. The approved record includes a
 unit purchase-cost reference per product/SKU (not accounting/inventory
 valuation or margin calculation) and structured physical attributes.
 It removes the standalone
@@ -51,7 +56,8 @@ These artifacts do not demonstrate runtime rendering or operation parity.
 Conceptual approval covers the revised full-page product/SKU compositions,
 record page, reference drawers and purchase-cost-reference scope, approved by
 @loopdev-io on 2026-10-24. Screenshot comparison remains `NOT_RUN` until
-approved implementation exists. Remote Products are online-only:
+approved implementation exists. Product media has no approved UI composition
+yet. Remote Products and Files are online-only:
 offline is an unavailable state with no cache or mutation queue, while
 `local_demo` is a separately selected local-only mode.
 
@@ -68,6 +74,7 @@ the SVG snapshot covers light theme only.
 | --- | --- | --- | --- | --- |
 | Domain and lifecycle | `src/loopdev/domains/catalog/types.ts` is the legacy technical contract; canonical Products model TBD | Current catalog UI/adapter supplies evidence for the future Products module | Same semantics required; individual mobile operations need testing | `discovery.md`; catalog tests |
 | Product category operations | Proposed shared operations `catalog.categories.list` / `catalog.categories.manage`; current `categoryKey` is not a category-tree contract | Dedicated category-management view within Products; tree/detail composition is conceptual | Same operations and permission semantics; tree and detail stack with visible return to Products | `VD-ERP-013`; category-management wireframe and platform evidence matrix |
+| Product media operations | Proposed `catalog.media.library.list`, `catalog.media.upload`, `catalog.media.attach`, `catalog.media.metadata.manage` and `catalog.media.detach`; shared Files owns file bytes, Products owns product/variant association semantics | Product record and organization image library; composition not yet designed | Same operations; touch upload, interrupted selection and narrow image-library navigation require design and tests | `CR-ERP-PRODUCT-MEDIA-001`; `discovery.md`; current Files contract is insufficient for generic remote/reusable associations |
 | Navigation and deep links | `src/routes/LoopdevRoutes.tsx`; current route is legacy, target path is proposed | Current `/app/erp/product-catalog/:catalogId`; proposed `/app/erp/products` with legacy redirect/filter | Same route meaning; sidebar drawer, product-card action, back/close and old deep-link behavior require mobile verification | Current route source, Shell reference and `wireframes/` |
 | Permissions and tenant scope | Platform organization/membership and RLS contracts; current IDs remain `catalog.*` | Existing catalog actions need permission parity audit | Same semantics; mobile visibility does not substitute for server checks | `MULTI_TENANCY_STRATEGY.md`, `DATABASE_SECURITY_RLS.md`, catalog migration |
 | Offline and synchronization | Remote Products are online-only; local demo mode is separate and explicit | Existing catalog-named adapter is current baseline; explicit mode and storage failure behavior are not implemented | Same unavailable/offline feedback; no remote cache or mutation queue in this release | User decision; `sync-model.md`; adapter evidence |
@@ -79,4 +86,5 @@ the SVG snapshot covers light theme only.
 | --- | --- | --- | --- | --- |
 | iOS and Android ERP operations | Explicitly deferred from first release by the Product Owner | No native parity is claimed | @loopdev-io (Product Owner) | #36 |
 | Mobile-web operation parity | Responsive source exists, but operation-level behavior has not been verified | Users could see data without all required actions | @loopdev-io (Product Owner) | #36 |
+| Product media design and operation parity | Scope approved, but no product image library, alt-text UI, remote Files operation or per-operation desktop/mobile evidence exists | Local-only behavior could be mistaken for a tenant-safe production upload flow | Product Owner + Platform owner | #36 |
 | Sales, purchasing, inventory, finance and channel integrations | Explicitly deferred from this release (`ERP-OD-006` resolved) | Wireframes/roadmap could be mistaken for approved MVP scope | @loopdev-io (Product Owner) | #36 |

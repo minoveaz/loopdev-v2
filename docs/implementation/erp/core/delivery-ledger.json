@@ -7,6 +7,7 @@
   "approved_by": null,
   "approved_at": null,
   "approval_source": null,
+  "task_scoped_approvals": true,
   "product_sources": [
     "docs/06-product/products/PRODUCT_CATALOG_GLOBAL_TRACK.md",
     "docs/implementation/erp/core/discovery.md"
@@ -55,6 +56,21 @@
       "capability_ids": ["CAP-ERP-CATALOG", "CAP-ERP-PRODUCT-CATEGORIES"]
     },
     {
+      "id": "REQ-ERP-AUTO-IDENTIFIERS",
+      "title": "Generate immutable LoopDev identifiers and SKU values",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/erp/core/implementation-plan.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": [
+        "The database UUID remains the immutable technical primary key; users cannot choose or edit it.",
+        "LoopDev generates numeric, organization-unique, immutable internal keys for products and variants.",
+        "LoopDev generates numeric, organization-unique SKUs for products and variants; direct users cannot choose or change them.",
+        "A trusted future integration may replace the LoopDev SKU with the external system's SKU while preserving the internal key and recording source provenance; channel integration itself remains out of scope."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": ["CAP-ERP-CATALOG"]
+    },
+    {
       "id": "REQ-ERP-PRODUCT-CATEGORIES",
       "title": "Manage the hierarchical product category tree within Products",
       "classification": "REQUIRED_MVP",
@@ -70,6 +86,22 @@
       ],
       "evidence_level": "E2_UNIT",
       "capability_ids": ["CAP-ERP-PRODUCT-CATEGORIES"]
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-MEDIA",
+      "title": "Manage reusable image assets for Products and variants",
+      "classification": "REQUIRED_MVP",
+      "source": "docs/implementation/erp/core/discovery.md",
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "acceptance_criteria": [
+        "Products operators can browse an organization-scoped image library, upload images through the shared Files capability, and attach an existing image to a product or variant.",
+        "The same image file can be reused by multiple product/variant associations within its organization without duplicating binary content; cross-organization association is rejected.",
+        "Users can edit approved file metadata and alt text for product imagery; exact metadata ownership and fields are resolved in the design/domain contracts.",
+        "Product/variant media associations reference shared Platform File records; ERP does not create a parallel uploader, preview pipeline or binary-storage system.",
+        "This scope does not publish or synchronize images to ecommerce, Shopify or social channels and does not expose public storage URLs."
+      ],
+      "evidence_level": "E3_COMPONENT",
+      "capability_ids": ["CAP-ERP-PRODUCT-MEDIA"]
     },
     {
       "id": "REQ-ERP-COST-REFERENCE",
@@ -133,10 +165,11 @@
       "requirement_ids": [
         "REQ-ERP-BOUNDARY-MAP",
         "REQ-ERP-CATALOG-FOUNDATION",
-        "REQ-ERP-CRM-BOUNDARY"
+        "REQ-ERP-CRM-BOUNDARY",
+        "REQ-ERP-AUTO-IDENTIFIERS"
       ],
       "semantics": {
-        "operations": ["catalog.list", "catalog.manage"],
+        "operations": ["catalog.list", "catalog.manage", "catalog.identifiers.generate"],
         "validation_contract": "src/loopdev/domains/catalog/types.ts",
         "errors": ["not-found", "conflict", "invalid-scope", "forbidden", "server-error"]
       },
@@ -149,7 +182,8 @@
       "parity": { "domain": "partial", "renderer": "partial", "operations": "partial" },
       "operation_coverage": [
         { "id": "catalog.list", "desktop_web": "implemented", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
-        { "id": "catalog.manage", "desktop_web": "implemented", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null }
+        { "id": "catalog.manage", "desktop_web": "implemented", "mobile_web": "missing", "ios": "missing", "android": "missing", "adaptation_ref": null },
+        { "id": "catalog.identifiers.generate", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
       ],
       "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
       "permissions": ["catalog.read", "catalog.write", "catalog.manage"],
@@ -157,6 +191,45 @@
         "src/loopdev/domains/catalog/types.ts",
         "src/loopdev/domains/catalog/adapter/index.ts",
         "supabase/migrations/20260928160000_erp_catalog_foundation.sql"
+      ],
+      "task_ids": ["ERP-IDENTIFIERS-001"]
+    },
+    {
+      "id": "CAP-ERP-PRODUCT-MEDIA",
+      "name": "Product and variant image library",
+      "classification": "REQUIRED_MVP",
+      "requirement_ids": ["REQ-ERP-PRODUCT-MEDIA"],
+      "semantics": {
+        "operations": [
+          "catalog.media.library.list",
+          "catalog.media.upload",
+          "catalog.media.attach",
+          "catalog.media.metadata.manage",
+          "catalog.media.detach"
+        ],
+        "validation_contract": null,
+        "errors": ["forbidden", "cross-organization-file", "invalid-image", "conflict", "upload-failed", "file-unavailable"]
+      },
+      "platforms": {
+        "desktop_web": { "required": true, "surface": "Product record and organization-scoped image library; composition to be designed", "route": "/app/erp/products" },
+        "mobile_web": { "required": true, "surface": "Responsive Product record and image library; touch and upload-interruption behavior to be designed", "route": "/app/erp/products" },
+        "ios": { "required": false, "surface": "deferred; no native surface in this release", "route": null },
+        "android": { "required": false, "surface": "deferred; no native surface in this release", "route": null }
+      },
+      "parity": { "domain": "not_tested", "renderer": "not_tested", "operations": "not_tested" },
+      "operation_coverage": [
+        { "id": "catalog.media.library.list", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "catalog.media.upload", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "catalog.media.attach", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "catalog.media.metadata.manage", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null },
+        { "id": "catalog.media.detach", "desktop_web": "missing", "mobile_web": "missing", "ios": "not_applicable", "android": "not_applicable", "adaptation_ref": null }
+      ],
+      "states": ["loading", "empty", "error", "forbidden", "conflict", "offline", "pending", "success"],
+      "permissions": ["catalog.read", "catalog.write", "work.read", "work.write"],
+      "contract_refs": [
+        "docs/implementation/erp/core/discovery.md",
+        "src/loopdev/domains/files/types.ts",
+        "docs/03-platform/backend/FILES_BACKEND_MAPPING.md"
       ],
       "task_ids": []
     },
@@ -436,7 +509,71 @@
       "task_ids": []
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "ERP-IDENTIFIERS-001",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "blocked",
+      "title": "Generate immutable numeric product and SKU identifiers",
+      "requirement_ids": ["REQ-ERP-AUTO-IDENTIFIERS"],
+      "capability_ids": ["CAP-ERP-CATALOG"],
+      "operation_ids": ["catalog.identifiers.generate"],
+      "platforms": ["shared", "desktop_web", "mobile_web"],
+      "dependencies": [],
+      "owner": "@loopdev-io",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-24T23:57:57+02:00",
+        "approval_source": "User approved automatic LoopDev-generated identifiers and future external SKU import; see minoveaz/loopdev-v2#37."
+      },
+      "risk": "high",
+      "evidence_level": "E3_COMPONENT",
+      "acceptance_criteria": [
+        "Database and local adapters generate numeric internal keys and SKUs organization-wide for products and variants.",
+        "Normal product and variant UI flows do not accept user-entered keys or SKUs; generated values are displayed read-only.",
+        "Existing product/variant UUID primary keys remain unchanged; existing LoopDev sample variant keys are migrated without changing product relationships.",
+        "Only trusted server-side integration writes can replace the generated SKU with an imported external SKU; this task does not build a channel connector.",
+        "Focused adapter, component and migration validation passes; remote deployment remains gated by the shared Platform audit and deployment checks."
+      ],
+      "validation": [
+        { "command": "npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-list-table.test.tsx", "required": true },
+        { "command": "npm run typecheck", "required": true },
+        { "command": "npm run build", "required": true },
+        { "command": "npm run i18n:check", "required": true },
+        { "command": "npm run validate:delivery-ledgers", "required": true },
+        { "command": "supabase db lint --local", "required": true }
+      ],
+      "files": [
+        "src/loopdev/domains/catalog/types.ts",
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "src/loopdev/domains/catalog/adapter/local.ts",
+        "src/loopdev/domains/catalog/adapter/supabase.ts",
+        "src/loopdev/domains/catalog/data/localCatalog.ts",
+        "src/loopdev/pages/erp/ProductCatalog.tsx",
+        "src/loopdev/pages/erp/ProductRecordPages.tsx",
+        "src/loopdev/pages/erp/ProductSkuManagerPage.tsx",
+        "src/routes/LoopdevRoutes.tsx",
+        "src/test/catalog/catalog-adapter.test.ts",
+        "src/test/erp/product-list-table.test.tsx",
+        "src/test/erp/product-record-pages.test.tsx",
+        "src/test/erp/product-sku-manager.test.tsx",
+        "supabase/migrations/20261025000000_erp_system_generated_identifiers.sql"
+      ],
+      "blocked_by": [
+        "Required migration validation is blocked because Docker/local PostgreSQL is unavailable at 127.0.0.1:54322.",
+        "The module run has no 06-plan checkpoint and its current phase validation fails on pre-existing visual-design evidence and approval inconsistencies."
+      ],
+      "evidence_refs": [
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md",
+        "src/test/catalog/catalog-adapter.test.ts",
+        "src/test/erp/product-list-table.test.tsx",
+        "src/test/erp/product-record-pages.test.tsx",
+        "src/test/erp/product-sku-manager.test.tsx",
+        "supabase/migrations/20261025000000_erp_system_generated_identifiers.sql"
+      ]
+    }
+  ],
   "change_requests": [
     {
       "id": "CR-ERP-SUPPLIERS-SEPARATE",
@@ -473,6 +610,24 @@
       "approved_by": "@loopdev-io",
       "approved_at": "2026-10-24T17:47:04Z",
       "source": "User approved full-page product/SKU record and create/edit pages with drawers for quick auxiliary-reference management, then selected: \"Coste de compra unitario de referencia por producto/SKU, no contable\". The reference is not accounting/inventory valuation or margin calculation. Brands/tags lifecycle, cost visibility/currency/inheritance and physical-field ownership remain open for specialized analysis."
+    },
+    {
+      "id": "CR-ERP-SKU-AUTO-GENERATION",
+      "status": "approved",
+      "removed_requirement_ids": [],
+      "removed_capability_ids": [],
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-24T23:57:57+02:00",
+      "source": "User decision recorded in minoveaz/loopdev-v2#37: LoopDev generates the SKU and internal key automatically; users cannot change them; a future integration imports the external system SKU. Approval is limited to ERP-IDENTIFIERS-001; no channel connector, numeric UUID primary keys, other ERP tasks or remote rollout is approved."
+    },
+    {
+      "id": "CR-ERP-PRODUCT-MEDIA-001",
+      "status": "approved",
+      "removed_requirement_ids": [],
+      "removed_capability_ids": [],
+      "approved_by": "@loopdev-io",
+      "approved_at": "2026-10-25T08:54:12+01:00",
+      "source": "User asked to add product images and a place to reuse images for ecommerce/social use, then approved: product/variant assets with a reusable library, metadata and alt text, without automatic publishing. Scope is limited to image asset management inside Products; no channel connector, publication, video, social scheduler or external system is authorized."
     }
   ],
   "blockers": [
@@ -482,6 +637,9 @@
     "Semimanufactured items are deferred until Manufacturing discovery.",
     "Verify Products documentation/runtime parity and reconcile legacy catalog.write versus catalog.manage before implementation.",
     "Assign destination-domain ownership for locale and channel fields formerly stored on migration-only OrganizationCatalog.",
-    "Assign an owner and explicit scope decision for iOS and Android before plan approval."
+    "Assign an owner and explicit scope decision for iOS and Android before plan approval.",
+    "Product media must pass updated design, visual, domain, access, API, sync and plan phases before any implementation task can be authorized.",
+    "The generic organization-scoped Files upload/preview adapter and reusable multi-entity relation are not evidenced; obtain Platform owner approval and define tenant, signed-URL, audit, retention and image-validation behavior.",
+    "Resolve alt-text/metadata ownership, service eligibility, variant image count/order, and shared-file detach/archive/delete behavior before planning implementation."
   ]
 }

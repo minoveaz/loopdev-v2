@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-CORE-20261025-002",
+  "span_id": "MOD-CORE-20261025-002:00-discovery",
+  "phase": "00-discovery",
+  "skill": "module-discovery",
+  "parent_span_id": null,
+  "module": "Core",
+  "status": "running",
+  "decision_status": "open",
+  "architecture_quality": "PENDING",
+  "attempt": 1,
+  "started_at": "2026-10-25T08:12:59.243Z",
+  "completed_at": null,
+  "input_fingerprint": "sha256:4fc29f4f672ed7c4aba3216a8cfa761bcc22bcbe27af5d01206ce88877f55b2a",
+  "environment": {
+    "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
+    "checkout_type": "branch",
+    "branch": "feature/erp-core-capabilities",
+    "base_branch": null,
+    "head_commit": "2fe79082039b24eb771879dad3ca79a59dba6d21",
+    "working_tree": "modified",
+    "runtime_url": null,
+    "runtime_port": null
+  },
+  "input_artifacts": [],
+  "output_artifacts": [],
+  "decisions": [],
+  "actions": [],
+  "validation": [],
+  "requirements": [],
+  "task_ids": [],
+  "evidence": [],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": null,
+  "approval_gate": {
+    "status": "not_required",
+    "approved_by": null,
+    "approved_at": null
+  },
+  "invalidated": false
+}

@@ -265,6 +265,37 @@ test("plan approval requires an explicit task for each missing required operatio
   assert.deepEqual(errors, []);
 });
 
+test("task-scoped approval validates only its approved operation while preserving unrelated blockers", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const ledger = validLedger({ task_scoped_approvals: true, blockers: ["Unrelated Platform audit prerequisite"] });
+  ledger.capabilities[0].semantics.operations.push("updateContacts");
+  ledger.capabilities[0].operation_coverage.push({
+    id: "updateContacts", desktop_web: "implemented", mobile_web: "missing",
+    ios: "not_applicable", android: "not_applicable", adaptation_ref: null,
+  });
+  ledger.tasks[0].status = "ready";
+  ledger.tasks[0].operation_ids = ["listContacts"];
+  ledger.tasks[0].approval = {
+    approved_by: "owner@example.com",
+    approved_at: "2026-09-14T12:00:00.000Z",
+    approval_source: "https://github.test/issues/1",
+  };
+  const ledgerFile = join(current.root, "delivery-ledger.json");
+  assert.deepEqual(validateLedger(current.root, ledger, ledgerFile, { stage: "plan", taskIds: ["CONTACTS-TASK-LIST"] }), []);
+  const globalErrors = validateLedger(current.root, ledger, ledgerFile, { stage: "plan" });
+  assert.ok(globalErrors.some((error) => error.includes("updateContacts is missing on required platform mobile_web")));
+});
+
+test("task-scoped mode rejects a ready task without its own approval", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const ledger = validLedger({ task_scoped_approvals: true, blockers: ["Unrelated Platform audit prerequisite"] });
+  ledger.tasks[0].status = "ready";
+  const errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"));
+  assert.ok(errors.some((error) => error.includes("requires a complete task-scoped approval")));
+});
+
 test("approved plan may preserve missing operation status when an explicit task is blocked", (context) => {
   const current = fixture();
   context.after(current.cleanup);
@@ -405,6 +436,53 @@ test("approved ledger allows in-progress tasks but rejects pending tasks", (cont
   ledger.tasks[0].status = "pending";
   errors = validateLedger(current.root, ledger, join(current.root, "delivery-ledger.json"));
   assert.ok(errors.some((error) => error.includes("must be ready, in_progress, done or explicitly blocked")));
+});
+
+test("scoped plan and build phases can run with unrelated global blockers", (context) => {
+  const current = fixture();
+  context.after(current.cleanup);
+  const ledger = validLedger({ task_scoped_approvals: true, blockers: ["Unrelated Platform audit prerequisite"] });
+  ledger.tasks[0].status = "ready";
+  ledger.tasks[0].operation_ids = ["listContacts"];
+  ledger.tasks[0].approval = {
+    approved_by: "owner@example.com",
+    approved_at: "2026-09-14T12:00:00.000Z",
+    approval_source: "https://github.test/issues/1",
+  };
+  write(join(current.machine.workspace("crm", "Contacts"), "delivery-ledger.json"), `${JSON.stringify(ledger, null, 2)}\n`);
+
+  complete(current.machine, current.runId, "00-discovery", "module-discovery");
+  complete(current.machine, current.runId, "01-design", "module-design");
+  approve(current.machine, current.runId, "design");
+  complete(current.machine, current.runId, "01-visual-design", "module-visual-design");
+  approve(current.machine, current.runId, "visual_design");
+  complete(current.machine, current.runId, "02-domain", "domain-model");
+  complete(current.machine, current.runId, "03-access", "access-design");
+  complete(current.machine, current.runId, "04-api", "api-contracts");
+  complete(current.machine, current.runId, "05-sync", "sync-design");
+
+  const plan = current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "06-plan", skill: "module-plan" });
+  assert.deepEqual(plan.task_ids, ["CONTACTS-TASK-LIST"]);
+  const planOutput = "docs/implementation/crm/contacts/scoped-plan.md";
+  write(join(current.root, planOutput), "# Scoped plan\n");
+  current.machine.completePhase({
+    suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "06-plan",
+    data: { architecture_quality: "PASS", output_artifacts: [planOutput], validation: [{ command: "scoped plan validation", result: "passed" }] },
+  });
+
+  const build = current.machine.startPhase({ suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "07-build", skill: "module-build" });
+  assert.deepEqual(build.task_ids, ["CONTACTS-TASK-LIST"]);
+  ledger.tasks[0].status = "done";
+  ledger.tasks[0].evidence_refs = ["src/test/contact.test.ts"];
+  write(join(current.machine.workspace("crm", "Contacts"), "delivery-ledger.json"), `${JSON.stringify(ledger, null, 2)}\n`);
+  const buildOutput = "docs/implementation/crm/contacts/scoped-build.md";
+  write(join(current.root, buildOutput), "# Scoped build\n");
+  const checkpoint = current.machine.completePhase({
+    suite: "crm", moduleName: "Contacts", runId: current.runId, phaseId: "07-build",
+    data: { architecture_quality: "PASS", output_artifacts: [buildOutput], validation: [{ command: "scoped build validation", result: "passed" }] },
+  });
+  assert.deepEqual(checkpoint.task_ids, ["CONTACTS-TASK-LIST"]);
+  assert.equal(checkpoint.status, "completed");
 });
 
 test("ledger rejects task dependency cycles", (context) => {

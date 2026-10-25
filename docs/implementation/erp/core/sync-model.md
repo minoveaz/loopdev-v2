@@ -34,6 +34,15 @@ infrastructure, or authorize migration of real local data.
 | `SYNC-ERP-011` | Adapter selection is explicit runtime configuration (`local_demo` or `supabase`), never inferred from organization ID shape; missing/invalid configuration fails closed. | `confirmed` | User approved a local demo mode separate from Supabase; current proxy uses ID shape and must be replaced. |
 | `SYNC-ERP-012` | Category synchronization and legacy `categoryKey` migration wait for category scope, identity and lifecycle decisions. | `confirmed` | No category entity/store/table or migration exists. |
 
+## Identifier generation and authority
+
+The local adapter generates numeric internal keys and SKUs for newly created
+products and variants. Remote persistence generates them authoritatively in the
+database; direct-user requests cannot provide or change either value. Existing
+UUID primary keys remain stable. A future trusted channel integration may
+import an external SKU while preserving the LoopDev key/UUID and recording the
+SKU origin; no connector or offline replay is included in this release.
+
 ## Current storage and adapter boundaries
 
 | Concern | Current behavior | Sync implication |

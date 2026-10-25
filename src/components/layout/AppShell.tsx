@@ -101,7 +101,7 @@ export function AppShell() {
 
   return (
     <div className={cn(
-      "h-dvh w-full overflow-hidden bg-gradient-surface text-foreground",
+      "fixed inset-x-0 top-0 h-dvh w-full overflow-hidden bg-gradient-surface text-foreground",
     )}>
       <a
         href="#main-content"

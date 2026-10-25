@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import { validateLedgerFile } from "./delivery-ledger.mjs";
+import { validateLedger, validateLedgerFile } from "./delivery-ledger.mjs";
 
 const sha256 = (value) => `sha256:${createHash("sha256").update(value).digest("hex")}`;
 const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -161,6 +161,17 @@ export class DeliveryStateMachine {
     return typeof approval === "string" ? approval : approval?.status;
   }
 
+  scopedReadyTaskIds(suite, moduleName) {
+    const ledger = readJson(join(this.workspace(suite, moduleName), "delivery-ledger.json"));
+    if (ledger.task_scoped_approvals !== true || ledger.status === "approved") return [];
+    const errors = validateLedger(this.root, ledger, join(this.workspace(suite, moduleName), "delivery-ledger.json"));
+    if (errors.length) throw new Error(`Delivery ledger is invalid:\n${errors.join("\n")}`);
+    return ledger.tasks
+      .filter((task) => task.status === "ready" && task.approval && !(task.blocked_by ?? []).length
+        && (task.dependencies ?? []).every((dependency) => ledger.tasks.find((candidate) => candidate.id === dependency)?.status === "done"))
+      .map((task) => task.id);
+  }
+
   assertCanStart(manifest, checkpoints, suite, moduleName, phaseId, skill) {
     const phase = this.phaseById.get(phaseId);
     if (!phase) throw new Error(`Unknown phase: ${phaseId}`);
@@ -170,7 +181,14 @@ export class DeliveryStateMachine {
       const checkpoint = checkpoints.get(predecessor)?.checkpoint;
       if (checkpoint?.status !== "completed" || checkpoint.invalidated) throw new Error(`Phase ${phaseId} requires completed predecessor ${predecessor}`);
     }
-    if (phase.required_gate && this.approvalStatus(manifest, phase.required_gate) !== "approved") throw new Error(`Phase ${phaseId} requires approved gate ${phase.required_gate}`);
+    if (phase.required_gate && this.approvalStatus(manifest, phase.required_gate) !== "approved") {
+      const planTaskIds = checkpoints.get("06-plan")?.checkpoint.task_ids ?? [];
+      const readyTaskIds = this.scopedReadyTaskIds(suite, moduleName);
+      const scopedBuildApproved = phaseId === "07-build"
+        && planTaskIds.length > 0
+        && planTaskIds.every((taskId) => readyTaskIds.includes(taskId));
+      if (!scopedBuildApproved) throw new Error(`Phase ${phaseId} requires approved gate ${phase.required_gate}`);
+    }
     if (phaseId === "08-verify" || phaseId === "10-git") {
       const ledgerFile = join(this.workspace(suite, moduleName), "delivery-ledger.json");
       const stage = phaseId === "08-verify" ? "verification" : "release";
@@ -183,12 +201,25 @@ export class DeliveryStateMachine {
     const { file, manifest } = this.loadRun(suite, moduleName, runId);
     const checkpoints = this.checkpoints(suite, moduleName, runId);
     this.assertCanStart(manifest, checkpoints, suite, moduleName, phaseId, skill);
+    let taskIds = [];
+    if (phaseId === "06-plan") {
+      const ledger = readJson(join(this.workspace(suite, moduleName), "delivery-ledger.json"));
+      taskIds = ledger.status === "approved"
+        ? ledger.tasks.map((task) => task.id)
+        : this.scopedReadyTaskIds(suite, moduleName);
+    } else if (phaseId === "07-build") {
+      const ledger = readJson(join(this.workspace(suite, moduleName), "delivery-ledger.json"));
+      taskIds = this.approvalStatus(manifest, "plan") === "approved"
+        ? ledger.tasks.map((task) => task.id)
+        : [...(checkpoints.get("06-plan")?.checkpoint.task_ids ?? [])];
+    }
     const checkpoint = {
       schema_version: 1, run_id: runId, span_id: `${runId}:${phaseId}`, phase: phaseId, skill,
       parent_span_id: null, module: moduleName, status: "running", decision_status: "open",
       architecture_quality: "PENDING", attempt: manifest.attempt, started_at: this.now(), completed_at: null,
       input_fingerprint: manifest.input_fingerprint, environment: manifest.environment,
       input_artifacts: [], output_artifacts: [], decisions: [], actions: [], validation: [], requirements: [],
+      task_ids: taskIds,
       evidence: [], detected_failure: null, likely_failure_origin: null, next_handoff: null,
       approval_gate: { status: "not_required", approved_by: null, approved_at: null }, invalidated: false,
     };
@@ -240,13 +271,22 @@ export class DeliveryStateMachine {
         "09-review": "release",
         "10-git": "release",
       }[phaseId];
-      const ledgerErrors = validateLedgerFile(this.root, ledgerFile, { stage });
+      const taskIds = checkpoint.task_ids?.length ? checkpoint.task_ids : undefined;
+      const ledgerErrors = validateLedgerFile(this.root, ledgerFile, { stage, taskIds });
       if (ledgerErrors.length) throw new Error(`Delivery ledger is invalid:\n${ledgerErrors.join("\n")}`);
       const ledger = readJson(ledgerFile);
-      if (ledger.status === "blocked") throw new Error(`Delivery ledger is blocked: ${(ledger.blockers ?? []).join("; ")}`);
-      if (phaseId === "06-plan" && ledger.status !== "approved") throw new Error("Plan completion requires an approved delivery ledger");
-      if (phaseId === "07-build" && ledger.tasks.some((task) => task.status !== "done")) {
-        throw new Error("Build completion requires every ledger task to be done with evidence");
+      if (ledger.status === "blocked" && !taskIds?.length) throw new Error(`Delivery ledger is blocked: ${(ledger.blockers ?? []).join("; ")}`);
+      if (phaseId === "06-plan" && ledger.status !== "approved"
+        && !(ledger.task_scoped_approvals === true && taskIds?.length)) {
+        throw new Error("Plan completion requires an approved ledger or an approved task scope");
+      }
+      if (phaseId === "07-build") {
+        const requiredTasks = ledger.status === "approved" ? ledger.tasks : ledger.tasks.filter((task) => taskIds?.includes(task.id));
+        if (requiredTasks.some((task) => task.status !== "done")) {
+          throw new Error(ledger.status === "approved"
+            ? "Build completion requires every ledger task to be done with evidence"
+            : "Build completion requires every approved scoped task to be done with evidence");
+        }
       }
     }
     checkpoint.status = "completed";

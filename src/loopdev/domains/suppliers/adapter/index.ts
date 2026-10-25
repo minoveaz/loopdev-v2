@@ -1,7 +1,10 @@
 import { localSupplierAdapter } from "./local";
 import { localSupplierItemAdapter } from "./localItems";
+import { localSupplierP2PAdapter } from "./localP2P";
 import { supabaseSupplierAdapter } from "./supabase";
 import { supabaseSupplierItemAdapter } from "./supabaseItems";
+import { supabaseSupplierP2PAdapter } from "./supabaseP2P";
+import { SupplierAdapterError } from "../types";
 import type {
   SupplierAdapter,
   SupplierCreateInput,
@@ -12,89 +15,57 @@ import type {
   SupplierItemTermsInput,
   SupplierItemUpdateInput,
   SupplierListParams,
+  SupplierP2PAdapter,
   SupplierScopeParams,
   SupplierUpdateInput,
 } from "../types";
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const isRemoteOrganization = (organizationId: unknown): organizationId is string =>
-  typeof organizationId === "string" && UUID_PATTERN.test(organizationId);
+type AdapterMode = "local_demo" | "supabase";
 
-export const supplierAdapter: SupplierAdapter = {
-  listSuppliers(params: SupplierListParams) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierAdapter.listSuppliers(params)
-      : localSupplierAdapter.listSuppliers(params);
-  },
-  getSupplier(id: string, params: SupplierScopeParams) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierAdapter.getSupplier(id, params)
-      : localSupplierAdapter.getSupplier(id, params);
-  },
-  createSupplier(input: SupplierCreateInput) {
-    return isRemoteOrganization(input.organizationId)
-      ? supabaseSupplierAdapter.createSupplier(input)
-      : localSupplierAdapter.createSupplier(input);
-  },
-  updateSupplier(id: string, params: SupplierScopeParams, patch: SupplierUpdateInput) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierAdapter.updateSupplier(id, params, patch)
-      : localSupplierAdapter.updateSupplier(id, params, patch);
-  },
-  deactivateSupplier(id: string, params: SupplierScopeParams, expectedVersion: number) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierAdapter.deactivateSupplier(id, params, expectedVersion)
-      : localSupplierAdapter.deactivateSupplier(id, params, expectedVersion);
-  },
-  reactivateSupplier(id: string, params: SupplierScopeParams, expectedVersion: number) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierAdapter.reactivateSupplier(id, params, expectedVersion)
-      : localSupplierAdapter.reactivateSupplier(id, params, expectedVersion);
-  },
-};
+function configuredAdapterMode(): AdapterMode {
+  const mode = import.meta.env?.VITE_CATALOG_ADAPTER_MODE;
+  if (mode === "local_demo" || mode === "supabase") return mode;
+  throw new SupplierAdapterError(
+    "Supplier adapter mode must be explicitly configured as local_demo or supabase.",
+    "server-error",
+  );
+}
 
-export const supplierItemAdapter: SupplierItemAdapter = {
-  listSupplierItems(supplierId: string, params: SupplierItemListParams) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierItemAdapter.listSupplierItems(supplierId, params)
-      : localSupplierItemAdapter.listSupplierItems(supplierId, params);
-  },
-  addSupplierItem(input: SupplierItemCreateInput) {
-    return isRemoteOrganization(input.organizationId)
-      ? supabaseSupplierItemAdapter.addSupplierItem(input)
-      : localSupplierItemAdapter.addSupplierItem(input);
-  },
-  linkSupplierItemToProduct(id: string, params: SupplierScopeParams, input: SupplierItemLinkInput) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierItemAdapter.linkSupplierItemToProduct(id, params, input)
-      : localSupplierItemAdapter.linkSupplierItemToProduct(id, params, input);
-  },
-  startProductCreationFromSupplierItem(id: string, params: SupplierScopeParams) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierItemAdapter.startProductCreationFromSupplierItem(id, params)
-      : localSupplierItemAdapter.startProductCreationFromSupplierItem(id, params);
-  },
-  updateSupplierItem(id: string, params: SupplierScopeParams, patch: SupplierItemUpdateInput) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierItemAdapter.updateSupplierItem(id, params, patch)
-      : localSupplierItemAdapter.updateSupplierItem(id, params, patch);
-  },
-  updateSupplierItemTerms(id: string, params: SupplierScopeParams, patch: SupplierItemTermsInput) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierItemAdapter.updateSupplierItemTerms(id, params, patch)
-      : localSupplierItemAdapter.updateSupplierItemTerms(id, params, patch);
-  },
-  deactivateSupplierItem(id: string, params: SupplierScopeParams, expectedVersion: number) {
-    return isRemoteOrganization(params.organizationId)
-      ? supabaseSupplierItemAdapter.deactivateSupplierItem(id, params, expectedVersion)
-      : localSupplierItemAdapter.deactivateSupplierItem(id, params, expectedVersion);
-  },
-};
+function configuredProxy<T extends object>(selectAdapter: (mode: AdapterMode) => T): T {
+  return new Proxy({} as T, {
+    get(_target, property) {
+      if (property === "then" || typeof property !== "string") return undefined;
+      return (...args: unknown[]) => {
+        try {
+          const adapter = selectAdapter(configuredAdapterMode());
+          const method = Reflect.get(adapter, property);
+          if (typeof method !== "function") {
+            throw new SupplierAdapterError("The requested Supplier operation is unavailable.", "server-error");
+          }
+          return method.apply(adapter, args);
+        } catch (error) {
+          return Promise.reject(error);
+        }
+      };
+    },
+  });
+}
+
+export const supplierAdapter: SupplierAdapter = configuredProxy((mode) =>
+  mode === "supabase" ? supabaseSupplierAdapter : localSupplierAdapter);
+
+export const supplierItemAdapter: SupplierItemAdapter = configuredProxy((mode) =>
+  mode === "supabase" ? supabaseSupplierItemAdapter : localSupplierItemAdapter);
+
+export const supplierP2PAdapter: SupplierP2PAdapter = configuredProxy((mode) =>
+  mode === "supabase" ? supabaseSupplierP2PAdapter : localSupplierP2PAdapter);
 
 export { SupplierAdapterError } from "../types";
 export type {
   SupplierAdapter,
   SupplierItemAdapter,
+  SupplierP2PAdapter,
+  SupplierP2PSetup,
   SupplierItemCreateInput,
   SupplierItemLinkInput,
   SupplierItemListParams,

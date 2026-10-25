@@ -179,6 +179,7 @@ export type PlatformPermission =
   | "catalog.write"
   | "supplier.read"
   | "supplier.manage"
+  | "supplier.verify"
   | "crm.read"
   | "crm.write"
   | "crm.assign"

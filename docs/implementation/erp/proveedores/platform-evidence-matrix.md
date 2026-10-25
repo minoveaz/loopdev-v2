@@ -94,16 +94,16 @@ from this pilot.
 | --- | --- |
 | Repository path | `C:\Users\o010630\copilot-worktrees\loopdev-v2\o010630-upgraded-enigma` |
 | Checkout type | Branch worktree |
-| Branch and HEAD | `feature/erp-proveedores` / `ffd9bd16d01438f8dc3efd25be4b646861988476` |
-| Desktop URL/port | No Supplier runtime surface; app dev server history is not supplier evidence |
-| Mobile URL/port | No Supplier runtime surface; responsive Supplier behavior not yet implemented |
-| Validation timestamp | 2026-10-25 |
+| Branch and HEAD | `feature/erp-proveedores` / `57dd7360b0f91ee3f2813c5e94aba708678a6ecf` |
+| Desktop URL/port | `http://127.0.0.1:8080/app/erp/suppliers` — HTTP 200; protected sign-in page shown |
+| Mobile URL/port | Same responsive web route; authenticated and narrow-viewport behavior not verified |
+| Validation timestamp | 2026-10-25 19:28 +01:00 |
 
 ## Validation commands
 
-Validation evidence below corresponds to the approved non-tax task scope.
-Supplier operations are still unimplemented, so these statuses describe the
-repository baseline rather than runtime compliance.
+The commands below are historical baseline validation for the approved
+non-tax task scope. Current implementation evidence is in the build addendum;
+the baseline results do not establish current runtime compliance.
 
 | Command | Result | Evidence | Notes |
 | --- | --- | --- | --- |
@@ -122,12 +122,30 @@ repository baseline rather than runtime compliance.
 | `supplier_assortment.add_supplier_item` | Verified by adapter test | Add-and-link component test passes | Narrow viewport and touch behavior not verified | Not applicable | Not applicable | PARTIAL | ERP frontend | Verify authenticated flow on desktop and mobile web |
 | `supplier_assortment.link_supplier_item_to_product` | Verified for same-org Product/variant and cross-org denial | Product link component test passes | Narrow viewport and touch behavior not verified | Not applicable | Not applicable | PARTIAL | ERP/Catalog | Verify browser flow and permission/error states |
 | `supplier_assortment.start_product_creation_from_supplier_item` | Verified by handoff adapter test | Product handoff test passes | Narrow viewport and touch behavior not verified | Not applicable | Not applicable | PARTIAL | ERP frontend | Verify complete authenticated create-return-link journey |
-| `supplier_assortment.update_supplier_item` | Verified for update and version conflict | No focused renderer test | Not verified | Not applicable | Not applicable | PARTIAL | ERP frontend | Add interactive update coverage and responsive check |
-| `supplier_assortment.update_supplier_item_terms` | Verified by adapter test | No focused renderer test | Not verified | Not applicable | Not applicable | PARTIAL | ERP frontend | Add interactive terms coverage and responsive check |
-| `supplier_assortment.deactivate_supplier_item` | Verified by adapter test, including inactive-list behavior | No focused renderer test | Not verified | Not applicable | Not applicable | PARTIAL | ERP frontend | Add lifecycle/confirmation coverage on both web viewports |
+| `supplier_assortment.update_supplier_item` | Verified for update and version conflict | Targeted item edit is exercised by the Supplier page component test | Same responsive route; viewport not verified | Not applicable | Not applicable | PARTIAL | ERP frontend | Verify authenticated browser flow and narrow viewport |
+| `supplier_assortment.update_supplier_item_terms` | Verified by adapter test | Terms edit and rendered values are exercised by the Supplier page component test | Same responsive route; viewport not verified | Not applicable | Not applicable | PARTIAL | ERP frontend | Verify authenticated browser flow and narrow viewport |
+| `supplier_assortment.deactivate_supplier_item` | Verified by adapter test, including inactive-list behavior | Component test exercises activate/deactivate/reactivate on the targeted item | Same responsive route; viewport not verified | Not applicable | Not applicable | PARTIAL | ERP frontend | Verify authenticated lifecycle flow and narrow viewport |
+| `supplier_master.manage_contacts_addresses` | Local adapter versioning, validation and soft deactivation tests pass; remote RLS is not runtime-tested | Full-page form create/edit sections and validation are component-tested | Shared responsive form; narrow viewport is not browser-verified | Not applicable | Not applicable | PARTIAL | ERP frontend + Platform Access | Validate remote mutation, tenant isolation and mobile viewport after P2P migration deployment |
+| `supplier_master.manage_purchase_defaults` | Local adapter validation/versioning tests pass; remote persistence is not runtime-tested | Currency, terms, delivery address and Finance reference are saved in the full-page form test | Shared responsive form; narrow viewport is not browser-verified | Not applicable | Not applicable | PARTIAL | ERP frontend | Validate remote persistence and mobile viewport |
+| `supplier_master.manage_payee_instructions` | Protected Supabase adapter and audit migration are authored; remote mutation is not runtime-tested | Component verifies local demo never renders or stores bank values; protected form is present only in remote mode | Same protected responsive form; authenticated viewport is not verified | Not applicable | Not applicable | PARTIAL | ERP frontend + Finance | Apply and verify the P2P migration; confirm no sensitive read/edit/queue offline |
+| `supplier_master.verify_payee_account` | SQL enforces owner/admin and editor/verifier separation; database test is pending | Component tests expose verification only to a different eligible reviewer | Same shared responsive action; mobile browser is not verified | Not applicable | Not applicable | PARTIAL | ERP QA + Platform Access | Exercise actual RLS/RPC/audit behavior with authenticated roles |
+| `supplier_master.manage_tax_profile` | Blocked pending Finance/Legal field rules | Read-only pending-validation notice; no tax fields are invented | Same responsive notice | Not applicable | Not applicable | BLOCKED | Finance/Legal | Approve country-specific tax requirements before implementation |
+
+The Supplier foundation migration `20261025120000` is applied to
+`loopdev-platform-dev`. The migration history row, the three Supplier tables,
+RLS enablement, expected policy counts and `supplier.read`/`supplier.manage`
+permissions were verified through a read-only remote query. This confirms
+schema deployment, not authenticated application CRUD.
+
+The P2P migration `20261025181000` is authored but has not been linted against a
+PostgreSQL instance or applied remotely. The current dev-server URL responds
+with HTTP 200, but the browser is redirected to sign-in; authenticated visual,
+CRUD, maker-checker and narrow-viewport runtime checks are therefore still
+pending. Component tests cover the implemented responsive form and protected
+UI behavior, not remote database authorization.
 
 The local dev server responds on `http://127.0.0.1:8080`; direct navigation
-to `/app/erp/suppliers` presents the protected sign-in page. No credentials
-were available in this verification session, so runtime visual checks are
-explicitly unverified. Native iOS and Android remain excluded by approved
-scope; mobile web remains in scope and is not complete.
+to `/app/erp/suppliers` presents the protected sign-in page. No authenticated
+application session was available, so runtime visual and CRUD checks remain
+unverified. Native iOS and Android remain excluded by approved scope; mobile
+web remains in scope and is not complete.

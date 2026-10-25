@@ -247,6 +247,7 @@
         "SUPPLIER-ROUTE-AUDIT",
         "SUPPLIER-DIRECTORY-CONTRACT",
         "SUPPLIER-DIRECTORY-DOMAIN",
+        "SUPPLIER-DIRECTORY-FISCAL-DUPLICATE",
         "SUPPLIER-DIRECTORY-DESKTOP",
         "SUPPLIER-DIRECTORY-MOBILE",
         "SUPPLIER-DIRECTORY-TESTS"
@@ -282,13 +283,13 @@
       "platforms": {
         "desktop_web": {
           "required": true,
-          "surface": "Supplier P2P master settings (proposed)",
-          "route": null
+          "surface": "Supplier full-page P2P setup form",
+          "route": "/app/erp/suppliers?newSupplier=1"
         },
         "mobile_web": {
           "required": true,
-          "surface": "Responsive Supplier P2P master settings (proposed)",
-          "route": null
+          "surface": "Responsive Supplier full-page P2P setup form",
+          "route": "/app/erp/suppliers?newSupplier=1"
         },
         "ios": {
           "required": false,
@@ -302,23 +303,23 @@
         }
       },
       "parity": {
-        "domain": "not_tested",
-        "renderer": "not_tested",
-        "operations": "not_tested"
+        "domain": "partial",
+        "renderer": "partial",
+        "operations": "partial"
       },
       "operation_coverage": [
         {
           "id": "manage_supplier_contacts_addresses",
-          "desktop_web": "missing",
-          "mobile_web": "missing",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
           "ios": "not_applicable",
           "android": "not_applicable",
           "adaptation_ref": null
         },
         {
           "id": "manage_supplier_purchase_defaults",
-          "desktop_web": "missing",
-          "mobile_web": "missing",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
           "ios": "not_applicable",
           "android": "not_applicable",
           "adaptation_ref": null
@@ -333,16 +334,16 @@
         },
         {
           "id": "manage_supplier_payee_instructions",
-          "desktop_web": "missing",
-          "mobile_web": "missing",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
           "ios": "not_applicable",
           "android": "not_applicable",
           "adaptation_ref": null
         },
         {
           "id": "verify_supplier_payee_account",
-          "desktop_web": "missing",
-          "mobile_web": "missing",
+          "desktop_web": "implemented",
+          "mobile_web": "implemented",
           "ios": "not_applicable",
           "android": "not_applicable",
           "adaptation_ref": null
@@ -380,6 +381,7 @@
         "SUPPLIER-P2P-CONTRACT",
         "SUPPLIER-P2P-DOMAIN",
         "SUPPLIER-COUNTRY-TAX-RULES",
+        "SUPPLIER-P2P-TAX-PROFILE",
         "SUPPLIER-P2P-DESKTOP",
         "SUPPLIER-P2P-MOBILE",
         "SUPPLIER-P2P-TESTS"
@@ -810,7 +812,7 @@
       "id": "SUPPLIER-ROUTE-AUDIT",
       "phase": "07-build",
       "type": "audit",
-      "status": "ready",
+      "status": "done",
       "title": "Confirm Supplier route and sidebar placement",
       "requirement_ids": [
         "REQ-ERP-SUPPLIER-FOLLOWUP"
@@ -843,7 +845,11 @@
         "src/loopdev/navigation.ts"
       ],
       "blocked_by": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "src/test/erp/suppliers/supplier-route.test.tsx",
+        "scripts/smoke-routes.json",
+        "supabase/migrations/20261025120000_erp_suppliers_foundation.sql"
+      ],
       "approval": {
         "approved_by": "User",
         "approved_at": "2026-10-25T12:49:27.286Z",
@@ -902,7 +908,7 @@
       "id": "SUPPLIER-DIRECTORY-DOMAIN",
       "phase": "07-build",
       "type": "backend",
-      "status": "blocked",
+      "status": "in_progress",
       "title": "Implement Supplier directory domain and persistence ports",
       "requirement_ids": [
         "REQ-ERP-SUPPLIER-FOLLOWUP"
@@ -930,8 +936,8 @@
       "risk": "high",
       "evidence_level": "E3_COMPONENT",
       "acceptance_criteria": [
-        "Enforce org scope, expectedVersion, exact fiscal duplicate blocking and normalized-name warnings.",
-        "Support active/on_hold/inactive without hard delete; preserve historical facts."
+        "Enforce org scope, expectedVersion and normalized-name warnings.",
+        "Support active/on_hold/inactive without hard delete; preserve historical facts. Exact fiscal duplicate blocking remains in SUPPLIER-DIRECTORY-FISCAL-DUPLICATE."
       ],
       "validation": [
         {
@@ -943,15 +949,57 @@
         "src/loopdev/domains/suppliers/",
         "src/test/erp/suppliers/"
       ],
-      "blocked_by": [
-        "Exact fiscal duplicate blocking requires country-specific tax data rules; Finance/Legal validation is still pending."
-      ],
+      "blocked_by": [],
       "evidence_refs": [],
       "approval": {
         "approved_by": "User",
         "approved_at": "2026-10-25T12:49:27.286Z",
         "approval_source": "Explicit user approval in conversation on 2026-10-25: advance with tasks not blocked by country tax rules; route confirmed as ERP > Proveedores."
       }
+    },
+    {
+      "id": "SUPPLIER-DIRECTORY-FISCAL-DUPLICATE",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "blocked",
+      "title": "Implement jurisdiction-specific fiscal duplicate blocking",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-FOLLOWUP"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-DIRECTORY"
+      ],
+      "operation_ids": [
+        "create_supplier"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "SUPPLIER-COUNTRY-TAX-RULES"
+      ],
+      "owner": "ERP + Finance/Legal",
+      "risk": "high",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Block exact duplicate tax identifiers within the validated organization and jurisdiction scope.",
+        "Do not infer identifiers, formats or matching rules before Finance/Legal approval."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/suppliers.ts",
+        "src/loopdev/domains/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [
+        "Finance/Legal validation of country-specific tax identifiers and matching rules."
+      ],
+      "evidence_refs": []
     },
     {
       "id": "SUPPLIER-DIRECTORY-DESKTOP",
@@ -1166,7 +1214,7 @@
       "id": "SUPPLIER-P2P-DOMAIN",
       "phase": "07-build",
       "type": "backend",
-      "status": "blocked",
+      "status": "done",
       "title": "Implement Supplier P2P master domain",
       "requirement_ids": [
         "REQ-ERP-SUPPLIER-P2P-MASTER"
@@ -1177,7 +1225,6 @@
       "operation_ids": [
         "manage_supplier_contacts_addresses",
         "manage_supplier_purchase_defaults",
-        "manage_supplier_tax_profile",
         "manage_supplier_payee_instructions",
         "verify_supplier_payee_account"
       ],
@@ -1186,14 +1233,15 @@
       ],
       "dependencies": [
         "SUPPLIER-P2P-CONTRACT",
-        "SUPPLIER-COUNTRY-TAX-RULES"
+        "SUPPLIER-MANDATORY-AUDITS"
       ],
       "owner": "ERP + Finance",
       "risk": "critical",
       "evidence_level": "E3_COMPONENT",
       "acceptance_criteria": [
         "Enforce owner/admin-only maker-checker verification and revoke verification on material account change.",
-        "Protect real tax/bank values server-side and require immutable audit for mutations."
+        "Persist contacts, addresses, purchasing defaults, finance references and payee instructions with organization scope, optimistic versioning and immutable audit.",
+        "Protect real bank values server-side; keep jurisdiction-specific tax profile work in SUPPLIER-P2P-TAX-PROFILE."
       ],
       "validation": [
         {
@@ -1205,10 +1253,18 @@
         "src/loopdev/domains/suppliers/",
         "src/test/erp/suppliers/"
       ],
-      "blocked_by": [
-        "SUPPLIER-COUNTRY-TAX-RULES remains blocked pending Finance/Legal validation"
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/domains/suppliers/adapter/localP2P.ts",
+        "src/loopdev/domains/suppliers/adapter/supabaseP2P.ts",
+        "supabase/migrations/20261025181000_erp_suppliers_p2p_master.sql",
+        "src/test/erp/suppliers/supplier-p2p-adapter.test.ts"
       ],
-      "evidence_refs": []
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T19:34:30.692+01:00",
+        "approval_source": "User explicitly requested development of the previously agreed Supplier scope. Finance/Legal tax-profile rules remain excluded until validated; implement the approved non-tax P2P master and protected payee-verification flow."
+      }
     },
     {
       "id": "SUPPLIER-COUNTRY-TAX-RULES",
@@ -1252,10 +1308,54 @@
       "evidence_refs": []
     },
     {
+      "id": "SUPPLIER-P2P-TAX-PROFILE",
+      "phase": "07-build",
+      "type": "backend",
+      "status": "blocked",
+      "title": "Implement validated Supplier tax profiles",
+      "requirement_ids": [
+        "REQ-ERP-SUPPLIER-P2P-MASTER"
+      ],
+      "capability_ids": [
+        "CAP-ERP-SUPPLIER-P2P-SETUP"
+      ],
+      "operation_ids": [
+        "manage_supplier_tax_profile"
+      ],
+      "platforms": [
+        "shared"
+      ],
+      "dependencies": [
+        "SUPPLIER-COUNTRY-TAX-RULES"
+      ],
+      "owner": "ERP + Finance/Legal",
+      "risk": "critical",
+      "evidence_level": "E2_UNIT",
+      "acceptance_criteria": [
+        "Implement only tax identifiers, formats, conditional fields and duplicate rules approved by Finance/Legal for Spain, United States and Colombia.",
+        "Protect real tax values and audit changes without recording their values."
+      ],
+      "validation": [
+        {
+          "command": "npm run test -- src/test/erp/suppliers",
+          "required": true
+        }
+      ],
+      "files": [
+        "packages/contracts/src/suppliers.ts",
+        "src/loopdev/domains/suppliers/",
+        "src/test/erp/suppliers/"
+      ],
+      "blocked_by": [
+        "SUPPLIER-COUNTRY-TAX-RULES must be completed first."
+      ],
+      "evidence_refs": []
+    },
+    {
       "id": "SUPPLIER-P2P-DESKTOP",
       "phase": "07-build",
       "type": "desktop_renderer",
-      "status": "blocked",
+      "status": "in_progress",
       "title": "Build Supplier P2P setup desktop web",
       "requirement_ids": [
         "REQ-ERP-SUPPLIER-P2P-MASTER"
@@ -1266,7 +1366,6 @@
       "operation_ids": [
         "manage_supplier_contacts_addresses",
         "manage_supplier_purchase_defaults",
-        "manage_supplier_tax_profile",
         "manage_supplier_payee_instructions",
         "verify_supplier_payee_account"
       ],
@@ -1295,16 +1394,24 @@
         "src/loopdev/pages/erp/suppliers/",
         "src/test/erp/suppliers/"
       ],
-      "blocked_by": [
-        "SUPPLIER-P2P-DOMAIN is blocked by country tax rules"
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/erp/suppliers/SupplierP2PForm.tsx",
+        "src/test/erp/suppliers/supplier-p2p-form.test.tsx",
+        "src/test/erp/suppliers/supplier-p2p-protected-ui.test.tsx",
+        "src/test/erp/suppliers/suppliers-page.test.tsx"
       ],
-      "evidence_refs": []
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T19:34:30.692+01:00",
+        "approval_source": "User explicitly requested the previously agreed Supplier scope; implement the approved non-tax P2P sections while Finance/Legal tax-profile work remains blocked."
+      }
     },
     {
       "id": "SUPPLIER-P2P-MOBILE",
       "phase": "07-build",
       "type": "mobile_renderer",
-      "status": "blocked",
+      "status": "in_progress",
       "title": "Build Supplier P2P setup mobile web",
       "requirement_ids": [
         "REQ-ERP-SUPPLIER-P2P-MASTER"
@@ -1315,7 +1422,6 @@
       "operation_ids": [
         "manage_supplier_contacts_addresses",
         "manage_supplier_purchase_defaults",
-        "manage_supplier_tax_profile",
         "manage_supplier_payee_instructions",
         "verify_supplier_payee_account"
       ],
@@ -1344,16 +1450,24 @@
         "src/loopdev/pages/erp/suppliers/",
         "src/test/erp/suppliers/"
       ],
-      "blocked_by": [
-        "SUPPLIER-P2P-DOMAIN is blocked by country tax rules"
+      "blocked_by": [],
+      "evidence_refs": [
+        "src/loopdev/pages/erp/suppliers/SupplierP2PForm.tsx",
+        "src/test/erp/suppliers/supplier-p2p-form.test.tsx",
+        "src/test/erp/suppliers/supplier-p2p-protected-ui.test.tsx",
+        "docs/implementation/erp/proveedores/platform-evidence-matrix.md"
       ],
-      "evidence_refs": []
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T19:34:30.692+01:00",
+        "approval_source": "User explicitly requested the previously agreed Supplier scope; preserve desktop/mobile parity for approved non-tax P2P operations."
+      }
     },
     {
       "id": "SUPPLIER-P2P-TESTS",
       "phase": "07-build",
       "type": "test",
-      "status": "blocked",
+      "status": "pending",
       "title": "Verify Supplier P2P access and verification",
       "requirement_ids": [
         "REQ-ERP-SUPPLIER-P2P-MASTER"
@@ -1364,7 +1478,6 @@
       "operation_ids": [
         "manage_supplier_contacts_addresses",
         "manage_supplier_purchase_defaults",
-        "manage_supplier_tax_profile",
         "manage_supplier_payee_instructions",
         "verify_supplier_payee_account"
       ],
@@ -1392,10 +1505,13 @@
       "files": [
         "src/test/erp/suppliers/"
       ],
-      "blocked_by": [
-        "SUPPLIER-P2P-DESKTOP and SUPPLIER-P2P-MOBILE are blocked by country tax rules"
-      ],
-      "evidence_refs": []
+      "blocked_by": [],
+      "evidence_refs": [],
+      "approval": {
+        "approved_by": "User",
+        "approved_at": "2026-10-25T19:34:30.692+01:00",
+        "approval_source": "User explicitly requested the previously agreed Supplier scope; tests cover approved non-tax P2P data and protected payee verification, not unvalidated tax rules."
+      }
     },
     {
       "id": "SUPPLIER-ASSORTMENT-CONTRACT",

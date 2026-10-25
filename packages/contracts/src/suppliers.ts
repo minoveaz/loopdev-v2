@@ -41,6 +41,8 @@ export type SupplierOperation = (typeof supplierOperations)[number];
 export type SupplierKind = "organization" | "individual";
 export type SupplierStatus = "active" | "on_hold" | "inactive";
 export type SupplierP2POperation = (typeof supplierP2POperations)[number];
+export type SupplierContactRole = "purchasing" | "receiving" | "ap_invoices" | "remittance";
+export type SupplierAddressPurpose = "legal" | "billing" | "order" | "ship_from" | "remit_to" | "returns";
 
 export interface SupplierRecord {
   id: string;
@@ -74,19 +76,24 @@ export interface SupplierContactSummary {
   name: string;
   email: string | null;
   phone: string | null;
-  role: string | null;
+  role: SupplierContactRole | null;
   isPrimary: boolean;
+  status: "active" | "inactive";
+  version: number;
 }
 
 export interface SupplierAddress {
   id: string;
   label: string;
+  purpose: SupplierAddressPurpose;
   countryCode: string;
   region: string | null;
   locality: string | null;
   postalCode: string | null;
   addressLines: string[];
   isPrimary: boolean;
+  status: "active" | "inactive";
+  version: number;
 }
 
 export interface SupplierPurchaseDefaults {
@@ -94,6 +101,7 @@ export interface SupplierPurchaseDefaults {
   paymentTermCode: string | null;
   deliveryTermCode: string | null;
   deliveryAddressId: string | null;
+  financeReference: string | null;
 }
 
 export type SupplierTaxProfileStatus =
@@ -127,11 +135,68 @@ export interface SupplierP2PSummary {
   payeeInstructions: SupplierPayeeInstructionSummary[];
 }
 
+export interface SupplierContactInput {
+  id?: string;
+  expectedVersion?: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  role: SupplierContactRole;
+  isPrimary: boolean;
+}
+
+export interface SupplierAddressInput {
+  id?: string;
+  expectedVersion?: number;
+  label: string;
+  purpose: SupplierAddressPurpose;
+  countryCode: string;
+  region: string | null;
+  locality: string | null;
+  postalCode: string | null;
+  addressLines: string[];
+  isPrimary: boolean;
+}
+
+export interface SupplierP2PSetupInput {
+  expectedVersion: number;
+  contacts: SupplierContactInput[];
+  addresses: SupplierAddressInput[];
+  purchaseDefaults: SupplierPurchaseDefaults;
+}
+
+export interface SupplierPayeeInstruction {
+  id: string;
+  beneficiaryName: string;
+  bankCountryCode: string;
+  bankName: string | null;
+  accountIdentifier: string;
+  currency: string;
+  status: "pending_review" | "verified" | "rejected" | "inactive";
+  rejectionReason: string | null;
+  updatedBy: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  verifiedBy: string | null;
+  verifiedAt: string | null;
+  version: number;
+}
+
+export interface SupplierPayeeInstructionInput {
+  beneficiaryName: string;
+  bankCountryCode: string;
+  bankName: string | null;
+  accountIdentifier: string;
+  currency: string;
+  expectedVersion?: number;
+}
+
 export type SupplierP2PErrorCode =
   | "forbidden"
   | "conflict"
   | "invalid-input"
   | "verification-required"
+  | "secure-storage-required"
   | "server-error";
 
 export interface SupplierItemRecord {

@@ -11,7 +11,8 @@
       { "path": "/app/sales-crm/contacts", "surface": "Contacts list" },
       { "path": "/app/sales-crm/contacts/:contactId", "example": "/app/sales-crm/contacts/crm_cust_1", "surface": "Customer 360", "deep_link": true },
       { "path": "/app/sales-crm/contacts/:contactId/activity", "example": "/app/sales-crm/contacts/crm_cust_1/activity", "surface": "Contact activity", "deep_link": true },
-      { "path": "/app/sales-crm/pipeline", "surface": "Pipeline" }
+      { "path": "/app/sales-crm/pipeline", "surface": "Pipeline" },
+      { "path": "/app/erp/suppliers", "surface": "Supplier directory", "deep_link": true }
     ],
     "checks": [
       { "kind": "route", "evidence": "AppRoutes.tsx legacy redirect and LoopdevRoutes.tsx canonical registration" },

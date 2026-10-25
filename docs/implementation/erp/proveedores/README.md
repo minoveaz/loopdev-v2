@@ -15,20 +15,20 @@
 - View/state and operation matrix: `view-state-matrix.md`
 - Styled review wireframes: `wireframes/`
 - Requirement evidence: `requirement-evidence-matrix.md`
-- Implementation plan template: `implementation-plan.md` (owned by `module-plan`; not started)
-- Ledger: `delivery-ledger.json` (`draft`; no implementation tasks authorized)
+- Implementation plan: `implementation-plan.md` (owned by `module-plan`; approved task-scoped build)
+- Ledger: `delivery-ledger.json` (`draft` globally; selected non-tax tasks have task-scoped approval)
 
 ## Current status
 
 | Field | Value |
 |---|---|
-| Status | Approved defaults are recorded; plan is in progress; no production implementation |
-| Current phase | `06-plan` on attempt 7; jurisdiction list and access/link decisions captured |
+| Status | `in_progress` — approved non-tax P2P implementation; remote/runtime verification remains open |
+| Current phase | `07-build` on attempt 9; migration and authenticated verification remain |
 | Current issue | none |
 | Branch | `feature/erp-proveedores` |
-| Commit | Base `ffd9bd16d01438f8dc3efd25be4b646861988476`; working tree modified |
+| Commit | Pending delivery commit |
 | Pull request | none |
-| Last evidence | User approved visual direction and prebuild defaults; no Supplier runtime behavior |
+| Last evidence | Supplier tests (9 files, 23 tests), typecheck, delivery-ledger and module-run validation passed; authenticated runtime not verified |
 
 ## Scope direction
 
@@ -60,9 +60,11 @@
 | Phase | Status | Checkpoint | Evidence |
 |---|---|---|---|
 | 00-discovery | Completed as `partial` on attempt 6 | `runs/MOD-PROVEEDORES-20261025-001/00-discovery.json` | P2P field inventory, broad tax/bank visibility decision, updated benchmark and downstream transaction boundary |
-| 01-design | Completed as `partial` on attempt 7 | `runs/MOD-PROVEEDORES-20261025-001/01-design.json` | Architecture, capability semantics, acceptance matrix and open decisions; no build authorization |
+| 01-design | Completed as `partial` on attempt 7 | `runs/MOD-PROVEEDORES-20261025-001/01-design.json` | Architecture, capability semantics, acceptance matrix and open decisions |
 | 01-visual-design | Approved | `runs/MOD-PROVEEDORES-20261025-001/01-visual-design.json` | Visual source plus user-approved domain/access/persistence defaults |
-| 06-plan | In progress | `runs/MOD-PROVEEDORES-20261025-001/06-plan.json` | Build tasks and accountable remaining validations are being prepared; no build authorization |
+| 06-plan | Completed | `runs/MOD-PROVEEDORES-20261025-001/06-plan.json` | Approved task-scoped implementation plan |
+| 07-build | In progress | `runs/MOD-PROVEEDORES-20261025-001/07-build.json` | Non-tax P2P domain and responsive full-page setup implemented; remote migration, authenticated runtime and operation verification remain |
+| 10-git | Pending | `runs/MOD-PROVEEDORES-20261025-001/10-git.json` | Commit and remote branch evidence to be recorded |
 
 ## Decisions and blockers
 

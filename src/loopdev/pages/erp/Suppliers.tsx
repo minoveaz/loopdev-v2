@@ -13,16 +13,10 @@ import { supplierAdapter, supplierItemAdapter } from "@/loopdev/domains/supplier
 import { isSupplierItemPurchasable } from "../../../../packages/contracts/src/suppliers";
 import { catalogAdapter } from "@/loopdev/domains/catalog/adapter";
 import type { CatalogItem, CatalogVariant } from "@/loopdev/domains/catalog";
-import { SupplierAdapterError } from "@/loopdev/domains/suppliers";
-import type { SupplierItemRecord, SupplierKind, SupplierRecord, SupplierStatus } from "@/loopdev/domains/suppliers";
+import type { SupplierItemRecord, SupplierRecord, SupplierStatus } from "@/loopdev/domains/suppliers";
+import { SupplierP2PForm } from "./suppliers/SupplierP2PForm";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { useTenantContext } from "@/hooks/use-tenant-context";
-
-type SupplierForm = {
-  kind: SupplierKind;
-  legalName: string;
-  countryCode: string;
-};
 
 type SupplierItemForm = {
   supplierItemCode: string;
@@ -35,7 +29,6 @@ type SupplierItemForm = {
   leadTimeDays: string;
 };
 
-const emptyForm = (): SupplierForm => ({ kind: "organization", legalName: "", countryCode: "ES" });
 const emptyItemForm = (): SupplierItemForm => ({
   supplierItemCode: "",
   name: "",
@@ -62,10 +55,9 @@ export default function Suppliers() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [form, setForm] = useState<SupplierForm>(emptyForm);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(() =>
+    searchParams.get("newSupplier") === "1" || Boolean(searchParams.get("editSupplier")));
+  const [editingSupplier, setEditingSupplier] = useState<SupplierRecord | null>(null);
   const [selected, setSelected] = useState<SupplierRecord | null>(null);
   const [supplierItems, setSupplierItems] = useState<SupplierItemRecord[]>([]);
   const [catalogProducts, setCatalogProducts] = useState<CatalogItem[]>([]);
@@ -105,6 +97,32 @@ export default function Suppliers() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useEffect(() => {
+    const editSupplierId = searchParams.get("editSupplier");
+    if (searchParams.get("newSupplier") === "1") {
+      setEditingSupplier(null);
+      setFormOpen(true);
+      return;
+    }
+    if (editSupplierId) {
+      const target = suppliers.find((supplier) => supplier.id === editSupplierId);
+      if (target) {
+        setEditingSupplier(target);
+        setSelected(target);
+        setFormOpen(true);
+      } else if (!loading) {
+        setActionError("The supplier selected for editing is unavailable.");
+        setFormOpen(false);
+        const next = new URLSearchParams(searchParams);
+        next.delete("editSupplier");
+        setSearchParams(next, { replace: true });
+      }
+      return;
+    }
+    setFormOpen(false);
+    setEditingSupplier(null);
+  }, [loading, searchParams, setSearchParams, suppliers]);
 
   const reloadSupplierItems = useCallback(async (supplierId: string) => {
     if (!activeOrganization?.id) return;
@@ -193,33 +211,6 @@ export default function Suppliers() {
         .toLocaleLowerCase()
         .includes(value));
   }, [query, suppliers]);
-
-  const saveSupplier = async () => {
-    if (!activeOrganization?.id) return;
-    if (!form.legalName.trim()) {
-      setFormError("Enter the supplier's legal name.");
-      return;
-    }
-    setSaving(true);
-    setFormError(null);
-    try {
-      await supplierAdapter.createSupplier({
-        organizationId: activeOrganization.id,
-        kind: form.kind,
-        legalName: form.legalName,
-        countryCode: form.countryCode,
-      });
-      setFormOpen(false);
-      setForm(emptyForm());
-      await reload();
-    } catch (cause) {
-      setFormError(cause instanceof SupplierAdapterError && cause.code === "forbidden"
-        ? "You do not have permission to create suppliers."
-        : cause instanceof Error ? cause.message : "Unable to create supplier.");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const changeStatus = async (supplier: SupplierRecord) => {
     if (!activeOrganization?.id) return;
@@ -376,6 +367,44 @@ export default function Suppliers() {
     }
   };
 
+  const updateSupplierFormParams = (mode?: "create" | "edit", supplierId?: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("newSupplier");
+    next.delete("editSupplier");
+    if (mode === "create") next.set("newSupplier", "1");
+    if (mode === "edit" && supplierId) next.set("editSupplier", supplierId);
+    setSearchParams(next);
+  };
+
+  const openNewSupplierForm = () => {
+    setEditingSupplier(null);
+    setFormOpen(true);
+    updateSupplierFormParams("create");
+  };
+
+  const openEditSupplierForm = (supplier: SupplierRecord) => {
+    setEditingSupplier(supplier);
+    setFormOpen(true);
+    updateSupplierFormParams("edit", supplier.id);
+  };
+
+  const exitSupplierForm = (savedSupplier?: SupplierRecord) => {
+    setFormOpen(false);
+    if (savedSupplier) setSelected(savedSupplier);
+    else if (editingSupplier) setSelected(editingSupplier);
+    updateSupplierFormParams();
+  };
+
+  const handleSupplierSaved = (supplier: SupplierRecord) => {
+    setSuppliers((current) => {
+      const exists = current.some((item) => item.id === supplier.id);
+      return exists
+        ? current.map((item) => item.id === supplier.id ? supplier : item)
+        : [...current, supplier];
+    });
+    setSelected((current) => current?.id === supplier.id ? supplier : current);
+  };
+
   const columns: DataTableColumn<SupplierRecord>[] = [
     {
       key: "legalName",
@@ -402,13 +431,34 @@ export default function Suppliers() {
     { label: "Reactivate", icon: RotateCcw, onClick: (supplier) => void reactivate(supplier), hidden: (supplier) => supplier.status !== "inactive" },
   ];
 
+  if (formOpen) {
+    const requestedEditId = searchParams.get("editSupplier");
+    if (requestedEditId && editingSupplier?.id !== requestedEditId) {
+      return <PageContainer width="wide"><LoadingState label="Loading supplier" /></PageContainer>;
+    }
+    return (
+      <PageContainer width="wide">
+        {activeOrganization?.id ? (
+          <SupplierP2PForm
+            organizationId={activeOrganization.id}
+            supplier={editingSupplier}
+            onExit={exitSupplierForm}
+            onSaved={handleSupplierSaved}
+          />
+        ) : (
+          <EmptyState title="Organization required" description="Select an organization before creating or editing a supplier." />
+        )}
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer width="wide">
       <PageHeader
         title="Suppliers"
         description="Manage commercial suppliers separately from CRM contacts and the product catalog."
         breadcrumbs={trail.length ? trail : [{ label: "ERP" }, { label: "Suppliers" }]}
-        actions={<Button onClick={() => { setForm(emptyForm()); setFormError(null); setFormOpen(true); }}><Plus className="me-2 h-4 w-4" />New supplier</Button>}
+        actions={<Button onClick={openNewSupplierForm}><Plus className="me-2 h-4 w-4" />New supplier</Button>}
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -460,49 +510,6 @@ export default function Suppliers() {
         </>
       )}
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>New supplier</DialogTitle>
-            <DialogDescription>Tax profile fields will be added after the country rules are validated.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="supplier-legal-name">Legal name</Label>
-              <Input id="supplier-legal-name" autoComplete="organization" value={form.legalName} onChange={(event) => setForm((current) => ({ ...current, legalName: event.target.value }))} />
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="supplier-kind">Supplier type</Label>
-                <Select value={form.kind} onValueChange={(value: SupplierKind) => setForm((current) => ({ ...current, kind: value }))}>
-                  <SelectTrigger id="supplier-kind"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="organization">Organization</SelectItem>
-                    <SelectItem value="individual">Individual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="supplier-country">Country</Label>
-                <Select value={form.countryCode} onValueChange={(value) => setForm((current) => ({ ...current, countryCode: value }))}>
-                  <SelectTrigger id="supplier-country"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ES">Spain</SelectItem>
-                    <SelectItem value="US">United States</SelectItem>
-                    <SelectItem value="CO">Colombia</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {formError && <p role="alert" className="text-sm text-destructive">{formError}</p>}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
-            <Button onClick={() => void saveSupplier()} disabled={saving}>{saving ? "Saving…" : "Create supplier"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={selected !== null && !itemDialogOpen && linkingItem === null} onOpenChange={(open) => { if (!open) setSelected(null); }}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
           <DialogHeader>
@@ -511,6 +518,9 @@ export default function Suppliers() {
           </DialogHeader>
           {selected && (
             <div className="space-y-6">
+              <div className="flex justify-end">
+                <Button size="sm" variant="outline" onClick={() => openEditSupplierForm(selected)}>Edit supplier master</Button>
+              </div>
               <dl className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                 <div><dt className="text-muted-foreground">Type</dt><dd className="mt-1 font-medium">{selected.kind === "organization" ? "Organization" : "Individual"}</dd></div>
                 <div><dt className="text-muted-foreground">Country</dt><dd className="mt-1 font-medium">{selected.countryCode}</dd></div>

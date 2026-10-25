@@ -9,7 +9,7 @@
   "status": "running",
   "decision_status": "open",
   "architecture_quality": "PENDING",
-  "attempt": 7,
+  "attempt": 9,
   "started_at": "2026-10-25T12:58:12.545Z",
   "completed_at": null,
   "input_fingerprint": "sha256:14bd85f96c59bd86628f1c4e5602ec7c2e0408490346bdd3d3d1242ffc7897a3",
@@ -18,7 +18,7 @@
     "checkout_type": "branch",
     "branch": "feature/erp-proveedores",
     "base_branch": null,
-    "head_commit": "ffd9bd16d01438f8dc3efd25be4b646861988476",
+    "head_commit": "57dd7360b0f91ee3f2813c5e94aba708678a6ecf",
     "working_tree": "modified",
     "runtime_url": "http://127.0.0.1:8080/app/erp/suppliers",
     "runtime_port": 8080
@@ -27,7 +27,34 @@
   "output_artifacts": [
     "src/loopdev/domains/suppliers/adapter/localItems.ts",
     "src/loopdev/domains/suppliers/adapter/supabaseItems.ts",
-    "src/test/erp/suppliers/supplier-items.test.ts"
+    "src/test/erp/suppliers/supplier-items.test.ts",
+    "supabase/migrations/20261025120000_erp_suppliers_foundation.sql",
+    "supabase/migrations/20261025173000_erp_product_write_audit_controls.sql",
+    "supabase/migrations/20261025174000_erp_products_operation_rls.sql",
+    "src/loopdev/domains/suppliers/adapter/localP2P.ts",
+    "src/loopdev/domains/suppliers/adapter/supabaseP2P.ts",
+    "src/loopdev/domains/suppliers/adapter/index.ts",
+    "src/loopdev/domains/suppliers/data/localSupplierP2P.ts",
+    "src/loopdev/domains/suppliers/rules.ts",
+    "src/loopdev/domains/suppliers/types.ts",
+    "src/loopdev/domains/platform/adapter/local.ts",
+    "src/loopdev/domains/platform/types.ts",
+    "packages/contracts/src/suppliers.ts",
+    "src/loopdev/pages/erp/Suppliers.tsx",
+    "src/loopdev/pages/erp/suppliers/SupplierP2PForm.tsx",
+    "src/test/erp/suppliers/supplier-adapter-mode.test.ts",
+    "src/test/erp/suppliers/supplier-p2p-adapter.test.ts",
+    "src/test/erp/suppliers/supplier-p2p-form.test.tsx",
+    "src/test/erp/suppliers/supplier-p2p-protected-ui.test.tsx",
+    "src/test/erp/suppliers/suppliers-page.test.tsx",
+    "src/test/erp/suppliers/supplier-route.test.tsx",
+    "scripts/smoke-routes.json",
+    ".env.example",
+    "supabase/migrations/20261025181000_erp_suppliers_p2p_master.sql",
+    "docs/implementation/erp/proveedores/README.md",
+    "docs/implementation/erp/proveedores/delivery-ledger.json",
+    "docs/implementation/erp/proveedores/platform-evidence-matrix.md",
+    "docs/implementation/erp/proveedores/runs/MOD-PROVEEDORES-20261025-001/run.json"
   ],
   "decisions": [],
   "actions": [
@@ -36,7 +63,21 @@
     "Kept the dev server running; the authenticated Supplier route redirects to sign-in, so browser visual checks could not proceed without a user session.",
     "Authenticated the Supabase CLI and linked the checkout to loopdev-platform-dev after user confirmation.",
     "Fetched origin/develop and confirmed it also lacks the three remote-only migration definitions.",
-    "Did not apply the Supplier migration: the remote migration history contains three versions absent from this checkout and origin/develop, and the CLI dry run stopped on that divergence."
+    "The initial migration dry run stopped on remote migration history versions that were not represented locally; no database changes were made during that failed attempt.",
+    "Selected Supplier adapters with the shared Catalog adapter-mode setting and verified that remote mode does not silently fall back to local storage.",
+    "Registered the Supplier deep link in the desktop smoke manifest and added protected-route/back-navigation coverage.",
+    "Extended the Supplier item component test to edit terms and exercise activation, deactivation and reactivation on the targeted item card.",
+    "Verified the local Supplier URL responds with HTTP 200; the browser renders sign-in, so authenticated Supabase behavior remains unverified.",
+    "Confirmed the three previously reported remote migration versions already have matching local files; the earlier checkpoint incorrectly reported them missing.",
+    "Restored the exact applied SQL recorded remotely for 20261025173000 and 20261025174000, which were additional remote history versions without local files.",
+    "Confirmed the migration list now matches local and remote history except for the pending Supplier migration; retrieved the linked database password from the local clipboard without displaying it.",
+    "Ran a dry run with --include-all; it proposed only 20261025120000_erp_suppliers_foundation.sql.",
+    "Applied the Supplier foundation migration to loopdev-platform-dev with --include-all and removed SUPABASE_DB_PASSWORD from the terminal process afterward.",
+    "Implemented the Supplier full-page setup form with identity, contacts, addresses, purchasing defaults, Finance reference, tax-rule deferral and protected payee instructions.",
+    "Added local setup versioning, soft-deactivation and child-version conflict tests; kept bank details unavailable in local demo mode.",
+    "Added protected UI tests for independent payee verification and hiding sensitive values when the browser goes offline.",
+    "The P2P migration 20261025181000 is authored but has not been linted against PostgreSQL or applied remotely.",
+    "Browser route returned HTTP 200 and redirected to sign-in; no authenticated visual or narrow-viewport runtime evidence is available."
   ],
   "validation": [
     {
@@ -93,6 +134,106 @@
       "command": "git fetch origin develop",
       "result": "passed",
       "evidence": "Fetched the latest develop commit; the three remote-only migration files are absent from its supabase/migrations directory."
+    },
+    {
+      "command": "npm run test -- src/test/erp/suppliers --reporter=dot",
+      "result": "passed",
+      "evidence": "6 Supplier test files passed; 15 tests passed."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "All 9 delivery ledgers validated."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "Application and Node TypeScript checks completed successfully."
+    },
+    {
+      "command": "npm run smoke:routes",
+      "result": "passed",
+      "evidence": "11 desktop and 6 mobile routes registered; this does not establish authenticated runtime behavior."
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "evidence": "Production Vite build completed with exit code 0."
+    },
+    {
+      "command": "GET http://127.0.0.1:8080/app/erp/suppliers and browser preview",
+      "result": "partial",
+      "evidence": "HTTP 200 and protected sign-in page confirmed; no authenticated session was available."
+    },
+    {
+      "command": "npx supabase migration list --linked",
+      "result": "passed",
+      "evidence": "Local and remote migration versions match after restoring 20261025173000_erp_product_write_audit_controls.sql and 20261025174000_erp_products_operation_rls.sql; 20261025120000 remains pending."
+    },
+    {
+      "command": "npx supabase db query --linked \"select version from supabase_migrations.schema_migrations where version >= '20261025120000' order by version;\"",
+      "result": "passed",
+      "evidence": "Read-only query confirmed the three previously identified remote versions plus 20261025173000 and 20261025174000 are recorded as applied."
+    },
+    {
+      "command": "npx supabase db push --dry-run --linked",
+      "result": "blocked",
+      "evidence": "The first PowerShell secure prompt captured only one character; no migration was applied by this failed attempt."
+    },
+    {
+      "command": "npx supabase db push --dry-run --linked --include-all",
+      "result": "passed",
+      "evidence": "Supabase reported only 20261025120000_erp_suppliers_foundation.sql would be pushed."
+    },
+    {
+      "command": "npx supabase db push --linked --include-all",
+      "result": "passed",
+      "evidence": "Supabase confirmed the pending Supplier migration and finished the push."
+    },
+    {
+      "command": "npx supabase db query --linked \"select 'migration' as check_type, version as result from supabase_migrations.schema_migrations where version = '20261025120000' union all select 'table_rls', c.relname || ':' || c.relrowsecurity::text from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relname in ('erp_suppliers','erp_supplier_items','erp_supplier_audit_events') union all select 'policy_count', tablename || ':' || count(*)::text from pg_policies where schemaname = 'public' and tablename in ('erp_suppliers','erp_supplier_items','erp_supplier_audit_events') group by tablename union all select 'permission', key from public.permissions where key in ('supplier.read','supplier.manage') order by check_type, result;\"",
+      "result": "passed",
+      "evidence": "Remote migration row exists; all three Supplier tables have RLS enabled; policy counts are 3 for suppliers, 3 for items and 1 for audit events; both supplier.read and supplier.manage permissions exist."
+    },
+    {
+      "command": "npm run test -- src/test/erp/suppliers --reporter=dot",
+      "result": "passed",
+      "evidence": "9 Supplier test files passed; 23 tests passed, including full-page setup, validation, maker-checker UI and offline hiding."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "Application and Node TypeScript checks completed successfully."
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "evidence": "Vite production build completed successfully."
+    },
+    {
+      "command": "npm run validate:contracts",
+      "result": "passed",
+      "evidence": "27 contract files and 4 stable IDs validated."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "All 9 delivery ledgers validated after the P2P task evidence update."
+    },
+    {
+      "command": "npm run smoke:routes",
+      "result": "passed",
+      "evidence": "11 desktop and 6 mobile routes registered; authenticated runtime behavior is not established."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors; Git reported only line-ending normalization warnings for JSON files."
+    },
+    {
+      "command": "GET http://127.0.0.1:8080/app/erp/suppliers and browser preview",
+      "result": "partial",
+      "evidence": "HTTP 200; ProtectedRoute presented sign-in, so authenticated form and mobile viewport could not be inspected."
     }
   ],
   "requirements": [],
@@ -104,12 +245,17 @@
     "SUPPLIER-DIRECTORY-CONTRACT",
     "SUPPLIER-P2P-CONTRACT",
     "SUPPLIER-ASSORTMENT-CONTRACT",
-    "SUPPLIER-ASSORTMENT-DOMAIN"
+    "SUPPLIER-ASSORTMENT-DOMAIN",
+    "SUPPLIER-P2P-DOMAIN",
+    "SUPPLIER-P2P-TAX-PROFILE",
+    "SUPPLIER-P2P-DESKTOP",
+    "SUPPLIER-P2P-MOBILE",
+    "SUPPLIER-P2P-TESTS"
   ],
   "evidence": [],
-  "detected_failure": "Supabase refused the migration dry run because remote versions 20261025120145, 20261025120200, and 20261025122000 have no matching SQL files in the checkout.",
-  "likely_failure_origin": "Migration history drift between loopdev-platform-dev and the available repository branches; the origin of those remote versions is unknown.",
-  "next_handoff": "Recover and review the three missing migration definitions from their source of origin, reconcile remote history with the repository, then rerun the dry run before applying 20261025120000. Do not mark the remote versions reverted without their SQL and owner review.",
+  "detected_failure": "The first secure PowerShell prompt captured only one character, causing PostgreSQL password authentication to fail. Loading the copied password directly from the clipboard resolved authentication; the approved Supplier migration was then applied and verified.",
+  "likely_failure_origin": "The terminal canvas secure-input prompt did not capture pasted input reliably.",
+  "next_handoff": "The non-tax P2P domain and responsive full-page form are implemented and pass component/domain checks. Before claiming remote or release readiness, validate and apply migration 20261025181000, test authenticated RLS/audit/maker-checker behavior, and verify the form at desktop and mobile web viewports. Country-specific tax-profile work remains blocked by Finance/Legal.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,

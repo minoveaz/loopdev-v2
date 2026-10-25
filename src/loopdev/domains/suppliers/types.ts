@@ -1,15 +1,31 @@
 import type {
   SupplierCreateInput,
+  SupplierAddress,
+  SupplierContactSummary,
+  SupplierPayeeInstruction,
+  SupplierPayeeInstructionInput,
+  SupplierP2PSetupInput,
   SupplierItemRecord,
+  SupplierPurchaseDefaults,
   SupplierRecord,
   SupplierStatus,
   SupplierUpdateInput,
 } from "../../../../packages/contracts/src/suppliers";
 
 export type {
+  SupplierAddress,
+  SupplierAddressInput,
+  SupplierAddressPurpose,
   SupplierCreateInput,
+  SupplierContactInput,
+  SupplierContactRole,
+  SupplierContactSummary,
   SupplierKind,
+  SupplierPayeeInstruction,
+  SupplierPayeeInstructionInput,
+  SupplierP2PSetupInput,
   SupplierItemRecord,
+  SupplierPurchaseDefaults,
   SupplierRecord,
   SupplierStatus,
   SupplierUpdateInput,
@@ -76,10 +92,50 @@ export interface SupplierItemProductHandoff {
   purchaseUnit: string;
 }
 
+export interface SupplierP2PSetup {
+  version: number;
+  contacts: SupplierContactSummary[];
+  addresses: SupplierAddress[];
+  purchaseDefaults: SupplierPurchaseDefaults;
+  payeeInstructions: SupplierPayeeInstruction[];
+}
+
+export interface SupplierP2PAdapter {
+  getSetup(supplierId: string, params: SupplierScopeParams): Promise<SupplierP2PSetup>;
+  canReviewPayee(params: SupplierScopeParams): Promise<boolean>;
+  saveSetup(
+    supplierId: string,
+    params: SupplierScopeParams,
+    input: SupplierP2PSetupInput,
+  ): Promise<SupplierP2PSetup>;
+  createPayeeInstruction(
+    supplierId: string,
+    params: SupplierScopeParams,
+    input: SupplierPayeeInstructionInput,
+  ): Promise<SupplierPayeeInstruction>;
+  updatePayeeInstruction(
+    id: string,
+    supplierId: string,
+    params: SupplierScopeParams,
+    input: SupplierPayeeInstructionInput,
+  ): Promise<SupplierPayeeInstruction>;
+  verifyPayeeInstruction(
+    id: string,
+    params: SupplierScopeParams,
+    expectedVersion: number,
+  ): Promise<SupplierPayeeInstruction>;
+  rejectPayeeInstruction(
+    id: string,
+    params: SupplierScopeParams,
+    expectedVersion: number,
+    reason: string,
+  ): Promise<SupplierPayeeInstruction>;
+}
+
 export class SupplierAdapterError extends Error {
   constructor(
     message: string,
-    public readonly code: "not-found" | "conflict" | "invalid-scope" | "forbidden" | "server-error",
+    public readonly code: "not-found" | "conflict" | "invalid-input" | "invalid-scope" | "forbidden" | "offline" | "secure-storage-required" | "server-error",
   ) {
     super(message);
     this.name = "SupplierAdapterError";

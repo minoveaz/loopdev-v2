@@ -27,7 +27,7 @@
 | Branch | `feature/erp-core-capabilities` |
 | Commit | `6de4213` |
 | Pull request | [#38](https://github.com/minoveaz/loopdev-v2/pull/38) |
-| Last evidence | Product catalog/media implementation is under review; linked Supabase migrations are applied. CI exposed two CRM tests relying on pre-migration product keys; compatibility lookup and regression coverage now pass locally. Media visual evidence and module/release gates remain open. |
+| Last evidence | Product catalog/media implementation is under review; linked Supabase migrations are applied, and all PR checks pass on the implementation/fix revision. Legacy CRM product-key compatibility is covered. Media visual evidence and module/release gates remain open. |
 
 ## Scope
 

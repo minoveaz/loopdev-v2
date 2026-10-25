@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "run_id": "MOD-PROVEEDORES-20261025-001",
+  "span_id": "MOD-PROVEEDORES-20261025-001:10-git",
+  "phase": "10-git",
+  "skill": "git-workflow",
+  "parent_span_id": null,
+  "module": "Proveedores",
+  "status": "completed",
+  "decision_status": "confirmed",
+  "architecture_quality": "PASS_WITH_DEBT",
+  "attempt": 1,
+  "started_at": "2026-10-25T20:19:13.861+01:00",
+  "completed_at": "2026-10-25T20:24:14.092+01:00",
+  "input_fingerprint": "sha256:14bd85f96c59bd86628f1c4e5602ec7c2e0408490346bdd3d3d1242ffc7897a3",
+  "environment": {
+    "repository": "minoveaz/loopdev-v2",
+    "repository_path": "C:\\Users\\o010630\\copilot-worktrees\\loopdev-v2\\o010630-upgraded-enigma",
+    "checkout_type": "branch",
+    "branch": "feature/erp-proveedores",
+    "base_branch": null,
+    "head_commit": "d8f45f895dd8ae74ea4dce3aacc2a60d627ebf91",
+    "working_tree": "Clean after implementation commit; delivery-evidence documentation follow-up is being prepared."
+  },
+  "input_artifacts": [
+    "docs/implementation/erp/proveedores/README.md",
+    "docs/implementation/erp/proveedores/runs/MOD-PROVEEDORES-20261025-001/07-build.json",
+    "docs/implementation/erp/proveedores/runs/MOD-PROVEEDORES-20261025-001/run.json",
+    "User request: realiza commit y push a remoto del trabajo realizado en esta rama"
+  ],
+  "output_artifacts": [
+    "docs/implementation/erp/proveedores/README.md",
+    "docs/implementation/erp/proveedores/runs/MOD-PROVEEDORES-20261025-001/run.json",
+    "docs/implementation/erp/proveedores/runs/MOD-PROVEEDORES-20261025-001/10-git.json",
+    "https://github.com/minoveaz/loopdev-v2/commit/d8f45f895dd8ae74ea4dce3aacc2a60d627ebf91",
+    "origin/feature/erp-proveedores"
+  ],
+  "validation": [
+    {
+      "command": "npm run test -- src/test/erp/suppliers --reporter=dot",
+      "result": "passed: 9 files, 23 tests"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed"
+    },
+    {
+      "command": "npm run validate:contracts",
+      "result": "passed: 27 contract files, 4 stable IDs"
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed: 9 ledgers"
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed: 116 checkpoint files"
+    },
+    {
+      "command": "npm run smoke:routes",
+      "result": "passed: 11 desktop and 6 mobile routes"
+    },
+    {
+      "command": "git diff --cached --check",
+      "result": "passed before implementation commit"
+    },
+    {
+      "command": "git push -u origin feature/erp-proveedores",
+      "result": "passed; new remote branch created and configured for tracking"
+    },
+    {
+      "command": "git ls-remote origin refs/heads/feature/erp-proveedores",
+      "result": "passed; remote branch points to d8f45f895dd8ae74ea4dce3aacc2a60d627ebf91"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "GIT-SUPPLIERS-COMMIT",
+      "status": "PASS",
+      "evidence": "Created feat(suppliers): implement P2P supplier setup at d8f45f895dd8ae74ea4dce3aacc2a60d627ebf91 with the required run ID and co-author trailer."
+    },
+    {
+      "id": "GIT-SUPPLIERS-PUSH",
+      "status": "PASS",
+      "evidence": "Pushed feature/erp-proveedores to origin and confirmed the remote ref points to the implementation commit."
+    },
+    {
+      "id": "GIT-SUPPLIERS-RELEASE-GATES",
+      "status": "PARTIAL",
+      "evidence": "The build phase remains in progress. The P2P migration and authenticated RLS/audit/maker-checker and desktop/mobile runtime checks remain unverified; no pull request or release readiness is claimed."
+    }
+  ],
+  "detected_failure": null,
+  "likely_failure_origin": null,
+  "next_handoff": "Continue the approved Supplier P2P build/verification work: validate and apply the pending P2P migration, verify authenticated remote authorization and audit behavior, and inspect desktop/mobile runtime behavior before claiming readiness.",
+  "approval_gate": {
+    "status": "approved",
+    "approved_by": "User",
+    "approved_at": "2026-10-25T20:19:13.861+01:00",
+    "source": "User explicitly requested commit and push to the remote branch."
+  },
+  "invalidated": false,
+  "notes": [
+    "No pull request was requested or created.",
+    "Git delivery evidence does not establish functional, authenticated, migration or release readiness."
+  ]
+}

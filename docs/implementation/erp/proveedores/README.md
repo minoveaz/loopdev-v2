@@ -26,7 +26,7 @@
 | Current phase | `07-build` on attempt 9; migration and authenticated verification remain |
 | Current issue | none |
 | Branch | `feature/erp-proveedores` |
-| Commit | Pending delivery commit |
+| Commit | `d8f45f895dd8ae74ea4dce3aacc2a60d627ebf91` — pushed to `origin/feature/erp-proveedores` |
 | Pull request | none |
 | Last evidence | Supplier tests (9 files, 23 tests), typecheck, delivery-ledger and module-run validation passed; authenticated runtime not verified |
 
@@ -64,7 +64,7 @@
 | 01-visual-design | Approved | `runs/MOD-PROVEEDORES-20261025-001/01-visual-design.json` | Visual source plus user-approved domain/access/persistence defaults |
 | 06-plan | Completed | `runs/MOD-PROVEEDORES-20261025-001/06-plan.json` | Approved task-scoped implementation plan |
 | 07-build | In progress | `runs/MOD-PROVEEDORES-20261025-001/07-build.json` | Non-tax P2P domain and responsive full-page setup implemented; remote migration, authenticated runtime and operation verification remain |
-| 10-git | Pending | `runs/MOD-PROVEEDORES-20261025-001/10-git.json` | Commit and remote branch evidence to be recorded |
+| 10-git | Completed | `runs/MOD-PROVEEDORES-20261025-001/10-git.json` | Implementation commit pushed to `origin/feature/erp-proveedores`; no PR requested |
 
 ## Decisions and blockers
 
@@ -97,3 +97,4 @@
 | 2026-10-25 | Reconciled discovery with confirmed ERP ownership, many-to-many product sourcing, responsive web, and no-default-CRM direction | `MOD-PROVEEDORES-20261025-001` | User-confirmed product direction; no build approval |
 | 2026-10-25 | Reopened discovery for Supplier P2P master readiness, SupplierItem terms, and broad tax/bank visibility; kept transaction records in owning modules | `MOD-PROVEEDORES-20261025-001`, attempt 6 | User-confirmed direction; access-model reconciliation remains open |
 | 2026-10-25 | Drafted P2P architecture, acceptance evidence and shared capability validation; visual approval and open decisions remain pending | `MOD-PROVEEDORES-20261025-001`, attempt 7 | Proposed; no product or build approval |
+| 2026-10-25 | Implemented the approved non-tax P2P setup and pushed its delivery commit | `MOD-PROVEEDORES-20261025-001`, `d8f45f895dd8ae74ea4dce3aacc2a60d627ebf91` | User-approved task-scoped work |

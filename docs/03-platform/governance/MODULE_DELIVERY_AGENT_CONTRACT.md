@@ -265,6 +265,16 @@ For implementation-first, only `module-plan → module-build → module-verify �
 module-review → git-workflow` run by default. Specialist skills are invoked
 only for a concrete unresolved design or safety decision.
 
+When approved scope includes UI, `module-plan` performs a focused reuse review
+before build: current standardized LoopDev components, applicable shared
+Platform capabilities and consumers, and one or two implemented comparable
+screens from other suites. It checks Rivera template examples only for a
+genuine new-component gap. The plan checkpoint records exact source paths,
+findings and decisions in `ui_reuse_review`; no separate inventory, matrix or
+audit task is created. If no comparable screen exists, the checkpoint records
+where the focused search was made. Backend-only scope records why the UI review
+does not apply.
+
 Helper skills run as child spans of design or plan. The agent must pass their
 outputs to the parent phase and store their checkpoints.
 
@@ -283,8 +293,12 @@ BLOCKED
 All profiles reuse Rivera visual primitives and shared LoopDev capabilities
 for Notes, Files, uploads, previews, Activity, Tasks, Relations and Document
 Intelligence. Stop for approval before extending a shared Platform contract;
-do not create a module-local duplicate. In implementation-first, record this
-decision in the task ledger rather than a separate audit report.
+do not create a module-local duplicate. In implementation-first, record the
+component/capability classifications in the task ledger and the source-backed
+UI pattern findings in `06-plan.json` as `ui_reuse_review`; do not create a
+separate audit report. Cross-suite examples are references to implemented
+source and tests, not permission to copy business logic. Proposed `SAAS_*`
+documents are not evidence that a pattern is implemented.
 
 ## Track and issue lifecycle
 

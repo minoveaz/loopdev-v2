@@ -174,11 +174,72 @@ test("implementation-first writes its report only after the approved code build"
 
   const plan = current.machine.startPhase({ ...scope, phaseId: "06-plan", skill: "module-plan" });
   const ledgerPath = "docs/implementation/crm/contacts/delivery-ledger.json";
-  current.machine.completePhase({
+  const uiReuseReview = {
+    ui_scope: true,
+    new_component: false,
+    rationale: "The approved Contacts scope includes desktop and mobile list views.",
+    evidence: [
+      { category: "loopdev_component", source: "src/components/common/DataTable.tsx", finding: "Reuse the typed shared table composition." },
+      { category: "platform_capability", source: "docs/03-platform/frontend/PLATFORM_V2_UI_REFERENCE.md", finding: "No domain Platform capability applies to contact listing; shared UI primitives do." },
+      { category: "cross_suite_module", suite: "erp", source: "src/loopdev/pages/erp/ProductRecordPages.tsx", finding: "Use the ERP list's search and row-action pattern as a reference." },
+    ],
+  };
+  for (const item of uiReuseReview.evidence) write(join(current.root, item.source), `# ${item.category}\n`);
+  const planData = {
     ...scope,
     phaseId: "06-plan",
     data: { architecture_quality: "PASS", output_artifacts: [ledgerPath], validation: [{ command: "validate plan", result: "passed" }] },
+  };
+  assert.throws(() => current.machine.completePhase(planData), /complete ui_reuse_review/);
+  assert.throws(() => current.machine.completePhase({
+    ...planData,
+    data: { ...planData.data, ui_reuse_review: {
+      ...uiReuseReview,
+      evidence: uiReuseReview.evidence.filter((item) => item.category !== "cross_suite_module"),
+    } },
+  }), /comparable module from another suite or a documented cross-suite search/);
+  assert.throws(() => current.machine.completePhase({
+    ...planData,
+    data: { ...planData.data, ui_reuse_review: {
+      ...uiReuseReview,
+      evidence: uiReuseReview.evidence.map((item) => item.category === "loopdev_component"
+        ? { ...item, source: "src/components/common/MissingTable.tsx" }
+        : item),
+    } },
+  }), /existing repository source and finding for loopdev_component/);
+  assert.throws(() => current.machine.completePhase({
+    ...planData,
+    data: { ...planData.data, ui_reuse_review: {
+      ...uiReuseReview,
+      evidence: uiReuseReview.evidence.map((item) => item.category === "cross_suite_module"
+        ? { ...item, suite: "crm" }
+        : item),
+    } },
+  }), /comparable module from another suite or a documented cross-suite search/);
+  assert.throws(() => current.machine.completePhase({
+    ...planData,
+    data: { ...planData.data, ui_reuse_review: { ...uiReuseReview, new_component: true } },
+  }), /existing Rivera template source/);
+  assert.throws(() => current.machine.completePhase({
+    ...planData,
+    data: { ...planData.data, ui_reuse_review: {
+      ui_scope: false,
+      new_component: true,
+      rationale: "Contradictory review",
+      evidence: [],
+    } },
+  }), /cannot be proposed when ui_scope is false/);
+  const completedPlan = current.machine.completePhase({
+    ...scope,
+    phaseId: "06-plan",
+    data: {
+      architecture_quality: "PASS",
+      output_artifacts: [ledgerPath],
+      validation: [{ command: "validate plan", result: "passed" }],
+      ui_reuse_review: uiReuseReview,
+    },
   });
+  assert.deepEqual(completedPlan.ui_reuse_review, uiReuseReview);
   assert.throws(() => current.machine.startPhase({ ...scope, phaseId: "07-build", skill: "module-build" }), /approved gate plan/);
   current.machine.approve({ ...scope, gate: "plan", approvedBy: "owner", role: "product_owner",
     artifact: ledgerPath, artifactFingerprint: validFingerprint, source: "Explicit scope approval" });

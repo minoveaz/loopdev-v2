@@ -148,6 +148,15 @@ Classify the result as `REUSE`, `EXTEND_PLATFORM`, `MODULE_SPECIFIC` or
 timeline, task widget, extractor or permission model is a plan deviation and
 requires explicit approval.
 
+For UI work, follow the approved `ui_reuse_review`: first use established
+LoopDev components and applicable Platform capabilities, then adapt relevant
+patterns observed in implemented screens from other suites. Use Rivera
+template code only as a visual/component reference for a justified new
+component, never as a business dependency. If implementation reveals that the
+review missed a reusable capability or the design choice changes, update the
+plan evidence and obtain approval when scope or a shared Platform contract
+changes; do not silently create a parallel component.
+
 ## Operational truth gate
 
 Before editing and before reporting completion, record the actual repository

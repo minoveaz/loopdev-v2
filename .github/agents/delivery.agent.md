@@ -56,10 +56,12 @@ If the user does not specify a mode, use `interactive`.
 3. Reuse confirmed user decisions. Ask only for an unresolved decision that
    blocks safe implementation; otherwise record a concise assumption in the
    task ledger and proceed.
-4. Initialize the run with `implementation-first`. Keep the pre-build record
-   to `delivery-ledger.json`: stable task IDs, acceptance criteria, affected
-   files, dependencies, risks and targeted validation. Run
-   `npm run validate:delivery-ledgers` before implementation.
+4. Initialize the run with `implementation-first`. Keep pre-build workspace
+   artifacts to `delivery-ledger.json`: stable task IDs, acceptance criteria,
+   affected files, dependencies, risks and targeted validation. Run
+   `npm run validate:delivery-ledgers` before implementation. For UI scope,
+   record the compact `ui_reuse_review` in the automatically generated
+   `06-plan` JSON checkpoint; do not create a separate audit document.
 5. Build the approved tasks and add/update tests with each behavior change.
    Run targeted tests first. Do not write narrative completion documents
    before code and tests pass.

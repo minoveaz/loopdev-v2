@@ -81,6 +81,11 @@ Reuse the approved product decisions and existing plan; do not generate
 discovery, architecture, visual, platform, track or per-phase issue documents
 unless a concrete unresolved decision or risk requires one. Plan approval
 authorizes the listed tasks; it does not prove their implementation.
+For UI scope, the plan checkpoint also records a compact, source-backed
+`ui_reuse_review`: existing LoopDev components and Platform capabilities,
+comparable implemented screens from other suites, and a Rivera template
+reference only when a new component is justified. This is JSON phase evidence,
+not an extra workspace document or audit task.
 
 The verification report maps each approved task to changed code, exact test
 and build commands/results, verified behavior, platform coverage, gaps and

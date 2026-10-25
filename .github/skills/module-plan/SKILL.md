@@ -14,6 +14,16 @@ dependencies, acceptance criteria and targeted tests; do not create or expand
 discovery, architecture, visual, platform, track or issue documents. Do not
 run broad audits unless a specific risk or unresolved decision blocks safe
 implementation. Request only the approval needed to start the listed tasks.
+For UI scope, inspect the current LoopDev shared components and applicable
+Platform capabilities, then one or two implemented, comparable screens from
+other suites for interaction patterns such as tables and forms. Inspect the
+Rivera template only when a genuinely new component is needed. Record sources,
+findings and reuse decisions in the plan checkpoint's structured
+`ui_reuse_review`; this is a concise JSON evidence gate, not a new document or
+a separate audit task.
+Read `V2_DOCUMENTATION_SOURCE_OF_TRUTH.md` and the targeted V2 UI reference for
+this review, then verify candidate components against their current source and
+consumers. This focused check does not authorize a repository-wide survey.
 
 For an explicitly selected `supplier-pilot` run, first read the experimental
 profile section of `MODULE_DELIVERY_AGENT_CONTRACT.md`. It overrides the
@@ -38,6 +48,19 @@ checkpoint evidence.
 - Inspect existing LoopDev routes, domains, adapters, hooks and shared components.
 - Treat Rivera as the mandatory visual baseline. Identify reusable Rivera
   primitives and record any intentional visual deviation.
+- For UI planning, prefer this evidence order: established LoopDev components
+  and patterns; shared Platform capabilities and their current consumers;
+  comparable implemented screens in a different suite; then Rivera template
+  examples only for a real component gap. Do not copy business behavior from
+  another module or introduce a local duplicate.
+- In `ui_reuse_review`, cite exact source paths and a short finding for:
+  current LoopDev components, applicable Platform capabilities, and at least
+  one comparable implementation from another suite, using its exact suite key
+  and a source path within that suite. If no comparable screen exists, record
+  the focused source locations checked and that no match was found. When
+  proposing a new component, cite the closest Rivera template
+  example or explain why none applies. A no-UI plan must mark the review
+  inapplicable with a reason.
 - Inventory existing controls before planning new UI. Native product controls
   such as `<select>` are not allowed when an established LoopDev primitive or
   pattern exists; plan reuse of the existing `Select`, `Command`, `Popover`,
@@ -45,10 +68,15 @@ checkpoint evidence.
 - Identify reusable patterns and incompatible or legacy implementations.
 - Split work into frontend, local adapter, backend contract, synchronization,
   permissions, migrations and tests.
-- Add a mandatory `platform-reuse-audit` task before planning new shared
-  components, adapters or persistence.
+- In legacy standard runs, add a mandatory `platform-reuse-audit` task before
+  planning new shared components, adapters or persistence. For
+  implementation-first, do not add audit-only tasks: use `ui_reuse_review` in
+  the plan checkpoint and add a build task only when it delivers approved
+  product work or a necessary Platform extension.
 - Add mandatory `architecture-boundary-audit`, `responsibility-audit` and
-  `refactor-safety-audit` tasks before implementation.
+  `refactor-safety-audit` tasks before implementation in legacy standard runs;
+  implementation-first records only material risks in its existing task
+  acceptance criteria and checkpoint.
 - Convert every `REUSE` and `EXTEND_PLATFORM` decision from the design into
   explicit dependencies and acceptance evidence.
 - Assign dependencies, sequencing, risk and acceptance criteria.
@@ -68,6 +96,9 @@ checkpoint evidence.
 7. Risks, blockers and decisions requiring approval.
 
 Do not claim implementation is complete and do not modify production files.
+For `implementation-first`, the numbered narrative outputs above are planning
+considerations, not extra deliverables; use the approved ledger and concise
+checkpoint evidence only.
 
 ## Platform integration planning (legacy standard profile)
 

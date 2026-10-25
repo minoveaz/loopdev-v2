@@ -1,13 +1,20 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, dirname, isAbsolute, join, relative } from "node:path";
 import { validateLedger, validateLedgerFile } from "./delivery-ledger.mjs";
 
 const sha256 = (value) => `sha256:${createHash("sha256").update(value).digest("hex")}`;
 const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 const writeJson = (file, value) => writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
+
+function hasRepositorySource(root, source) {
+  if (typeof source !== "string" || !source.trim() || isAbsolute(source)) return false;
+  const target = join(root, source);
+  const relativePath = relative(root, target);
+  return relativePath !== "" && !relativePath.startsWith("..") && existsSync(target);
+}
 
 export function workflowForRun(workflow, manifest = {}) {
   if (!manifest.profile || manifest.profile === "standard") return workflow;
@@ -355,6 +362,43 @@ export class DeliveryStateMachine {
           throw new Error(`Pilot plan requires prebuild_decisions.${area}`);
         }
       }
+    }
+    if (manifest.profile === "implementation-first" && phaseId === "06-plan") {
+      const review = data.ui_reuse_review;
+      if (!review || typeof review.ui_scope !== "boolean" || typeof review.new_component !== "boolean"
+        || typeof review.rationale !== "string" || !review.rationale.trim() || !Array.isArray(review.evidence)) {
+        throw new Error("Implementation-first plan requires a complete ui_reuse_review");
+      }
+      if (!review.ui_scope && review.new_component) {
+        throw new Error("A new UI component cannot be proposed when ui_scope is false");
+      }
+      if (review.ui_scope) {
+        const requiredCategories = ["loopdev_component", "platform_capability"];
+        for (const category of requiredCategories) {
+          if (!review.evidence.some((item) => item?.category === category
+            && hasRepositorySource(this.root, item.source)
+            && typeof item.finding === "string" && item.finding.trim())) {
+            throw new Error(`UI reuse review requires existing repository source and finding for ${category}`);
+          }
+        }
+        const crossSuiteModules = review.evidence.filter((item) => item?.category === "cross_suite_module");
+        const crossSuiteSearch = review.evidence.filter((item) => item?.category === "cross_suite_search");
+        if (!crossSuiteModules.some((item) => typeof item.suite === "string" && item.suite.trim()
+          && item.suite.toLowerCase() !== manifest.suite.toLowerCase()
+          && hasRepositorySource(this.root, item.source)
+          && item.source.replaceAll("\\", "/").split("/").some((segment) => segment.toLowerCase() === item.suite.toLowerCase())
+          && typeof item.finding === "string" && item.finding.trim())
+          && !crossSuiteSearch.some((item) => hasRepositorySource(this.root, item.source)
+            && typeof item.finding === "string" && item.finding.trim())) {
+          throw new Error("UI reuse review requires a comparable module from another suite or a documented cross-suite search");
+        }
+        if (review.new_component && !review.evidence.some((item) => item?.category === "rivera_template"
+          && hasRepositorySource(this.root, item.source)
+          && typeof item.finding === "string" && item.finding.trim())) {
+          throw new Error("A new UI component requires existing Rivera template source and finding evidence");
+        }
+      }
+      checkpoint.ui_reuse_review = review;
     }
     if (!this.workflow.architecture_completion_states.includes(checkpoint.architecture_quality)) throw new Error("Completion requires architecture_quality PASS or PASS_WITH_DEBT");
     if (!checkpoint.output_artifacts?.length) throw new Error("Completion requires output_artifacts");

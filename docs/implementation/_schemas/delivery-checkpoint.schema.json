@@ -35,6 +35,28 @@
             "rollback": { "type": "string", "minLength": 1 }
           }
         },
+        "ui_reuse_review": {
+          "type": "object",
+          "required": ["ui_scope", "new_component", "rationale", "evidence"],
+          "properties": {
+            "ui_scope": { "type": "boolean" },
+            "new_component": { "type": "boolean" },
+            "rationale": { "type": "string", "minLength": 1 },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["category", "source", "finding"],
+                "properties": {
+                  "category": { "enum": ["loopdev_component", "platform_capability", "cross_suite_module", "cross_suite_search", "rivera_template"] },
+                  "source": { "type": "string", "minLength": 1 },
+                  "finding": { "type": "string", "minLength": 1 },
+                  "suite": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        },
         "validated_fingerprints": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" } },
         "input_artifacts": { "type": "array", "items": { "type": "string" } },
         "output_artifacts": { "type": "array", "items": { "type": "string" } },

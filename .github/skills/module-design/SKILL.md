@@ -155,6 +155,27 @@ Platform. Las fuentes iniciales de reutilización son
 `docs/03-platform/frontend/PLATFORM_V2_SHELL_REFERENCE.md`, junto con la
 documentación de cada capacidad en `docs/03-platform` y `docs/06-product`.
 
+### Cross-suite UI pattern evidence
+
+For each in-scope table, form, detail or other primary UI, inspect only one or
+two directly comparable, implemented screens in a different LoopDev suite.
+Use their source, route and tests to learn established composition and
+interaction patterns; do not copy domain behavior or infer capability status
+from a design proposal. Prefer the current shared LoopDev component or Platform
+capability over a suite-local example. If no suitable screen exists, record
+the focused search and proceed from shared primitives. Consult `src/template/rivera`
+when a genuinely new component is needed, and record the closest example or
+why none applies.
+
+For the full design artifact, include a concise reuse matrix with source paths:
+
+| UI surface | LoopDev component/pattern | Platform capability | Other-suite example | Rivera reference if new | Decision |
+|---|---|---|---|---|---|
+
+In `implementation-first`, use the same matrix's essential evidence in the
+structured `ui_reuse_review` plan checkpoint instead of creating a design
+document or separate matrix.
+
 ## Operational truth and regression prevention
 
 Cuando exista checkout o implementación, registra el contexto real antes de

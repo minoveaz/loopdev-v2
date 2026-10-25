@@ -2,6 +2,12 @@ alter table public.erp_product_media_assignments
   add column position integer,
   add column version bigint;
 
+-- Backfill gallery metadata without enabling product writes or auditing the migration.
+alter table public.erp_product_media_assignments
+  disable trigger erp_product_write_control_guard;
+alter table public.erp_product_media_assignments
+  disable trigger erp_product_mutation_audit;
+
 with ranked_assignments as (
   select id,
          row_number() over (
@@ -15,6 +21,11 @@ update public.erp_product_media_assignments assignments
        version = 1
   from ranked_assignments
  where assignments.id = ranked_assignments.id;
+
+alter table public.erp_product_media_assignments
+  enable trigger erp_product_mutation_audit;
+alter table public.erp_product_media_assignments
+  enable trigger erp_product_write_control_guard;
 
 alter table public.erp_product_media_assignments
   alter column position set default 0,

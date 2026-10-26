@@ -43,5 +43,5 @@ export interface ProductMediaAdapter {
     variantId: string | null;
     assignments: Array<{ id: string; expectedVersion: number }>;
   }): Promise<void>;
-  getPreviewSource(assetId: string, params: ProductMediaScope & { catalogItemId?: string }): Promise<FilePreviewSource | null>;
+  getPreviewSource(assetId: string, params: ProductMediaScope & { catalogItemId: string }): Promise<FilePreviewSource | null>;
 }

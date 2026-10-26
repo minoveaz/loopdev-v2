@@ -1,5 +1,6 @@
 import { assertEquals, assertThrows } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { makeWebpRendition } from "./image-processing.ts";
+import { createProductMediaRenditionArtifacts } from "./renditions.ts";
 import {
   hasMatchingImageSignature,
   isProductMediaMimeType,
@@ -84,6 +85,28 @@ Deno.test("creates bounded renditions without upscaling or changing aspect ratio
     width: 200,
     height: 100,
   });
+});
+
+Deno.test("creates and registers metadata for missing product media renditions", async () => {
+  const artifacts = await createProductMediaRenditionArtifacts({
+    organizationId: "organization-id",
+    fileId: "file-id",
+    mimeType: "image/png",
+    bytes: await onePixelPng(),
+    renditions: ["large", "thumbnail"],
+  });
+
+  assertEquals(artifacts.map(({ rendition }) => rendition), ["large", "thumbnail"]);
+  assertEquals(artifacts.map(({ storagePath }) => storagePath), [
+    "organizations/organization-id/product-media/file-id/renditions/large.webp",
+    "organizations/organization-id/product-media/file-id/renditions/thumbnail.webp",
+  ]);
+  for (const artifact of artifacts) {
+    assertEquals(artifact.mediaType, "image/webp");
+    assertEquals(artifact.width, 1);
+    assertEquals(artifact.height, 1);
+    assertEquals(hasMatchingImageSignature(artifact.mediaType, artifact.bytes), true);
+  }
 });
 
 Deno.test("rejects invalid or excessive image dimensions", () => {

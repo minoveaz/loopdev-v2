@@ -178,6 +178,7 @@ describe("product media", () => {
   it("previews product-level images and opens the full product gallery", async () => {
     const item = localCatalogItemsStore.get(productId);
     if (!item) throw new Error("Seed product is unavailable.");
+    const getPreviewSource = vi.spyOn(localProductMediaAdapter, "getPreviewSource");
     const asset = await localProductMediaAdapter.uploadAsset({
       organizationId,
       file: new File(["product image preview"], "product-gallery.png", { type: "image/png" }),
@@ -199,6 +200,8 @@ describe("product media", () => {
     );
 
     expect(await screen.findByRole("img", { name: "Front view of the product" })).toBeInTheDocument();
+    expect(getPreviewSource).toHaveBeenCalledWith(asset.id, { organizationId, catalogItemId: productId });
+    getPreviewSource.mockRestore();
     fireEvent.click(screen.getByRole("button", { name: "Open gallery" }));
     expect(screen.getByTestId("current-path")).toHaveTextContent(`/app/erp/products/${productId}/media`);
   });

@@ -2,6 +2,7 @@
 
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.116.0";
 import { imageMagickReady, makeWebpRendition, type RenditionResult } from "./image-processing.ts";
+import { createProductMediaRenditionArtifacts, type ProductMediaRenditionName } from "./renditions.ts";
 import {
   hasMatchingImageSignature,
   isProductMediaMimeType,
@@ -311,6 +312,7 @@ async function finishUpload(
   for (const [path, rendition] of [[largePath, large], [thumbnailPath, thumbnail]] as const) {
     const { error } = await service.storage.from(BUCKET).upload(path, rendition.bytes, {
       contentType: "image/webp",
+      metadata: { loopdev_actor_user_id: actorId },
       upsert: true,
     });
     if (error) {
@@ -333,6 +335,86 @@ async function finishUpload(
     throw new PlatformFilesError("FILE_PROCESSING_FAILED", finalizeError.message, 503, true);
   }
   return readyFile(service, session.organization_id, session.id);
+}
+
+async function regenerateMissingProductMediaRenditions(
+  service: SupabaseClient,
+  file: FileMetadata,
+  actorId: string,
+  missingRenditions: ProductMediaRenditionName[],
+): Promise<void> {
+  if (!file.storage_path) {
+    throw new PlatformFilesError("FILE_NOT_FOUND", "Product media original not found.", 404);
+  }
+  const { data: original, error: downloadError } = await service.storage
+    .from(BUCKET)
+    .download(file.storage_path);
+  if (downloadError || !original) {
+    const details = downloadError as { statusCode?: string } | null;
+    if (details?.statusCode === "404" || /not found|no such key/i.test(downloadError?.message ?? "")) {
+      throw new PlatformFilesError("FILE_NOT_FOUND", "Product media original not found.", 404);
+    }
+    throw new PlatformFilesError(
+      "FILE_PREVIEW_FAILED",
+      downloadError?.message ?? "The product media original could not be read.",
+      503,
+      true,
+    );
+  }
+
+  const bytes = new Uint8Array(await original.arrayBuffer());
+  if (bytes.byteLength !== file.size || bytes.byteLength > MAX_PRODUCT_MEDIA_BYTES) {
+    throw new PlatformFilesError(
+      "FILE_VALIDATION_ERROR",
+      "The existing product media file size is outside the supported range.",
+      415,
+    );
+  }
+
+  let artifacts;
+  try {
+    artifacts = await createProductMediaRenditionArtifacts({
+      organizationId: file.organization_id,
+      fileId: file.id,
+      mimeType: file.media_type,
+      bytes,
+      renditions: missingRenditions,
+    });
+  } catch (error) {
+    throw new PlatformFilesError(
+      "FILE_VALIDATION_ERROR",
+      error instanceof Error ? error.message : "The product media image could not be processed.",
+      415,
+    );
+  }
+
+  for (const artifact of artifacts) {
+    const { error } = await service.storage.from(BUCKET).upload(artifact.storagePath, artifact.bytes, {
+      contentType: artifact.mediaType,
+      metadata: { loopdev_actor_user_id: actorId },
+      upsert: true,
+    });
+    if (error) {
+      throw new PlatformFilesError("FILE_PROCESSING_FAILED", error.message, 503, true);
+    }
+  }
+
+  const { error } = await service.from("platform_file_renditions").upsert(
+    artifacts.map((artifact) => ({
+      organization_id: file.organization_id,
+      file_id: file.id,
+      rendition: artifact.rendition,
+      media_type: artifact.mediaType,
+      byte_size: artifact.byteSize,
+      width: artifact.width,
+      height: artifact.height,
+      storage_path: artifact.storagePath,
+    })),
+    { onConflict: "organization_id,file_id,rendition", ignoreDuplicates: true },
+  );
+  if (error) {
+    throw new PlatformFilesError("FILE_PREVIEW_FAILED", error.message, 503, true);
+  }
 }
 
 async function beginUpload(
@@ -473,6 +555,7 @@ async function uploadStatus(
 async function preview(
   user: SupabaseClient,
   service: SupabaseClient,
+  actorId: string,
   body: Record<string, unknown>,
 ): Promise<unknown> {
   const organizationId = requireUuid(body.organizationId, "organizationId");
@@ -499,15 +582,44 @@ async function preview(
   let path = file.storage_path as string;
   let mimeType = file.media_type as string;
   if (rendition !== "original") {
-    const { data: derivative, error: renditionError } = await service
+    const { data: derivatives, error: renditionError } = await service
       .from("platform_file_renditions")
-      .select("storage_path,media_type")
+      .select("rendition,storage_path,media_type")
       .eq("organization_id", organizationId)
       .eq("file_id", fileId)
-      .eq("rendition", rendition)
-      .maybeSingle();
+      .in("rendition", ["large", "thumbnail"]);
     if (renditionError) throw new PlatformFilesError("FILE_PREVIEW_FAILED", renditionError.message, 503, true);
-    if (!derivative) throw new PlatformFilesError("FILE_NOT_FOUND", "Product media rendition not found.", 404);
+    let derivative = (derivatives ?? []).find((candidate) => candidate.rendition === rendition);
+    if (!derivative) {
+      const existingRenditions = new Set((derivatives ?? []).map((candidate) => candidate.rendition));
+      const missingRenditions = (["large", "thumbnail"] as const)
+        .filter((name) => !existingRenditions.has(name));
+      await regenerateMissingProductMediaRenditions(
+        service,
+        file as FileMetadata,
+        actorId,
+        [...missingRenditions],
+      );
+      const { data: regenerated, error: regeneratedError } = await service
+        .from("platform_file_renditions")
+        .select("rendition,storage_path,media_type")
+        .eq("organization_id", organizationId)
+        .eq("file_id", fileId)
+        .eq("rendition", rendition)
+        .maybeSingle();
+      if (regeneratedError) {
+        throw new PlatformFilesError("FILE_PREVIEW_FAILED", regeneratedError.message, 503, true);
+      }
+      if (!regenerated) {
+        throw new PlatformFilesError(
+          "FILE_PREVIEW_FAILED",
+          "The product media rendition could not be registered.",
+          503,
+          true,
+        );
+      }
+      derivative = regenerated;
+    }
     path = derivative.storage_path;
     mimeType = derivative.media_type;
   }
@@ -536,7 +648,7 @@ Deno.serve(async (request) => {
     let result: unknown;
     if (action === "begin") result = await beginUpload(user, service, actorId, body);
     else if (action === "status") result = await uploadStatus(user, service, actorId, body);
-    else if (action === "preview") result = await preview(user, service, body);
+    else if (action === "preview") result = await preview(user, service, actorId, body);
     else if (action === "list") result = await listLibrary(user, service, body);
     else throw new PlatformFilesError("FILE_OPERATION_UNSUPPORTED", "This Files operation is not supported.", 400);
     return jsonResponse(request, { data: result });

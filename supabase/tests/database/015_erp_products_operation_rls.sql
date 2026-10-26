@@ -2,7 +2,7 @@ begin;
 
 \ir helpers/rls_helpers.sql
 
-select plan(46);
+select plan(52);
 
 insert into auth.users (id, aud, role, email, encrypted_password, confirmed_at)
 values
@@ -437,6 +437,107 @@ select ok(
        and qual like '%catalog.read%'
   ),
   'Product media File metadata reads require catalog.read'
+);
+
+select set_config('request.jwt.claim.role', 'service_role', true);
+select set_config('request.jwt.claim.sub', '', true);
+set local role service_role;
+select lives_ok($$
+  insert into public.platform_files (
+    id, organization_id, name, category, source, media_type, size, status,
+    relation_type, relation_id, storage_path, uploaded_by
+  ) values (
+    '00000000-0000-4000-9700-000000000099',
+    '00000000-0000-4000-9700-000000000051',
+    'service-upload.png',
+    'other',
+    'upload',
+    'image/png',
+    8,
+    'active',
+    'product_media_library',
+    '00000000-0000-4000-9700-000000000051',
+    'organizations/00000000-0000-4000-9700-000000000051/product-media/00000000-0000-4000-9700-000000000099/service-upload.png',
+    '00000000-0000-4000-8700-000000000051'
+  )
+$$, 'service-role product media metadata writes audit the validated uploader');
+reset role;
+select is(
+  (select count(*)::integer
+     from public.platform_audit_events
+    where organization_id = '00000000-0000-4000-9700-000000000051'
+      and actor_user_id = '00000000-0000-4000-8700-000000000051'
+      and event_type = 'erp.product_media.file.insert'),
+  1,
+  'service-role product media metadata audit retains the authenticated actor'
+);
+
+select set_config('request.jwt.claim.sub', '', true);
+insert into public.platform_file_upload_sessions (
+  id, organization_id, file_name, mime_type, byte_size, storage_path, status,
+  created_by, purpose, resource_entity_type, resource_entity_id,
+  idempotency_key, idempotency_fingerprint
+) values (
+  '00000000-0000-4000-9700-000000000099',
+  '00000000-0000-4000-9700-000000000051',
+  'service-upload.png',
+  'image/png',
+  8,
+  'organizations/00000000-0000-4000-9700-000000000051/product-media/00000000-0000-4000-9700-000000000099/original.png',
+  'pending',
+  '00000000-0000-4000-8700-000000000051',
+  'product_media',
+  'catalog_item',
+  '00000000-0000-4000-9700-000000000051',
+  repeat('a', 64),
+  'service-upload'
+);
+set local role service_role;
+select lives_ok($$
+  insert into storage.objects (bucket_id, name, owner, owner_id, metadata, user_metadata, version)
+  values (
+    'platform-files',
+    'organizations/00000000-0000-4000-9700-000000000051/product-media/00000000-0000-4000-9700-000000000099/original.png',
+    '00000000-0000-4000-8700-000000000051',
+    '00000000-0000-4000-8700-000000000051',
+    '{"mimetype":"image/png"}'::jsonb,
+    '{}'::jsonb,
+    'service-product-media-original'
+  )
+$$, 'signed product media Storage uploads audit the actor from their upload session');
+reset role;
+select is(
+  (select count(*)::integer
+     from public.platform_audit_events
+    where organization_id = '00000000-0000-4000-9700-000000000051'
+      and actor_user_id = '00000000-0000-4000-8700-000000000051'
+      and event_type = 'erp.product_media.storage.insert'),
+  1,
+  'signed product media Storage audit retains the upload-session actor'
+);
+
+set local role service_role;
+select lives_ok($$
+  insert into storage.objects (bucket_id, name, owner, owner_id, metadata, user_metadata, version)
+  values (
+    'platform-files',
+    'organizations/00000000-0000-4000-9700-000000000051/product-media/00000000-0000-4000-9700-000000000098/renditions/large.webp',
+    '00000000-0000-4000-8700-000000000051',
+    '00000000-0000-4000-8700-000000000051',
+    '{"mimetype":"image/webp"}'::jsonb,
+    '{"loopdev_actor_user_id":"00000000-0000-4000-8700-000000000051"}'::jsonb,
+    'service-product-media-legacy-rendition'
+  )
+$$, 'legacy product media renditions audit the supplied service actor');
+reset role;
+select is(
+  (select count(*)::integer
+     from public.platform_audit_events
+    where organization_id = '00000000-0000-4000-9700-000000000051'
+      and actor_user_id = '00000000-0000-4000-8700-000000000051'
+      and event_type = 'erp.product_media.storage.insert'),
+  2,
+  'legacy product media renditions retain their authenticated audit actor'
 );
 
 select * from finish();

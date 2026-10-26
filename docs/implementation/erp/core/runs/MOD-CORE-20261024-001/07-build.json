@@ -612,16 +612,21 @@
       "type": "remote-migration-deployment",
       "path": "supabase/migrations/20261025175000_erp_product_media_gallery_order.sql",
       "result": "Authenticated to linked loopdev-platform-dev (sukjcsylkljiyvfklxvj). Reconciled remote-only version 20261025120000 by retrieving its stored SQL statements read-only and restoring supabase/migrations/20261025120000_erp_suppliers_foundation.sql (commit 4379822). The first Products push rolled back because the gallery backfill hit the existing ERP write-control trigger; updated the gallery migration to disable only the gallery table's write-control and audit triggers during metadata backfill, then restore them (commit 692bbc5). `supabase db push --linked --skip-vault` applied 20261025175000, 20261025180000 and 20261027120000. Read-only verification confirmed position is integer, all three versions are recorded, the gallery row has a position, all three relevant triggers are enabled, global Product writes remain false, and zero organization controls are enabled. No Product/SKU business fields, Vault secrets or seed data were changed. Isolated pgTAP rerun was blocked because Docker was unavailable; no authenticated browser route was retested."
+    },
+    {
+      "type": "edge-function-deployment",
+      "path": "supabase/functions/platform-files/index.ts",
+      "result": "The reported Edge Function request error was traced to platform-files not being deployed in loopdev-platform-dev. Local Deno check and 5 function tests passed. Deployed only platform-files with JWT verification enabled via `supabase functions deploy platform-files --project-ref sukjcsylkljiyvfklxvj --use-api`; Supabase reports ACTIVE version 1. OPTIONS preflight for http://localhost:8080 returned HTTP 200 with the expected CORS headers. The browser canvas redirected to /pages/login, so no authenticated gallery request was verified. PLATFORM_FILES_ALLOWED_ORIGINS is not configured; non-local app origins require configuration."
     }
   ],
-  "detected_failure": "The missing position column was deployed to loopdev-platform-dev and verified remotely. The isolated pgTAP rerun could not start because Docker was unavailable, and no authenticated browser refresh was performed; UI runtime verification remains outstanding.",
-  "likely_failure_origin": "The application adapter reads erp_product_media_assignments.position, but the migration adding that column was absent from merged PR #40. The first deployment attempt also exposed that the gallery data backfill was blocked by the existing default-off Product write-control trigger; the migration now bypasses only the write-control and audit triggers during that metadata backfill and restores them before completing.",
-  "next_handoff": "Refresh and verify the Products web route against loopdev-platform-dev. The position column and all three pending Products migrations are applied; global Product writes remain disabled and no organization enables them. The feature branch commits are still local, not pushed, and no follow-up PR has been opened. Mobile work remains excluded.",
+  "detected_failure": "The Products gallery Edge Function request failure was caused by the platform-files function being absent from loopdev-platform-dev; it is now deployed and active. The browser canvas had no authenticated session, so the gallery route still needs user-session verification. The function currently allows localhost origins; non-local origins require PLATFORM_FILES_ALLOWED_ORIGINS.",
+  "likely_failure_origin": "The web adapter invokes the shared platform-files Edge Function, but only the database migration had been deployed. The remote function list confirmed there was no platform-files deployment; deploying the approved function made the endpoint active and its localhost CORS preflight succeeds.",
+  "next_handoff": "Refresh the Products page in the authenticated browser session and verify the media card. If the app is hosted on a non-local origin, configure PLATFORM_FILES_ALLOWED_ORIGINS for that exact origin. Product write controls remain disabled. The feature branch commits are local; no push or follow-up PR has been made.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
     "approved_at": null
   },
   "invalidated": false,
-  "updated_at": "2026-10-25T21:56:32Z"
+  "updated_at": "2026-10-26T21:45:00Z"
 }

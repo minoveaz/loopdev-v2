@@ -604,3 +604,20 @@ The targeted isolated pgTAP rerun could not start because Docker was not
 running (`ECONNREFUSED` on the isolated project's port and missing Docker
 socket). No authenticated browser refresh was performed, so the database
 schema fix is verified but the UI route was not re-tested.
+
+### Attempt 19 — deploy Platform Files Edge Function
+
+The new screenshot showed `Failed to send a request to the Edge Function`.
+`supabase functions list --project-ref sukjcsylkljiyvfklxvj` confirmed
+`platform-files` was absent from `loopdev-platform-dev`. After local
+`deno check` and five passing Deno tests, deployed only that function with
+`supabase functions deploy platform-files --project-ref sukjcsylkljiyvfklxvj
+--use-api`; Supabase reports it `ACTIVE`, version 1. JWT verification remains
+enabled. An OPTIONS preflight for `http://localhost:8080` returned HTTP 200
+with the expected CORS headers.
+
+The browser verification canvas redirected to `/pages/login`, so it had no
+authenticated session to exercise the product gallery. The configured
+`PLATFORM_FILES_ALLOWED_ORIGINS` secret is absent; local origins are explicitly
+allowed by the function, but a non-local app origin must be configured before
+that origin can call the function.

@@ -11,6 +11,7 @@ import {
   localCatalogSkuCountersStore,
   localCatalogVariantsStore,
   localOrganizationCatalogsStore,
+  localProductCostMutationsStore,
   localProductCostReferencesStore,
   localProductReferencesStore,
 } from "@/loopdev/domains/catalog/data/localCatalog";
@@ -30,6 +31,7 @@ describe("ERP product SKU manager", () => {
     localCatalogSkuCountersStore.reset();
     localCatalogVariantsStore.reset();
     localOrganizationCatalogsStore.reset();
+    localProductCostMutationsStore.reset();
     localProductCostReferencesStore.reset();
     localProductReferencesStore.reset();
     window.localStorage.setItem("rivera:ui:language", JSON.stringify("en"));
@@ -142,5 +144,42 @@ describe("ERP product SKU manager", () => {
     });
     expect(localCatalogItemsStore.get(item.id)?.sku).toBe("");
     expect(await screen.findByRole("status")).toHaveTextContent("SKUs saved.");
+  });
+
+  it("manages purchase costs independently for each SKU", async () => {
+    let uuid = 0;
+    Object.defineProperty(window.crypto, "randomUUID", {
+      configurable: true,
+      value: () => `sku-cost-${++uuid}`,
+    });
+    const item = await localCatalogAdapter.createCatalogItem({
+      organizationId,
+      catalogId: "catalog_products",
+      name: "Costed product",
+      type: "physical_product",
+      status: "draft",
+      metadata: { itemKind: "product", canPurchase: true },
+    });
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={[`/app/erp/products/${item.id}/skus`]}>
+          <ProductSkuManagerPage productId={item.id} />
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+
+    fireEvent.change(await screen.findByLabelText("Colors"), { target: { value: "Black, Red" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generate combinations" }));
+    fireEvent.change(screen.getByLabelText("Unit purchase cost Black"), { target: { value: "12.50" } });
+    fireEvent.change(screen.getByLabelText("Unit purchase cost Red"), { target: { value: "18.75" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save SKUs" }));
+
+    await waitFor(() => expect(localProductCostReferencesStore.list()).toHaveLength(2));
+    const variants = localCatalogVariantsStore.list().filter((variant) => variant.catalogItemId === item.id);
+    expect(localProductCostReferencesStore.list()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ variantId: variants.find((variant) => variant.attributes.color === "Black")?.id, amount: 12.5, currency: "EUR", version: 1 }),
+      expect.objectContaining({ variantId: variants.find((variant) => variant.attributes.color === "Red")?.id, amount: 18.75, currency: "EUR", version: 1 }),
+    ]));
   });
 });

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ImagePlus, LoaderCircle, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, ImagePlus, LoaderCircle, Trash2 } from "lucide-react";
 import { FormSectionHeader } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FilePicker } from "@/loopdev/components/files/FilePicker";
-import { productMediaAdapter, type ProductMediaAssignment } from "@/loopdev/domains/catalog";
+import { productMediaAdapter, type ProductMediaAsset, type ProductMediaAssignment } from "@/loopdev/domains/catalog";
 import type { CatalogItem, CatalogVariant } from "@/loopdev/domains/catalog";
 import type { FilePreviewSource } from "@/loopdev/domains/files";
 import { useT } from "@/i18n";
@@ -32,11 +32,14 @@ export function ProductMediaGalleryManager({
   const translateRef = useRef(t);
   translateRef.current = t;
   const [assignments, setAssignments] = useState<ProductMediaAssignment[]>([]);
+  const [libraryAssets, setLibraryAssets] = useState<ProductMediaAsset[]>([]);
   const [previewSources, setPreviewSources] = useState<Record<string, FilePreviewSource>>({});
   const [altTextDrafts, setAltTextDrafts] = useState<Record<string, string>>({});
   const [targetVariantId, setTargetVariantId] = useState("__product");
   const [previewedAssignment, setPreviewedAssignment] = useState<ProductMediaAssignment | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [libraryLoading, setLibraryLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [workingAssetId, setWorkingAssetId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +61,7 @@ export function ProductMediaGalleryManager({
       const assetIds = [...new Set(loadedAssignments.map((assignment) => assignment.assetId))];
       const sources = await Promise.all(assetIds.map(async (assetId) => [
         assetId,
-        await productMediaAdapter.getPreviewSource(assetId, { organizationId }),
+        await productMediaAdapter.getPreviewSource(assetId, { organizationId, catalogItemId: item.id }),
       ] as const));
       if (requestId !== requestRef.current) {
         sources.forEach(([, source]) => source?.revoke?.());
@@ -96,7 +99,7 @@ export function ProductMediaGalleryManager({
     setError(null);
     try {
       for (const file of files) {
-        const asset = await productMediaAdapter.uploadAsset({ organizationId, file });
+        const asset = await productMediaAdapter.uploadAsset({ organizationId, catalogItemId: item.id, file });
         await productMediaAdapter.attach({
           organizationId,
           assetId: asset.id,
@@ -113,6 +116,38 @@ export function ProductMediaGalleryManager({
     }
   };
 
+  const openLibrary = async () => {
+    setLibraryOpen(true);
+    setLibraryLoading(true);
+    setError(null);
+    try {
+      setLibraryAssets(await productMediaAdapter.listLibrary({ organizationId }));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("common.erpProductRecord.mediaLoadError"));
+    } finally {
+      setLibraryLoading(false);
+    }
+  };
+
+  const attachLibraryAsset = async (asset: ProductMediaAsset) => {
+    setWorkingAssetId(asset.id);
+    setError(null);
+    try {
+      await productMediaAdapter.attach({
+        organizationId,
+        assetId: asset.id,
+        catalogItemId: item.id,
+        variantId: selectedVariantId,
+      });
+      setLibraryOpen(false);
+      await reload();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("common.erpProductRecord.mediaSaveError"));
+    } finally {
+      setWorkingAssetId(null);
+    }
+  };
+
   const saveAltText = async (assignment: ProductMediaAssignment) => {
     setWorkingAssetId(assignment.assetId);
     setError(null);
@@ -120,6 +155,7 @@ export function ProductMediaGalleryManager({
       await productMediaAdapter.updateAltText({
         organizationId,
         assignmentId: assignment.id,
+        expectedVersion: assignment.version,
         altText: altTextDrafts[assignment.id] ?? "",
       });
       await reload();
@@ -134,10 +170,36 @@ export function ProductMediaGalleryManager({
     setWorkingAssetId(assignment.assetId);
     setError(null);
     try {
-      await productMediaAdapter.detach({ organizationId, assignmentId: assignment.id });
+      await productMediaAdapter.detach({ organizationId, assignmentId: assignment.id, expectedVersion: assignment.version });
       await reload();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("common.erpProductRecord.mediaRemoveError"));
+    } finally {
+      setWorkingAssetId(null);
+    }
+  };
+
+  const moveAssignment = async (assignment: ProductMediaAssignment, direction: -1 | 1) => {
+    const gallery = assignments
+      .filter((candidate) => candidate.variantId === assignment.variantId)
+      .sort((left, right) => left.position - right.position);
+    const index = gallery.findIndex((candidate) => candidate.id === assignment.id);
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= gallery.length) return;
+    const reordered = [...gallery];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    setWorkingAssetId(assignment.assetId);
+    setError(null);
+    try {
+      await productMediaAdapter.reorderAssignments({
+        organizationId,
+        catalogItemId: item.id,
+        variantId: assignment.variantId,
+        assignments: reordered.map(({ id, version }) => ({ id, expectedVersion: version })),
+      });
+      await reload();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("common.erpProductRecord.mediaSaveError"));
     } finally {
       setWorkingAssetId(null);
     }
@@ -179,6 +241,9 @@ export function ProductMediaGalleryManager({
             onFilesSelected={(files) => { void uploadImages(files); }}
           />
         </div>
+        <Button type="button" variant="outline" onClick={() => void openLibrary()} disabled={uploading}>
+          {t("common.erpProductRecord.browseMediaLibrary")}
+        </Button>
       </div>
 
       {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
@@ -225,9 +290,17 @@ export function ProductMediaGalleryManager({
                     <Button type="button" size="sm" variant="outline" disabled={workingAssetId === assignment.assetId || (altTextDrafts[assignment.id] ?? "") === assignment.altText} onClick={() => void saveAltText(assignment)}>
                       {t("common.erpProductRecord.saveAltText")}
                     </Button>
-                    <Button type="button" size="icon" variant="ghost" aria-label={t("common.erpProductRecord.detachMedia", { name: assignment.asset.fileName })} disabled={workingAssetId === assignment.assetId} onClick={() => void detachAsset(assignment)}>
-                      {workingAssetId === assignment.assetId ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button type="button" size="icon" variant="ghost" aria-label={t("common.erpProductRecord.moveMediaUp", { name: assignment.asset.fileName })} disabled={workingAssetId === assignment.assetId || assignment.position === 0} onClick={() => void moveAssignment(assignment, -1)}>
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <Button type="button" size="icon" variant="ghost" aria-label={t("common.erpProductRecord.moveMediaDown", { name: assignment.asset.fileName })} disabled={workingAssetId === assignment.assetId || assignment.position === assignments.filter((candidate) => candidate.variantId === assignment.variantId).length - 1} onClick={() => void moveAssignment(assignment, 1)}>
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                      <Button type="button" size="icon" variant="ghost" aria-label={t("common.erpProductRecord.detachMedia", { name: assignment.asset.fileName })} disabled={workingAssetId === assignment.assetId} onClick={() => void detachAsset(assignment)}>
+                        {workingAssetId === assignment.assetId ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </article>
@@ -252,6 +325,38 @@ export function ProductMediaGalleryManager({
             />
           </div>
         </DialogContent>}
+      </Dialog>
+
+      <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{t("common.erpProductRecord.mediaLibraryTitle")}</DialogTitle>
+            <DialogDescription>{t("common.erpProductRecord.mediaLibraryDescription")}</DialogDescription>
+          </DialogHeader>
+          {libraryLoading ? <p role="status" className="py-6 text-sm text-muted-foreground">{t("common.erpProductRecord.loadingMedia")}</p> : libraryAssets.length ? (
+            <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+              {libraryAssets.map((asset) => {
+                const alreadyAttached = assignments.some((assignment) =>
+                  assignment.assetId === asset.id && assignment.variantId === selectedVariantId);
+                return <div key={asset.id} className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{asset.fileName}</p>
+                    <p className="text-xs text-muted-foreground">{asset.mimeType} · {formatBytes(asset.byteSize)}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={alreadyAttached || workingAssetId === asset.id}
+                    onClick={() => void attachLibraryAsset(asset)}
+                  >
+                    {alreadyAttached ? t("common.erpProductRecord.mediaAlreadyAttached") : t("common.erpProductRecord.attachLibraryMedia")}
+                  </Button>
+                </div>;
+              })}
+            </div>
+          ) : <p className="py-6 text-sm text-muted-foreground">{t("common.erpProductRecord.mediaLibraryEmpty")}</p>}
+        </DialogContent>
       </Dialog>
     </section>
   );

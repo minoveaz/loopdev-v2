@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Save } from "lucide-react";
+import { Archive, ArrowLeft, Check, Plus, RotateCcw, Save } from "lucide-react";
 import { AppDrawer } from "@/components/platform";
 import { FormSectionHeader, LoadingState, PageContainer, PageHeader, StatusBadge } from "@/components/common";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,7 @@ type ProductForm = {
   priceCurrency: string;
   cost: string;
   costCurrency: string;
+  costVersion: number;
   status: CatalogItem["status"];
 };
 
@@ -77,6 +78,7 @@ const emptyForm = (): ProductForm => ({
   priceCurrency: "EUR",
   cost: "",
   costCurrency: "EUR",
+  costVersion: 0,
   status: "draft",
 });
 
@@ -170,13 +172,13 @@ function ReferenceQuickDrawer({
       <Field label={t("common.erpProductRecord.referenceName", { kind: labels[kind] })} required>
         <Input autoFocus value={name} onChange={(event) => setName(event.target.value)} />
       </Field>
-      {kind === "category" && references.some((reference) => reference.kind === "category") && (
+      {kind === "category" && references.some((reference) => reference.kind === "category" && reference.status === "active") && (
         <Field label={t("common.erpProductRecord.parentCategory")}>
           <Select value={parentId || "__none"} onValueChange={(value) => setParentId(value === "__none" ? "" : value)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__none">{t("common.erpProductRecord.noParent")}</SelectItem>
-              {references.filter((reference) => reference.kind === "category").map((reference) =>
+              {references.filter((reference) => reference.kind === "category" && reference.status === "active").map((reference) =>
                 <SelectItem key={reference.id} value={reference.id}>{reference.name}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -203,6 +205,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
   const [saving, setSaving] = useState(false);
   const [quickCreateKind, setQuickCreateKind] = useState<ProductReferenceKind | null>(null);
   const [costReadable, setCostReadable] = useState(true);
+  const costMutationRef = useRef<{ fingerprint: string; idempotencyKey: string } | null>(null);
 
   useEffect(() => {
     if (!itemId && previousItemId.current) {
@@ -280,14 +283,21 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
           priceCurrency: stringValue(metadata.currency) || "EUR",
           status: loadedItem.status,
         });
-        try {
-          const cost = await catalogAdapter.getProductCostReference({ organizationId, catalogItemId: loadedItem.id });
-          if (active) {
-            setForm((current) => ({ ...current, cost: cost?.amount == null ? "" : String(cost.amount), costCurrency: cost?.currency ?? "EUR" }));
+        if (!loadedVariants.some((variant) => variant.status !== "archived")) {
+          try {
+            const cost = await catalogAdapter.getProductCostReference({ organizationId, catalogItemId: loadedItem.id });
+            if (active) {
+              setForm((current) => ({
+                ...current,
+                cost: cost?.amount == null ? "" : String(cost.amount),
+                costCurrency: cost?.currency ?? "EUR",
+                costVersion: cost?.version ?? 0,
+              }));
+            }
+          } catch (cause) {
+            if (active) setCostReadable(false);
+            if (cause instanceof Error && !/permission|forbidden/i.test(cause.message)) throw cause;
           }
-        } catch (cause) {
-          if (active) setCostReadable(false);
-          if (cause instanceof Error && !/permission|forbidden/i.test(cause.message)) throw cause;
         }
         if (active) setIsLoading(false);
       } catch (cause) {
@@ -338,7 +348,11 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
       setSaveError(t("common.erpProductRecord.activeCategoryRequired"));
       return;
     }
-    if (form.cost.trim() && (!Number.isFinite(Number(form.cost)) || Number(form.cost) < 0)) {
+    if (form.cost.trim() && (
+      !Number.isFinite(Number(form.cost))
+      || Number(form.cost) < 0
+      || Math.round(Number(form.cost) * 100) !== Number(form.cost) * 100
+    )) {
       setSaveError(t("common.erpProductRecord.invalidCost"));
       return;
     }
@@ -410,14 +424,24 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
           metadata,
         });
       setItem(savedItem);
-      if (form.itemKind === "product" && form.canPurchase) {
+      const managesCostAtProduct = !variants.some((variant) => variant.status !== "archived");
+      if (form.itemKind === "product" && managesCostAtProduct && costReadable && (form.canPurchase || form.costVersion > 0)) {
+        const fingerprint = JSON.stringify([savedItem.id, form.cost, form.costCurrency, form.costVersion, form.canPurchase]);
+        if (costMutationRef.current?.fingerprint !== fingerprint) {
+          const idempotencyKey = window.crypto?.randomUUID?.();
+          if (!idempotencyKey) throw new Error(t("common.erpProductRecord.costMutationUnavailable"));
+          costMutationRef.current = { fingerprint, idempotencyKey };
+        }
         await catalogAdapter.saveProductCostReference({
           organizationId,
           catalogItemId: savedItem.id,
           variantId: null,
-          amount: form.cost.trim() ? Number(form.cost) : null,
+          amount: form.canPurchase && form.cost.trim() ? Number(form.cost) : null,
           currency: form.costCurrency,
+          expectedVersion: form.costVersion,
+          idempotencyKey: costMutationRef.current.idempotencyKey,
         });
+        costMutationRef.current = null;
       }
       navigate(`/app/erp/products/${savedItem.id}`);
     } catch (cause) {
@@ -445,7 +469,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
         : storedItemKind === "service"
         ? t("common.erpProductRecord.itemKinds.service")
           : t(`common.erpForm.item.${itemTypeTranslationKeys[item.type]}`);
-    const canShowCost = physicalType && metadata.canPurchase !== false;
+    const canShowCost = physicalType && metadata.canPurchase !== false && !variants.some((variant) => variant.status !== "archived");
     return <PageContainer width="wide">
       <PageHeader
         title={item.name}
@@ -518,6 +542,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
   const isProduct = form.itemKind === "product";
   const isPhysical = isProduct;
   const isFinishedProduct = form.itemClass === "finished_product";
+  const managesCostAtProduct = !variants.some((variant) => variant.status !== "archived");
   const pageTitle = mode === "create"
     ? t(form.itemKind === "service" ? "common.erpProductRecord.createService" : form.itemKind === "product" ? "common.erpProductRecord.createProduct" : "common.erpProductRecord.createItem")
     : form.itemKind === "service"
@@ -666,12 +691,12 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
                 <Field label={t("common.erpProductRecord.referenceSalesPrice")}><Input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setField("price", event.target.value)} /></Field>
                 <Field label={t("common.erpForm.item.currency")}><Select value={form.priceCurrency} onValueChange={(value) => setField("priceCurrency", value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["EUR", "USD", "GBP"].map((currency) => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}</SelectContent></Select></Field>
               </div>}
-              {isPhysical && form.canPurchase && <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-3">
+              {isPhysical && form.canPurchase && managesCostAtProduct && <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-3">
                 <Field label={t("common.erpProductRecord.purchaseCost")}><Input type="number" min="0" step="0.01" value={form.cost} onChange={(event) => setField("cost", event.target.value)} disabled={!costReadable} /></Field>
                 <Field label={t("common.erpForm.item.currency")}><Select value={form.costCurrency} onValueChange={(value) => setField("costCurrency", value)} disabled={!costReadable}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["EUR", "USD", "GBP"].map((currency) => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}</SelectContent></Select></Field>
               </div>}
             </div>
-            {isPhysical && form.canPurchase && <p className="mt-3 text-xs text-muted-foreground">{t("common.erpProductRecord.costNote")}</p>}
+            {isPhysical && form.canPurchase && <p className="mt-3 text-xs text-muted-foreground">{t(managesCostAtProduct ? "common.erpProductRecord.costNote" : "common.erpProductRecord.skuCostNote")}</p>}
           </section>}
           <section className="rounded-xl border border-border bg-card p-5">
             <FormSectionHeader eyebrow={t("common.erpProductRecord.organizationEyebrow")} title={t("common.erpProductRecord.tagsAvailability")} description={t("common.erpProductRecord.tagsDescription")} mode="expanded" responsive="auto" />
@@ -721,7 +746,7 @@ export function ProductConfigurationPage() {
     setLoading(true);
     setError(null);
     try {
-      setReferences(await catalogAdapter.listProductReferences({ organizationId }));
+      setReferences(await catalogAdapter.listProductReferences({ organizationId, includeArchived: true }));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("common.erpProductRecord.configurationLoadError"));
     } finally {
@@ -752,12 +777,18 @@ export function ProductConfigurationPage() {
               <div><h2 className="font-semibold">{group.title}</h2><p className="mt-1 text-sm text-muted-foreground">{group.description}</p></div>
               <Button size="icon" variant="outline" aria-label={t("common.erpProductRecord.createReference", { kind: (group.kind === "category" ? t("common.erpForm.item.category") : group.kind === "brand" ? t("common.erpForm.item.brand") : t("common.erpProductRecord.tag")).toLocaleLowerCase() })} onClick={() => setQuickCreateKind(group.kind)}><Plus className="h-4 w-4" /></Button>
             </div>
-            <div className="mt-4 divide-y divide-border">
-              {groupReferences.length ? groupReferences.map((reference) => <div key={reference.id} className="py-3 text-sm">
+            {group.kind === "category" ? (
+              <CategoryTreeManager
+                categories={groupReferences}
+                organizationId={organizationId}
+                onUpdated={(updated) => setReferences((current) => current.map((reference) => reference.id === updated.id ? updated : reference))}
+              />
+            ) : <div className="mt-4 divide-y divide-border">
+              {groupReferences.filter((reference) => reference.status !== "archived").length ? groupReferences.filter((reference) => reference.status !== "archived").map((reference) => <div key={reference.id} className="py-3 text-sm">
                 <p className="font-medium">{reference.name}</p>
                 <p className="mt-0.5 font-mono text-xs text-muted-foreground">{reference.key}</p>
               </div>) : <p className="py-4 text-sm text-muted-foreground">{t("common.erpProductRecord.noReferences", { group: group.title.toLocaleLowerCase() })}</p>}
-            </div>
+            </div>}
           </section>;
         })}
       </div>
@@ -770,6 +801,127 @@ export function ProductConfigurationPage() {
       onCreated={(reference) => { setReferences((current) => [reference, ...current]); setQuickCreateKind(null); }}
     />
   </PageContainer>;
+}
+
+function CategoryTreeManager({
+  categories,
+  organizationId,
+  onUpdated,
+}: {
+  categories: ProductReference[];
+  organizationId: string;
+  onUpdated: (category: ProductReference) => void;
+}) {
+  const t = useT();
+  const [nameDrafts, setNameDrafts] = useState<Record<string, string>>({});
+  const [workingId, setWorkingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const activeCategories = categories.filter((category) => category.status === "active");
+
+  const descendantsOf = (categoryId: string) => {
+    const descendants = new Set<string>();
+    const pending = [categoryId];
+    while (pending.length) {
+      const parentId = pending.pop();
+      for (const child of categories) {
+        if (child.parentId === parentId && !descendants.has(child.id)) {
+          descendants.add(child.id);
+          pending.push(child.id);
+        }
+      }
+    }
+    return descendants;
+  };
+
+  const orderedCategories = (() => {
+    const children = new Map<string | null, ProductReference[]>();
+    categories.forEach((category) => {
+      const key = category.parentId && categories.some((candidate) => candidate.id === category.parentId)
+        ? category.parentId
+        : null;
+      children.set(key, [...(children.get(key) ?? []), category]);
+    });
+    children.forEach((siblings) => siblings.sort((left, right) => left.name.localeCompare(right.name)));
+    const ordered: Array<{ category: ProductReference; depth: number }> = [];
+    const visited = new Set<string>();
+    const visit = (parentId: string | null, depth: number) => {
+      for (const category of children.get(parentId) ?? []) {
+        if (visited.has(category.id)) continue;
+        visited.add(category.id);
+        ordered.push({ category, depth });
+        visit(category.id, depth + 1);
+      }
+    };
+    visit(null, 0);
+    categories.filter((category) => !visited.has(category.id)).forEach((category) => ordered.push({ category, depth: 0 }));
+    return ordered;
+  })();
+
+  const update = async (category: ProductReference, patch: Partial<Pick<ProductReference, "name" | "parentId" | "status">>) => {
+    setWorkingId(category.id);
+    setError(null);
+    try {
+      const updated = await catalogAdapter.updateProductReference(category.id, { organizationId }, {
+        expectedVersion: category.version,
+        patch,
+      });
+      onUpdated(updated);
+      setNameDrafts((current) => ({ ...current, [category.id]: updated.name }));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("common.erpProductRecord.categorySaveError"));
+    } finally {
+      setWorkingId(null);
+    }
+  };
+
+  if (!categories.length) return <p className="mt-4 py-4 text-sm text-muted-foreground">{t("common.erpProductRecord.noReferences", { group: t("common.erpProductRecord.categories").toLocaleLowerCase() })}</p>;
+
+  return <div className="mt-4">
+    {error && <p role="alert" className="mb-3 text-sm text-destructive">{error}</p>}
+    <div className="divide-y divide-border">
+      {orderedCategories.map(({ category, depth }) => {
+        const name = nameDrafts[category.id] ?? category.name;
+        const blockedParents = descendantsOf(category.id);
+        const busy = workingId === category.id;
+        return <div key={category.id} className="grid gap-2 py-3 sm:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_auto] sm:items-center" style={{ paddingInlineStart: `${depth * 1.25}rem` }}>
+          <div className="min-w-0">
+            <Input
+              aria-label={t("common.erpProductRecord.categoryName", { name: category.name })}
+              value={name}
+              disabled={busy || category.status === "archived"}
+              onChange={(event) => setNameDrafts((current) => ({ ...current, [category.id]: event.target.value }))}
+            />
+            <p className="mt-1 truncate font-mono text-xs text-muted-foreground">{category.key} · {t(`common.erpForm.item.${category.status}`)}</p>
+          </div>
+          <Select
+            value={category.parentId ?? "__root"}
+            disabled={busy || category.status === "archived"}
+            onValueChange={(value) => void update(category, { parentId: value === "__root" ? null : value })}
+          >
+            <SelectTrigger aria-label={t("common.erpProductRecord.categoryParentLabel", { name: category.name })}><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__root">{t("common.erpProductRecord.rootCategory")}</SelectItem>
+              {activeCategories.filter((candidate) => candidate.id !== category.id && !blockedParents.has(candidate.id)).map((candidate) => (
+                <SelectItem key={candidate.id} value={candidate.id}>{candidate.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-1">
+            {category.status === "active" ? <>
+              <Button type="button" size="icon" variant="ghost" aria-label={t("common.erpProductRecord.saveCategoryName", { name: category.name })} disabled={busy || !name.trim() || name.trim() === category.name} onClick={() => void update(category, { name })}>
+                {busy ? <Save className="h-4 w-4 animate-pulse" /> : <Check className="h-4 w-4" />}
+              </Button>
+              <Button type="button" size="icon" variant="ghost" aria-label={t("common.erpProductRecord.archiveCategory", { name: category.name })} disabled={busy} onClick={() => void update(category, { status: "archived" })}>
+                <Archive className="h-4 w-4" />
+              </Button>
+            </> : <Button type="button" size="icon" variant="ghost" aria-label={t("common.erpProductRecord.restoreCategory", { name: category.name })} disabled={busy} onClick={() => void update(category, { status: "active" })}>
+              <RotateCcw className="h-4 w-4" />
+            </Button>}
+          </div>
+        </div>;
+      })}
+    </div>
+  </div>;
 }
 
 function RecordValue({ label, value, technical = false, wide = false }: { label: string; value: React.ReactNode; technical?: boolean; wide?: boolean }) {

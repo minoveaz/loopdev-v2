@@ -9,20 +9,20 @@
   "status": "blocked",
   "decision_status": "open",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 9,
-  "started_at": "2026-10-25T13:02:25.056Z",
-  "completed_at": null,
+  "attempt": 16,
+  "started_at": "2026-10-25T18:22:51Z",
+  "completed_at": "2026-10-25T18:29:42Z",
   "input_fingerprint": "sha256:7ce9b44cad626b5de49d65607db36c3b312eef926b64d1bd3251bb38de4fd4fa",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
     "branch": "feature/erp-core-capabilities",
     "base_branch": "develop",
-    "head_commit": "2e7faf367aa0b13a735492e9878390cc7e5a3621",
-    "working_tree": "Modified pre-existing ERP planning, contracts, run trace, migrations and delivery-validator/tests plus ADAPTER-MODE-001 Catalog adapter/storage changes and evidence updates.",
-    "runtime_url": "http://localhost:8080/app/erp/products",
-    "runtime_port": 8080,
-    "serving_process": "Vite dev server (node PID 32300)"
+    "head_commit": "141f1ca6d50286d639e3b1e0e5a472c676acda9a",
+    "working_tree": "Existing Products security implementation and Platform Files contract plus MEDIA-DATA-001 migration, pgTAP coverage and build evidence.",
+    "runtime_url": null,
+    "runtime_port": null,
+    "serving_process": "Isolated local Supabase project at 127.0.0.1:55422 applied the full migration chain and ran pgTAP; no application runtime or remote database was used."
   },
   "input_artifacts": [],
   "output_artifacts": [
@@ -38,7 +38,25 @@
     "src/test/setup.ts",
     "src/test/catalog/catalog-adapter.test.ts",
     "docs/implementation/erp/core/platform-evidence-matrix.md",
-    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md"
+    "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md",
+    "docs/implementation/erp/core/access-model.md",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "supabase/migrations/20261025173000_erp_product_write_audit_controls.sql",
+    "supabase/migrations/20261025174000_erp_products_operation_rls.sql",
+    "supabase/tests/database/014_erp_product_write_audit.sql",
+    "supabase/tests/database/015_erp_products_operation_rls.sql",
+    "src/loopdev/domains/platform/types.ts",
+    "src/loopdev/domains/platform/adapter/local.ts",
+    "packages/contracts/src/platform-files.ts",
+    "packages/contracts/src/index.ts",
+    "packages/contracts/src/private-user-files.ts",
+    "src/test/platform/files-contract.test.ts",
+    "docs/03-platform/backend/FILES_BACKEND_MAPPING.md",
+    "docs/implementation/erp/core/api-contracts.md",
+    "docs/implementation/erp/core/sync-model.md",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "supabase/migrations/20261025175000_erp_product_media_gallery_order.sql",
+    "supabase/tests/database/016_erp_product_media_gallery_order.sql"
   ],
   "decisions": [
     {
@@ -49,17 +67,27 @@
     {
       "id": "BUILD-PLATFORM-AUDIT-001",
       "status": "confirmed",
-      "summary": "The authorized Platform/DB owner @loopdev-io approved an append-only Products audit event using the existing Platform event envelope, allowlisted metadata (changed field names, version, correlation ID and reason code), no field values/sensitive data, same-transaction persistence with mutation rollback on audit failure, six months active retention, and restricted archive only for documented exceptions. This approves semantics only; Platform implementation, retention enforcement, atomicity tests and all remote Products writes remain gated."
+      "summary": "The authorized Platform/DB owner @loopdev-io approved an append-only Products audit event using the existing Platform event envelope, allowlisted metadata (changed field names, version, correlation ID and reason code), no field values/sensitive data, same-transaction persistence with mutation rollback on audit failure, six months active retention, and restricted archive only for documented exceptions. The migration and atomicity tests are implemented and deployed; the approved retention/archive operation still requires verification."
     },
     {
       "id": "BUILD-WRITE-CONTROL-001",
       "status": "confirmed",
-      "summary": "The authorized Platform/DB owner @loopdev-io approved a database-enforced global and per-organization Products write control, default false, checked by every mutation, changed only by Platform/DB owner and audited. This is design approval only; no control or migration was implemented."
+      "summary": "The authorized Platform/DB owner @loopdev-io approved a database-enforced global and per-organization Products write control, default false, checked by every mutation, changed only by Platform/DB owner and audited. It is deployed to loopdev-platform-dev; the global control is false and no organization control is enabled, so remote Products writes remain disabled."
     },
     {
       "id": "BUILD-MIGRATION-RECOVERY-001",
       "status": "confirmed",
       "summary": "The authorized Platform/DB owner @loopdev-io approved an immutable pre-cutover snapshot and forward-only recovery: disable writes/read-only on failure, repair forward without deleting post-cutover writes, and restore the snapshot only before post-cutover mutations or after reconciliation."
+    },
+    {
+      "id": "BUILD-SIGNED-URL-001",
+      "status": "confirmed",
+      "summary": "The Product Owner selected a maximum five-minute lifetime for signed media previews. Platform Files returns expiresAt, issues previews only after current authorization checks, and consumers request/renew URLs on demand. The existing Products adapter still uses one-hour URLs until MEDIA-ADAPTER-001 replaces it."
+    },
+    {
+      "id": "BUILD-PLATFORM-FILES-CONTRACT-001",
+      "status": "confirmed",
+      "summary": "Platform Files owns upload/finalization, server-side image validation, original and 1600/400 max-edge renditions, signed-preview authorization, retention and orphan recovery. ERP owns media tags and Product/SKU assignment/order/alt text; detach removes only an assignment. The generic remote adapter remains future implementation work."
     }
   ],
   "actions": [
@@ -80,7 +108,27 @@
     "Completed the read-only AUDIT-SECURITY-001 review. It found that the new Storage write policies broadened non-product Platform Files paths from owner/admin/agent (plus matching personal upload flows) to any active organization member.",
     "Fixed the Storage policies so only product-media paths use catalog.read/catalog.write; non-product organization writes retain the existing owner/admin/agent checks, and personal file paths retain owner/session checks. Added a forward-only correction denying authenticated physical deletion of product-media objects, plus pgTAP assertions for the policy boundaries.",
     "The Catalog adapter suite passed (12 tests). The user applied migrations 20261025120145, 20261025120200 and 20261025122000 to loopdev-platform-dev. Remote Management API queries confirmed the versions, Storage policy definitions and authenticated Files table grants. The isolated pgTAP suite passes all 19 tests; AUDIT-SECURITY-001 and 07-build remain blocked by broader audit criteria.",
-    "Completed only ready task ADAPTER-MODE-001: Catalog backend selection now requires explicit VITE_CATALOG_ADAPTER_MODE=local_demo|supabase, fails closed when configuration is missing/invalid, and never falls back to local fixtures after remote errors. Catalog local stores use strict persistence while unrelated localStore consumers retain best-effort semantics; failed writes do not update the in-memory cache."
+    "Completed only ready task ADAPTER-MODE-001: Catalog backend selection now requires explicit VITE_CATALOG_ADAPTER_MODE=local_demo|supabase, fails closed when configuration is missing/invalid, and never falls back to local fixtures after remote errors. Catalog local stores use strict persistence while unrelated localStore consumers retain best-effort semantics; failed writes do not update the in-memory cache.",
+    "Attempt 11: performed read-only inspection of the linked Supabase deployment. Confirmed broad FOR ALL Catalog policies, agent access to cost rows through catalog.write, direct DELETE/TRUNCATE privileges, broad media table write policies, missing Products audit triggers and missing database write controls. Integrity preflight found no cross-organization Product or price-entry references. No remote migration or data write was issued.",
+    "Recorded the Products security execution authorization as local-only. Remote migration application, production write enablement and user-data mutations remain explicitly out of scope until a separate rollout confirmation.",
+    "Completed PLATFORM-AUDIT-001 locally: added default-off global and organization write controls, a security-readiness gate, a Platform-owner-only control RPC, redacted same-transaction mutation auditing through the existing Platform audit RPC, and failure-closed write/audit triggers on Products and commercial tables. No remote migration was applied.",
+    "Attempt 13 completed RLS-MIGRATION-001: operation-specific Catalog/Products and cost policies, physical-delete restrictions with media-association detach, tenant-scoped relationship constraints, product Files/Storage write gates, and server-owned mutation timestamps. After the user explicitly authorized deployment with writes disabled, both migrations were applied to loopdev-platform-dev.",
+    "Recreated the disposable Supabase database from the full migration chain after the final SQL change; both audit and RLS pgTAP suites passed all 63 assertions. The write controls remain off by default.",
+    "The attempt-13 SQL lint command found existing findings in unrelated organization/settings functions and Supabase Storage dynamic-SQL functions; no finding referenced either new migration. These out-of-scope functions were not changed.",
+    "After deployment, read-only Management API queries confirmed both migration versions, zero broad FOR ALL Products policies, enabled audit/write-control triggers, owner/admin-only cost grants, product-media Storage write gates, global writes disabled and zero enabled organization controls. No Product records were modified.",
+    "No pre-cutover backup or recovery rehearsal was performed; keep the global and organization write controls disabled until recovery and remaining release gates are addressed.",
+    "Attempt 14 completed the Products security audit against the deployed policies, isolated pgTAP suites and current adapters. Negative tenant/role, delete, cost and default-off control cases are covered in suites 014/015; remote checks remain read-only because writes are disabled.",
+    "The audit identified remaining application-level cost projection/cache/log/search evidence, unaudited consumers of legacy catalog.manage grants, and the direct Product-media-to-Storage preview path. Existing one-hour signed URLs remain valid until expiry after access revocation; Platform Files must define the acceptable exposure window and shared lifecycle.",
+    "Recorded recovery and legacy-data review as independent unresolved release gates. The audit task can close with these risks explicit; this does not enable writes or establish release readiness.",
+    "Attempt 15: completed PLATFORM-FILES-001 by adding the provider-neutral PlatformFilesPort and policy contract, exporting it from the shared contracts package, and updating the Files backend mapping plus Products API/access/sync/platform evidence.",
+    "The Product Owner selected a maximum 300-second signed preview URL lifetime. Preview requests include organization/resource context and an explicit original/large/thumbnail rendition; server authorization is rechecked on each issuance. The existing Products adapter remains at 3600 seconds until MEDIA-ADAPTER-001.",
+    "Finalized media policy: JPEG/PNG/WebP, maximum 25 MiB, server MIME/signature/decode validation; preserve original and produce 1600/400 max-edge renditions with aspect ratio preserved and no upscale. Platform owns processing/encoding policy, retention/legal hold and orphan recovery; ERP owns tags, assignments, order and per-assignment alt text.",
+    "Detach removes only an ERP assignment. Registration/attachment failure never deletes a finalized shared File; cleanup requires Platform reconciliation to verify no active references. The exact retention duration is intentionally left to existing Platform policy.",
+    "No shared remote Files adapter or Products media runtime behavior was implemented in this contract task. No remote upload/preview or authenticated Files journey was run; remote Products writes remain disabled.",
+    "Attempt 16 completed MEDIA-DATA-001 locally: existing assignments receive deterministic per-gallery positions and version 1; triggers serialize gallery mutations, append new assignments, protect identity and version order/alt-text changes; a deferred unique constraint enforces gallery position uniqueness.",
+    "Added a security-checked atomic reorder RPC requiring catalog.write, enabled Products write controls, complete assignment IDs and matching expected versions. Direct clients can update contextual alt text but cannot change position; detach removes only the association.",
+    "The isolated full Supabase migration chain applied 20261025175000. Suites 014, 015 and 016 passed all 84 pgTAP assertions, covering role/security compatibility, reusable same-organization Files, product/SKU order, stale/incomplete conflicts, versioning and detach preservation.",
+    "SQL lint still reports pre-existing findings in organization/settings functions and Supabase Storage dynamic-SQL functions; no finding references the new migration or gallery functions. No remote migration, file operation, Product data write or write-control change was performed."
   ],
   "validation": [
     {
@@ -257,6 +305,146 @@
       "command": "npm run validate:multiplatform",
       "result": "passed",
       "evidence": "Structural platform scope/evidence validation; no new renderer or operation parity is claimed."
+    },
+    {
+      "command": "npm run supabase:check",
+      "result": "passed (4/4)",
+      "evidence": "Configured Supabase URL and authenticated read checks responded successfully. The doctor generated a local ignored .env from .env.example; no database mutation or migration was performed."
+    },
+    {
+      "command": "supabase test db --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap supabase/tests/database/014_erp_product_write_audit.sql",
+      "result": "passed (17 tests)",
+      "evidence": "Full migration chain, including 20261025173000, ran in a separate local Supabase project. The pgTAP suite proves default-off controls, org/global gates, Platform-owner-only toggling, audit emission and rollback on audit failure."
+    },
+    {
+      "command": "supabase db lint --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap",
+      "result": "completed with 4 pre-existing findings",
+      "evidence": "The linter reported unrelated errors in update_organization_settings, patch_user_preferences and organization membership functions; no finding referenced the new Products write-control/audit functions."
+    },
+    {
+      "command": "supabase test db --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap supabase/tests/database/014_erp_product_write_audit.sql supabase/tests/database/015_erp_products_operation_rls.sql",
+      "result": "passed (63 assertions)",
+      "evidence": "Both pgTAP suites passed after the disposable local database was reset with the full migration chain. Includes 17 audit-control assertions and 46 operation-specific RLS assertions, including rejection of client-supplied updated_at."
+    },
+    {
+      "command": "npm run test:quality",
+      "result": "passed (559 tests, 100 files)",
+      "evidence": "Full non-visual quality suite passed after the Products write-security implementation."
+    },
+    {
+      "command": "supabase db lint --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap --schema public,storage --fail-on error",
+      "result": "failed on unrelated existing functions",
+      "evidence": "Findings are in public.update_organization_settings, public.update_organization_member, public.remove_organization_member, public.patch_user_preferences, storage.list_objects_with_delimiter and storage.search. None refer to functions introduced or changed by the Products security migrations."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed (8 ledgers)",
+      "evidence": "The ledger passed after RLS-MIGRATION-001 was marked complete with file and evidence references."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed (110 checkpoint files)",
+      "evidence": "Module-run evidence schema and traceability validation passed."
+    },
+    {
+      "command": "supabase db push --linked --dry-run",
+      "result": "passed",
+      "evidence": "The CLI preview listed exactly migrations 20261025173000 and 20261025174000."
+    },
+    {
+      "command": "supabase db push --linked --skip-vault",
+      "result": "passed",
+      "evidence": "Applied only the two authorized migrations to loopdev-platform-dev. No seed data or Vault secret updates were included."
+    },
+    {
+      "command": "supabase migration list --linked",
+      "result": "passed",
+      "evidence": "Remote history records both 20261025173000 and 20261025174000."
+    },
+    {
+      "command": "supabase db query --linked --output-format json <read-only verification queries>",
+      "result": "passed",
+      "evidence": "Management API queries confirmed no broad Products FOR ALL policies, enabled audit/control triggers, owner/admin-only cost permissions, product-media Storage write gates, global control false and zero organizations with writes enabled."
+    },
+    {
+      "command": "npm test -- src/test/platform/files-contract.test.ts src/test/platform/account/profile-adapter.test.ts",
+      "result": "passed (13 tests)",
+      "evidence": "Platform Files policy constants and the shared five-minute preview TTL, including profile-avatar TTL reuse, passed."
+    },
+    {
+      "command": "npm run validate:contracts",
+      "result": "passed (26 contract files)",
+      "evidence": "Shared capability contract structural validation passed."
+    },
+    {
+      "command": "npm run test:multiplatform-contracts",
+      "result": "passed (10 tests)",
+      "evidence": "Existing cross-platform contract regression suite passed; no Files renderer parity is claimed."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "Application and Node TypeScript projects passed with the new shared contract."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed (8 ledgers)",
+      "evidence": "All ledgers passed after PLATFORM-FILES-001 was marked done with contract and test evidence."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed (110 checkpoint files)",
+      "evidence": "Run and checkpoint schemas passed after attempt 15 was added."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors in contract, test, ledger or documentation changes."
+    },
+    {
+      "command": "npm test -- src/test/catalog/catalog-adapter.test.ts",
+      "result": "passed (16 tests)",
+      "evidence": "Required Catalog adapter authorization/persistence regressions passed during the security-audit closeout."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed (8 ledgers)",
+      "evidence": "Delivery ledger validation passed after AUDIT-SECURITY-001 was marked done with evidence."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed (110 checkpoint files)",
+      "evidence": "Module run evidence validation passed after attempt 14 was recorded."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors in the audit documentation, delivery ledger or build evidence."
+    },
+    {
+      "command": "supabase test db --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap supabase/tests/database/014_erp_product_write_audit.sql supabase/tests/database/015_erp_products_operation_rls.sql supabase/tests/database/016_erp_product_media_gallery_order.sql",
+      "result": "passed (84 assertions)",
+      "evidence": "All three pgTAP suites passed against the isolated local project after the full migration chain, including the new gallery migration."
+    },
+    {
+      "command": "supabase db lint --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap --schema public,storage --fail-on error",
+      "result": "failed on pre-existing findings",
+      "evidence": "Errors remain in unrelated organization/settings and Supabase Storage dynamic-SQL functions; no finding referenced the new gallery migration or its functions."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed (8 ledgers)",
+      "evidence": "All ledgers passed after MEDIA-DATA-001 was marked done with migration and pgTAP evidence."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed",
+      "evidence": "Run/checkpoint validation passed after attempt 16 was recorded."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors in the migration, pgTAP test, evidence matrix, ledger or build checkpoint."
     }
   ],
   "requirements": [
@@ -353,7 +541,7 @@
     {
       "type": "platform-reuse-audit",
       "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
-      "result": "REUSE: shared shell/UI, Notes, Tasks, Activity, Relations; Document Intelligence remains a separate reusable capability and is not used for product images. BLOCKED: generic remote/reusable Files associations and derivative lifecycle lack an approved contract. Product media currently bypasses that boundary via direct Supabase Storage/platform_files/erp_product_media_* access. See current UI/shell references, packages/contracts/src/notes.ts, tasks.ts, activity-timeline.ts, src/loopdev/domains/files/types.ts and src/loopdev/domains/catalog/adapter/product-media-supabase.ts."
+      "result": "REUSE/EXTEND_PLATFORM: shared shell/UI, Notes, Tasks, Activity, Relations and Files. The provider-neutral PlatformFilesPort contract is now approved, including finalized uploads, product-media policy, renditions, five-minute previews and Platform-owned retention/orphan recovery. Product media still bypasses the contract via direct Supabase Storage/platform_files/erp_product_media_* access; implement that integration in MEDIA-ADAPTER-001. Document Intelligence remains separate and is not used for product images."
     },
     {
       "type": "legacy-behavior-audit",
@@ -379,16 +567,66 @@
       "type": "architecture-quality",
       "path": "docs/implementation/erp/core/architecture-design.md",
       "result": "PASS_WITH_DEBT retained from the approved architecture audit. The optional strict-persistence setting changes behavior only for Catalog stores; best-effort behavior remains the default for all existing localStore consumers and is regression-tested."
+    },
+    {
+      "type": "remote-security-preflight",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-11-remote-security-preflight",
+      "result": "Linked project loopdev-platform-dev was inspected read-only. The deployed Catalog tables have broad FOR ALL policies that separate read from manage only via USING/WITH CHECK, which leaves DELETE reachable through the read condition; authenticated has DELETE/TRUNCATE grants. Cost policies use catalog.write and no catalog.cost.read/manage permissions are registered. Product-media metadata policies allow write/delete through broad write policies. platform_audit_events and record_platform_audit_event exist, but no Products mutation audit triggers are installed. No Products DB write-control table exists. Cross-organization integrity checks returned zero mismatches, including price-book entries. The deployed migration history ends at 20261025122000. No remote Products write or migration was performed."
+    },
+    {
+      "type": "task-evidence",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-12-product-audit-controls",
+      "result": "PLATFORM-AUDIT-001 complete in local isolated Supabase only. Migration 20261025173000 creates fail-closed global/per-organization controls and security readiness gating, restricts changes to Platform owners, records redacted audit events and blocks mutations when audit persistence fails. The isolated pgTAP suite passed all 17 assertions. The migration was not applied remotely."
+    },
+    {
+      "type": "task-evidence",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-13-local-products-write-security-migration",
+      "result": "RLS-MIGRATION-001 implemented, tested and deployed to loopdev-platform-dev after explicit user authorization. Both isolated pgTAP suites passed 63 assertions and npm run test:quality passed 559 tests. Read-only remote checks confirm the controls remain off and the policy/audit state is installed. No Product records were modified. No pre-cutover backup or recovery rehearsal was performed; remote writes remain disabled."
+    },
+    {
+      "type": "task-evidence",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-14-products-security-audit-closeout",
+      "result": "AUDIT-SECURITY-001 complete as an audit. access-model.md maps deployed tenant/RLS/cost/audit/write-control boundaries, local negative pgTAP evidence and remote read-only status, and records remaining application cost-surface, shared Files/signed-URL, legacy permission, recovery and data-review risks. Products writes remain disabled; module/release readiness is not claimed."
+    },
+    {
+      "type": "task-evidence",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-15-platform-files-contract",
+      "result": "PLATFORM-FILES-001 complete as a shared contract task. PlatformFilesPort and its policy define server-validated JPEG/PNG/WebP uploads up to 25 MiB, finalized-file states, retained originals, 1600/400 max-edge renditions, 300-second maximum signed previews, consumer-owned multi-assignment/detach behavior, and Platform-owned retention/orphan recovery. The Product Owner selected the five-minute preview maximum. No runtime adapter or remote file operation was changed; current Products media still uses one-hour direct Storage URLs pending MEDIA-ADAPTER-001."
+    },
+    {
+      "type": "task-evidence",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-16-product-media-gallery-persistence",
+      "result": "MEDIA-DATA-001 complete in isolated local Supabase. Migration 20261025175000 adds same-organization reusable assignment ordering/versioning, serialized and atomic full-gallery reorder with expected-version conflict checks, restricted direct position updates, and detach preservation. Suites 014/015/016 passed 84 assertions. SQL lint reports only existing findings outside the migration. No remote migration or Product write was performed."
+    },
+    {
+      "type": "task-evidence",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-17-platform-files-product-media",
+      "result": "MEDIA-ADAPTER-001 complete in the existing checkout. Products media now uses PlatformFilesPort and the authenticated platform-files function for library listing, upload/finalization, status recovery and short-lived previews. Focused web tests passed (48 tests), Deno image/function checks passed (5 tests), five isolated Products pgTAP suites passed (105 assertions), and typecheck/build/i18n/contracts/ledger/module-run/migration-lint/focused-eslint validations passed. No remote migration, deployment, Product data write or authenticated browser journey was performed."
+    },
+    {
+      "type": "git-checkpoint",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#git-checkpoint-follow-up-pr-preparation",
+      "result": "Committed the complete approved web Products follow-up scope as 311d9f7e468326ddb727a01d4f7b5692b44fd360 on feature/erp-core-capabilities; working tree was clean. The commit includes migration 20261025175000_erp_product_media_gallery_order.sql, which adds the missing position column. Changes have not been pushed and no follow-up PR has been opened. Remote migration history could not be checked because PostgreSQL password authentication failed; no remote migration or deployment was performed."
+    },
+    {
+      "type": "remote-migration-deployment",
+      "path": "supabase/migrations/20261025175000_erp_product_media_gallery_order.sql",
+      "result": "Authenticated to linked loopdev-platform-dev (sukjcsylkljiyvfklxvj). Reconciled remote-only version 20261025120000 by retrieving its stored SQL statements read-only and restoring supabase/migrations/20261025120000_erp_suppliers_foundation.sql (commit 4379822). The first Products push rolled back because the gallery backfill hit the existing ERP write-control trigger; updated the gallery migration to disable only the gallery table's write-control and audit triggers during metadata backfill, then restore them (commit 692bbc5). `supabase db push --linked --skip-vault` applied 20261025175000, 20261025180000 and 20261027120000. Read-only verification confirmed position is integer, all three versions are recorded, the gallery row has a position, all three relevant triggers are enabled, global Product writes remain false, and zero organization controls are enabled. No Product/SKU business fields, Vault secrets or seed data were changed. Isolated pgTAP rerun was blocked because Docker was unavailable; no authenticated browser route was retested."
+    },
+    {
+      "type": "edge-function-deployment",
+      "path": "supabase/functions/platform-files/index.ts",
+      "result": "The reported Edge Function request error was traced to platform-files not being deployed in loopdev-platform-dev. Local Deno check and 5 function tests passed. Deployed only platform-files with JWT verification enabled via `supabase functions deploy platform-files --project-ref sukjcsylkljiyvfklxvj --use-api`; Supabase reports ACTIVE version 1. OPTIONS preflight for http://localhost:8080 returned HTTP 200 with the expected CORS headers. The browser canvas redirected to /pages/login, so no authenticated gallery request was verified. PLATFORM_FILES_ALLOWED_ORIGINS is not configured; non-local app origins require configuration."
     }
   ],
-  "detected_failure": "BUILD-003: npm run validate:module-runs failed with six approval consistency errors: completed 01-visual-design requires approved design; completed 02-domain, 03-access, 04-api, 05-sync and 06-plan require approved visual_design. Revalidate artifacts and obtain approvals before restart.",
-  "likely_failure_origin": "Attempt-10 fingerprint reconciliation invalidated prior approval gates; not caused by ADAPTER-MODE-001 implementation.",
-  "next_handoff": null,
+  "detected_failure": "The Products gallery Edge Function request failure was caused by the platform-files function being absent from loopdev-platform-dev; it is now deployed and active. The browser canvas had no authenticated session, so the gallery route still needs user-session verification. The function currently allows localhost origins; non-local origins require PLATFORM_FILES_ALLOWED_ORIGINS.",
+  "likely_failure_origin": "The web adapter invokes the shared platform-files Edge Function, but only the database migration had been deployed. The remote function list confirmed there was no platform-files deployment; deploying the approved function made the endpoint active and its localhost CORS preflight succeeds.",
+  "next_handoff": "Refresh the Products page in the authenticated browser session and verify the media card. If the app is hosted on a non-local origin, configure PLATFORM_FILES_ALLOWED_ORIGINS for that exact origin. Product write controls remain disabled. The feature branch commits are local; no push or follow-up PR has been made.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
     "approved_at": null
   },
   "invalidated": false,
-  "updated_at": "2026-10-25T12:19:13.000Z"
+  "updated_at": "2026-10-26T21:45:00Z"
 }

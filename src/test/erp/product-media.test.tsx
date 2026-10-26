@@ -90,6 +90,44 @@ describe("product media", () => {
     await expect(localProductMediaAdapter.listLibrary({ organizationId: "other-development-organization" })).rejects.toThrow();
   });
 
+  it("reorders a complete gallery with version checks", async () => {
+    const firstAsset = await localProductMediaAdapter.uploadAsset({
+      organizationId,
+      file: new File(["first"], "first.png", { type: "image/png" }),
+    });
+    const secondAsset = await localProductMediaAdapter.uploadAsset({
+      organizationId,
+      file: new File(["second"], "second.png", { type: "image/png" }),
+    });
+    const first = await localProductMediaAdapter.attach({ organizationId, assetId: firstAsset.id, catalogItemId: productId });
+    const second = await localProductMediaAdapter.attach({ organizationId, assetId: secondAsset.id, catalogItemId: productId });
+
+    await localProductMediaAdapter.reorderAssignments({
+      organizationId,
+      catalogItemId: productId,
+      variantId: null,
+      assignments: [
+        { id: second.id, expectedVersion: second.version },
+        { id: first.id, expectedVersion: first.version },
+      ],
+    });
+
+    const ordered = await localProductMediaAdapter.listAssignments({ organizationId, catalogItemId: productId });
+    expect(ordered.filter((assignment) => assignment.variantId === null).map((assignment) => assignment.assetId))
+      .toEqual([secondAsset.id, firstAsset.id]);
+    expect(ordered.filter((assignment) => assignment.variantId === null).map((assignment) => assignment.version))
+      .toEqual([2, 2]);
+    await expect(localProductMediaAdapter.reorderAssignments({
+      organizationId,
+      catalogItemId: productId,
+      variantId: null,
+      assignments: [
+        { id: second.id, expectedVersion: second.version },
+        { id: first.id, expectedVersion: first.version },
+      ],
+    })).rejects.toThrow(/changed/i);
+  });
+
   it("attaches uploads directly to products without variants", async () => {
     const item = localCatalogItemsStore.get(productId);
     if (!item) throw new Error("Seed product is unavailable.");
@@ -110,9 +148,37 @@ describe("product media", () => {
     });
   });
 
+  it("reuses an existing library image without uploading another file", async () => {
+    const item = localCatalogItemsStore.get(productId);
+    if (!item) throw new Error("Seed product is unavailable.");
+    const asset = await localProductMediaAdapter.uploadAsset({
+      organizationId,
+      file: new File(["reusable image"], "reusable.png", { type: "image/png" }),
+    });
+
+    render(
+      <I18nProvider>
+        <ProductMediaGalleryManager item={item} variants={[]} organizationId={organizationId} />
+      </I18nProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Browse library" }));
+    const dialog = await screen.findByRole("dialog", { name: "Product media library" });
+    expect(within(dialog).getByText("reusable.png")).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Attach image" }));
+
+    await waitFor(async () => expect(await localProductMediaAdapter.listAssignments({
+      organizationId,
+      catalogItemId: productId,
+    })).toEqual(expect.arrayContaining([
+      expect.objectContaining({ assetId: asset.id, variantId: null }),
+    ])));
+  });
+
   it("previews product-level images and opens the full product gallery", async () => {
     const item = localCatalogItemsStore.get(productId);
     if (!item) throw new Error("Seed product is unavailable.");
+    const getPreviewSource = vi.spyOn(localProductMediaAdapter, "getPreviewSource");
     const asset = await localProductMediaAdapter.uploadAsset({
       organizationId,
       file: new File(["product image preview"], "product-gallery.png", { type: "image/png" }),
@@ -134,6 +200,8 @@ describe("product media", () => {
     );
 
     expect(await screen.findByRole("img", { name: "Front view of the product" })).toBeInTheDocument();
+    expect(getPreviewSource).toHaveBeenCalledWith(asset.id, { organizationId, catalogItemId: productId });
+    getPreviewSource.mockRestore();
     fireEvent.click(screen.getByRole("button", { name: "Open gallery" }));
     expect(screen.getByTestId("current-path")).toHaveTextContent(`/app/erp/products/${productId}/media`);
   });
@@ -214,5 +282,33 @@ describe("product media", () => {
     fireEvent.click(screen.getByRole("button", { name: "Enlarge product-image.png" }));
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(within(screen.getByRole("dialog")).getByRole("img", { name: "A small teal toy made from cotton." })).toBeInTheDocument();
+  });
+
+  it("moves product images within their own ordered gallery", async () => {
+    const item = localCatalogItemsStore.get(productId);
+    if (!item) throw new Error("Seed product is unavailable.");
+    const firstAsset = await localProductMediaAdapter.uploadAsset({
+      organizationId,
+      file: new File(["first"], "first.png", { type: "image/png" }),
+    });
+    const secondAsset = await localProductMediaAdapter.uploadAsset({
+      organizationId,
+      file: new File(["second"], "second.png", { type: "image/png" }),
+    });
+    await localProductMediaAdapter.attach({ organizationId, assetId: firstAsset.id, catalogItemId: productId });
+    await localProductMediaAdapter.attach({ organizationId, assetId: secondAsset.id, catalogItemId: productId });
+
+    render(
+      <I18nProvider>
+        <ProductMediaGalleryManager item={item} variants={[]} organizationId={organizationId} />
+      </I18nProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Move second.png earlier" }));
+    await waitFor(async () => {
+      const ordered = (await localProductMediaAdapter.listAssignments({ organizationId, catalogItemId: productId }))
+        .filter((assignment) => assignment.variantId === null);
+      expect(ordered.map((assignment) => assignment.assetId)).toEqual([secondAsset.id, firstAsset.id]);
+    });
   });
 });

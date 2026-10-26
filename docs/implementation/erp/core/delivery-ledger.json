@@ -1973,7 +1973,7 @@
       "id": "AUDIT-SECURITY-001",
       "phase": "07-build",
       "type": "audit",
-      "status": "blocked",
+      "status": "done",
       "title": "Audit tenant security and rollback boundaries",
       "requirement_ids": [
         "REQ-ERP-ACCESS-AUDIT"
@@ -1986,7 +1986,9 @@
       ],
       "dependencies": [
         "AUDIT-REUSE-001",
-        "AUDIT-LEGACY-001"
+        "AUDIT-LEGACY-001",
+        "PLATFORM-AUDIT-001",
+        "RLS-MIGRATION-001"
       ],
       "owner": "@loopdev-io",
       "risk": "critical",
@@ -2006,9 +2008,7 @@
         "docs/implementation/erp/core/api-contracts.md",
         "supabase/migrations/"
       ],
-      "blocked_by": [
-        "Audit semantics, recovery strategy and DB-enforced kill-switch design are approved, but tenant isolation, cost-field authorization, operation-specific RLS, audit implementation/atomicity tests and negative role/tenant tests remain incomplete."
-      ],
+      "blocked_by": [],
       "evidence_refs": [
         "docs/03-platform/backend/DATABASE_SECURITY_RLS.md",
         "docs/03-platform/governance/SOFTWARE_ARCHITECTURE_AND_DESIGN_CONTRACT.md",
@@ -2017,6 +2017,13 @@
         "supabase/migrations/20261025120200_erp_product_media_no_direct_delete.sql",
         "supabase/migrations/20261025122000_platform_files_authenticated_access_grants.sql",
         "supabase/tests/database/012_platform_private_user_files.sql",
+        "supabase/migrations/20261025173000_erp_product_write_audit_controls.sql",
+        "supabase/migrations/20261025174000_erp_products_operation_rls.sql",
+        "supabase/tests/database/014_erp_product_write_audit.sql",
+        "supabase/tests/database/015_erp_products_operation_rls.sql",
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-13-local-products-write-security-migration",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-14-products-security-audit-closeout",
         "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json"
       ]
     },
@@ -2165,7 +2172,7 @@
       "id": "PLATFORM-AUDIT-001",
       "phase": "07-build",
       "type": "shared_contract",
-      "status": "blocked",
+      "status": "done",
       "title": "Approve and implement atomic shared mutation audit",
       "requirement_ids": [
         "REQ-ERP-ACCESS-AUDIT"
@@ -2177,14 +2184,13 @@
         "shared"
       ],
       "dependencies": [
-        "AUDIT-SECURITY-001",
         "AUDIT-REUSE-001"
       ],
       "owner": "@loopdev-io",
       "approval": {
         "approved_by": "@loopdev-io",
         "approved_at": "2026-10-25T13:49:01+01:00",
-        "approval_source": "User confirmed Platform/DB authority and approved six-month active retention with documented restricted-archive exceptions plus the event-field/redaction/atomicity contract."
+        "approval_source": "Platform/DB owner approved the event-field, redaction, atomicity and retention contract; user initially authorized local-only implementation/tests, then explicitly authorized deployment of the audit/RLS migrations to loopdev-platform-dev on 2026-10-25 with write controls disabled. Enabling writes remains unauthorized."
       },
       "risk": "critical",
       "evidence_level": "E2_UNIT",
@@ -2207,20 +2213,21 @@
         "src/loopdev/domains/platform/",
         "supabase/migrations/"
       ],
-      "blocked_by": [
-        "Audit owner and semantic contract are approved; implementation and atomicity tests remain gated by AUDIT-SECURITY-001."
-      ],
+      "blocked_by": [],
       "evidence_refs": [
         "docs/implementation/erp/core/access-model.md",
         "docs/implementation/erp/core/api-contracts.md",
-        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json"
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
+        "supabase/migrations/20261025173000_erp_product_write_audit_controls.sql",
+        "supabase/tests/database/014_erp_product_write_audit.sql",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-12-product-audit-controls"
       ]
     },
     {
       "id": "PLATFORM-FILES-001",
       "phase": "07-build",
       "type": "shared_contract",
-      "status": "ready",
+      "status": "done",
       "title": "Approve reusable and secure Platform Files integration",
       "requirement_ids": [
         "REQ-ERP-PRODUCT-MEDIA"
@@ -2250,6 +2257,14 @@
         {
           "command": "npm run test:multiplatform-contracts",
           "required": true
+        },
+        {
+          "command": "npm test -- src/test/platform/files-contract.test.ts src/test/platform/account/profile-adapter.test.ts",
+          "required": true
+        },
+        {
+          "command": "npm run typecheck",
+          "required": true
         }
       ],
       "files": [
@@ -2262,6 +2277,11 @@
       "evidence_refs": [
         "docs/implementation/erp/core/api-contracts.md",
         "docs/implementation/erp/core/sync-model.md",
+        "docs/implementation/erp/core/access-model.md",
+        "docs/03-platform/backend/FILES_BACKEND_MAPPING.md",
+        "packages/contracts/src/platform-files.ts",
+        "src/test/platform/files-contract.test.ts",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-15-platform-files-contract",
         "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json"
       ]
     },
@@ -2313,6 +2333,11 @@
     },
     {
       "id": "PRODUCT-CONTRACT-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "shared_contract",
       "status": "ready",
@@ -2427,7 +2452,7 @@
       "id": "REMOTE-STATE-001",
       "phase": "07-build",
       "type": "audit",
-      "status": "blocked",
+      "status": "done",
       "title": "Verify deployed Supabase schema and policies read-only",
       "requirement_ids": [
         "REQ-ERP-ACCESS-AUDIT"
@@ -2438,10 +2463,13 @@
       "platforms": [
         "shared"
       ],
-      "dependencies": [
-        "AUDIT-SECURITY-001"
-      ],
-      "owner": "Platform DB owner (assignment/access required)",
+      "dependencies": [],
+      "owner": "@loopdev-io",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T17:29:55Z",
+        "approval_source": "User authorized local-only implementation after read-only deployed-state inspection; remote migrations and writes remain unauthorized."
+      },
       "risk": "critical",
       "evidence_level": "E1_LINT",
       "acceptance_criteria": [
@@ -2458,12 +2486,11 @@
         "supabase/migrations/",
         "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/06-plan.json"
       ],
-      "blocked_by": [
-        "Authorized read-only database access and Platform DB owner are unavailable."
-      ],
+      "blocked_by": [],
       "evidence_refs": [
         "docs/implementation/erp/core/access-model.md",
-        "docs/implementation/erp/core/sync-model.md"
+        "docs/implementation/erp/core/sync-model.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-11-remote-security-preflight"
       ]
     },
     {
@@ -2513,7 +2540,7 @@
       "id": "RLS-MIGRATION-001",
       "phase": "07-build",
       "type": "migration",
-      "status": "blocked",
+      "status": "done",
       "title": "Add forward-only operation-specific Products RLS",
       "requirement_ids": [
         "REQ-ERP-ACCESS-AUDIT"
@@ -2526,10 +2553,14 @@
       ],
       "dependencies": [
         "PLATFORM-AUDIT-001",
-        "AUDIT-SECURITY-001",
         "REMOTE-STATE-001"
       ],
       "owner": "@loopdev-io",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T17:54:43Z",
+        "approval_source": "User first authorized local-only implementation and tests, then explicitly authorized applying these two forward migrations to loopdev-platform-dev with Products controls left off and no Product data changes. Enabling writes remains unauthorized."
+      },
       "risk": "critical",
       "evidence_level": "E2_UNIT",
       "acceptance_criteria": [
@@ -2538,28 +2569,46 @@
       ],
       "validation": [
         {
-          "command": "supabase db lint --local",
+          "command": "supabase db lint --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap --schema public,storage --fail-on error",
           "required": true
         },
         {
           "command": "npm run test:quality",
           "required": true
+        },
+        {
+          "command": "supabase test db --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap supabase/tests/database/014_erp_product_write_audit.sql supabase/tests/database/015_erp_products_operation_rls.sql",
+          "required": true
         }
       ],
       "files": [
-        "supabase/migrations/",
+        "supabase/migrations/20261025173000_erp_product_write_audit_controls.sql",
+        "supabase/migrations/20261025174000_erp_products_operation_rls.sql",
+        "supabase/tests/database/014_erp_product_write_audit.sql",
+        "supabase/tests/database/015_erp_products_operation_rls.sql",
         "src/loopdev/domains/platform/types.ts",
-        "src/test/"
+        "src/loopdev/domains/platform/adapter/local.ts",
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json"
       ],
-      "blocked_by": [
-        "Blocked until Platform audit contract and deployed RLS state are verified."
-      ],
+      "blocked_by": [],
       "evidence_refs": [
-        "docs/implementation/erp/core/access-model.md"
+        "docs/implementation/erp/core/access-model.md",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md",
+        "supabase/migrations/20261025173000_erp_product_write_audit_controls.sql",
+        "supabase/migrations/20261025174000_erp_products_operation_rls.sql",
+        "supabase/tests/database/014_erp_product_write_audit.sql",
+        "supabase/tests/database/015_erp_products_operation_rls.sql"
       ]
     },
     {
       "id": "PRODUCT-DATA-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "migration",
       "status": "ready",
@@ -2602,6 +2651,11 @@
     },
     {
       "id": "PRODUCT-ADAPTER-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "backend",
       "status": "ready",
@@ -2664,9 +2718,14 @@
     },
     {
       "id": "MEDIA-ADAPTER-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded. User then explicitly approved extending the scope to the shared Platform Files backend: \"Sí, ampliar a Platform Files (Recomendado)\"."
+      },
       "phase": "07-build",
       "type": "backend",
-      "status": "ready",
+      "status": "done",
       "title": "Implement Products media assignments through Platform Files",
       "requirement_ids": [
         "REQ-ERP-PRODUCT-MEDIA"
@@ -2696,11 +2755,29 @@
       "evidence_level": "E2_UNIT",
       "acceptance_criteria": [
         "Products stores only reusable File references and contextual assignment metadata/order; Platform Files owns bytes, finalized upload, preview, derivatives and lifecycle.",
+        "Platform Files authorizes every upload, status and preview operation against the authenticated actor, organization and product resource; idempotent sessions recover safely after reload.",
+        "Uploads validate MIME, signature and decoded image content, retain the original, create the approved 1600/400 renditions and issue previews for at most 300 seconds.",
         "Reorder validates full gallery and versions atomically; attach/detach failures never delete a shared file; cross-organization access is denied."
       ],
       "validation": [
         {
+          "command": "deno test --allow-read supabase/functions/platform-files",
+          "required": true
+        },
+        {
+          "command": "npm test -- src/test/platform/platform-files-supabase.test.ts",
+          "required": true
+        },
+        {
           "command": "npm test -- src/test/erp/product-media.test.tsx",
+          "required": true
+        },
+        {
+          "command": "supabase test db --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap supabase/tests/database/018_platform_files_product_media_backend.sql",
+          "required": true
+        },
+        {
+          "command": "supabase db lint --local",
           "required": true
         },
         {
@@ -2709,19 +2786,34 @@
         }
       ],
       "files": [
+        "src/loopdev/domains/files/adapter/platform-files-supabase.ts",
+        "src/loopdev/domains/files/adapter/index.ts",
+        "packages/contracts/src/platform-files.ts",
         "src/loopdev/domains/catalog/media/",
         "src/loopdev/domains/catalog/adapter/product-media-local.ts",
         "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
-        "src/test/erp/product-media.test.tsx"
+        "src/test/erp/product-media.test.tsx",
+        "src/test/platform/platform-files-supabase.test.ts",
+        "supabase/functions/platform-files/",
+        "supabase/migrations/20261027120000_platform_files_product_media_backend.sql",
+        "supabase/tests/database/018_platform_files_product_media_backend.sql"
       ],
       "blocked_by": [],
       "evidence_refs": [
         "docs/implementation/erp/core/api-contracts.md",
-        "docs/implementation/erp/core/sync-model.md"
+        "docs/implementation/erp/core/sync-model.md",
+        "docs/03-platform/backend/FILES_BACKEND_MAPPING.md",
+        "packages/contracts/src/platform-files.ts",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-17-platform-files-product-media"
       ]
     },
     {
       "id": "PRODUCT-DESKTOP-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "desktop_renderer",
       "status": "ready",
@@ -2842,6 +2934,11 @@
     },
     {
       "id": "CATEGORY-DESKTOP-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "desktop_renderer",
       "status": "ready",
@@ -2946,6 +3043,11 @@
     },
     {
       "id": "MEDIA-DESKTOP-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "desktop_renderer",
       "status": "ready",
@@ -3058,6 +3160,11 @@
     },
     {
       "id": "COST-DESKTOP-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "desktop_renderer",
       "status": "ready",
@@ -3325,6 +3432,11 @@
     },
     {
       "id": "CATEGORY-CONTRACT-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "shared_contract",
       "status": "ready",
@@ -3380,6 +3492,11 @@
     },
     {
       "id": "COST-CONTRACT-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "shared_contract",
       "status": "ready",
@@ -3434,6 +3551,11 @@
     },
     {
       "id": "CATEGORY-DATA-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "migration",
       "status": "ready",
@@ -3477,6 +3599,11 @@
     },
     {
       "id": "COST-DATA-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "migration",
       "status": "ready",
@@ -3522,7 +3649,7 @@
       "id": "MEDIA-DATA-001",
       "phase": "07-build",
       "type": "migration",
-      "status": "ready",
+      "status": "done",
       "title": "Persist reusable media assignments and atomic gallery order",
       "requirement_ids": [
         "REQ-ERP-PRODUCT-MEDIA"
@@ -3549,20 +3676,32 @@
         {
           "command": "supabase db lint --local",
           "required": true
+        },
+        {
+          "command": "supabase test db --local --workdir /Users/minoveaz/.copilot/session-state/0b70bb23-44c9-4553-8d2a-e291f96a51ad/files/isolated-pgtap supabase/tests/database/014_erp_product_write_audit.sql supabase/tests/database/015_erp_products_operation_rls.sql supabase/tests/database/016_erp_product_media_gallery_order.sql",
+          "required": true
         }
       ],
       "files": [
-        "supabase/migrations/",
-        "src/test/"
+        "supabase/migrations/20261025175000_erp_product_media_gallery_order.sql",
+        "supabase/tests/database/016_erp_product_media_gallery_order.sql"
       ],
       "blocked_by": [],
       "evidence_refs": [
         "docs/implementation/erp/core/domain-model.md",
-        "docs/implementation/erp/core/api-contracts.md"
+        "docs/implementation/erp/core/api-contracts.md",
+        "supabase/migrations/20261025175000_erp_product_media_gallery_order.sql",
+        "supabase/tests/database/016_erp_product_media_gallery_order.sql",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-16-product-media-gallery"
       ]
     },
     {
       "id": "CATEGORY-ADAPTER-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "backend",
       "status": "ready",
@@ -3617,6 +3756,11 @@
     },
     {
       "id": "COST-ADAPTER-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-10-25T18:47:49Z",
+        "approval_source": "User explicitly authorized completing Products, categories, media and costs in one web-only implementation block; mobile work is excluded."
+      },
       "phase": "07-build",
       "type": "backend",
       "status": "ready",

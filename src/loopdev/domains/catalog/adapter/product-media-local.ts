@@ -68,6 +68,10 @@ export const localProductMediaAdapter: ProductMediaAdapter = {
     const assetById = new Map(library.map((asset) => [asset.id, asset]));
     return localProductMediaAssignmentsStore.list()
       .filter((assignment) => assignment.organizationId === params.organizationId && assignment.catalogItemId === params.catalogItemId)
+      .sort((left, right) => {
+        if (left.variantId !== right.variantId) return (left.variantId ?? "").localeCompare(right.variantId ?? "");
+        return left.position - right.position;
+      })
       .map((assignment) => {
         const asset = assetById.get(assignment.assetId);
         if (!asset) throw new Error("A product media assignment references a missing asset.");
@@ -90,19 +94,14 @@ export const localProductMediaAdapter: ProductMediaAdapter = {
       source: "upload",
       file: input.file,
     });
-    try {
-      return toAsset(localProductMediaAssetsStore.create({
-        organizationId: input.organizationId,
-        fileId: file.id,
-        fileName: file.fileName,
-        mimeType: file.mimeType,
-        byteSize: file.byteSize,
-        tags: [],
-      }), file);
-    } catch (cause) {
-      await localFilesAdapter.remove(file.id, file.currentVersion);
-      throw cause;
-    }
+    return toAsset(localProductMediaAssetsStore.create({
+      organizationId: input.organizationId,
+      fileId: file.id,
+      fileName: file.fileName,
+      mimeType: file.mimeType,
+      byteSize: file.byteSize,
+      tags: [],
+    }), file);
   },
 
   async updateTags(input) {
@@ -136,12 +135,18 @@ export const localProductMediaAdapter: ProductMediaAdapter = {
       && assignment.catalogItemId === input.catalogItemId
       && assignment.variantId === (input.variantId ?? null));
     if (duplicate) throw new Error("This image is already attached to the selected product or variant.");
+    const gallery = localProductMediaAssignmentsStore.list().filter((assignment) =>
+      assignment.organizationId === input.organizationId
+      && assignment.catalogItemId === input.catalogItemId
+      && assignment.variantId === (input.variantId ?? null));
     const assignment = localProductMediaAssignmentsStore.create({
       organizationId: input.organizationId,
       assetId: asset.id,
       catalogItemId: input.catalogItemId,
       variantId: input.variantId ?? null,
       altText: input.altText?.trim() ?? "",
+      position: gallery.length,
+      version: 1,
       asset,
     });
     return { ...assignment, asset };
@@ -151,9 +156,10 @@ export const localProductMediaAdapter: ProductMediaAdapter = {
     assertWrite(input.organizationId);
     const assignment = localProductMediaAssignmentsStore.get(input.assignmentId);
     if (!assignment || assignment.organizationId !== input.organizationId) throw new Error("Product media assignment not found.");
+    if (assignment.version !== input.expectedVersion) throw new Error("Product media assignment changed. Reload and try again.");
     const altText = input.altText.trim();
     if (altText.length > 512) throw new Error("Alternative text must be 512 characters or fewer.");
-    const updated = localProductMediaAssignmentsStore.update(assignment.id, { altText });
+    const updated = localProductMediaAssignmentsStore.update(assignment.id, { altText, version: assignment.version + 1 });
     if (!updated) throw new Error("Product media assignment could not be updated.");
     return updated;
   },
@@ -162,7 +168,32 @@ export const localProductMediaAdapter: ProductMediaAdapter = {
     assertWrite(input.organizationId);
     const assignment = localProductMediaAssignmentsStore.get(input.assignmentId);
     if (!assignment || assignment.organizationId !== input.organizationId) throw new Error("Product media assignment not found.");
+    if (assignment.version !== input.expectedVersion) throw new Error("Product media assignment changed. Reload and try again.");
     localProductMediaAssignmentsStore.remove(assignment.id);
+  },
+
+  async reorderAssignments(input) {
+    assertWrite(input.organizationId);
+    const gallery = localProductMediaAssignmentsStore.list().filter((assignment) =>
+      assignment.organizationId === input.organizationId
+      && assignment.catalogItemId === input.catalogItemId
+      && assignment.variantId === input.variantId);
+    if (
+      gallery.length !== input.assignments.length
+      || new Set(input.assignments.map((assignment) => assignment.id)).size !== input.assignments.length
+      || input.assignments.some((requested) => {
+        const current = gallery.find((assignment) => assignment.id === requested.id);
+        return !current || current.version !== requested.expectedVersion;
+      })
+    ) {
+      throw new Error("Product media gallery changed. Reload and try again.");
+    }
+    input.assignments.forEach(({ id }, position) => {
+      const current = gallery.find((assignment) => assignment.id === id);
+      if (!current) throw new Error("Product media gallery changed. Reload and try again.");
+      const updated = localProductMediaAssignmentsStore.update(id, { position, version: current.version + 1 });
+      if (!updated) throw new Error("Product media gallery could not be reordered.");
+    });
   },
 
   async getPreviewSource(assetId, params) {

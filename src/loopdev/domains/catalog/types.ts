@@ -108,6 +108,7 @@ export interface ProductReference extends Entity {
   name: string;
   parentId: string | null;
   status: CatalogRecordStatus;
+  version: number;
 }
 
 export interface ProductCostReference extends Entity {
@@ -116,6 +117,7 @@ export interface ProductCostReference extends Entity {
   variantId: string | null;
   amount: number | null;
   currency: string;
+  version: number;
 }
 
 export interface ProductPartyRole extends Entity {
@@ -189,8 +191,15 @@ export type CatalogOfferCreateInput = Omit<Offer, "id" | "createdAt" | "updatedA
 export type CatalogVariantCreateInput = Omit<CatalogVariant, "id" | "key" | "sku" | "createdAt" | "updatedAt">;
 export type CatalogPriceBookCreateInput = Omit<PriceBook, "id" | "createdAt" | "updatedAt">;
 export type CatalogPriceEntryCreateInput = Omit<PriceEntry, "id" | "createdAt" | "updatedAt">;
-export type ProductReferenceCreateInput = Omit<ProductReference, "id" | "createdAt" | "updatedAt" | "status">;
-export type ProductCostReferenceInput = Omit<ProductCostReference, "id" | "createdAt" | "updatedAt">;
+export type ProductReferenceCreateInput = Omit<ProductReference, "id" | "createdAt" | "updatedAt" | "status" | "version">;
+export interface ProductReferenceUpdateInput {
+  expectedVersion: number;
+  patch: Partial<Pick<ProductReference, "name" | "parentId" | "status">>;
+}
+export type ProductCostReferenceInput = Omit<ProductCostReference, "id" | "createdAt" | "updatedAt" | "version"> & {
+  expectedVersion: number;
+  idempotencyKey: string;
+};
 
 export interface CatalogScopeParams {
   organizationId: string;

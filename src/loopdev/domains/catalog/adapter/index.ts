@@ -26,6 +26,7 @@ import type {
   ProductCostReferenceInput,
   ProductReference,
   ProductReferenceCreateInput,
+  ProductReferenceUpdateInput,
   ProductReferenceKind,
 } from "../types";
 
@@ -57,8 +58,9 @@ export interface CatalogAdapter {
   listProductPartyRoles(params: CatalogListParams & { catalogItemId?: string; role?: ProductPartyRole["role"] }): Promise<ProductPartyRole[]>;
   listAvailabilities(params: CatalogListParams & { catalogItemId?: string }): Promise<CatalogAvailability[]>;
   listEligibilities(params: CatalogListParams & { catalogItemId?: string }): Promise<CatalogEligibility[]>;
-  listProductReferences(params: CatalogScopeParams & { kind?: ProductReferenceKind }): Promise<ProductReference[]>;
+  listProductReferences(params: CatalogScopeParams & { kind?: ProductReferenceKind; includeArchived?: boolean }): Promise<ProductReference[]>;
   createProductReference(input: ProductReferenceCreateInput): Promise<ProductReference>;
+  updateProductReference(id: string, params: CatalogScopeParams, input: ProductReferenceUpdateInput): Promise<ProductReference>;
   getProductCostReference(params: CatalogScopeParams & { catalogItemId: string; variantId?: string | null }): Promise<ProductCostReference | null>;
   saveProductCostReference(input: ProductCostReferenceInput): Promise<ProductCostReference>;
   resolveReference(params: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null>;
@@ -98,4 +100,4 @@ export { supabaseCatalogAdapter };
 
 export { CatalogAdapterError };
 
-export type { CatalogCreateInput, CatalogItemCreateInput, CatalogItem, CatalogListParams, CatalogReference, CatalogReferenceResolutionParams, CatalogScopeParams, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole, CatalogAvailability, CatalogEligibility, ProductCostReference, ProductCostReferenceInput, ProductReference, ProductReferenceCreateInput, ProductReferenceKind, ResolvedCatalogReference, CatalogOfferCreateInput, CatalogVariantCreateInput, CatalogPriceBookCreateInput, CatalogPriceEntryCreateInput };
+export type { CatalogCreateInput, CatalogItemCreateInput, CatalogItem, CatalogListParams, CatalogReference, CatalogReferenceResolutionParams, CatalogScopeParams, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole, CatalogAvailability, CatalogEligibility, ProductCostReference, ProductCostReferenceInput, ProductReference, ProductReferenceCreateInput, ProductReferenceUpdateInput, ProductReferenceKind, ResolvedCatalogReference, CatalogOfferCreateInput, CatalogVariantCreateInput, CatalogPriceBookCreateInput, CatalogPriceEntryCreateInput };

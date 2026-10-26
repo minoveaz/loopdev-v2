@@ -13,6 +13,7 @@ import {
   localCatalogAvailabilitiesStore,
   localCatalogEligibilitiesStore,
   localProductCostReferencesStore,
+  localProductCostMutationsStore,
   localProductReferencesStore,
 } from "@/loopdev/domains/catalog/data/localCatalog";
 
@@ -31,6 +32,7 @@ describe("local Catalog adapter", () => {
     localCatalogAvailabilitiesStore.reset();
     localCatalogEligibilitiesStore.reset();
     localProductCostReferencesStore.reset();
+    localProductCostMutationsStore.reset();
     localProductReferencesStore.reset();
   });
 
@@ -351,6 +353,46 @@ describe("local Catalog adapter", () => {
     })).rejects.toMatchObject({ code: "conflict" });
   });
 
+  it("manages category trees with immutable keys, cycle guards and optimistic versions", async () => {
+    const parent = await catalogAdapter.createProductReference({
+      organizationId, kind: "category", key: "pet-care", name: "Pet care", parentId: null,
+    });
+    const child = await catalogAdapter.createProductReference({
+      organizationId, kind: "category", key: "toys", name: "Toys", parentId: parent.id,
+    });
+
+    const renamed = await catalogAdapter.updateProductReference(child.id, { organizationId }, {
+      expectedVersion: child.version,
+      patch: { name: "Toys and play" },
+    });
+    expect(renamed).toMatchObject({ key: "toys", name: "Toys and play", version: 2 });
+    await expect(catalogAdapter.updateProductReference(parent.id, { organizationId }, {
+      expectedVersion: parent.version,
+      patch: { parentId: child.id },
+    })).rejects.toMatchObject({ code: "conflict" });
+    await expect(catalogAdapter.updateProductReference(parent.id, { organizationId }, {
+      expectedVersion: parent.version,
+      patch: { status: "archived" },
+    })).rejects.toMatchObject({ code: "conflict" });
+
+    const archivedChild = await catalogAdapter.updateProductReference(child.id, { organizationId }, {
+      expectedVersion: renamed.version,
+      patch: { status: "archived" },
+    });
+    await expect(catalogAdapter.createCatalogItem({
+      organizationId, name: "Archived category item", type: "physical_product", categoryKey: archivedChild.key,
+    })).rejects.toMatchObject({ code: "invalid-scope" });
+    const restoredChild = await catalogAdapter.updateProductReference(child.id, { organizationId }, {
+      expectedVersion: archivedChild.version,
+      patch: { status: "active" },
+    });
+    await expect(catalogAdapter.updateProductReference(child.id, { organizationId }, {
+      expectedVersion: archivedChild.version,
+      patch: { name: "Stale update" },
+    })).rejects.toMatchObject({ code: "conflict" });
+    expect(restoredChild.status).toBe("active");
+  });
+
   it("keeps purchase cost separate and limits cost reads to product writers", async () => {
     const item = await catalogAdapter.createCatalogItem({
       organizationId,
@@ -366,6 +408,8 @@ describe("local Catalog adapter", () => {
       variantId: null,
       amount: 12.5,
       currency: "EUR",
+      expectedVersion: 0,
+      idempotencyKey: "cost-test-create",
     });
 
     expect(cost).toMatchObject({ catalogItemId: item.id, amount: 12.5, currency: "EUR" });
@@ -375,8 +419,55 @@ describe("local Catalog adapter", () => {
       organizationId,
       catalogItemId: item.id,
       variantId: null,
+      amount: 12.5,
+      currency: "EUR",
+      expectedVersion: 0,
+      idempotencyKey: "cost-test-create",
+    })).resolves.toMatchObject({ id: cost.id, version: 1 });
+    await expect(catalogAdapter.saveProductCostReference({
+      organizationId,
+      catalogItemId: item.id,
+      variantId: null,
+      amount: 13.25,
+      currency: "EUR",
+      expectedVersion: 1,
+      idempotencyKey: "cost-test-update",
+    })).resolves.toMatchObject({ id: cost.id, amount: 13.25, version: 2 });
+    await expect(catalogAdapter.saveProductCostReference({
+      organizationId,
+      catalogItemId: item.id,
+      variantId: null,
+      amount: 13.25,
+      currency: "EUR",
+      expectedVersion: 1,
+      idempotencyKey: "cost-test-update",
+    })).resolves.toMatchObject({ id: cost.id, amount: 13.25, version: 2 });
+    await expect(catalogAdapter.saveProductCostReference({
+      organizationId,
+      catalogItemId: item.id,
+      variantId: null,
+      amount: 14,
+      currency: "EUR",
+      expectedVersion: 1,
+      idempotencyKey: "cost-test-stale",
+    })).rejects.toMatchObject({ code: "conflict" });
+    await expect(catalogAdapter.saveProductCostReference({
+      organizationId,
+      catalogItemId: item.id,
+      variantId: null,
       amount: -1,
       currency: "EUR",
+      expectedVersion: 2,
+      idempotencyKey: "cost-test-invalid",
+    })).rejects.toMatchObject({ code: "server-error" });
+    await expect(catalogAdapter.saveProductCostReference({
+      organizationId,
+      catalogItemId: item.id,
+      variantId: null,
+      amount: 1.239,
+      currency: "EUR",
+      expectedVersion: 2,
+      idempotencyKey: "cost-test-scale",
     })).rejects.toMatchObject({ code: "server-error" });
     await expect(catalogAdapter.getProductCostReference({
       organizationId: "other-development-organization",

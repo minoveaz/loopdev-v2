@@ -47,7 +47,7 @@ export function ProductMediaSection({
         const loadedAssignments = allAssignments.filter((assignment) => assignment.variantId === null);
         const sources = await Promise.all(loadedAssignments.map(async (assignment) => [
           assignment.assetId,
-          await productMediaAdapter.getPreviewSource(assignment.assetId, { organizationId }),
+          await productMediaAdapter.getPreviewSource(assignment.assetId, { organizationId, catalogItemId: item.id }),
         ] as const));
         if (requestId !== requestRef.current) {
           sources.forEach(([, source]) => source?.revoke?.());

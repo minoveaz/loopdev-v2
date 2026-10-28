@@ -26,6 +26,7 @@ vi.mock("@/hooks/use-tenant-context", () => ({
 
 describe("ERP product SKU manager", () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     localCatalogItemsStore.reset();
     localCatalogItemKeyCountersStore.reset();
     localCatalogSkuCountersStore.reset();
@@ -175,11 +176,54 @@ describe("ERP product SKU manager", () => {
     fireEvent.change(screen.getByLabelText("Unit purchase cost Red"), { target: { value: "18.75" } });
     fireEvent.click(screen.getByRole("button", { name: "Save SKUs" }));
 
+    await waitFor(() => expect(localCatalogVariantsStore.list().filter((variant) => variant.catalogItemId === item.id)).toHaveLength(2));
+    expect(localProductCostReferencesStore.list()).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Save cost for Black" }));
+    await waitFor(() => expect(localProductCostReferencesStore.list()).toHaveLength(1));
+    fireEvent.click(screen.getByRole("button", { name: "Save cost for Red" }));
     await waitFor(() => expect(localProductCostReferencesStore.list()).toHaveLength(2));
     const variants = localCatalogVariantsStore.list().filter((variant) => variant.catalogItemId === item.id);
     expect(localProductCostReferencesStore.list()).toEqual(expect.arrayContaining([
       expect.objectContaining({ variantId: variants.find((variant) => variant.attributes.color === "Black")?.id, amount: 12.5, currency: "EUR", version: 1 }),
       expect.objectContaining({ variantId: variants.find((variant) => variant.attributes.color === "Red")?.id, amount: 18.75, currency: "EUR", version: 1 }),
     ]));
+  });
+
+  it("saves SKUs even when a separate cost operation fails", async () => {
+    let uuid = 0;
+    Object.defineProperty(window.crypto, "randomUUID", {
+      configurable: true,
+      value: () => `sku-cost-failure-${++uuid}`,
+    });
+    const item = await localCatalogAdapter.createCatalogItem({
+      organizationId,
+      catalogId: "catalog_products",
+      name: "SKU cost failure product",
+      type: "physical_product",
+      status: "draft",
+      metadata: { itemKind: "product", canPurchase: true },
+    });
+    const costSave = vi.spyOn(localCatalogAdapter, "saveProductCostReference").mockRejectedValue(new Error("Cost service unavailable."));
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={[`/app/erp/products/${item.id}/skus`]}>
+          <ProductSkuManagerPage productId={item.id} />
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+
+    fireEvent.change(await screen.findByLabelText("Colors"), { target: { value: "Black" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generate combinations" }));
+    fireEvent.change(screen.getByLabelText("Unit purchase cost Black"), { target: { value: "12.50" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save SKUs" }));
+    await waitFor(() => expect(localCatalogVariantsStore.list().filter((variant) => variant.catalogItemId === item.id)).toHaveLength(1));
+    expect(await screen.findByRole("status")).toHaveTextContent("SKUs saved.");
+    expect(costSave).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save cost for Black" }));
+    expect(await screen.findByText("Cost service unavailable.")).toBeInTheDocument();
+    expect(localCatalogVariantsStore.list().filter((variant) => variant.catalogItemId === item.id)).toHaveLength(1);
+    expect(localProductCostReferencesStore.list()).toHaveLength(0);
   });
 });

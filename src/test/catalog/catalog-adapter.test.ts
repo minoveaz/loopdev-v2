@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { catalogAdapter, CatalogAdapterError, localCatalogAdapter, supabaseCatalogAdapter } from "@/loopdev/domains/catalog";
+import { localPlatformAdapter } from "@/loopdev/domains/platform/adapter";
 import { createLocalStore } from "@/lib/localStore";
 import {
   localCatalogItemsStore,
@@ -393,7 +394,7 @@ describe("local Catalog adapter", () => {
     expect(restoredChild.status).toBe("active");
   });
 
-  it("keeps purchase cost separate and limits cost reads to product writers", async () => {
+  it("keeps purchase cost separate and requires read plus manage permission to mutate", async () => {
     const item = await catalogAdapter.createCatalogItem({
       organizationId,
       catalogId: "catalog_products",
@@ -415,6 +416,8 @@ describe("local Catalog adapter", () => {
     expect(cost).toMatchObject({ catalogItemId: item.id, amount: 12.5, currency: "EUR" });
     await expect(catalogAdapter.getProductCostReference({ organizationId, catalogItemId: item.id }))
       .resolves.toMatchObject({ id: cost.id, amount: 12.5 });
+    await expect(catalogAdapter.getProductCostAccess({ organizationId }))
+      .resolves.toEqual({ canRead: true, canManage: true });
     await expect(catalogAdapter.saveProductCostReference({
       organizationId,
       catalogItemId: item.id,
@@ -473,5 +476,40 @@ describe("local Catalog adapter", () => {
       organizationId: "other-development-organization",
       catalogItemId: item.id,
     })).rejects.toMatchObject({ code: "forbidden" });
+
+    const permissionSpy = vi.spyOn(localPlatformAdapter, "hasPermission");
+    try {
+      permissionSpy.mockImplementation((permission) => permission === "catalog.cost.manage");
+      await expect(catalogAdapter.getProductCostAccess({ organizationId }))
+        .resolves.toEqual({ canRead: false, canManage: false });
+      await expect(catalogAdapter.getProductCostReference({ organizationId, catalogItemId: item.id }))
+        .rejects.toMatchObject({ code: "forbidden" });
+      await expect(catalogAdapter.saveProductCostReference({
+        organizationId,
+        catalogItemId: item.id,
+        variantId: null,
+        amount: 15,
+        currency: "EUR",
+        expectedVersion: 2,
+        idempotencyKey: "cost-manage-only",
+      })).rejects.toMatchObject({ code: "forbidden" });
+
+      permissionSpy.mockImplementation((permission) => permission === "catalog.cost.read");
+      await expect(catalogAdapter.getProductCostAccess({ organizationId }))
+        .resolves.toEqual({ canRead: true, canManage: false });
+      await expect(catalogAdapter.getProductCostReference({ organizationId, catalogItemId: item.id }))
+        .resolves.toMatchObject({ id: cost.id, amount: 13.25 });
+      await expect(catalogAdapter.saveProductCostReference({
+        organizationId,
+        catalogItemId: item.id,
+        variantId: null,
+        amount: 15,
+        currency: "EUR",
+        expectedVersion: 2,
+        idempotencyKey: "cost-read-only",
+      })).rejects.toMatchObject({ code: "forbidden" });
+    } finally {
+      permissionSpy.mockRestore();
+    }
   });
 });

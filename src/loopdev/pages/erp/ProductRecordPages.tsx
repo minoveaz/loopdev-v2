@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { catalogAdapter } from "@/loopdev/domains/catalog/adapter";
-import type { CatalogItem, CatalogItemClass, CatalogItemKind, CatalogSourcingMode, CatalogVariant, ProductReference, ProductReferenceKind } from "@/loopdev/domains/catalog";
+import type { CatalogItem, CatalogItemClass, CatalogItemKind, CatalogSourcingMode, CatalogVariant, ProductCostAccess, ProductReference, ProductReferenceKind } from "@/loopdev/domains/catalog";
 import { ProductMediaSection } from "./ProductMediaSection";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useT } from "@/i18n";
@@ -204,7 +204,12 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [quickCreateKind, setQuickCreateKind] = useState<ProductReferenceKind | null>(null);
-  const [costReadable, setCostReadable] = useState(true);
+  const [costAccess, setCostAccess] = useState<ProductCostAccess | null>(null);
+  const [costAccessError, setCostAccessError] = useState<string | null>(null);
+  const [costReadError, setCostReadError] = useState<string | null>(null);
+  const [costSaveError, setCostSaveError] = useState<string | null>(null);
+  const [costSaveSuccess, setCostSaveSuccess] = useState(false);
+  const [savingCost, setSavingCost] = useState(false);
   const costMutationRef = useRef<{ fingerprint: string; idempotencyKey: string } | null>(null);
 
   useEffect(() => {
@@ -219,12 +224,27 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
     let active = true;
     setIsLoading(mode !== "create");
     setLoadError(null);
+    setCostAccess(null);
+    setCostAccessError(null);
+    setCostReadError(null);
+    setCostSaveError(null);
+    setCostSaveSuccess(false);
     if (!organizationId) {
       setLoadError(t("common.erpProductRecord.noOrganization"));
       setIsLoading(false);
       return () => { active = false; };
     }
     const load = async () => {
+      let access: ProductCostAccess = { canRead: false, canManage: false };
+      try {
+        access = await catalogAdapter.getProductCostAccess({ organizationId });
+        if (active) setCostAccess(access);
+      } catch (cause) {
+        if (active) {
+          setCostAccessError(cause instanceof Error ? cause.message : t("common.erpProductRecord.costAccessUnavailable"));
+        }
+      }
+      if (!active) return;
       try {
         const nextReferences = await catalogAdapter.listProductReferences({ organizationId });
         if (!active) return;
@@ -283,7 +303,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
           priceCurrency: stringValue(metadata.currency) || "EUR",
           status: loadedItem.status,
         });
-        if (!loadedVariants.some((variant) => variant.status !== "archived")) {
+        if (access.canRead && !loadedVariants.some((variant) => variant.status !== "archived")) {
           try {
             const cost = await catalogAdapter.getProductCostReference({ organizationId, catalogItemId: loadedItem.id });
             if (active) {
@@ -295,8 +315,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
               }));
             }
           } catch (cause) {
-            if (active) setCostReadable(false);
-            if (cause instanceof Error && !/permission|forbidden/i.test(cause.message)) throw cause;
+            if (active) setCostReadError(cause instanceof Error ? cause.message : t("common.erpProductRecord.costReadError"));
           }
         }
         if (active) setIsLoading(false);
@@ -330,6 +349,55 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
     setQuickCreateKind(null);
   };
 
+  const saveCost = async () => {
+    if (!item || !organizationId || !costAccess?.canManage) return;
+    if (variants.some((variant) => variant.status !== "archived")) {
+      setCostSaveError(t("common.erpProductRecord.skuCostNote"));
+      return;
+    }
+    const amount = form.canPurchase && form.cost.trim() ? Number(form.cost) : null;
+    if (amount !== null && (
+      !Number.isFinite(amount)
+      || amount < 0
+      || Math.round(amount * 100) !== amount * 100
+    )) {
+      setCostSaveError(t("common.erpProductRecord.invalidCost"));
+      return;
+    }
+    const fingerprint = JSON.stringify([item.id, amount, form.costCurrency, form.costVersion]);
+    if (costMutationRef.current?.fingerprint !== fingerprint) {
+      const idempotencyKey = window.crypto?.randomUUID?.();
+      if (!idempotencyKey) {
+        setCostSaveError(t("common.erpProductRecord.costMutationUnavailable"));
+        return;
+      }
+      costMutationRef.current = { fingerprint, idempotencyKey };
+    }
+    setSavingCost(true);
+    setCostSaveError(null);
+    setCostSaveSuccess(false);
+    try {
+      const savedCost = await catalogAdapter.saveProductCostReference({
+        organizationId,
+        catalogItemId: item.id,
+        variantId: null,
+        amount,
+        currency: form.costCurrency,
+        expectedVersion: form.costVersion,
+        idempotencyKey: costMutationRef.current.idempotencyKey,
+      });
+      costMutationRef.current = null;
+      setField("costVersion", savedCost.version);
+      setField("cost", savedCost.amount == null ? "" : String(savedCost.amount));
+      setField("costCurrency", savedCost.currency);
+      setCostSaveSuccess(true);
+    } catch (cause) {
+      setCostSaveError(cause instanceof Error ? cause.message : t("common.erpProductRecord.costSaveError"));
+    } finally {
+      setSavingCost(false);
+    }
+  };
+
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!organizationId || !form.name.trim()) {
@@ -346,14 +414,6 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
     }
     if (form.status === "active" && !form.categoryKey) {
       setSaveError(t("common.erpProductRecord.activeCategoryRequired"));
-      return;
-    }
-    if (form.cost.trim() && (
-      !Number.isFinite(Number(form.cost))
-      || Number(form.cost) < 0
-      || Math.round(Number(form.cost) * 100) !== Number(form.cost) * 100
-    )) {
-      setSaveError(t("common.erpProductRecord.invalidCost"));
       return;
     }
     setSaving(true);
@@ -424,25 +484,6 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
           metadata,
         });
       setItem(savedItem);
-      const managesCostAtProduct = !variants.some((variant) => variant.status !== "archived");
-      if (form.itemKind === "product" && managesCostAtProduct && costReadable && (form.canPurchase || form.costVersion > 0)) {
-        const fingerprint = JSON.stringify([savedItem.id, form.cost, form.costCurrency, form.costVersion, form.canPurchase]);
-        if (costMutationRef.current?.fingerprint !== fingerprint) {
-          const idempotencyKey = window.crypto?.randomUUID?.();
-          if (!idempotencyKey) throw new Error(t("common.erpProductRecord.costMutationUnavailable"));
-          costMutationRef.current = { fingerprint, idempotencyKey };
-        }
-        await catalogAdapter.saveProductCostReference({
-          organizationId,
-          catalogItemId: savedItem.id,
-          variantId: null,
-          amount: form.canPurchase && form.cost.trim() ? Number(form.cost) : null,
-          currency: form.costCurrency,
-          expectedVersion: form.costVersion,
-          idempotencyKey: costMutationRef.current.idempotencyKey,
-        });
-        costMutationRef.current = null;
-      }
       navigate(`/app/erp/products/${savedItem.id}`);
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : t("common.erpProductRecord.saveError"));
@@ -684,19 +725,30 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
               </div>
             </div>
           </section>}
-          {(form.canSell || (isPhysical && form.canPurchase)) && <section className="rounded-xl border border-border bg-card p-5">
+          {(form.canSell || (isPhysical && form.canPurchase) || (isPhysical && item && form.costVersion > 0)) && <section className="rounded-xl border border-border bg-card p-5">
             <FormSectionHeader eyebrow={t("common.erpProductRecord.commercialEyebrow")} title={t("common.erpProductRecord.pricesAndCost")} description={t("common.erpProductRecord.commercialDescription")} mode="expanded" responsive="auto" />
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {form.canSell && <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-3">
                 <Field label={t("common.erpProductRecord.referenceSalesPrice")}><Input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setField("price", event.target.value)} /></Field>
                 <Field label={t("common.erpForm.item.currency")}><Select value={form.priceCurrency} onValueChange={(value) => setField("priceCurrency", value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["EUR", "USD", "GBP"].map((currency) => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}</SelectContent></Select></Field>
               </div>}
-              {isPhysical && form.canPurchase && managesCostAtProduct && <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-3">
-                <Field label={t("common.erpProductRecord.purchaseCost")}><Input type="number" min="0" step="0.01" value={form.cost} onChange={(event) => setField("cost", event.target.value)} disabled={!costReadable} /></Field>
-                <Field label={t("common.erpForm.item.currency")}><Select value={form.costCurrency} onValueChange={(value) => setField("costCurrency", value)} disabled={!costReadable}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["EUR", "USD", "GBP"].map((currency) => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}</SelectContent></Select></Field>
+              {isPhysical && managesCostAtProduct && item && costAccess?.canRead && (form.canPurchase || form.costVersion > 0) && <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-3">
+                <Field label={t("common.erpProductRecord.purchaseCost")}><Input type="number" min="0" step="0.01" value={form.cost} onChange={(event) => setField("cost", event.target.value)} readOnly={!costAccess.canManage} /></Field>
+                <Field label={t("common.erpForm.item.currency")}><Select value={form.costCurrency} onValueChange={(value) => setField("costCurrency", value)} disabled={!costAccess.canManage}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["EUR", "USD", "GBP"].map((currency) => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}</SelectContent></Select></Field>
               </div>}
             </div>
             {isPhysical && form.canPurchase && <p className="mt-3 text-xs text-muted-foreground">{t(managesCostAtProduct ? "common.erpProductRecord.costNote" : "common.erpProductRecord.skuCostNote")}</p>}
+            {isPhysical && form.canPurchase && !item && <p role="status" className="mt-3 text-xs text-muted-foreground">{t("common.erpProductRecord.costSaveAfterProduct")}</p>}
+            {isPhysical && form.canPurchase && item && !managesCostAtProduct && <p role="status" className="mt-3 text-xs text-muted-foreground">{t("common.erpProductRecord.skuCostNote")}</p>}
+            {isPhysical && form.canPurchase && item && managesCostAtProduct && costAccess && !costAccess.canRead && <p role="status" className="mt-3 text-xs text-muted-foreground">{t("common.erpProductRecord.costRestricted")}</p>}
+            {costAccessError && <p role="alert" className="mt-3 text-sm text-destructive">{t("common.erpProductRecord.costAccessUnavailable")}: {costAccessError}</p>}
+            {costReadError && <p role="alert" className="mt-3 text-sm text-destructive">{t("common.erpProductRecord.costReadError")}: {costReadError}</p>}
+            {isPhysical && managesCostAtProduct && item && costAccess?.canRead && !costAccess.canManage && <p role="status" className="mt-3 text-xs text-muted-foreground">{t("common.erpProductRecord.costEditRequiresBoth")}</p>}
+            {costSaveError && <p role="alert" className="mt-3 text-sm text-destructive">{costSaveError}</p>}
+            {costSaveSuccess && <p role="status" className="mt-3 text-sm text-emerald-700 dark:text-emerald-300">{t("common.erpProductRecord.costSaved")}</p>}
+            {isPhysical && managesCostAtProduct && item && costAccess?.canManage && <Button className="mt-4" type="button" variant="outline" onClick={() => void saveCost()} disabled={savingCost || saving}>
+              {savingCost ? t("common.erpProductRecord.savingCost") : t("common.erpProductRecord.saveCost")}
+            </Button>}
           </section>}
           <section className="rounded-xl border border-border bg-card p-5">
             <FormSectionHeader eyebrow={t("common.erpProductRecord.organizationEyebrow")} title={t("common.erpProductRecord.tagsAvailability")} description={t("common.erpProductRecord.tagsDescription")} mode="expanded" responsive="auto" />
@@ -716,9 +768,8 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
             <p className="text-sm font-semibold">{t("common.erpProductRecord.recordSummary")}</p>
             <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{item?.key ?? t("common.erpProductRecord.generatedKey")}</p>
             <div className="mt-4 space-y-2 text-sm"><p><span className="text-muted-foreground">{t("common.erpProductRecord.type")}:</span> {form.itemKind ? t(`common.erpProductRecord.itemKinds.${form.itemKind}`) : t("common.erpProductRecord.notSet")}</p><p><span className="text-muted-foreground">SKU:</span> {form.sku || t("common.erpProductRecord.notSet")}</p><p><span className="text-muted-foreground">{t("common.erpForm.item.category")}:</span> {categoryReferences.find((reference) => reference.key === form.categoryKey)?.name ?? t("common.erpProductRecord.uncategorized")}</p><p><span className="text-muted-foreground">{t("common.erpForm.item.status")}:</span> {t(`common.erpForm.item.${form.status}`)}</p></div>
-            <Button className="mt-5 w-full" type="submit" disabled={saving || !form.itemKind || (isProduct && !form.itemClass) || (isFinishedProduct && !form.sourcingMode) || (isPhysical && form.canPurchase && !costReadable)}><Save className="me-2 h-4 w-4" />{saving ? t("common.erpProductRecord.saving") : mode === "create" ? pageTitle : t("common.erpProductRecord.saveChanges")}</Button>
+            <Button className="mt-5 w-full" type="submit" disabled={saving || savingCost || !form.itemKind || (isProduct && !form.itemClass) || (isFinishedProduct && !form.sourcingMode)}><Save className="me-2 h-4 w-4" />{saving ? t("common.erpProductRecord.saving") : mode === "create" ? pageTitle : t("common.erpProductRecord.saveChanges")}</Button>
             {saveError && <p role="alert" className="mt-3 text-sm text-destructive">{saveError}</p>}
-            {isPhysical && form.canPurchase && !costReadable && <p role="status" className="mt-3 text-xs text-muted-foreground">{t("common.erpProductRecord.costRestricted")}</p>}
           </section>
         </aside>
       </div>
@@ -933,19 +984,33 @@ function ProductCostCard({ itemId, organizationId }: { itemId: string; organizat
   const [amount, setAmount] = useState<number | null>(null);
   const [currency, setCurrency] = useState("EUR");
   const [restricted, setRestricted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
-    void catalogAdapter.getProductCostReference({ organizationId, catalogItemId: itemId }).then((cost) => {
+    setLoading(true);
+    setRestricted(false);
+    setError(null);
+    void catalogAdapter.getProductCostAccess({ organizationId }).then(async (access) => {
+      if (!active) return;
+      if (!access.canRead) {
+        setRestricted(true);
+        return;
+      }
+      const cost = await catalogAdapter.getProductCostReference({ organizationId, catalogItemId: itemId });
       if (!active) return;
       setAmount(cost?.amount ?? null);
       setCurrency(cost?.currency ?? "EUR");
     }).catch((cause) => {
-      if (active && cause instanceof Error && /permission|forbidden/i.test(cause.message)) setRestricted(true);
+      if (active) setError(cause instanceof Error ? cause.message : t("common.erpProductRecord.costReadError"));
+    }).finally(() => {
+      if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [itemId, organizationId]);
+  }, [itemId, organizationId, t]);
   return <section className="rounded-xl border border-border bg-card p-5">
     <FormSectionHeader eyebrow={t("common.erpProductRecord.internal")} title={t("common.erpProductRecord.purchaseCost")} description={t("common.erpProductRecord.costReferenceDescription")} mode="expanded" responsive="auto" />
-    <p className="mt-5 text-2xl font-semibold">{restricted ? t("common.erpProductRecord.restricted") : amount == null ? t("common.erpProductRecord.notSet") : `${amount} ${currency}`}</p>
+    <p className="mt-5 text-2xl font-semibold">{loading ? t("common.erpProductRecord.loadingCost") : restricted ? t("common.erpProductRecord.restricted") : error ? t("common.erpProductRecord.costReadError") : amount == null ? t("common.erpProductRecord.notSet") : `${amount} ${currency}`}</p>
+    {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
   </section>;
 }

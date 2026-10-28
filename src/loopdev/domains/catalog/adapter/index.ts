@@ -24,6 +24,7 @@ import type {
   CatalogPriceEntryCreateInput,
   ProductCostReference,
   ProductCostReferenceInput,
+  ProductCostAccess,
   ProductReference,
   ProductReferenceCreateInput,
   ProductReferenceUpdateInput,
@@ -61,6 +62,7 @@ export interface CatalogAdapter {
   listProductReferences(params: CatalogScopeParams & { kind?: ProductReferenceKind; includeArchived?: boolean }): Promise<ProductReference[]>;
   createProductReference(input: ProductReferenceCreateInput): Promise<ProductReference>;
   updateProductReference(id: string, params: CatalogScopeParams, input: ProductReferenceUpdateInput): Promise<ProductReference>;
+  getProductCostAccess(params: CatalogScopeParams): Promise<ProductCostAccess>;
   getProductCostReference(params: CatalogScopeParams & { catalogItemId: string; variantId?: string | null }): Promise<ProductCostReference | null>;
   saveProductCostReference(input: ProductCostReferenceInput): Promise<ProductCostReference>;
   resolveReference(params: CatalogReferenceResolutionParams): Promise<ResolvedCatalogReference | null>;
@@ -100,4 +102,4 @@ export { supabaseCatalogAdapter };
 
 export { CatalogAdapterError };
 
-export type { CatalogCreateInput, CatalogItemCreateInput, CatalogItem, CatalogListParams, CatalogReference, CatalogReferenceResolutionParams, CatalogScopeParams, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole, CatalogAvailability, CatalogEligibility, ProductCostReference, ProductCostReferenceInput, ProductReference, ProductReferenceCreateInput, ProductReferenceUpdateInput, ProductReferenceKind, ResolvedCatalogReference, CatalogOfferCreateInput, CatalogVariantCreateInput, CatalogPriceBookCreateInput, CatalogPriceEntryCreateInput };
+export type { CatalogCreateInput, CatalogItemCreateInput, CatalogItem, CatalogListParams, CatalogReference, CatalogReferenceResolutionParams, CatalogScopeParams, CatalogVariant, Offer, OrganizationCatalog, PriceBook, PriceEntry, ProductPartyRole, CatalogAvailability, CatalogEligibility, ProductCostAccess, ProductCostReference, ProductCostReferenceInput, ProductReference, ProductReferenceCreateInput, ProductReferenceUpdateInput, ProductReferenceKind, ResolvedCatalogReference, CatalogOfferCreateInput, CatalogVariantCreateInput, CatalogPriceBookCreateInput, CatalogPriceEntryCreateInput };

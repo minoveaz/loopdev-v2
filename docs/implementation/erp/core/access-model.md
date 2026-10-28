@@ -39,7 +39,7 @@ its complete lifecycle remains pending.
 | `ACC-ERP-009` | Shared Notes, Files, Activity, Tasks, Relations and Document Intelligence reuse their Platform authorization contracts and inherit access to the referenced ERP record. | `confirmed` | Shared capability rule | Do not create parallel ERP collaboration permissions. A reference must not grant access beyond the referenced record. |
 | `ACC-ERP-010` | Membership changes and permission grants remain owned by Platform organization-management permissions, not Products. | `confirmed` | Authorization invariant | `organization.manage` is the existing membership-management boundary. |
 | `ACC-ERP-011` | Every successful remote Products mutation must create an immutable Platform audit event in the same transaction; if audit persistence fails, the mutation fails. | `confirmed` | Audit invariant | User approved extending the shared Platform audit capability before enabling remote writes. |
-| `ACC-ERP-012` | Cost read and management use separate `catalog.cost.read` and `catalog.cost.manage` permissions. Grant both only to organization owners/admins by default; agents and viewers receive neither. | `confirmed` | Sensitive-field authorization | Product Owner selected the owner/admin-only policy. Neither permission is implied by `catalog.read` or `catalog.write`. |
+| `ACC-ERP-012` | Cost reads require `catalog.cost.read`; creating, updating or clearing a cost requires both `catalog.cost.read` and `catalog.cost.manage`. Grant both only to organization owners/admins by default; agents and viewers receive neither. | `confirmed` | Sensitive-field authorization | Product Owner confirmed that cost mutation is unavailable without cost-read permission. Neither permission is implied by `catalog.read` or `catalog.write`. |
 | `ACC-ERP-013` | Product/SKU associations use catalog permissions; file metadata, bytes, upload, preview and lifecycle reuse the approved Platform Files boundary and cannot inherit broader access from the association. | `confirmed` | Shared capability authorization | Platform Files owns upload/finalization, preview authorization, 300-second maximum signed-URL lifetime, renditions, retention and orphan recovery. Products owns same-organization asset/assignment references and contextual alt text; implementation remains pending. |
 
 ## Role, action and scope matrix
@@ -58,7 +58,7 @@ explicitly excluded agents from the separate cost permissions.
 | Export product or commercial data | Deny | Deny | Deny | Deny | Export is out of scope for this release. |
 | Read offers and sales prices | `catalog.read` | `catalog.read` | `catalog.read` | `catalog.read` | User approved current organization-wide read visibility. |
 | Read purchase cost | `catalog.cost.read` | `catalog.cost.read` | Deny | Deny | Costs are excluded from ordinary `catalog.read`; no cost amount may leak through list/detail/search or related projections. |
-| Create/update/clear purchase cost | `catalog.cost.manage` | `catalog.cost.manage` | Deny | Deny | Cost mutation is field-specific, organization-scoped and audited; it does not grant general catalog writes. Owners/admins are granted both cost permissions. |
+| Create/update/clear purchase cost | `catalog.cost.read` + `catalog.cost.manage` | `catalog.cost.read` + `catalog.cost.manage` | Deny | Deny | Cost mutation is field-specific, organization-scoped and audited; it does not grant general catalog writes. Both permissions are checked at the UI, RPC and RLS boundaries. |
 | Read derived margin or supplier commercial terms | Not in scope | Not in scope | Not in scope | Not in scope | No margin/report/export surface is approved; supplier terms remain outside this release. |
 | Attach, reorder, update alt text or detach product media | `catalog.write` | `catalog.write` | `catalog.write` | Deny | Product association only; every referenced file must independently pass Platform Files authorization. Detach never deletes the reusable file. |
 | Upload or read product-media file bytes | `catalog.read` / `catalog.write` | `catalog.read` / `catalog.write` | `catalog.read` / `catalog.write` | Read via `catalog.read`; write denied | Product-media Storage paths are scoped to catalog permissions. Platform Files owns upload, preview, derivatives and lifecycle; authenticated physical deletion is denied. |
@@ -101,7 +101,8 @@ or `catalog.write`.
 - Product name, class, category, SKU, offers and sales prices are readable by
   every organization member with `catalog.read`, including viewer.
 - Purchase-cost references and values are readable only with
-  `catalog.cost.read` and mutable only with `catalog.cost.manage`. Both are
+  `catalog.cost.read`; mutation requires both `catalog.cost.read` and
+  `catalog.cost.manage`. Both are
   granted to owner/admin by default; agent/viewer must not receive cost data
   through product DTOs, search, caches, logs, activity, exports or background
   projections. Permission checks apply to every cost row and its parent unit.
@@ -132,8 +133,9 @@ or `catalog.write`.
    and create no `DELETE` policy for Products entities; the media-assignment
    table permits detach only and never deletes the shared File or object.
 3. Protect `erp_product_cost_references` independently: `SELECT` requires
-   `catalog.cost.read`; `INSERT` and `UPDATE` require
-   `catalog.cost.manage`; revoke `DELETE`. Cost policies also validate active
+   `catalog.cost.read`; `INSERT` and `UPDATE` require both
+   `catalog.cost.read` and `catalog.cost.manage`; the RPC must recheck both
+   permissions, including idempotent retries; revoke `DELETE`. Cost policies also validate active
    organization membership and same-organization ownership of the product or
    SKU, without returning amounts to a caller lacking cost-read permission.
 4. For `UPDATE`, validate both the existing row and the resulting row so a
@@ -212,6 +214,7 @@ cache invalidation and the shared Files lifecycle still need their own tests.
 | `ACC-TEST-016` | User with `catalog.write` detaches a product/SKU image or attempts to delete its shared file/Storage object. | Detach is allowed and leaves the reusable File intact; physical file/object deletion is denied. |
 | `ACC-TEST-017` | User obtains or reuses a signed URL after losing organization or parent-record access, or references a File from another organization. | New URL issuance is denied after access loss and cross-organization references never resolve. Previously issued bearer URLs remain usable until expiry; the current Products adapter sets a one-hour expiry, so the shared Files contract must approve and test the acceptable revocation window. |
 | `ACC-TEST-018` | Owner/admin cost change is sent to ordinary Activity, application logs, export or a background projection. | Audit metadata is recorded under the approved Platform contract; ordinary surfaces do not expose raw cost values. |
+| `ACC-TEST-019` | A member has only `catalog.cost.manage`, only `catalog.cost.read`, or ordinary `catalog.write`. | Manage without read cannot view or mutate; read without manage can view but cannot mutate; `catalog.write` grants neither cost access nor mutation. |
 
 ## Existing implementation gaps and risks
 

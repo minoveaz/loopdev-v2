@@ -101,3 +101,106 @@ The detailed requirement matrix is the output artifact. Summary:
 
 **Verification state: `blocked`.** No production code, database or remote state
 was changed during this verification.
+
+## Attempt 2 — Focused purchase-cost permission verification
+
+This is a narrow continuation for `REQ-ERP-COST-REFERENCE`; it does not
+reopen or complete the blocked module-wide verification.
+
+| Field | Value |
+|---|---|
+| Timestamp | `2026-10-27T21:18:30Z` |
+| Checkout | `/Users/minoveaz/.copilot/repos/loopdev-v2`, branch `feature/erp-products-web-management` |
+| HEAD | `1bc95a77557dbf89e49c203f66e127bab951ffd0` |
+| Working tree | Pre-existing `docs/implementation/erp/core/README.md` modification; preserved |
+| Runtime | No app listening on ports 8080 or 5174; no authenticated UI journey |
+
+**Authorization evidence:** the forward migration registers distinct
+`catalog.cost.read` and `catalog.cost.manage` permissions, grants both to
+owners/admins, removes both from agents/viewers, and creates cost-table
+operation policies using read for `SELECT` and manage for writes. The write
+RPC independently checks `catalog.cost.manage`; the Supabase adapter reads
+only the cost-reference table and writes through that RPC. The access model
+records a prior read-only remote role/RLS verification. That remote state was
+not queried again during this attempt.
+
+**Detected gap:** the product form and SKU manager use successful cost reading
+as the indicator that cost editing is available. If a user has read but not
+manage, the UI permits editing; the product/SKU save occurs before the
+cost-specific RPC, so a denied cost mutation can leave the record save
+committed. The current tests do not cover split read/manage grants or an
+`agent` with `catalog.write` directly invoking the cost RPC. No production
+code was changed.
+
+| Validation | Result |
+|---|---|
+| `npm test -- src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx` | PASS — 3 files, 28 tests |
+| `curl` on ports 8080 and 5174 | NOT RUNNABLE — neither app process was listening. |
+| `npm run validate:module-runs` | PASS — 110 checkpoint files |
+| `npm run validate:multiplatform` | PASS — structural matrix validation only |
+| `git diff --check` and checkpoint JSON parse | PASS |
+
+**Cost verification state: `PARTIAL`.** Source and previously recorded
+database evidence support the server-side split permissions, but UI behavior
+for split grants, direct negative-role RPC coverage and authenticated runtime
+behavior remain unverified. Exact next actions: gate editing on
+`catalog.cost.manage`, prevent partial product/SKU persistence when cost
+mutation is denied, and add the agent-with-`catalog.write` RPC test. This
+verification does not authorize those remediations.
+
+### Database rerun after Docker became available
+
+At `2026-10-27T21:18:30Z`, the dedicated
+`supabase/tests/database/017_erp_product_cost_reference.sql` suite passed all
+10 assertions. The broader run of migrations/tests 014–018 completed 111
+assertions with 5 failures, all in
+`015_erp_products_operation_rls.sql` tests 47 and 49–52. Those failures occur
+in product-media audit actor cases and report `organization access denied`;
+the cost test 017 passed within the same broader run. No remote database was
+used or modified.
+
+### Attempt 4 — Purchase-cost implementation and remote-state check
+
+The local remediation now implements the approved split: mutations require
+both `catalog.cost.read` and `catalog.cost.manage`; product/SKU saves are
+independent from cost saves; product cost is suppressed when active SKUs exist;
+and SKU costs remain independent. The focused UI/adapter suite passes, and the
+isolated test database passed 22 pgTAP assertions against the forward
+migration.
+
+Environment: `/Users/minoveaz/.copilot/repos/loopdev-v2`, in-place branch
+`feature/erp-products-web-management`, `HEAD
+1bc95a77557dbf89e49c203f66e127bab951ffd0`. Vite served
+`http://127.0.0.1:5173` with HTTP 200; direct navigation to a Products edit URL
+redirected to `/pages/login`. No authenticated route/operation journey was
+performed.
+
+Read-only queries to the linked `loopdev-platform-dev` project found:
+
+- Cost `SELECT` RLS requires `catalog.cost.read`.
+- Cost `INSERT` and `UPDATE` policies require `catalog.cost.manage` only.
+- The deployed RPC checks `catalog.cost.manage` but not `catalog.cost.read`;
+  the new internal RPC core is absent.
+- One global and one organization write-control row are enabled.
+
+No remote migration, data write or write-control change was made. This
+contradicts earlier checkpoint evidence that reported the controls disabled;
+the current live read-only result is recorded here and the deployment state
+must be treated as enabled.
+
+| Validation | Result |
+|---|---|
+| `npm test -- src/test/erp/product-record-pages.test.tsx` | PASS — 10 tests. |
+| Targeted catalog/Product/SKU Vitest run | PASS — 3 files, 31 tests. |
+| `npm run typecheck`, `npm run i18n:check`, `npm run build` | PASS. |
+| Isolated local cost pgTAP after the forward migration | PASS — 22 assertions. |
+| Live linked-project read-only policy/RPC/control queries | PASS — confirmed mismatch and enabled controls; no writes. |
+| Direct browser route | PARTIAL — unauthenticated redirect to login; no authorized runtime behavior verified. |
+
+**Cost verification state: `PARTIAL`.** Local code and regression evidence
+address the UI/adapter and database-contract gaps. The linked deployment still
+allows manage-only cost mutations while write controls are enabled, so the
+security fix is not active remotely. Do not deploy or toggle controls without
+separate authorization. Exact next actions: reconcile the deployed control
+state with its owner; obtain deployment authorization; apply and recheck the
+forward migration; then verify the desktop flow in an authenticated session.

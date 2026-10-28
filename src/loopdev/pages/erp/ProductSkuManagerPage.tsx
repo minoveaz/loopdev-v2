@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { catalogAdapter, CatalogAdapterError } from "@/loopdev/domains/catalog/adapter";
-import type { CatalogItem, CatalogRecordStatus, CatalogVariant, ProductReference } from "@/loopdev/domains/catalog";
+import type { CatalogItem, CatalogRecordStatus, CatalogVariant, ProductCostAccess, ProductReference } from "@/loopdev/domains/catalog";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useT } from "@/i18n";
 
@@ -63,10 +63,18 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [costManagementAvailable, setCostManagementAvailable] = useState(true);
+  const [costAccess, setCostAccess] = useState<ProductCostAccess>({ canRead: false, canManage: false });
+  const [costAccessError, setCostAccessError] = useState<string | null>(null);
+  const [costReadError, setCostReadError] = useState<string | null>(null);
+  const [costSaveErrors, setCostSaveErrors] = useState<Record<string, string>>({});
+  const [costSaveSuccess, setCostSaveSuccess] = useState<Record<string, boolean>>({});
+  const [savingCostIds, setSavingCostIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let active = true;
+    setCostAccess({ canRead: false, canManage: false });
+    setCostAccessError(null);
+    setCostReadError(null);
     if (!organizationId) {
       setError(translateRef.current("common.erpProductRecord.noOrganization"));
       setLoading(false);
@@ -88,21 +96,23 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
       }
       setItem(loadedItem);
       setReferences(loadedReferences);
+      let access: ProductCostAccess = { canRead: false, canManage: false };
+      try {
+        access = await catalogAdapter.getProductCostAccess({ organizationId });
+        if (active) setCostAccess(access);
+      } catch (cause) {
+        if (active) setCostAccessError(cause instanceof Error ? cause.message : translateRef.current("common.erpProductRecord.costAccessUnavailable"));
+      }
+      if (!active) return;
       let costsByVariant = new Map<string, Awaited<ReturnType<typeof catalogAdapter.getProductCostReference>>>();
-      if (loadedItem.metadata.canPurchase === true) {
+      if (access.canRead) {
         try {
           const costs = await Promise.all(loadedVariants.map((variant) =>
             catalogAdapter.getProductCostReference({ organizationId, catalogItemId: loadedItem.id, variantId: variant.id })));
           costsByVariant = new Map(loadedVariants.map((variant, index) => [variant.id, costs[index]]));
         } catch (cause) {
-          if (cause instanceof CatalogAdapterError && cause.code === "forbidden") {
-            setCostManagementAvailable(false);
-          } else {
-            throw cause;
-          }
+          if (active) setCostReadError(cause instanceof Error ? cause.message : translateRef.current("common.erpProductRecord.costReadError"));
         }
-      } else {
-        setCostManagementAvailable(false);
       }
       if (!active) return;
       setRows(loadedVariants.map((variant) => {
@@ -139,6 +149,14 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
       : row));
     setError(null);
     setSuccess(false);
+    if (patch.costAmount !== undefined || patch.costCurrency !== undefined) {
+      setCostSaveErrors((current) => {
+        const next = { ...current };
+        delete next[localId];
+        return next;
+      });
+      setCostSaveSuccess((current) => ({ ...current, [localId]: false }));
+    }
   };
 
   const generateCombinations = () => {
@@ -200,14 +218,6 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
       setError(t("common.erpProductRecord.activateProductFirst"));
       return;
     }
-    if (rows.some((row) => row.costAmount.trim() && (
-      !Number.isFinite(Number(row.costAmount))
-      || Number(row.costAmount) < 0
-      || Math.round(Number(row.costAmount) * 100) !== Number(row.costAmount) * 100
-    ))) {
-      setError(t("common.erpProductRecord.invalidCost"));
-      return;
-    }
     setSaving(true);
     setError(null);
     setSuccess(false);
@@ -231,30 +241,6 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
         setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
           ? { ...currentRow, variantId: saved.id, sku: saved.sku, name: saved.name, metadata: saved.metadata }
           : currentRow));
-        let costVersion = row.costVersion;
-        if (item.metadata.canPurchase === true && costManagementAvailable && (row.costAmount.trim() || row.costVersion > 0)) {
-          const idempotencyKey = row.costMutationKey ?? window.crypto?.randomUUID?.();
-          if (!idempotencyKey) throw new Error(t("common.erpProductRecord.costMutationUnavailable"));
-          setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
-            ? { ...currentRow, costMutationKey: idempotencyKey }
-            : currentRow));
-          const cost = await catalogAdapter.saveProductCostReference({
-            organizationId,
-            catalogItemId: item.id,
-            variantId: saved.id,
-            amount: row.costAmount.trim() ? Number(row.costAmount) : null,
-            currency: row.costCurrency,
-            expectedVersion: row.costVersion,
-            idempotencyKey,
-          });
-          costVersion = cost.version;
-          setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
-            ? { ...currentRow, costMutationKey: null }
-            : currentRow));
-        }
-        setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
-          ? { ...currentRow, variantId: saved.id, sku: saved.sku, name: saved.name, metadata: saved.metadata, costVersion }
-          : currentRow));
       }
       setSuccess(true);
     } catch (cause) {
@@ -266,9 +252,69 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
     }
   };
 
+  const saveCost = async (row: SkuDraft) => {
+    if (!item || !organizationId || !costAccess.canManage) return;
+    if (!row.variantId) {
+      setCostSaveErrors((current) => ({ ...current, [row.localId]: t("common.erpProductRecord.costSaveAfterSku") }));
+      return;
+    }
+    const amount = item.metadata.canPurchase === true && row.costAmount.trim() ? Number(row.costAmount) : null;
+    if (amount !== null && (
+      !Number.isFinite(amount)
+      || amount < 0
+      || Math.round(amount * 100) !== amount * 100
+    )) {
+      setCostSaveErrors((current) => ({ ...current, [row.localId]: t("common.erpProductRecord.invalidCost") }));
+      return;
+    }
+    const idempotencyKey = row.costMutationKey ?? window.crypto?.randomUUID?.();
+    if (!idempotencyKey) {
+      setCostSaveErrors((current) => ({ ...current, [row.localId]: t("common.erpProductRecord.costMutationUnavailable") }));
+      return;
+    }
+    setSavingCostIds((current) => new Set(current).add(row.localId));
+    setCostSaveErrors((current) => {
+      const next = { ...current };
+      delete next[row.localId];
+      return next;
+    });
+    setCostSaveSuccess((current) => ({ ...current, [row.localId]: false }));
+    setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
+      ? { ...currentRow, costMutationKey: idempotencyKey }
+      : currentRow));
+    try {
+      const cost = await catalogAdapter.saveProductCostReference({
+        organizationId,
+        catalogItemId: item.id,
+        variantId: row.variantId,
+        amount,
+        currency: row.costCurrency,
+        expectedVersion: row.costVersion,
+        idempotencyKey,
+      });
+      setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
+        ? { ...currentRow, costVersion: cost.version, costAmount: cost.amount == null ? "" : String(cost.amount), costCurrency: cost.currency, costMutationKey: null }
+        : currentRow));
+      setCostSaveSuccess((current) => ({ ...current, [row.localId]: true }));
+    } catch (cause) {
+      setCostSaveErrors((current) => ({
+        ...current,
+        [row.localId]: cause instanceof Error ? cause.message : t("common.erpProductRecord.costSaveError"),
+      }));
+    } finally {
+      setSavingCostIds((current) => {
+        const next = new Set(current);
+        next.delete(row.localId);
+        return next;
+      });
+    }
+  };
+
   if (loading) return <PageContainer width="wide"><LoadingState label={t("common.erpProductRecord.loadingProduct")} /></PageContainer>;
   if (error && !item) return <PageContainer width="narrow"><div className="rounded-lg border border-destructive/30 p-5"><p role="alert" className="text-sm text-destructive">{error}</p><Button className="mt-4" variant="outline" onClick={() => navigate("/app/erp/products")}><ArrowLeft className="me-2 h-4 w-4" />{t("common.erpProductRecord.backToProducts")}</Button></div></PageContainer>;
   if (!item) return null;
+  const showCostColumns = costAccess.canRead
+    && (item.metadata.canPurchase === true || rows.some((row) => row.costVersion > 0));
 
   return <PageContainer width="wide">
     <PageHeader
@@ -322,9 +368,10 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
               <TableHead>{t("common.erpProductRecord.sku")}</TableHead>
               <TableHead>{t("common.erpForm.item.category")}</TableHead>
               <TableHead>{t("common.erpForm.item.status")}</TableHead>
-              {item.metadata.canPurchase === true && costManagementAvailable && <>
+              {showCostColumns && <>
                 <TableHead>{t("common.erpProductRecord.purchaseCost")}</TableHead>
                 <TableHead>{t("common.erpForm.item.currency")}</TableHead>
+                {costAccess.canManage && <TableHead>{t("common.erpProductRecord.costActions")}</TableHead>}
               </>}
             </TableRow></TableHeader>
             <TableBody>{rows.map((row) => <TableRow key={row.localId}>
@@ -339,16 +386,30 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
                 <SelectTrigger aria-label={`${t("common.erpForm.item.status")} ${row.name || row.sku}`}><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="draft">{t("common.erpForm.item.draft")}</SelectItem><SelectItem value="active">{t("common.erpForm.item.active")}</SelectItem><SelectItem value="archived">{t("common.erpForm.item.archived")}</SelectItem></SelectContent>
               </Select></TableCell>
-              {item.metadata.canPurchase === true && costManagementAvailable && <>
-                <TableCell><Input aria-label={`${t("common.erpProductRecord.purchaseCost")} ${row.name || row.sku}`} type="number" min="0" step="0.01" value={row.costAmount} onChange={(event) => updateRow(row.localId, { costAmount: event.target.value })} /></TableCell>
-                <TableCell><Select value={row.costCurrency} onValueChange={(value) => updateRow(row.localId, { costCurrency: value })}>
+              {showCostColumns && <>
+                <TableCell>
+                  <Input aria-label={`${t("common.erpProductRecord.purchaseCost")} ${row.name || row.sku}`} type="number" min="0" step="0.01" value={row.costAmount} onChange={(event) => updateRow(row.localId, { costAmount: event.target.value })} readOnly={!costAccess.canManage || item.metadata.canPurchase !== true} />
+                  {costSaveErrors[row.localId] && <p role="alert" className="mt-1 text-xs text-destructive">{costSaveErrors[row.localId]}</p>}
+                  {costSaveSuccess[row.localId] && <p role="status" className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">{t("common.erpProductRecord.costSaved")}</p>}
+                  {!row.variantId && row.costAmount.trim() && <p role="status" className="mt-1 text-xs text-muted-foreground">{t("common.erpProductRecord.costSaveAfterSku")}</p>}
+                </TableCell>
+                <TableCell><Select value={row.costCurrency} onValueChange={(value) => updateRow(row.localId, { costCurrency: value })} disabled={!costAccess.canManage || item.metadata.canPurchase !== true}>
                   <SelectTrigger aria-label={`${t("common.erpForm.item.currency")} ${row.name || row.sku}`}><SelectValue /></SelectTrigger>
                   <SelectContent>{["EUR", "USD", "GBP"].map((currency) => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}</SelectContent>
                 </Select></TableCell>
+                {costAccess.canManage && <TableCell>
+                  <Button type="button" variant="outline" size="sm" onClick={() => void saveCost(row)} disabled={saving || savingCostIds.has(row.localId) || !row.variantId || (!row.costAmount.trim() && row.costVersion === 0)}>
+                    {savingCostIds.has(row.localId) ? t("common.erpProductRecord.savingCost") : t("common.erpProductRecord.saveCostForSku", { sku: row.name || row.sku })}
+                  </Button>
+                </TableCell>}
               </>}
             </TableRow>)}</TableBody>
           </Table>
         </div>
+        {item.metadata.canPurchase === true && !costAccess.canRead && <p role="status" className="mt-4 text-sm text-muted-foreground">{t("common.erpProductRecord.costRestricted")}</p>}
+        {costAccessError && <p role="alert" className="mt-4 text-sm text-destructive">{t("common.erpProductRecord.costAccessUnavailable")}: {costAccessError}</p>}
+        {costReadError && <p role="alert" className="mt-4 text-sm text-destructive">{t("common.erpProductRecord.costReadError")}: {costReadError}</p>}
+        {item.metadata.canPurchase === true && costAccess.canRead && !costAccess.canManage && <p role="status" className="mt-4 text-sm text-muted-foreground">{t("common.erpProductRecord.costEditRequiresBoth")}</p>}
         {!rows.length && <p className="mt-4 text-sm text-muted-foreground">{t("common.erpProductRecord.noSkus")}</p>}
         <div className="mt-5 flex justify-end"><Button onClick={() => void save()} disabled={saving || !rows.length}>{saving ? t("common.erpProductRecord.savingSkus") : t("common.erpProductRecord.saveSkus")}</Button></div>
       </section>

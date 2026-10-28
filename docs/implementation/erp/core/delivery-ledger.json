@@ -3213,7 +3213,18 @@
       "blocked_by": [],
       "evidence_refs": [
         "docs/implementation/erp/core/access-model.md",
-        "docs/implementation/erp/core/api-contracts.md"
+        "docs/implementation/erp/core/api-contracts.md",
+        "src/loopdev/domains/catalog/adapter/index.ts",
+        "src/loopdev/domains/catalog/adapter/local.ts",
+        "src/loopdev/domains/catalog/adapter/supabase.ts",
+        "src/loopdev/pages/erp/ProductRecordPages.tsx",
+        "src/loopdev/pages/erp/ProductSkuManagerPage.tsx",
+        "src/test/catalog/catalog-adapter.test.ts",
+        "src/test/erp/product-record-pages.test.tsx",
+        "src/test/erp/product-sku-manager.test.tsx",
+        "supabase/migrations/20261027160000_erp_product_cost_requires_read_and_manage.sql",
+        "supabase/tests/database/017_erp_product_cost_reference.sql",
+        "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-20-purchase-cost-permissions"
       ]
     },
     {

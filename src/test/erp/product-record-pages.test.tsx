@@ -23,6 +23,7 @@ vi.mock("@/hooks/use-tenant-context", () => ({
 
 describe("ERP product record pages", () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     localCatalogItemsStore.reset();
     localCatalogItemKeyCountersStore.reset();
     localCatalogSkuCountersStore.reset();
@@ -34,8 +35,8 @@ describe("ERP product record pages", () => {
     window.localStorage.setItem("rivera:ui:language", JSON.stringify("en"));
   });
 
-  it("creates a product with a separate purchase-cost reference", async () => {
-    render(
+  it("saves product data and its purchase cost as separate operations", async () => {
+    const creationPage = render(
       <I18nProvider>
         <MemoryRouter initialEntries={["/app/erp/products/new"]}>
           <ProductRecordPage mode="create" itemId={null} />
@@ -51,27 +52,96 @@ describe("ERP product record pages", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /Can be purchased/ }));
     fireEvent.change(screen.getByLabelText(/Product name/), { target: { value: "MiauCraft Toy" } });
     expect(screen.getByLabelText(/SKU/)).toHaveAttribute("readonly");
-    fireEvent.change(screen.getByLabelText(/Unit purchase cost/), { target: { value: "4.50" } });
     fireEvent.click(screen.getByRole("button", { name: "Create product" }));
 
-    await waitFor(() => expect(localCatalogItemsStore.list()).toContainEqual(
-      expect.objectContaining({
-        name: "MiauCraft Toy",
-        sku: expect.stringMatching(/^\d+$/),
-        type: "physical_product",
-        metadata: expect.objectContaining({
-          itemKind: "product",
-          itemClass: "finished_product",
-          sourcingMode: "buy",
-          canPurchase: true,
-          canSell: false,
-          trackInventory: false,
-        }),
+    const item = await waitFor(() => {
+      const created = localCatalogItemsStore.list().find((catalogItem) => catalogItem.name === "MiauCraft Toy");
+      if (!created) throw new Error("Product was not created");
+      return created;
+    });
+    expect(item).toMatchObject({
+      sku: expect.stringMatching(/^\d+$/),
+      type: "physical_product",
+      metadata: expect.objectContaining({
+        itemKind: "product",
+        itemClass: "finished_product",
+        sourcingMode: "buy",
+        canPurchase: true,
+        canSell: false,
+        trackInventory: false,
       }),
-    ));
+    });
+    expect(localProductCostReferencesStore.list()).toHaveLength(0);
+    creationPage.unmount();
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={[`/app/erp/products/${item.id}/edit`]}>
+          <ProductRecordPage mode="edit" itemId={item.id} />
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+    fireEvent.change(await screen.findByLabelText("Unit purchase cost"), { target: { value: "4.50" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save purchase cost" }));
     await waitFor(() => expect(localProductCostReferencesStore.list()).toContainEqual(
-      expect.objectContaining({ amount: 4.5, currency: "EUR" }),
+      expect.objectContaining({ catalogItemId: item.id, amount: 4.5, currency: "EUR" }),
     ));
+  });
+
+  it("does not block a product save when its separate purchase-cost save fails", async () => {
+    const item = await localCatalogAdapter.createCatalogItem({
+      organizationId: "local-development-organization",
+      catalogId: "catalog_products",
+      name: "Cost save failure product",
+      type: "physical_product",
+      status: "draft",
+      metadata: { itemKind: "product", itemClass: "finished_product", sourcingMode: "buy", canPurchase: true },
+    });
+    const costSave = vi.spyOn(localCatalogAdapter, "saveProductCostReference").mockRejectedValue(new Error("Cost service unavailable."));
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={[`/app/erp/products/${item.id}/edit`]}>
+          <ProductRecordPage mode="edit" itemId={item.id} />
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+
+    fireEvent.change(await screen.findByLabelText(/Product name/), { target: { value: "Product saved independently" } });
+    fireEvent.change(screen.getByLabelText("Unit purchase cost"), { target: { value: "8.75" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save purchase cost" }));
+    expect(await screen.findByText("Cost service unavailable.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(localCatalogItemsStore.get(item.id)?.name).toBe("Product saved independently"));
+    expect(costSave).toHaveBeenCalledTimes(1);
+    expect(localProductCostReferencesStore.list()).toHaveLength(0);
+  });
+
+  it("does not query cost data when read permission is denied", async () => {
+    const item = await localCatalogAdapter.createCatalogItem({
+      organizationId: "local-development-organization",
+      catalogId: "catalog_products",
+      name: "Restricted cost product",
+      type: "physical_product",
+      status: "draft",
+      metadata: { itemKind: "product", itemClass: "finished_product", sourcingMode: "buy", canPurchase: true },
+    });
+    const accessCheck = vi.spyOn(localCatalogAdapter, "getProductCostAccess").mockResolvedValue({ canRead: false, canManage: false });
+    const costRead = vi.spyOn(localCatalogAdapter, "getProductCostReference");
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={[`/app/erp/products/${item.id}/edit`]}>
+          <ProductRecordPage mode="edit" itemId={item.id} />
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+
+    expect(await screen.findByText(/Purchase cost is restricted/)).toBeInTheDocument();
+    expect(accessCheck).toHaveBeenCalledWith({ organizationId: "local-development-organization" });
+    expect(costRead).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Unit purchase cost")).not.toBeInTheDocument();
   });
 
   it("creates and displays a fully populated product with a numeric key and test SKU", async () => {
@@ -121,7 +191,6 @@ describe("ERP product record pages", () => {
     fireEvent.change(screen.getByLabelText("Width"), { target: { value: "12" } });
     fireEvent.change(screen.getByLabelText("Height"), { target: { value: "5.5" } });
     fireEvent.change(screen.getByLabelText("Reference sales price"), { target: { value: "39.90" } });
-    fireEvent.change(screen.getByLabelText("Unit purchase cost"), { target: { value: "11.25" } });
     fireEvent.click(screen.getByRole("checkbox", { name: "New arrival" }));
     fireEvent.click(screen.getByRole("combobox", { name: "Status" }));
     fireEvent.click(await screen.findByRole("option", { name: "Active" }));
@@ -159,11 +228,15 @@ describe("ERP product record pages", () => {
         currency: "EUR",
       },
     });
-    await waitFor(() => expect(localProductCostReferencesStore.list()).toContainEqual(expect.objectContaining({
+    await localCatalogAdapter.saveProductCostReference({
+      organizationId,
       catalogItemId: item.id,
+      variantId: null,
       amount: 11.25,
       currency: "EUR",
-    })));
+      expectedVersion: 0,
+      idempotencyKey: "seed-product-cost-1",
+    });
     form.unmount();
 
     render(

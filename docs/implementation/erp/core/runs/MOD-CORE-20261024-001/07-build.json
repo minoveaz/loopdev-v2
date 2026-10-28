@@ -9,20 +9,20 @@
   "status": "blocked",
   "decision_status": "open",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 16,
-  "started_at": "2026-10-25T18:22:51Z",
-  "completed_at": "2026-10-25T18:29:42Z",
+  "attempt": 20,
+  "started_at": "2026-10-27T21:55:46Z",
+  "completed_at": "2026-10-27T21:55:46Z",
   "input_fingerprint": "sha256:7ce9b44cad626b5de49d65607db36c3b312eef926b64d1bd3251bb38de4fd4fa",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
-    "branch": "feature/erp-core-capabilities",
+    "branch": "feature/erp-products-web-management",
     "base_branch": "develop",
-    "head_commit": "141f1ca6d50286d639e3b1e0e5a472c676acda9a",
-    "working_tree": "Existing Products security implementation and Platform Files contract plus MEDIA-DATA-001 migration, pgTAP coverage and build evidence.",
-    "runtime_url": null,
-    "runtime_port": null,
-    "serving_process": "Isolated local Supabase project at 127.0.0.1:55422 applied the full migration chain and ran pgTAP; no application runtime or remote database was used."
+    "head_commit": "1bc95a77557dbf89e49c203f66e127bab951ffd0",
+    "working_tree": "Pre-existing ERP planning/traceability changes plus the purchase-cost permission implementation, tests and evidence.",
+    "runtime_url": "http://127.0.0.1:5173/app/erp/products/{id}/edit",
+    "runtime_port": 5173,
+    "serving_process": "Vite served the SPA with HTTP 200; browser direct navigation redirected to /pages/login. The temporary server was stopped after verification."
   },
   "input_artifacts": [],
   "output_artifacts": [
@@ -56,7 +56,14 @@
     "docs/implementation/erp/core/sync-model.md",
     "docs/implementation/erp/core/platform-evidence-matrix.md",
     "supabase/migrations/20261025175000_erp_product_media_gallery_order.sql",
-    "supabase/tests/database/016_erp_product_media_gallery_order.sql"
+    "supabase/tests/database/016_erp_product_media_gallery_order.sql",
+    "supabase/migrations/20261027160000_erp_product_cost_requires_read_and_manage.sql",
+    "supabase/tests/database/017_erp_product_cost_reference.sql",
+    "src/loopdev/pages/erp/ProductRecordPages.tsx",
+    "src/loopdev/pages/erp/ProductSkuManagerPage.tsx",
+    "src/test/catalog/catalog-adapter.test.ts",
+    "src/test/erp/product-record-pages.test.tsx",
+    "src/test/erp/product-sku-manager.test.tsx"
   ],
   "decisions": [
     {
@@ -128,7 +135,8 @@
     "Attempt 16 completed MEDIA-DATA-001 locally: existing assignments receive deterministic per-gallery positions and version 1; triggers serialize gallery mutations, append new assignments, protect identity and version order/alt-text changes; a deferred unique constraint enforces gallery position uniqueness.",
     "Added a security-checked atomic reorder RPC requiring catalog.write, enabled Products write controls, complete assignment IDs and matching expected versions. Direct clients can update contextual alt text but cannot change position; detach removes only the association.",
     "The isolated full Supabase migration chain applied 20261025175000. Suites 014, 015 and 016 passed all 84 pgTAP assertions, covering role/security compatibility, reusable same-organization Files, product/SKU order, stale/incomplete conflicts, versioning and detach preservation.",
-    "SQL lint still reports pre-existing findings in organization/settings functions and Supabase Storage dynamic-SQL functions; no finding references the new migration or gallery functions. No remote migration, file operation, Product data write or write-control change was performed."
+    "SQL lint still reports pre-existing findings in organization/settings functions and Supabase Storage dynamic-SQL functions; no finding references the new migration or gallery functions. No remote migration, file operation, Product data write or write-control change was performed.",
+    "Attempt 20 implemented split purchase-cost permissions and independent product/SKU versus cost saves locally. Local UI/adapter tests and 22 pgTAP assertions pass. Read-only linked-project checks found the remote RPC and INSERT/UPDATE policies still require manage only, while global and organization write controls are enabled. No remote mutation was authorized or performed; authenticated UI behavior remains unverified."
   ],
   "validation": [
     {
@@ -445,6 +453,41 @@
       "command": "git diff --check",
       "result": "passed",
       "evidence": "No whitespace errors in the migration, pgTAP test, evidence matrix, ledger or build checkpoint."
+    },
+    {
+      "command": "npm test -- src/test/erp/product-record-pages.test.tsx",
+      "result": "passed (10 tests)",
+      "evidence": "Required E3 component regression suite for separate product and cost saves."
+    },
+    {
+      "command": "npx vitest run src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx",
+      "result": "passed (31 tests)",
+      "evidence": "Adapter permission matrix and product/SKU cost save independence regressions."
+    },
+    {
+      "command": "npm run typecheck && npm run i18n:check",
+      "result": "passed",
+      "evidence": "Application/Node TypeScript and visible-text localization checks."
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "evidence": "Production Vite build completed."
+    },
+    {
+      "command": "docker exec -i -w /tmp/loopdev-cost-tests supabase_db_loopdev-erp-write-tests psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f /tmp/loopdev-cost-tests/017_erp_product_cost_reference.sql",
+      "result": "passed (22 pgTAP assertions)",
+      "evidence": "Applied and tested only in the isolated local database; no remote migration or data write."
+    },
+    {
+      "command": "Read-only linked-project queries for cost policies, RPC permission checks and write controls",
+      "result": "passed",
+      "evidence": "Remote INSERT/UPDATE and RPC require manage only; SELECT requires read; global and one organization control are enabled. No remote change was made."
+    },
+    {
+      "command": "Browser direct route http://127.0.0.1:5173/app/erp/products/{id}/edit",
+      "result": "partial",
+      "evidence": "The SPA returned HTTP 200 but navigation redirected to /pages/login; authenticated route behavior was not verified."
     }
   ],
   "requirements": [
@@ -617,16 +660,21 @@
       "type": "edge-function-deployment",
       "path": "supabase/functions/platform-files/index.ts",
       "result": "The reported Edge Function request error was traced to platform-files not being deployed in loopdev-platform-dev. Local Deno check and 5 function tests passed. Deployed only platform-files with JWT verification enabled via `supabase functions deploy platform-files --project-ref sukjcsylkljiyvfklxvj --use-api`; Supabase reports ACTIVE version 1. OPTIONS preflight for http://localhost:8080 returned HTTP 200 with the expected CORS headers. The browser canvas redirected to /pages/login, so no authenticated gallery request was verified. PLATFORM_FILES_ALLOWED_ORIGINS is not configured; non-local app origins require configuration."
+    },
+    {
+      "type": "task-evidence",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-20-purchase-cost-permissions",
+      "result": "COST-DESKTOP-001 local implementation evidence: read/manage are separated, mutations require both permissions, and product/SKU persistence is independent from cost persistence. Focused UI/adapter tests (31), typecheck, i18n, build and the isolated 22-assertion pgTAP suite passed. Live remote checks remain manage-only for mutations and show global and organization write controls enabled; no remote change was made. Authenticated route behavior remains unverified."
     }
   ],
-  "detected_failure": "The Products gallery Edge Function request failure was caused by the platform-files function being absent from loopdev-platform-dev; it is now deployed and active. The browser canvas had no authenticated session, so the gallery route still needs user-session verification. The function currently allows localhost origins; non-local origins require PLATFORM_FILES_ALLOWED_ORIGINS.",
-  "likely_failure_origin": "The web adapter invokes the shared platform-files Edge Function, but only the database migration had been deployed. The remote function list confirmed there was no platform-files deployment; deploying the approved function made the endpoint active and its localhost CORS preflight succeeds.",
-  "next_handoff": "Refresh the Products page in the authenticated browser session and verify the media card. If the app is hosted on a non-local origin, configure PLATFORM_FILES_ALLOWED_ORIGINS for that exact origin. Product write controls remain disabled. The feature branch commits are local; no push or follow-up PR has been made.",
+  "detected_failure": "Purchase-cost permission enforcement is implemented locally but is not active in the linked project. Remote INSERT/UPDATE policies and the RPC check catalog.cost.manage without catalog.cost.read, and both global and one organization write-control row are enabled. The authenticated Products route also remains unverified because direct navigation redirected to login.",
+  "likely_failure_origin": "The forward migration has not been applied to the linked project, consistent with the explicit no-remote-change scope. The current live control state differs from earlier checkpoint evidence and requires owner reconciliation before a separately authorized deployment.",
+  "next_handoff": "Reconcile the enabled remote write-control state with its owner; obtain separate deployment authorization; apply the purchase-cost permission migration and re-read policies, RPC and controls; then verify the cost workflows in an authenticated desktop session. Do not toggle remote controls or deploy as part of this local implementation.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
     "approved_at": null
   },
   "invalidated": false,
-  "updated_at": "2026-10-26T21:45:00Z"
+  "updated_at": "2026-10-27T21:55:46Z"
 }

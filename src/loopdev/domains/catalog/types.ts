@@ -120,6 +120,11 @@ export interface ProductCostReference extends Entity {
   version: number;
 }
 
+export interface ProductCostAccess {
+  canRead: boolean;
+  canManage: boolean;
+}
+
 export interface ProductPartyRole extends Entity {
   organizationId: string;
   workspaceId: string | null;

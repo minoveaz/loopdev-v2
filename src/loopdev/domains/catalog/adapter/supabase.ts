@@ -19,6 +19,7 @@ import type {
   PriceEntry,
   ProductCostReference,
   ProductCostReferenceInput,
+  ProductCostAccess,
   ProductReference,
   ProductReferenceCreateInput,
   ProductReferenceUpdateInput,
@@ -192,6 +193,24 @@ export const supabaseCatalogAdapter: CatalogAdapter = {
     if (error) throw mapError(error);
     if (!data) throw new CatalogAdapterError("Product category changed or is no longer available. Reload and try again.", "conflict");
     return mapProductReference(data as Row);
+  },
+  async getProductCostAccess(params): Promise<ProductCostAccess> {
+    const checkPermission = async (requiredPermission: "catalog.cost.read" | "catalog.cost.manage") => {
+      const { data, error } = await client().rpc("has_organization_permission", {
+        target_organization_id: params.organizationId,
+        required_permission: requiredPermission,
+      });
+      if (error) throw mapError(error);
+      if (typeof data !== "boolean") {
+        throw new CatalogAdapterError("Purchase cost permissions could not be verified.", "server-error");
+      }
+      return data;
+    };
+    const [canRead, hasManagePermission] = await Promise.all([
+      checkPermission("catalog.cost.read"),
+      checkPermission("catalog.cost.manage"),
+    ]);
+    return { canRead, canManage: canRead && hasManagePermission };
   },
   async getProductCostReference(params: CatalogScopeParams & { catalogItemId: string; variantId?: string | null }) {
     let query = client().from("erp_product_cost_references").select("*")

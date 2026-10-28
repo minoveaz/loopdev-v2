@@ -2,12 +2,53 @@ begin;
 
 \ir helpers/rls_helpers.sql
 
-select plan(10);
+select plan(22);
 
-insert into auth.users (id, aud, role, email, encrypted_password, confirmed_at)
+select is(
+  has_function_privilege(
+    'authenticated',
+    'public.save_erp_product_cost_reference(uuid,uuid,uuid,numeric,text,bigint,text)',
+    'EXECUTE'
+  ),
+  true,
+  'authenticated clients can execute the guarded cost wrapper'
+);
+
+select is(
+  has_function_privilege(
+    'anon',
+    'public.save_erp_product_cost_reference(uuid,uuid,uuid,numeric,text,bigint,text)',
+    'EXECUTE'
+  ),
+  false,
+  'anonymous clients cannot execute the cost wrapper'
+);
+
+select is(
+  has_function_privilege(
+    'authenticated',
+    'public.save_erp_product_cost_reference_core(uuid,uuid,uuid,numeric,text,bigint,text)',
+    'EXECUTE'
+  ),
+  false,
+  'authenticated clients cannot bypass the guarded cost wrapper'
+);
+
+select is(
+  has_function_privilege(
+    'anon',
+    'public.save_erp_product_cost_reference_core(uuid,uuid,uuid,numeric,text,bigint,text)',
+    'EXECUTE'
+  ),
+  false,
+  'anonymous clients cannot execute the internal cost function'
+);
+
+insert into auth.users (id, aud, role, email, encrypted_password)
 values
-  ('00000000-0000-4000-8700-000000000081', 'authenticated', 'authenticated', 'cost-owner@example.test', '', now()),
-  ('00000000-0000-4000-8700-000000000082', 'authenticated', 'authenticated', 'cost-viewer@example.test', '', now());
+  ('00000000-0000-4000-8700-000000000081', 'authenticated', 'authenticated', 'cost-owner@example.test', ''),
+  ('00000000-0000-4000-8700-000000000082', 'authenticated', 'authenticated', 'cost-viewer@example.test', ''),
+  ('00000000-0000-4000-8700-000000000083', 'authenticated', 'authenticated', 'cost-agent@example.test', '');
 
 insert into public.organizations (id, name, slug)
 values ('00000000-0000-4000-9700-000000000081', 'Product cost test', 'product-cost-test');
@@ -15,7 +56,8 @@ values ('00000000-0000-4000-9700-000000000081', 'Product cost test', 'product-co
 insert into public.organization_memberships (organization_id, user_id, role)
 values
   ('00000000-0000-4000-9700-000000000081', '00000000-0000-4000-8700-000000000081', 'owner'),
-  ('00000000-0000-4000-9700-000000000081', '00000000-0000-4000-8700-000000000082', 'viewer');
+  ('00000000-0000-4000-9700-000000000081', '00000000-0000-4000-8700-000000000082', 'viewer'),
+  ('00000000-0000-4000-9700-000000000081', '00000000-0000-4000-8700-000000000083', 'agent');
 
 update public.erp_product_write_controls
    set enabled = true,
@@ -57,6 +99,14 @@ select is(
   )).version,
   1::bigint,
   'an owner can create a versioned SKU cost'
+);
+
+select is(
+  (select count(*)::integer
+     from public.erp_product_cost_references
+    where organization_id = '00000000-0000-4000-9700-000000000081'),
+  1,
+  'an owner with both permissions can read the cost'
 );
 
 select is(
@@ -126,8 +176,22 @@ select throws_ok(
        15.00, 'USD', 2, 'cost-denied-0001'
      ) $$,
   '42501',
-  'Purchase cost management is not permitted',
+     'Purchase cost read and management permissions are required',
   'a viewer cannot write purchase costs'
+);
+
+select throws_ok(
+  $$ insert into public.erp_product_cost_references (
+       organization_id, catalog_item_id, variant_id, amount, currency
+     ) values (
+       '00000000-0000-4000-9700-000000000081',
+       (select id from public.erp_catalog_items where organization_id = '00000000-0000-4000-9700-000000000081' and name = 'Costed product'),
+       (select id from public.erp_catalog_variants where organization_id = '00000000-0000-4000-9700-000000000081' and name = 'Costed SKU'),
+       15.00, 'USD'
+     ) $$,
+  '42501',
+  'new row violates row-level security policy for table "erp_product_cost_references"',
+  'direct writes are denied without both cost permissions'
 );
 
 select is(
@@ -136,6 +200,81 @@ select is(
     where organization_id = '00000000-0000-4000-9700-000000000081'),
   0,
   'a viewer cannot read purchase cost rows'
+);
+
+reset role;
+insert into public.role_permissions (role, permission_key)
+values ('viewer', 'catalog.cost.manage')
+on conflict (role, permission_key) do nothing;
+set local role authenticated;
+select pg_temp.set_authenticated_user('00000000-0000-4000-8700-000000000082');
+select throws_ok(
+  $$ select public.save_erp_product_cost_reference(
+       '00000000-0000-4000-9700-000000000081',
+       (select id from public.erp_catalog_items where organization_id = '00000000-0000-4000-9700-000000000081' and name = 'Costed product'),
+       (select id from public.erp_catalog_variants where organization_id = '00000000-0000-4000-9700-000000000081' and name = 'Costed SKU'),
+       15.00, 'USD', 2, 'cost-manage-only'
+     ) $$,
+  '42501',
+  'Purchase cost read and management permissions are required',
+  'manage without read cannot mutate purchase costs'
+);
+select is(
+  (select count(*)::integer
+     from public.erp_product_cost_references
+    where organization_id = '00000000-0000-4000-9700-000000000081'),
+  0,
+  'manage without read cannot read purchase cost rows'
+);
+
+reset role;
+delete from public.role_permissions
+where role = 'viewer'
+  and permission_key = 'catalog.cost.manage';
+insert into public.role_permissions (role, permission_key)
+values ('viewer', 'catalog.cost.read')
+on conflict (role, permission_key) do nothing;
+set local role authenticated;
+select pg_temp.set_authenticated_user('00000000-0000-4000-8700-000000000082');
+select is(
+  (select count(*)::integer
+     from public.erp_product_cost_references
+    where organization_id = '00000000-0000-4000-9700-000000000081'),
+  1,
+  'read permission alone allows cost visibility'
+);
+select throws_ok(
+  $$ select public.save_erp_product_cost_reference(
+       '00000000-0000-4000-9700-000000000081',
+       (select id from public.erp_catalog_items where organization_id = '00000000-0000-4000-9700-000000000081' and name = 'Costed product'),
+       (select id from public.erp_catalog_variants where organization_id = '00000000-0000-4000-9700-000000000081' and name = 'Costed SKU'),
+       15.00, 'USD', 2, 'cost-read-only'
+     ) $$,
+  '42501',
+  'Purchase cost read and management permissions are required',
+  'read without manage cannot mutate purchase costs'
+);
+
+reset role;
+set local role authenticated;
+select pg_temp.set_authenticated_user('00000000-0000-4000-8700-000000000083');
+select throws_ok(
+  $$ select public.save_erp_product_cost_reference(
+       '00000000-0000-4000-9700-000000000081',
+       (select id from public.erp_catalog_items where organization_id = '00000000-0000-4000-9700-000000000081' and name = 'Costed product'),
+       (select id from public.erp_catalog_variants where organization_id = '00000000-0000-4000-9700-000000000081' and name = 'Costed SKU'),
+       15.00, 'USD', 2, 'cost-agent-deny'
+     ) $$,
+  '42501',
+  'Purchase cost read and management permissions are required',
+  'catalog.write does not grant cost mutation'
+);
+select is(
+  (select count(*)::integer
+     from public.erp_product_cost_references
+    where organization_id = '00000000-0000-4000-9700-000000000081'),
+  0,
+  'catalog.write does not grant cost visibility'
 );
 
 reset role;

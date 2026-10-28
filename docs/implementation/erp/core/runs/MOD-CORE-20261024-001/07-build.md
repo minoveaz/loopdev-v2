@@ -660,3 +660,14 @@ served the SPA at port 5173, but the direct Products URL redirected to
 `COST-DESKTOP-001` remains `ready`; its required contract/adapter/a11y
 dependencies are not closed, and remote rollout is intentionally pending
 separate authorization. This local build does not claim release readiness.
+
+### Git checkpoint — purchase-cost permission follow-up
+
+Committed as
+`ccf4675a9f8e431a0ce582ee7317f4ff89852764`
+(`fix(erp): enforce purchase-cost read and manage permissions
+(MOD-CORE-20261024-001)`) and pushed to
+`origin/feature/erp-products-web-management`. The remote ref was verified at
+the same commit. PR #41 had already merged; no follow-up PR was requested or
+opened. The pre-existing `README.md` discount-scope change was intentionally
+left unstaged. The remote migration and write controls remain unchanged.

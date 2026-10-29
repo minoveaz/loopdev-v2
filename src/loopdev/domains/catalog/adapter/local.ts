@@ -29,6 +29,7 @@ import type {
   Offer,
   PriceBook,
   PriceEntry,
+  ProductCostAccess,
   ResolvedCatalogReference,
   ProductCostReferenceInput,
   ProductReferenceCreateInput,
@@ -517,6 +518,13 @@ export const localCatalogAdapter: CatalogAdapter = {
     return updated;
   },
 
+  async getProductCostAccess(params): Promise<ProductCostAccess> {
+    const scope = scopeFor(params);
+    const canRead = localPlatformAdapter.hasPermission("catalog.cost.read", scope);
+    const hasManagePermission = localPlatformAdapter.hasPermission("catalog.cost.manage", scope);
+    return { canRead, canManage: canRead && hasManagePermission };
+  },
+
   async getProductCostReference(params) {
     if (!localPlatformAdapter.hasPermission("catalog.cost.read", scopeFor(params))) {
       throw new CatalogAdapterError("You do not have permission to view purchase costs.", "forbidden");
@@ -534,8 +542,9 @@ export const localCatalogAdapter: CatalogAdapter = {
   },
 
   async saveProductCostReference(input: ProductCostReferenceInput) {
-    if (!localPlatformAdapter.hasPermission("catalog.cost.manage", scopeFor(input))) {
-      throw new CatalogAdapterError("You do not have permission to manage purchase costs.", "forbidden");
+    const access = await this.getProductCostAccess(input);
+    if (!access.canManage) {
+      throw new CatalogAdapterError("You need both purchase-cost read and manage permissions.", "forbidden");
     }
     if (input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0 || Math.round(input.amount * 100) !== input.amount * 100)) {
       throw new CatalogAdapterError("Cost must be a non-negative amount.", "server-error");

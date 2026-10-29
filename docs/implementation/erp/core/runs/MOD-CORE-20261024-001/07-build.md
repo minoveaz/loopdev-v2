@@ -621,3 +621,67 @@ authenticated session to exercise the product gallery. The configured
 `PLATFORM_FILES_ALLOWED_ORIGINS` secret is absent; local origins are explicitly
 allowed by the function, but a non-local app origin must be configured before
 that origin can call the function.
+
+### Attempt 20 — Purchase-cost permissions
+
+Implemented the authorized desktop purchase-cost workflow locally. Cost access
+is now represented as separate read/manage capabilities, and mutations require
+both. Product and SKU persistence no longer writes costs as a side effect;
+product-level costs are available only when there are no active SKUs, while
+each managed SKU retains an independent cost and currency. Cost load/save
+failures have their own visible states and do not block product/SKU saves.
+
+Added forward-only RLS and RPC enforcement in
+`20261027160000_erp_product_cost_requires_read_and_manage.sql`; the internal
+RPC core is not executable by client roles. The dedicated local test database
+passed all 22 pgTAP assertions, including read-only, manage-only, agent,
+direct-RLS, idempotency, versioning and function-grant cases. The task ledger
+now points at the relevant implementation and test evidence; task statuses
+were not changed.
+
+The linked project was queried read-only. Its current INSERT/UPDATE policies
+and RPC require `catalog.cost.manage` but not `catalog.cost.read`; one global
+and one organization write-control row are enabled. The migration was not
+applied remotely and no remote data or controls were changed. The local app
+served the SPA at port 5173, but the direct Products URL redirected to
+`/pages/login`, so authenticated route behavior remains unverified.
+
+| Command or check | Result |
+|---|---|
+| `npm test -- src/test/erp/product-record-pages.test.tsx` | Passed: 1 file, 10 tests. |
+| `npx vitest run src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx` | Passed: 3 files, 31 tests. |
+| `npm run typecheck` | Passed. |
+| `npm run i18n:check` | Passed. |
+| `npm run build` | Passed. |
+| `docker exec -i -w /tmp/loopdev-cost-tests supabase_db_loopdev-erp-write-tests psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f /tmp/loopdev-cost-tests/017_erp_product_cost_reference.sql` | Passed: 22 pgTAP assertions after applying the forward migration only to the isolated local test database. |
+| Read-only linked-project policy/RPC/write-control queries | Passed; remote state is unchanged and remains weaker than the approved mutation rule. |
+| Browser direct route on `http://127.0.0.1:5173` | SPA served HTTP 200; route redirected to login, so no authenticated journey was verified. |
+
+`COST-DESKTOP-001` remains `ready`; its required contract/adapter/a11y
+dependencies are not closed, and remote rollout is intentionally pending
+separate authorization. This local build does not claim release readiness.
+
+### Git checkpoint — purchase-cost permission follow-up
+
+Committed as
+`ccf4675a9f8e431a0ce582ee7317f4ff89852764`
+(`fix(erp): enforce purchase-cost read and manage permissions
+(MOD-CORE-20261024-001)`) and pushed to
+`origin/feature/erp-products-web-management`. The remote ref was verified at
+the same commit. PR #41 had already merged; no follow-up PR was requested or
+opened. The pre-existing `README.md` discount-scope change was intentionally
+left unstaged. The remote migration and write controls remain unchanged.
+
+### Git checkpoint — clean cost-permissions follow-up
+
+Because PR #41 was squash-merged, comparing the original branch with updated
+`develop` included the previously merged Products work. A clean
+`fix/erp-cost-permissions` branch was created from `origin/develop`; only
+`ccf4675` and its Git-evidence commit were carried over. The unrelated local
+`README.md` change remains unstaged and is excluded.
+
+The follow-up PR is open against `develop` and references issue #36. Its local
+validation passed: 31 focused tests, typecheck, i18n check, production build,
+module-run validation and diff whitespace check. Remote migration deployment
+and authenticated-route verification remain pending; this PR does not change
+remote database state.

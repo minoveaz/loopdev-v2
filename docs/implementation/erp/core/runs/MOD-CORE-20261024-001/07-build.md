@@ -671,3 +671,17 @@ Committed as
 the same commit. PR #41 had already merged; no follow-up PR was requested or
 opened. The pre-existing `README.md` discount-scope change was intentionally
 left unstaged. The remote migration and write controls remain unchanged.
+
+### Git checkpoint — clean cost-permissions follow-up
+
+Because PR #41 was squash-merged, comparing the original branch with updated
+`develop` included the previously merged Products work. A clean
+`fix/erp-cost-permissions` branch was created from `origin/develop`; only
+`ccf4675` and its Git-evidence commit were carried over. The unrelated local
+`README.md` change remains unstaged and is excluded.
+
+The follow-up PR is open against `develop` and references issue #36. Its local
+validation passed: 31 focused tests, typecheck, i18n check, production build,
+module-run validation and diff whitespace check. Remote migration deployment
+and authenticated-route verification remain pending; this PR does not change
+remote database state.

@@ -6,10 +6,10 @@
 |---|---|
 | Run | `MOD-CORE-20261024-001` |
 | Phase | `03-access` |
-| Status | `partial` (revalidated in attempts 11–15; Products RLS and audit controls deployed, write controls remain off) |
+| Status | `partial` (remote state rechecked in verification attempt 6; effective Products writes are enabled for one organization despite its readiness gate being false) |
 | Parent | `02-domain` |
 | Domain input | `domain-model.md` |
-| Runtime changes | Forward-only security migrations applied to `loopdev-platform-dev`; no application deployment or Product-record mutation |
+| Runtime changes | Earlier forward-only security migrations were applied to `loopdev-platform-dev`; this verification performed read-only inspection only |
 
 This is the authorization contract and implementation record for Products and
 its commercial child records. It does not change the shared Platform
@@ -17,12 +17,40 @@ authorization model. Products RLS and audit controls are deployed in the
 development database, but they do not establish full module or release
 readiness.
 
-Attempts 11–15 revalidated this model against the current migration chain,
-isolated pgTAP tests and read-only deployed policy checks. The deployed global
-write control is false and no organization control is enabled. Product media
-access is checked by `catalog.read`/`catalog.write` at the database boundary,
-but the current Products adapter still bypasses the shared Files adapter and
-its complete lifecycle remains pending.
+Attempts 11–15 recorded an earlier remote snapshot. Verification attempt 6
+rechecked the live development project and found that the write-control,
+cost-permission and category-lifecycle state has since diverged from that
+snapshot. The current effective write function returns `true` for one
+organization even though that organization's `security_gates_ready` value is
+false. Treat this as a release blocker; this audit did not change the controls
+or perform product writes.
+
+## Remote state recheck — 2026-11-02
+
+The read-only inspection targeted `loopdev-platform-dev`
+(`sukjcsylkljiyvfklxvj`). Its migration history ends at `20261027150000`;
+the local forward migrations `20261027160000`,
+`20261101124000` and `20261102093000` are not registered remotely.
+
+| Area | Observed state | Verification consequence |
+|---|---|---|
+| Write controls | Global control and readiness are true. One organization has `enabled=true` and `security_gates_ready=false`; `erp_product_writes_enabled` nevertheless returns true for it. | Do not assume writes are disabled. Reconcile this state with the owner before changing any control or performing a mutation. |
+| Cost authorization | Remote cost mutation policies and the RPC check `catalog.cost.manage` without also requiring `catalog.cost.read`; local migration `20261027160000` adds that requirement. | The deployed authorization contract does not match local code/tests. Do not treat cost write enforcement as verified. |
+| Category archive | The remote function rejects archiving a category with active product/SKU assignments. Local migration `20261101124000` and pgTAP test 019 disagree: the migration blocks while the test expects assignments to be preserved. | Resolve the local migration/test contradiction and validate it before considering deployment. Remote behavior has not been changed. |
+| Physical attributes | `physical_attributes` is absent from both `erp_catalog_items` and `erp_catalog_variants`. | The local product/SKU measurement feature is not available in the remote schema. |
+| Data and policies | Five draft products, four draft SKUs, six active categories and four cost rows were present. Aggregate checks found no duplicate product/SKU keys, invalid category references, out-of-scope costs or broken media links. Main Products tables have RLS enabled, no `anon`/`public` policies and no authenticated `DELETE`/`TRUNCATE` grants. | These are structural/data-integrity checks only; they do not prove authenticated CRUD behavior. |
+| Files service | `platform-files` is `ACTIVE` v3 with JWT verification; `platform-files` Storage is private with a 25 MiB limit. Localhost preflight CORS checks passed for ports 5173 and 8080. | No authenticated upload, processing, rendition, tenant-isolation or remote-origin browser flow was exercised. |
+
+No remote migration, data mutation, write-control change or application
+deployment was performed in this recheck. The remote schema and control
+configuration must be revalidated after any authorized remediation.
+
+The Product Owner authorized disabling the control for the affected
+organization, but the available Supabase SQL context has no authenticated user
+(`auth.uid()` is null) and is not a Platform owner. The deployed
+`set_erp_product_write_control` RPC enforces that owner check. No direct-table
+update or identity bypass was used; an authenticated Platform owner must make
+the change through the approved RPC.
 
 ## Decision status
 
@@ -171,12 +199,13 @@ price entries. The forward migrations
 revoke physical deletes (except association detach), add cost-only permissions,
 same-organization foreign keys, default-off write controls and atomic audit
 triggers. Both migrations were applied to `loopdev-platform-dev` after explicit
-authorization and verified read-only: migration history contains versions
-`20261025173000` and `20261025174000`, there are no remaining `FOR ALL`
-policies, and the audit/write-control triggers are enabled. The global write
-control is false and no organization control is enabled, so Products writes
-remain blocked. The migration changed schema/policy/permission configuration
-only; it did not modify existing Product records.
+authorization. A historical read-only check confirmed migration history
+versions `20261025173000` and `20261025174000`, no remaining `FOR ALL`
+policies, and enabled audit/write-control triggers. That earlier snapshot
+reported writes blocked; the 2026-11-02 recheck supersedes that control-state
+claim (see the current remote-state section above). The migrations changed
+schema/policy/permission configuration only; they did not modify existing
+Product records.
 
 ## Shared Platform capabilities
 
@@ -189,10 +218,11 @@ only; it did not modify existing Product records.
 
 ## Authorization test cases
 
-These tests define the security contract. The deployed migration behavior is
-covered by isolated pgTAP suites 014/015; remote verification was read-only
-because write controls remain disabled. Application-level cost projections,
-cache invalidation and the shared Files lifecycle still need their own tests.
+These tests define the security contract. The deployed migration behavior is covered by isolated pgTAP suites 014/015.
+Remote verification remains read-only; the current effective write control is
+enabled for one organization, so no remote mutation was used as a test.
+Application-level cost projections, cache invalidation and the shared Files
+lifecycle still need their own tests.
 
 | ID | Scenario | Expected result |
 |---|---|---|
@@ -225,9 +255,9 @@ cache invalidation and the shared Files lifecycle still need their own tests.
 | Products are organization-wide but local visibility may still apply workspace filtering; the target and existing local behavior can diverge. | Catalog adapters and `isScopeVisible` | Align local and remote adapter tests with organization-wide visibility; treat legacy workspace values only as migration provenance. |
 | `ProductPartyRole`, `CatalogAvailability` and `CatalogEligibility` are local-only in the current Supabase adapter and have no table in the reviewed migration. | Supabase adapter and migration | Keep out of remote access promises until their product scope and persistence are approved. |
 | Hard delete cascades through commercial children; existing adapters expose physical deletes. | ERP migration and catalog tests | Remove delete actions from all adapters and deny SQL deletes; archive/restore only for this release. |
-| Cost references now use `catalog.cost.read/manage` remotely, with grants only for owner/admin. | `20261025174000_erp_products_operation_rls.sql`; `src/loopdev/domains/platform/types.ts`; `015_erp_products_operation_rls.sql`; remote read-only verification in build attempt 13 | Keep writes disabled; separately verify cost visibility through application queries, caches, logs and search before enabling. |
+| The current remote cost mutation policies and RPC require `catalog.cost.manage` but do not also require `catalog.cost.read`, unlike the local contract and forward migration. | `20261027160000_erp_product_cost_requires_read_and_manage.sql`; remote read-only recheck 2026-11-02 | Reconcile and validate the forward migration before deployment; verify cost visibility through application queries, caches, logs and search. |
 | Remote media policies now require the Products control for product-media writes, preserve non-product Files rules, deny physical object deletion and permit association detach without deleting the reusable File. The Products adapter still reads metadata and creates one-hour signed URLs directly through Supabase Storage. | `20261025174000_erp_products_operation_rls.sql`; `015_erp_products_operation_rls.sql`; `src/loopdev/domains/catalog/adapter/product-media-supabase.ts`; remote read-only verification in build attempt 13 | Complete the approved shared Files integration, decide/test signed-URL revocation window, and verify metadata, lifecycle, retention and orphan recovery before enabling uploads. |
-| Shared audit integration and default-off global/per-organization controls are deployed. The global control is false and no organization control is enabled; active-retention/archive operations remain unverified. | `20261025173000_erp_product_write_audit_controls.sql`; `014_erp_product_write_audit.sql`; remote read-only verification in build attempt 13 | Keep writes disabled; verify the approved six-month active-retention operation before release. |
+| Shared audit integration and write controls are deployed, but the live effective write function returns true for one organization whose `security_gates_ready` is false. The global control/readiness are true and the organization's control is enabled; retention/archive operations remain unverified. | `20261025173000_erp_product_write_audit_controls.sql`; `014_erp_product_write_audit.sql`; remote read-only recheck 2026-11-02 | Reconcile the effective gate with the owner and make the readiness invariant fail closed before any remote write; verify the approved six-month active-retention operation before release. |
 | Old tenancy documentation and current permission migrations use different role vocabularies. | `MULTI_TENANCY_STRATEGY.md`, `20260807000000_platform_core_permissions.sql` | Treat current Platform permission contract as baseline; reconcile docs in the owning Platform work. |
 
 ## Open questions and risks
@@ -237,9 +267,10 @@ cache invalidation and the shared Files lifecycle still need their own tests.
    metadata/Storage controls and the Products audit are deployed, but the
    current adapter still signs previews directly for one hour; its integration
    must be replaced before this contract is in effect at runtime.
-2. The linked security migrations are deployed and verified, but no pre-cutover
-   backup or recovery rehearsal was performed. Products writes remain disabled;
-   preserve that state until the remaining data and security checks pass.
+2. The linked security migrations are deployed, but no pre-cutover backup or
+   recovery rehearsal was performed. The current effective gate reports writes
+   enabled for one organization; do not make a remote mutation until the owner
+   reconciles the control discrepancy and the recovery/security checks pass.
 3. Review actual legacy workspace/category data in a dry run before
    organization-wide cutover; this repository contains no authorized
    production data export.
@@ -247,19 +278,21 @@ cache invalidation and the shared Files lifecycle still need their own tests.
 | Open decision / gate | Owner | Impact | Proposed default | Exact approval or evidence needed |
 |---|---|---|---|---|
 | `ACC-ERP-013`: product-media Files integration | Platform Files + ERP | Cross-tenant file disclosure, stale bearer URL access after permission revocation, deletion of reusable assets, or authorization broader than the parent Product | Apply `catalog.read`/`catalog.write` only to product-media paths; preserve existing non-product Files rules; detach leaves the shared File intact; deny authenticated physical object deletion; signed previews expire within 300 seconds. | Contract approved in build attempt 15. Implement and test the shared Files adapter, table/lifecycle authorization and orphan recovery before enabling uploads. |
-| `ACC-ERP-REMOTE-001`: deployed Products RLS/write controls and recovery | Platform DB owner + Product Owner | Incorrect policy state or failed recovery could expose or interrupt tenant data | Keep remote Products writes disabled until a recovery rehearsal and remaining data checks pass | Migrations applied and policy/grant/control/trigger state verified remotely. Still required: immutable pre-cutover backup evidence and forward-only recovery rehearsal. |
-| `ACC-ERP-COST-001`: deployed cost permission state | Platform + ERP | Cost disclosure through queries, caches, logs, search or RLS | Separate `catalog.cost.read`/`catalog.cost.manage`, owner/admin only; agents/viewers receive neither | Remote role map and RLS are verified; verify application query/cache/log/search surfaces before enabling cost operations. |
+| `ACC-ERP-REMOTE-001`: deployed Products RLS/write controls and recovery | Platform DB owner + Product Owner | Incorrect policy state or failed recovery could expose or interrupt tenant data | Effective writes must remain blocked until readiness, recovery and remaining data checks pass | Reconcile the live control discrepancy; verify the effective function respects the organization readiness gate. Still required: immutable pre-cutover backup evidence and forward-only recovery rehearsal. |
+| `ACC-ERP-COST-001`: deployed cost permission state | Platform + ERP | Cost disclosure or mutation through queries, caches, logs, search or RLS | Separate `catalog.cost.read`/`catalog.cost.manage`; mutation requires both; owner/admin only | Remote role map and policies/RPC currently do not enforce both permissions for mutation. Apply the validated forward migration only after separate authorization; verify application query/cache/log/search surfaces. |
 | `ACC-ERP-AUDIT-001`: deployed Products audit integration and retention | Platform + ERP | Untraceable remote mutation, write without audit, or stale audit retention | Use the approved append-only Platform event in the same transaction; redact values and abort mutation on audit failure | Remote audit triggers and atomicity are covered by local tests; separately confirm the six-month retention/archive operation before release. |
 
 ## Handoff
 
-**Status: `partial`.** The forward migrations implement
-operation-specific Products policies, cost-specific permissions,
-same-organization foreign keys, default-off global/organization write
-controls, media write gating and redacted same-transaction audit. Both pgTAP
-suites pass in isolation, and both migrations are deployed to
-`loopdev-platform-dev`. Read-only checks confirm operation-specific policies,
-owner/admin-only costs, enabled audit/control triggers and zero organizations
-with writes enabled. No Product records were changed. Remote Products
-mutations remain blocked until recovery evidence, legacy-data review, Files
-lifecycle/security checks and the remaining release gates pass.
+**Status: `partial`.** Operation-specific Products policies,
+same-organization foreign keys, media write gating and redacted
+same-transaction audit are deployed. The current remote recheck found cost
+mutation policies/RPC missing the `catalog.cost.read` requirement, the three
+newer local migrations absent from remote history, and an effective write
+control enabled for one organization despite its readiness gate being false.
+The remote category archive function also conflicts with the local
+assignment-preserving contract, and physical-attribute columns are absent.
+The recheck was read-only; no Product records or remote controls were changed.
+Do not treat remote Products writes as blocked or this module as release-ready
+until the control discrepancy and migration/test gaps are resolved and the
+remaining recovery, legacy-data and Files lifecycle checks pass.

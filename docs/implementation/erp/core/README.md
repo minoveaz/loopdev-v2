@@ -42,10 +42,13 @@
 
 ### Included
 
-- Deliver Products and categories, including variants, offers, sales prices,
-  structured physical attributes and a non-accounting unit purchase-cost
+- Deliver Products and categories, including variants, structured physical
+  attributes, a reference sales price and a non-accounting unit purchase-cost
   reference per product/SKU; add the approved organization-scoped reusable
   image library for products/variants with metadata and alt text.
+- Keep discounts out of Products: customer-facing sales discounts belong to a
+  future Pricing/Promotions flow; supplier purchase discounts belong to future
+  Procurement. Both consume product/SKU references and neither blocks Products.
 - Use full pages for product/SKU records and editing; use drawers for quick
   auxiliary-reference creation. Keep category-tree management in its dedicated
   Products view.
@@ -58,6 +61,8 @@
 
 - Approval or implementation of a full ERP, general ledger, advanced procurement/WMS or a generic storefront builder.
 - Manufacturing; revisit only through future discovery and product approval.
+- Sales discount rules/promotions and supplier purchase-discount conditions;
+  neither flow is part of this Products release.
 - Replacing Shopify for MiauCraft or processing payment-card data in LoopDev.
 - Shopify integration, automatic media publication/synchronization, Inhand storefront/orders, Suppliers, Sales, Procurement,
   Inventory, Finance, Reporting, native apps, offline remote cache/queue,
@@ -143,13 +148,14 @@ direction on 2026-10-24; runtime comparison remains a post-implementation gate.
 | CR-ERP-PRODUCT-MEDIA-001 | Confirmed | Add reusable organization-scoped product/variant images, metadata and alt text; automatic publication is excluded | User approved 2026-10-25 | `discovery.md`, `delivery-ledger.json` |
 | ERP-OD-007 | Resolved for this release | Suppliers is independent but deferred; its later scope/timing remain future discovery | User approved | `discovery.md`, `design.md` |
 | ERP-DEC-008 | Confirmed | `OrganizationCatalog` is migration-only, not a target business entity or product-ownership boundary | User decision; preserve legacy records for migration |
-| ERP-DEC-009 | Confirmed | Commercial price currency belongs to each `PriceBook`; migrate legacy catalog currency into applicable books | User decision; `domain-model.md` |
+| ERP-DEC-009 | Superseded | Legacy commercial currency was assigned to `PriceBook`; preserve it as migration provenance, not as the target Products pricing contract | `CR-ERP-DISCOUNT-FLOW-BOUNDARY-001`; `domain-model.md` |
+| ERP-DEC-010 | Confirmed | Products keeps only reference sales-price and purchase-cost values. Sales discounts belong to future Pricing/Promotions; purchase discounts belong to future Procurement. These flows consume Products/SKU references and are not implementation dependencies for Products. | User decision on 2026-10-27; `discovery.md`, `delivery-ledger.json` |
 | ERP-OD-008 | Resolved for this release | Preserve legacy locale/channel values as migration provenance; destination ownership is deferred and unchanged by the media-scope amendment | User approved | `domain-model.md`, `discovery.md` |
 | DOM-ERP-009 | Confirmed | Only legacy `service` maps automatically; all other listed catalog item types remain drafts pending explicit review | User decision; `domain-model.md` |
 | DOM-ERP-015 | Open | How legacy `categoryKey` references map to organization-scoped product categories | `domain-model.md` |
 | DOM-ERP-016 | Open | Where legacy `OrganizationCatalog` locale and channel fields belong | `domain-model.md` |
-| DOM-ERP-017 | Confirmed | Each `PriceEntry` uses its `PriceBook` currency | User decision; `domain-model.md` |
-| DOM-ERP-018 | Confirmed | `Offer` has no independent currency; offer prices use the associated `PriceBook` currency | User decision; `domain-model.md` |
+| DOM-ERP-017 | Superseded | Legacy `PriceEntry` currency inherited from `PriceBook`; not a target Products price contract | `CR-ERP-DISCOUNT-FLOW-BOUNDARY-001`; `domain-model.md` |
+| DOM-ERP-018 | Superseded | Legacy `Offer` used its associated `PriceBook`; not a target Products discount workflow | `CR-ERP-DISCOUNT-FLOW-BOUNDARY-001`; `domain-model.md` |
 | ERP-CF-001 | Execution gate | Reconcile product documentation with the existing remote adapter and verify deployed schema/runtime | Plan task | `discovery.md`, `implementation-plan.md` |
 | ERP-CF-002 | Resolved decision | `catalog.write` is canonical; a forward RLS/permission migration and deployed-state verification remain required | User approved | `access-model.md`, `api-contracts.md` |
 | ACC-ERP-011 | Platform dependency | Append-only shared Platform audit is required before remote writes; Platform owner must approve its contract | Owner approval pending | `access-model.md`, `implementation-plan.md` |

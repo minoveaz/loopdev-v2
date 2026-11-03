@@ -186,10 +186,10 @@ describe("ERP product record pages", () => {
     fireEvent.change(screen.getByLabelText("Material"), { target: { value: "Organic cotton" } });
     fireEvent.change(screen.getByLabelText("Color"), { target: { value: "Teal" } });
     fireEvent.change(screen.getByLabelText(/Size/), { target: { value: "18 cm" } });
-    fireEvent.change(screen.getByLabelText("Weight"), { target: { value: "0.45" } });
-    fireEvent.change(screen.getByLabelText("Length"), { target: { value: "18" } });
-    fireEvent.change(screen.getByLabelText("Width"), { target: { value: "12" } });
-    fireEvent.change(screen.getByLabelText("Height"), { target: { value: "5.5" } });
+    fireEvent.change(screen.getByLabelText("Weight (kg)"), { target: { value: "0.45" } });
+    fireEvent.change(screen.getByLabelText("Length (cm)"), { target: { value: "18" } });
+    fireEvent.change(screen.getByLabelText("Width (cm)"), { target: { value: "12" } });
+    fireEvent.change(screen.getByLabelText("Height (cm)"), { target: { value: "5.5" } });
     fireEvent.change(screen.getByLabelText("Reference sales price"), { target: { value: "39.90" } });
     fireEvent.click(screen.getByRole("checkbox", { name: "New arrival" }));
     fireEvent.click(screen.getByRole("combobox", { name: "Status" }));
@@ -207,6 +207,7 @@ describe("ERP product record pages", () => {
       categoryKey: category.key,
       status: "active",
       description: "A durable, hand-finished cotton toy designed for indoor play.",
+      physicalAttributes: { weightKg: 0.45, lengthCm: 18, widthCm: 12, heightCm: 5.5 },
       metadata: {
         itemKind: "product",
         itemClass: "finished_product",
@@ -222,8 +223,6 @@ describe("ERP product record pages", () => {
         material: "Organic cotton",
         color: "Teal",
         size: "18 cm",
-        weight: "0.45 kg",
-        dimensions: "18 × 12 × 5.5 cm",
         price: 39.9,
         currency: "EUR",
       },
@@ -253,6 +252,8 @@ describe("ERP product record pages", () => {
     expect(screen.getByText(item.sku)).toBeInTheDocument();
     expect(screen.getByText("MiauCraft")).toBeInTheDocument();
     expect(screen.getByText("Toys")).toBeInTheDocument();
+    expect(screen.getByText("0.45 kg")).toBeInTheDocument();
+    expect(screen.getByText("18 × 12 × 5.5 cm")).toBeInTheDocument();
     expect(screen.getByText("Soft cotton toy for cats.")).toBeInTheDocument();
     expect(screen.getByText("A durable, hand-finished cotton toy designed for indoor play.")).toBeInTheDocument();
     expect(screen.getByText("8437012345678")).toBeInTheDocument();
@@ -384,6 +385,22 @@ describe("ERP product record pages", () => {
       name: "Cat toys",
       parentId: parent.id,
     });
+    const assignedProduct = await localCatalogAdapter.createCatalogItem({
+      organizationId: "local-development-organization",
+      name: "Assigned cat toy",
+      type: "physical_product",
+      categoryKey: child.key,
+      status: "active",
+    });
+    const assignedSku = await localCatalogAdapter.createVariant({
+      organizationId: "local-development-organization",
+      workspaceId: null,
+      catalogItemId: assignedProduct.id,
+      name: "Assigned cat toy SKU",
+      status: "active",
+      attributes: {},
+      metadata: { categoryKey: child.key },
+    });
 
     render(
       <I18nProvider>
@@ -395,7 +412,7 @@ describe("ERP product record pages", () => {
 
     await screen.findByRole("textbox", { name: "Category name: Pet care" });
     fireEvent.click(screen.getByRole("button", { name: "Archive Pet care" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Move active child categories and assignments");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Move active child categories before archiving this category.");
 
     fireEvent.change(screen.getByRole("textbox", { name: "Category name: Cat toys" }), { target: { value: "Feline toys" } });
     fireEvent.click(screen.getByRole("button", { name: "Save name for Cat toys" }));
@@ -407,6 +424,8 @@ describe("ERP product record pages", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Archive Feline toys" }));
     await waitFor(() => expect(localProductReferencesStore.get(child.id)?.status).toBe("archived"));
+    expect(localCatalogItemsStore.get(assignedProduct.id)?.categoryKey).toBe(child.key);
+    expect(localCatalogVariantsStore.get(assignedSku.id)?.metadata.categoryKey).toBe(child.key);
     fireEvent.click(screen.getByRole("button", { name: "Restore Feline toys" }));
     await waitFor(() => expect(localProductReferencesStore.get(child.id)?.status).toBe("active"));
   });
@@ -454,5 +473,40 @@ describe("ERP product record pages", () => {
     expect(screen.queryByRole("checkbox", { name: /Can be purchased/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("checkbox", { name: /Track inventory/ })).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Can be sold/ })).toBeInTheDocument();
+  });
+
+  it("uses SKU measurements independently instead of inheriting product measurements", async () => {
+    const item = await localCatalogAdapter.createCatalogItem({
+      organizationId: "local-development-organization",
+      catalogId: "catalog_products",
+      name: "SKU measured product",
+      type: "physical_product",
+      status: "draft",
+      metadata: { itemKind: "product" },
+      physicalAttributes: { weightKg: 9.9, lengthCm: 99 },
+    });
+    await localCatalogAdapter.createVariant({
+      organizationId: "local-development-organization",
+      workspaceId: null,
+      catalogItemId: item.id,
+      name: "Small",
+      status: "draft",
+      attributes: { size: "S" },
+      metadata: {},
+      physicalAttributes: { weightKg: 0.2, lengthCm: 10 },
+    });
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={[`/app/erp/products/${item.id}`]}>
+          <ProductRecordPage mode="view" itemId={item.id} />
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "SKU measured product" })).toBeInTheDocument();
+    expect(screen.getByText("0.2 kg · 10 × — × — cm")).toBeInTheDocument();
+    expect(screen.queryByText("9.9 kg")).not.toBeInTheDocument();
+    expect(screen.queryByText("99 × — × — cm")).not.toBeInTheDocument();
   });
 });

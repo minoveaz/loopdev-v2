@@ -23,6 +23,12 @@ export interface CatalogItemMetadata extends Record<string, unknown> {
   canSell?: boolean;
   trackInventory?: boolean;
 }
+export interface ProductPhysicalAttributes {
+  weightKg?: number;
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
+}
 export type CatalogRecordStatus = "draft" | "active" | "archived";
 export type CatalogBillingModel = "one_time" | "recurring" | "usage";
 export type OrganizationCatalogKind = "products" | "services";
@@ -57,6 +63,7 @@ export interface CatalogItem extends Entity {
   status: CatalogRecordStatus;
   visibility: CatalogVisibility;
   metadata: CatalogItemMetadata;
+  physicalAttributes?: ProductPhysicalAttributes | null;
 }
 
 export function matchesCatalogItemKey(item: CatalogItem, candidate: string): boolean {
@@ -97,6 +104,7 @@ export interface CatalogVariant extends Entity {
   status: CatalogRecordStatus;
   attributes: Record<string, string>;
   metadata: Record<string, unknown>;
+  physicalAttributes?: ProductPhysicalAttributes | null;
 }
 
 export type ProductReferenceKind = "category" | "brand" | "tag";
@@ -237,6 +245,7 @@ export interface CatalogItemCreateInput {
   status?: CatalogRecordStatus;
   categoryKey?: string | null;
   metadata?: CatalogItemMetadata;
+  physicalAttributes?: ProductPhysicalAttributes | null;
 }
 
 export interface CatalogReference {
@@ -260,7 +269,7 @@ export interface CatalogReferenceResolutionParams extends CatalogScopeParams {
 export class CatalogAdapterError extends Error {
   constructor(
     message: string,
-    public readonly code: "not-found" | "conflict" | "invalid-scope" | "forbidden" | "server-error",
+    public readonly code: "not-found" | "conflict" | "invalid-input" | "invalid-scope" | "forbidden" | "server-error",
   ) {
     super(message);
     this.name = "CatalogAdapterError";

@@ -147,6 +147,86 @@ describe("ERP product SKU manager", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("SKUs saved.");
   });
 
+  it("saves independent canonical physical measurements for each SKU", async () => {
+    let uuid = 0;
+    Object.defineProperty(window.crypto, "randomUUID", {
+      configurable: true,
+      value: () => `sku-physical-${++uuid}`,
+    });
+    const item = await localCatalogAdapter.createCatalogItem({
+      organizationId,
+      catalogId: "catalog_products",
+      name: "Measured product",
+      type: "physical_product",
+      status: "draft",
+      metadata: { itemKind: "product", canSell: true },
+      physicalAttributes: { weightKg: 0.9 },
+    });
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={[`/app/erp/products/${item.id}/skus`]}>
+          <ProductSkuManagerPage productId={item.id} />
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+
+    fireEvent.change(await screen.findByLabelText("Colors"), { target: { value: "Teal, Blue" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generate combinations" }));
+    fireEvent.change(screen.getByLabelText("Weight (kg) Teal"), { target: { value: "0.2" } });
+    fireEvent.change(screen.getByLabelText("Length (cm) Teal"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText("Weight (kg) Blue"), { target: { value: "0.35" } });
+    fireEvent.change(screen.getByLabelText("Width (cm) Blue"), { target: { value: "8.5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save SKUs" }));
+
+    await waitFor(() => {
+      const variants = localCatalogVariantsStore.list().filter((variant) => variant.catalogItemId === item.id);
+      expect(variants).toHaveLength(2);
+      expect(variants.find((variant) => variant.attributes.color === "Teal")?.physicalAttributes).toEqual({
+        weightKg: 0.2,
+        lengthCm: 10,
+      });
+      expect(variants.find((variant) => variant.attributes.color === "Blue")?.physicalAttributes).toEqual({
+        weightKg: 0.35,
+        widthCm: 8.5,
+      });
+    });
+    expect(localCatalogItemsStore.get(item.id)?.physicalAttributes).toEqual({ weightKg: 0.9 });
+    expect(screen.getByText("Existing product measurements are not copied to SKUs.")).toBeInTheDocument();
+  });
+
+  it("rejects negative SKU measurements without saving", async () => {
+    let uuid = 0;
+    Object.defineProperty(window.crypto, "randomUUID", {
+      configurable: true,
+      value: () => `sku-physical-invalid-${++uuid}`,
+    });
+    const item = await localCatalogAdapter.createCatalogItem({
+      organizationId,
+      catalogId: "catalog_products",
+      name: "Invalid measurement product",
+      type: "physical_product",
+      status: "draft",
+      metadata: { itemKind: "product" },
+    });
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={[`/app/erp/products/${item.id}/skus`]}>
+          <ProductSkuManagerPage productId={item.id} />
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+
+    fireEvent.change(await screen.findByLabelText("Colors"), { target: { value: "Black" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generate combinations" }));
+    fireEvent.change(screen.getByLabelText("Weight (kg) Black"), { target: { value: "-1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save SKUs" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Enter finite, non-negative measurements in kg and cm.");
+    expect(localCatalogVariantsStore.list().filter((variant) => variant.catalogItemId === item.id)).toHaveLength(0);
+  });
+
   it("manages purchase costs independently for each SKU", async () => {
     let uuid = 0;
     Object.defineProperty(window.crypto, "randomUUID", {

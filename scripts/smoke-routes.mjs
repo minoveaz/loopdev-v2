@@ -24,7 +24,7 @@ for (const surface of ["desktop_web", "mobile_web"]) {
     if (!route.path.startsWith("/")) errors.push(`${surface}: route must be absolute: ${route.path}`);
     const routeSource = surface === "desktop_web"
       ? `${desktopRoutes}\n${sharedRoutes}`
-      : `${mobileRoutes}\n${sharedRoutes}`;
+      : `${mobileRoutes}\n${desktopRoutes}\n${sharedRoutes}`;
     if (!routeSource.includes(route.path) && !routeSource.includes(route.path.replace(/:[^/]+/g, "([^/]+)"))) errors.push(`${surface}: ${route.path} is not registered in its router`);
     if (route.path.includes(":")) {
       if (!route.example || !matchesTemplate(route.path, route.example)) errors.push(`${surface}: ${route.path} requires a matching concrete example`);

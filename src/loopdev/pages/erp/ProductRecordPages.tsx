@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { catalogAdapter } from "@/loopdev/domains/catalog/adapter";
 import type { CatalogItem, CatalogItemClass, CatalogItemKind, CatalogSourcingMode, CatalogVariant, ProductCostAccess, ProductReference, ProductReferenceKind } from "@/loopdev/domains/catalog";
+import { formatPhysicalAttributes, formatPhysicalDimensions, formatPhysicalWeight, legacyPhysicalAttributes, parsePhysicalAttributeDraft } from "@/loopdev/domains/catalog/physical-attributes";
 import { ProductMediaSection } from "./ProductMediaSection";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useT } from "@/i18n";
@@ -35,12 +36,10 @@ type ProductForm = {
   material: string;
   color: string;
   size: string;
-  weightValue: string;
-  weightUnit: string;
-  length: string;
-  width: string;
-  height: string;
-  dimensionUnit: string;
+  weightKg: string;
+  lengthCm: string;
+  widthCm: string;
+  heightCm: string;
   price: string;
   priceCurrency: string;
   cost: string;
@@ -68,12 +67,10 @@ const emptyForm = (): ProductForm => ({
   material: "",
   color: "",
   size: "",
-  weightValue: "",
-  weightUnit: "kg",
-  length: "",
-  width: "",
-  height: "",
-  dimensionUnit: "cm",
+  weightKg: "",
+  lengthCm: "",
+  widthCm: "",
+  heightCm: "",
   price: "",
   priceCurrency: "EUR",
   cost: "",
@@ -270,9 +267,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
         const storedKind = metadata.itemKind === "product" || metadata.itemKind === "service"
           ? metadata.itemKind
           : storedClass === "service" ? "service" : storedClass ? "product" : loadedItem.type === "service" ? "service" : "";
-        const dimensions = metadata.dimensionsValue && typeof metadata.dimensionsValue === "object"
-          ? metadata.dimensionsValue as Record<string, unknown>
-          : {};
+        const physicalAttributes = loadedItem.physicalAttributes ?? legacyPhysicalAttributes(metadata);
         setForm({
           ...emptyForm(),
           name: loadedItem.name,
@@ -293,12 +288,10 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
           material: stringValue(metadata.material),
           color: stringValue(metadata.color),
           size: stringValue(metadata.size),
-          weightValue: numberValue(metadata.weightValue) || stringValue(metadata.weight).split(" ")[0],
-          weightUnit: stringValue(metadata.weightUnit) || stringValue(metadata.weight).split(" ")[1] || "kg",
-          length: numberValue(dimensions.length),
-          width: numberValue(dimensions.width),
-          height: numberValue(dimensions.height),
-          dimensionUnit: stringValue(dimensions.unit) || "cm",
+          weightKg: physicalAttributes?.weightKg == null ? "" : String(physicalAttributes.weightKg),
+          lengthCm: physicalAttributes?.lengthCm == null ? "" : String(physicalAttributes.lengthCm),
+          widthCm: physicalAttributes?.widthCm == null ? "" : String(physicalAttributes.widthCm),
+          heightCm: physicalAttributes?.heightCm == null ? "" : String(physicalAttributes.heightCm),
           price: numberValue(metadata.price),
           priceCurrency: stringValue(metadata.currency) || "EUR",
           status: loadedItem.status,
@@ -416,18 +409,31 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
       setSaveError(t("common.erpProductRecord.activeCategoryRequired"));
       return;
     }
+    let physicalAttributes: ReturnType<typeof parsePhysicalAttributeDraft> = null;
+    try {
+      if (form.itemKind === "product") {
+        physicalAttributes = parsePhysicalAttributeDraft({
+          weightKg: form.weightKg,
+          lengthCm: form.lengthCm,
+          widthCm: form.widthCm,
+          heightCm: form.heightCm,
+        });
+      }
+    } catch {
+      setSaveError(t("common.erpProductRecord.invalidPhysicalAttributes"));
+      return;
+    }
     setSaving(true);
     setSaveError(null);
     try {
       const brand = references.find((reference) => reference.kind === "brand" && reference.key === form.brandKey);
-      const dimensionsValue = {
-        length: form.length ? Number(form.length) : null,
-        width: form.width ? Number(form.width) : null,
-        height: form.height ? Number(form.height) : null,
-        unit: form.dimensionUnit,
-      };
-      const metadata: CatalogItem["metadata"] = {
-        ...(item?.metadata ?? {}),
+      const metadata: CatalogItem["metadata"] = { ...(item?.metadata ?? {}) };
+      delete metadata.weight;
+      delete metadata.weightValue;
+      delete metadata.weightUnit;
+      delete metadata.dimensions;
+      delete metadata.dimensionsValue;
+      Object.assign(metadata, {
         itemKind: form.itemKind || undefined,
         itemClass: form.itemKind === "service" ? "service" : form.itemClass || undefined,
         sourcingMode: form.itemKind !== "product"
@@ -445,16 +451,9 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
         material: form.material,
         color: form.color,
         size: form.size,
-        weight: form.weightValue ? `${form.weightValue} ${form.weightUnit}` : "",
-        weightValue: form.weightValue ? Number(form.weightValue) : null,
-        weightUnit: form.weightUnit,
-        dimensions: [form.length, form.width, form.height].some(Boolean)
-          ? `${form.length || "—"} × ${form.width || "—"} × ${form.height || "—"} ${form.dimensionUnit}`
-          : "",
-        dimensionsValue,
         price: form.price ? Number(form.price) : null,
         currency: form.priceCurrency,
-      };
+      });
       const catalogs = await catalogAdapter.listCatalogs({ organizationId });
       const targetCatalog = catalogs.find((catalog) => catalog.kind === "products" && catalog.status === "active")
         ?? await catalogAdapter.createCatalog({
@@ -472,6 +471,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
           categoryKey: form.categoryKey || null,
           status: form.status,
           metadata,
+          physicalAttributes,
         })
         : await catalogAdapter.createCatalogItem({
           organizationId,
@@ -482,6 +482,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
           categoryKey: form.categoryKey || null,
           status: form.status,
           metadata,
+          physicalAttributes,
         });
       setItem(savedItem);
       navigate(`/app/erp/products/${savedItem.id}`);
@@ -497,6 +498,7 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
 
   if (mode === "view" && item) {
     const metadata = item.metadata;
+    const physicalAttributes = item.physicalAttributes ?? legacyPhysicalAttributes(metadata);
     const tags = Array.isArray(metadata.tags) ? metadata.tags.filter((value): value is string => typeof value === "string") : [];
     const storedItemKind = metadata.itemKind === "product" || metadata.itemKind === "service"
       ? metadata.itemKind
@@ -549,8 +551,8 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
               <RecordValue label={t("common.erpProductRecord.material")} value={stringValue(metadata.material) || "—"} />
               <RecordValue label={t("common.erpProductRecord.color")} value={stringValue(metadata.color) || "—"} />
               <RecordValue label={t("common.erpProductRecord.sizeFormat")} value={stringValue(metadata.size) || "—"} />
-              <RecordValue label={t("common.erpProductRecord.weight")} value={stringValue(metadata.weight) || "—"} />
-              <RecordValue label={t("common.erpProductRecord.dimensions")} value={stringValue(metadata.dimensions) || "—"} />
+              {variants.length === 0 && <RecordValue label={t("common.erpProductRecord.weightKg")} value={formatPhysicalWeight(physicalAttributes?.weightKg) || "—"} />}
+              {variants.length === 0 && <RecordValue label={t("common.erpProductRecord.dimensions")} value={formatPhysicalDimensions(physicalAttributes) || "—"} />}
             </dl>
           </section>}
           {physicalType && <section className="rounded-xl border border-border bg-card p-5">
@@ -561,8 +563,9 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
             {variants.length ? <div className="mt-4 divide-y divide-border">{variants.map((variant) => {
               const categoryKey = typeof variant.metadata.categoryKey === "string" ? variant.metadata.categoryKey : "";
               const category = references.find((reference) => reference.kind === "category" && reference.key === categoryKey)?.name ?? categoryKey;
+              const skuPhysicalAttributes = formatPhysicalAttributes(variant.physicalAttributes ?? legacyPhysicalAttributes(variant.metadata));
               return <div key={variant.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
-                <span><span className="block font-medium">{variant.name}</span><span className="font-mono text-xs text-muted-foreground">{variant.sku}</span></span>
+                <span><span className="block font-medium">{variant.name}</span><span className="font-mono text-xs text-muted-foreground">{variant.sku}</span>{skuPhysicalAttributes && <span className="block text-xs text-muted-foreground">{skuPhysicalAttributes}</span>}</span>
                 <span className="flex items-center gap-3 text-muted-foreground"><span>{category || t("common.erpProductRecord.uncategorized")}</span><StatusBadge tone={variant.status === "active" ? "success" : variant.status === "draft" ? "warning" : "neutral"} dot>{t(`common.erpForm.item.${variant.status}`)}</StatusBadge></span>
               </div>;
             })}</div> : <p className="mt-4 text-sm text-muted-foreground">{t("common.erpProductRecord.noSkus")}</p>}
@@ -710,20 +713,15 @@ export function ProductRecordPage({ mode, itemId }: { mode: ProductPageMode; ite
               <Field label={t("common.erpProductRecord.material")}><Input value={form.material} onChange={(event) => setField("material", event.target.value)} /></Field>
               <Field label={t("common.erpProductRecord.color")}><Input value={form.color} onChange={(event) => setField("color", event.target.value)} /></Field>
               <Field label={t("common.erpProductRecord.sizeFormat")}><Input value={form.size} onChange={(event) => setField("size", event.target.value)} /></Field>
-              <div className="grid grid-cols-[minmax(0,1fr)_110px] gap-3">
-                <Field label={t("common.erpProductRecord.weight")}><Input type="number" min="0" step="0.001" value={form.weightValue} onChange={(event) => setField("weightValue", event.target.value)} /></Field>
-                <Field label={t("common.erpForm.item.unit")}><Select value={form.weightUnit} onValueChange={(value) => setField("weightUnit", value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="g">g</SelectItem><SelectItem value="kg">kg</SelectItem><SelectItem value="oz">oz</SelectItem><SelectItem value="lb">lb</SelectItem></SelectContent></Select></Field>
-              </div>
             </div>
-            <div className="mt-4">
-              <p className="mb-2 text-sm font-medium">{t("common.erpProductRecord.dimensions")}</p>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Field label={t("common.erpProductRecord.length")}><Input type="number" min="0" step="0.1" value={form.length} onChange={(event) => setField("length", event.target.value)} /></Field>
-                <Field label={t("common.erpProductRecord.width")}><Input type="number" min="0" step="0.1" value={form.width} onChange={(event) => setField("width", event.target.value)} /></Field>
-                <Field label={t("common.erpProductRecord.height")}><Input type="number" min="0" step="0.1" value={form.height} onChange={(event) => setField("height", event.target.value)} /></Field>
-                <Field label={t("common.erpForm.item.unit")}><Select value={form.dimensionUnit} onValueChange={(value) => setField("dimensionUnit", value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mm">mm</SelectItem><SelectItem value="cm">cm</SelectItem><SelectItem value="m">m</SelectItem><SelectItem value="in">in</SelectItem></SelectContent></Select></Field>
+            {variants.length === 0
+              ? <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Field label={t("common.erpProductRecord.weightKg")}><Input type="number" min="0" step="any" value={form.weightKg} onChange={(event) => setField("weightKg", event.target.value)} /></Field>
+                <Field label={t("common.erpProductRecord.lengthCm")}><Input type="number" min="0" step="any" value={form.lengthCm} onChange={(event) => setField("lengthCm", event.target.value)} /></Field>
+                <Field label={t("common.erpProductRecord.widthCm")}><Input type="number" min="0" step="any" value={form.widthCm} onChange={(event) => setField("widthCm", event.target.value)} /></Field>
+                <Field label={t("common.erpProductRecord.heightCm")}><Input type="number" min="0" step="any" value={form.heightCm} onChange={(event) => setField("heightCm", event.target.value)} /></Field>
               </div>
-            </div>
+              : <p role="status" className="mt-4 text-sm text-muted-foreground">{t("common.erpProductRecord.physicalAttributesManagedPerSku")}</p>}
           </section>}
           {(form.canSell || (isPhysical && form.canPurchase) || (isPhysical && item && form.costVersion > 0)) && <section className="rounded-xl border border-border bg-card p-5">
             <FormSectionHeader eyebrow={t("common.erpProductRecord.commercialEyebrow")} title={t("common.erpProductRecord.pricesAndCost")} description={t("common.erpProductRecord.commercialDescription")} mode="expanded" responsive="auto" />

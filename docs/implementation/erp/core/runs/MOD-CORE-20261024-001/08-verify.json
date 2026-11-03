@@ -9,20 +9,21 @@
   "status": "blocked",
   "decision_status": "open",
   "architecture_quality": "BLOCKED",
-  "attempt": 4,
-  "started_at": "2026-10-27T21:55:46Z",
-  "completed_at": "2026-10-27T21:55:46Z",
+  "attempt": 6,
+  "started_at": "2026-11-02T09:27:40Z",
+  "completed_at": "2026-11-02T09:57:24Z",
   "input_fingerprint": "sha256:3d589576d659e96ebf0d22d64db0c00da03681658a8eef678a0e4143b4e766df",
   "environment": {
     "repository": "minoveaz/loopdev-v2",
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
-    "branch": "feature/erp-products-web-management",
+    "branch": "develop",
     "base_branch": "develop",
-    "head_commit": "1bc95a77557dbf89e49c203f66e127bab951ffd0",
-    "working_tree": "Pre-existing ERP planning/traceability edits plus local purchase-cost implementation, tests and evidence.",
-    "runtime_url": "http://127.0.0.1:5173/app/erp/products/{id}/edit",
-    "runtime_port": 5173
+    "head_commit": "cf90768ce77c4d3ec302502a948d6ee6fec0806c",
+    "working_tree": "Existing ERP implementation/evidence and user changes preserved; this attempt updates verification documentation only.",
+    "runtime_url": null,
+    "runtime_port": null,
+    "serving_process": "No listener on ports 5173, 5174 or 8080."
   },
   "input_artifacts": [
     "docs/03-platform/governance/V2_DOCUMENTATION_SOURCE_OF_TRUTH.md",
@@ -39,7 +40,12 @@
     "src/loopdev/pages/erp/ProductRecordPages.tsx",
     "src/loopdev/pages/erp/ProductSkuManagerPage.tsx",
     "src/loopdev/pages/erp/ProductMediaGalleryManager.tsx",
-    "src/loopdev/domains/catalog/adapter/product-media-supabase.ts"
+    "src/loopdev/domains/catalog/adapter/product-media-supabase.ts",
+    "supabase/migrations/20261027160000_erp_product_cost_requires_read_and_manage.sql",
+    "supabase/migrations/20261101124000_erp_categories_preserve_assignments_on_archive.sql",
+    "supabase/migrations/20261102093000_erp_catalog_physical_attributes.sql",
+    "supabase/tests/database/019_erp_product_category_lifecycle.sql",
+    "supabase/tests/database/020_erp_catalog_physical_attributes.sql"
   ],
   "actions": [
     "Compared first-release requirements with current contracts, source, tests, migration and checkpoint evidence.",
@@ -48,7 +54,14 @@
     "Recorded gaps without changing production code or database state.",
     "Rechecked the purchase-cost permission path, focused UI/adapter tests, and existing isolated pgTAP evidence; recorded the current database/runtime blockers and cost UI gap.",
     "After Docker became available, reran the dedicated purchase-cost pgTAP suite (10/10 passed) and the broader five-file database suite (106/111 passed, with five failures in unrelated media audit actor tests).",
-    "Attempt 4 implemented separate read/manage UI/adapter enforcement and independent cost save operations locally; local tests and 22 pgTAP assertions passed. Read-only linked-project queries found manage-only remote mutations and enabled global/organization write controls. No remote changes were made."
+    "Attempt 4 implemented separate read/manage UI/adapter enforcement and independent cost save operations locally; local tests and 22 pgTAP assertions passed. Read-only linked-project queries found manage-only remote mutations and enabled global/organization write controls. No remote changes were made.",
+    "User confirmed the current Products platform scope is desktop web plus responsive mobile web; native iOS/Android remain deferred. Recorded matching task-scoped approvals for mobile renderer tasks without changing their status.",
+    "Started the local Vite app and reopened the canonical Products edit URL in the browser canvas. The browser redirected to /pages/login at 560x925, so only the unauthenticated route guard was observed; no authenticated desktop/mobile-web operation was verified.",
+    "Added canonical Products list/edit and legacy catalog routes to the route smoke manifest. Mobile web uses the same responsive web routes as desktop; the smoke validator now checks these shared route registrations for both surfaces.",
+    "Current curl to the local Vite URL returns HTTP 200 for the SPA shell; this does not demonstrate authentication or Products route behavior. Supabase local status is blocked by the missing Docker API socket.",
+    "Attempt 6 rechecked Supabase Dev migration history, schema, RLS/policies, grants, cost RPC/policies, write controls, aggregate data, Storage and Edge Function state read-only.",
+    "Attempt 6 recorded the missing remote cost/category/physical-attribute migrations, cost permission mismatch, category archive contract mismatch and effective write gate returning true despite the organization readiness flag being false.",
+    "Updated the access model and requirement/platform evidence matrices with the current remote snapshot; made no remote or production changes."
   ],
   "output_artifacts": [
     "docs/implementation/erp/core/requirement-evidence-matrix.md",
@@ -62,7 +75,10 @@
     "src/loopdev/pages/erp/ProductRecordPages.tsx",
     "src/loopdev/pages/erp/ProductSkuManagerPage.tsx",
     "src/test/erp/product-record-pages.test.tsx",
-    "src/test/erp/product-sku-manager.test.tsx"
+    "src/test/erp/product-sku-manager.test.tsx",
+    "docs/implementation/erp/core/delivery-ledger.json",
+    "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "docs/implementation/erp/core/access-model.md"
   ],
   "validation": [
     {
@@ -169,13 +185,118 @@
       "command": "Browser direct route http://127.0.0.1:5173/app/erp/products/{id}/edit",
       "result": "partial",
       "evidence": "SPA returned HTTP 200, but route redirected to /pages/login; authenticated runtime behavior was not verified."
+    },
+    {
+      "command": "Current checkout: git branch --show-current; git rev-parse HEAD; git status --short",
+      "result": "passed",
+      "evidence": "In-place checkout on develop at cf90768ce77c4d3ec302502a948d6ee6fec0806c; working tree contains local Product/category/media/evidence changes and a pre-existing README.md change."
+    },
+    {
+      "command": "curl -I http://127.0.0.1:5173/app/erp/products/00000000-0000-4000-8700-000000000081/edit",
+      "result": "passed: HTTP 200",
+      "evidence": "The SPA shell responds; browser navigation then redirects unauthenticated access to /pages/login."
+    },
+    {
+      "command": "Browser responsive viewport at 560x925",
+      "result": "partial",
+      "evidence": "Direct Products edit URL redirects to the login guard; no authenticated Products content or operation was observed."
+    },
+    {
+      "command": "npm run smoke:routes",
+      "result": "passed: 10 desktop and 6 mobile routes",
+      "evidence": "Structural route smoke passes, but scripts/smoke-routes.json omits /app/erp/products and its legacy route; no Products runtime claim follows from this command."
+    },
+    {
+      "command": "supabase status",
+      "result": "blocked",
+      "evidence": "Local Supabase cannot connect to the Docker API socket; database lint and pgTAP tests 019/020 remain unrun."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed: 8 ledgers",
+      "evidence": "Task-scoped approvals and the corrected mobile-web route blocker validate; task statuses and dependencies remain unchanged."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed: 110 checkpoints",
+      "evidence": "Verification checkpoint and current run artifacts validate."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Responsive desktop/mobile-web scope and evidence matrix validate structurally; this is not runtime parity evidence."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors."
+    },
+    {
+      "command": "npm run smoke:routes",
+      "result": "passed: 13 desktop and 9 mobile routes",
+      "evidence": "The manifest includes canonical Products list/edit and legacy catalog paths on both desktop and responsive mobile web; this is structural route validation, not runtime operation evidence."
+    },
+    {
+      "command": "curl http://127.0.0.1:5173/app/erp/products",
+      "result": "HTTP 200",
+      "evidence": "The local SPA shell responds; authentication and route authorization remain unverified."
+    },
+    {
+      "command": "Read-only Supabase Dev migration, schema, policy, grant, function, trigger, data and Storage inspection",
+      "result": "partial: current snapshot recorded; no remote writes",
+      "evidence": "Migration history ends at 20261027150000; migrations 20261027160000, 20261101124000 and 20261102093000 are absent. Effective write control returns true for one organization with security_gates_ready=false; cost mutation policies/RPC require manage but not read; physical-attribute columns are absent; remote category archive rejects active assignments."
+    },
+    {
+      "command": "Supabase Edge Function inventory and CORS preflight",
+      "result": "passed: platform-files ACTIVE v3; both local origins returned HTTP 200",
+      "evidence": "JWT verification is enabled. No authenticated upload, processing, rendition or remote-origin browser flow was exercised."
+    },
+    {
+      "command": "docker info --format 'Docker server {{.ServerVersion}}'",
+      "result": "blocked: Docker API socket unavailable",
+      "evidence": "Local migration lint and pgTAP suites 019/020 could not run."
+    },
+    {
+      "command": "Local runtime checks on ports 5173, 5174 and 8080",
+      "result": "no listener",
+      "evidence": "No authenticated desktop or responsive mobile-web journey was available."
+    },
+    {
+      "command": "Authenticated Platform-owner authorization check for set_erp_product_write_control",
+      "result": "blocked: SQL tool context is not authenticated as a Platform owner",
+      "evidence": "auth.uid() returned null and has_platform_role('owner') returned false. The deployed RPC requires both; no direct-table update or identity bypass was used."
+    },
+    {
+      "command": "npm run validate:module-runs",
+      "result": "passed: 110 checkpoint files",
+      "evidence": "Verification checkpoint and current module-run artifacts validate."
+    },
+    {
+      "command": "npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "Updated responsive platform matrix validates structurally; no runtime parity is implied."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed: 8 ledgers",
+      "evidence": "Existing ledger data validates; no task statuses or dependencies were changed."
+    },
+    {
+      "command": "git diff --check and checkpoint JSON parse",
+      "result": "passed",
+      "evidence": "No whitespace errors and the updated JSON parses."
     }
   ],
   "requirements": [
     {
       "id": "REQ-ERP-CATALOG-FOUNDATION",
       "status": "PARTIAL",
-      "evidence": "Product/SKU source and focused tests pass; commercial, lifecycle and authenticated remote parity remain unverified."
+      "evidence": "Five focused suites (49 tests) cover local product/SKU and physical-attribute behavior. Remote aggregate checks found five draft products, four draft SKUs and no duplicate keys or broken media links; authenticated remote operations and commercial/lifecycle completeness remain unverified."
+    },
+    {
+      "id": "REQ-ERP-PHYSICAL-ATTRIBUTES",
+      "status": "FAIL",
+      "evidence": "Remote schema inspection found no physical_attributes column on erp_catalog_items or erp_catalog_variants; migration 20261102093000 is absent from remote history. Local migration lint/pgTAP is blocked by unavailable Docker."
     },
     {
       "id": "REQ-ERP-AUTO-IDENTIFIERS",
@@ -185,32 +306,32 @@
     {
       "id": "REQ-ERP-PRODUCT-CATEGORIES",
       "status": "FAIL",
-      "evidence": "Only flat category references and quick-create exist; category hierarchy management operations are absent."
+      "evidence": "Remote archive function rejects categories with active product/SKU assignments. Local migration 019 also blocks, but pgTAP 019 expects assignments to be preserved; the migration is absent remotely and tests are unrun."
     },
     {
       "id": "REQ-ERP-PRODUCT-MEDIA",
       "status": "PARTIAL",
-      "evidence": "Upload, association, preview, alt text and detach have source/local tests; the media visual addendum is conceptually approved, but library reuse, normalization and authenticated platform runtime evidence are absent."
+      "evidence": "Shared Files-backed library reuse, upload, tags, preview renewal, reorder and detach have local tests. Authenticated remote tenant/processing behavior and mobile-web operation parity remain unverified."
     },
     {
       "id": "REQ-ERP-COST-REFERENCE",
-      "status": "PARTIAL",
-      "evidence": "Local UI/adapter code now requires read plus manage for mutations and separates product/SKU saves from cost saves; the focused 31-test run and local pgTAP suite (22 assertions) pass. The linked project remains unchanged: SELECT requires read, INSERT/UPDATE and the RPC require manage only, and the new RPC core is absent. Global and one organization write-control row are enabled. The direct browser route redirected to login, so authenticated operation evidence is absent."
+      "status": "FAIL",
+      "evidence": "Remote cost mutation policies and RPC require catalog.cost.manage without also requiring catalog.cost.read; migration 20261027160000 is absent remotely. Local tests/pgTAP cover the intended contract, but no authenticated remote operation was tested."
     },
     {
       "id": "REQ-ERP-ACCESS-AUDIT",
       "status": "FAIL",
-      "evidence": "Foundation RLS has a documented read-only-delete risk; forward policy verification and shared append-only audit are release blockers."
+      "evidence": "Remote RLS and audit triggers are present, but the effective write function returns true for one organization whose security_gates_ready is false; global control/readiness are true. No control was changed and no remote mutation was performed."
     },
     {
       "id": "REQ-ERP-DESKTOP-MOBILE-PARITY",
       "status": "NOT_TESTED",
-      "evidence": "No authenticated desktop or mobile-web operation journey was performed."
+      "evidence": "User confirmed desktop web plus responsive mobile web; native apps are deferred. The direct route previously redirected to login at 560x925. Structural route smoke covers list/edit/legacy paths on both responsive web surfaces; authenticated desktop/mobile-web operations remain unverified."
     },
     {
       "id": "REQ-ERP-PLAN-AND-RELEASE-GATES",
-      "status": "FAIL",
-      "evidence": "Ledger remains draft, only approved task is blocked, and no approved 06-plan checkpoint exists."
+      "status": "PARTIAL",
+      "evidence": "The implementation plan and ledger are approved with task-scoped approvals. Build and verification remain blocked; the route audit is the upstream blocker and dependent tasks remain incomplete."
     },
     {
       "id": "REQ-MIAUCRAFT-SHOPIFY / REQ-INHAND-NATIVE-COMMERCE",
@@ -219,12 +340,12 @@
     }
   ],
   "detected_failure": {
-    "code": "VERIFY-001",
+    "code": "VERIFY-003",
     "detected_by": "module-verify",
-    "summary": "The local purchase-cost UI/adapter and migration tests pass, but the linked deployment still allows manage-only mutations with global and organization write controls enabled; authenticated route behavior is unverified. Category, media, security/audit, mobile-runtime and formal plan gates also remain incomplete."
+    "summary": "Supabase Dev does not match the current Products security/domain contract: cost mutation omits the read permission, one organization's effective write gate is true despite readiness=false, category archive behavior conflicts with the expected assignment-preserving contract, and physical-attribute columns are absent."
   },
   "likely_failure_origin": null,
-  "next_handoff": "Reconcile the enabled remote write-control state with its owner; obtain separate deployment authorization; apply and recheck the cost permission migration; then verify the cost workflow in an authenticated desktop session. Continue the separate category, media, security/audit, mobile and formal plan gates.",
+  "next_handoff": "An authenticated Platform owner must disable the affected organization's write control through set_erp_product_write_control; resolve the category migration/test/domain contract mismatch; restore Docker and run local migration lint plus pgTAP 017/019/020; deploy validated migrations only after separate authorization; then verify authenticated desktop and responsive mobile-web operations.",
   "approval_gate": {
     "status": "pending",
     "approved_by": null,
@@ -234,18 +355,26 @@
     "docs/implementation/erp/core/requirement-evidence-matrix.md",
     "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/08-verify.md",
     "docs/implementation/erp/core/platform-evidence-matrix.md",
+    "docs/implementation/erp/core/access-model.md",
     "supabase/migrations/20261027160000_erp_product_cost_requires_read_and_manage.sql",
-    "supabase/tests/database/017_erp_product_cost_reference.sql"
+    "supabase/tests/database/017_erp_product_cost_reference.sql",
+    "supabase/migrations/20261101124000_erp_categories_preserve_assignments_on_archive.sql",
+    "supabase/tests/database/019_erp_product_category_lifecycle.sql",
+    "supabase/migrations/20261102093000_erp_catalog_physical_attributes.sql",
+    "supabase/tests/database/020_erp_catalog_physical_attributes.sql"
   ],
   "notes": [
-    "This is a bounded verification snapshot only. The formal run remains blocked before the approved plan/build gates; the checkpoint does not authorize additional implementation.",
+    "This is a bounded verification snapshot only. The 07-build and 08-verify checkpoints remain blocked pending route, database, data and release evidence; this checkpoint does not authorize remote changes.",
     "This attempt used feature/erp-products-web-management at 1bc95a77557dbf89e49c203f66e127bab951ffd0.",
-    "The delivery ledger contains one task, ERP-IDENTIFIERS-001, and it is blocked.",
+    "The current delivery ledger is approved with task-scoped approvals. PRODUCT-MOBILE-001, CATEGORY-MOBILE-001, MEDIA-MOBILE-001 and COST-MOBILE-001 have explicit user approval for responsive mobile web; their dependencies remain incomplete.",
     "No production code, database or remote state was changed.",
     "Focused cost verification is partial: migration/source enforcement and dedicated isolated pgTAP evidence support the separate permissions; the broad SQL suite has five media audit actor failures unrelated to test 017, and no active app/runtime was available.",
     "The checkout already contained a README.md modification before this attempt; it was preserved.",
     "Attempt 4 added local purchase-cost enforcement and test evidence. The test migration was applied only to the isolated local test database; no remote migration, data write or write-control change was made.",
-    "The current live control query reports one enabled global row and one enabled organization row; this conflicts with earlier verification evidence and must be reconciled before any deployment."
+    "Attempt 6 refreshed the remote state read-only. Effective Products writes are currently enabled for one organization despite its false organization readiness flag; do not make a remote mutation until the owner reconciles this.",
+    "The remote audit event's reason was visible, but its actor identity was not inspected; no origin is assigned to the control discrepancy.",
+    "The user explicitly authorized disabling the affected organization's control. The change remains unapplied because the available SQL context has auth.uid() = null and is not a Platform owner; the audited setter enforces the owner check. No bypass was attempted.",
+    "Current scope is desktop web and responsive mobile web only; native iOS/Android are deferred."
   ],
   "invalidated": false
 }

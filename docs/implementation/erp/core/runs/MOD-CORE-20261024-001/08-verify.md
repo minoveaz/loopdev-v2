@@ -204,3 +204,101 @@ security fix is not active remotely. Do not deploy or toggle controls without
 separate authorization. Exact next actions: reconcile the deployed control
 state with its owner; obtain deployment authorization; apply and recheck the
 forward migration; then verify the desktop flow in an authenticated session.
+
+### Attempt 5 — responsive web route and current handoff
+
+The Product Owner confirmed the release scope is **desktop web plus responsive
+mobile web**; native iOS/Android remain deferred. Updated task-scoped approvals
+for the four mobile-web renderer tasks. The native `apps/mobile` route is not a
+Products release requirement.
+
+Current checkout: `/Users/minoveaz/.copilot/repos/loopdev-v2`, in-place
+`develop`, `HEAD cf90768ce77c4d3ec302502a948d6ee6fec0806c`. The working tree
+contains existing Products/category/media changes and the pre-existing
+`README.md` edit; all were preserved. Vite from this checkout served port 5173
+(PID 43338). Opening the canonical Products edit URL at a 560x925 viewport
+redirected to `/pages/login`; no authenticated product operation was observed.
+
+| Requirement | Status | Evidence | Gap | Severity |
+|---|---|---|---|---|
+| Product/SKU foundation and physical attributes | PARTIAL | Five focused suites passed 49 tests; typecheck passed in build attempt 23 | Migration 020 and pgTAP are not validated; authenticated data behavior remains unverified | High |
+| Categories | PARTIAL | Local tree lifecycle and assignment-preserving archive tests pass | Migration 019/pgTAP and authorized legacy-category mapping remain pending | High |
+| Media and purchase cost | PARTIAL | Shared Files gallery and split cost permissions have implementation/test evidence | Authenticated remote tenancy/processing and current deployed cost-policy state require verification | High |
+| Desktop/mobile-web parity and route gates | NOT_TESTED | Structural smoke covers Products routes on desktop and the same responsive web routes for mobile; current browser confirms unauthenticated route guard at 560x925 | No authenticated desktop or responsive operation journey | High |
+| Plan/build/release gates | PARTIAL | Plan and task-scoped ledger are approved | `AUDIT-ROUTE-001` remains blocked; dependent audit/contract/adapter tasks are incomplete | High |
+
+| Command or check | Result |
+|---|---|
+| `npm run smoke:routes` | Passed structurally: 13 desktop and 9 mobile routes; Products list/edit/legacy paths are included for both responsive web surfaces |
+| `curl -I http://127.0.0.1:5173/app/erp/products/00000000-0000-4000-8700-000000000081/edit` | HTTP 200 SPA response; browser navigation redirects to login |
+| Browser at 560x925 | Partial: login guard rendered; no authenticated Products content |
+| `supabase status` | Blocked: Docker API socket unavailable; lint and pgTAP 019/020 not run |
+
+Detected by `module-verify`: the Products paths were absent from the smoke
+manifest and the current browser lacks an authenticated session. The manifest
+now checks the shared responsive web routes for desktop and mobile web. Likely
+origins: the old route blocker referenced a native-app route outside the
+confirmed scope, while local authentication and Docker are unavailable.
+
+**Exact next actions:** authenticate in the local browser and verify desktop
+plus responsive mobile-web routes, navigation, refresh and operation states;
+start Docker and run migration lint plus pgTAP 019/020. Refresh remote
+policy/write-control state read-only before any deployment decision. Do not
+apply a remote migration or enable writes as part of this verification.
+
+### Attempt 6 — Supabase Dev read-only audit
+
+This attempt rechecked the live Supabase Dev database and Files service
+read-only. It did not apply migrations, write Product data, change write
+controls or deploy the application.
+
+| Field | Value |
+|---|---|
+| Timestamp | `2026-11-02T09:38:52Z` |
+| Checkout | `/Users/minoveaz/.copilot/repos/loopdev-v2`, in-place `develop` |
+| HEAD | `cf90768ce77c4d3ec302502a948d6ee6fec0806c` |
+| Working tree | Existing ERP implementation, evidence and user changes preserved; this attempt updates verification documentation only |
+| Runtime | No process on ports 5173, 5174 or 8080; no authenticated browser session |
+| Remote project | `loopdev-platform-dev` (`sukjcsylkljiyvfklxvj`); all database/service inspection was read-only |
+
+| Requirement | Status | Evidence | Gap | Severity |
+|---|---|---|---|---|
+| Cost read/manage authorization | FAIL | Remote mutation policies and RPC check `catalog.cost.manage`, but not `catalog.cost.read`; migration `20261027160000` is absent from remote history | Validate the forward migration locally, then seek separate authorization before deployment | Critical |
+| Effective Products write gate | FAIL | The remote function returns true for one organization with `security_gates_ready=false`; global control and readiness are true | Reconcile with the owner and make the gate fail closed before any remote mutation | Critical |
+| Category archive contract | FAIL | Remote function rejects archive with active product/SKU assignments; local migration 019 blocks too, while its pgTAP test expects assignments to be preserved | Resolve intended behavior and migration/test mismatch; validate before deployment | High |
+| Physical product/SKU attributes | FAIL | Remote schema lacks `physical_attributes` on both catalog items and variants; migration 020 is absent | Restore Docker, lint and run pgTAP 020, then deploy only with separate authorization | High |
+| Products data integrity and RLS | PARTIAL | Five draft products, four draft SKUs, six active categories and four cost rows; aggregate checks found no duplicate keys, invalid category references, out-of-scope costs or broken media links. Main tables have RLS and no `anon`/`public` policies or authenticated `DELETE`/`TRUNCATE` grants. | Structural checks do not prove authenticated reads/writes, tenant isolation or complete lifecycle behavior | High |
+| Files backend | PARTIAL | `platform-files` is ACTIVE v3 with JWT verification; bucket is private with 25 MiB limit; localhost preflight CORS passed on ports 5173 and 8080 | No authenticated upload, processing/recovery, rendition or remote-origin browser test | High |
+| Desktop/mobile web runtime | NOT_TESTED | Current local ports 5173, 5174 and 8080 are unavailable; prior unauthenticated route redirected to login | Obtain an authenticated browser session and verify both responsive web surfaces | High |
+
+| Command/check | Result |
+|---|---|
+| Read-only Supabase migration, schema, policy, grant, function, trigger, data and Storage inspection | PARTIAL: concrete state recorded above; no writes performed |
+| Supabase Edge Function inventory | `platform-files` ACTIVE v3; JWT verification enabled |
+| CORS preflight for `http://localhost:5173` and `http://localhost:8080` | HTTP 200 for both |
+| Authorized write-control change | BLOCKED: the SQL tool context has no authenticated user and is not a Platform owner; the deployed setter requires an authenticated Platform owner |
+| `docker info --format 'Docker server {{.ServerVersion}}'` | BLOCKED: Docker API socket is unavailable; local migration lint and pgTAP 019/020 cannot run |
+| Local runtime checks on ports 5173, 5174 and 8080 | No listener; all returned connection failure |
+| `npm run validate:module-runs` | PASS — 110 checkpoint files |
+| `npm run validate:multiplatform` | PASS — structural evidence validation only |
+| `npm run validate:delivery-ledgers` | PASS — 8 ledgers |
+| `git diff --check` and checkpoint JSON parse | PASS |
+
+**Detected failure:** `module-verify` found deployed authorization/gating and
+category behavior that contradict the local contract, plus missing remote
+schema migrations. The likely origin of the write-control mismatch cannot be
+assigned from the inspected evidence; the audit event reason was visible but
+its actor identity was not inspected. No origin is assigned to the category
+migration/test conflict pending contract clarification.
+
+**Exact next actions:** (1) an authenticated Platform owner must disable the
+organization's write control through `set_erp_product_write_control`; (2)
+resolve the category contract and correct migration 019/test parity; (3)
+restore Docker and run lint plus pgTAP 017/019/020; (4) after separate
+authorization, deploy validated forward migrations and recheck remote state;
+(5) verify authenticated desktop and mobile-web operations, including cost,
+category, measurements and Files flows. Do not use privileged credentials or
+direct SQL writes to simulate user flows.
+
+**Verification state: `blocked`.** The database snapshot does not support a
+claim that Products is fully functioning in Supabase Dev.

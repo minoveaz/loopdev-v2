@@ -37,6 +37,7 @@ import type {
   ProductReferenceKind,
 } from "../types";
 import { CatalogAdapterError, matchesCatalogItemKey } from "../types";
+import { normalizePhysicalAttributes } from "../physical-attributes";
 import type { CatalogAdapter } from "./index";
 
 function scopeFor(params: CatalogScopeParams) {
@@ -215,6 +216,7 @@ export const localCatalogAdapter: CatalogAdapter = {
       status: input.status ?? "draft",
       visibility: { organizationId: input.organizationId, workspaceId: input.workspaceId ?? null },
       metadata: input.metadata ?? {},
+      physicalAttributes: normalizePhysicalAttributes(input.physicalAttributes),
     });
   },
 
@@ -229,7 +231,10 @@ export const localCatalogAdapter: CatalogAdapter = {
     assertIdentifiersAreServerControlled(patch);
     if (patch.categoryKey !== undefined) assertActiveCategory(params.organizationId, patch.categoryKey);
     if (patch.status === "active") assertActiveCategory(params.organizationId, patch.categoryKey ?? current.categoryKey);
-    const updated = localCatalogItemsStore.update(id, patch);
+    const updated = localCatalogItemsStore.update(id, {
+      ...patch,
+      ...("physicalAttributes" in patch ? { physicalAttributes: normalizePhysicalAttributes(patch.physicalAttributes) } : {}),
+    });
     if (!updated) throw new CatalogAdapterError("Unable to update catalog item.", "server-error");
     return updated;
   },
@@ -316,6 +321,7 @@ export const localCatalogAdapter: CatalogAdapter = {
       key,
       sku,
       name: input.name.trim(),
+      physicalAttributes: normalizePhysicalAttributes(input.physicalAttributes),
     });
     if (item.sku) {
       const updatedItem = localCatalogItemsStore.update(item.id, { sku: "" });
@@ -346,7 +352,10 @@ export const localCatalogAdapter: CatalogAdapter = {
         : null;
       if (!category) throw new CatalogAdapterError("An active SKU needs an active category.", "invalid-scope");
     }
-    const updated = localCatalogVariantsStore.update(id, patch);
+    const updated = localCatalogVariantsStore.update(id, {
+      ...patch,
+      ...("physicalAttributes" in patch ? { physicalAttributes: normalizePhysicalAttributes(patch.physicalAttributes) } : {}),
+    });
     if (!updated) throw new CatalogAdapterError("Unable to update variant.", "server-error");
     return updated;
   },
@@ -498,14 +507,8 @@ export const localCatalogAdapter: CatalogAdapter = {
     if (patch.status === "archived") {
       const hasActiveChildren = localProductReferencesStore.list().some((reference) =>
         reference.kind === "category" && reference.parentId === id && reference.status === "active");
-      const hasActiveAssignments = localCatalogItemsStore.list().some((item) =>
-        item.organizationId === params.organizationId && item.status === "active" && item.categoryKey === current.key)
-        || localCatalogVariantsStore.list().some((variant) =>
-          variant.organizationId === params.organizationId
-          && variant.status === "active"
-          && variant.metadata.categoryKey === current.key);
-      if (hasActiveChildren || hasActiveAssignments) {
-        throw new CatalogAdapterError("Move active child categories and assignments before archiving this category.", "conflict");
+      if (hasActiveChildren) {
+        throw new CatalogAdapterError("Move active child categories before archiving this category.", "conflict");
       }
     }
     const updated = localProductReferencesStore.update(id, {

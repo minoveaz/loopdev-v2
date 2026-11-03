@@ -1822,14 +1822,13 @@
         "src/loopdev/navigation.ts"
       ],
       "blocked_by": [
-        "The authenticated desktop route works, but apps/mobile/App.tsx has no canonical /app/erp/products route and falls through to the generic workspace screen. Mobile runtime behavior remains unverified; implement the route under PRODUCT-MOBILE-001 before claiming parity."
+        "Products routes are not verified with an authenticated session. The current direct route redirects to /pages/login at a 560x925 viewport. The structural smoke manifest covers canonical/list, edit and legacy routes on desktop and the same responsive web routes for mobile web. Verify canonical/legacy routes, navigation, refresh, guards and operations at desktop and mobile viewports before closing this audit. Native iOS/Android remain deferred and are not blockers."
       ],
       "evidence_refs": [
         "docs/implementation/erp/core/platform-scope.md",
         "docs/implementation/erp/core/platform-evidence-matrix.md",
         "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.json",
         "src/routes/LoopdevRoutes.tsx",
-        "apps/mobile/App.tsx",
         "scripts/smoke-routes.json"
       ]
     },
@@ -2874,6 +2873,11 @@
     },
     {
       "id": "PRODUCT-MOBILE-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-11-02T09:15:28Z",
+        "approval_source": "User confirmed Products includes responsive mobile web; native iOS/Android remain deferred."
+      },
       "phase": "07-build",
       "type": "mobile_renderer",
       "status": "ready",
@@ -2991,6 +2995,11 @@
     },
     {
       "id": "CATEGORY-MOBILE-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-11-02T09:15:28Z",
+        "approval_source": "User confirmed Products includes responsive mobile web; native iOS/Android remain deferred."
+      },
       "phase": "07-build",
       "type": "mobile_renderer",
       "status": "ready",
@@ -3104,6 +3113,11 @@
     },
     {
       "id": "MEDIA-MOBILE-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-11-02T09:15:28Z",
+        "approval_source": "User confirmed Products includes responsive mobile web; native iOS/Android remain deferred."
+      },
       "phase": "07-build",
       "type": "mobile_renderer",
       "status": "ready",
@@ -3229,6 +3243,11 @@
     },
     {
       "id": "COST-MOBILE-001",
+      "approval": {
+        "approved_by": "@loopdev-io",
+        "approved_at": "2026-11-02T09:15:28Z",
+        "approval_source": "User confirmed Products includes responsive mobile web; native iOS/Android remain deferred."
+      },
       "phase": "07-build",
       "type": "mobile_renderer",
       "status": "ready",

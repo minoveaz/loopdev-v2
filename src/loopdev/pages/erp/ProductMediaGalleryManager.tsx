@@ -33,6 +33,8 @@ export function ProductMediaGalleryManager({
   translateRef.current = t;
   const [assignments, setAssignments] = useState<ProductMediaAssignment[]>([]);
   const [libraryAssets, setLibraryAssets] = useState<ProductMediaAsset[]>([]);
+  const [libraryTagDrafts, setLibraryTagDrafts] = useState<Record<string, string>>({});
+  const [libraryTagSaveSuccess, setLibraryTagSaveSuccess] = useState<Record<string, boolean>>({});
   const [previewSources, setPreviewSources] = useState<Record<string, FilePreviewSource>>({});
   const [altTextDrafts, setAltTextDrafts] = useState<Record<string, string>>({});
   const [targetVariantId, setTargetVariantId] = useState("__product");
@@ -43,6 +45,7 @@ export function ProductMediaGalleryManager({
   const [uploading, setUploading] = useState(false);
   const [workingAssetId, setWorkingAssetId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [libraryError, setLibraryError] = useState<string | null>(null);
   const requestRef = useRef(0);
   const previewRef = useRef<Record<string, FilePreviewSource>>({});
 
@@ -82,6 +85,61 @@ export function ProductMediaGalleryManager({
     }
   }, [clearPreviews, item.id, organizationId]);
 
+  const refreshExpiredPreviews = useCallback(async () => {
+    const expiringAssetIds = Object.entries(previewRef.current)
+      .filter(([, source]) => {
+        if (!source.expiresAt) return false;
+        const expiresAt = Date.parse(source.expiresAt);
+        return Number.isFinite(expiresAt) && expiresAt <= Date.now() + 15_000;
+      })
+      .map(([assetId]) => assetId);
+    if (!expiringAssetIds.length) return;
+
+    const requestId = requestRef.current;
+    const refreshed = await Promise.all(expiringAssetIds.map(async (assetId) => {
+      try {
+        return {
+          assetId,
+          source: await productMediaAdapter.getPreviewSource(assetId, { organizationId, catalogItemId: item.id }),
+          error: null,
+        };
+      } catch (cause) {
+        return {
+          assetId,
+          source: null,
+          error: cause instanceof Error ? cause.message : translateRef.current("common.erpProductRecord.mediaLoadError"),
+        };
+      }
+    }));
+
+    if (requestId !== requestRef.current) {
+      refreshed.forEach(({ source }) => source?.revoke?.());
+      return;
+    }
+
+    const nextSources = { ...previewRef.current };
+    for (const result of refreshed) {
+      nextSources[result.assetId]?.revoke?.();
+      if (result.source?.url) nextSources[result.assetId] = result.source;
+      else delete nextSources[result.assetId];
+    }
+    previewRef.current = nextSources;
+    setPreviewSources(nextSources);
+    const failure = refreshed.find((result) => result.error)?.error;
+    if (failure) setError(failure);
+  }, [item.id, organizationId]);
+
+  useEffect(() => {
+    const expiryTimes = Object.values(previewSources)
+      .flatMap((source) => source.expiresAt ? [Date.parse(source.expiresAt)] : [])
+      .filter(Number.isFinite);
+    if (!expiryTimes.length) return;
+
+    const refreshInMs = Math.max(0, Math.min(...expiryTimes) - Date.now() - 15_000);
+    const timeout = window.setTimeout(() => { void refreshExpiredPreviews(); }, refreshInMs);
+    return () => window.clearTimeout(timeout);
+  }, [previewSources, refreshExpiredPreviews]);
+
   useEffect(() => {
     void reload();
     return () => {
@@ -119,19 +177,41 @@ export function ProductMediaGalleryManager({
   const openLibrary = async () => {
     setLibraryOpen(true);
     setLibraryLoading(true);
-    setError(null);
+    setLibraryError(null);
     try {
-      setLibraryAssets(await productMediaAdapter.listLibrary({ organizationId }));
+      const assets = await productMediaAdapter.listLibrary({ organizationId });
+      setLibraryAssets(assets);
+      setLibraryTagDrafts(Object.fromEntries(assets.map((asset) => [asset.id, asset.tags.join(", ")])));
+      setLibraryTagSaveSuccess({});
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("common.erpProductRecord.mediaLoadError"));
+      setLibraryError(cause instanceof Error ? cause.message : t("common.erpProductRecord.mediaLoadError"));
     } finally {
       setLibraryLoading(false);
     }
   };
 
+  const saveAssetTags = async (asset: ProductMediaAsset) => {
+    setWorkingAssetId(asset.id);
+    setLibraryError(null);
+    try {
+      const updated = await productMediaAdapter.updateTags({
+        organizationId,
+        assetId: asset.id,
+        tags: (libraryTagDrafts[asset.id] ?? "").split(/[,\n]/).map((tag) => tag.trim()).filter(Boolean),
+      });
+      setLibraryAssets((current) => current.map((candidate) => candidate.id === updated.id ? updated : candidate));
+      setLibraryTagDrafts((current) => ({ ...current, [asset.id]: updated.tags.join(", ") }));
+      setLibraryTagSaveSuccess((current) => ({ ...current, [asset.id]: true }));
+    } catch (cause) {
+      setLibraryError(cause instanceof Error ? cause.message : t("common.erpProductRecord.mediaSaveError"));
+    } finally {
+      setWorkingAssetId(null);
+    }
+  };
+
   const attachLibraryAsset = async (asset: ProductMediaAsset) => {
     setWorkingAssetId(asset.id);
-    setError(null);
+    setLibraryError(null);
     try {
       await productMediaAdapter.attach({
         organizationId,
@@ -142,7 +222,7 @@ export function ProductMediaGalleryManager({
       setLibraryOpen(false);
       await reload();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("common.erpProductRecord.mediaSaveError"));
+      setLibraryError(cause instanceof Error ? cause.message : t("common.erpProductRecord.mediaSaveError"));
     } finally {
       setWorkingAssetId(null);
     }
@@ -333,25 +413,53 @@ export function ProductMediaGalleryManager({
             <DialogTitle>{t("common.erpProductRecord.mediaLibraryTitle")}</DialogTitle>
             <DialogDescription>{t("common.erpProductRecord.mediaLibraryDescription")}</DialogDescription>
           </DialogHeader>
+          {libraryError && <p role="alert" className="text-sm text-destructive">{libraryError}</p>}
           {libraryLoading ? <p role="status" className="py-6 text-sm text-muted-foreground">{t("common.erpProductRecord.loadingMedia")}</p> : libraryAssets.length ? (
             <div className="max-h-[60vh] space-y-2 overflow-y-auto">
               {libraryAssets.map((asset) => {
                 const alreadyAttached = assignments.some((assignment) =>
                   assignment.assetId === asset.id && assignment.variantId === selectedVariantId);
-                return <div key={asset.id} className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{asset.fileName}</p>
-                    <p className="text-xs text-muted-foreground">{asset.mimeType} · {formatBytes(asset.byteSize)}</p>
+                return <div key={asset.id} className="space-y-3 rounded-md border border-border p-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{asset.fileName}</p>
+                      <p className="text-xs text-muted-foreground">{asset.mimeType} · {formatBytes(asset.byteSize)}</p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={alreadyAttached || workingAssetId === asset.id}
+                      onClick={() => void attachLibraryAsset(asset)}
+                    >
+                      {alreadyAttached ? t("common.erpProductRecord.mediaAlreadyAttached") : t("common.erpProductRecord.attachLibraryMedia")}
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={alreadyAttached || workingAssetId === asset.id}
-                    onClick={() => void attachLibraryAsset(asset)}
-                  >
-                    {alreadyAttached ? t("common.erpProductRecord.mediaAlreadyAttached") : t("common.erpProductRecord.attachLibraryMedia")}
-                  </Button>
+                  <label className="block space-y-1.5 text-sm font-medium">
+                    {t("common.erpProductRecord.productMediaTags")}
+                    <Input
+                      value={libraryTagDrafts[asset.id] ?? ""}
+                      onChange={(event) => {
+                        setLibraryTagDrafts((current) => ({ ...current, [asset.id]: event.target.value }));
+                        setLibraryTagSaveSuccess((current) => ({ ...current, [asset.id]: false }));
+                      }}
+                    />
+                    <span className="block text-xs font-normal text-muted-foreground">
+                      {t("common.erpProductRecord.productMediaTagsDescription")}
+                    </span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={workingAssetId === asset.id || (libraryTagDrafts[asset.id] ?? "") === asset.tags.join(", ")}
+                      onClick={() => void saveAssetTags(asset)}
+                    >
+                      {workingAssetId === asset.id ? t("common.erpProductRecord.savingMediaTags") : t("common.erpProductRecord.saveMediaTags")}
+                    </Button>
+                    {libraryTagSaveSuccess[asset.id] && <span role="status" className="text-xs text-muted-foreground">{t("common.erpProductRecord.mediaTagsSaved")}</span>}
+                  </div>
                 </div>;
               })}
             </div>

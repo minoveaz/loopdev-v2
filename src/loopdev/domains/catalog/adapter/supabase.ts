@@ -28,6 +28,7 @@ import type {
   ResolvedCatalogReference,
 } from "../types";
 import { CatalogAdapterError, matchesCatalogItemKey } from "../types";
+import { normalizePhysicalAttributes } from "../physical-attributes";
 import type { CatalogAdapter } from "./index";
 
 type Row = Record<string, unknown>;
@@ -62,7 +63,7 @@ function mapCatalog(row: Row): OrganizationCatalog {
 }
 
 function mapItem(row: Row): CatalogItem {
-  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, catalogId: (row.catalog_id as string | null) ?? null, key: String(row.key), sku: String(row.sku ?? ""), type: row.type as CatalogItem["type"], name: String(row.name), description: (row.description as string | null) ?? null, categoryKey: (row.category_key as string | null) ?? null, status: row.status as CatalogItem["status"], visibility: (row.visibility as CatalogItem["visibility"]) ?? { organizationId: String(row.organization_id), workspaceId: null }, metadata: (row.metadata as Record<string, unknown>) ?? {} };
+  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, catalogId: (row.catalog_id as string | null) ?? null, key: String(row.key), sku: String(row.sku ?? ""), type: row.type as CatalogItem["type"], name: String(row.name), description: (row.description as string | null) ?? null, categoryKey: (row.category_key as string | null) ?? null, status: row.status as CatalogItem["status"], visibility: (row.visibility as CatalogItem["visibility"]) ?? { organizationId: String(row.organization_id), workspaceId: null }, metadata: (row.metadata as Record<string, unknown>) ?? {}, physicalAttributes: normalizePhysicalAttributes(row.physical_attributes) };
 }
 
 function mapOffer(row: Row): Offer {
@@ -70,7 +71,7 @@ function mapOffer(row: Row): Offer {
 }
 
 function mapVariant(row: Row): import("../types").CatalogVariant {
-  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, catalogItemId: String(row.catalog_item_id), key: String(row.key), sku: String(row.sku ?? ""), name: String(row.name), status: row.status as import("../types").CatalogVariant["status"], attributes: (row.attributes as Record<string, string>) ?? {}, metadata: (row.metadata as Record<string, unknown>) ?? {} };
+  return { ...base(row), organizationId: String(row.organization_id), workspaceId: (row.workspace_id as string | null) ?? null, catalogItemId: String(row.catalog_item_id), key: String(row.key), sku: String(row.sku ?? ""), name: String(row.name), status: row.status as import("../types").CatalogVariant["status"], attributes: (row.attributes as Record<string, string>) ?? {}, metadata: (row.metadata as Record<string, unknown>) ?? {}, physicalAttributes: normalizePhysicalAttributes(row.physical_attributes) };
 }
 
 function mapPriceBook(row: Row): PriceBook {
@@ -130,8 +131,8 @@ function assertIdentifiersAreServerControlled(patch: object): void {
 export const supabaseCatalogAdapter: CatalogAdapter = {
   async listCatalogs(params) { return (await listRows("erp_catalogs", params)).map(mapCatalog); },
   async createCatalog(input: CatalogCreateInput) { return mapCatalog(await insertRow("erp_catalogs", { organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, key: input.key.trim().toLowerCase().replace(/\s+/g, "-"), name: input.name.trim(), description: input.description?.trim() || null, kind: input.kind, metadata: input.metadata ?? {} })); },
-  async createCatalogItem(input: CatalogItemCreateInput) { return mapItem(await insertRow("erp_catalog_items", { organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, catalog_id: input.catalogId, type: input.type, name: input.name.trim(), description: input.description?.trim() || null, category_key: input.categoryKey?.trim() || null, status: input.status ?? "draft", visibility: { organizationId: input.organizationId, workspaceId: input.workspaceId ?? null }, metadata: input.metadata ?? {} })); },
-  async updateCatalogItem(id, params, patch) { assertIdentifiersAreServerControlled(patch); return mapItem(await updateRow("erp_catalog_items", id, params.organizationId, write({ name: patch.name?.trim(), type: patch.type, description: patch.description, category_key: patch.categoryKey, status: patch.status, metadata: patch.metadata }))); },
+  async createCatalogItem(input: CatalogItemCreateInput) { return mapItem(await insertRow("erp_catalog_items", { organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, catalog_id: input.catalogId, type: input.type, name: input.name.trim(), description: input.description?.trim() || null, category_key: input.categoryKey?.trim() || null, status: input.status ?? "draft", visibility: { organizationId: input.organizationId, workspaceId: input.workspaceId ?? null }, metadata: input.metadata ?? {}, physical_attributes: normalizePhysicalAttributes(input.physicalAttributes) })); },
+  async updateCatalogItem(id, params, patch) { assertIdentifiersAreServerControlled(patch); return mapItem(await updateRow("erp_catalog_items", id, params.organizationId, write({ name: patch.name?.trim(), type: patch.type, description: patch.description, category_key: patch.categoryKey, status: patch.status, metadata: patch.metadata, physical_attributes: patch.physicalAttributes === undefined ? undefined : normalizePhysicalAttributes(patch.physicalAttributes) }))); },
   async deleteCatalogItem(id, params) { await deleteRow("erp_catalog_items", id, params.organizationId); },
   async listCatalogItems(params) { return (await listRows("erp_catalog_items", params, { catalog_id: params.catalogId })).map(mapItem); },
   async getCatalogItem(id, params) { const rows = await listRows("erp_catalog_items", params, { id }); return rows[0] ? mapItem(rows[0]) : null; },
@@ -149,8 +150,8 @@ export const supabaseCatalogAdapter: CatalogAdapter = {
   async updateOffer(id, params, patch) { return mapOffer(await updateRow("erp_catalog_offers", id, params.organizationId, write({ key: patch.key, name: patch.name, status: patch.status, billing_model: patch.billingModel, currency: patch.currency, unit: patch.unit, valid_from: patch.validFrom, valid_to: patch.validTo, metadata: patch.metadata }))); },
   async deleteOffer(id, params) { await deleteRow("erp_catalog_offers", id, params.organizationId); },
   async listVariants(params) { return (await listRows("erp_catalog_variants", params, { catalog_item_id: params.catalogItemId })).map(mapVariant); },
-  async createVariant(input: CatalogVariantCreateInput) { return mapVariant(await insertRow("erp_catalog_variants", write({ organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, catalog_item_id: input.catalogItemId, name: input.name.trim(), status: input.status, attributes: input.attributes, metadata: input.metadata }))); },
-  async updateVariant(id, params, patch) { assertIdentifiersAreServerControlled(patch); return mapVariant(await updateRow("erp_catalog_variants", id, params.organizationId, write({ catalog_item_id: patch.catalogItemId, name: patch.name, status: patch.status, attributes: patch.attributes, metadata: patch.metadata }))); },
+  async createVariant(input: CatalogVariantCreateInput) { return mapVariant(await insertRow("erp_catalog_variants", write({ organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, catalog_item_id: input.catalogItemId, name: input.name.trim(), status: input.status, attributes: input.attributes, metadata: input.metadata, physical_attributes: normalizePhysicalAttributes(input.physicalAttributes) }))); },
+  async updateVariant(id, params, patch) { assertIdentifiersAreServerControlled(patch); return mapVariant(await updateRow("erp_catalog_variants", id, params.organizationId, write({ catalog_item_id: patch.catalogItemId, name: patch.name, status: patch.status, attributes: patch.attributes, metadata: patch.metadata, physical_attributes: patch.physicalAttributes === undefined ? undefined : normalizePhysicalAttributes(patch.physicalAttributes) }))); },
   async deleteVariant(id, params) { await deleteRow("erp_catalog_variants", id, params.organizationId); },
   async listPriceBooks(params) { return (await listRows("erp_price_books", params)).map(mapPriceBook); },
   async createPriceBook(input: CatalogPriceBookCreateInput) { return mapPriceBook(await insertRow("erp_price_books", write({ organization_id: input.organizationId, workspace_id: input.workspaceId ?? null, key: input.key, name: input.name, currency: input.currency, status: input.status, valid_from: input.validFrom, valid_to: input.validTo, visibility: input.visibility }))); },

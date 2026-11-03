@@ -35,7 +35,7 @@ export interface CatalogAdapter {
   listCatalogs(params: CatalogScopeParams): Promise<OrganizationCatalog[]>;
   createCatalog(input: CatalogCreateInput): Promise<OrganizationCatalog>;
   createCatalogItem(input: CatalogItemCreateInput): Promise<CatalogItem>;
-  updateCatalogItem(id: string, params: CatalogScopeParams, patch: Partial<Pick<CatalogItem, "name" | "type" | "description" | "categoryKey" | "status" | "metadata">>): Promise<CatalogItem>;
+  updateCatalogItem(id: string, params: CatalogScopeParams, patch: Partial<Pick<CatalogItem, "name" | "type" | "description" | "categoryKey" | "status" | "metadata" | "physicalAttributes">>): Promise<CatalogItem>;
   deleteCatalogItem(id: string, params: CatalogScopeParams): Promise<void>;
   listCatalogItems(params: CatalogListParams): Promise<CatalogItem[]>;
   getCatalogItem(id: string, params: CatalogScopeParams): Promise<CatalogItem | null>;

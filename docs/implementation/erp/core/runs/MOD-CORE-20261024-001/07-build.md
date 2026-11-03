@@ -685,3 +685,93 @@ validation passed: 31 focused tests, typecheck, i18n check, production build,
 module-run validation and diff whitespace check. Remote migration deployment
 and authenticated-route verification remain pending; this PR does not change
 remote database state.
+
+### Attempt 21 — category archive assignment preservation
+
+The approved `DOM-ERP-011` contract requires category archival to retain
+existing product/SKU category assignments, reject new assignments, and block
+only while active child categories remain. The local adapter previously
+rejected archival when products or SKUs were assigned. Updated the adapter and
+added regression coverage for product and SKU assignment preservation through
+both the adapter and Products configuration UI.
+
+Added the forward-only migration
+`20261101124000_erp_categories_preserve_assignments_on_archive.sql` to align
+the PostgreSQL lifecycle trigger, plus pgTAP coverage for preserved
+assignments, rejected new assignments and the active-child guard. The remote
+project migration history currently ends at `20261027150000`; no remote
+migration was applied. The Supabase MCP migration tool cannot specify the
+repository migration version, and the CLI's local status/lint path is blocked
+because Docker is unavailable, so no database write was attempted.
+
+| Command or check | Result |
+|---|---|
+| `npm test -- --run src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx` | Passed: 2 files, 28 tests. |
+| `npm run typecheck` | Passed: application and Node TypeScript projects. |
+| `git diff --check` | Passed. |
+| `supabase status` | Blocked: Docker API socket unavailable; migration lint and pgTAP were not run. |
+| Read-only Supabase migration list | Passed: latest remote version is `20261027150000`; the cost-permission and new category migrations are pending. |
+
+This is a local partial implementation of the ready category data/adapter
+tasks, not module completion. Next: restore local Supabase, run lint and the
+new pgTAP test, then apply the forward migration through the version-preserving
+CLI after validating migration history. Other Products release blockers and
+authenticated runtime verification remain open.
+
+The same attempt also fixed gallery preview expiry: short-lived Platform Files
+URLs are renewed before expiration, and a failed renewal removes the stale
+preview while surfacing the error. The focused media suite passes all 10 tests,
+including renewal and renewal-failure cases.
+
+### Attempt 22 — Product-specific media tags
+
+The Product Owner confirmed that image tags used to organize the Products
+library belong to `erp_product_media_assets` and remain separate from general
+Platform Files tags. Added editing and saving those tags from the reusable
+library selector; the UI explicitly states that it does not change general
+file tags. Updated the domain/API contracts and evidence matrices accordingly.
+
+The initial focused test run exposed two test-query mismatches with the
+accessible names; the queries now match the rendered label/status text.
+Validation passed: the focused media suite (10 tests), application/Node
+typecheck, i18n check, module-run validation, multiplatform validation and
+`git diff --check`. No remote database writes or migrations were performed for
+this UI/contract change.
+
+### Attempt 23 — independent physical attributes for products and SKUs
+
+Implemented typed physical measurements at the managed-unit boundary:
+products without separately managed SKUs store optional weight/dimensions on
+the product, while each SKU stores its own optional measurements without
+inheritance. Values are canonical kg/cm; recognized legacy units normalize on
+save. The product and SKU adapters validate and persist the typed fields, and
+the desktop forms make the ownership rule explicit.
+
+Added migration `20261102093000_erp_catalog_physical_attributes.sql` with
+independent product/SKU JSONB columns and database constraints, plus seven
+pgTAP assertions for storage, independence and invalid values. The test suite
+has not run because Docker is unavailable. No remote migration or product
+record write was performed. Module/release readiness is not claimed.
+
+| Command or check | Result | Evidence |
+|---|---|---|
+| `npm test -- --run src/test/catalog/catalog-adapter.test.ts src/test/catalog/physical-attributes.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-media.test.tsx` | Passed: 5 files, 49 tests | Focused adapter, product/SKU, physical-attribute and media suites |
+| `npm run typecheck` | Passed | Application and Node TypeScript projects |
+| `npm run i18n:check` | Passed | No visible-text candidates |
+| `npm run validate:module-runs` | Passed: 110 checkpoint files | Module-run traceability validator |
+| `npm run validate:multiplatform` | Passed | Structural web-scope/evidence validation |
+| `git diff --check` | Passed | No whitespace errors |
+| `supabase status` | Blocked | Docker API socket unavailable; migration lint and pgTAP suite 020 were not run |
+
+| Environment field | Value |
+|---|---|
+| Repository path | `/Users/minoveaz/.copilot/repos/loopdev-v2` |
+| Checkout / branch | In-place branch checkout / `develop` |
+| HEAD | `cf90768ce77c4d3ec302502a948d6ee6fec0806c` |
+| Working tree | Existing Product/category/media follow-ups and evidence updates; preserved the pre-existing `docs/implementation/erp/core/README.md` edit |
+| Runtime URL / port | Not started or used; no authenticated UI journey was performed in this attempt |
+
+The first focused run exposed an undefined organization fixture in the new
+no-inheritance test; the fixture was corrected and the complete focused rerun
+passed. The DB suite and remote deployment remain pending; do not treat code
+and component evidence as database or release evidence.

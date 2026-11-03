@@ -9,20 +9,20 @@
   "status": "blocked",
   "decision_status": "open",
   "architecture_quality": "PASS_WITH_DEBT",
-  "attempt": 20,
-  "started_at": "2026-10-27T21:55:46Z",
-  "completed_at": "2026-10-27T21:55:46Z",
+  "attempt": 23,
+  "started_at": "2026-11-02T08:40:55Z",
+  "completed_at": "2026-11-02T08:43:51Z",
   "input_fingerprint": "sha256:7ce9b44cad626b5de49d65607db36c3b312eef926b64d1bd3251bb38de4fd4fa",
   "environment": {
     "repository_path": "/Users/minoveaz/.copilot/repos/loopdev-v2",
     "checkout_type": "branch",
-    "branch": "feature/erp-products-web-management",
+    "branch": "develop",
     "base_branch": "develop",
-    "head_commit": "1bc95a77557dbf89e49c203f66e127bab951ffd0",
-    "working_tree": "Pre-existing ERP planning/traceability changes plus the purchase-cost permission implementation, tests and evidence.",
-    "runtime_url": "http://127.0.0.1:5173/app/erp/products/{id}/edit",
-    "runtime_port": 5173,
-    "serving_process": "Vite served the SPA with HTTP 200; browser direct navigation redirected to /pages/login. The temporary server was stopped after verification."
+    "head_commit": "cf90768ce77c4d3ec302502a948d6ee6fec0806c",
+    "working_tree": "In-place develop at cf90768ce77c4d3ec302502a948d6ee6fec0806c; preserves the user's pre-existing README.md change and includes category/media follow-ups plus independent typed physical attributes, adapters, UI, tests, migrations and evidence updates.",
+    "runtime_url": "Not started; no local server was running on ports 5173 or 8080.",
+    "runtime_port": null,
+    "serving_process": "No local app server was running during this attempt."
   },
   "input_artifacts": [],
   "output_artifacts": [
@@ -63,7 +63,23 @@
     "src/loopdev/pages/erp/ProductSkuManagerPage.tsx",
     "src/test/catalog/catalog-adapter.test.ts",
     "src/test/erp/product-record-pages.test.tsx",
-    "src/test/erp/product-sku-manager.test.tsx"
+    "src/test/erp/product-sku-manager.test.tsx",
+    "src/loopdev/pages/erp/ProductMediaGalleryManager.tsx",
+    "src/test/erp/product-media.test.tsx",
+    "supabase/migrations/20261101124000_erp_categories_preserve_assignments_on_archive.sql",
+    "supabase/tests/database/019_erp_product_category_lifecycle.sql",
+    "docs/implementation/erp/core/domain-model.md",
+    "docs/implementation/erp/core/api-contracts.md",
+    "docs/implementation/erp/core/requirement-evidence-matrix.md",
+    "src/i18n/locales/en.json",
+    "src/i18n/locales/es.json",
+    "src/loopdev/domains/catalog/physical-attributes.ts",
+    "src/loopdev/domains/catalog/types.ts",
+    "src/loopdev/domains/catalog/adapter/local.ts",
+    "src/loopdev/domains/catalog/adapter/supabase.ts",
+    "supabase/migrations/20261102093000_erp_catalog_physical_attributes.sql",
+    "supabase/tests/database/020_erp_catalog_physical_attributes.sql",
+    "src/test/catalog/physical-attributes.test.ts"
   ],
   "decisions": [
     {
@@ -95,6 +111,11 @@
       "id": "BUILD-PLATFORM-FILES-CONTRACT-001",
       "status": "confirmed",
       "summary": "Platform Files owns upload/finalization, server-side image validation, original and 1600/400 max-edge renditions, signed-preview authorization, retention and orphan recovery. ERP owns media tags and Product/SKU assignment/order/alt text; detach removes only an assignment. The generic remote adapter remains future implementation work."
+    },
+    {
+      "id": "BUILD-PRODUCT-MEDIA-TAGS-001",
+      "status": "confirmed",
+      "summary": "The Product Owner confirmed that tags used to organize media in Products are owned by ERP and stored on erp_product_media_assets, separately from general Platform Files tags."
     }
   ],
   "actions": [
@@ -136,7 +157,10 @@
     "Added a security-checked atomic reorder RPC requiring catalog.write, enabled Products write controls, complete assignment IDs and matching expected versions. Direct clients can update contextual alt text but cannot change position; detach removes only the association.",
     "The isolated full Supabase migration chain applied 20261025175000. Suites 014, 015 and 016 passed all 84 pgTAP assertions, covering role/security compatibility, reusable same-organization Files, product/SKU order, stale/incomplete conflicts, versioning and detach preservation.",
     "SQL lint still reports pre-existing findings in organization/settings functions and Supabase Storage dynamic-SQL functions; no finding references the new migration or gallery functions. No remote migration, file operation, Product data write or write-control change was performed.",
-    "Attempt 20 implemented split purchase-cost permissions and independent product/SKU versus cost saves locally. Local UI/adapter tests and 22 pgTAP assertions pass. Read-only linked-project checks found the remote RPC and INSERT/UPDATE policies still require manage only, while global and organization write controls are enabled. No remote mutation was authorized or performed; authenticated UI behavior remains unverified."
+    "Attempt 20 implemented split purchase-cost permissions and independent product/SKU versus cost saves locally. Local UI/adapter tests and 22 pgTAP assertions pass. Read-only linked-project checks found the remote RPC and INSERT/UPDATE policies still require manage only, while global and organization write controls are enabled. No remote mutation was authorized or performed; authenticated UI behavior remains unverified.",
+    "Attempt 21 aligned category archive behavior with DOM-ERP-011: existing product/SKU assignments are preserved, new assignments remain blocked, and active children still prevent archival. Added a forward-only PostgreSQL migration and pgTAP coverage. Also renewed expiring gallery preview URLs and added renewal failure handling. Focused UI/adapter/media tests and typecheck pass. Docker is unavailable, so database lint and pgTAP were not run; no remote migration was applied.",
+    "Attempt 22 records the Product Owner's confirmed tag ownership: Product-specific library tags are stored on erp_product_media_assets and separate from general Platform Files tags. Added tag editing/saving in the library selector, updated domain/API/evidence documents and localized labels, and added a save regression to the media suite. The initial focused test run exposed accessible-name query mismatches; after correcting the queries, all 10 media tests, typecheck, i18n, module-run, multiplatform and diff checks passed.",
+    "Attempt 23 implements typed independent physical attributes for product-managed units and each SKU, with canonical kg/cm values, recognized legacy-unit normalization on save, adapter validation, product/SKU form controls and a no-inheritance regression. Five focused suites passed (49 tests), typecheck, i18n, module-run, multiplatform and diff checks passed. The first test run found a missing organization fixture constant; the test was corrected before the passing rerun. Docker is unavailable, so migration lint and pgTAP were not run; no remote migration or product write was performed."
   ],
   "validation": [
     {
@@ -488,13 +512,88 @@
       "command": "Browser direct route http://127.0.0.1:5173/app/erp/products/{id}/edit",
       "result": "partial",
       "evidence": "The SPA returned HTTP 200 but navigation redirected to /pages/login; authenticated route behavior was not verified."
+    },
+    {
+      "command": "npm test -- --run src/test/catalog/catalog-adapter.test.ts src/test/erp/product-record-pages.test.tsx",
+      "result": "passed (28 tests)",
+      "evidence": "Category archive preserves existing product/SKU assignments in adapter and configuration UI; active-child archival remains blocked."
+    },
+    {
+      "command": "npm test -- --run src/test/erp/product-media.test.tsx",
+      "result": "passed (10 tests)",
+      "evidence": "Shared Files-backed gallery tests include Product-specific tag editing/saving, preview renewal before expiry, and removal/error behavior when renewal fails."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "Application and Node TypeScript projects."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors."
+    },
+    {
+      "command": "supabase status",
+      "result": "blocked",
+      "evidence": "Could not connect to the Docker API socket; database migration lint and pgTAP validation were not run."
+    },
+    {
+      "command": "Read-only Supabase migration list",
+      "result": "passed",
+      "evidence": "Remote history ends at 20261027150000; the purchase-cost permission and category archive migrations are not applied."
+    },
+    {
+      "command": "npm test -- --run src/test/catalog/catalog-adapter.test.ts src/test/catalog/physical-attributes.test.ts src/test/erp/product-record-pages.test.tsx src/test/erp/product-sku-manager.test.tsx src/test/erp/product-media.test.tsx",
+      "result": "passed (49 tests)",
+      "evidence": "Five focused adapter, physical-attribute, product-record, SKU-manager and media suites passed, including independent product/SKU measurements and no-inheritance behavior."
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed",
+      "evidence": "Application and Node TypeScript projects."
+    },
+    {
+      "command": "npm run i18n:check",
+      "result": "passed",
+      "evidence": "No visible-text candidates."
+    },
+    {
+      "command": "npm run validate:module-runs && npm run validate:multiplatform",
+      "result": "passed",
+      "evidence": "110 checkpoint files validate; multiplatform scope/evidence structure validates."
+    },
+    {
+      "command": "npm run validate:delivery-ledgers",
+      "result": "passed",
+      "evidence": "All 8 delivery ledgers validate; no task status or scope was changed."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "evidence": "No whitespace errors."
+    },
+    {
+      "command": "supabase status",
+      "result": "blocked",
+      "evidence": "Docker API socket is unavailable; migration lint and pgTAP suite 020 were not run."
     }
   ],
   "requirements": [
     {
       "id": "REQ-ERP-CATALOG-FOUNDATION",
       "status": "PARTIAL",
-      "evidence": "Explicit adapter mode and strict local persistence are implemented and tested. Requirement remains partial because authenticated route access, full Products behavior, mobile operation parity and security/deployment gates remain unverified."
+      "evidence": "Product/SKU physical attributes now persist independently as typed kg/cm values without inheritance, with five focused suites passing 49 tests. Requirement remains partial because PostgreSQL lint/pgTAP, authenticated route access, full Products behavior and security/deployment gates remain unverified."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-CATEGORIES",
+      "status": "PARTIAL",
+      "evidence": "Category create/rename/reparent/archive/restore UI and adapter exist. Attempt 21 fixes assignment-preserving archive semantics locally and adds a forward migration; 28 focused tests and typecheck pass. PostgreSQL lint/pgTAP and remote deployment remain pending."
+    },
+    {
+      "id": "REQ-ERP-PRODUCT-MEDIA",
+      "status": "PARTIAL",
+      "evidence": "The shared Files-backed product gallery supports reusable library selection, upload, alt text, Product-specific tag editing, reorder, detach and preview. Product tags are stored separately from general Files tags. Attempt 21 adds expiring-preview renewal; the media suite has 10 focused tests. Authenticated remote runtime remains pending."
     }
   ],
   "task_ids": [
@@ -665,16 +764,21 @@
       "type": "task-evidence",
       "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-20-purchase-cost-permissions",
       "result": "COST-DESKTOP-001 local implementation evidence: read/manage are separated, mutations require both permissions, and product/SKU persistence is independent from cost persistence. Focused UI/adapter tests (31), typecheck, i18n, build and the isolated 22-assertion pgTAP suite passed. Live remote checks remain manage-only for mutations and show global and organization write controls enabled; no remote change was made. Authenticated route behavior remains unverified."
+    },
+    {
+      "type": "task-evidence",
+      "path": "docs/implementation/erp/core/runs/MOD-CORE-20261024-001/07-build.md#attempt-23-independent-physical-attributes-for-products-and-skus",
+      "result": "Product/SKU physical measurements are independently stored and edited in canonical kg/cm with legacy recognized-unit normalization on save and no inheritance. Five focused suites passed 49 tests; typecheck, i18n, module-run, multiplatform and diff checks passed. Migration 20261102093000 and pgTAP suite 020 are present but unvalidated because Docker is unavailable; no remote migration or product data write was performed."
     }
   ],
-  "detected_failure": "Purchase-cost permission enforcement is implemented locally but is not active in the linked project. Remote INSERT/UPDATE policies and the RPC check catalog.cost.manage without catalog.cost.read, and both global and one organization write-control row are enabled. The authenticated Products route also remains unverified because direct navigation redirected to login.",
-  "likely_failure_origin": "The forward migration has not been applied to the linked project, consistent with the explicit no-remote-change scope. The current live control state differs from earlier checkpoint evidence and requires owner reconciliation before a separately authorized deployment.",
-  "next_handoff": "Reconcile the enabled remote write-control state with its owner; obtain separate deployment authorization; apply the purchase-cost permission migration and re-read policies, RPC and controls; then verify the cost workflows in an authenticated desktop session. Do not toggle remote controls or deploy as part of this local implementation.",
+  "detected_failure": "Category archive and physical-attributes migrations/pgTAP suites could not be validated because the local Supabase CLI cannot connect to Docker. The linked project still lacks the purchase-cost permission, category archive and physical-attributes migrations; authenticated Products behavior remains unverified.",
+  "likely_failure_origin": "Docker is not running on the local host. The remote migration tool does not accept a repository migration version, so applying through it risks diverging migration history; the local CLI workflow is the version-preserving path.",
+  "next_handoff": "Start local Docker/Supabase, run lint and pgTAP for category lifecycle and physical attributes, reconcile the linked migration history, and continue the remaining Products tasks. Keep the module blocked pending database evidence, approved legacy-data mapping, security/deployment gates and authenticated runtime verification.",
   "approval_gate": {
     "status": "not_required",
     "approved_by": null,
     "approved_at": null
   },
   "invalidated": false,
-  "updated_at": "2026-10-27T21:55:46Z"
+  "updated_at": "2026-11-02T08:43:51Z"
 }

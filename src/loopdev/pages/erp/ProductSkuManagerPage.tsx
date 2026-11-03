@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { catalogAdapter, CatalogAdapterError } from "@/loopdev/domains/catalog/adapter";
 import type { CatalogItem, CatalogRecordStatus, CatalogVariant, ProductCostAccess, ProductReference } from "@/loopdev/domains/catalog";
+import { legacyPhysicalAttributes, parsePhysicalAttributeDraft } from "@/loopdev/domains/catalog/physical-attributes";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useT } from "@/i18n";
 
@@ -21,6 +22,10 @@ type SkuDraft = {
   categoryKey: string;
   status: CatalogRecordStatus;
   metadata: Record<string, unknown>;
+  weightKg: string;
+  lengthCm: string;
+  widthCm: string;
+  heightCm: string;
   costAmount: string;
   costCurrency: string;
   costVersion: number;
@@ -41,6 +46,10 @@ const toDraft = (variant: CatalogVariant): SkuDraft => ({
   categoryKey: typeof variant.metadata.categoryKey === "string" ? variant.metadata.categoryKey : "",
   status: variant.status,
   metadata: variant.metadata,
+  weightKg: variant.physicalAttributes?.weightKg == null ? "" : String(variant.physicalAttributes.weightKg),
+  lengthCm: variant.physicalAttributes?.lengthCm == null ? "" : String(variant.physicalAttributes.lengthCm),
+  widthCm: variant.physicalAttributes?.widthCm == null ? "" : String(variant.physicalAttributes.widthCm),
+  heightCm: variant.physicalAttributes?.heightCm == null ? "" : String(variant.physicalAttributes.heightCm),
   costAmount: "",
   costCurrency: "EUR",
   costVersion: 0,
@@ -187,6 +196,10 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
         categoryKey: item?.categoryKey ?? "",
         status: "draft",
         metadata: {},
+        weightKg: "",
+        lengthCm: "",
+        widthCm: "",
+        heightCm: "",
         costAmount: "",
         costCurrency: "EUR",
         costVersion: 0,
@@ -218,6 +231,13 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
       setError(t("common.erpProductRecord.activateProductFirst"));
       return;
     }
+    let physicalAttributesByRow: Map<string, ReturnType<typeof parsePhysicalAttributeDraft>>;
+    try {
+      physicalAttributesByRow = new Map(rows.map((row) => [row.localId, parsePhysicalAttributeDraft(row)]));
+    } catch {
+      setError(t("common.erpProductRecord.invalidPhysicalAttributes"));
+      return;
+    }
     setSaving(true);
     setError(null);
     setSuccess(false);
@@ -234,12 +254,23 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
           status: row.status,
           attributes,
           metadata: { ...row.metadata, categoryKey: row.categoryKey || null },
+          physicalAttributes: physicalAttributesByRow.get(row.localId) ?? null,
         };
         const saved = row.variantId
           ? await catalogAdapter.updateVariant(row.variantId, { organizationId }, input)
           : await catalogAdapter.createVariant(input);
         setRows((current) => current.map((currentRow) => currentRow.localId === row.localId
-          ? { ...currentRow, variantId: saved.id, sku: saved.sku, name: saved.name, metadata: saved.metadata }
+          ? {
+            ...currentRow,
+            variantId: saved.id,
+            sku: saved.sku,
+            name: saved.name,
+            metadata: saved.metadata,
+            weightKg: saved.physicalAttributes?.weightKg == null ? "" : String(saved.physicalAttributes.weightKg),
+            lengthCm: saved.physicalAttributes?.lengthCm == null ? "" : String(saved.physicalAttributes.lengthCm),
+            widthCm: saved.physicalAttributes?.widthCm == null ? "" : String(saved.physicalAttributes.widthCm),
+            heightCm: saved.physicalAttributes?.heightCm == null ? "" : String(saved.physicalAttributes.heightCm),
+          }
           : currentRow));
       }
       setSuccess(true);
@@ -315,6 +346,7 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
   if (!item) return null;
   const showCostColumns = costAccess.canRead
     && (item.metadata.canPurchase === true || rows.some((row) => row.costVersion > 0));
+  const productPhysicalAttributes = item.physicalAttributes ?? legacyPhysicalAttributes(item.metadata);
 
   return <PageContainer width="wide">
     <PageHeader
@@ -326,6 +358,8 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
     <div className="space-y-5">
       <section className="rounded-xl border border-border bg-card p-5">
         <FormSectionHeader eyebrow={t("common.erpProductRecord.variants")} title={t("common.erpProductRecord.generateSkusTitle")} description={t("common.erpProductRecord.generateSkusDescription")} mode="expanded" responsive="auto" />
+        <p className="mt-3 text-sm text-muted-foreground">{t("common.erpProductRecord.skuPhysicalAttributesNote")}</p>
+        {productPhysicalAttributes && <p className="mt-2 text-sm text-muted-foreground">{t("common.erpProductRecord.productPhysicalAttributesNotInherited")}</p>}
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <label className="block space-y-1.5 text-sm font-medium">{t("common.erpProductRecord.colors")}<Input value={colors} onChange={(event) => setColors(event.target.value)} placeholder={t("common.erpProductRecord.colorsPlaceholder")} /></label>
           <label className="block space-y-1.5 text-sm font-medium">{t("common.erpProductRecord.sizes")}<Input value={sizes} onChange={(event) => setSizes(event.target.value)} placeholder={t("common.erpProductRecord.sizesPlaceholder")} /></label>
@@ -351,6 +385,10 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
               categoryKey: item.categoryKey ?? "",
               status: "draft",
               metadata: {},
+              weightKg: "",
+              lengthCm: "",
+              widthCm: "",
+              heightCm: "",
               costAmount: "",
               costCurrency: "EUR",
               costVersion: 0,
@@ -368,6 +406,10 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
               <TableHead>{t("common.erpProductRecord.sku")}</TableHead>
               <TableHead>{t("common.erpForm.item.category")}</TableHead>
               <TableHead>{t("common.erpForm.item.status")}</TableHead>
+              <TableHead>{t("common.erpProductRecord.weightKg")}</TableHead>
+              <TableHead>{t("common.erpProductRecord.lengthCm")}</TableHead>
+              <TableHead>{t("common.erpProductRecord.widthCm")}</TableHead>
+              <TableHead>{t("common.erpProductRecord.heightCm")}</TableHead>
               {showCostColumns && <>
                 <TableHead>{t("common.erpProductRecord.purchaseCost")}</TableHead>
                 <TableHead>{t("common.erpForm.item.currency")}</TableHead>
@@ -386,6 +428,10 @@ export function ProductSkuManagerPage({ productId }: { productId: string }) {
                 <SelectTrigger aria-label={`${t("common.erpForm.item.status")} ${row.name || row.sku}`}><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="draft">{t("common.erpForm.item.draft")}</SelectItem><SelectItem value="active">{t("common.erpForm.item.active")}</SelectItem><SelectItem value="archived">{t("common.erpForm.item.archived")}</SelectItem></SelectContent>
               </Select></TableCell>
+              <TableCell><Input aria-label={`${t("common.erpProductRecord.weightKg")} ${row.name || row.sku}`} type="number" min="0" step="any" value={row.weightKg} onChange={(event) => updateRow(row.localId, { weightKg: event.target.value })} /></TableCell>
+              <TableCell><Input aria-label={`${t("common.erpProductRecord.lengthCm")} ${row.name || row.sku}`} type="number" min="0" step="any" value={row.lengthCm} onChange={(event) => updateRow(row.localId, { lengthCm: event.target.value })} /></TableCell>
+              <TableCell><Input aria-label={`${t("common.erpProductRecord.widthCm")} ${row.name || row.sku}`} type="number" min="0" step="any" value={row.widthCm} onChange={(event) => updateRow(row.localId, { widthCm: event.target.value })} /></TableCell>
+              <TableCell><Input aria-label={`${t("common.erpProductRecord.heightCm")} ${row.name || row.sku}`} type="number" min="0" step="any" value={row.heightCm} onChange={(event) => updateRow(row.localId, { heightCm: event.target.value })} /></TableCell>
               {showCostColumns && <>
                 <TableCell>
                   <Input aria-label={`${t("common.erpProductRecord.purchaseCost")} ${row.name || row.sku}`} type="number" min="0" step="0.01" value={row.costAmount} onChange={(event) => updateRow(row.localId, { costAmount: event.target.value })} readOnly={!costAccess.canManage || item.metadata.canPurchase !== true} />

@@ -165,6 +165,12 @@ describe("product media", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Browse library" }));
     const dialog = await screen.findByRole("dialog", { name: "Product media library" });
     expect(within(dialog).getByText("reusable.png")).toBeInTheDocument();
+    fireEvent.change(within(dialog).getByRole("textbox", { name: /Product media tags/ }), {
+      target: { value: " ecommerce, winter " },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save tags" }));
+    await within(dialog).findByText("Tags saved");
+    expect(localProductMediaAssetsStore.get(asset.id)?.tags).toEqual(["ecommerce", "winter"]);
     fireEvent.click(within(dialog).getByRole("button", { name: "Attach image" }));
 
     await waitFor(async () => expect(await localProductMediaAdapter.listAssignments({
@@ -173,6 +179,72 @@ describe("product media", () => {
     })).toEqual(expect.arrayContaining([
       expect.objectContaining({ assetId: asset.id, variantId: null }),
     ])));
+  });
+
+  it("renews gallery preview URLs before they expire", async () => {
+    const item = localCatalogItemsStore.get(productId);
+    if (!item) throw new Error("Seed product is unavailable.");
+    const asset = await localProductMediaAdapter.uploadAsset({
+      organizationId,
+      file: new File(["expiring image"], "expiring.png", { type: "image/png" }),
+    });
+    await localProductMediaAdapter.attach({
+      organizationId,
+      assetId: asset.id,
+      catalogItemId: productId,
+      altText: "Renewal preview",
+    });
+    const getPreviewSource = vi.spyOn(localProductMediaAdapter, "getPreviewSource")
+      .mockResolvedValueOnce({
+        url: "blob:expiring-preview",
+        mimeType: "image/png",
+        expiresAt: new Date(Date.now() + 1_000).toISOString(),
+      })
+      .mockResolvedValueOnce({
+        url: "blob:renewed-preview",
+        mimeType: "image/png",
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      });
+
+    render(
+      <I18nProvider>
+        <ProductMediaGalleryManager item={item} variants={[]} organizationId={organizationId} />
+      </I18nProvider>,
+    );
+
+    await waitFor(() => expect(getPreviewSource).toHaveBeenCalledTimes(2));
+    expect(await screen.findByRole("img", { name: "Renewal preview" })).toHaveAttribute("src", "blob:renewed-preview");
+  });
+
+  it("removes an expired preview and reports a renewal failure", async () => {
+    const item = localCatalogItemsStore.get(productId);
+    if (!item) throw new Error("Seed product is unavailable.");
+    const asset = await localProductMediaAdapter.uploadAsset({
+      organizationId,
+      file: new File(["expired image"], "expired.png", { type: "image/png" }),
+    });
+    await localProductMediaAdapter.attach({
+      organizationId,
+      assetId: asset.id,
+      catalogItemId: productId,
+      altText: "Expired preview",
+    });
+    vi.spyOn(localProductMediaAdapter, "getPreviewSource")
+      .mockResolvedValueOnce({
+        url: "blob:expired-preview",
+        mimeType: "image/png",
+        expiresAt: new Date(Date.now() + 1_000).toISOString(),
+      })
+      .mockRejectedValueOnce(new Error("Preview authorization expired."));
+
+    render(
+      <I18nProvider>
+        <ProductMediaGalleryManager item={item} variants={[]} organizationId={organizationId} />
+      </I18nProvider>,
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Preview authorization expired.");
+    expect(screen.queryByRole("img", { name: "Expired preview" })).not.toBeInTheDocument();
   });
 
   it("previews product-level images and opens the full product gallery", async () => {

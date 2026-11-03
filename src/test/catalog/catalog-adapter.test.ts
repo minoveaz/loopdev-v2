@@ -394,6 +394,56 @@ describe("local Catalog adapter", () => {
     expect(restoredChild.status).toBe("active");
   });
 
+  it("preserves existing product assignments when archiving a category", async () => {
+    const category = await localCatalogAdapter.createProductReference({
+      organizationId,
+      kind: "category",
+      key: "pet-care",
+      name: "Pet care",
+      parentId: null,
+    });
+    const product = await localCatalogAdapter.createCatalogItem({
+      organizationId,
+      name: "Assigned product",
+      type: "physical_product",
+      categoryKey: category.key,
+      status: "active",
+    });
+    const variant = await localCatalogAdapter.createVariant({
+      organizationId,
+      workspaceId: null,
+      catalogItemId: product.id,
+      name: "Assigned SKU",
+      status: "active",
+      attributes: {},
+      metadata: { categoryKey: category.key },
+    });
+
+    const archived = await localCatalogAdapter.updateProductReference(category.id, { organizationId }, {
+      expectedVersion: category.version,
+      patch: { status: "archived" },
+    });
+
+    expect(archived.status).toBe("archived");
+    expect(localCatalogItemsStore.get(product.id)?.categoryKey).toBe(category.key);
+    expect(localCatalogVariantsStore.get(variant.id)?.metadata.categoryKey).toBe(category.key);
+    await expect(localCatalogAdapter.createCatalogItem({
+      organizationId,
+      name: "Newly assigned product",
+      type: "physical_product",
+      categoryKey: category.key,
+    })).rejects.toMatchObject({ code: "invalid-scope" });
+    await expect(localCatalogAdapter.createVariant({
+      organizationId,
+      workspaceId: null,
+      catalogItemId: product.id,
+      name: "Newly assigned SKU",
+      status: "active",
+      attributes: {},
+      metadata: { categoryKey: category.key },
+    })).rejects.toMatchObject({ code: "invalid-scope" });
+  });
+
   it("keeps purchase cost separate and requires read plus manage permission to mutate", async () => {
     const item = await catalogAdapter.createCatalogItem({
       organizationId,

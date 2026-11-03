@@ -22,12 +22,12 @@
 | Field | Value |
 |---|---|
 | Status | `blocked` |
-| Current phase | Attempt 10 is blocked at `00-discovery`: changed scope/design/code/test fingerprints invalidated prior phase handoffs and design, visual-design, plan, verification and release approvals. `ADAPTER-MODE-001` is implemented and evidenced; the `07-build` checkpoint remains blocked pending revalidation/approval. Security, mobile route/operations, deployed RLS and authorized legacy-data gates remain unresolved. No remote writes were made. |
-| Current issue | #39 (remaining security-audit criteria); #36 remains open for Product/Platform acceptance evidence |
-| Branch | `feature/erp-core-capabilities` |
-| Commit | `2e7faf367aa0b13a735492e9878390cc7e5a3621` |
-| Pull request | [#38](https://github.com/minoveaz/loopdev-v2/pull/38), merged into `develop` on 2026-10-25 |
-| Last evidence | The Product Owner approved extending the shared Files contract. Migrations `20261025120145`, `20261025120200` and `20261025122000` are applied in `loopdev-platform-dev`; remote queries confirm policy boundaries and grant parity. The isolated pgTAP regression suite passes 19/19. This does not complete the broader security audit. The Catalog adapter suite (12 tests) and delivery tooling (34 tests) passed. |
+| Current phase | Verification attempt 6 is blocked: remote Dev has cost-permission and write-gate discrepancies, category migration/test mismatch, and missing physical-attribute columns. The owner-only write-control RPC could not be invoked from the unauthenticated MCP context. No remote data, migration or control was changed. |
+| Current issue | #36 (updated with remote audit and Git delivery); #39 remains relevant to security-audit closure |
+| Branch | `feature/erp-products-completion` |
+| Commit | `676c4d4e6b7013faf2ebd9755f26e696bf6c998b` |
+| Pull request | None for this branch; previous [#42](https://github.com/minoveaz/loopdev-v2/pull/42) is merged |
+| Last evidence | Focused Products tests pass 49/49, typecheck and route/doc validators pass. Supabase Dev audit remains read-only; Docker is unavailable, so pgTAP 019/020 and local migration lint are not verified. |
 
 ## Scope
 
@@ -82,6 +82,8 @@
 | 05-sync | #36 | `completed` (`partial`) | Online-only semantics defined; runtime behavior remains unimplemented | `sync-model.md`, `05-sync.json` |
 | 06-plan | #36 | `completed` | Approved plan validated against `REQUIRED_MVP`; deferred capabilities remain out of scope | `implementation-plan.md`, `delivery-ledger.json`, `runs/MOD-CORE-20261024-001/06-plan.json` |
 | 07-build | #39 | `blocked` | Complete the full security audit and required regression evidence; remote Storage policy state is already verified | `delivery-ledger.json`, `runs/MOD-CORE-20261024-001/07-build.json` |
+| 08-verify | #36 | `blocked` | Supabase Dev discrepancies and authenticated runtime/database evidence remain unresolved | `runs/MOD-CORE-20261024-001/08-verify.md`, `requirement-evidence-matrix.md`, `platform-evidence-matrix.md` |
+| 10-git | #36 | `completed` (branch pushed; no PR requested) | Commit `676c4d4` is on `origin/feature/erp-products-completion`; see attempt 7 | `runs/MOD-CORE-20261024-001/10-git.json` |
 
 The phase rows above describe historical artifacts. Attempt 10 invalidated
 their current handoff status; revalidate the canonical artifacts and required
@@ -182,3 +184,4 @@ direction on 2026-10-24; runtime comparison remains a post-implementation gate.
 | 2026-10-24 | Bounded the first release to Products/categories on desktop and mobile web; deferred Shopify, Inhand, Suppliers, native apps and other ERP modules; confirmed online-only remote access and archive-only lifecycle | `CR-ERP-PRODUCTS-FIRST-RELEASE` | @loopdev-io |
 | 2026-10-25 | Amended Products scope to include reusable product/variant images, metadata and alt text; excluded automatic publication and recorded Files backend/relation dependencies | `CR-ERP-PRODUCT-MEDIA-001` | @loopdev-io |
 | 2026-10-25 | Committed and pushed the Products catalog/media implementation; PR #38 merged. The visual media addendum is approved; plan, access, migration and runtime verification gates remain open. | `6de4213`, PR #38 | @loopdev-io |
+| 2026-11-03 | Added Products physical attributes, category/media work and refreshed verification evidence; audited Supabase Dev read-only, then committed and pushed the pending work to a topic branch. Remote controls and migrations remain unchanged; verification is blocked. | `676c4d4`, `feature/erp-products-completion` | @loopdev-io |
